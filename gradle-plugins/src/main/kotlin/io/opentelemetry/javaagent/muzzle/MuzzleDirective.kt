@@ -23,7 +23,7 @@ abstract class MuzzleDirective {
   abstract val excludedInstrumentationNames: SetProperty<String>
   abstract val assertPass: Property<Boolean>
   abstract val assertInverse: Property<Boolean>
-  abstract val coreJdk: Property<Boolean> // use coreJdk() function below to enable
+  abstract val coreJdk: Property<Boolean>
 
   init {
     name.convention("")
@@ -35,10 +35,6 @@ abstract class MuzzleDirective {
     assertPass.convention(false)
     assertInverse.convention(false)
     coreJdk.convention(false)
-  }
-
-  fun coreJdk() {
-    coreJdk.set(true)
   }
 
   /**

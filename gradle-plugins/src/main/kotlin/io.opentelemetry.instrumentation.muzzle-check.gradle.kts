@@ -39,6 +39,9 @@ val RANGE_COUNT_LIMIT = Integer.getInteger("otel.javaagent.muzzle.versions.limit
 // preventing failures when new library versions are released to Maven Central.
 val muzzlePinnedVersions: Map<String, String> by lazy {
   val file = rootProject.file(".github/config/latest-dep-versions.json")
+  if (!file.exists()) {
+    throw GradleException("Pinned latest-dep versions file is missing: ${file}.")
+  }
   @Suppress("UNCHECKED_CAST")
   groovy.json.JsonSlurper().parse(file) as Map<String, String>
 }
@@ -441,7 +444,7 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
 
 fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version) = sequence {
   val predicate = AcceptableVersions(skipVersions)
-  fun accept(version: Version?): Boolean = predicate.test(version) && version!! <= upperBound
+  fun accept(version: Version?): Boolean = version != null && predicate.test(version) && version <= upperBound
   if (accept(range.lowestVersion)) {
     yield(range.lowestVersion.toString())
   }

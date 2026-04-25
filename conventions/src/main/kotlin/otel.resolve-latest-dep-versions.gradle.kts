@@ -69,17 +69,12 @@ tasks {
               reject("pre-release version")
             }
           }
-          try {
-            val resolutionResult = detached.incoming.resolutionResult
-            resolutionResult.rootComponent.get()
-              .dependencies
-              .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
-              .firstOrNull()
-              ?.selected?.moduleVersion?.version
-          } catch (e: Exception) {
-            logger.warn("Failed to resolve stable version for $group:$module:$version: ${e.message}")
-            null
-          }
+          val resolutionResult = detached.incoming.resolutionResult
+          resolutionResult.rootComponent.get()
+            .dependencies
+            .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
+            .firstOrNull()
+            ?.selected?.moduleVersion?.version
         }
       }
 
@@ -87,26 +82,22 @@ tasks {
         configurations
           .filter { it.isCanBeResolved && it.name.contains("test", ignoreCase = true) && it.name.endsWith("RuntimeClasspath") }
           .forEach { config ->
-            try {
-              config.incoming.resolutionResult.allDependencies.forEach { dep ->
-                if (dep is org.gradle.api.artifacts.result.ResolvedDependencyResult) {
-                  val requested = dep.requested
-                  if (requested is org.gradle.api.artifacts.component.ModuleComponentSelector) {
-                    val reqVersion = requested.version
-                    val selectedVersion = dep.selected.moduleVersion?.version ?: return@forEach
-                    val version = if (AcceptableVersions.isStable(selectedVersion)) selectedVersion
-                      else resolveStableVersion(this@subprojects, requested.group, requested.module, reqVersion)
-                      ?: selectedVersion // Fall back to pre-release if no stable version exists in range
-                    if (reqVersion == "latest.release") {
-                      recordVersion("${requested.group}:${requested.module}#+", version)
-                    } else if (reqVersion.contains("+")) {
-                      recordVersion("${requested.group}:${requested.module}#$reqVersion", version)
-                    }
+            config.incoming.resolutionResult.allDependencies.forEach { dep ->
+              if (dep is org.gradle.api.artifacts.result.ResolvedDependencyResult) {
+                val requested = dep.requested
+                if (requested is org.gradle.api.artifacts.component.ModuleComponentSelector) {
+                  val reqVersion = requested.version
+                  val selectedVersion = dep.selected.moduleVersion?.version ?: return@forEach
+                  val version = if (AcceptableVersions.isStable(selectedVersion)) selectedVersion
+                    else resolveStableVersion(this@subprojects, requested.group, requested.module, reqVersion)
+                    ?: selectedVersion // Fall back to pre-release if no stable version exists in range
+                  if (reqVersion == "latest.release") {
+                    recordVersion("${requested.group}:${requested.module}#+", version)
+                  } else if (reqVersion.contains("+")) {
+                    recordVersion("${requested.group}:${requested.module}#$reqVersion", version)
                   }
                 }
               }
-            } catch (e: Exception) {
-              logger.warn("Failed to resolve ${this.path}:${config.name}: ${e.message}")
             }
           }
       }

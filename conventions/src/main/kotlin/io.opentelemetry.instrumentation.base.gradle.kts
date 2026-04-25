@@ -41,12 +41,11 @@ fun getPinnedVersions(): Map<String, String> {
   val key = "latestDepPinnedVersions"
   if (!rootProject.extra.has(key)) {
     val file = rootProject.file(".github/config/latest-dep-versions.json")
-    @Suppress("UNCHECKED_CAST")
-    rootProject.extra[key] = if (file.exists()) {
-      groovy.json.JsonSlurper().parse(file) as Map<String, String>
-    } else {
-      emptyMap<String, String>()
+    if (!file.exists()) {
+      throw GradleException("Pinned latest-dep versions file is missing: ${file}.")
     }
+    @Suppress("UNCHECKED_CAST")
+    rootProject.extra[key] = groovy.json.JsonSlurper().parse(file) as Map<String, String>
   }
   @Suppress("UNCHECKED_CAST")
   return rootProject.extra[key] as Map<String, String>

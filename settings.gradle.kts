@@ -39,11 +39,10 @@ dependencyResolutionManagement {
     @Suppress("UNCHECKED_CAST")
     val pinnedVersions: Map<String, String> = if (pinLatestDeps) {
       val file = file(".github/config/latest-dep-versions.json")
-      if (file.exists()) {
-        groovy.json.JsonSlurper().parse(file) as Map<String, String>
-      } else {
-        emptyMap()
+      if (!file.exists()) {
+        throw GradleException("Pinned latest-dep versions file is missing: ${file}.")
       }
+      groovy.json.JsonSlurper().parse(file) as Map<String, String>
     } else {
       emptyMap()
     }
