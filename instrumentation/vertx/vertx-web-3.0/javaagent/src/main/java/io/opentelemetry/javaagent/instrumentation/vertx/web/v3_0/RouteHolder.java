@@ -21,7 +21,7 @@ public class RouteHolder implements ImplicitContextKeyed {
     this.route = route;
   }
 
-  public static Context init(Context context, String route) {
+  static Context init(Context context, String route) {
     if (context.get(KEY) != null) {
       return context;
     }
@@ -29,7 +29,7 @@ public class RouteHolder implements ImplicitContextKeyed {
   }
 
   @Nullable
-  public static String get(Context context) {
+  static String get(Context context) {
     RouteHolder holder = context.get(KEY);
     return holder != null ? holder.route : null;
   }
