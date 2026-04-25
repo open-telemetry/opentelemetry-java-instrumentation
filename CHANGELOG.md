@@ -27,6 +27,12 @@
   `otel.instrumentation.{logback-appender,log4j-appender,jboss-logmanager}.experimental.capture-event-name`
   javaagent properties. Use the `otel.event.name` key in MDC / context data / key-value pairs /
   Logstash markers / structured arguments instead.
+- Removed previously deprecated experimental config property
+  `otel.instrumentation.http.client.experimental.redact-query-parameters`; use
+  `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` instead.
+- Removed previously deprecated experimental config property
+  `otel.instrumentation.common.experimental.db-sqlcommenter.enabled`; use
+  `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` instead.
 
 ## Version 2.27.0 (2026-04-21)
 

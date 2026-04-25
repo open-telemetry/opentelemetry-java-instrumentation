@@ -55,9 +55,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
     SPECIAL_MAPPINGS.put(
-        "java.common.http.client.redact_query_parameters/development",
-        "otel.instrumentation.http.client.experimental.redact-query-parameters");
-    SPECIAL_MAPPINGS.put(
         "java.common.http.client.emit_experimental_telemetry/development",
         "otel.instrumentation.http.client.emit-experimental-telemetry");
     SPECIAL_MAPPINGS.put(

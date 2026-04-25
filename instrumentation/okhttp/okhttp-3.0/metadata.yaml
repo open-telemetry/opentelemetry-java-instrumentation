@@ -34,8 +34,7 @@ configurations:
       `http.client.response.size` metrics.
     type: boolean
     default: false
-  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
-    declarative_name: java.common.http.client.redact_query_parameters/development
-    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: boolean
-    default: true
+  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: list
+    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"

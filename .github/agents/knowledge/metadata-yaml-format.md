@@ -29,7 +29,6 @@ Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.ja
 | `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` | `general.sanitization.url.sensitive_query_parameters/development` |
 | `otel.semconv-stability.opt-in`                                                 | `general.semconv_stability.opt_in`                                |
 | `otel.instrumentation.http.known-methods`                                       | `java.common.http.known_methods`                                  |
-| `otel.instrumentation.http.client.experimental.redact-query-parameters`         | `java.common.http.client.redact_query_parameters/development`     |
 | `otel.instrumentation.http.client.emit-experimental-telemetry`                  | `java.common.http.client.emit_experimental_telemetry/development` |
 | `otel.instrumentation.http.server.emit-experimental-telemetry`                  | `java.common.http.server.emit_experimental_telemetry/development` |
 | `otel.instrumentation.messaging.experimental.receive-telemetry.enabled`         | `java.common.messaging.receive_telemetry/development.enabled`     |

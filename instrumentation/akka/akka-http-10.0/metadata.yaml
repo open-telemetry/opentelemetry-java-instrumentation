@@ -37,10 +37,6 @@ configurations:
       `http.client.response.size` metrics.
     type: boolean
     default: false
-  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
-    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: boolean
-    default: true
   - name: otel.instrumentation.http.server.capture-request-headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
     type: list
@@ -56,3 +52,7 @@ configurations:
       `http.server.response.size` metrics.
     type: boolean
     default: false
+  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: list
+    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
