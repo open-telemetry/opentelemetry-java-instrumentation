@@ -55,9 +55,6 @@ jobs:
     uses: ./.github/workflows/reusable-markdown-lint-check.yml
 
   required-status-check:
-    # test-latest-deps and muzzle are included in the required status checks because
-    # latest dependency versions are pinned (see .github/config/latest-dep-versions.json),
-    # so they should no longer fail due to newly released library versions.
     needs:
       - common
       - test-latest-deps
