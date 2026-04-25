@@ -61,8 +61,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Thrown Throwable throwable, @Advice.Enter CallDepth callDepth) {
+    public static void onExit(@Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }

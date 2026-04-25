@@ -48,7 +48,8 @@ class JarAnalyzerInstallerTest {
                     .containsEntry("package.type", "jar")
                     .containsEntry("package.checksum_algorithm", "SHA1")
                     .hasEntrySatisfying(
-                        stringKey("package.checksum"), value -> assertThat(value).isNotNull())
+                        stringKey("package.checksum"),
+                        value -> assertThat(value).matches("[0-9a-f]{40}"))
                     .hasEntrySatisfying(
                         stringKey("package.path"), value -> assertThat(value).isNotNull())
                     .satisfies(

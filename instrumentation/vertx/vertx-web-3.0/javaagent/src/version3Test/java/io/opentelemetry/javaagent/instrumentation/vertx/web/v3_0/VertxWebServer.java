@@ -12,12 +12,12 @@ import io.vertx.ext.web.Router;
 public class VertxWebServer extends AbstractVertxWebServer {
 
   @Override
-  public void end(HttpServerResponse response) {
+  void end(HttpServerResponse response) {
     response.end();
   }
 
   @Override
-  public void end(HttpServerResponse response, String message) {
+  void end(HttpServerResponse response, String message) {
     response.end(message);
   }
 

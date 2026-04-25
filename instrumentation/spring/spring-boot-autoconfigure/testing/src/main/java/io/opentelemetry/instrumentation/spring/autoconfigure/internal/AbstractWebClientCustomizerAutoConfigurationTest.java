@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -75,21 +74,19 @@ public abstract class AbstractWebClientCustomizerAutoConfigurationTest<T> {
           WebClient.Builder builder = WebClient.builder();
           customizeWebClient(customizer, builder);
 
-          AtomicLong count = new AtomicLong(0);
           builder
               .build()
               .mutate()
               .filters(
                   filters ->
-                      count.set(
-                          filters.stream()
-                              .filter(
-                                  f ->
-                                      f.getClass()
-                                          .getName()
-                                          .startsWith("io.opentelemetry.instrumentation"))
-                              .count()));
-          assertThat(count.get()).isEqualTo(1);
+                      assertThat(filters)
+                          .filteredOn(
+                              filter ->
+                                  filter
+                                      .getClass()
+                                      .getName()
+                                      .startsWith("io.opentelemetry.instrumentation"))
+                          .hasSize(1));
         });
   }
 

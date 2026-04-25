@@ -13,7 +13,7 @@ public class RoutingContextUtil {
   private static final VirtualField<RoutingContext, String> routeField =
       VirtualField.find(RoutingContext.class, String.class);
 
-  public static void setRoute(RoutingContext routingContext, @Nullable String route) {
+  static void setRoute(RoutingContext routingContext, @Nullable String route) {
     routeField.set(routingContext, route);
   }
 

@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin.v14_2;
 
+import javax.annotation.Nullable;
+
 public class VaadinServiceContext {
   private boolean requestHandled;
-  private String spanNameCandidate;
+  @Nullable private String spanNameCandidate;
 
   void setRequestHandled() {
     requestHandled = true;
@@ -21,6 +23,7 @@ public class VaadinServiceContext {
     this.spanNameCandidate = spanNameCandidate;
   }
 
+  @Nullable
   String getSpanNameCandidate() {
     return spanNameCandidate;
   }

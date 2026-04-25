@@ -161,13 +161,15 @@ class JarDetails {
 
     Attributes mainAttributes = manifest.getMainAttributes();
     String name = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
-    String description = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
+    String vendor = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
 
-    String packageDescription = name;
-    if (description != null && !description.isEmpty()) {
-      packageDescription += " by " + description;
+    if (name == null || name.isEmpty()) {
+      return vendor == null || vendor.isEmpty() ? null : vendor;
     }
-    return packageDescription;
+    if (vendor == null || vendor.isEmpty()) {
+      return name;
+    }
+    return name + " by " + vendor;
   }
 
   /** Returns the SHA1 hash of this file, e.g. {@code 30d16ec2aef6d8094c5e2dce1d95034ca8b6cb42}. */
@@ -181,7 +183,7 @@ class JarDetails {
       byte[] buffer = new byte[8192];
       while (dis.read(buffer) != -1) {}
       byte[] digest = md.digest();
-      return new BigInteger(1, digest).toString(16);
+      return String.format(Locale.ROOT, "%040x", new BigInteger(1, digest));
     }
   }
 

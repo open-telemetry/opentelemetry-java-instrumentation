@@ -18,9 +18,9 @@ import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
 
 @SpringBootApplication
-public class Gateway43MvcTestApplication {
+class Gateway43MvcTestApplication {
   @Bean
-  public RouterFunction<ServerResponse> gatewayRouterFunction() {
+  RouterFunction<ServerResponse> gatewayRouterFunction() {
     HandlerFunction<ServerResponse> echoHandler =
         request -> {
           try {

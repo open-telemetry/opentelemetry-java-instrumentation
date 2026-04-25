@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
+import org.apache.rocketmq.client.apis.ClientException;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.consumer.FilterExpression;
@@ -58,7 +59,7 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
   }
 
   @Test
-  void testSendAndConsumeMessage() throws Throwable {
+  void testSendAndConsumeMessage() throws ClientException {
     ClientConfiguration clientConfiguration =
         ClientConfiguration.newBuilder()
             .setEndpoints(CONTAINER.endpoints)
@@ -104,7 +105,8 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
     SendReceipt sendReceipt =
         testing()
             .runWithSpan(
-                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+                "parent",
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     testing()
         .waitAndAssertTraces(
             trace ->

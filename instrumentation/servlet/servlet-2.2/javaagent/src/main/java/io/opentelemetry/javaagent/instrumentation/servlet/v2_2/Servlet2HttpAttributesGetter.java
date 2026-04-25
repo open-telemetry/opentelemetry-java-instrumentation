@@ -13,11 +13,10 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Servlet2HttpAttributesGetter
+class Servlet2HttpAttributesGetter
     extends ServletHttpAttributesGetter<HttpServletRequest, HttpServletResponse> {
 
-  public Servlet2HttpAttributesGetter(
-      ServletAccessor<HttpServletRequest, HttpServletResponse> accessor) {
+  Servlet2HttpAttributesGetter(ServletAccessor<HttpServletRequest, HttpServletResponse> accessor) {
     super(accessor);
   }
 
