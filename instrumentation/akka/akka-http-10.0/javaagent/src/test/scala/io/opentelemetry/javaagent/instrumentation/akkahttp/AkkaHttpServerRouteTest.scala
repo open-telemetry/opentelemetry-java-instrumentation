@@ -41,8 +41,8 @@ class AkkaHttpServerRouteTest {
   private def buildAddress(port: Int): URI = try
     new URI("http://localhost:" + port + "/")
   catch {
-    case exception: URISyntaxException =>
-      throw new IllegalStateException(exception)
+    case e: URISyntaxException =>
+      throw new IllegalStateException(e)
   }
 
   @Test def testSimple(): Unit = {
