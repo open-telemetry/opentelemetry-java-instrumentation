@@ -20,8 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SpringBootServiceVersionDetectorTest {
 
-  static final String BUILD_PROPS = "build-info.properties";
-  static final String META_INFO = "META-INF";
+  private static final String BUILD_PROPS = "build-info.properties";
+  private static final String META_INFO = "META-INF";
 
   @Mock ConfigProperties config;
   @Mock SystemHelper system;

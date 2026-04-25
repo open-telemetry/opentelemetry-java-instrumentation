@@ -5,11 +5,7 @@ plugins {
 
 group = "io.opentelemetry.instrumentation"
 
-val springBootVersion = "2.6.15"
-
 dependencies {
-  compileOnly("org.springframework.boot:spring-boot-starter:$springBootVersion")
-  compileOnly("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   api(project(":instrumentation:spring:spring-boot-autoconfigure"))
   api(project(":instrumentation-annotations"))
   implementation(project(":instrumentation:resources:library"))

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.xxljob;
 
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 
 public class XxlJobTestingConstants {
 
@@ -17,11 +18,14 @@ public class XxlJobTestingConstants {
 
   public static final Object METHOD_JOB_HANDLER_OBJECT = ReflectiveMethodsFactory.getTarget();
 
+  @Nullable
   public static final Method METHOD_JOB_HANDLER_METHOD = ReflectiveMethodsFactory.getMethod();
 
+  @Nullable
   public static final Method METHOD_JOB_HANDLER_INIT_METHOD =
       ReflectiveMethodsFactory.getInitMethod();
 
+  @Nullable
   public static final Method METHOD_JOB_HANDLER_DESTROY_METHOD =
       ReflectiveMethodsFactory.getDestroyMethod();
 

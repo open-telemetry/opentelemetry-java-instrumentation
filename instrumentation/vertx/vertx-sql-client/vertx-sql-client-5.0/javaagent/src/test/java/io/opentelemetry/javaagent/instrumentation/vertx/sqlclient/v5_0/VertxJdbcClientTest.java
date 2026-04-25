@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.vertx.core.Vertx;
@@ -27,7 +28,6 @@ import io.vertx.jdbcclient.JDBCConnectOptions;
 import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -44,29 +44,28 @@ class VertxJdbcClientTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static Vertx vertx;
   private static Pool pool;
 
   @BeforeAll
   static void setUp() throws Exception {
     vertx = Vertx.vertx();
+    cleanup.deferAfterAll(vertx::close);
     pool =
         JDBCPool.pool(
             vertx,
             new JDBCConnectOptions().setJdbcUrl("jdbc:hsqldb:mem:" + DB),
             new PoolOptions().setMaxSize(4));
+    cleanup.deferAfterAll(pool::close);
     pool.query("create table test(id int primary key, name varchar(255))")
         .execute()
         .compose(r -> pool.query("insert into test values (1, 'Hello'), (2, 'World')").execute())
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    pool.close();
-    vertx.close();
   }
 
   @Test

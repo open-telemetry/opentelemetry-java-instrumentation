@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
+  private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
   @Override

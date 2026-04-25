@@ -28,7 +28,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
     extends AbstractVertxKafkaTest {
 
-  final CountDownLatch consumerReady = new CountDownLatch(1);
+  private final CountDownLatch consumerReady = new CountDownLatch(1);
 
   @BeforeAll
   void setUpTopicAndConsumer() {
