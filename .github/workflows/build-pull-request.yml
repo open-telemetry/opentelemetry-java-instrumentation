@@ -69,7 +69,13 @@ jobs:
       - muzzle
       - markdown-lint-check
     runs-on: ubuntu-latest
-    if: always()
+    # `!cancelled()` (instead of `always()`) makes this a "skipped" check-run
+    # when the workflow is cancelled by concurrency (e.g. when a "test *"
+    # label triggers a rebuild via rebuild-pull-request-on-label.yml). That
+    # avoids a noisy red "required-status-check failed" on the superseded
+    # run; the rebuild produces a same-named check that branch protection
+    # resolves to success.
+    if: ${{ !cancelled() }}
     steps:
       - if: |
           needs.common.result != 'success' ||
