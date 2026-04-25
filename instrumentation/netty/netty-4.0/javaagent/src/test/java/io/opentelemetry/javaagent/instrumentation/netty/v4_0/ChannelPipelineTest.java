@@ -26,9 +26,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 class ChannelPipelineTest {
 
-  private static final String DEFAULT_TAIL_HANDLER =
-      "io.netty.channel.DefaultChannelPipeline$TailHandler";
-
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -203,10 +200,14 @@ class ChannelPipelineTest {
   }
 
   private static void assertThatPipelineHasNoUserHandlers(ChannelPipeline channelPipeline) {
-    assertThat(channelPipeline.first())
-        .matches(
-            handler ->
-                handler == null || DEFAULT_TAIL_HANDLER.equals(handler.getClass().getName()));
+    ChannelHandler first = channelPipeline.first();
+    // In early Netty 4.0.x there was a bug that caused first() to return the internal
+    // TailHandler sentinel on an empty pipeline; from 4.0.20.Final onward (and in all 4.1.x)
+    // it returns null.
+    if (first != null) {
+      assertThat(first.getClass().getName())
+          .isEqualTo("io.netty.channel.DefaultChannelPipeline$TailHandler");
+    }
     assertThat(channelPipeline.last()).isNull();
     assertThat(channelPipeline.toMap()).isEmpty();
   }
