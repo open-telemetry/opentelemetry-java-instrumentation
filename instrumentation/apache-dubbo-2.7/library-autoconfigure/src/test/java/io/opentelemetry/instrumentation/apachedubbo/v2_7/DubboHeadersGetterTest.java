@@ -26,7 +26,7 @@ class DubboHeadersGetterTest {
   @Mock RpcInvocation rpcInvocation;
 
   @Test
-  void testKeys() throws Exception {
+  void testKeys() throws ReflectiveOperationException {
     when(context.getUrl()).thenReturn(new URL("http", "localhost", 1));
     when(context.getRemoteAddress()).thenReturn(new InetSocketAddress(1));
     when(context.getLocalAddress()).thenReturn(new InetSocketAddress(1));
@@ -43,7 +43,7 @@ class DubboHeadersGetterTest {
   }
 
   @SuppressWarnings("unchecked")
-  private Map<Object, Object> getObjectAttachments() throws Exception {
+  private Map<Object, Object> getObjectAttachments() throws ReflectiveOperationException {
     return (Map<Object, Object>)
         RpcInvocation.class.getMethod("getObjectAttachments").invoke(rpcInvocation);
   }
