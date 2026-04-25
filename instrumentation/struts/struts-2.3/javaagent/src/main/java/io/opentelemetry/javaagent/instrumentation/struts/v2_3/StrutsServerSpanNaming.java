@@ -9,7 +9,7 @@ import com.opensymphony.xwork2.ActionProxy;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
-public class StrutsServerSpanNaming {
+class StrutsServerSpanNaming {
 
   private static final HttpServerRouteGetter<ActionProxy> serverSpanName =
       (context, actionProxy) -> {
@@ -33,7 +33,7 @@ public class StrutsServerSpanNaming {
         return ServletContextPath.prepend(context, result);
       };
 
-  public static HttpServerRouteGetter<ActionProxy> serverSpanName() {
+  static HttpServerRouteGetter<ActionProxy> serverSpanName() {
     return serverSpanName;
   }
 

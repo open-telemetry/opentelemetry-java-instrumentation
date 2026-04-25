@@ -89,9 +89,17 @@ still allows the code to function correctly.
 **Exception — Single public class**: If a module has only one public class then don't change it to
 package-private. Javadoc task fails when module has no public classes.**
 
-**Exception — Used from advice**: All classes and methods used from methods annotated with
-`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must be public. These methods are inlined into
-transformed classes and must be accessible from those classes, which may be in different packages.
+**Exception — Directly referenced from advice**: Classes and methods that are *directly*
+referenced from methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must be
+public, since the advice may be applied to classes in other packages.
+
+This applies only to **direct** references in the advice methods, not transitive ones. Helpers
+reached only from inside another helper called by the advice (for example, a same-package
+`*Singletons` accessor invoked from inside `AdviceScope.start()`) can keep package-private
+visibility. A source-level `inline = false` on the advice annotation is not a reason to widen
+visibility — the agent forcibly overrides the `inline` attribute at runtime based on the
+configured indy mode, so the source value does not determine how the advice is dispatched.
+Reason about visibility from "what does the advice method directly reference?".
 
 ## [Style] `@SuppressWarnings` Usage
 
