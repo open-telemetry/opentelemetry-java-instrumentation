@@ -5,32 +5,42 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v5_3.internal;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.internal.Initializer;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.spring.webmvc.v5_3.SpringWebMvcTelemetryBuilder;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * Back-channel between the {@code spring-webmvc-5.3} library and the {@code
+ * spring-boot-autoconfigure} starter, used to configure the {@code
+ * DefaultHttpServerInstrumenterBuilder} held in a private field of {@link
+ * SpringWebMvcTelemetryBuilder} without exposing it as public API.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class SpringMvcBuilderUtil {
-  // allows access to the private field for the spring starter
-  private static Function<
+
+  @Nullable
+  private static volatile Function<
           SpringWebMvcTelemetryBuilder,
           DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>>
       builderExtractor;
 
-  public static Function<
-          SpringWebMvcTelemetryBuilder,
-          DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>>
-      getBuilderExtractor() {
-    return builderExtractor;
+  @CanIgnoreReturnValue
+  public static SpringWebMvcTelemetryBuilder applyCommonConfig(
+      SpringWebMvcTelemetryBuilder builder, OpenTelemetry openTelemetry) {
+    if (builderExtractor != null) {
+      builderExtractor.apply(builder).configure(new CommonConfig(openTelemetry));
+    }
+    return builder;
   }
 
-  @Initializer
   public static void setBuilderExtractor(
       Function<
               SpringWebMvcTelemetryBuilder,

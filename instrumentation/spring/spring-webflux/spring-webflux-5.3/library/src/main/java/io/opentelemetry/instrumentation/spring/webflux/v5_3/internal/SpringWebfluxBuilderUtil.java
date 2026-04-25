@@ -5,43 +5,62 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.internal.Initializer;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetryBuilder;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * Back-channel between the {@code spring-webflux-5.3} library and the {@code
+ * spring-boot-autoconfigure} starter, used to configure the {@code
+ * DefaultHttp{Client,Server}InstrumenterBuilder} held in private fields of {@link
+ * SpringWebfluxClientTelemetryBuilder} / {@link SpringWebfluxServerTelemetryBuilder} without
+ * exposing them as public API.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class SpringWebfluxBuilderUtil {
   private SpringWebfluxBuilderUtil() {}
 
-  // allows access to the private field for the spring starter
-  private static Function<
+  @Nullable
+  private static volatile Function<
           SpringWebfluxClientTelemetryBuilder,
           DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse>>
       clientBuilderExtractor;
 
-  // allows access to the private field for the spring starter
-  private static Function<
+  @Nullable
+  private static volatile Function<
           SpringWebfluxServerTelemetryBuilder,
           DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>>
       serverBuilderExtractor;
 
-  public static Function<
-          SpringWebfluxServerTelemetryBuilder,
-          DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>>
-      getServerBuilderExtractor() {
-    return serverBuilderExtractor;
+  @CanIgnoreReturnValue
+  public static SpringWebfluxClientTelemetryBuilder applyClientCommonConfig(
+      SpringWebfluxClientTelemetryBuilder builder, OpenTelemetry openTelemetry) {
+    if (clientBuilderExtractor != null) {
+      clientBuilderExtractor.apply(builder).configure(new CommonConfig(openTelemetry));
+    }
+    return builder;
   }
 
-  @Initializer
+  @CanIgnoreReturnValue
+  public static SpringWebfluxServerTelemetryBuilder applyServerCommonConfig(
+      SpringWebfluxServerTelemetryBuilder builder, OpenTelemetry openTelemetry) {
+    if (serverBuilderExtractor != null) {
+      serverBuilderExtractor.apply(builder).configure(new CommonConfig(openTelemetry));
+    }
+    return builder;
+  }
+
   public static void setServerBuilderExtractor(
       Function<
               SpringWebfluxServerTelemetryBuilder,
@@ -50,14 +69,6 @@ public final class SpringWebfluxBuilderUtil {
     SpringWebfluxBuilderUtil.serverBuilderExtractor = serverBuilderExtractor;
   }
 
-  public static Function<
-          SpringWebfluxClientTelemetryBuilder,
-          DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse>>
-      getClientBuilderExtractor() {
-    return clientBuilderExtractor;
-  }
-
-  @Initializer
   public static void setClientBuilderExtractor(
       Function<
               SpringWebfluxClientTelemetryBuilder,
