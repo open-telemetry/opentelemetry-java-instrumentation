@@ -26,6 +26,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -35,7 +36,6 @@ import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
 import java.net.InetAddress;
 import java.util.concurrent.CompletableFuture;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -44,6 +44,9 @@ import org.testcontainers.containers.GenericContainer;
 class VertxRedisClientTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
@@ -57,24 +60,20 @@ class VertxRedisClientTest {
   @BeforeAll
   static void setup() throws Exception {
     redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
     ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
 
     vertx = Vertx.vertx();
+    cleanup.deferAfterAll(vertx::close);
     client = Redis.createClient(vertx, "redis://" + host + ":" + port + "/1");
+    cleanup.deferAfterAll(client::close);
     RedisConnection connection =
         client.connect().toCompletionStage().toCompletableFuture().get(30, SECONDS);
     redis = RedisAPI.api(connection);
-  }
-
-  @AfterAll
-  static void cleanup() {
-    redis.close();
-    client.close();
-    vertx.close();
-    redisServer.stop();
+    cleanup.deferAfterAll(redis::close);
   }
 
   @Test
