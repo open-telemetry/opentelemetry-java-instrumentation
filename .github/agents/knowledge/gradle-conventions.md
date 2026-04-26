@@ -157,6 +157,13 @@ Flag `build.gradle.kts` dependencies that appear unused or redundant:
 - A dependency that duplicates something already provided transitively.
 - A `testImplementation` dependency for a library not used in tests.
 
+### Never declare `javaagent-bootstrap` explicitly in javaagent modules
+
+The `otel.javaagent-instrumentation` convention plugin already provides
+`javaagent-bootstrap` on the `compileOnly` classpath transitively. Do not add
+`compileOnly(project(":javaagent-bootstrap"))` to a javaagent module's
+`build.gradle.kts`, and remove it if present.
+
 ## Custom Test Tasks
 
 Every custom `Test` task registered with `val foo by registering(Test::class)` **must** include

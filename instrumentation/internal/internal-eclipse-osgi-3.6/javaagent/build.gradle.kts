@@ -2,10 +2,6 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-dependencies {
-  compileOnly(project(":javaagent-bootstrap"))
-}
-
 // this instrumentation applies to the class 'org.eclipse.osgi.internal.loader.BundleLoader'
 // which is present in the following artifacts dating back to version 3.6 (2010):
 //
