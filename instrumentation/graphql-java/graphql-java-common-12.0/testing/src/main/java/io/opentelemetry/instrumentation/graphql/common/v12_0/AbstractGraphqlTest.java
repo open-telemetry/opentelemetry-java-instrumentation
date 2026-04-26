@@ -81,9 +81,7 @@ public abstract class AbstractGraphqlTest {
 
     try (Reader reader =
         new InputStreamReader(
-            requireNonNull(
-                getClass().getClassLoader().getResourceAsStream("schema.graphqls"),
-                "schema.graphqls"),
+            requireNonNull(getClass().getClassLoader().getResourceAsStream("schema.graphqls")),
             UTF_8)) {
       graphqlSchema = buildSchema(reader);
       GraphQL.Builder graphqlBuilder = GraphQL.newGraphQL(graphqlSchema);
