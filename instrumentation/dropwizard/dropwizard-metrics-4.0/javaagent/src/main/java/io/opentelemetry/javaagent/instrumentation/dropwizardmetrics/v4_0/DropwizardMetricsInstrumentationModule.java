@@ -24,7 +24,7 @@ public class DropwizardMetricsInstrumentationModule extends InstrumentationModul
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // removed in 4.0
+    // added in 3.1.0
     return not(hasClassesNamed("com.codahale.metrics.LongAdder"));
   }
 
