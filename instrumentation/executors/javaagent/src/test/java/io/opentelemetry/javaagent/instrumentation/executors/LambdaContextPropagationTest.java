@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.executors;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Scope;
@@ -134,7 +133,7 @@ class LambdaContextPropagationTest {
   }
 
   @Test
-  void propagateContextInvokeAny() throws InterruptedException {
+  void propagateContextInvokeAny() throws Exception {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     Baggage baggage = Baggage.builder().put("test", "test").build();
@@ -145,8 +144,7 @@ class LambdaContextPropagationTest {
               assertBaggage();
               return null;
             };
-        assertThatCode(() -> executor.invokeAny(singletonList(callable)))
-            .doesNotThrowAnyException();
+        executor.invokeAny(singletonList(callable));
       }
     }
 
