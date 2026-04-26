@@ -37,6 +37,11 @@
   wrapping when the lambda already needs its own error handling for behavioral reasons.
 - Do **not** choose `CompletableFuture.runAsync(...)` over the simpler
   `executor.submit(runnable).get()` just to avoid the checked exceptions thrown by `Future.get()`.
+- Do **not** wrap a call in `assertThatCode(() -> ...).doesNotThrowAnyException()`
+  solely to narrow a test method's `throws` clause by swallowing checked exceptions
+  into an `AssertionError`. If the call throws, the test already fails via its
+  `throws` clause. Prefer calling the method directly and leaving `throws Exception`
+  (or the narrowest checked type) on the `@Test` method.
 
 ## Test Resource Cleanup
 
