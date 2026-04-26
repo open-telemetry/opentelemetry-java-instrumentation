@@ -13,10 +13,9 @@ import scala.concurrent.impl.Promise;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
-public class FutureWrapper {
+class FutureWrapper {
 
-  public static <T> Future<T> wrap(
-      Future<T> future, ExecutionContext executionContext, Context context) {
+  static <T> Future<T> wrap(Future<T> future, ExecutionContext executionContext, Context context) {
     Promise.DefaultPromise<T> promise = new Promise.DefaultPromise<>();
     future.onComplete(
         new AbstractFunction1<Try<T>, Object>() {

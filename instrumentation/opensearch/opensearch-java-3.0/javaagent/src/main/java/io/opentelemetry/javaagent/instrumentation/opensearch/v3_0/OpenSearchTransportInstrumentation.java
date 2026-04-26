@@ -132,14 +132,13 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PerformRequestAsyncAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object[] onEnter(
+    public static AdviceScope onEnter(
         @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
-      AdviceScope adviceScope =
-          AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
-      return new Object[] {adviceScope};
+      return AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -147,8 +146,7 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
     public static CompletableFuture<Object> stopSpan(
         @Advice.Return CompletableFuture<Object> future,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter Object[] enterResult) {
-      AdviceScope adviceScope = (AdviceScope) enterResult[0];
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.endAsync(throwable);
         return adviceScope.wrapFuture(future);

@@ -37,44 +37,40 @@ public abstract class AbstractLongTaskTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimer.active",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test long task timer")
-                            .hasUnit("{tasks}")
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.isNotMonotonic()
-                                        .hasPointsSatisfying(
-                                            point ->
-                                                point
-                                                    .hasValue(1)
-                                                    .hasAttributesSatisfyingExactly(
-                                                        equalTo(stringKey("tag"), "value"))))));
+            metric ->
+                metric
+                    .hasName("testLongTaskTimer.active")
+                    .hasDescription("This is a test long task timer")
+                    .hasUnit("{tasks}")
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.isNotMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimer.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test long task timer")
-                            .hasUnit("s")
-                            .hasDoubleSumSatisfying(
-                                sum ->
-                                    sum.isNotMonotonic()
-                                        .hasPointsSatisfying(
-                                            point ->
-                                                point
-                                                    .hasAttributesSatisfyingExactly(
-                                                        equalTo(stringKey("tag"), "value"))
-                                                    .satisfies(
-                                                        pointData ->
-                                                            assertThat(pointData.getValue())
-                                                                .isPositive())))));
+            metric ->
+                metric
+                    .hasName("testLongTaskTimer.duration")
+                    .hasDescription("This is a test long task timer")
+                    .hasUnit("s")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.isNotMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "value"))
+                                            .satisfies(
+                                                pointData ->
+                                                    assertThat(pointData.getValue())
+                                                        .isPositive()))));
 
     // when
     MILLISECONDS.sleep(100);
@@ -84,35 +80,31 @@ public abstract class AbstractLongTaskTimerTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimer.active",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(0)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("tag"), "value"))))));
+            metric ->
+                metric
+                    .hasName("testLongTaskTimer.active")
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testLongTaskTimer.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(0)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("tag"), "value"))))));
+            metric ->
+                metric
+                    .hasName("testLongTaskTimer.duration")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
 
     // when timer is removed from the registry
     Metrics.globalRegistry.remove(timer);

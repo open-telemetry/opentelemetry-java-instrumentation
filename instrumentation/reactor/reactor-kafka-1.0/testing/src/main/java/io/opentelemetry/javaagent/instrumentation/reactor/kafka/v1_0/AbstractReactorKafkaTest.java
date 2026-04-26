@@ -73,7 +73,7 @@ public abstract class AbstractReactorKafkaTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static KafkaContainer kafka;
+  private static KafkaContainer kafka;
   protected static KafkaSender<String, String> sender;
   protected static KafkaReceiver<String, String> receiver;
 
@@ -207,7 +207,7 @@ public abstract class AbstractReactorKafkaTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
+  private static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -229,7 +229,7 @@ public abstract class AbstractReactorKafkaTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static List<AttributeAssertion> receiveAttributes(String topic) {
+  private static List<AttributeAssertion> receiveAttributes(String topic) {
     ArrayList<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -245,8 +245,7 @@ public abstract class AbstractReactorKafkaTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static List<AttributeAssertion> processAttributes(
-      ProducerRecord<String, String> record) {
+  private static List<AttributeAssertion> processAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(

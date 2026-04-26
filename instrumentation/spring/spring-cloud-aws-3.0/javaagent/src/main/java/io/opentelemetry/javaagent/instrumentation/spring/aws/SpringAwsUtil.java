@@ -92,13 +92,13 @@ public class SpringAwsUtil {
   }
 
   public static class MessageScope {
-    final Instrumenter<SqsProcessRequest, Response> instrumenter;
-    final Context context;
-    final SqsProcessRequest request;
-    final Response response;
-    final Scope scope;
+    private final Instrumenter<SqsProcessRequest, Response> instrumenter;
+    private final Context context;
+    private final SqsProcessRequest request;
+    private final Response response;
+    private final Scope scope;
 
-    MessageScope(
+    private MessageScope(
         Instrumenter<SqsProcessRequest, Response> instrumenter,
         Context context,
         SqsProcessRequest request,
@@ -110,21 +110,21 @@ public class SpringAwsUtil {
       this.scope = context.makeCurrent();
     }
 
-    public void close(Throwable throwable) {
+    public void close(@Nullable Throwable throwable) {
       scope.close();
       instrumenter.end(context, request, response, throwable);
     }
   }
 
   private static class TracingContext {
-    final ExecutionAttributes request;
-    final Response response;
-    final Instrumenter<SqsProcessRequest, Response> instrumenter;
-    final TracingExecutionInterceptor config;
-    final Context receiveContext;
-    final software.amazon.awssdk.services.sqs.model.Message sqsMessage;
+    private final ExecutionAttributes request;
+    private final Response response;
+    private final Instrumenter<SqsProcessRequest, Response> instrumenter;
+    private final TracingExecutionInterceptor config;
+    @Nullable private final Context receiveContext;
+    private final software.amazon.awssdk.services.sqs.model.Message sqsMessage;
 
-    TracingContext(
+    private TracingContext(
         TracingList tracingList, software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
       this.request = tracingList.getRequest();
       this.response = tracingList.getResponse();

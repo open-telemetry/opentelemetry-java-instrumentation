@@ -59,7 +59,7 @@ public class PersistenceConfig {
   }
 
   @Bean
-  public R2dbcEntityTemplate r2dbcEntityTemplate(ConnectionFactory connectionFactory) {
+  R2dbcEntityTemplate r2dbcEntityTemplate(ConnectionFactory connectionFactory) {
     DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
     return new R2dbcEntityTemplate(databaseClient, H2Dialect.INSTANCE);

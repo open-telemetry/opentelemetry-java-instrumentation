@@ -75,13 +75,11 @@ class TracerTest {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
-    Scope parentScope = Context.current().with(parentSpan).makeCurrent();
-
-    Span testSpan = tracer.spanBuilder("test").startSpan();
-    testSpan.end();
-
+    try (Scope parentScope = Context.current().with(parentSpan).makeCurrent()) {
+      Span testSpan = tracer.spanBuilder("test").startSpan();
+      testSpan.end();
+    }
     parentSpan.end();
-    parentScope.close();
 
     // Then
     testing.waitAndAssertTraces(
@@ -98,13 +96,11 @@ class TracerTest {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
-    Scope parentScope = parentSpan.makeCurrent();
-
-    Span testSpan = tracer.spanBuilder("test").startSpan();
-    testSpan.end();
-
+    try (Scope parentScope = parentSpan.makeCurrent()) {
+      Span testSpan = tracer.spanBuilder("test").startSpan();
+      testSpan.end();
+    }
     parentSpan.end();
-    parentScope.close();
 
     // Then
     testing.waitAndAssertTraces(
@@ -123,13 +119,11 @@ class TracerTest {
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
     Context parentContext = Context.current().with(parentSpan);
-    Scope parentScope = parentContext.makeCurrent();
-
-    Span testSpan = tracer.spanBuilder("test").startSpan();
-    testSpan.end();
-
+    try (Scope parentScope = parentContext.makeCurrent()) {
+      Span testSpan = tracer.spanBuilder("test").startSpan();
+      testSpan.end();
+    }
     parentSpan.end();
-    parentScope.close();
 
     // Then
     testing.waitAndAssertTraces(
@@ -166,11 +160,11 @@ class TracerTest {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
-    Scope parentScope = parentSpan.makeCurrent();
-    Span testSpan = tracer.spanBuilder("test").setNoParent().startSpan();
-    testSpan.end();
+    try (Scope parentScope = parentSpan.makeCurrent()) {
+      Span testSpan = tracer.spanBuilder("test").setNoParent().startSpan();
+      testSpan.end();
+    }
     parentSpan.end();
-    parentScope.close();
 
     // Then
     testing.waitAndAssertSortedTraces(
@@ -255,9 +249,9 @@ class TracerTest {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
-    Scope testScope = Context.current().with(testSpan).makeCurrent();
-    Span.current().updateName("test2");
-    testScope.close();
+    try (Scope testScope = Context.current().with(testSpan).makeCurrent()) {
+      Span.current().updateName("test2");
+    }
     testSpan.end();
 
     // Then
@@ -273,9 +267,9 @@ class TracerTest {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
-    Scope testScope = Context.current().with(testSpan).makeCurrent();
-    Span.fromContext(Context.current()).updateName("test2");
-    testScope.close();
+    try (Scope testScope = Context.current().with(testSpan).makeCurrent()) {
+      Span.fromContext(Context.current()).updateName("test2");
+    }
     testSpan.end();
 
     // Then

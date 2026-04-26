@@ -49,6 +49,7 @@ class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static XxlJobHelper.XxlJobScope onSchedule(@Advice.This IJobHandler handler) {
       return helper().startSpan(XxlJobProcessRequest.createSimpleJobRequest(handler));

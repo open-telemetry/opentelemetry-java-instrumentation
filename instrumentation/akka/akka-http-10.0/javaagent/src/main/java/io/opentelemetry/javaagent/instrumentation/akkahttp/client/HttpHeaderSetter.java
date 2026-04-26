@@ -12,11 +12,11 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 
-public class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttpHeaders> {
+class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttpHeaders> {
 
   private final ContextPropagators contextPropagators;
 
-  public HttpHeaderSetter(ContextPropagators contextPropagators) {
+  HttpHeaderSetter(ContextPropagators contextPropagators) {
     this.contextPropagators = contextPropagators;
   }
 
@@ -31,7 +31,7 @@ public class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttp
         (HttpRequest) request.removeHeader(key).addHeader(RawHeader.create(key, value)));
   }
 
-  public HttpRequest inject(HttpRequest original) {
+  HttpRequest inject(HttpRequest original) {
     AkkaHttpHeaders carrier = new AkkaHttpHeaders(original);
     contextPropagators.getTextMapPropagator().inject(Context.current(), carrier, this);
     return carrier.getRequest();
@@ -44,11 +44,11 @@ public class HttpHeaderSetter implements TextMapSetter<HttpHeaderSetter.AkkaHttp
       this.request = request;
     }
 
-    public HttpRequest getRequest() {
+    HttpRequest getRequest() {
       return request;
     }
 
-    public void setRequest(HttpRequest request) {
+    void setRequest(HttpRequest request) {
       this.request = request;
     }
   }

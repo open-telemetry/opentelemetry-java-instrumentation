@@ -56,9 +56,9 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
           ERROR.getStatus(),
           ERROR.getBody(),
           false);
-  private TestAccessLogValve accessLogValve;
-
   @TempDir private static File tempDir;
+
+  private TestAccessLogValve accessLogValve;
 
   @Override
   protected void configure(HttpServerTestOptions options) {

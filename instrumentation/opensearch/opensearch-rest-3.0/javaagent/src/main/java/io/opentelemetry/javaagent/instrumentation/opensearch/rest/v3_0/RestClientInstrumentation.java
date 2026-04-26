@@ -103,6 +103,7 @@ class RestClientInstrumentation implements TypeInstrumentation {
   public static class PerformRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(0) Request request) {
       return AdviceScope.start(request);
     }

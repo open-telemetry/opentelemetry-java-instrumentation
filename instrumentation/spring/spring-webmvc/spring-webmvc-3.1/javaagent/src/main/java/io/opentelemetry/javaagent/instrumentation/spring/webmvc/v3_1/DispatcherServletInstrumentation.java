@@ -39,12 +39,12 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
             .and(named("onRefresh"))
             .and(takesArgument(0, named("org.springframework.context.ApplicationContext")))
             .and(takesArguments(1)),
-        DispatcherServletInstrumentation.class.getName() + "$HandlerMappingAdvice");
+        getClass().getName() + "$HandlerMappingAdvice");
     transformer.applyAdviceToMethod(
         isProtected()
             .and(named("render"))
             .and(takesArgument(0, named("org.springframework.web.servlet.ModelAndView"))),
-        DispatcherServletInstrumentation.class.getName() + "$RenderAdvice");
+        getClass().getName() + "$RenderAdvice");
   }
 
   /**

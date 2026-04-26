@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ComplexPropagationTest extends AbstractComplexPropagationTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   ComplexPropagationTest() {
     super(testing, null);

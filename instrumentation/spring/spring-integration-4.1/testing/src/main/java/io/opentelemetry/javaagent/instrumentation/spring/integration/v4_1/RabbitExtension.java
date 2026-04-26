@@ -106,7 +106,7 @@ public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
   @EnableAutoConfiguration
   @EnableBinding(Source.class)
   static class ProducerConfig {
-    @Autowired Source source;
+    @Autowired private Source source;
 
     @Bean
     Runnable producer() {
