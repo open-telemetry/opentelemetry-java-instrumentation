@@ -39,7 +39,6 @@ final class ClickHouseAttributesGetter
     // "String literals must be enclosed in single quotes.
     // Double quotes are not supported."
     // https://clickhouse.com/docs/en/sql-reference/syntax#string
-    // https://clickhouse.com/docs/en/sql-reference/syntax#identifiers
     return DOUBLE_QUOTES_ARE_IDENTIFIERS;
   }
 
