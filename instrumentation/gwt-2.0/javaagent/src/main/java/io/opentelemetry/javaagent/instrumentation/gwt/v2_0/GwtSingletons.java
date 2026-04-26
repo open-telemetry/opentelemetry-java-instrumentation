@@ -13,11 +13,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.lang.reflect.Method;
 
-class GwtSingletons {
+public class GwtSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.gwt-2.0";
 
-  static final ContextKey<Boolean> RPC_CONTEXT_KEY =
+  public static final ContextKey<Boolean> RPC_CONTEXT_KEY =
       ContextKey.named("opentelemetry-gwt-rpc-context-key");
 
   private static final Instrumenter<Method, Void> instrumenter;
@@ -33,7 +33,7 @@ class GwtSingletons {
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
-  static Instrumenter<Method, Void> instrumenter() {
+  public static Instrumenter<Method, Void> instrumenter() {
     return instrumenter;
   }
 
