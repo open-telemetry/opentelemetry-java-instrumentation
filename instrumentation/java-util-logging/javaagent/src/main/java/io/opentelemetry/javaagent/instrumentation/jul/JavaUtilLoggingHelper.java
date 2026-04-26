@@ -29,7 +29,7 @@ import java.util.logging.LogRecord;
 
 public class JavaUtilLoggingHelper {
 
-  private static final Formatter FORMATTER = new AccessibleFormatter();
+  private static final Formatter formatter = new AccessibleFormatter();
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
@@ -63,12 +63,15 @@ public class JavaUtilLoggingHelper {
    * <ul>
    *   <li>Fully qualified class name - {@link LogRecord#getSourceClassName()}
    *   <li>Fully qualified method name - {@link LogRecord#getSourceMethodName()}
-   *   <li>Thread id - {@link LogRecord#getThreadID()}
+   *   <li>Original log record thread id - {@link LogRecord#getThreadID()}
    * </ul>
+   *
+   * <p>When experimental log attributes are enabled, the current thread's {@code thread.name} and
+   * {@code thread.id} are captured separately.
    */
   private static void mapLogRecord(LogRecordBuilder builder, LogRecord logRecord) {
     // message
-    String message = FORMATTER.formatMessage(logRecord);
+    String message = formatter.formatMessage(logRecord);
     if (message != null) {
       builder.setBody(message);
     }
@@ -82,7 +85,7 @@ public class JavaUtilLoggingHelper {
     Level level = logRecord.getLevel();
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
-      builder.setSeverityText(logRecord.getLevel().getName());
+      builder.setSeverityText(level.getName());
     }
 
     AttributesBuilder attributes = Attributes.builder();
