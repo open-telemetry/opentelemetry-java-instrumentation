@@ -29,7 +29,11 @@ class FinatraServer extends HttpServer {
   }
 
   def awaitReady(): FinatraServer = {
-    latch.await(1, TimeUnit.MINUTES)
+    if (!latch.await(1, TimeUnit.MINUTES)) {
+      throw new IllegalStateException(
+        "Timed out waiting for Finatra server startup"
+      )
+    }
     this
   }
 }
