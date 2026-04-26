@@ -28,9 +28,8 @@ public final class Experimental {
    */
   public static void setEmitExperimentalTelemetry(
       JavaHttpClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
-    BiConsumer<JavaHttpClientTelemetryBuilder, Boolean> setter = setEmitExperimentalTelemetry;
-    if (setter != null) {
-      setter.accept(builder, emitExperimentalTelemetry);
+    if (setEmitExperimentalTelemetry != null) {
+      setEmitExperimentalTelemetry.accept(builder, emitExperimentalTelemetry);
     }
   }
 
