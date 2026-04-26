@@ -23,6 +23,7 @@ final class AsyncHttpClient19Helper implements AsyncHttpClientHelper {
   }
 
   @Override
+  @Nullable
   public String getServerAddress(Request request) {
     return request.getUri().getHost();
   }
