@@ -46,17 +46,15 @@ import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.ResponseHeaders;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.RecordedRequest;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -464,7 +462,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             "PUT",
             (Function<S3Client, Object>)
                 c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()),
-            (Function<S3AsyncClient, Future<?>>)
+            (Function<S3AsyncClient, CompletableFuture<?>>)
                 c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()),
             ""),
         Arguments.of(
@@ -474,7 +472,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 c ->
                     c.getObject(
                         GetObjectRequest.builder().bucket("somebucket").key("somekey").build()),
-            (Function<S3AsyncClient, Future<?>>)
+            (Function<S3AsyncClient, CompletableFuture<?>>)
                 c ->
                     c.getObject(
                         GetObjectRequest.builder().bucket("somebucket").key("somekey").build(),
@@ -485,7 +483,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   @ParameterizedTest
   @MethodSource("provideS3Arguments")
   void testS3Client(String operation, String method, Function<S3Client, Object> call)
-      throws Exception {
+      throws ReflectiveOperationException {
     S3ClientBuilder builder = S3Client.builder();
     if (Boolean.getBoolean("testLatestDeps")) {
       Method forcePathStyleMethod =
@@ -517,13 +515,9 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
       String operation,
       String method,
       Function<S3Client, Object> call,
-      Function<S3AsyncClient, Future<?>> asyncCall,
+      Function<S3AsyncClient, CompletableFuture<?>> asyncCall,
       String body)
-      throws ExecutionException,
-          IllegalAccessException,
-          InterruptedException,
-          InvocationTargetException,
-          NoSuchMethodException {
+      throws ReflectiveOperationException {
     S3AsyncClientBuilder builder = S3AsyncClient.builder();
     if (Boolean.getBoolean("testLatestDeps")) {
       Method forcePathStyleMethod =
@@ -540,8 +534,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
 
-    Future<?> response = asyncCall.apply(client);
-    response.get();
+    CompletableFuture<?> response = asyncCall.apply(client);
+    response.join();
 
     clientAssertions("S3", operation, method, response, "UNKNOWN");
   }
@@ -574,7 +568,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
         Arguments.of(
             "CreateQueue",
             "7a62c49f-347e-4fc4-9331-6e8e7a96aa73",
-            (Callable<HttpResponse>)
+            (Supplier<HttpResponse>)
                 () -> {
                   String content;
                   if (!Boolean.getBoolean("testLatestDeps")) {
@@ -601,7 +595,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
         Arguments.of(
             "SendMessage",
             "27daac76-34dd-47df-bd01-1f6e873584a0",
-            (Callable<HttpResponse>)
+            (Supplier<HttpResponse>)
                 () -> {
                   String content;
                   if (!Boolean.getBoolean("testLatestDeps")) {
@@ -640,9 +634,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   void testSqsClient(
       String operation,
       String requestId,
-      Callable<HttpResponse> serverResponse,
-      Function<SqsClient, Object> call)
-      throws Exception {
+      Supplier<HttpResponse> serverResponse,
+      Function<SqsClient, Object> call) {
     assumeSupportedConfig(operation);
 
     SqsClientBuilder builder = SqsClient.builder();
@@ -654,7 +647,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
 
-    server.enqueue(serverResponse.call());
+    server.enqueue(serverResponse.get());
     Object response = call.apply(client);
 
     assertThat(response)
@@ -669,9 +662,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   void testSqsAsyncClient(
       String operation,
       String requestId,
-      Callable<HttpResponse> serverResponse,
-      Function<SqsClient, Object> call)
-      throws Exception {
+      Supplier<HttpResponse> serverResponse,
+      Function<SqsClient, Object> call) {
     assumeSupportedConfig(operation);
 
     SqsAsyncClientBuilder builder = SqsAsyncClient.builder();
@@ -683,7 +675,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
 
-    server.enqueue(serverResponse.call());
+    server.enqueue(serverResponse.get());
     Object response = call.apply(wrapClient(SqsClient.class, SqsAsyncClient.class, client));
 
     clientAssertions("Sqs", operation, "POST", response, requestId);
