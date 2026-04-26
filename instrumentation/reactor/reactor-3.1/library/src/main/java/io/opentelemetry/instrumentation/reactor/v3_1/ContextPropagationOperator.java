@@ -388,7 +388,7 @@ public final class ContextPropagationOperator {
     }
   }
 
-  private static class RunnableWrapper implements Runnable {
+  static class RunnableWrapper implements Runnable {
     private final Runnable delegate;
     private final Context context;
 

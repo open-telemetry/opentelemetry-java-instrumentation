@@ -40,10 +40,12 @@ class HooksTest {
               TraceState.getDefault()));
 
   @AfterEach
-  void resetHooks() {
+  void resetHooks() throws ReflectiveOperationException {
     Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
     if (schedulerHooksSupported()) {
-      Schedulers.resetOnScheduleHook(RunnableWrapper.class.getName());
+      Schedulers.class
+          .getMethod("resetOnScheduleHook", String.class)
+          .invoke(null, ContextPropagationOperator.RunnableWrapper.class.getName());
     }
   }
 
