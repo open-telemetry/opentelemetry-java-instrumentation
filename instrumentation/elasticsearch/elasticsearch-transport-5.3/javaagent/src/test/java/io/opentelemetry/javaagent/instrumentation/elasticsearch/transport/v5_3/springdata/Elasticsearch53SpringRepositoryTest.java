@@ -75,7 +75,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
   void emptyRepository() {
     Iterable<Doc> result = repository().findAll();
 
-    assertThat(result.iterator().hasNext()).isFalse();
+    assertThat(result).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -186,7 +186,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
     testing.clearData();
 
     repository.deleteById("1");
-    assertThat(repository.findAll().iterator().hasNext()).isFalse();
+    assertThat(repository.findAll()).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->
