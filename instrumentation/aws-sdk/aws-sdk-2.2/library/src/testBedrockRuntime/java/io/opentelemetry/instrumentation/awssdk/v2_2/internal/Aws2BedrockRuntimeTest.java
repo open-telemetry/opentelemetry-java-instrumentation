@@ -5,7 +5,10 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
@@ -31,6 +34,7 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.AbstractAws2BedrockRuntimeTe
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -160,15 +164,14 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 415),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 162),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "Converse",
+                            "/model/amazon.nova-micro-v1%3A0/converse",
+                            415,
+                            162,
+                            "tool_use")));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -296,15 +299,14 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 57),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "Converse",
+                            "/model/amazon.nova-micro-v1%3A0/converse",
+                            554,
+                            57,
+                            "end_turn")));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -507,15 +509,14 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 415),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 162),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "ConverseStream",
+                            "/model/amazon.nova-micro-v1%3A0/converse-stream",
+                            415,
+                            162,
+                            "tool_use")));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -662,15 +663,14 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "ConverseStream",
+                            "/model/amazon.nova-micro-v1%3A0/converse-stream",
+                            554,
+                            59,
+                            "end_turn")));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -920,15 +920,14 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 166),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "InvokeModel",
+                            "/model/amazon.nova-micro-v1%3A0/invoke",
+                            416,
+                            166,
+                            "tool_use")));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1084,15 +1083,14 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 559),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "InvokeModel",
+                            "/model/amazon.nova-micro-v1%3A0/invoke",
+                            559,
+                            59,
+                            "end_turn")));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1362,15 +1360,14 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 165),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "InvokeModelWithResponseStream",
+                            "/model/amazon.nova-micro-v1%3A0/invoke-with-response-stream",
+                            416,
+                            165,
+                            "tool_use")));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1569,15 +1566,14 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 558),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 58),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "InvokeModelWithResponseStream",
+                            "/model/amazon.nova-micro-v1%3A0/invoke-with-response-stream",
+                            558,
+                            58,
+                            "end_turn")));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1778,15 +1774,15 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 133),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "InvokeModel",
+                            "/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke",
+                            380,
+                            133,
+                            "tool_use",
+                            1000)));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1920,15 +1916,15 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 590),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 132),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "InvokeModel",
+                            "/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke",
+                            590,
+                            132,
+                            "end_turn",
+                            1000)));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -2201,15 +2197,15 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 144),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "InvokeModelWithResponseStream",
+                            "/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke-with-response-stream",
+                            380,
+                            144,
+                            "tool_use",
+                            1000)));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -2383,15 +2379,15 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 601),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 145),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+                        assertBedrockSpan(
+                            span,
+                            modelId,
+                            "InvokeModelWithResponseStream",
+                            "/model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke-with-response-stream",
+                            601,
+                            145,
+                            "end_turn",
+                            1000)));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -2487,5 +2483,67 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         Value.of(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
                             KeyValue.of("index", Value.of(0)))));
+  }
+
+  private static void assertBedrockSpan(
+      SpanDataAssert span,
+      String modelId,
+      String rpcMethod,
+      String urlSuffix,
+      int inputTokens,
+      int outputTokens,
+      String finishReason) {
+    span.hasName("chat " + modelId)
+        .hasKind(SpanKind.CLIENT)
+        .hasAttributesSatisfyingExactly(
+            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+            equalTo(GEN_AI_REQUEST_MODEL, modelId),
+            equalTo(GEN_AI_USAGE_INPUT_TOKENS, inputTokens),
+            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, outputTokens),
+            equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList(finishReason)),
+            equalTo(stringKey("rpc.method"), rpcMethod),
+            equalTo(stringKey("http.request.method"), "POST"),
+            equalTo(stringKey("server.address"), "localhost"),
+            satisfies(stringKey("aws.request_id"), val -> val.isNotBlank()),
+            satisfies(
+                stringKey("url.full"),
+                val -> val.startsWith("http://localhost:").endsWith(urlSuffix)),
+            equalTo(longKey("http.response.status_code"), 200),
+            equalTo(stringKey("rpc.service"), "BedrockRuntime"),
+            satisfies(longKey("server.port"), val -> val.isPositive()),
+            equalTo(stringKey("rpc.system"), "aws-api"));
+  }
+
+  private static void assertBedrockSpan(
+      SpanDataAssert span,
+      String modelId,
+      String rpcMethod,
+      String urlSuffix,
+      int inputTokens,
+      int outputTokens,
+      String finishReason,
+      int maxTokens) {
+    span.hasName("chat " + modelId)
+        .hasKind(SpanKind.CLIENT)
+        .hasAttributesSatisfyingExactly(
+            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+            equalTo(GEN_AI_REQUEST_MODEL, modelId),
+            equalTo(GEN_AI_USAGE_INPUT_TOKENS, inputTokens),
+            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, outputTokens),
+            equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList(finishReason)),
+            equalTo(longKey("gen_ai.request.max_tokens"), maxTokens),
+            equalTo(stringKey("rpc.method"), rpcMethod),
+            equalTo(stringKey("http.request.method"), "POST"),
+            equalTo(stringKey("server.address"), "localhost"),
+            satisfies(stringKey("aws.request_id"), val -> val.isNotBlank()),
+            satisfies(
+                stringKey("url.full"),
+                val -> val.startsWith("http://localhost:").endsWith(urlSuffix)),
+            equalTo(longKey("http.response.status_code"), 200),
+            equalTo(stringKey("rpc.service"), "BedrockRuntime"),
+            satisfies(longKey("server.port"), val -> val.isPositive()),
+            equalTo(stringKey("rpc.system"), "aws-api"));
   }
 }
