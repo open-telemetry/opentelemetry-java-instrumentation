@@ -39,7 +39,7 @@ class PromiseInterruptibleInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
-    public static PartialFunction<Throwable, BoxedUnit> onEnter(
+    public static PartialFunction<Throwable, BoxedUnit> onExit(
         @Advice.Argument(1) PartialFunction<Throwable, BoxedUnit> handler) {
       if (handler instanceof TwitterUtilCoreHelpers.InterruptibleWithContext) {
         return handler;

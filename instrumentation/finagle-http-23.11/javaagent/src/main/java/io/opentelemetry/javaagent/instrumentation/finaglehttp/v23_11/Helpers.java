@@ -43,7 +43,7 @@ public class Helpers {
   public static final RecordSchema.Field<Context> OTEL_CONTEXT_KEY =
       Request$.MODULE$.Schema().newField();
 
-  public static final String OTEL_NETTY_HANDLER = "otelFinagleNettyHandler";
+  private static final String OTEL_NETTY_HANDLER = "otelFinagleNettyHandler";
 
   private Helpers() {}
 
@@ -163,8 +163,6 @@ public class Helpers {
                     FULL_HTTP_REQUEST_CONTEXT.set((FullHttpRequest) msg, Context.current());
                   } else if (msg instanceof HttpRequest) {
                     HTTP_REQUEST_CONTEXT.set((HttpRequest) msg, Context.current());
-                  } else {
-                    throw new IllegalArgumentException("unexpected request type: " + msg);
                   }
 
                   super.channelRead(ctx, msg);
@@ -177,15 +175,12 @@ public class Helpers {
   Part 2/3 of bridging the otel Context from netty to finagle.
    */
   public static void chainContextToFinagle(Object msg, Request request) {
-    Context context;
+    Context context = null;
     // type switch courtesy of com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()
     if (msg instanceof FullHttpRequest) {
       context = FULL_HTTP_REQUEST_CONTEXT.get((FullHttpRequest) msg);
     } else if (msg instanceof HttpRequest) {
       context = HTTP_REQUEST_CONTEXT.get((HttpRequest) msg);
-    } else {
-      // shouldn't practically reach here
-      throw new IllegalArgumentException("unexpected request type: " + msg);
     }
 
     // hook the Context from netty's request up to finagle's request

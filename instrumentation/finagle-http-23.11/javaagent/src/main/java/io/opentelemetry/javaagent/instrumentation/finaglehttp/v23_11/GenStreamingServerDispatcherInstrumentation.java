@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -44,19 +45,20 @@ class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope methodEnter(@Advice.Argument(0) Object req) {
       if (req instanceof Request) {
         // practically this will always be a Request, from HttpServerDispatcher
         Request request = (Request) req;
         // if this is null, there's a bug in the instrumentation
         Context context = request.ctx().apply(Helpers.OTEL_CONTEXT_KEY);
-        return context.makeCurrent();
+        return context != null ? context.makeCurrent() : null;
       }
       return null;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter Scope scope) {
+    public static void methodExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
