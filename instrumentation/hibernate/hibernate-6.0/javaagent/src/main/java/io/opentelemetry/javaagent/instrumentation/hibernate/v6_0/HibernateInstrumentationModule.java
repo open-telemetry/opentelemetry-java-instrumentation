@@ -25,9 +25,8 @@ public class HibernateInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed(
-        // added in 6.0
-        "org.hibernate.query.spi.SqmQuery");
+    // added in 6.0
+    return hasClassesNamed("org.hibernate.query.spi.SqmQuery");
   }
 
   @Override
