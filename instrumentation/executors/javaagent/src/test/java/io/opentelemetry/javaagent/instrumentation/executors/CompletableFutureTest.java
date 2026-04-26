@@ -32,35 +32,30 @@ class CompletableFutureTest {
     cleanup.deferCleanup(executor::shutdown);
     cleanup.deferCleanup(executor2::shutdown);
 
-    String result;
-    try {
-      result =
-          testing.runWithSpan(
-              "parent",
-              () ->
-                  CompletableFuture.supplyAsync(
-                          () -> {
-                            testing.runWithSpan("supplier", () -> {});
-                            try {
-                              Thread.sleep(1);
-                            } catch (InterruptedException e) {
-                              Thread.currentThread().interrupt();
-                              throw new AssertionError(e);
-                            }
-                            return "a";
-                          },
-                          executor)
-                      .thenCompose(
-                          s -> CompletableFuture.supplyAsync(new AppendingSupplier(s), executor2))
-                      .thenApply(
-                          s -> {
-                            testing.runWithSpan("function", () -> {});
-                            return s + "c";
-                          })
-                      .get());
-    } catch (Exception e) {
-      throw new AssertionError(e);
-    }
+    String result =
+        testing.runWithSpan(
+            "parent",
+            () ->
+                CompletableFuture.supplyAsync(
+                        () -> {
+                          testing.runWithSpan("supplier", () -> {});
+                          try {
+                            Thread.sleep(1);
+                          } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            throw new AssertionError(e);
+                          }
+                          return "a";
+                        },
+                        executor)
+                    .thenCompose(
+                        s -> CompletableFuture.supplyAsync(new AppendingSupplier(s), executor2))
+                    .thenApply(
+                        s -> {
+                          testing.runWithSpan("function", () -> {});
+                          return s + "c";
+                        })
+                    .join());
 
     assertThat(result).isEqualTo("abc");
 
