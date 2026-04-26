@@ -17,7 +17,9 @@ import io.opentelemetry.testing.internal.armeria.server.ServerBuilder;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.ServerExtension;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,13 +43,19 @@ class JaxMultithreadedClientTest {
 
   @SuppressWarnings("CatchingUnchecked")
   boolean checkUri(JerseyClientBuilder builder, URI uri) {
+    Client client = builder.build();
     try {
-      Client client = builder.build();
-      client.target(uri).request().get();
+      Response response = client.target(uri).request().get();
+      try {
+        return false;
+      } finally {
+        response.close();
+      }
     } catch (Exception e) {
       return true;
+    } finally {
+      client.close();
     }
-    return false;
   }
 
   @DisplayName("multiple threads using the same builder works")
@@ -55,6 +63,7 @@ class JaxMultithreadedClientTest {
   void testMultipleThreads() throws InterruptedException {
     URI uri = server.httpUri().resolve("/success");
     JerseyClientBuilder builder = new JerseyClientBuilder();
+    AtomicBoolean hadErrors = new AtomicBoolean();
 
     // Start 10 threads and do 50 requests each
     CountDownLatch latch = new CountDownLatch(10);
@@ -63,17 +72,22 @@ class JaxMultithreadedClientTest {
               new Runnable() {
                 @Override
                 public void run() {
-                  boolean hadErrors = false;
-                  for (int j = 0; j < 50; j++) {
-                    hadErrors = hadErrors || checkUri(builder, uri);
+                  try {
+                    for (int j = 0; j < 50; j++) {
+                      if (checkUri(builder, uri)) {
+                        hadErrors.set(true);
+                        return;
+                      }
+                    }
+                  } finally {
+                    latch.countDown();
                   }
-                  assertThat(hadErrors).isFalse();
-                  latch.countDown();
                 }
               })
           .start();
     }
 
     assertThat(latch.await(10, SECONDS)).isTrue();
+    assertThat(hadErrors).isFalse();
   }
 }
