@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExtraClientAttributes;
+import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExtraClientMetricAttributes;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
@@ -304,7 +305,7 @@ public abstract class AbstractGrpcStreamingTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
+                                      point.hasAttributesSatisfyingExactly(
                                           equalTo(SERVER_ADDRESS, "localhost"),
                                           equalTo(SERVER_PORT, server.getPort()),
                                           equalTo(RPC_METHOD, "Conversation"),
@@ -347,15 +348,16 @@ public abstract class AbstractGrpcStreamingTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "Conversation"),
-                                          equalTo(RPC_SERVICE, "example.Greeter"),
-                                          equalTo(RPC_SYSTEM, "grpc"),
-                                          equalTo(
-                                              RPC_GRPC_STATUS_CODE,
-                                              (long) Status.Code.OK.value())))));
+                                      point.hasAttributesSatisfyingExactly(
+                                          addExtraClientMetricAttributes(
+                                              equalTo(SERVER_ADDRESS, "localhost"),
+                                              equalTo(SERVER_PORT, server.getPort()),
+                                              equalTo(RPC_METHOD, "Conversation"),
+                                              equalTo(RPC_SERVICE, "example.Greeter"),
+                                              equalTo(RPC_SYSTEM, "grpc"),
+                                              equalTo(
+                                                  RPC_GRPC_STATUS_CODE,
+                                                  (long) Status.Code.OK.value()))))));
     }
     if (emitStableRpcSemconv()) {
       testing()
@@ -369,7 +371,7 @@ public abstract class AbstractGrpcStreamingTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
+                                      point.hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "grpc"),
                                           equalTo(SERVER_ADDRESS, "localhost"),
                                           equalTo(SERVER_PORT, server.getPort()),

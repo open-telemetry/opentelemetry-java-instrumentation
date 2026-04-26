@@ -1719,6 +1719,15 @@ public abstract class AbstractGrpcTest {
     return result;
   }
 
+  static AttributeAssertion[] addExtraClientMetricAttributes(AttributeAssertion... assertions) {
+    List<AttributeAssertion> result = new ArrayList<>();
+    result.addAll(asList(assertions));
+    if (Boolean.getBoolean("testLatestDeps")) {
+      result.add(equalTo(NETWORK_TYPE, "ipv4"));
+    }
+    return result.toArray(new AttributeAssertion[0]);
+  }
+
   private void assertMetrics(Server server, Status.Code statusCode) {
     boolean hasSizeMetric = statusCode == Status.Code.OK;
     if (emitOldRpcSemconv()) {
@@ -1799,14 +1808,16 @@ public abstract class AbstractGrpcTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "SayHello"),
-                                          equalTo(RPC_SERVICE, "example.Greeter"),
-                                          equalTo(RPC_SYSTEM, "grpc"),
-                                          equalTo(
-                                              RPC_GRPC_STATUS_CODE, (long) statusCode.value())))));
+                                      point.hasAttributesSatisfyingExactly(
+                                          addExtraClientMetricAttributes(
+                                              equalTo(SERVER_ADDRESS, "localhost"),
+                                              equalTo(SERVER_PORT, server.getPort()),
+                                              equalTo(RPC_METHOD, "SayHello"),
+                                              equalTo(RPC_SERVICE, "example.Greeter"),
+                                              equalTo(RPC_SYSTEM, "grpc"),
+                                              equalTo(
+                                                  RPC_GRPC_STATUS_CODE,
+                                                  (long) statusCode.value()))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -1819,14 +1830,16 @@ public abstract class AbstractGrpcTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "SayHello"),
-                                          equalTo(RPC_SERVICE, "example.Greeter"),
-                                          equalTo(RPC_SYSTEM, "grpc"),
-                                          equalTo(
-                                              RPC_GRPC_STATUS_CODE, (long) statusCode.value())))));
+                                      point.hasAttributesSatisfyingExactly(
+                                          addExtraClientMetricAttributes(
+                                              equalTo(SERVER_ADDRESS, "localhost"),
+                                              equalTo(SERVER_PORT, server.getPort()),
+                                              equalTo(RPC_METHOD, "SayHello"),
+                                              equalTo(RPC_SERVICE, "example.Greeter"),
+                                              equalTo(RPC_SYSTEM, "grpc"),
+                                              equalTo(
+                                                  RPC_GRPC_STATUS_CODE,
+                                                  (long) statusCode.value()))))));
       if (hasSizeMetric) {
         testing()
             .waitAndAssertMetrics(
@@ -1839,15 +1852,16 @@ public abstract class AbstractGrpcTest {
                             histogram ->
                                 histogram.hasPointsSatisfying(
                                     point ->
-                                        point.hasAttributesSatisfying(
-                                            equalTo(SERVER_ADDRESS, "localhost"),
-                                            equalTo(SERVER_PORT, server.getPort()),
-                                            equalTo(RPC_METHOD, "SayHello"),
-                                            equalTo(RPC_SERVICE, "example.Greeter"),
-                                            equalTo(RPC_SYSTEM, "grpc"),
-                                            equalTo(
-                                                RPC_GRPC_STATUS_CODE,
-                                                (long) statusCode.value())))));
+                                        point.hasAttributesSatisfyingExactly(
+                                            addExtraClientMetricAttributes(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, server.getPort()),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    RPC_GRPC_STATUS_CODE,
+                                                    (long) statusCode.value()))))));
       }
     }
     if (emitStableRpcSemconv()) {
@@ -1880,7 +1894,7 @@ public abstract class AbstractGrpcTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
+                                      point.hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "grpc"),
                                           equalTo(SERVER_ADDRESS, "localhost"),
                                           equalTo(SERVER_PORT, server.getPort()),
