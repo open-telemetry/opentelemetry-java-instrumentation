@@ -83,3 +83,14 @@ couchbase-common:testing
 dropwizard-metrics-4.0:javaagent
 dropwizard:dropwizard-testing
 dropwizard-views-0.7:javaagent
+couchbase-3.1.6:tracing-opentelemetry-shaded
+elasticsearch-api-client-7.16:javaagent
+elasticsearch-api-client-7.16:javaagent-unit-tests
+elasticsearch-rest-5.0:javaagent
+elasticsearch-rest-6.4:javaagent
+elasticsearch-rest-7.0:javaagent
+elasticsearch-rest-7.0:library
+elasticsearch-rest-common-5.0:javaagent
+elasticsearch-rest-common-5.0:library
+elasticsearch-transport-5.0:javaagent
+elasticsearch-transport-5.3:javaagent
