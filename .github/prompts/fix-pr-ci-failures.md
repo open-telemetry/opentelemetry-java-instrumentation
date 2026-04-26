@@ -64,6 +64,7 @@ Create `/tmp/ci-plan.md` (outside the repo — no risk of accidental commit):
 # CI Failure Analysis Plan
 
 ## Failed Jobs Summary
+
 - Job 1: <job-name> (job ID: <id>)
 ...
 
@@ -77,7 +78,7 @@ Create `/tmp/ci-plan.md` (outside the repo — no risk of accidental commit):
 - <job-name>: <reason>
 
 ## Notes
-[Patterns or observations]
+[Any patterns or observations about the failures]
 ```
 
 ## Phase 3: Fix Issues

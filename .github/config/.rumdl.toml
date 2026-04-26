@@ -1,5 +1,11 @@
-[MD013]
-enabled = true
-line-length = 120
-code-blocks = false
-tables = false
+[global]
+disable = ["MD059", "line-length", "no-inline-html", "MD041", "ul-style", "fenced-code-language"]
+
+[no-duplicate-heading]
+siblings-only = true
+
+[no-trailing-punctuation]
+punctuation = ".,;:"
+
+[ol-prefix]
+style = "ordered"
