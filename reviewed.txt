@@ -148,3 +148,14 @@ internal-application-logger:javaagent
 internal-class-loader:compile-stub
 internal-class-loader:javaagent
 internal-class-loader:javaagent-integration-tests
+internal-eclipse-osgi-3.6:javaagent
+internal-lambda:javaagent
+internal-reflection:javaagent
+internal-reflection:javaagent-integration-tests
+internal-url-class-loader:javaagent
+internal-url-class-loader:javaagent-integration-tests
+java-http-client:javaagent
+java-http-client:library
+java-http-client:testing
+java-http-server:javaagent
+java-http-server:library
