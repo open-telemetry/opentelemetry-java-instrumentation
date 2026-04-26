@@ -23,9 +23,6 @@ sourceSets {
     java {
       destinationDirectory.set(layout.buildDirectory.dir("testapp/classes"))
     }
-    resources {
-      srcDirs("src/testapp/webapp")
-    }
     compileClasspath = compileClasspath.plus(sourceSets.main.get().compileClasspath)
   }
 }
