@@ -30,7 +30,6 @@ public final class ElasticsearchRest7TelemetryBuilder {
   private final List<AttributesExtractor<ElasticsearchRestRequest, Response>> attributesExtractors =
       new ArrayList<>();
   private Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
-  private boolean captureSearchQuery = false;
   private Function<
           SpanNameExtractor<ElasticsearchRestRequest>,
           ? extends SpanNameExtractor<? super ElasticsearchRestRequest>>
@@ -71,18 +70,6 @@ public final class ElasticsearchRest7TelemetryBuilder {
   }
 
   /**
-   * Configures whether query bodies are captured for Elasticsearch search requests. Disabled by
-   * default.
-   *
-   * <p>WARNING: captured query bodies may contain sensitive information.
-   */
-  @CanIgnoreReturnValue
-  public ElasticsearchRest7TelemetryBuilder setCaptureSearchQuery(boolean captureSearchQuery) {
-    this.captureSearchQuery = captureSearchQuery;
-    return this;
-  }
-
-  /**
    * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
    * one.
    */
@@ -108,7 +95,7 @@ public final class ElasticsearchRest7TelemetryBuilder {
             attributesExtractors,
             spanNameExtractorCustomizer,
             knownMethods,
-            captureSearchQuery);
+            false);
 
     return new ElasticsearchRest7Telemetry(instrumenter);
   }
