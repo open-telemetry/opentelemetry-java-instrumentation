@@ -44,7 +44,7 @@ class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
     client.addFilter(new LoggingFilter());
     client.addFilter(new GZIPContentEncodingFilter());
 
-    cleanup.deferAfterAll(client::destroy);
+    cleanup.deferCleanup(client::destroy);
     return client;
   }
 
