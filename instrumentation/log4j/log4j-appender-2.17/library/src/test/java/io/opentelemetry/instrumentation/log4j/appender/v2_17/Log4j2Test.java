@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -39,7 +41,7 @@ class Log4j2Test extends AbstractLog4j2Test {
     // For library tests, AsyncLogger can't capture code location in older versions
     String selector = System.getProperty("Log4j2.contextSelector");
     boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
-    if (async && !Boolean.getBoolean("testLatestDeps")) {
+    if (async && !testLatestDeps()) {
       // source info is not available by default when async logger is used in non latest dep tests
       return new ArrayList<>();
     }

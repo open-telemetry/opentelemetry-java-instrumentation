@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -32,7 +33,7 @@ class DubboHeadersGetterTest {
     when(context.getLocalAddress()).thenReturn(new InetSocketAddress(1));
 
     // for latest dep tests call getObjectAttachments, otherwise call getAttachments
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       when(getObjectAttachments()).thenReturn(singletonMap("key", "value"));
     } else {
       when(rpcInvocation.getAttachments()).thenReturn(singletonMap("key", "value"));

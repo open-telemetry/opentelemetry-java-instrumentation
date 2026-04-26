@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -1711,7 +1712,7 @@ public abstract class AbstractGrpcTest {
   static List<AttributeAssertion> addExtraClientAttributes(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>();
     result.addAll(asList(assertions));
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       result.add(equalTo(NETWORK_TYPE, "ipv4"));
       result.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
       result.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
