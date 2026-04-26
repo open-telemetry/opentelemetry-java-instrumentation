@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.util.StringHelper;
 
-public class CamelSingletons {
+class CamelSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.camel-2.20";
 
@@ -77,11 +77,11 @@ public class CamelSingletons {
     instrumenter = builder.buildInstrumenter(request -> request.getSpanKind());
   }
 
-  public static Instrumenter<CamelRequest, Void> instrumenter() {
+  static Instrumenter<CamelRequest, Void> instrumenter() {
     return instrumenter;
   }
 
-  public static SpanDecorator getSpanDecorator(Endpoint endpoint) {
+  static SpanDecorator getSpanDecorator(Endpoint endpoint) {
     String component = "";
     String uri = endpoint.getEndpointUri();
     String[] splitUri = StringHelper.splitOnCharacter(uri, ":", 2);
