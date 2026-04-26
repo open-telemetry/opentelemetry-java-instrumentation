@@ -10,6 +10,10 @@ import org.eclipse.jetty.server.Response;
 
 public class Jetty12ResponseMutator implements HttpServerResponseMutator<Response> {
 
+  public static final Jetty12ResponseMutator INSTANCE = new Jetty12ResponseMutator();
+
+  private Jetty12ResponseMutator() {}
+
   @Override
   public void appendHeader(Response response, String name, String value) {
     response.getHeaders().add(name, value);

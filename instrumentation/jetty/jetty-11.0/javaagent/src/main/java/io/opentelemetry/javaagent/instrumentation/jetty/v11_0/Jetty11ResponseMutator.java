@@ -10,6 +10,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 final class Jetty11ResponseMutator implements HttpServerResponseMutator<HttpServletResponse> {
 
+  static final Jetty11ResponseMutator INSTANCE = new Jetty11ResponseMutator();
+
+  private Jetty11ResponseMutator() {}
+
   @Override
   public void appendHeader(HttpServletResponse response, String name, String value) {
     response.addHeader(name, value);

@@ -12,6 +12,10 @@ import org.glassfish.grizzly.http.util.MimeHeaders;
 
 public class GrizzlyHttpResponseMutator implements HttpServerResponseMutator<HttpResponsePacket> {
 
+  public static final GrizzlyHttpResponseMutator INSTANCE = new GrizzlyHttpResponseMutator();
+
+  private GrizzlyHttpResponseMutator() {}
+
   @Override
   public void appendHeader(HttpResponsePacket response, String name, String value) {
     MimeHeaders headers = response.getHeaders();
