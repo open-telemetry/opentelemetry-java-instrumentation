@@ -264,5 +264,8 @@ When already present, verify:
 - `collectMetadata` is in `withType<Test>().configureEach` (or `tasks.test` if the module
   does not explicitly register additional `Test` tasks — `latestDepTest` does not count) —
   never on individual tasks.
-- `metadataConfig` is on each non-default task, not on the default `test` task.
+- `metadataConfig` is on each non-default task. It may also appear on the default `test`
+  task when that task itself runs with non-default `jvmArgs` (e.g., an experimental flag
+  enabled module-wide via `withType<Test>().configureEach { jvmArgs(...) }`); in that case
+  the `metadataConfig` value should describe those non-default jvmArgs.
 - The `metadataConfig` value matches at least one of the jvmArgs configured in the task

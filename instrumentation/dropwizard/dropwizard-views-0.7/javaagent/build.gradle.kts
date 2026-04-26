@@ -22,4 +22,5 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
   systemProperty("collectMetadata", otelProps.collectMetadata)
+  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true")
 }
