@@ -59,11 +59,7 @@ class JettyClient12ResponseListenersInstrumentation implements TypeInstrumentati
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void onExitNotify(
-        @Advice.Argument(0) Response response,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Enter @Nullable Scope scope) {
-
+    public static void onExitNotify(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -82,10 +78,7 @@ class JettyClient12ResponseListenersInstrumentation implements TypeInstrumentati
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void onExitComplete(
-        @Advice.Argument(0) Result result,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Enter @Nullable Scope scope) {
+    public static void onExitComplete(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

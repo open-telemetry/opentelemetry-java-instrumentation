@@ -63,7 +63,7 @@ class JettyHttpClient12Instrumentation implements TypeInstrumentation {
       if (context == null) {
         return null;
       }
-      // set context for responseListeners
+      // store the parent context for request/response listener callbacks
       request.attribute(JETTY_CLIENT_CONTEXT_KEY, parentContext);
 
       return new AdviceLocals(context, context.makeCurrent());
