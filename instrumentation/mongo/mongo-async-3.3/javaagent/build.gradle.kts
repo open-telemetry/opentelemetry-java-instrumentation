@@ -7,8 +7,8 @@ muzzle {
     group.set("org.mongodb")
     module.set("mongodb-driver-async")
     versions.set("[3.3,)")
-    extraDependency("org.mongodb:mongo-java-driver")
     assertInverse.set(true)
+    extraDependency("org.mongodb:mongo-java-driver")
   }
 }
 
