@@ -74,6 +74,7 @@ public class JdbcAdviceScope {
     return new JdbcAdviceScope(callDepth, request, context, context.makeCurrent());
   }
 
+  @Nullable
   private static DbRequest createBatchRequest(Statement statement) {
     if (statement instanceof PreparedStatement) {
       String sql = JdbcData.PREPARED_STATEMENT.get((PreparedStatement) statement);

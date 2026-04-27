@@ -18,7 +18,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class AddUrlTest {
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void testShouldInstrumentClassAfterItIsLoadedViaAddUrl() throws Exception {

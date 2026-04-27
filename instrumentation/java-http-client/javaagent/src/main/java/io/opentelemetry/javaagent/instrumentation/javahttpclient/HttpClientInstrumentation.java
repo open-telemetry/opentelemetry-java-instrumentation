@@ -144,6 +144,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
         }
         Context parentContext = currentContext();
         if (!instrumenter().shouldStart(parentContext, request)) {
+          callDepth.decrementAndGet();
           return null;
         }
         Context context = instrumenter().start(parentContext, request);

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -136,7 +137,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_OPERATION, "receive"),
                             satisfies(MESSAGING_CLIENT_ID, val -> val.endsWith("consumer")),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
-                if (Boolean.getBoolean("testLatestDeps")) {
+                if (testLatestDeps()) {
                   assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
                 }
                 span.hasName(STREAM_PENDING + " receive")
@@ -169,7 +170,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           val -> val.isGreaterThanOrEqualTo(0)));
                 }
 
-                if (Boolean.getBoolean("testLatestDeps")) {
+                if (testLatestDeps()) {
                   assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
                 }
                 span.hasName(STREAM_PENDING + " process")
@@ -212,7 +213,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_OPERATION, "receive"),
                               satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                               equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
-                  if (Boolean.getBoolean("testLatestDeps")) {
+                  if (testLatestDeps()) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
                   }
                   span.hasName(STREAM_PROCESSED + " receive")
@@ -244,7 +245,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             val -> val.isGreaterThanOrEqualTo(0)));
                   }
 
-                  if (Boolean.getBoolean("testLatestDeps")) {
+                  if (testLatestDeps()) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
                   }
                   span.hasName(STREAM_PROCESSED + " process")

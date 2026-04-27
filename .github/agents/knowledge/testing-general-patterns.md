@@ -135,3 +135,41 @@ unless the span ordering within a trace is genuinely non-deterministic (e.g., co
 producers/consumers, thread-pool fan-out, or channel interleaving). Sequential operations
 like `repeat {}` loops, single-child traces, and `flux` sequential emission produce spans
 in deterministic order — use `hasSpansSatisfyingExactly` for those.
+
+## Flag-Gated / Mode-Dependent Assertions
+
+Several test modes change which attributes, span names, status codes, or span indexes are
+expected:
+
+- Experimental attributes (`-Dotel.instrumentation.<module>.experimental-*=true`) — see
+  [testing-experimental-flags.md](testing-experimental-flags.md).
+- Semconv stability (`-Dotel.semconv-stability.opt-in=...`) — see
+  [testing-semconv-stability.md](testing-semconv-stability.md).
+- `testLatestDeps` Gradle property — runs against the newest supported library versions
+  instead of the pinned earliest-supported ones.
+
+### Read the flag through a shared static helper, not a per-class field
+
+Each flag has a shared static accessor; static-import it and call it directly. Never call
+`Boolean.getBoolean("…")` inline and never duplicate the property-name string at the call
+site.
+
+| Flag | Shared accessor | Where it lives |
+| --- | --- | --- |
+| `-PtestLatestDeps=true` | `testLatestDeps()` | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
+| `otel.semconv-stability.opt-in=…` | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc. | `io.opentelemetry.instrumentation.api.internal.SemconvStability` |
+| `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class |
+
+### Inline ternary in `equalTo(...)` with `null` for "absent"
+
+Push the ternary as deep as possible — into the `equalTo` value or single attribute key —
+rather than duplicating two whole `hasAttributesSatisfyingExactly(...)` blocks under a
+`flag ? a : b`. The assertion API treats `null` as "expect attribute absent":
+
+```java
+equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
+equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)
+equalTo(SOME_KEY, EXPERIMENTAL_ATTRIBUTES ? "value" : null)
+span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
+.hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
+```

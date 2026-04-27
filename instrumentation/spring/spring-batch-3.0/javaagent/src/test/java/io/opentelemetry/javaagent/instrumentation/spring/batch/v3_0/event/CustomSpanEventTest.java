@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.event;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 
@@ -22,7 +23,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class CustomSpanEventTest {
 
-  private static final boolean VERSION_GREATER_THAN_4_0 = Boolean.getBoolean("testLatestDeps");
+  private static final boolean VERSION_GREATER_THAN_4_0 = testLatestDeps();
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
