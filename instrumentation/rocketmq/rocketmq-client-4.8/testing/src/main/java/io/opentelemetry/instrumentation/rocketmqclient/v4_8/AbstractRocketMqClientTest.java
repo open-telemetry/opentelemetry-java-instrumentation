@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -114,7 +115,7 @@ abstract class AbstractRocketMqClientTest {
     configureMqPushConsumer(consumer);
 
     // for RocketMQ 5.x wait a bit to ensure that consumer is properly started up
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       Thread.sleep(30_000);
     }
   }
@@ -276,7 +277,7 @@ abstract class AbstractRocketMqClientTest {
   @Test
   void testRocketmqProduceAndBatchConsume() throws Exception {
     // context propagation doesn't work for batch messages in 5.3.4
-    Assumptions.assumeFalse(Boolean.getBoolean("testLatestDeps"));
+    Assumptions.assumeFalse(testLatestDeps());
 
     consumer.setConsumeMessageBatchMaxSize(2);
     // This test assumes that messages are sent and received as a batch. Occasionally it happens

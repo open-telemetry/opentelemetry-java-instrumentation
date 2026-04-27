@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -134,7 +135,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                             longKey("kafka.record.queue_time_ms"),
                             val -> val.isGreaterThanOrEqualTo(0)));
                   }
-                  if (Boolean.getBoolean("testLatestDeps")) {
+                  if (testLatestDeps()) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
                   }
                   span.hasName(STREAM_PENDING + " process")
@@ -186,7 +187,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                             longKey("kafka.record.queue_time_ms"),
                             val -> val.isGreaterThanOrEqualTo(0)));
                   }
-                  if (Boolean.getBoolean("testLatestDeps")) {
+                  if (testLatestDeps()) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
                   }
                   span.hasName(STREAM_PROCESSED + " process")

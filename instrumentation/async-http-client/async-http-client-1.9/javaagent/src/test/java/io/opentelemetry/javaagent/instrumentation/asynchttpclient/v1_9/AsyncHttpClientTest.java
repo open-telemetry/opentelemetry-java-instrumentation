@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 
 import com.ning.http.client.AsyncCompletionHandler;
@@ -99,7 +100,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.disableTestRedirects();
 
     // disable read timeout test for non latest because it is flaky with 1.9.0
-    if (!Boolean.getBoolean("testLatestDeps")) {
+    if (!testLatestDeps()) {
       optionsBuilder.disableTestReadTimeout();
     }
 

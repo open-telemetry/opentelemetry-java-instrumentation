@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import io.opentelemetry.instrumentation.spring.webflux.IpcSingleThreadNettyCustomizer;
 import io.opentelemetry.instrumentation.spring.webflux.server.SingleThreadNettyCustomizer;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,7 +39,7 @@ class SpringThreadedSpringWebfluxTest extends SpringWebfluxTest {
   }
 
   static NettyServerCustomizer customizer() {
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       return new SingleThreadNettyCustomizer();
     }
     return new IpcSingleThreadNettyCustomizer();
