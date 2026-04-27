@@ -275,3 +275,12 @@ lettuce-common:library
 liberty:compile-stub
 liberty-20.0:javaagent
 liberty-dispatcher-20.0:javaagent
+log4j-appender-1.2:javaagent
+log4j-appender-2.17:javaagent
+log4j-appender-2.17:library
+log4j-appender-2.17:testing
+log4j-context-data-2.17:javaagent
+log4j-context-data-2.17:library-autoconfigure
+log4j-context-data-2.7:javaagent
+log4j-context-data-common:testing
+log4j-mdc-1.2:javaagent
