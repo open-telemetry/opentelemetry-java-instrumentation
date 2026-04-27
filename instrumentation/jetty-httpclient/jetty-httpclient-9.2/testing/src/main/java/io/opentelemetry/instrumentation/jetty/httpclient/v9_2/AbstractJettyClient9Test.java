@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -18,12 +19,14 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Request> {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private HttpClient client;
   private HttpClient httpsClient;
@@ -34,37 +37,13 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
     client = createStandardClient();
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
     client.start();
+    cleanup.deferCleanup(client::stop);
 
     SslContextFactory tlsCtx = new SslContextFactory();
     httpsClient = createHttpsClient(tlsCtx);
     httpsClient.setFollowRedirects(false);
     httpsClient.start();
-  }
-
-  @AfterEach
-  void after() throws Exception {
-    Exception error = null;
-    if (client != null) {
-      try {
-        client.stop();
-      } catch (Exception e) {
-        error = e;
-      }
-    }
-    if (httpsClient != null) {
-      try {
-        httpsClient.stop();
-      } catch (Exception e) {
-        if (error == null) {
-          error = e;
-        } else {
-          error.addSuppressed(e);
-        }
-      }
-    }
-    if (error != null) {
-      throw error;
-    }
+    cleanup.deferCleanup(httpsClient::stop);
   }
 
   @Override
