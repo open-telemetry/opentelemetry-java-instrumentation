@@ -1157,7 +1157,7 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     try {
       connection = new TestConnection(true);
-    } catch (IllegalStateException ignored) {
+    } catch (Exception ignored) {
       connection = driver.connect(jdbcUrl, null);
     }
     connection = wrap(connection);
@@ -1569,7 +1569,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6015
   @DisplayName("test proxy statement")
   @Test
-  void testProxyStatement() throws ClassNotFoundException, SQLException {
+  void testProxyStatement() throws Exception {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
     cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
