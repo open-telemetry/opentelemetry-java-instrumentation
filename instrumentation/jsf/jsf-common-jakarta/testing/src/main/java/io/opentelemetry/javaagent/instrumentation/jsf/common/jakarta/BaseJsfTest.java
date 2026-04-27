@@ -183,7 +183,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                     span.hasName(getContextPath() + "/greeting.xhtml")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
-                span -> assertHandlerSpan(span, trace, 0, "#{greetingForm.submit()}", null)));
+                span -> assertHandlerSpan(span, trace, 0, "#{greetingForm.submit()}")));
   }
 
   @Test
@@ -255,14 +255,17 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
   }
 
   private static void assertHandlerSpan(
+      SpanDataAssert span, TraceAssert trace, int parentIndex, String spanName) {
+    span.hasName(spanName).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(parentIndex));
+  }
+
+  private static void assertHandlerSpan(
       SpanDataAssert span,
       TraceAssert trace,
       int parentIndex,
       String spanName,
-      Exception expectedException) {
-    span.hasName(spanName).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(parentIndex));
-    if (expectedException != null) {
-      span.hasStatus(StatusData.error()).hasException(expectedException);
-    }
+      IllegalStateException expectedException) {
+    assertHandlerSpan(span, trace, parentIndex, spanName);
+    span.hasStatus(StatusData.error()).hasException(expectedException);
   }
 }
