@@ -240,7 +240,7 @@ public final class OpenTelemetryDriver implements Driver {
 
   @Nullable
   @Override
-  public Connection connect(String url, Properties info) throws SQLException {
+  public Connection connect(String url, @Nullable Properties info) throws SQLException {
     if (url == null || url.trim().isEmpty()) {
       throw new IllegalArgumentException("url is required");
     }
@@ -283,7 +283,8 @@ public final class OpenTelemetryDriver implements Driver {
   }
 
   @Override
-  public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
+  public DriverPropertyInfo[] getPropertyInfo(String url, @Nullable Properties info)
+      throws SQLException {
     if (url == null || url.trim().isEmpty()) {
       throw new IllegalArgumentException("url is required");
     }
