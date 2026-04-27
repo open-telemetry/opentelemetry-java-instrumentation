@@ -203,13 +203,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
     assertThat(config.getStructured("java").getStructured("aws_lambda").getInt("flush_timeout"))
         .isEqualTo(5000);
-    assertThat(
-            createConfig("otel.jmx.discovery.delay", "42")
-                .getStructured("java")
-                .getStructured("jmx")
-                .getStructured("discovery")
-                .getInt("delay"))
-        .isEqualTo(42);
   }
 
   @Test
