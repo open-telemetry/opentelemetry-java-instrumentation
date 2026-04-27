@@ -19,6 +19,11 @@ configurations:
     examples:
       - "path/to/config.yaml"
       - "path/to/config.yaml,more_rules.yaml"
+  - name: otel.jmx.discovery.delay
+    declarative_name: java.jmx.discovery.delay
+    type: int
+    default: 60000
+    description: Milliseconds to wait before repeating MBean discovery.
   - name: otel.jmx.target.system
     declarative_name: java.jmx.target.system
     type: list
