@@ -1798,15 +1798,18 @@ libraries:
   - com.ning:async-http-client:[1.9.0,)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ''
@@ -1816,11 +1819,13 @@ libraries:
     type: map
     default: ''
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
       attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: list
@@ -1913,15 +1918,18 @@ libraries:
   - org.asynchttpclient:async-http-client:[2.0.0,)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ''
@@ -1931,11 +1939,13 @@ libraries:
     type: map
     default: ''
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
       attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: list
@@ -2058,6 +2068,7 @@ libraries:
   - com.amazonaws:aws-lambda-java-core:[1.0.0,)
   configurations:
   - name: otel.instrumentation.aws-lambda.flush-timeout
+    declarative_name: java.aws_lambda.flush_timeout
     description: Flush timeout in milliseconds.
     type: int
     default: 10000
@@ -2085,10 +2096,12 @@ libraries:
   - com.amazonaws:aws-lambda-java-core:[1.0.0,)
   configurations:
   - name: otel.instrumentation.aws-lambda.flush-timeout
+    declarative_name: java.aws_lambda.flush_timeout
     description: Flush timeout in milliseconds.
     type: int
     default: 10000
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
@@ -2130,6 +2143,7 @@ libraries:
   has_standalone_library: true
   configurations:
   - name: otel.instrumentation.aws-lambda.flush-timeout
+    declarative_name: java.aws_lambda.flush_timeout
     description: Flush timeout in milliseconds.
     type: int
     default: 10000
@@ -3172,6 +3186,7 @@ libraries:
   - com.datastax.oss:java-driver-core:[4.0,4.4)
   configurations:
   - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
     description: Enables query sanitization for database queries.
     type: boolean
     default: true
@@ -4320,7 +4335,7 @@ libraries:
   - name: otel.instrumentation.elasticsearch.experimental-span-attributes
     declarative_name: java.elasticsearch.experimental_span_attributes/development
     description: |
-      Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.search.types`, `elasticsearch.request.write.type`, `elasticsearch.request.write.version`, `elasticsearch.response.status`, `elasticsearch.shard.broadcast.failed`, `elasticsearch.shard.broadcast.successful`, `elasticsearch.shard.broadcast.total`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version` experimental span attributes.
+      Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.search.types`, `elasticsearch.request.write.routing`, `elasticsearch.request.write.type`, `elasticsearch.request.write.version`, `elasticsearch.response.status`, `elasticsearch.shard.broadcast.failed`, `elasticsearch.shard.broadcast.successful`, `elasticsearch.shard.broadcast.total`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version` experimental span attributes.
     type: boolean
     default: false
   telemetry:
@@ -4645,6 +4660,7 @@ libraries:
   - org.apache.geode:geode-core:[1.4.0,)
   configurations:
   - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
     description: Enables query sanitization for database queries.
     type: boolean
     default: true
@@ -5622,6 +5638,7 @@ libraries:
   - org.hibernate:hibernate-core:[6.0.0.Final,)
   configurations:
   - name: otel.instrumentation.hibernate.experimental-span-attributes
+    declarative_name: java.hibernate.experimental_span_attributes/development
     description: Enables the experimental `hibernate.session_id` span attribute.
     type: boolean
     default: false
@@ -5933,6 +5950,7 @@ libraries:
   - com.netflix.hystrix:hystrix-core:[1.4.0,)
   configurations:
   - name: otel.instrumentation.hystrix.experimental-span-attributes
+    declarative_name: java.hystrix.experimental_span_attributes/development
     description: Enables capturing the experimental `hystrix.command`, `hystrix.circuit_open`
       and `hystrix.group` span attributes.
     type: boolean
@@ -6060,6 +6078,7 @@ libraries:
   - org.influxdb:influxdb-java:[2.4,)
   configurations:
   - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
     description: Enables or disables query sanitization for database queries.
     type: boolean
     default: true
@@ -13602,8 +13621,6 @@ libraries:
       attributes:
       - name: jvm.thread.daemon
         type: BOOLEAN
-      - name: jvm.thread.state
-        type: STRING
   - when: default
     metrics:
     - name: jvm.buffer.count
