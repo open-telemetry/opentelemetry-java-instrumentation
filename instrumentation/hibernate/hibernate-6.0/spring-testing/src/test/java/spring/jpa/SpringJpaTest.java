@@ -298,8 +298,8 @@ class SpringJpaTest {
                         .hasTotalAttributeCount(0),
                 span ->
                     span.satisfies(
-                            val ->
-                                assertThat(val.getName())
+                            spanData ->
+                                assertThat(spanData.getName())
                                     .isIn(
                                         emitStableDatabaseSemconv()
                                             ? asList("SELECT spring.jpa.Customer", "hibernate")
@@ -353,8 +353,8 @@ class SpringJpaTest {
                         .hasTotalAttributeCount(0),
                 span ->
                     span.satisfies(
-                            val ->
-                                assertThat(val.getName())
+                            spanData ->
+                                assertThat(spanData.getName())
                                     .matches("Session.(get|find) spring.jpa.Customer"))
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
