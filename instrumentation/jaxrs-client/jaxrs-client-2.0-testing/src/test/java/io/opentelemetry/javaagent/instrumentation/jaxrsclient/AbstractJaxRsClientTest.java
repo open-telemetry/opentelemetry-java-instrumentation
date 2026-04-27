@@ -57,11 +57,16 @@ abstract class AbstractJaxRsClientTest extends AbstractHttpClientTest<Invocation
   public int sendRequest(
       Invocation.Builder request, String method, URI uri, Map<String, String> headers)
       throws Exception {
-    Entity<String> body = BODY_METHODS.contains(method) ? Entity.text("") : null;
-    try (Response response = request.build(method, body).invoke()) {
-      // read response body to avoid broken pipe errors on the server side
-      response.readEntity(String.class);
-      return response.getStatus();
+    try {
+      Entity<String> body = BODY_METHODS.contains(method) ? Entity.text("") : null;
+      Response response = request.build(method, body).invoke();
+      try {
+        // read response body to avoid broken pipe errors on the server side
+        response.readEntity(String.class);
+        return response.getStatus();
+      } finally {
+        response.close();
+      }
     } catch (ProcessingException e) {
       if (e.getCause() instanceof Exception) {
         throw (Exception) e.getCause();
