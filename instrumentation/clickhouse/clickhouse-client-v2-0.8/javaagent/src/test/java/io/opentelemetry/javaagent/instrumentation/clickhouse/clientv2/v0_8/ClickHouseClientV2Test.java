@@ -40,8 +40,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -53,22 +51,23 @@ class ClickHouseClientV2Test {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final GenericContainer<?> clickhouseServer =
       new GenericContainer<>("clickhouse/clickhouse-server:24.4.2").withExposedPorts(8123);
 
   private static final String databaseName = "default";
   private static final String tableName = "test_table";
+  private static final String username = "default";
+  private static final String password = "";
   private static int port;
   private static String host;
   private static Client client;
-  private static final String username = "default";
-  private static final String password = "";
 
   @BeforeAll
   static void setup() throws Exception {
     clickhouseServer.start();
+    cleanup.deferAfterAll(clickhouseServer::stop);
     port = clickhouseServer.getMappedPort(8123);
     host = clickhouseServer.getHost();
 
@@ -80,24 +79,17 @@ class ClickHouseClientV2Test {
             .setPassword(password)
             .setOption("compress", "false")
             .build();
+    cleanup.deferAfterAll(client);
 
     QueryResponse response =
         client
             .query("create table if not exists " + tableName + "(value String) engine=Memory")
-            .get();
+            .join();
     response.close();
 
     // wait for CREATE operation and clear
     testing.waitForTraces(1);
     testing.clearData();
-  }
-
-  @AfterAll
-  static void cleanup() {
-    if (client != null) {
-      client.close();
-    }
-    clickhouseServer.stop();
   }
 
   @Test
@@ -111,7 +103,7 @@ class ClickHouseClientV2Test {
             .build();
     cleanup.deferCleanup(client);
 
-    QueryResponse response = client.query("select * from " + tableName).get();
+    QueryResponse response = client.query("select * from " + tableName).join();
     response.close();
 
     testing.waitAndAssertTraces(
@@ -153,10 +145,10 @@ class ClickHouseClientV2Test {
         "parent",
         () -> {
           QueryResponse response =
-              client.query("insert into " + tableName + " values('1')('2')('3')").get();
+              client.query("insert into " + tableName + " values('1')('2')('3')").join();
           response.close();
 
-          response = client.query("select * from " + tableName).get();
+          response = client.query("select * from " + tableName).join();
           response.close();
         });
 
@@ -214,7 +206,7 @@ class ClickHouseClientV2Test {
           QuerySettings querySettings = new QuerySettings();
           querySettings.setQueryId("test_query_id");
 
-          QueryResponse response = client.query("select * from " + tableName, querySettings).get();
+          QueryResponse response = client.query("select * from " + tableName, querySettings).join();
           response.close();
         });
 
@@ -285,9 +277,8 @@ class ClickHouseClientV2Test {
     testing.runWithSpan(
         "parent",
         () -> {
-          CompletableFuture<CommandResponse> future =
-              client.execute("select * from " + tableName + " limit 1");
-          CommandResponse results = future.get();
+          CommandResponse results =
+              client.execute("select * from " + tableName + " limit 1").join();
           assertThat(results.getReadRows()).isEqualTo(0);
         });
 
@@ -360,10 +351,10 @@ class ClickHouseClientV2Test {
         "parent",
         () -> {
           Records records =
-              client.queryRecords("insert into " + tableName + " values('test_value')").get();
+              client.queryRecords("insert into " + tableName + " values('test_value')").join();
           records.close();
 
-          records = client.queryRecords("select * from " + tableName + " limit 1").get();
+          records = client.queryRecords("select * from " + tableName + " limit 1").join();
           records.close();
           assertThat(records.getReadRows()).isEqualTo(1);
         });
@@ -430,7 +421,7 @@ class ClickHouseClientV2Test {
                       "select * from " + tableName + " where value={param_s: String}",
                       queryParams,
                       null)
-                  .get();
+                  .join();
           response.close();
         });
 

@@ -35,7 +35,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableList;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -233,7 +232,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
   }
 
   @Test
-  void testCaptureMessageHeaderAsAttributeSpan() throws URISyntaxException {
+  void testCaptureMessageHeaderAsAttributeSpan() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -260,7 +259,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
   }
 
   @Test
-  void testBatchSqsProducerConsumerServicesSync() throws URISyntaxException {
+  void testBatchSqsProducerConsumerServicesSync() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());

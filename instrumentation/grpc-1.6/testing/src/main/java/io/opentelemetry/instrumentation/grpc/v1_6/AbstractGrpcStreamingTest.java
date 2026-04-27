@@ -304,7 +304,7 @@ public abstract class AbstractGrpcStreamingTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
+                                      point.hasAttributesSatisfyingExactly(
                                           equalTo(SERVER_ADDRESS, "localhost"),
                                           equalTo(SERVER_PORT, server.getPort()),
                                           equalTo(RPC_METHOD, "Conversation"),
@@ -347,15 +347,19 @@ public abstract class AbstractGrpcStreamingTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
+                                      point.hasAttributesSatisfyingExactly(
                                           equalTo(SERVER_ADDRESS, "localhost"),
                                           equalTo(SERVER_PORT, server.getPort()),
                                           equalTo(RPC_METHOD, "Conversation"),
                                           equalTo(RPC_SERVICE, "example.Greeter"),
                                           equalTo(RPC_SYSTEM, "grpc"),
                                           equalTo(
-                                              RPC_GRPC_STATUS_CODE,
-                                              (long) Status.Code.OK.value())))));
+                                              RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                          equalTo(
+                                              NETWORK_TYPE,
+                                              Boolean.getBoolean("testLatestDeps")
+                                                  ? "ipv4"
+                                                  : null)))));
     }
     if (emitStableRpcSemconv()) {
       testing()
@@ -369,7 +373,7 @@ public abstract class AbstractGrpcStreamingTest {
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
-                                      point.hasAttributesSatisfying(
+                                      point.hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "grpc"),
                                           equalTo(SERVER_ADDRESS, "localhost"),
                                           equalTo(SERVER_PORT, server.getPort()),

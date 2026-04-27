@@ -64,7 +64,7 @@ public final class OpenTelemetryInstrumentationHelper {
                 openTelemetry, instrumentationName, ignored -> "GraphQL Operation")
             .setSpanStatusExtractor(
                 (spanStatusBuilder, instrumentationExecutionParameters, executionResult, error) -> {
-                  if (!executionResult.getErrors().isEmpty()) {
+                  if (executionResult != null && !executionResult.getErrors().isEmpty()) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
                   } else {
                     SpanStatusExtractor.getDefault()

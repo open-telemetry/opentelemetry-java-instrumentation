@@ -46,8 +46,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     // There are 8 execute(...) methods.  Depending on the version, they may or may not delegate
     // to each other. Thus, all methods need to be instrumented.  Because of argument position and
-    // type, some methods can share the same advice class.  The call depth tracking ensures only 1
-    // span is created
+    // type, some methods can share the same advice class. Span suppression ensures only one span
+    // is created.
 
     transformer.applyAdviceToMethod(
         named("execute")
@@ -161,6 +161,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class UriRequestAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.Argument(0) HttpUriRequest request) {
       return AdviceScope.start(new ApacheHttpClientRequest(request));
@@ -210,9 +211,10 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(
-        @Advice.Argument(0) HttpHost host, @Advice.Argument(1) HttpRequest request) {
+        @Advice.Argument(0) @Nullable HttpHost host, @Advice.Argument(1) HttpRequest request) {
       return AdviceScope.start(new ApacheHttpClientRequest(host, request));
     }
 
@@ -234,7 +236,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
-        @Advice.Argument(0) HttpHost host,
+        @Advice.Argument(0) @Nullable HttpHost host,
         @Advice.Argument(1) HttpRequest request,
         @Advice.Argument(2) ResponseHandler<?> handler) {
 

@@ -28,11 +28,11 @@ final class Graphql20OpenTelemetryInstrumentationState extends OpenTelemetryInst
   }
 
   @Nullable
-  public Context setContextForPath(ResultPath resultPath, Context context) {
+  Context setContextForPath(ResultPath resultPath, Context context) {
     return contextStorage.putIfAbsent(resultPath.toString(), context);
   }
 
-  public Context getParentContextForPath(ResultPath resultPath) {
+  Context getParentContextForPath(ResultPath resultPath) {
 
     // Navigate up the path until we find the closest parent context
     for (ResultPath currentPath = resultPath.getParent();

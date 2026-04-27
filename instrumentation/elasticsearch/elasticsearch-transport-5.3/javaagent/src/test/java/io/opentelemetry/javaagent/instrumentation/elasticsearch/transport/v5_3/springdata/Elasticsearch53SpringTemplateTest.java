@@ -54,7 +54,6 @@ import org.elasticsearch.search.aggregations.bucket.nested.InternalNested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.transport.BindTransportException;
 import org.elasticsearch.transport.Netty3Plugin;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -146,12 +145,8 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
     testing.waitForTraces(1);
     testing.clearData();
 
+    autoCleanup.deferAfterAll(testNode);
     template = new ElasticsearchTemplate(client);
-  }
-
-  @AfterAll
-  static void cleanUp() throws Exception {
-    testNode.close();
   }
 
   @BeforeEach

@@ -59,15 +59,15 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
       private final AwsLambdaRequest lambdaRequest;
       private final Scope functionScope;
       private final io.opentelemetry.context.Context functionContext;
-      private final Scope messageScope;
-      private final io.opentelemetry.context.Context messageContext;
+      @Nullable private final Scope messageScope;
+      @Nullable private final io.opentelemetry.context.Context messageContext;
 
       private AdviceScope(
           AwsLambdaRequest lambdaRequest,
           io.opentelemetry.context.Context functionContext,
           Scope functionScope,
-          io.opentelemetry.context.Context messageContext,
-          Scope messageScope) {
+          @Nullable io.opentelemetry.context.Context messageContext,
+          @Nullable Scope messageScope) {
         this.lambdaRequest = lambdaRequest;
         this.functionContext = functionContext;
         this.functionScope = functionScope;

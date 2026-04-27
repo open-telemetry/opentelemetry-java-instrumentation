@@ -55,7 +55,7 @@ configurations.configureEach {
   if (!name.contains("muzzle")) {
     resolutionStrategy {
       eachDependency {
-        // specifying a fixed version for all libraries with io.netty' group
+        // specify a fixed version for all libraries in the io.netty group
         if (requested.group == "io.netty" && requested.name != "netty-bom") {
           useVersion("3.9.0.Final")
         }

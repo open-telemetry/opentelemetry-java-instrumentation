@@ -172,7 +172,7 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
       String responseBody,
       List<AttributeAssertion> additionalAttributes,
       Function<AWSLambda, Object> call)
-      throws Exception {
+      throws ReflectiveOperationException {
     AWSLambdaClientBuilder clientBuilder = AWSLambdaClientBuilder.standard();
     AWSLambda client =
         configureClient(clientBuilder)
