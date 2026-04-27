@@ -43,18 +43,11 @@ class JaxMultithreadedClientTest {
 
   @SuppressWarnings("CatchingUnchecked")
   boolean checkUri(JerseyClientBuilder builder, URI uri) {
-    Client client = builder.build();
-    try {
-      Response response = client.target(uri).request().get();
-      try {
-        return false;
-      } finally {
-        response.close();
-      }
+    try (Client client = builder.build();
+        Response response = client.target(uri).request().get()) {
+      return false;
     } catch (Exception e) {
       return true;
-    } finally {
-      client.close();
     }
   }
 
