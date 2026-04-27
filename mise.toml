@@ -1,9 +1,22 @@
 [tools]
 
 # Linters
+actionlint = "1.7.12"
+"aqua:owenlamont/ryl" = "0.7.0"
+biome = "2.4.13"
+editorconfig-checker = "3.6.1"
+"github:google/google-java-format" = "1.35.0"
 "github:grafana/flint" = "0.20.4"
+"github:jonwiggins/xmloxide" = "0.4.2"
+"github:koalaman/shellcheck" = "0.11.0"
+hadolint = "2.14.0"
+ktlint = "1.8.0"
 lychee = "0.23.0"
+"pipx:codespell" = "2.4.2"
+ruff = "0.15.12"
 rumdl = "0.1.80"
+shfmt = "3.13.1"
+taplo = "0.10.0"
 
 [env]
 FLINT_CONFIG_DIR = ".github/config"

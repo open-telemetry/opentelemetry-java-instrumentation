@@ -260,6 +260,8 @@ ij_java_wrap_comments = false
 ij_java_wrap_first_method_in_call_chain = false
 ij_java_wrap_long_lines = false
 
+# Java line length is handled by google-java-format
+max_line_length = off
 [*.proto]
 ij_continuation_indent_size = 2
 ij_proto_keep_indents_on_empty_lines = false
@@ -761,3 +763,7 @@ ij_properties_spaces_around_key_value_delimiter = false
 [{*.yaml, *.yml}]
 ij_yaml_keep_indents_on_empty_lines = false
 ij_yaml_keep_line_breaks = true
+
+[*.md]
+# Markdown line length is handled by rumdl
+max_line_length = off
