@@ -46,7 +46,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.beans.PropertyVetoException;
 import java.io.Closeable;
-import java.io.IOException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -68,7 +67,6 @@ import org.apache.derby.jdbc.EmbeddedDriver;
 import org.assertj.core.api.ThrowingConsumer;
 import org.h2.jdbcx.JdbcDataSource;
 import org.hsqldb.jdbc.JDBCDriver;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -128,32 +126,19 @@ public abstract class AbstractJdbcInstrumentationTest {
     prepareConnectionPoolDatasources();
   }
 
-  @AfterAll
-  static void tearDown() {
-    cpDatasources
-        .values()
-        .forEach(
-            k ->
-                k.values()
-                    .forEach(
-                        dataSource -> {
-                          if (dataSource instanceof Closeable) {
-                            try {
-                              ((Closeable) dataSource).close();
-                            } catch (IOException ignored) {
-                              // ignore exceptions during close
-                            }
-                          }
-                        }));
-  }
-
   static void prepareConnectionPoolDatasources() {
     List<String> connectionPoolNames = asList("tomcat", "hikari", "c3p0");
     connectionPoolNames.forEach(
         cpName -> {
           Map<String, DataSource> dbDsMapping = new HashMap<>();
           jdbcUrls.forEach(
-              (dbType, jdbcUrl) -> dbDsMapping.put(dbType, createDs(cpName, dbType, jdbcUrl)));
+              (dbType, jdbcUrl) -> {
+                DataSource dataSource = createDs(cpName, dbType, jdbcUrl);
+                if (dataSource instanceof Closeable) {
+                  cleanup.deferAfterAll((Closeable) dataSource);
+                }
+                dbDsMapping.put(dbType, dataSource);
+              });
           cpDatasources.put(cpName, dbDsMapping);
         });
   }
@@ -1172,7 +1157,7 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     try {
       connection = new TestConnection(true);
-    } catch (Exception ignored) {
+    } catch (IllegalStateException ignored) {
       connection = driver.connect(jdbcUrl, null);
     }
     connection = wrap(connection);
@@ -1584,7 +1569,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6015
   @DisplayName("test proxy statement")
   @Test
-  void testProxyStatement() throws Exception {
+  void testProxyStatement() throws ClassNotFoundException, SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
     cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
