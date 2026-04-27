@@ -81,6 +81,12 @@ val targets = mapOf(
       listOf("hotspot", "openj9"),
       listOf("8", "11", "17", "21")
     ),
+    ImageTarget(
+      listOf("open-liberty:26.0.0.3-full-java11-openj9@sha256:0f1e49d15b6de21cdf65b032a20103598c30f20f764b45ba1044d36d762f6165"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11", "17", "21", "25"),
+      mapOf("release" to "26.0.0.3")
+    ),
   ),
   "payara" to listOf(
     ImageTarget(
