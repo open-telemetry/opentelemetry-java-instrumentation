@@ -10,20 +10,20 @@ import org.apache.cxf.message.Message;
 import org.apache.cxf.service.Service;
 import org.apache.cxf.service.model.BindingOperationInfo;
 
-public class CxfRequest {
+class CxfRequest {
   private final Message message;
   private final String spanName;
 
-  public CxfRequest(Message message) {
+  CxfRequest(Message message) {
     this.message = message;
     this.spanName = getSpanName(message);
   }
 
-  public String spanName() {
+  String spanName() {
     return spanName;
   }
 
-  public Message message() {
+  Message message() {
     return message;
   }
 
