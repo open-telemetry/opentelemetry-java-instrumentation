@@ -212,7 +212,7 @@ class LogEventToReplay implements LogEvent {
     @Nullable
     @Override
     public Object[] getParameters() {
-      return parameters == null ? null : parameters.clone();
+      return parameters;
     }
 
     @Nullable
