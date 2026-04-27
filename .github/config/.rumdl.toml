@@ -1,5 +1,5 @@
-# See https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
-# and https://github.com/DavidAnson/markdownlint-cli2
+# See https://rumdl.dev/
+# and https://rumdl.dev/rules/
 [global]
 # disable link text should be descriptive check
 disable = ["MD059", "line-length", "no-inline-html", "MD041", "MD022", "ul-style", "fenced-code-language"]
