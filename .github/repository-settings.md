@@ -24,10 +24,6 @@ Secrets:
 
 ## Secrets and variables > Actions
 
-### Repository secrets
-
-- `FLAKY_TEST_REPORTER_ACCESS_KEY` - owned by [@laurit](https://github.com/laurit)
-
 ### Organization secrets
 
 - `DEVELOCITY_ACCESS_KEY` (scoped only to Java repos)

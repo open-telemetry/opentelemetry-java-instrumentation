@@ -9,12 +9,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsRequest;
 
-public class JwsSingletons {
+class JwsSingletons {
 
   private static final Instrumenter<JaxWsRequest, Void> instrumenter =
       JaxWsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxws-jws-api-1.1");
 
-  public static Instrumenter<JaxWsRequest, Void> instrumenter() {
+  static Instrumenter<JaxWsRequest, Void> instrumenter() {
     return instrumenter;
   }
 

@@ -161,18 +161,18 @@ class JavaUtilLoggingTest {
   }
 
   @FunctionalInterface
-  interface LoggerMethod {
+  private interface LoggerMethod {
     void call(Logger logger, String msg);
   }
 
-  static String experimental(String value) {
+  private static String experimental(String value) {
     if (isExperimentalAttributesEnabled) {
       return value;
     }
     return null;
   }
 
-  static Long experimental(long value) {
+  private static Long experimental(long value) {
     if (isExperimentalAttributesEnabled) {
       return value;
     }

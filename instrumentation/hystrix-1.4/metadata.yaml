@@ -3,7 +3,7 @@ description: This instrumentation enables spans for Hystrix command executions a
 library_link: https://github.com/Netflix/Hystrix
 configurations:
   - name: otel.instrumentation.hystrix.experimental-span-attributes
+    declarative_name: java.hystrix.experimental_span_attributes/development
     description: Enables capturing the experimental `hystrix.command`, `hystrix.circuit_open` and `hystrix.group` span attributes.
     type: boolean
     default: false
-
