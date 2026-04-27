@@ -1,13 +1,13 @@
 # Converted from the repo's legacy markdownlint config.
 [global]
-# Disable the descriptive-link-text rule to preserve the old markdownlint policy.
+# disable link text should be descriptive check
 disable = ["MD059", "line-length", "no-inline-html", "MD041", "MD022", "ul-style", "fenced-code-language"]
 
 [no-duplicate-heading]
 siblings-only = true
 
 [no-trailing-punctuation]
-# Allow exclamation points and question marks at the end of sentences.
+# allowing exclamation points and question marks at end of sentences
 punctuation = ".,;:"
 
 [ol-prefix]
