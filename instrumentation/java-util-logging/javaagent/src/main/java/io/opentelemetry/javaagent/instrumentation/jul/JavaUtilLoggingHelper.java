@@ -63,11 +63,8 @@ public class JavaUtilLoggingHelper {
    * <ul>
    *   <li>Fully qualified class name - {@link LogRecord#getSourceClassName()}
    *   <li>Fully qualified method name - {@link LogRecord#getSourceMethodName()}
-   *   <li>Original log record thread id - {@link LogRecord#getThreadID()}
+   *   <li>Thread id - {@link LogRecord#getThreadID()}
    * </ul>
-   *
-   * <p>When experimental log attributes are enabled, the current thread's {@code thread.name} and
-   * {@code thread.id} are captured separately.
    */
   private static void mapLogRecord(LogRecordBuilder builder, LogRecord logRecord) {
     // message
