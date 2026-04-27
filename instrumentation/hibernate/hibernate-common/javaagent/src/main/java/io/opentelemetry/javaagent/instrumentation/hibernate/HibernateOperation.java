@@ -21,12 +21,12 @@ public class HibernateOperation {
     this.sessionId = sessionInfo != null ? sessionInfo.getSessionId() : null;
   }
 
-  public String getName() {
+  String getName() {
     return spanName;
   }
 
   @Nullable
-  public String getSessionId() {
+  String getSessionId() {
     return sessionId;
   }
 
