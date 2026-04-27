@@ -1,4 +1,5 @@
-# Converted from the repo's legacy markdownlint config.
+# See https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+# and https://github.com/DavidAnson/markdownlint-cli2
 [global]
 # disable link text should be descriptive check
 disable = ["MD059", "line-length", "no-inline-html", "MD041", "MD022", "ul-style", "fenced-code-language"]
