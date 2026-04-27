@@ -29,7 +29,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -83,7 +82,7 @@ public abstract class KafkaClientBaseTest {
   protected Consumer<Integer, String> consumer;
   private final CountDownLatch consumerReady = new CountDownLatch(1);
 
-  protected static final boolean isExperimentalEnabled =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
   public static final int partition = 0;
@@ -200,7 +199,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
-    if (isExperimentalEnabled) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(
               stringKey("messaging.kafka.bootstrap.servers"),
@@ -239,13 +238,11 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "process"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
-                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-                satisfies(
-                    longKey("kafka.record.queue_time_ms"),
-                    val ->
-                        val.satisfiesAnyOf(
-                            v -> assertThat(v).isNotNegative(),
-                            v -> assertThat(isExperimentalEnabled).isFalse()))));
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
+    if (EXPERIMENTAL_ATTRIBUTES) {
+      assertions.add(
+          satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
+    }
     if (emitOldMessagingSemconv()) {
       assertions.add(satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative));
     }
