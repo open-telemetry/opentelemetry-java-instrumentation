@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Reshaped the ktor `Experimental` helper from a class with a `companion object` to a top-level
+  `object`. Kotlin source callers (`Experimental.emitExperimentalTelemetry(...)`) are unaffected,
+  but pre-compiled consumers must be recompiled against the new artifact.
+  ([#18343](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18343))
 - Removed previously deprecated `SqlQueryAnalyzer.analyze(String)` and
   `SqlQueryAnalyzer.analyzeWithSummary(String)`; use the overloads that take a `SqlDialect`.
 - Removed the unused `DbClientAttributesGetter.getDbResponseStatusCode()` default method.
