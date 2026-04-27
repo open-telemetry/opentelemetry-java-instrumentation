@@ -12,8 +12,6 @@ import java.util.concurrent.CompletionStage;
 
 public class CompletionStageWrapper {
 
-  private CompletionStageWrapper() {}
-
   public static <T> CompletionStage<T> wrap(CompletionStage<T> future) {
     Context context = Context.current();
     if (context != Context.root()) {
@@ -37,4 +35,6 @@ public class CompletionStageWrapper {
 
     return result;
   }
+
+  private CompletionStageWrapper() {}
 }

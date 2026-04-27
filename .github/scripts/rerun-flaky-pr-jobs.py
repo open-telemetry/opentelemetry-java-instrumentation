@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 LOOKBACK_HOURS = 2
-MAX_FAILED_JOBS_PER_WORKFLOW_RUN = 2
+MAX_FAILED_JOBS_PER_WORKFLOW_RUN = 5
 MAX_RERUN_ATTEMPTS = 2
 
 
@@ -36,7 +36,7 @@ def main() -> None:
             continue
 
         rerun_attempts = run["run_attempt"] - 1
-        if rerun_attempts > MAX_RERUN_ATTEMPTS:
+        if rerun_attempts >= MAX_RERUN_ATTEMPTS:
             processed_runs.append(
                 f"Skipped {format_run(run)}: already rerun {rerun_attempts} times."
             )

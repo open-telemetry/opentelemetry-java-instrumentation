@@ -53,45 +53,44 @@ class JavaExecutorInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, Runnable.class)).and(takesArguments(1)),
-        JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
+        getClass().getName() + "$SetExecuteRunnableStateAdvice");
     // Netty uses addTask as the actual core of their submission; there are non-standard variations
     // like execute(Runnable,boolean) that aren't caught by standard instrumentation
     transformer.applyAdviceToMethod(
         named("addTask").and(takesArgument(0, Runnable.class)).and(takesArguments(1)),
-        JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
+        getClass().getName() + "$SetExecuteRunnableStateAdvice");
     transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, ForkJoinTask.class)),
-        JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
+        getClass().getName() + "$SetJavaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
         named("submit")
             .and(takesArgument(0, Runnable.class))
             .and(returns(hasSuperType(is(Future.class)))),
-        JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
+        getClass().getName() + "$SetSubmitRunnableStateAdvice");
     transformer.applyAdviceToMethod(
         named("submit")
             .and(takesArgument(0, Callable.class))
             .and(returns(hasSuperType(is(Future.class)))),
-        JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
+        getClass().getName() + "$SetCallableStateAdvice");
     transformer.applyAdviceToMethod(
         named("submit").and(takesArgument(0, ForkJoinTask.class)),
-        JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
+        getClass().getName() + "$SetJavaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("invokeAny", "invokeAll").and(takesArgument(0, Collection.class)),
-        JavaExecutorInstrumentation.class.getName()
-            + "$SetCallableStateForCallableCollectionAdvice");
+        getClass().getName() + "$SetCallableStateForCallableCollectionAdvice");
     transformer.applyAdviceToMethod(
         named("invoke").and(takesArgument(0, ForkJoinTask.class)),
-        JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
+        getClass().getName() + "$SetJavaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
         named("schedule")
             .and(takesArgument(0, Runnable.class))
             .and(returns(hasSuperType(is(Future.class)))),
-        JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
+        getClass().getName() + "$SetSubmitRunnableStateAdvice");
     transformer.applyAdviceToMethod(
         named("schedule")
             .and(takesArgument(0, Callable.class))
             .and(returns(hasSuperType(is(Future.class)))),
-        JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
+        getClass().getName() + "$SetCallableStateAdvice");
   }
 
   @SuppressWarnings("unused")

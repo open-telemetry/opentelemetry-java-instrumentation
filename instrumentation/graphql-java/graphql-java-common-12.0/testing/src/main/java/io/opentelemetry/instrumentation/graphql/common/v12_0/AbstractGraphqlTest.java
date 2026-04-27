@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GR
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -80,7 +81,8 @@ public abstract class AbstractGraphqlTest {
 
     try (Reader reader =
         new InputStreamReader(
-            this.getClass().getClassLoader().getResourceAsStream("schema.graphqls"), UTF_8)) {
+            requireNonNull(getClass().getClassLoader().getResourceAsStream("schema.graphqls")),
+            UTF_8)) {
       graphqlSchema = buildSchema(reader);
       GraphQL.Builder graphqlBuilder = GraphQL.newGraphQL(graphqlSchema);
       configure(graphqlBuilder);
