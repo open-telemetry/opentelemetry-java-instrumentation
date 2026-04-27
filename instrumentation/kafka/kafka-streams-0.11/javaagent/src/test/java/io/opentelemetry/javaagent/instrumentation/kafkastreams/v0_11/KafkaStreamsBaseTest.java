@@ -12,7 +12,6 @@ import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
@@ -50,8 +49,6 @@ abstract class KafkaStreamsBaseTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
-      AttributeKey.stringKey("messaging.client_id");
   protected static final String STREAM_PENDING = "test.pending";
   protected static final String STREAM_PROCESSED = "test.processed";
 
@@ -60,7 +57,7 @@ abstract class KafkaStreamsBaseTest {
   static Consumer<Integer, String> consumer;
   static CountDownLatch consumerReady = new CountDownLatch(1);
 
-  protected static final boolean isExperimental =
+  protected static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
   @BeforeAll
