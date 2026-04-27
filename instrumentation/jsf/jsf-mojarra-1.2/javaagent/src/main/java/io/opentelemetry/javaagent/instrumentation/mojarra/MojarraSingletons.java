@@ -19,7 +19,7 @@ public class MojarraSingletons {
   static {
     instrumenter =
         Instrumenter.<JsfRequest, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::spanName)
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::getSpanName)
             .setErrorCauseExtractor(new JsfErrorCauseExtractor())
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .buildInstrumenter();
