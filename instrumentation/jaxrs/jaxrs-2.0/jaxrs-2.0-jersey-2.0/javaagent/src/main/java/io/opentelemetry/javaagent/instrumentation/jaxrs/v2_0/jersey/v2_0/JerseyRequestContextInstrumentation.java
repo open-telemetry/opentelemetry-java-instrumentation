@@ -62,7 +62,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
         return new AdviceScope(handlerData, context);
       }
 
-      public void exit(@Nullable Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }
@@ -96,7 +96,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(throwable);
+        adviceScope.end(throwable);
       }
     }
   }
