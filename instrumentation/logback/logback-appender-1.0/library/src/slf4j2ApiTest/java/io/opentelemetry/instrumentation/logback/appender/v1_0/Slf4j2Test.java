@@ -10,13 +10,17 @@ import static io.opentelemetry.api.common.AttributeKey.doubleKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -59,23 +63,24 @@ class Slf4j2Test {
         .addKeyValue("otel.event.name", "MyEventName")
         .log();
 
+    List<AttributeAssertion> assertions = codeAssertions("keyValue");
+    assertions.add(equalTo(stringKey("string key"), "string value"));
+    assertions.add(equalTo(booleanKey("boolean key"), true));
+    assertions.add(equalTo(longKey("byte key"), 1));
+    assertions.add(equalTo(longKey("short key"), 2));
+    assertions.add(equalTo(longKey("int key"), 3));
+    assertions.add(equalTo(longKey("long key"), 4));
+    assertions.add(equalTo(doubleKey("float key"), 5.0));
+    assertions.add(equalTo(doubleKey("double key"), 6.0));
+
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(codeAttributesLogCount() + 8) // 8 key value pairs
                 .hasEventName("MyEventName")
-                .hasAttributesSatisfying(
-                    equalTo(stringKey("string key"), "string value"),
-                    equalTo(booleanKey("boolean key"), true),
-                    equalTo(longKey("byte key"), 1),
-                    equalTo(longKey("short key"), 2),
-                    equalTo(longKey("int key"), 3),
-                    equalTo(longKey("long key"), 4),
-                    equalTo(doubleKey("float key"), 5.0),
-                    equalTo(doubleKey("double key"), 6.0)));
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -87,6 +92,9 @@ class Slf4j2Test {
         .addKeyValue("key1", "val1")
         .log();
 
+    List<AttributeAssertion> assertions = codeAssertions("otelEventNameKeyValue");
+    assertions.add(equalTo(stringKey("key1"), "val1"));
+
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
@@ -94,8 +102,7 @@ class Slf4j2Test {
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
                 .hasEventName("MyEventName")
-                .hasTotalAttributeCount(codeAttributesLogCount() + 1)
-                .hasAttributesSatisfying(equalTo(stringKey("key1"), "val1")));
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -107,11 +114,11 @@ class Slf4j2Test {
       MDC.clear();
     }
 
+    List<AttributeAssertion> assertions = codeAssertions("keyValuePairWinsOverMdc");
+    assertions.add(equalTo(stringKey("key1"), "kvp-value"));
+
     testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("test message")
-                .hasAttributesSatisfying(equalTo(stringKey("key1"), "kvp-value")));
+        logRecord -> logRecord.hasBody("test message").hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -125,15 +132,16 @@ class Slf4j2Test {
         .addMarker(MarkerFactory.getMarker(markerName2))
         .log();
 
+    List<AttributeAssertion> assertions = codeAssertions("multipleMarkers");
+    assertions.add(equalTo(stringArrayKey("logback.marker"), asList(markerName1, markerName2)));
+
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(codeAttributesLogCount() + 1) // 1 marker
-                .hasAttributesSatisfying(
-                    equalTo(stringArrayKey("logback.marker"), asList(markerName1, markerName2))));
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -147,6 +155,18 @@ class Slf4j2Test {
         .addArgument(Long.MAX_VALUE)
         .log();
 
+    List<AttributeAssertion> assertions = codeAssertions("argumentsAndTemplate");
+    assertions.add(
+        equalTo(
+            stringArrayKey("log.body.parameters"),
+            asList(
+                "'world'",
+                String.valueOf(Math.PI),
+                String.valueOf(true),
+                String.valueOf(Long.MAX_VALUE))));
+    assertions.add(
+        equalTo(stringKey("log.body.template"), "log message {} and {}, bool {}, long {}"));
+
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
@@ -154,17 +174,13 @@ class Slf4j2Test {
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody(
                     "log message 'world' and 3.141592653589793, bool true, long 9223372036854775807")
-                .hasTotalAttributeCount(codeAttributesLogCount() + 2)
-                .hasAttributesSatisfying(
-                    equalTo(
-                        stringArrayKey("log.body.parameters"),
-                        asList(
-                            "'world'",
-                            String.valueOf(Math.PI),
-                            String.valueOf(true),
-                            String.valueOf(Long.MAX_VALUE))),
-                    equalTo(
-                        stringKey("log.body.template"),
-                        "log message {} and {}, bool {}, long {}")));
+                .hasAttributesSatisfyingExactly(assertions));
+  }
+
+  private static List<AttributeAssertion> codeAssertions(String methodName) {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.addAll(codeFileAndLineAssertions(Slf4j2Test.class.getSimpleName() + ".java"));
+    assertions.addAll(codeFunctionAssertions(Slf4j2Test.class, methodName));
+    return assertions;
   }
 }

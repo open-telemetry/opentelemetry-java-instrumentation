@@ -6,13 +6,17 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import ch.qos.logback.classic.LoggerContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -49,6 +53,14 @@ abstract class AbstractOpenTelemetryAppenderTest {
       Helper.resetLoggerContext();
     }
 
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.addAll(
+        codeFileAndLineAssertions(
+            AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"));
+    assertions.addAll(
+        codeFunctionAssertions(AbstractOpenTelemetryAppenderTest.class, "logLoggerContext"));
+    assertions.add(equalTo(stringKey("test-property"), "test-value"));
+
     getTesting()
         .waitAndAssertLogRecords(
             logRecord ->
@@ -56,7 +68,6 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(codeAttributesLogCount() + 1)
-                    .hasAttributesSatisfying(equalTo(stringKey("test-property"), "test-value")));
+                    .hasAttributesSatisfyingExactly(assertions));
   }
 }

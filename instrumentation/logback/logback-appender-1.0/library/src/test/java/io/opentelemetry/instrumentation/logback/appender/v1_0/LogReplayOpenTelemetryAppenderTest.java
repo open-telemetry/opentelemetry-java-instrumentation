@@ -25,7 +25,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
       LibraryInstrumentationExtension.create();
 
   @BeforeEach
-  void setup() throws Exception {
+  void setup() throws ReflectiveOperationException {
     // to make sure we start fresh with a new OpenTelemetryAppender for each test
     reloadLoggerConfiguration();
   }
@@ -35,7 +35,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     return testing;
   }
 
-  private static void reloadLoggerConfiguration() throws Exception {
+  private static void reloadLoggerConfiguration() throws ReflectiveOperationException {
     LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
     loggerContext.reset();
     try {
