@@ -8,6 +8,5 @@ dependencies {
 
   testImplementation(project(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent"))
 
-  testImplementation(project(":instrumentation-api"))
   testImplementation("org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0")
 }
