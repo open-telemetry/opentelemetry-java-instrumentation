@@ -35,7 +35,7 @@ public class InstrumentationPoints {
       RedisCommand<?, ?, ?> command,
       Context context,
       @Nullable Throwable throwable,
-      AsyncCommand<?, ?, ?> asyncCommand) {
+      @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
     if (throwable != null) {
       instrumenter().end(context, command, null, throwable);
     } else if (expectsResponse(command)) {
