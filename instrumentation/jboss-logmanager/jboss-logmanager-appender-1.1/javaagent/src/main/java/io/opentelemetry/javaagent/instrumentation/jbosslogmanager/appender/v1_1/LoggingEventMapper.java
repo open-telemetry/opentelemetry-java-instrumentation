@@ -32,11 +32,11 @@ public class LoggingEventMapper {
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
-  private final List<AttributeKey<String>> captureMdcAttributeKeys;
-
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jboss_logmanager")
           .getBoolean("experimental_log_attributes/development", false);
+
+  private final List<AttributeKey<String>> captureMdcAttributeKeys;
 
   // cached as an optimization
   private final boolean captureAllMdcAttributes;
