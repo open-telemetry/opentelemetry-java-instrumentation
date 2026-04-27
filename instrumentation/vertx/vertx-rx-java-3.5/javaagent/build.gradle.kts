@@ -60,7 +60,7 @@ testing {
 
     val version5Test by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (otelProps.testLatestDeps) "latest.release" else "5.0.0"
+        val version = baseVersion("5.0.0").orLatest()
         implementation("org.hsqldb:hsqldb:2.3.4")
         compileOnly("io.vertx:vertx-codegen:$version")
         implementation("io.vertx:vertx-web:$version")
