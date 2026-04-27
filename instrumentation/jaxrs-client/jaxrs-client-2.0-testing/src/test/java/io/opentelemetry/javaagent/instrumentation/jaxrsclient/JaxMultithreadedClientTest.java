@@ -19,7 +19,6 @@ import java.net.URI;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,12 +44,8 @@ class JaxMultithreadedClientTest {
   boolean checkUri(JerseyClientBuilder builder, URI uri) {
     Client client = builder.build();
     try {
-      Response response = client.target(uri).request().get();
-      try {
-        return false;
-      } finally {
-        response.close();
-      }
+      client.target(uri).request().get().close();
+      return false;
     } catch (Exception e) {
       return true;
     } finally {
