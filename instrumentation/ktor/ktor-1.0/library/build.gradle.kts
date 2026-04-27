@@ -29,8 +29,6 @@ kotlin {
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
+tasks.test {
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

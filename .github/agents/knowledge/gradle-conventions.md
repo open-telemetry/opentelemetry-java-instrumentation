@@ -269,10 +269,11 @@ review**. Only verify correctness when they are already present.
 
 When already present, verify:
 
-- `collectMetadata` is in `tasks.test` for single-test-task modules (preferred), or in
+- `collectMetadata` is in `tasks.test` for single-test-task modules, or in
   `withType<Test>().configureEach` for modules that explicitly register additional `Test`
   tasks via `by registering(Test::class)` (`latestDepTest` does not count) — never on
-  individual tasks.
+  individual tasks. Do not use
+  `withType<Test>().configureEach { ... }` in single-test-task modules.
 - `metadataConfig` is on each non-default task. It may also appear on the default `test`
   task when that task itself runs with non-default `jvmArgs` (e.g., an experimental flag
   enabled module-wide via `withType<Test>().configureEach { jvmArgs(...) }`); in that case
