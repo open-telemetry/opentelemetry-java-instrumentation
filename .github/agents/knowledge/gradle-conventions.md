@@ -157,6 +157,13 @@ Flag `build.gradle.kts` dependencies that appear unused or redundant:
 - A dependency that duplicates something already provided transitively.
 - A `testImplementation` dependency for a library not used in tests.
 
+### Never declare `javaagent-bootstrap` explicitly in javaagent modules
+
+The `otel.javaagent-instrumentation` convention plugin already provides
+`javaagent-bootstrap` on the `compileOnly` classpath transitively. Do not add
+`compileOnly(project(":javaagent-bootstrap"))` to a javaagent module's
+`build.gradle.kts`, and remove it if present.
+
 ## Custom Test Tasks
 
 Every custom `Test` task registered with `val foo by registering(Test::class)` **must** include
@@ -215,15 +222,16 @@ block, not repeated on each individual task.
 If a property or JVM arg is moved into `withType<Test>().configureEach`, remove any now-redundant
 copies from individual tasks unless a task intentionally overrides the shared value.
 
-When the module's `build.gradle.kts` does not explicitly register additional `Test` tasks,
-`tasks.test { ... }` is fine — **do not** convert it to `withType<Test>().configureEach` and
-do not flag it.
+**When the module has only a single test task, prefer the simple `tasks.test { ... }` form.**
+Do **not** convert `tasks.test { ... }` to `withType<Test>().configureEach` in single-test-task
+modules, and do **not** flag the simple form as a problem. The `withType<Test>().configureEach`
+form is only justified when the same `build.gradle.kts` actually registers additional `Test` tasks.
 
 **`latestDepTest` does not count as a second test task for this rule.** It is registered
 implicitly by the convention plugin when `testLatestDeps` is set, and it inherits the
 configuration of `tasks.test`. A module with only a `tasks.test { ... }` block and no
 `by registering(Test::class)` declarations is a single-test-task module — leave it alone
-even if `testLatestDeps = true`.
+(use the simple form) even if `testLatestDeps = true`.
 
 Only consider converting to `withType<Test>().configureEach` when the **same
 `build.gradle.kts`** explicitly registers one or more additional `Test` tasks via
@@ -261,9 +269,10 @@ review**. Only verify correctness when they are already present.
 
 When already present, verify:
 
-- `collectMetadata` is in `withType<Test>().configureEach` (or `tasks.test` if the module
-  does not explicitly register additional `Test` tasks — `latestDepTest` does not count) —
-  never on individual tasks.
+- `collectMetadata` is in `tasks.test` for single-test-task modules (preferred), or in
+  `withType<Test>().configureEach` for modules that explicitly register additional `Test`
+  tasks via `by registering(Test::class)` (`latestDepTest` does not count) — never on
+  individual tasks.
 - `metadataConfig` is on each non-default task. It may also appear on the default `test`
   task when that task itself runs with non-default `jvmArgs` (e.g., an experimental flag
   enabled module-wide via `withType<Test>().configureEach { jvmArgs(...) }`); in that case
