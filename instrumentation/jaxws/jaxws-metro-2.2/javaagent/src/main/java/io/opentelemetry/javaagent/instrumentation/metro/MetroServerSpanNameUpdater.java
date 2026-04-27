@@ -39,7 +39,7 @@ final class MetroServerSpanNameUpdater {
    */
   private final Map<String, HttpServletRequestAdapter> servletRequestAdapters;
 
-  public MetroServerSpanNameUpdater() {
+  MetroServerSpanNameUpdater() {
     this.servletRequestAdapters = new LinkedHashMap<>();
 
     registerHttpServletRequestAdapter(
@@ -72,7 +72,7 @@ final class MetroServerSpanNameUpdater {
     logger.finest(() -> "Enabled " + name + " jaxws metro server span naming");
   }
 
-  public void updateServerSpanName(Context context, MetroRequest metroRequest) {
+  void updateServerSpanName(Context context, MetroRequest metroRequest) {
     String spanName = metroRequest.spanName();
 
     Span serverSpan = LocalRootSpan.fromContextOrNull(context);
