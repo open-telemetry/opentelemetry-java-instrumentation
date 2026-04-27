@@ -2,5 +2,7 @@ extends: relaxed
 
 rules:
   document-start: disable
+  # Line length is owned by the repo's root .editorconfig.
   line-length: disable
-  indentation: warning
+  # Keep indentation checks in yamllint so YAML structure issues still fail lint.
+  indentation: enable
