@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.JsfErrorCauseExtractor;
 import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.JsfRequest;
 
-public class MojarraSingletons {
+class MojarraSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jsf-mojarra-1.2";
 
   private static final Instrumenter<JsfRequest, Void> instrumenter;
@@ -25,7 +25,7 @@ public class MojarraSingletons {
             .buildInstrumenter();
   }
 
-  public static Instrumenter<JsfRequest, Void> instrumenter() {
+  static Instrumenter<JsfRequest, Void> instrumenter() {
     return instrumenter;
   }
 
