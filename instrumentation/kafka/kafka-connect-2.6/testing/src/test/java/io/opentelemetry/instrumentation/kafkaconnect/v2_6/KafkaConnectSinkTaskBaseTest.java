@@ -27,6 +27,9 @@ import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import io.opentelemetry.smoketest.TelemetryRetriever;
 import io.opentelemetry.smoketest.TelemetryRetrieverProvider;
 import io.restassured.http.ContentType;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.Properties;
@@ -132,7 +135,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   }
 
   @BeforeAll
-  void setupBase() {
+  void setupBase() throws IOException {
     network = Network.newNetwork();
 
     // Start backend container first (like smoke tests)
@@ -238,7 +241,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withStartupTimeout(Duration.of(5, MINUTES));
   }
 
-  private void setupKafkaConnect() {
+  private void setupKafkaConnect() throws IOException {
     // Get the agent path from system properties (smoke test pattern)
     String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
     if (agentPath == null) {
@@ -253,11 +256,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withExposedPorts(CONNECT_REST_PORT_INTERNAL)
             .withLogConsumer(
                 new Slf4jLogConsumer(LoggerFactory.getLogger("kafka-connect-container")))
-            // Save logs to desktop
             .withFileSystemBind(
-                System.getProperty("user.home") + "/Desktop/kafka-connect-logs",
-                "/var/log/kafka-connect",
-                BindMode.READ_WRITE)
+                getKafkaConnectLogsDir(), "/var/log/kafka-connect", BindMode.READ_WRITE)
             // Copy the agent jar to the container
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
@@ -306,6 +306,12 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                     + " && "
                     + "echo 'Starting Kafka Connect with logging to /var/log/kafka-connect/' && "
                     + "/etc/confluent/docker/run 2>&1 | tee /var/log/kafka-connect/kafka-connect.log");
+  }
+
+  private static String getKafkaConnectLogsDir() throws IOException {
+    return Files.createDirectories(
+            Path.of(System.getProperty("java.io.tmpdir"), "kafka-connect-logs"))
+        .toString();
   }
 
   @BeforeEach
