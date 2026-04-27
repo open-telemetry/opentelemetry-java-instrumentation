@@ -7,9 +7,9 @@ rumdl = "0.1.80"
 FLINT_CONFIG_DIR = ".github/config"
 
 [tasks.lint]
-description = "Run markdown and link linting"
+description = "Run lychee and rumdl checks"
 run = "flint run lychee rumdl"
 
 [tasks."lint:fix"]
-description = "Auto-fix lint issues"
+description = "Auto-fix rumdl issues"
 run = "flint run --fix rumdl"
