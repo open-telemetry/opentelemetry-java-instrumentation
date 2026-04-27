@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.TracingHolder.tracing;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -41,7 +42,7 @@ class ClientResourcesInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return ClientResources.Builder builder) {
       if (CompatibilityChecker.isCompatible()) {
-        builder.tracing(TracingHolder.getTracing());
+        builder.tracing(tracing());
       }
     }
   }
