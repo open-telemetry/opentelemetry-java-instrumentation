@@ -222,3 +222,13 @@ jetty-httpclient-9.2:library
 jetty-httpclient-9.2:testing
 jetty-11.0:javaagent
 jetty-12.0:javaagent
+jetty-8.0:javaagent
+jetty-common:javaagent
+jfinal-3.2:javaagent
+jms-1.1:javaagent
+jms-3.0:javaagent
+jms-common:bootstrap
+jms-common:javaagent
+jms-common:javaagent-unit-tests
+jmx-metrics:javaagent
+jmx-metrics:library
