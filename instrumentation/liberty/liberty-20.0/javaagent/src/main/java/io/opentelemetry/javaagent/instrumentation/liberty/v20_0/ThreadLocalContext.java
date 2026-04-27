@@ -45,10 +45,6 @@ public class ThreadLocalContext {
     this.scope = scope;
   }
 
-  public HttpServletRequest getRequest() {
-    return requestContext.request();
-  }
-
   public ServletRequestContext<HttpServletRequest> getRequestContext() {
     return requestContext;
   }
