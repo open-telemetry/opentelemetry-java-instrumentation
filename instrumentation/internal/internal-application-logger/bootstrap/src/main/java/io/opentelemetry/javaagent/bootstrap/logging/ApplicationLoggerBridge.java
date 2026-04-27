@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap.logging;
 
-import static java.util.Objects.requireNonNull;
-
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -16,7 +14,7 @@ public abstract class ApplicationLoggerBridge {
       new AtomicReference<>();
 
   public static void set(ApplicationLoggerBridge bridge) {
-    if (!applicationLoggerBridge.compareAndSet(null, requireNonNull(bridge))) {
+    if (!applicationLoggerBridge.compareAndSet(null, bridge)) {
       throw new IllegalStateException(
           "ApplicationLoggerBridge was already set earlier."
               + " This should never happen in a properly built javaagent, and it's most likely a result of an error in the javaagent build.");
