@@ -53,7 +53,8 @@ class ResteasySingleConnection implements SingleConnection {
       requestBuilder.header(entry.getKey(), entry.getValue());
     }
 
-    try (Response response = requestBuilder.buildGet().invoke()) {
+    Response response = requestBuilder.buildGet().invoke();
+    try {
       String responseId = response.getHeaderString(REQUEST_ID_HEADER);
       if (!Objects.equals(requestId, responseId)) {
         throw new IllegalStateException(
@@ -61,6 +62,8 @@ class ResteasySingleConnection implements SingleConnection {
       }
 
       return response.getStatus();
+    } finally {
+      response.close();
     }
   }
 }
