@@ -5,3 +5,25 @@ description: >
   configured to extract JVM and application-level telemetry data from JMX MBeans such as memory
   usage, thread counts, and garbage collection statistics, and translate these measurements into
   OpenTelemetry metrics.
+configurations:
+  - name: otel.jmx.enabled
+    declarative_name: java.jmx.enabled
+    type: boolean
+    default: true
+    description: Enables JMX metric collection during agent startup.
+  - name: otel.jmx.config
+    declarative_name: java.jmx.config
+    type: list
+    default: ""
+    description: Comma-separated list of custom JMX rules files to load.
+    examples:
+      - "path/to/config.yaml"
+      - "path/to/config.yaml,more_rules.yaml"
+  - name: otel.jmx.target.system
+    declarative_name: java.jmx.target.system
+    type: list
+    default: ""
+    description: Comma-separated list of predefined JMX target systems to enable.
+    examples:
+      - "jetty"
+      - "jetty,kafka-broker"
