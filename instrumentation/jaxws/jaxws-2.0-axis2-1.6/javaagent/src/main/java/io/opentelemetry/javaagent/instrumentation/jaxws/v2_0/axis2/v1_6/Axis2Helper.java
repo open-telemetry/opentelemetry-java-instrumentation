@@ -12,14 +12,14 @@ import io.opentelemetry.context.Scope;
 import javax.annotation.Nullable;
 import org.apache.axis2.jaxws.core.MessageContext;
 
-public class Axis2Helper {
+class Axis2Helper {
   private static final String REQUEST_KEY = Axis2Helper.class.getName() + ".Request";
   private static final String CONTEXT_KEY = Axis2Helper.class.getName() + ".Context";
   private static final String SCOPE_KEY = Axis2Helper.class.getName() + ".Scope";
 
   private Axis2Helper() {}
 
-  public static void start(MessageContext message) {
+  static void start(MessageContext message) {
     Context parentContext = Context.current();
 
     Axis2Request request = new Axis2Request(message);
@@ -37,7 +37,7 @@ public class Axis2Helper {
     message.setProperty(SCOPE_KEY, scope);
   }
 
-  public static void end(MessageContext message, @Nullable Throwable throwable) {
+  static void end(MessageContext message, @Nullable Throwable throwable) {
     Scope scope = (Scope) message.getProperty(SCOPE_KEY);
     if (scope == null) {
       return;
