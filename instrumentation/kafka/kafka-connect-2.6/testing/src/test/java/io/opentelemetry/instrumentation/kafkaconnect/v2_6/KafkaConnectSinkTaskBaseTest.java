@@ -27,8 +27,6 @@ import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import io.opentelemetry.smoketest.TelemetryRetriever;
 import io.opentelemetry.smoketest.TelemetryRetrieverProvider;
 import io.restassured.http.ContentType;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Locale;
@@ -45,6 +43,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
@@ -99,6 +98,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
 
   protected static OpenTelemetrySdk openTelemetry;
 
+  @TempDir static Path kafkaConnectLogsDir;
+
   // Abstract methods for database-specific setup
   protected abstract void setupDatabaseContainer();
 
@@ -135,7 +136,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   }
 
   @BeforeAll
-  void setupBase() throws IOException {
+  void setupBase() {
     network = Network.newNetwork();
 
     // Start backend container first (like smoke tests)
@@ -241,7 +242,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withStartupTimeout(Duration.of(5, MINUTES));
   }
 
-  private void setupKafkaConnect() throws IOException {
+  private void setupKafkaConnect() {
     // Get the agent path from system properties (smoke test pattern)
     String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
     if (agentPath == null) {
@@ -257,7 +258,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withLogConsumer(
                 new Slf4jLogConsumer(LoggerFactory.getLogger("kafka-connect-container")))
             .withFileSystemBind(
-                getKafkaConnectLogsDir(), "/var/log/kafka-connect", BindMode.READ_WRITE)
+                kafkaConnectLogsDir.toString(), "/var/log/kafka-connect", BindMode.READ_WRITE)
             // Copy the agent jar to the container
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
@@ -306,12 +307,6 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                     + " && "
                     + "echo 'Starting Kafka Connect with logging to /var/log/kafka-connect/' && "
                     + "/etc/confluent/docker/run 2>&1 | tee /var/log/kafka-connect/kafka-connect.log");
-  }
-
-  private static String getKafkaConnectLogsDir() throws IOException {
-    return Files.createDirectories(
-            Path.of(System.getProperty("java.io.tmpdir"), "kafka-connect-logs"))
-        .toString();
   }
 
   @BeforeEach
