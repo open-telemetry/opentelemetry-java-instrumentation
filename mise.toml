@@ -8,8 +8,8 @@ FLINT_CONFIG_DIR = ".github/config"
 
 [tasks.lint]
 description = "Run all lints"
-run = "flint run lychee rumdl"
+run = "flint run"
 
 [tasks."lint:fix"]
 description = "Auto-fix lint issues"
-run = "flint run --fix rumdl"
+run = "flint run --fix"
