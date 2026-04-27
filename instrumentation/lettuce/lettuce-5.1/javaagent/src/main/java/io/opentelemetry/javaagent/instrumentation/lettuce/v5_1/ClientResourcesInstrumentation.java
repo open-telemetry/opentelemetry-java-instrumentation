@@ -41,7 +41,7 @@ class ClientResourcesInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return ClientResources.Builder builder) {
       if (CompatibilityChecker.isCompatible()) {
-        builder.tracing(TracingHolder.tracing());
+        builder.tracing(TracingHolder.getTracing());
       }
     }
   }

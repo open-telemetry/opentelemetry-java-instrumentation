@@ -26,7 +26,7 @@ public class TracingHolder {
           .build()
           .createTracing();
 
-  public static Tracing tracing() {
+  public static Tracing getTracing() {
     return tracing;
   }
 
