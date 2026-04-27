@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalSemconv;
+
 import com.openai.core.RequestOptions;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.models.chat.completions.ChatCompletion;
@@ -99,14 +101,22 @@ final class InstrumentedChatCompletionServiceAsync
       Context context,
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions) {
-    ChatCompletionEventsHelper.emitPromptLogEvents(
-        context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+    if (!emitGenAiLatestExperimentalSemconv()) {
+      ChatCompletionEventsHelper.emitPromptLogEvents(
+          context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+    }
     CompletableFuture<ChatCompletion> future =
         delegate.create(chatCompletionCreateParams, requestOptions);
     future.thenAccept(
-        r ->
+        r -> {
+          if (emitGenAiLatestExperimentalSemconv()) {
+            ChatCompletionEventsHelper.emitOperationDetailsEvent(
+                context, eventLogger, chatCompletionCreateParams, r, captureMessageContent);
+          } else {
             ChatCompletionEventsHelper.emitCompletionLogEvents(
-                context, eventLogger, r, captureMessageContent));
+                context, eventLogger, r, captureMessageContent);
+          }
+        });
     return future;
   }
 
@@ -132,8 +142,10 @@ final class InstrumentedChatCompletionServiceAsync
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions,
       boolean newSpan) {
-    ChatCompletionEventsHelper.emitPromptLogEvents(
-        context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+    if (!emitGenAiLatestExperimentalSemconv()) {
+      ChatCompletionEventsHelper.emitPromptLogEvents(
+          context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+    }
     AsyncStreamResponse<ChatCompletionChunk> result =
         delegate.createStreaming(chatCompletionCreateParams, requestOptions);
     return new TracingAsyncStreamedResponse(

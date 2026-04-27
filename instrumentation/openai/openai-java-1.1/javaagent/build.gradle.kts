@@ -29,4 +29,14 @@ tasks {
     systemProperty("otel.instrumentation.genai.capture-message-content", "true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
+
+  val testExperimentalSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=gen_ai_latest_experimental")
+  }
+
+  check {
+    dependsOn(testExperimentalSemconv)
+  }
 }

@@ -42,6 +42,8 @@ public final class SemconvStability {
   private static final boolean emitOldMessagingSemconv;
   private static final boolean emitStableMessagingSemconv;
 
+  private static final boolean emitGenAiLatestExperimentalSemconv;
+
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
     v3Preview = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
@@ -59,6 +61,9 @@ public final class SemconvStability {
 
     emitOldRpcSemconv = shouldEmitOld("rpc", v3Preview, optInValues);
     emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, optInValues);
+
+    emitGenAiLatestExperimentalSemconv =
+        shouldEmitStable("gen_ai_latest_experimental", v3Preview, optInValues);
 
     emitOldMessagingSemconv = shouldEmitOld("messaging", false, previewValues);
     emitStableMessagingSemconv = shouldEmitStable("messaging", false, previewValues);
@@ -142,6 +147,14 @@ public final class SemconvStability {
 
   public static boolean emitStableRpcSemconv() {
     return emitStableRpcSemconv;
+  }
+
+  public static boolean emitOldGenAiSemconv() {
+    return !emitGenAiLatestExperimentalSemconv;
+  }
+
+  public static boolean emitGenAiLatestExperimentalSemconv() {
+    return emitGenAiLatestExperimentalSemconv;
   }
 
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();

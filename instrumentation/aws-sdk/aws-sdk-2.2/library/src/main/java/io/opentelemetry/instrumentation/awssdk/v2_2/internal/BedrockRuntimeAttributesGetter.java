@@ -27,7 +27,12 @@ class BedrockRuntimeAttributesGetter
   }
 
   @Override
-  public String getSystem(ExecutionAttributes executionAttributes) {
+  public String getOperationTarget(ExecutionAttributes executionAttributes) {
+    return getRequestModel(executionAttributes);
+  }
+
+  @Override
+  public String getProviderName(ExecutionAttributes executionAttributes) {
     return GenAiProviderNameIncubatingValues.AWS_BEDROCK;
   }
 

@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_ENCODING_FORMATS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_MODEL;
@@ -96,7 +95,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                             span.hasName("embeddings text-embedding-3-small")
                                 .hasKind(SpanKind.CLIENT)
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(genAiProviderKey(), OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                     equalTo(GEN_AI_REQUEST_MODEL, MODEL),
                                     equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
@@ -120,7 +119,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL),
                                             equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
@@ -134,7 +133,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(4.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL),
                                             equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
@@ -164,7 +163,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                             span.hasName("embeddings text-embedding-3-small")
                                 .hasKind(SpanKind.CLIENT)
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(genAiProviderKey(), OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                     equalTo(GEN_AI_REQUEST_MODEL, MODEL),
                                     equalTo(
@@ -185,7 +184,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL),
                                             equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
@@ -199,7 +198,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(4.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL),
                                             equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
@@ -244,7 +243,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                 .hasKind(SpanKind.CLIENT)
                                 .hasException(thrown)
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(genAiProviderKey(), OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                     equalTo(GEN_AI_REQUEST_MODEL, MODEL),
                                     // Newer versions of the library populate base64 when unset by
@@ -266,7 +265,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
   }

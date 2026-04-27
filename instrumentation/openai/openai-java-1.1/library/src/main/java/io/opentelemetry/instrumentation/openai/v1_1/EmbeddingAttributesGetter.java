@@ -25,7 +25,12 @@ final class EmbeddingAttributesGetter
   }
 
   @Override
-  public String getSystem(EmbeddingCreateParams request) {
+  public String getOperationTarget(EmbeddingCreateParams request) {
+    return getRequestModel(request);
+  }
+
+  @Override
+  public String getProviderName(EmbeddingCreateParams request) {
     return GenAiAttributes.GenAiProviderNameIncubatingValues.OPENAI;
   }
 
