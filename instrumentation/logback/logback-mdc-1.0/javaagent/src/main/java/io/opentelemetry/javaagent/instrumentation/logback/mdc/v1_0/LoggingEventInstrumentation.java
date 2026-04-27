@@ -23,7 +23,6 @@ import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -61,7 +60,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This ILoggingEvent event,
         @Advice.Return(typing = Typing.DYNAMIC) Map<String, String> contextData) {
 
-      if (contextData != null && contextData.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
+      if (contextData != null && contextData.containsKey(TRACE_ID_KEY)) {
         // Assume already instrumented event if traceId is present.
         return contextData;
       }

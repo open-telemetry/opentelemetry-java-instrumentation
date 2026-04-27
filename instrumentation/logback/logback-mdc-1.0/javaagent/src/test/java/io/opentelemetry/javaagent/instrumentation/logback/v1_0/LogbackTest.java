@@ -21,7 +21,7 @@ class LogbackTest extends AbstractLogbackTest {
   static InstrumentationExtension agentTesting = AgentInstrumentationExtension.create();
 
   @Override
-  public InstrumentationExtension getInstrumentationExtension() {
+  protected InstrumentationExtension getInstrumentationExtension() {
     return agentTesting;
   }
 
