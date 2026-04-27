@@ -12,7 +12,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class LogbackWithLoggingKeysTest extends AbstractLogbackTest {
 
   @RegisterExtension
-  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  private static final LibraryInstrumentationExtension testing =
+      LibraryInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension getInstrumentationExtension() {

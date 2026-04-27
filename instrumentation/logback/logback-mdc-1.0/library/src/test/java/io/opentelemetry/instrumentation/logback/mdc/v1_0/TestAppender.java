@@ -15,12 +15,20 @@ import java.util.Iterator;
 public class TestAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
 
-  static TestAppender instance;
+  private static TestAppender instance;
   private final AppenderAttachableImpl<ILoggingEvent> aai = new AppenderAttachableImpl<>();
-  ILoggingEvent lastEvent;
+  private ILoggingEvent lastEvent;
 
   public TestAppender() {
     instance = this;
+  }
+
+  static TestAppender getInstance() {
+    return instance;
+  }
+
+  ILoggingEvent getLastEvent() {
+    return lastEvent;
   }
 
   private void processEvent(ILoggingEvent event) {
