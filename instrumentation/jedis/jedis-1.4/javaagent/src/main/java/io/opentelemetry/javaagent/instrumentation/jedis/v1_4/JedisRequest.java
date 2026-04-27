@@ -13,7 +13,7 @@ import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
 
 @AutoValue
-abstract class JedisRequest {
+public abstract class JedisRequest {
 
   public static JedisRequest create(Connection connection, Protocol.Command command) {
     return new AutoValue_JedisRequest(connection, command, emptyList());

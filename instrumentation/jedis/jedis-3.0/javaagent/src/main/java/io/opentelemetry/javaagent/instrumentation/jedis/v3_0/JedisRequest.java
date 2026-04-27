@@ -17,7 +17,7 @@ import redis.clients.jedis.Protocol;
 import redis.clients.jedis.commands.ProtocolCommand;
 
 @AutoValue
-abstract class JedisRequest {
+public abstract class JedisRequest {
 
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
