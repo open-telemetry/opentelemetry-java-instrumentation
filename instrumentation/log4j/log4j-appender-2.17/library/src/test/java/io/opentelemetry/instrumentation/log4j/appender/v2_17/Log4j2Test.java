@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -26,8 +26,8 @@ class Log4j2Test extends AbstractLog4j2Test {
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
   }
 
-  @AfterAll
-  static void cleanup() {
+  @AfterEach
+  void cleanup() {
     OpenTelemetryAppender.resetForTest();
   }
 

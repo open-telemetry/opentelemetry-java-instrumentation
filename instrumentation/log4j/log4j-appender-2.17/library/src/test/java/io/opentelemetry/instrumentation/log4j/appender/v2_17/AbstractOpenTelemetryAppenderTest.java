@@ -21,7 +21,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -42,12 +41,6 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
   static void generalBeforeEachSetup() {
     ThreadContext.clearAll();
-  }
-
-  @AfterAll
-  static void cleanupAll() {
-    // This is to make sure that other test classes don't have issues with the logger provider set
-    OpenTelemetryAppender.resetForTest();
   }
 
   protected abstract InstrumentationExtension getTesting();
