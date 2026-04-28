@@ -112,6 +112,7 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   public static class PerformRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(
         @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
@@ -143,13 +144,16 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
+    @Nullable
     public static CompletableFuture<Object> stopSpan(
-        @Advice.Return CompletableFuture<Object> future,
+        @Advice.Return @Nullable CompletableFuture<Object> future,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.endAsync(throwable);
-        return adviceScope.wrapFuture(future);
+        if (future != null) {
+          return adviceScope.wrapFuture(future);
+        }
       }
       return future;
     }
