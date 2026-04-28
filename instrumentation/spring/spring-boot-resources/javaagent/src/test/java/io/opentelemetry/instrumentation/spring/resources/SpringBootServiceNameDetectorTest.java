@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.resources;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonMap;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -18,7 +19,6 @@ import io.opentelemetry.sdk.resources.Resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -132,12 +132,12 @@ class SpringBootServiceNameDetectorTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"application.yaml", APPLICATION_YML})
-  void yamlFileInCurrentDir(String fileName) throws Exception {
+  void yamlFileInCurrentDir(String fileName) throws IOException {
     Path yamlPath = Paths.get(fileName);
     try {
-      URL url = getClass().getClassLoader().getResource(APPLICATION_YML);
-      String content = readString(Paths.get(url.toURI()));
-      writeString(yamlPath, content);
+      try (InputStream in = requireNonNull(openClasspathResource(APPLICATION_YML))) {
+        Files.copy(in, yamlPath);
+      }
       when(system.openFile(fileName)).thenCallRealMethod();
       SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
       Resource result = guesser.createResource(config);
@@ -165,10 +165,10 @@ class SpringBootServiceNameDetectorTest {
   @Test
   void getFromCommandlineArgsWithSystemProperty() {
     when(system.getProperty("sun.java.command"))
-        .thenReturn("/bin/java sweet-spring.jar --spring.application.name=bullpen --quiet=never");
+        .thenReturn("/bin/java sweet-spring.jar --spring.application.name=bullpen-2 --quiet=never");
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
-    expectServiceName(result, "bullpen");
+    expectServiceName(result, "bullpen-2");
   }
 
   @Test
@@ -208,11 +208,6 @@ class SpringBootServiceNameDetectorTest {
     try (OutputStream out = Files.newOutputStream(path)) {
       out.write(value.getBytes(UTF_8));
     }
-  }
-
-  private static String readString(Path path) throws Exception {
-    byte[] allBytes = Files.readAllBytes(path);
-    return new String(allBytes, UTF_8);
   }
 
   private InputStream openClasspathResource(String resource) {
