@@ -128,6 +128,17 @@ def iter_bundles() -> list[PrBundle]:
 
 def preclassify(bundle: PrBundle) -> dict | None:
     """Return a decision dict if we can decide without the LLM, else None."""
+    labels = bundle.meta.get("labels") or []
+    if "automated code review" in labels:
+        return {
+            "decision": "omit",
+            "section": None,
+            "surface": "automated code review sweep",
+            "user_visible_effect": "none",
+            "bullet": None,
+            "evidence": "PR labeled 'automated code review'",
+            "source": "preclassify",
+        }
     if not bundle.meta.get("touches_src_main"):
         files = [f["path"] for f in bundle.meta.get("files", [])]
         return {
