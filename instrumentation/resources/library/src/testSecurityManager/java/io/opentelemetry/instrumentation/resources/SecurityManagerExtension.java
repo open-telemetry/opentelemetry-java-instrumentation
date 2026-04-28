@@ -34,24 +34,24 @@ final class SecurityManagerExtension implements BeforeEachCallback, AfterEachCal
 
     private static final BlockPropertiesAccess INSTANCE = new BlockPropertiesAccess();
 
-    private static final Set<String> BLOCKED_PROPERTIES = new HashSet<>();
+    private static final Set<String> blockedProperties = new HashSet<>();
 
     static {
-      BLOCKED_PROPERTIES.add("java.home");
-      BLOCKED_PROPERTIES.add("java.runtime.home");
-      BLOCKED_PROPERTIES.add("java.runtime.version");
-      BLOCKED_PROPERTIES.add("java.vm.name");
-      BLOCKED_PROPERTIES.add("java.vm.vendor");
-      BLOCKED_PROPERTIES.add("java.vm.version");
-      BLOCKED_PROPERTIES.add("os.arch");
-      BLOCKED_PROPERTIES.add("os.name");
-      BLOCKED_PROPERTIES.add("os.version");
+      blockedProperties.add("java.home");
+      blockedProperties.add("java.runtime.home");
+      blockedProperties.add("java.runtime.version");
+      blockedProperties.add("java.vm.name");
+      blockedProperties.add("java.vm.vendor");
+      blockedProperties.add("java.vm.version");
+      blockedProperties.add("os.arch");
+      blockedProperties.add("os.name");
+      blockedProperties.add("os.version");
     }
 
     @Override
     public void checkPermission(Permission perm) {
       if (perm instanceof PropertyPermission) {
-        if (BLOCKED_PROPERTIES.contains(perm.getName())) {
+        if (blockedProperties.contains(perm.getName())) {
           throw new SecurityException("Property access not allowed.");
         }
       }
