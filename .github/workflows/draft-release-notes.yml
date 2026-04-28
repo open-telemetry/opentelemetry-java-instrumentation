@@ -16,6 +16,10 @@ jobs:
     environment: protected
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # need full history and tags so the release-notes script can resolve
+          # the previous release tag (e.g. v2.27.0) when computing the commit range
+          fetch-depth: 0
 
       - name: Install Copilot CLI
         run: |
