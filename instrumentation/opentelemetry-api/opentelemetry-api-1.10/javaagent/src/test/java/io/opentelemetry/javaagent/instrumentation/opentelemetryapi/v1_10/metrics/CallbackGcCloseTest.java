@@ -32,10 +32,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  * <p>The mechanism under test:
  *
  * <ol>
- *   <li>{@code CallbackAnchor.anchor()} anchors the bridging consumer in a static {@code List} on
+ *   <li>{@code CallbackAnchor.anchor()} anchors the bridging consumer in a static {@code Map} on
  *       the helper class (tied to the app classloader's lifecycle) and wraps it in a {@code
  *       WeakRefConsumer} on the bootstrap classloader.
- *   <li>When the app classloader is collected, the static list is collected, removing the strong
+ *   <li>When the app classloader is collected, the static map is collected, removing the strong
  *       anchor. The {@code WeakReference} inside the {@code WeakRefConsumer} clears.
  *   <li>On the next SDK collection cycle, {@code WeakRefConsumer.accept()} detects the cleared
  *       reference and calls {@code close()} on the agent instrument.
@@ -65,7 +65,7 @@ class CallbackGcCloseTest {
   void instrumentClosedWhenClassLoaderCollected() throws Exception {
     // 1. Build a child-first URLClassLoader that loads its own copy of the OTel API.
     //    The agent will instrument GlobalOpenTelemetry in this CL and inject all bridge helpers
-    //    (including CallbackAnchor with its own static callbacks list).
+    //    (including CallbackAnchor with its own static callbacks map).
     URL apiJar = GlobalOpenTelemetry.class.getProtectionDomain().getCodeSource().getLocation();
     URL testClasses = GaugeRegistrar.class.getProtectionDomain().getCodeSource().getLocation();
 
@@ -74,7 +74,7 @@ class CallbackGcCloseTest {
 
     // 2. Load GaugeRegistrar from the child CL and register a gauge.
     //    Because the child CL loads its own copy of the OTel API, the bridge creates an
-    //    CallbackAnchor instance in the child CL with its own callbacks list.
+    //    CallbackAnchor instance in the child CL with its own callbacks map.
     Class<?> registrar = childCl.loadClass(GaugeRegistrar.class.getName());
     registrar
         .getMethod("register", String.class, String.class)
