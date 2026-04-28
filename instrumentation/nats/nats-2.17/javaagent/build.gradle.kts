@@ -32,6 +32,10 @@ tasks {
       includeTestsMatching("NatsExperimentalTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.capture-headers=captured-header")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.capture-headers=captured-header"
+    )
   }
 
   test {
