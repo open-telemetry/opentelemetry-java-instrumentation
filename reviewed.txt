@@ -349,3 +349,15 @@ opentelemetry-api-1.61:testing
 opentelemetry-extension-annotations-1.0:javaagent
 opentelemetry-extension-kotlin-1.0:javaagent
 opentelemetry-instrumentation-annotations-1.16:javaagent
+opentelemetry-instrumentation-api:javaagent
+opentelemetry-instrumentation-api:testing
+oracle-ucp-11.2:javaagent
+oracle-ucp-11.2:library
+oracle-ucp-11.2:testing
+oshi:javaagent
+oshi:library
+oshi:testing
+payara:javaagent
+pekko-actor-1.0:javaagent
+pekko-http-1.0:javaagent
+play-mvc-2.4:javaagent
