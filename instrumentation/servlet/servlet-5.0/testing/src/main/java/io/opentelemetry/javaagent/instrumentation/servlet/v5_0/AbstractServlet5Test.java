@@ -157,40 +157,42 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
 
     ExperimentalSnippetHolder.setSnippet(
         "\n  <script type=\"text/javascript\"> Test Test</script>");
-    AggregatedHttpRequest request = request(HTML_SERVLET_OUTPUT_STREAM, "GET");
-    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+    try {
+      AggregatedHttpRequest request = request(HTML_SERVLET_OUTPUT_STREAM, "GET");
+      AggregatedHttpResponse response = client.execute(request).aggregate().join();
 
-    assertThat(response.status().code()).isEqualTo(HTML_SERVLET_OUTPUT_STREAM.getStatus());
-    String result =
-        "<!DOCTYPE html>\n"
-            + "<html lang=\"en\">\n"
-            + "<head>\n"
-            + "  <script type=\"text/javascript\"> Test Test</script>\n"
-            + "  <meta charset=\"UTF-8\">\n"
-            + "  <title>Title</title>\n"
-            + "</head>\n"
-            + "<body>\n"
-            + "<p>test works</p>\n"
-            + "</body>\n"
-            + "</html>";
-    assertThat(response.contentUtf8()).isEqualTo(result);
-    assertThat(response.headers().contentLength()).isEqualTo(result.length());
+      assertThat(response.status().code()).isEqualTo(HTML_SERVLET_OUTPUT_STREAM.getStatus());
+      String result =
+          "<!DOCTYPE html>\n"
+              + "<html lang=\"en\">\n"
+              + "<head>\n"
+              + "  <script type=\"text/javascript\"> Test Test</script>\n"
+              + "  <meta charset=\"UTF-8\">\n"
+              + "  <title>Title</title>\n"
+              + "</head>\n"
+              + "<body>\n"
+              + "<p>test works</p>\n"
+              + "</body>\n"
+              + "</html>";
+      assertThat(response.contentUtf8()).isEqualTo(result);
+      assertThat(response.headers().contentLength()).isEqualTo(result.length());
 
-    ExperimentalSnippetHolder.setSnippet("");
-
-    String expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM, "GET");
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent(),
-                    span ->
-                        span.hasName("controller")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+      String expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM, "GET");
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
+                              .hasKind(SpanKind.SERVER)
+                              .hasNoParent(),
+                      span ->
+                          span.hasName("controller")
+                              .hasKind(SpanKind.INTERNAL)
+                              .hasParent(trace.getSpan(0))));
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
   }
 
   @Test
@@ -198,40 +200,42 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
     assumeTrue(isAgentTest());
 
     ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
-    AggregatedHttpRequest request = request(HTML_PRINT_WRITER, "GET");
-    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+    try {
+      AggregatedHttpRequest request = request(HTML_PRINT_WRITER, "GET");
+      AggregatedHttpResponse response = client.execute(request).aggregate().join();
 
-    assertThat(response.status().code()).isEqualTo(HTML_PRINT_WRITER.getStatus());
-    String result =
-        "<!DOCTYPE html>\n"
-            + "<html lang=\"en\">\n"
-            + "<head>\n"
-            + "  <script type=\"text/javascript\"> Test </script>\n"
-            + "  <meta charset=\"UTF-8\">\n"
-            + "  <title>Title</title>\n"
-            + "</head>\n"
-            + "<body>\n"
-            + "<p>test works</p>\n"
-            + "</body>\n"
-            + "</html>";
+      assertThat(response.status().code()).isEqualTo(HTML_PRINT_WRITER.getStatus());
+      String result =
+          "<!DOCTYPE html>\n"
+              + "<html lang=\"en\">\n"
+              + "<head>\n"
+              + "  <script type=\"text/javascript\"> Test </script>\n"
+              + "  <meta charset=\"UTF-8\">\n"
+              + "  <title>Title</title>\n"
+              + "</head>\n"
+              + "<body>\n"
+              + "<p>test works</p>\n"
+              + "</body>\n"
+              + "</html>";
 
-    assertThat(response.contentUtf8()).isEqualTo(result);
-    assertThat(response.headers().contentLength()).isEqualTo(result.length());
+      assertThat(response.contentUtf8()).isEqualTo(result);
+      assertThat(response.headers().contentLength()).isEqualTo(result.length());
 
-    ExperimentalSnippetHolder.setSnippet("");
-
-    String expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER, "GET");
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent(),
-                    span ->
-                        span.hasName("controller")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+      String expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER, "GET");
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
+                              .hasKind(SpanKind.SERVER)
+                              .hasNoParent(),
+                      span ->
+                          span.hasName("controller")
+                              .hasKind(SpanKind.INTERNAL)
+                              .hasParent(trace.getSpan(0))));
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
   }
 }
