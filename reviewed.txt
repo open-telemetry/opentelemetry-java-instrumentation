@@ -310,3 +310,14 @@ netty-4.0:javaagent
 netty-4.1:javaagent
 netty-4.1:library
 netty-4.1:testing
+netty-common-4.0:javaagent
+netty-common-4.0:library
+netty-common:library
+okhttp-2.2:javaagent
+okhttp-3.0:javaagent
+okhttp-3.0:library
+okhttp-3.0:testing
+openai-java-1.1:javaagent
+openai-java-1.1:library
+openai-java-1.1:openai3-testing
+openai-java-1.1:testing
