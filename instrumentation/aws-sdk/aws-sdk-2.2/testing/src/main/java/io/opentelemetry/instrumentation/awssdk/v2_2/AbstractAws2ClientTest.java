@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -485,7 +486,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   void testS3Client(String operation, String method, Function<S3Client, Object> call)
       throws ReflectiveOperationException {
     S3ClientBuilder builder = S3Client.builder();
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       Method forcePathStyleMethod =
           S3ClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
       forcePathStyleMethod.invoke(builder, true);
@@ -519,7 +520,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
       String body)
       throws ReflectiveOperationException {
     S3AsyncClientBuilder builder = S3AsyncClient.builder();
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       Method forcePathStyleMethod =
           S3AsyncClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
       forcePathStyleMethod.invoke(builder, true);
@@ -571,7 +572,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             (Supplier<HttpResponse>)
                 () -> {
                   String content;
-                  if (!Boolean.getBoolean("testLatestDeps")) {
+                  if (!testLatestDeps()) {
                     content =
                         "<CreateQueueResponse>"
                             + " <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>"
@@ -598,7 +599,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             (Supplier<HttpResponse>)
                 () -> {
                   String content;
-                  if (!Boolean.getBoolean("testLatestDeps")) {
+                  if (!testLatestDeps()) {
                     content =
                         "<SendMessageResponse>"
                             + " <SendMessageResult>"

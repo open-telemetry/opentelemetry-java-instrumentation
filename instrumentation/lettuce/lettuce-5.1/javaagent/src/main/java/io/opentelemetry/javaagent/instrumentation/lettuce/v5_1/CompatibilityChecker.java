@@ -15,7 +15,7 @@ public class CompatibilityChecker {
     try {
       Tracing.getContext();
       return true;
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return false;
     }
   }

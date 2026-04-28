@@ -59,8 +59,8 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     // disable redirect tests
     optionsBuilder.disableTestRedirects();
-    // jetty 12 does not support to reuse request
-    // use request.send() twice will block the program infinitely
+    // Jetty 12 does not support reusing requests.
+    // Calling request.send() twice blocks indefinitely.
     optionsBuilder.disableTestReusedRequest();
     optionsBuilder.spanEndsAfterBody();
   }
