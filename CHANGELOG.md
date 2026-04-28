@@ -4,39 +4,130 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Reshaped the ktor `Experimental` helper from a class with a `companion object` to a top-level
-  `object`. Kotlin source callers (`Experimental.emitExperimentalTelemetry(...)`) are unaffected,
-  but pre-compiled consumers must be recompiled against the new artifact.
-  ([#18343](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18343))
-- Removed previously deprecated `SqlQueryAnalyzer.analyze(String)` and
-  `SqlQueryAnalyzer.analyzeWithSummary(String)`; use the overloads that take a `SqlDialect`.
-- Removed the unused `DbClientAttributesGetter.getDbResponseStatusCode()` default method.
-- Removed previously deprecated
-  `KafkaTelemetryBuilder.setMessagingReceiveInstrumentationEnabled(boolean)`; use
-  `setMessagingReceiveTelemetryEnabled(boolean)`.
-- Removed previously deprecated `OpenTelemetryAppender.Builder.captureCodeAttributes(boolean)` in
-  the log4j-appender-2.17 module; use `setCaptureCodeAttributes(boolean)`.
-- Removed previously deprecated `Experimental.setEnableSqlCommenter()` in the JDBC and R2DBC
-  instrumentations; use `Experimental.setSqlCommenterEnabled()`.
-- Removed previously deprecated `Experimental.addTraceIdRequestAttribute()` and
-  `Experimental.setCapturedRequestParameters()` in the servlet-3.0 and servlet-5.0 instrumentations;
-  use `setTraceIdRequestAttributeEnabled()` and `setCaptureRequestParameters()` respectively.
-- Removed the `opentelemetry-runtime-telemetry-java8` and `opentelemetry-runtime-telemetry-java17`
-  library artifacts (deprecated aliases); use `opentelemetry-runtime-telemetry` instead.
-- Removed previously deprecated experimental config property
-  `otel.instrumentation.servlet.experimental.add-trace-id-request-attribute`; use
-  `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled` instead.
+- Remove the internal `ClassInjector`/`ProxyInjectionBuilder` injection API from
+  `javaagent-extension-api`.
+  ([#18112](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18112))
+- Removed previously deprecated API methods such as `SqlQueryAnalyzer.analyze(String)`,
+  `KafkaTelemetryBuilder.setMessagingReceiveInstrumentationEnabled(boolean)`, and
+  `OpenTelemetryAppender.Builder.captureCodeAttributes(boolean)`, and removed the deprecated
+  `opentelemetry-runtime-telemetry-java8` and `opentelemetry-runtime-telemetry-java17` library
+  aliases.
+  ([#18136](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18136))
 - Removed the previously deprecated `captureEventName` library builder setting from the
   logback-appender-1.0 and log4j-appender-2.17 `OpenTelemetryAppender`, and the corresponding
   `otel.instrumentation.{logback-appender,log4j-appender,jboss-logmanager}.experimental.capture-event-name`
   javaagent properties. Use the `otel.event.name` key in MDC / context data / key-value pairs /
   Logstash markers / structured arguments instead.
-- Removed previously deprecated experimental config property
-  `otel.instrumentation.http.client.experimental.redact-query-parameters`; use
-  `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` instead.
-- Removed previously deprecated experimental config property
+  ([#18223](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18223))
+- Removed previously deprecated experimental config properties
+  `otel.instrumentation.http.client.experimental.redact-query-parameters` and
   `otel.instrumentation.common.experimental.db-sqlcommenter.enabled`; use
+  `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` and
   `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` instead.
+  ([#18229](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18229))
+- Removed previously deprecated experimental config property
+  `otel.instrumentation.servlet.experimental.add-trace-id-request-attribute`; use
+  `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled` instead.
+  ([#18237](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18237))
+- Reshaped the ktor `Experimental` helper from a class with a `companion object` to a top-level
+  `object`. Kotlin source callers (`Experimental.emitExperimentalTelemetry(...)`) are unaffected,
+  but pre-compiled consumers must be recompiled against the new artifact.
+  ([#18343](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18343))
+
+### 📈 Enhancements
+
+- Adds `otel.instrumentation.opentelemetry-annotations.exclude-methods` and
+  `otel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods` to skip
+  annotation-based auto-instrumentation for specific methods.
+  ([#18242](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18242))
+- Add experimental `otel.experimental.javascript-snippet` to inject a JavaScript snippet into HTML
+  servlet responses after the opening `<head>` tag.
+  ([#18268](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18268))
+- AWS Lambda Events now maps `otel.instrumentation.aws-lambda.flush-timeout` to the declarative
+  config name `java.aws_lambda.flush_timeout`.
+  ([#18304](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18304))
+
+### 🛠️ Bug fixes
+
+- Choose injected vs isolated helper classes based on `@Advice.OnMethodEnter` /
+  `@Advice.OnMethodExit` usage so advice-based instrumentations avoid helper-class loading failures.
+  ([#17815](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17815))
+- Skip expunging stale entries on virtual threads in `instrumentation-api`'s weak concurrent map
+  cleanup.
+  ([#18113](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18113))
+- Batch processing spans no longer link to the current span when propagation headers are missing.
+  ([#18154](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18154))
+- Handle `null` responses in OpenSearch REST instrumentation so failed requests still finish the
+  span instead of dropping it.
+  ([#18240](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18240))
+- Fix Pulsar `receiveAsync`/`batchReceiveAsync`, PowerJob `process`, and Play WS bootstrap advice so
+  exceptional exits no longer break instrumentation or leak context.
+  ([#18246](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18246))
+- Calling `resetOnEachOperator()` now also clears the Reactor scheduler hook, so context propagation
+  stops after reset.
+  ([#18258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18258))
+- Fix `package.info` runtime-telemetry records so `package.checksum` is always a 40-character SHA-1
+  and `package.description` falls back to `Implementation-Vendor` when `Implementation-Title` is
+  missing.
+  ([#18259](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18259))
+- Fix Scala `ForkJoinTask` context propagation when a task implements both `Runnable` and
+  `Callable`.
+  ([#18264](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18264))
+- Make `Servlet3SnippetInjectingResponseWrapper.containsHeader` null-safe so snippet injection no
+  longer fails on a null header name.
+  ([#18266](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18266))
+- Handle `null` from `HttpServletRequest.getHeaderNames()` in the Servlet 5 accessor.
+  ([#18267](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18267))
+- Avoids a crash in Spark 2.3 route enrichment when `find()` returns no `RouteMatch`.
+  ([#18269](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18269))
+- Fix Spring WS 2.0 controller spans to use the instrumented request context, so downstream spans
+  stay parented correctly.
+  ([#18278](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18278))
+- Fix a possible `NullPointerException` in Elasticsearch REST request advice when `@Advice.Enter` is
+  `null`.
+  ([#18313](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18313))
+- Handle a null `ExecutionResult` when setting GraphQL span status so requests no longer trip a
+  `NullPointerException`.
+  ([#18316](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18316))
+- Fix `java.net.http.HttpClient` instrumentation so skipped requests do not leave the call-depth
+  counter elevated.
+  ([#18323](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18323))
+- Fix Javalin 5 instrumentation activation by matching on `io.javalin.config.JavalinConfig`.
+  ([#18325](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18325))
+- Kafka 0.11 producer instrumentation now ignores `RuntimeException`s while extracting the Kafka
+  client ID.
+  ([#18341](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18341))
+- Restore Kafka client consumer span suppression when `WorkerSinkTask.execute()` exits with an
+  exception.
+  ([#18342](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18342))
+- Fix Lettuce callback context restoration and Liberty dispatcher handling so tracing keeps working
+  on affected versions.
+  ([#18346](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18346))
+- Fix NATS `publish` and `request` advice so instrumentation failures are suppressed instead of
+  breaking the original call.
+  ([#18353](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18353))
+- The Netty 3.8 HTTP server instrumentation now clears its per-channel `VirtualField` after a
+  response, preventing stale request context from being retained across requests.
+  ([#18358](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18358))
+- Fix OkHttp 2.2/3.0 instrumentation to tolerate skipped advice and null propagated context during
+  client construction and dispatcher enqueue handling.
+  ([#18360](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18360))
+- Fix OpenSearch async request tracing so `performRequestAsync` can return `null` safely, and
+  release metric callbacks if instrument setup fails.
+  ([#18362](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18362))
+- Fix `@WithSpan` instrumentation for methods with primitive return values.
+  ([#18364](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18364))
+- Fix Play MVC `Action.apply` spans so they end when an action throws or returns no future, and skip
+  unsupported Play WS `WebSocketUpgradeHandler` requests.
+  ([#18367](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18367))
+- Quartz tracing no longer crashes with a `NullPointerException` during `Scheduler` construction.
+  ([#18368](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18368))
+- Fix Redisson instrumentation so it works with both old and newer `getPromise()` return types and
+  still ends spans for batch promises.
+  ([#18378](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18378))
+- Restlet header extraction in `RestletHeadersGetter` now handles null carriers without throwing,
+  avoiding failures when instrumentation reads request headers from a missing request.
+  ([#18380](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18380))
 
 ## Version 2.27.0 (2026-04-21)
 
