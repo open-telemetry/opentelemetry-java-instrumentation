@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.servlet.common.javax.JavaxServletAccesso
 import io.opentelemetry.instrumentation.servlet.internal.ServletAsyncListener;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import java.util.List;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -21,16 +22,19 @@ class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse>
   private Servlet2Accessor() {}
 
   @Override
+  @Nullable
   public Integer getRequestRemotePort(HttpServletRequest httpServletRequest) {
     return null;
   }
 
   @Override
+  @Nullable
   public String getRequestLocalAddr(HttpServletRequest request) {
     return null;
   }
 
   @Override
+  @Nullable
   public Integer getRequestLocalPort(HttpServletRequest request) {
     return null;
   }
@@ -39,7 +43,7 @@ class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse>
   public void addRequestAsyncListener(
       HttpServletRequest httpServletRequest,
       ServletAsyncListener<HttpServletResponse> listener,
-      Object response) {
+      @Nullable Object response) {
     throw new UnsupportedOperationException();
   }
 
