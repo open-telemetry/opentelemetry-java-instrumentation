@@ -74,24 +74,27 @@ class JarDetails {
         int index = urlLower.indexOf(entry.getKey());
         if (index > 0) {
           String targetEntry = urlString.substring(index + entry.getKey().length());
-          JarFile jarFile =
+          try (JarFile jarFile =
               new JarFile(
-                  urlString.substring("jar:file:".length(), index + 1 + entry.getValue().length()));
-          JarEntry jarEntry = jarFile.getJarEntry(targetEntry);
-          if (jarEntry == null) {
-            throw new IOException("Embedded jar entry not found: " + targetEntry);
+                  urlString.substring(
+                      "jar:file:".length(), index + 1 + entry.getValue().length()))) {
+            JarEntry jarEntry = jarFile.getJarEntry(targetEntry);
+            if (jarEntry == null) {
+              throw new IOException("Embedded jar entry not found: " + targetEntry);
+            }
+            return new JarDetails(
+                url,
+                getPom(jarFile, jarEntry),
+                getManifest(jarFile, jarEntry),
+                computeDigest(jarFile, jarEntry, SHA1.get()));
           }
-          return new JarDetails(
-              url,
-              getPom(jarFile, jarEntry),
-              getManifest(jarFile, jarEntry),
-              computeDigest(jarFile, jarEntry, SHA1.get()));
         }
       }
     }
-    JarFile jarFile = new JarFile(url.getFile());
-    return new JarDetails(
-        url, getPom(jarFile), getManifest(jarFile), computeDigest(url, SHA1.get()));
+    try (JarFile jarFile = new JarFile(url.getFile())) {
+      return new JarDetails(
+          url, getPom(jarFile), getManifest(jarFile), computeDigest(url, SHA1.get()));
+    }
   }
 
   /**
