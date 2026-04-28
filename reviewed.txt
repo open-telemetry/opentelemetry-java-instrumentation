@@ -376,3 +376,15 @@ quarkus-resteasy-reactive:quarkus-3.0-testing
 quarkus-resteasy-reactive:quarkus-3.9-testing
 quarkus-resteasy-reactive:quarkus-common-testing
 quartz-2.0:javaagent
+quartz-2.0:library
+quartz-2.0:testing
+r2dbc-1.0:javaagent
+r2dbc-1.0:library
+r2dbc-1.0:library-instrumentation-shaded
+r2dbc-1.0:testing
+rabbitmq-2.7:javaagent
+ratpack-1.4:javaagent
+ratpack-1.4:testing
+ratpack-1.7:javaagent
+ratpack-1.7:library
+reactor-3.1:javaagent
