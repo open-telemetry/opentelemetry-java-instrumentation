@@ -14,7 +14,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 
 public abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest {
-  private static final boolean producerPropagationEnabled =
+  private static final boolean PRODUCER_PROPAGATION_ENABLED =
       Boolean.parseBoolean(
           System.getProperty("otel.instrumentation.kafka.producer-propagation.enabled", "true"));
 
@@ -28,7 +28,7 @@ public abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest
     ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records).hasSize(1);
     for (ConsumerRecord<?, ?> record : records) {
-      assertThat(record.headers().iterator().hasNext()).isEqualTo(producerPropagationEnabled);
+      assertThat(record.headers().iterator().hasNext()).isEqualTo(PRODUCER_PROPAGATION_ENABLED);
     }
   }
 }

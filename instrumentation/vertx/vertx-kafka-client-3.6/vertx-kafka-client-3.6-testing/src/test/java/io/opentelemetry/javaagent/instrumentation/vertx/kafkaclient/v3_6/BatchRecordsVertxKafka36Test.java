@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.vertx.kafka.AbstractBatchRecordsVertxKafkaTest;
@@ -29,7 +31,7 @@ class BatchRecordsVertxKafka36Test extends AbstractBatchRecordsVertxKafkaTest {
   @Override
   protected boolean hasConsumerGroup() {
     // consumer group is not available in version 0.11
-    return Boolean.getBoolean("testLatestDeps");
+    return testLatestDeps();
   }
 
   @Override

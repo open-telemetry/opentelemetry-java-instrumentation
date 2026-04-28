@@ -17,12 +17,12 @@ import javax.annotation.Nullable;
 
 public class MicrometerSingletons {
 
-  private static final MeterRegistry METER_REGISTRY;
+  private static final MeterRegistry meterRegistry;
 
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "micrometer");
-    METER_REGISTRY =
+    meterRegistry =
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())
             .setPrometheusMode(config.get("prometheus_mode").getBoolean("enabled", false))
             .setBaseTimeUnit(TimeUnitParser.parseConfigValue(config.getString("base_time_unit")))
@@ -32,7 +32,7 @@ public class MicrometerSingletons {
   }
 
   public static MeterRegistry meterRegistry() {
-    return METER_REGISTRY;
+    return meterRegistry;
   }
 
   // called from code generated in AbstractCompositeMeterInstrumentation

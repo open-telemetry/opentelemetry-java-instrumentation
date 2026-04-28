@@ -18,7 +18,7 @@ final class MyFacesSingletons {
   static {
     instrumenter =
         Instrumenter.<JsfRequest, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::spanName)
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::getSpanName)
             .setErrorCauseExtractor(new MyFacesErrorCauseExtractor())
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .buildInstrumenter();

@@ -26,7 +26,7 @@ class WrapperSendExceptionTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  @SuppressWarnings({"unchecked"})
+  @SuppressWarnings("unchecked")
   void producerSpanEndedWhenSendThrowsSynchronously() {
     Producer<String, String> producer = mock(Producer.class);
     when(producer.send(any(), any())).thenThrow(new KafkaException("send failed"));
