@@ -35,7 +35,6 @@ jobs:
     uses: ./.github/workflows/reusable-muzzle.yml
 
   lint:
-    # release branches are excluded because the README.md javaagent download link has to be updated
-    # on release branches before the release download has been published
+    # release branches are excluded to avoid unnecessary release branch maintenance
     if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-lint-check.yml
