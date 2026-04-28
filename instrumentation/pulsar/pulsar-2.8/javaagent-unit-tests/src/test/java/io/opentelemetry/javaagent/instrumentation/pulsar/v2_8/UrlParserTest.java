@@ -18,33 +18,16 @@ class UrlParserTest {
     assertThat(UrlParser.parseUrl("localhost:1,localhost:2")).isNull();
     assertThat(UrlParser.parseUrl("localhost:1;localhost:2")).isNull();
 
-    assertThat(UrlParser.parseUrl("pulsar://localhost:1"))
-        .isNotNull()
-        .satisfies(
-            url -> {
-              assertThat(url.getHost()).isEqualTo("localhost");
-              assertThat(url.getPort()).isEqualTo(1);
-            });
-    assertThat(UrlParser.parseUrl("pulsar://localhost:1/foo"))
-        .isNotNull()
-        .satisfies(
-            url -> {
-              assertThat(url.getHost()).isEqualTo("localhost");
-              assertThat(url.getPort()).isEqualTo(1);
-            });
-    assertThat(UrlParser.parseUrl("pulsar://localhost"))
-        .isNotNull()
-        .satisfies(
-            url -> {
-              assertThat(url.getHost()).isEqualTo("localhost");
-              assertThat(url.getPort()).isNull();
-            });
-    assertThat(UrlParser.parseUrl("pulsar://localhost:xxx"))
-        .isNotNull()
-        .satisfies(
-            url -> {
-              assertThat(url.getHost()).isEqualTo("localhost");
-              assertThat(url.getPort()).isNull();
-            });
+    assertHostAndPort("pulsar://localhost:1", "localhost", 1);
+    assertHostAndPort("pulsar://localhost:1/foo", "localhost", 1);
+    assertHostAndPort("pulsar://localhost", "localhost", null);
+    assertHostAndPort("pulsar://localhost:xxx", "localhost", null);
+  }
+
+  private static void assertHostAndPort(String input, String host, Integer port) {
+    UrlParser.UrlData url = UrlParser.parseUrl(input);
+    assertThat(url).isNotNull();
+    assertThat(url.getHost()).isEqualTo(host);
+    assertThat(url.getPort()).isEqualTo(port);
   }
 }
