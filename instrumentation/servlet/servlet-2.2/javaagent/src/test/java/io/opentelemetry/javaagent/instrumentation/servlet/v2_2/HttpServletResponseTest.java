@@ -96,7 +96,7 @@ class HttpServletResponseTest {
   }
 
   @Test
-  void testSendWithException() throws ServletException, IOException {
+  void testSendWithException() throws Exception {
     RuntimeException ex = new RuntimeException("some error");
     TestResponse response =
         new TestResponse() {
