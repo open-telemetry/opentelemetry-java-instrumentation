@@ -388,3 +388,10 @@ ratpack-1.4:testing
 ratpack-1.7:javaagent
 ratpack-1.7:library
 reactor-3.1:javaagent
+reactor-3.1:library
+reactor-3.1:testing
+reactor-3.4:javaagent
+reactor-kafka-1.0:javaagent
+reactor-kafka-1.0:testing
+reactor-netty-0.9:javaagent
+reactor-netty-1.0:javaagent
