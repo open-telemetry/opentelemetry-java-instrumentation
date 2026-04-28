@@ -13,7 +13,7 @@ dependencies {
   testImplementation(project(":instrumentation:rocketmq:rocketmq-client-4.8:testing"))
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   systemProperty("testLatestDeps", otelProps.testLatestDeps)
   // required on jdk17
   jvmArgs("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
