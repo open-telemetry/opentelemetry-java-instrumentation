@@ -426,3 +426,9 @@ rxjava-3.0:javaagent
 rxjava-3.0:library
 rxjava-3.1.1:javaagent
 rxjava-3.1.1:library
+rxjava-common-3.0:library
+rxjava-common-3.0:testing
+scala-fork-join-2.8:javaagent
+servlet-2.2:javaagent
+servlet-3.0:javaagent
+servlet-3.0:javaagent-testing
