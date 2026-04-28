@@ -11,6 +11,7 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.context.Context;
@@ -54,7 +55,7 @@ public final class DbExecution {
     map.put("mssql", MICROSOFT_SQL_SERVER);
     map.put("oracle", ORACLE_DB);
     map.put("h2", H2DATABASE);
-    return map;
+    return unmodifiableMap(map);
   }
 
   private final String systemName;
