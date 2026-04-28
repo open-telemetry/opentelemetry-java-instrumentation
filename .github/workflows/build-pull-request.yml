@@ -62,11 +62,9 @@ jobs:
       - if: |
           needs.common.result != 'success' ||
           needs.test-latest-deps.result != 'success' ||
+          needs.muzzle.result != 'success' ||
           (
             !startsWith(github.base_ref, 'release/') &&
-            (
-              needs.muzzle.result != 'success' ||
-              needs.lint.result != 'success'
-            )
+            needs.lint.result != 'success'
           )
         run: exit 1 # fail
