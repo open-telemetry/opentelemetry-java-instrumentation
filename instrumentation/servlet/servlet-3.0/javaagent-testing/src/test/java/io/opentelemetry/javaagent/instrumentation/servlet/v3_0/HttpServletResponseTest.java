@@ -97,7 +97,7 @@ class HttpServletResponseTest {
   }
 
   @Test
-  void testSendWithException() throws ServletException, IOException {
+  void testSendWithException() throws Exception {
     TestResponse response =
         new TestResponse() {
           @Override
