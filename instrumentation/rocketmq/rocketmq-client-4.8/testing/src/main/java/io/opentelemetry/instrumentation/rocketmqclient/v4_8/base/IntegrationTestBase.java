@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8.base;
 
 import static java.util.Collections.emptyMap;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -28,7 +29,6 @@ import org.apache.rocketmq.namesrv.NamesrvController;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
-import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +79,7 @@ public class IntegrationTestBase {
     NamesrvController namesrvController =
         new NamesrvController(namesrvConfig, nameServerNettyServerConfig);
     try {
-      Assert.assertTrue(namesrvController.initialize());
+      assertThat(namesrvController.initialize()).isTrue();
       logger.info("Name Server Start:{}", nameServerNettyServerConfig.getListenPort());
       namesrvController.start();
     } catch (Exception e) {
@@ -116,7 +116,7 @@ public class IntegrationTestBase {
     BrokerController brokerController =
         new BrokerController(brokerConfig, nettyServerConfig, nettyClientConfig, storeConfig);
     try {
-      Assert.assertTrue(brokerController.initialize());
+      assertThat(brokerController.initialize()).isTrue();
       logger.info(
           "Broker Start name:{} addr:{}",
           brokerConfig.getBrokerName(),
