@@ -45,11 +45,8 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLHandshakeException;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -97,12 +94,8 @@ class Netty41ClientSslTest {
     server = new HttpClientTestServer(testing.getOpenTelemetry());
     server.start();
     eventLoopGroup = new NioEventLoopGroup();
-  }
-
-  @AfterAll
-  static void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
-    server.stop().get(10, SECONDS);
-    eventLoopGroup.shutdownGracefully();
+    cleanup.deferAfterAll(eventLoopGroup::shutdownGracefully);
+    cleanup.deferAfterAll(server::stop);
   }
 
   @Test
