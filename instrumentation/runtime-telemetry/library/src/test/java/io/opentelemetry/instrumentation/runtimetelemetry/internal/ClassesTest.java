@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.management.ClassLoadingMXBean;
@@ -44,7 +43,7 @@ class ClassesTest {
                     sum ->
                         sum.isMonotonic()
                             .hasPointsSatisfying(
-                                point -> point.hasValue(3).hasAttributes(Attributes.empty()))));
+                                point -> point.hasValue(3).hasAttributesSatisfyingExactly())));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -56,7 +55,7 @@ class ClassesTest {
                     sum ->
                         sum.isMonotonic()
                             .hasPointsSatisfying(
-                                point -> point.hasValue(2).hasAttributes(Attributes.empty()))));
+                                point -> point.hasValue(2).hasAttributesSatisfyingExactly())));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -68,6 +67,6 @@ class ClassesTest {
                     sum ->
                         sum.isNotMonotonic()
                             .hasPointsSatisfying(
-                                point -> point.hasValue(1).hasAttributes(Attributes.empty()))));
+                                point -> point.hasValue(1).hasAttributesSatisfyingExactly())));
   }
 }
