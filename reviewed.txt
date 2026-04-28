@@ -367,3 +367,12 @@ play-ws-2.0:javaagent
 play-ws-2.1:javaagent
 play-ws-common:javaagent
 play-ws-common:testing
+powerjob-4.0:javaagent
+pulsar-2.8:javaagent
+pulsar-2.8:javaagent-unit-tests
+quarkus-resteasy-reactive:javaagent
+quarkus-resteasy-reactive:quarkus-2.0-testing
+quarkus-resteasy-reactive:quarkus-3.0-testing
+quarkus-resteasy-reactive:quarkus-3.9-testing
+quarkus-resteasy-reactive:quarkus-common-testing
+quartz-2.0:javaagent
