@@ -48,19 +48,35 @@ public class CallbackAnchor {
   public static <T, R extends AutoCloseable> R anchor(
       Function<Consumer<T>, R> buildFn, Consumer<T> callback) {
     callbacks.merge(new IdentityKey(callback), 1, Integer::sum);
-    WeakRefConsumer<T> weak = new WeakRefConsumer<>(new WeakReference<>(callback));
-    R instrument = buildFn.apply(weak);
-    weak.closeWhenCollected(instrument);
-    return instrument;
+    boolean success = false;
+    try {
+      WeakRefConsumer<T> weak = new WeakRefConsumer<>(new WeakReference<>(callback));
+      R instrument = buildFn.apply(weak);
+      weak.closeWhenCollected(instrument);
+      success = true;
+      return instrument;
+    } finally {
+      if (!success) {
+        release(callback);
+      }
+    }
   }
 
   public static <R extends AutoCloseable> R anchorBatch(
       Function<Runnable, R> buildFn, Runnable callback) {
     callbacks.merge(new IdentityKey(callback), 1, Integer::sum);
-    WeakRefRunnable weak = new WeakRefRunnable(new WeakReference<>(callback));
-    R instrument = buildFn.apply(weak);
-    weak.closeWhenCollected(instrument);
-    return instrument;
+    boolean success = false;
+    try {
+      WeakRefRunnable weak = new WeakRefRunnable(new WeakReference<>(callback));
+      R instrument = buildFn.apply(weak);
+      weak.closeWhenCollected(instrument);
+      success = true;
+      return instrument;
+    } finally {
+      if (!success) {
+        release(callback);
+      }
+    }
   }
 
   // Some instrument wrappers may end up calling close() more than once. Guard the deferred
