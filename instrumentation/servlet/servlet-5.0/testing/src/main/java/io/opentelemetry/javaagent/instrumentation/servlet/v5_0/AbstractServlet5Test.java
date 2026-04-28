@@ -35,8 +35,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttpServerTest<SERVER> {
 
-  @RegisterExtension
-  static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   public static final ServerEndpoint HTML_PRINT_WRITER =
       new ServerEndpoint(
