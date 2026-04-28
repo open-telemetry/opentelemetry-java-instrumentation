@@ -1,4 +1,6 @@
 [tools]
+
+# Linters
 "github:grafana/flint" = "0.21.0"
 lychee = "0.23.0"
 rumdl = "0.1.80"
