@@ -54,16 +54,17 @@ class JarDetails {
           });
 
   private final URL url;
+  protected final JarFile jarFile;
   @Nullable private final Properties pom;
   @Nullable private final Manifest manifest;
   private final String sha1Checksum;
 
-  private JarDetails(
-      URL url, @Nullable Properties pom, @Nullable Manifest manifest, String sha1Checksum) {
+  private JarDetails(URL url, JarFile jarFile) throws IOException {
     this.url = url;
-    this.pom = pom;
-    this.manifest = manifest;
-    this.sha1Checksum = sha1Checksum;
+    this.jarFile = jarFile;
+    this.pom = getPom();
+    this.manifest = getManifest();
+    this.sha1Checksum = computeDigest(SHA1.get());
   }
 
   static JarDetails forUrl(URL url) throws IOException {
@@ -74,27 +75,18 @@ class JarDetails {
         int index = urlLower.indexOf(entry.getKey());
         if (index > 0) {
           String targetEntry = urlString.substring(index + entry.getKey().length());
-          try (JarFile jarFile =
+          JarFile jarFile =
               new JarFile(
-                  urlString.substring(
-                      "jar:file:".length(), index + 1 + entry.getValue().length()))) {
-            JarEntry jarEntry = jarFile.getJarEntry(targetEntry);
-            if (jarEntry == null) {
-              throw new IOException("Embedded jar entry not found: " + targetEntry);
-            }
-            return new JarDetails(
-                url,
-                getPom(jarFile, jarEntry),
-                getManifest(jarFile, jarEntry),
-                computeDigest(jarFile, jarEntry, SHA1.get()));
+                  urlString.substring("jar:file:".length(), index + 1 + entry.getValue().length()));
+          JarEntry jarEntry = jarFile.getJarEntry(targetEntry);
+          if (jarEntry == null) {
+            throw new IOException("Embedded jar entry not found: " + targetEntry);
           }
+          return new EmbeddedJarDetails(url, jarFile, jarEntry);
         }
       }
     }
-    try (JarFile jarFile = new JarFile(url.getFile())) {
-      return new JarDetails(
-          url, getPom(jarFile), getManifest(jarFile), computeDigest(url, SHA1.get()));
-    }
+    return new JarDetails(url, new JarFile(url.getFile()));
   }
 
   /**
@@ -188,15 +180,8 @@ class JarDetails {
     return sha1Checksum;
   }
 
-  private static String computeDigest(URL url, MessageDigest md) throws IOException {
-    try (InputStream inputStream = url.openStream()) {
-      return computeDigest(inputStream, md);
-    }
-  }
-
-  private static String computeDigest(JarFile jarFile, JarEntry jarEntry, MessageDigest md)
-      throws IOException {
-    try (InputStream inputStream = jarFile.getInputStream(jarEntry)) {
+  private String computeDigest(MessageDigest md) throws IOException {
+    try (InputStream inputStream = getInputStream()) {
       return computeDigest(inputStream, md);
     }
   }
@@ -211,19 +196,20 @@ class JarDetails {
     return String.format(Locale.ROOT, "%040x", new BigInteger(1, digest));
   }
 
-  @Nullable
-  private static Manifest getManifest(JarFile jarFile) {
-    try {
-      return jarFile.getManifest();
-    } catch (IOException ignored) {
-      return null;
-    }
+  /**
+   * Returns An open input stream for the associated url. It is the caller's responsibility to close
+   * the stream on completion.
+   */
+  protected InputStream getInputStream() throws IOException {
+    return url.openStream();
   }
 
   @Nullable
-  private static Manifest getManifest(JarFile jarFile, JarEntry jarEntry) throws IOException {
-    try (JarInputStream jarInputStream = new JarInputStream(jarFile.getInputStream(jarEntry))) {
-      return jarInputStream.getManifest();
+  protected Manifest getManifest() {
+    try {
+      return jarFile.getManifest();
+    } catch (IOException e) {
+      return null;
     }
   }
 
@@ -232,7 +218,7 @@ class JarDetails {
    * are found or there is an error reading the file, return null.
    */
   @Nullable
-  private static Properties getPom(JarFile jarFile) throws IOException {
+  protected Properties getPom() throws IOException {
     Properties pom = null;
     for (Enumeration<JarEntry> entries = jarFile.entries(); entries.hasMoreElements(); ) {
       JarEntry jarEntry = entries.nextElement();
@@ -252,26 +238,51 @@ class JarDetails {
     return pom;
   }
 
-  @Nullable
-  private static Properties getPom(JarFile jarFile, JarEntry jarEntry) throws IOException {
-    Properties pom = null;
-    // Need to navigate inside the embedded jar which can't be done via random access.
-    try (JarInputStream jarInputStream = new JarInputStream(jarFile.getInputStream(jarEntry))) {
-      for (JarEntry entry = jarInputStream.getNextJarEntry();
-          entry != null;
-          entry = jarInputStream.getNextJarEntry()) {
-        if (entry.getName().startsWith("META-INF/maven")
-            && entry.getName().endsWith("pom.properties")) {
-          if (pom != null) {
-            // we've found multiple pom files. bail!
-            return null;
-          }
-          Properties props = new Properties();
-          props.load(jarInputStream);
-          pom = props;
-        }
+  private static class EmbeddedJarDetails extends JarDetails {
+
+    private final JarEntry jarEntry;
+
+    private EmbeddedJarDetails(URL url, JarFile jarFile, JarEntry jarEntry) throws IOException {
+      super(url, jarFile);
+      this.jarEntry = jarEntry;
+    }
+
+    @Override
+    protected InputStream getInputStream() throws IOException {
+      return jarFile.getInputStream(jarEntry);
+    }
+
+    @Override
+    protected Manifest getManifest() {
+      try (JarInputStream jarFile = new JarInputStream(getInputStream())) {
+        return jarFile.getManifest();
+      } catch (IOException e) {
+        return null;
       }
-      return pom;
+    }
+
+    @Override
+    @Nullable
+    protected Properties getPom() throws IOException {
+      Properties pom = null;
+      // Need to navigate inside the embedded jar which can't be done via random access.
+      try (JarInputStream jarFile = new JarInputStream(getInputStream())) {
+        for (JarEntry entry = jarFile.getNextJarEntry();
+            entry != null;
+            entry = jarFile.getNextJarEntry()) {
+          if (entry.getName().startsWith("META-INF/maven")
+              && entry.getName().endsWith("pom.properties")) {
+            if (pom != null) {
+              // we've found multiple pom files. bail!
+              return null;
+            }
+            Properties props = new Properties();
+            props.load(jarFile);
+            pom = props;
+          }
+        }
+        return pom;
+      }
     }
   }
 }
