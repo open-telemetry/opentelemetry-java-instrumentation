@@ -5,7 +5,7 @@ import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 
 plugins {
   `java-library`
-  id("otel.props-conventions")
+  id("otel.dsl-conventions")
 }
 
 val otelProps = the<OtelPropsExtension>()
