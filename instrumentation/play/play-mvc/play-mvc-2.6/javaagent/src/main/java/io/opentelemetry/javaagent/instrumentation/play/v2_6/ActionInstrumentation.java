@@ -78,14 +78,10 @@ class ActionInstrumentation implements TypeInstrumentation {
         scope.close();
         updateSpan(context, req);
 
-        if (throwable != null) {
+        // If the action threw, or didn't return a future to hook into, end the span now.
+        if (throwable != null || responseFuture == null) {
           instrumenter().end(context, null, null, throwable);
           return responseFuture;
-        }
-
-        if (responseFuture == null) {
-          instrumenter().end(context, null, null, null);
-          return null;
         }
 
         // span is finished when future completes
