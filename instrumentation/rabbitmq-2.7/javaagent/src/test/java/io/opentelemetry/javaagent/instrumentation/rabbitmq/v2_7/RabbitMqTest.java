@@ -439,7 +439,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   @Test
-  void captureMessageHeaderAsSpanAttributes() throws IOException, InterruptedException {
+  void captureMessageHeaderAsSpanAttributes() throws Exception {
     String queueName = channel.queueDeclare().getQueue();
     Map<String, Object> headers = new HashMap<>();
     headers.put("Test_Message_Header", "test");
