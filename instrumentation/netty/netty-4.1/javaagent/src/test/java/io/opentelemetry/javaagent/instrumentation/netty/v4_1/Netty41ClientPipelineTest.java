@@ -228,6 +228,7 @@ class Netty41ClientPipelineTest {
 
     private TracedClass() {
       EventLoopGroup group = new NioEventLoopGroup();
+      cleanup.deferCleanup(group::shutdownGracefully);
       bootstrap = new Bootstrap();
       bootstrap
           .group(group)
