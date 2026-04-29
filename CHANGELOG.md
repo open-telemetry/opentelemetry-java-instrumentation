@@ -4,39 +4,54 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Reshaped the ktor `Experimental` helper from a class with a `companion object` to a top-level
-  `object`. Kotlin source callers (`Experimental.emitExperimentalTelemetry(...)`) are unaffected,
-  but pre-compiled consumers must be recompiled against the new artifact.
-  ([#18343](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18343))
-- Removed previously deprecated `SqlQueryAnalyzer.analyze(String)` and
-  `SqlQueryAnalyzer.analyzeWithSummary(String)`; use the overloads that take a `SqlDialect`.
-- Removed the unused `DbClientAttributesGetter.getDbResponseStatusCode()` default method.
-- Removed previously deprecated
-  `KafkaTelemetryBuilder.setMessagingReceiveInstrumentationEnabled(boolean)`; use
-  `setMessagingReceiveTelemetryEnabled(boolean)`.
-- Removed previously deprecated `OpenTelemetryAppender.Builder.captureCodeAttributes(boolean)` in
-  the log4j-appender-2.17 module; use `setCaptureCodeAttributes(boolean)`.
-- Removed previously deprecated `Experimental.setEnableSqlCommenter()` in the JDBC and R2DBC
-  instrumentations; use `Experimental.setSqlCommenterEnabled()`.
-- Removed previously deprecated `Experimental.addTraceIdRequestAttribute()` and
-  `Experimental.setCapturedRequestParameters()` in the servlet-3.0 and servlet-5.0 instrumentations;
-  use `setTraceIdRequestAttributeEnabled()` and `setCaptureRequestParameters()` respectively.
-- Removed the `opentelemetry-runtime-telemetry-java8` and `opentelemetry-runtime-telemetry-java17`
-  library artifacts (deprecated aliases); use `opentelemetry-runtime-telemetry` instead.
+- Delete the internal `ClassInjector` API used for helper-class injection.
+  ([#18112](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18112))
+- Removed deprecated `SqlQueryAnalyzer.analyze(String)`/`analyzeWithSummary(String)`,
+  `DbClientAttributesGetter.getDbResponseStatusCode()`,
+  `KafkaTelemetryBuilder.setMessagingReceiveInstrumentationEnabled(boolean)`,
+  `OpenTelemetryAppender.Builder.captureCodeAttributes(boolean)`, the
+  `Experimental.setEnableSqlCommenter()`, `Experimental.addTraceIdRequestAttribute()`, and
+  `Experimental.setCapturedRequestParameters()` methods, and the deprecated
+  `opentelemetry-runtime-telemetry-java8` and `opentelemetry-runtime-telemetry-java17` artifacts;
+  switch to the replacement APIs and `opentelemetry-runtime-telemetry`.
+  ([#18136](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18136))
+- Removed the previously deprecated `captureEventName` setting from the logback-appender-1.0 and
+  log4j-appender-2.17 `OpenTelemetryAppender`, and the
+  `otel.instrumentation.{logback-appender,log4j-appender,jboss-logmanager}.experimental.capture-event-name`
+  properties; use `otel.event.name` instead.
+  ([#18223](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18223))
+- Removed previously deprecated experimental config properties
+  `otel.instrumentation.http.client.experimental.redact-query-parameters` and
+  `otel.instrumentation.common.experimental.db-sqlcommenter.enabled`; use
+  `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` and
+  `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` instead.
+  ([#18229](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18229))
 - Removed previously deprecated experimental config property
   `otel.instrumentation.servlet.experimental.add-trace-id-request-attribute`; use
   `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled` instead.
-- Removed the previously deprecated `captureEventName` library builder setting from the
-  logback-appender-1.0 and log4j-appender-2.17 `OpenTelemetryAppender`, and the corresponding
-  `otel.instrumentation.{logback-appender,log4j-appender,jboss-logmanager}.experimental.capture-event-name`
-  javaagent properties. Use the `otel.event.name` key in MDC / context data / key-value pairs /
-  Logstash markers / structured arguments instead.
-- Removed previously deprecated experimental config property
-  `otel.instrumentation.http.client.experimental.redact-query-parameters`; use
-  `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` instead.
-- Removed previously deprecated experimental config property
-  `otel.instrumentation.common.experimental.db-sqlcommenter.enabled`; use
-  `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` instead.
+  ([#18237](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18237))
+
+### 📈 Enhancements
+
+- Instrumentation modules now choose helper class loading strategy from advice annotations, and
+  `ExperimentalInstrumentationModule` can override it with `helperClassStrategy()`.
+  ([#17815](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17815))
+
+### 🛠️ Bug fixes
+
+- Skip stale-entry expunging on virtual threads so weak caches keep working correctly.
+  ([#18113](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18113))
+- Do not link to the current span when propagation headers are missing in Kafka and Pulsar batch
+  processing.
+  ([#18154](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18154))
+- Resetting `ContextPropagationOperator` now also removes the Reactor scheduler hook, so context
+  propagation stops after `resetOnEachOperator()`.
+  ([#18258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18258))
+- End spans when an RxJava 1.0 subscription throws synchronously.
+  ([#18265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18265))
+- Clear the Netty `VirtualField` for `HttpServerResponseTracingHandler` when a response ends so
+  per-channel request state is not retained after completion.
+  ([#18358](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18358))
 
 ## Version 2.27.0 (2026-04-21)
 
