@@ -375,13 +375,16 @@ ambiguous and the cast would otherwise be required). Do not flag those cases.
 
 ## [Semconv] Constants by Module Type
 
-- `library/src/main/`: incubating semconv constants (from
-  `io.opentelemetry.semconv.incubating`) must be copied locally as `private static final`
-  fields with a `// copied from <ClassName>` comment. Stable semconv constants (from
-  `io.opentelemetry.semconv`) may be imported directly.
+- `library/src/main/`: constants from `io.opentelemetry.semconv.incubating.*` must be
+  copied locally as `private static final` fields with a `// copied from <ClassName>`
+  comment. Constants from `io.opentelemetry.semconv.*` (stable) must be imported
+  directly via `import static` and must not be copied locally.
 - `javaagent/src/main/`: all semconv artifact constants (stable and incubating) may be used
   directly.
 - tests: all semconv artifact constants are allowed.
+
+The trigger for copying is the import package, not the constant name. Only convert an
+import to a local copy when it comes from `io.opentelemetry.semconv.incubating.*`.
 
 ## [NewModule] New Instrumentation Checklist
 
