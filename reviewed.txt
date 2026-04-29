@@ -504,3 +504,11 @@ starters:spring-boot-starter
 starters:zipkin-spring-boot-starter
 spymemcached-2.12:javaagent
 struts-2.3:javaagent
+struts-7.0:javaagent
+tapestry-5.4:javaagent
+tomcat-10.0:javaagent
+tomcat-7.0:javaagent
+tomcat-common:javaagent
+tomcat-jdbc:javaagent
+twilio-6.6:javaagent
+undertow-1.4:bootstrap
