@@ -10,13 +10,13 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AbstractSpringCloudStreamRabbitTest {
+abstract class AbstractSpringCloudStreamRabbitTest {
 
   @RegisterExtension private final RabbitExtension rabbit;
 
-  protected final InstrumentationExtension testing;
+  private final InstrumentationExtension testing;
 
-  public AbstractSpringCloudStreamRabbitTest(
+  AbstractSpringCloudStreamRabbitTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
     this.testing = testing;
     rabbit = new RabbitExtension(additionalContextClass);

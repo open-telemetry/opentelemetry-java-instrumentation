@@ -29,7 +29,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
+class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
 
   private final Class<?> additionalContextClass;
 
@@ -37,11 +37,11 @@ public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
   private ConfigurableApplicationContext producerContext;
   private ConfigurableApplicationContext consumerContext;
 
-  public RabbitExtension(Class<?> additionalContextClass) {
+  RabbitExtension(Class<?> additionalContextClass) {
     this.additionalContextClass = additionalContextClass;
   }
 
-  public <T> T getBean(String name, Class<T> requiredType) {
+  <T> T getBean(String name, Class<T> requiredType) {
     return producerContext.getBean(name, requiredType);
   }
 

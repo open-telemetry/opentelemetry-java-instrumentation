@@ -5,6 +5,7 @@
 
 package io.opentelemetry.testing;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -67,7 +68,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(MESSAGING_SYSTEM, "kafka"),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                                 equalTo(MESSAGING_OPERATION, "publish"),
-                                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                                satisfies(
+                                    stringKey("messaging.client_id"),
+                                    val -> val.startsWith("producer")),
                                 satisfies(
                                     MESSAGING_DESTINATION_PARTITION_ID,
                                     AbstractStringAssert::isNotEmpty),
@@ -93,7 +96,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     AbstractLongAssert::isNotNegative),
                                 equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
-                                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))),
+                                satisfies(
+                                    stringKey("messaging.client_id"),
+                                    val -> val.startsWith("consumer"))),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
@@ -120,7 +125,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
             satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
-            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
+            satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")));
 
     testing()
         .waitAndAssertTraces(
@@ -138,7 +143,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                       equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                                       equalTo(MESSAGING_OPERATION, "publish"),
                                       satisfies(
-                                          MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                                          stringKey("messaging.client_id"),
+                                          val -> val.startsWith("producer")),
                                       satisfies(
                                           MESSAGING_DESTINATION_PARTITION_ID,
                                           AbstractStringAssert::isNotEmpty),
@@ -214,7 +220,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(MESSAGING_SYSTEM, "kafka"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(MESSAGING_OPERATION, "publish"),
-                              satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                              satisfies(
+                                  stringKey("messaging.client_id"),
+                                  val -> val.startsWith("producer")),
                               satisfies(
                                   MESSAGING_DESTINATION_PARTITION_ID,
                                   AbstractStringAssert::isNotEmpty),
@@ -230,7 +238,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(MESSAGING_SYSTEM, "kafka"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(MESSAGING_OPERATION, "publish"),
-                              satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                              satisfies(
+                                  stringKey("messaging.client_id"),
+                                  val -> val.startsWith("producer")),
                               satisfies(
                                   MESSAGING_DESTINATION_PARTITION_ID,
                                   AbstractStringAssert::isNotEmpty),
@@ -257,7 +267,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                                 equalTo(MESSAGING_OPERATION, "process"),
                                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-                                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                                satisfies(
+                                    stringKey("messaging.client_id"),
+                                    val -> val.startsWith("consumer")),
                                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
   }
@@ -283,7 +295,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
             equalTo(MESSAGING_OPERATION, "process"),
             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+            satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
 
     testing()
@@ -300,7 +312,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(MESSAGING_SYSTEM, "kafka"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(MESSAGING_OPERATION, "publish"),
-                              satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                              satisfies(
+                                  stringKey("messaging.client_id"),
+                                  val -> val.startsWith("producer")),
                               satisfies(
                                   MESSAGING_DESTINATION_PARTITION_ID,
                                   AbstractStringAssert::isNotEmpty),
