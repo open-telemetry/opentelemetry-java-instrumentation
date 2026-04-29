@@ -1,0 +1,8 @@
+display_name: Apache Thrift
+description: This instrumentation enables RPC client and RPC server spans and metrics for Apache Thrift.
+semantic_conventions:
+  - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
+  - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
+library_link: https://thrift.apache.org

@@ -319,6 +319,7 @@
     "org.apache.struts:struts2-core#+": "7.1.1",
     "org.apache.struts:struts2-core#6.+": "6.9.0",
     "org.apache.tapestry:tapestry-core#+": "5.9.1",
+    "org.apache.thrift:libthrift#+": "0.22.0",
     "org.apache.tomcat.embed:tomcat-embed-core#+": "11.0.21",
     "org.apache.tomcat.embed:tomcat-embed-core#9.+": "9.0.117",
     "org.apache.tomcat.embed:tomcat-embed-jasper#+": "11.0.21",

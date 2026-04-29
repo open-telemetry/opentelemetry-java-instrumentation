@@ -294,6 +294,12 @@ targets:
       target: ':instrumentation:tapestry-5.4:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:thrift-0.13:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:thrift-0.13:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:twilio-6.6:javaagent'
     - type: gradle
       path: ./
