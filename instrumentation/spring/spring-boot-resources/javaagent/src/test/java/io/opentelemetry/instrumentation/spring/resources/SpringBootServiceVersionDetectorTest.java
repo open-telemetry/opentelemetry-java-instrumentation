@@ -20,16 +20,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SpringBootServiceVersionDetectorTest {
 
-  static final String BUILD_PROPS = "build-info.properties";
-  static final String META_INFO = "META-INF";
+  static final String BUILD_INFO_PATH = "META-INF/build-info.properties";
 
   @Mock ConfigProperties config;
   @Mock SystemHelper system;
 
   @Test
   void givenBuildVersionIsPresentInBuildInfProperties_thenReturnBuildVersion() {
-    when(system.openClasspathResource(META_INFO, BUILD_PROPS))
-        .thenReturn(openClasspathResource(META_INFO + "/" + BUILD_PROPS));
+    when(system.openJarRootResource(BUILD_INFO_PATH))
+        .thenReturn(openClasspathResource(BUILD_INFO_PATH));
 
     SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
     Resource result = guesser.createResource(config);
@@ -38,7 +37,7 @@ class SpringBootServiceVersionDetectorTest {
 
   @Test
   void givenBuildVersionFileNotPresent_thenReturnEmptyResource() {
-    when(system.openClasspathResource(META_INFO, BUILD_PROPS)).thenReturn(null);
+    when(system.openJarRootResource(BUILD_INFO_PATH)).thenReturn(null);
 
     SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
     Resource result = guesser.createResource(config);
@@ -47,8 +46,8 @@ class SpringBootServiceVersionDetectorTest {
 
   @Test
   void givenBuildVersionFileIsPresentButBuildVersionPropertyNotPresent_thenReturnEmptyResource() {
-    when(system.openClasspathResource(META_INFO, BUILD_PROPS))
-        .thenReturn(openClasspathResource(BUILD_PROPS));
+    when(system.openJarRootResource(BUILD_INFO_PATH))
+        .thenReturn(openClasspathResource("build-info.properties"));
 
     SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
     Resource result = guesser.createResource(config);
