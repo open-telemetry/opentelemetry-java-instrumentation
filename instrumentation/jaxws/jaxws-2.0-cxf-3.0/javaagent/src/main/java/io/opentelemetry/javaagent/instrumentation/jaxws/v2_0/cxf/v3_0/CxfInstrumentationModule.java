@@ -15,7 +15,6 @@ import java.util.List;
 
 @AutoService(InstrumentationModule.class)
 public class CxfInstrumentationModule extends InstrumentationModule {
-
   public CxfInstrumentationModule() {
     super("cxf", expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
   }
