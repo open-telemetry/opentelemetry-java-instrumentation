@@ -197,6 +197,13 @@
         'com.fasterxml.jackson.core:**',
       ],
     },
+    {
+      groupName: 'graalvm buildtools packages',
+      matchPackageNames: [
+        'org.graalvm.buildtools:**',
+        'org.graalvm.buildtools.native',
+      ],
+    },
 
     // ── Disabled updates (Java version compatibility) ──────────────────
 
