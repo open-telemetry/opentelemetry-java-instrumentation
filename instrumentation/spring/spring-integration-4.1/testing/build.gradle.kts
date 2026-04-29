@@ -13,3 +13,11 @@ dependencies {
   compileOnly("org.springframework.cloud:spring-cloud-stream:2.2.1.RELEASE")
   compileOnly("org.springframework.cloud:spring-cloud-stream-binder-rabbit:2.2.1.RELEASE")
 }
+
+tasks {
+  javadoc {
+    // Abstract test bases in this module are package-private and consumed by
+    // sibling test sources in the same package; nothing public to document.
+    enabled = false
+  }
+}

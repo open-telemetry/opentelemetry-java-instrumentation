@@ -60,10 +60,7 @@ class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StoreAdvice {
-    @Advice.OnMethodEnter(
-        suppress = Throwable.class,
-        skipOn = Advice.OnDefaultValue.class,
-        inline = false)
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
     public static boolean methodEnter() {
       return false;
     }

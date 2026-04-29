@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import io.opentelemetry.instrumentation.awssdk.v2_2.AbstractAws2LambdaTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -25,7 +27,7 @@ class Aws2LambdaTest extends AbstractAws2LambdaTest {
   @Override
   protected boolean canTestLambdaInvoke() {
     // only supported since 2.17.0
-    return Boolean.getBoolean("testLatestDeps");
+    return testLatestDeps();
   }
 
   @Override

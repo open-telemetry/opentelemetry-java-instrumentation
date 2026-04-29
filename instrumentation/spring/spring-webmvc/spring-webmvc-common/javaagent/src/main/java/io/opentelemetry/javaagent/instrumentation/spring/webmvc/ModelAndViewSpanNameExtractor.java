@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
-public class ModelAndViewSpanNameExtractor implements SpanNameExtractor<ModelAndView> {
+class ModelAndViewSpanNameExtractor implements SpanNameExtractor<ModelAndView> {
   @Override
   public String extract(ModelAndView modelAndView) {
     String viewName = modelAndView.getViewName();

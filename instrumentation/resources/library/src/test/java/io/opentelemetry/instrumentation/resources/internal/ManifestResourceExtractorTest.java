@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.resources.Resource;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Optional;
@@ -54,11 +55,14 @@ class ManifestResourceExtractorTest {
                                       prop -> null,
                                       JarServiceNameResourceExtractorTest::failPath),
                                   p -> {
+                                    if (t.input == null) {
+                                      return Optional.empty();
+                                    }
                                     try {
                                       Manifest manifest = new Manifest();
                                       manifest.read(t.input);
                                       return Optional.of(manifest);
-                                    } catch (Exception ignored) {
+                                    } catch (IOException ignored) {
                                       return Optional.empty();
                                     }
                                   })

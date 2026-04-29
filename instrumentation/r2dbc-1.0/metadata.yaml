@@ -8,16 +8,19 @@ semantic_conventions:
 library_link: https://r2dbc.io/
 configurations:
   - name: otel.instrumentation.r2dbc.query-sanitization.enabled
+    declarative_name: java.r2dbc.query_sanitization.enabled
     description: >
       Enables query sanitization for database queries. Takes precedence over
       otel.instrumentation.common.db.query-sanitization.enabled.
     type: boolean
     default: true
   - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
     description: Enables query sanitization for database queries.
     type: boolean
     default: true
   - name: otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled
+    declarative_name: java.r2dbc.sqlcommenter/development.enabled
     description: >
       Enables augmenting queries with a comment containing the tracing information. See
       [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting

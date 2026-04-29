@@ -348,9 +348,6 @@ targets:
       target: ':instrumentation:armeria:armeria-grpc-1.14:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:async-http-client:async-http-client-1-common:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:async-http-client:async-http-client-1.8:javaagent'
     - type: gradle
       path: ./
@@ -358,6 +355,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:async-http-client:async-http-client-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:async-http-client:async-http-client-common-1.8:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent'
@@ -429,9 +429,6 @@ targets:
       target: ':instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-2-common:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:couchbase:couchbase-2.0:javaagent'
     - type: gradle
       path: ./
@@ -448,6 +445,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-3.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:couchbase:couchbase-common-2.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent'
@@ -630,10 +630,10 @@ targets:
       target: ':instrumentation:jms:jms-common:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jsf:jsf-jakarta-common:javaagent'
+      target: ':instrumentation:jsf:jsf-common-jakarta:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jsf:jsf-javax-common:javaagent'
+      target: ':instrumentation:jsf:jsf-common-javax:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jsf:jsf-mojarra-1.2:javaagent'
@@ -906,18 +906,6 @@ targets:
       target: ':instrumentation:rocketmq:rocketmq-client-5.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:runtime-telemetry:runtime-telemetry-java17:library'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:runtime-telemetry:runtime-telemetry-java8:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:rxjava:rxjava-1.0:library'
     - type: gradle
       path: ./
@@ -1092,7 +1080,7 @@ targets:
       target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common:javaagent'
+      target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-annotations:javaagent'

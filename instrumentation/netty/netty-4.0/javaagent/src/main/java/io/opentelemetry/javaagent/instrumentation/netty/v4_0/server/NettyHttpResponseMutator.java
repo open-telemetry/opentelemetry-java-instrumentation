@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 
-public enum NettyHttpResponseMutator implements HttpServerResponseMutator<HttpResponse> {
+enum NettyHttpResponseMutator implements HttpServerResponseMutator<HttpResponse> {
   INSTANCE;
 
   NettyHttpResponseMutator() {}

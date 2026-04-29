@@ -35,9 +35,9 @@ class PekkoSchedulerTest {
       } yield result1 + result2
       assertThat(Await.result(futureResult, 5.seconds)).isEqualTo(3)
     } finally {
-      system.terminate()
       scope.close()
       initialSpan.end()
+      system.terminate()
     }
   }
 

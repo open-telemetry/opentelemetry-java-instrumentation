@@ -28,7 +28,7 @@ import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.internal.disposables.DisposableHelper;
 
-public class TracingCompletableObserver implements CompletableObserver, Disposable {
+public final class TracingCompletableObserver implements CompletableObserver, Disposable {
 
   private final CompletableObserver actual;
   private final Context context;

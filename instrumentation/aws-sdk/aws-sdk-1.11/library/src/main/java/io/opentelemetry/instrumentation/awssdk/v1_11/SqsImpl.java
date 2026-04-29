@@ -86,7 +86,7 @@ final class SqsImpl {
       Field field = ReceiveMessageResult.class.getDeclaredField("messages");
       field.setAccessible(true);
       return field;
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       return null;
     }
   }

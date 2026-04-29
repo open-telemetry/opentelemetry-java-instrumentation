@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -55,7 +56,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   private static String dbUriNonExistent;
 
-  private static final ImmutableMap<String, String> testHashMap =
+  private static final ImmutableMap<String, String> TEST_HASH_MAP =
       ImmutableMap.of(
           "firstname", "John",
           "lastname", "Doe",
@@ -82,7 +83,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     syncCommands = connection.sync();
 
     syncCommands.set("TESTKEY", "TESTVAL");
-    syncCommands.hmset("TESTHM", testHashMap);
+    syncCommands.hmset("TESTHM", TEST_HASH_MAP);
 
     // 2 sets
     testing().waitForTraces(2);
@@ -101,7 +102,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     StatefulRedisConnection<String, String> testConnection = redisClient.connect();
     cleanup.deferCleanup(testConnection);
 
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       // ignore CLIENT SETINFO traces
       testing().waitForTraces(2);
     } else {
@@ -255,7 +256,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     ContainerConnection containerConnection = newContainerConnection();
     RedisCommands<String, String> commands = containerConnection.connection.sync();
 
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       // ignore CLIENT SETINFO and MAINT_NOTIFICATIONS traces
       testing().waitForTraces(3);
       testing().clearData();
@@ -289,7 +290,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   @Test
   void testHashSetCommand() {
-    String res = testing().runWithSpan("parent", () -> syncCommands.hmset("user", testHashMap));
+    String res = testing().runWithSpan("parent", () -> syncCommands.hmset("user", TEST_HASH_MAP));
     assertThat(res).isEqualTo("OK");
 
     testing()
@@ -319,7 +320,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   @Test
   void testHashGetallCommand() {
     Map<String, String> res = testing().runWithSpan("parent", () -> syncCommands.hgetall("TESTHM"));
-    assertThat(res).isEqualTo(testHashMap);
+    assertThat(res).isEqualTo(TEST_HASH_MAP);
 
     testing()
         .waitAndAssertTraces(
@@ -417,7 +418,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
     commands.debugSegfault();
 
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       testing()
           .waitAndAssertTraces(
               trace ->
@@ -529,7 +530,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     ContainerConnection containerConnection = newContainerConnection();
     RedisCommands<String, String> commands = containerConnection.connection.sync();
 
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       // ignore CLIENT SETINFO and MAINT_NOTIFICATIONS traces
       testing().waitForTraces(3);
       testing().clearData();
@@ -548,8 +549,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                               addExtraAttributes(
                                   equalTo(
                                       stringKey("error"),
-                                      Boolean.getBoolean("testLatestDeps")
-                                              || emitStableDatabaseSemconv()
+                                      testLatestDeps() || emitStableDatabaseSemconv()
                                           ? null
                                           : "Connection disconnected"),
                                   equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -562,11 +562,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                   equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
                                   equalTo(
                                       ERROR_TYPE,
-                                      emitStableDatabaseSemconv()
-                                              && Boolean.getBoolean("testLatestDeps")
+                                      emitStableDatabaseSemconv() && testLatestDeps()
                                           ? "io.lettuce.core.RedisException"
                                           : null)));
-                      if (Boolean.getBoolean("testLatestDeps")) {
+                      if (testLatestDeps()) {
                         // Seems to only be treated as an error with Lettuce 6+
                         // and also produces an exception event in addition to encode events
                         span.hasException(new RedisException("Connection disconnected"))

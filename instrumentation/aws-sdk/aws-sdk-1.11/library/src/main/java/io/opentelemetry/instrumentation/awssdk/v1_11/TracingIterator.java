@@ -43,7 +43,7 @@ class TracingIterator implements Iterator<Message> {
     this.receiveContext = receiveContext;
   }
 
-  public static Iterator<Message> wrap(
+  static Iterator<Message> wrap(
       Iterator<Message> delegateIterator,
       Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,

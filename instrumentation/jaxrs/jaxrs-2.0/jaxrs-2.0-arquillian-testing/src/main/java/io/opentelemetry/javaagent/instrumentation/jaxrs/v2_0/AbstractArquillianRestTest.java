@@ -49,10 +49,6 @@ abstract class AbstractArquillianRestTest {
         .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
   }
 
-  private String getContextRoot() {
-    return url.getPath();
-  }
-
   @Test
   void testHelloCdiRestResource() {
     testHelloRequest("rest-app/cdiHello", "CdiRestResource");
@@ -79,5 +75,9 @@ abstract class AbstractArquillianRestTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
                 span -> span.hasName(className + ".hello").hasParent(trace.getSpan(0))));
+  }
+
+  private String getContextRoot() {
+    return url.getPath();
   }
 }

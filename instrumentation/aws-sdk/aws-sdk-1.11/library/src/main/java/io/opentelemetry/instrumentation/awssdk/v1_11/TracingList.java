@@ -38,7 +38,7 @@ class TracingList extends SdkInternalList<Message> {
     this.receiveContext = receiveContext;
   }
 
-  public static SdkInternalList<Message> wrap(
+  static SdkInternalList<Message> wrap(
       List<Message> list,
       Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,

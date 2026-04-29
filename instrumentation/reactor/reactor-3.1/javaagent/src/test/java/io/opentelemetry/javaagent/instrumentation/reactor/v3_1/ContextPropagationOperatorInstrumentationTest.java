@@ -40,12 +40,12 @@ class ContextPropagationOperatorInstrumentationTest {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
       return lookup.findVirtual(type, "contextWrite", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     try {
       return lookup.findVirtual(type, "subscriberContext", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     return null;
@@ -176,8 +176,8 @@ class ContextPropagationOperatorInstrumentationTest {
                     (Mono<String>)
                         MONO_CONTEXT_WRITE_METHOD.invoke(
                             interim, new StoreOpenTelemetryContext(span));
-              } catch (Throwable e) {
-                throw new RuntimeException(e);
+              } catch (Throwable t) {
+                throw new RuntimeException(t);
               }
               return interim.doFinally(unused -> span.end());
             });

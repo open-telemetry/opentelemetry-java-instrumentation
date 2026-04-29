@@ -29,9 +29,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 abstract class AbstractOpenTelemetryHandlerMappingFilterTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  final WebClient client = WebClient.of();
+  private final WebClient client = WebClient.of();
 
   @ArquillianResource URI url;
 

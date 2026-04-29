@@ -22,6 +22,7 @@ public class MetroInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 2.2.0.1
     return hasClassesNamed("com.sun.xml.ws.api.pipe.ServerTubeAssemblerContext");
   }
 

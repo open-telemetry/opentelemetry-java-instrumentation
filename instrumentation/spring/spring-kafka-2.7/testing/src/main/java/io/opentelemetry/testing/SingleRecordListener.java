@@ -9,14 +9,14 @@ import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 
-public class SingleRecordListener {
+class SingleRecordListener {
   private int failureCount;
 
   @KafkaListener(
       id = "testSingleListener",
       topics = "testSingleTopic",
       containerFactory = "singleFactory")
-  public void listener(ConsumerRecord<String, String> record) {
+  void listener(ConsumerRecord<String, String> record) {
     GlobalTraceUtil.runWithSpan("consumer", () -> {});
     if (record.value().equals("error") && failureCount < 2) {
       failureCount++;

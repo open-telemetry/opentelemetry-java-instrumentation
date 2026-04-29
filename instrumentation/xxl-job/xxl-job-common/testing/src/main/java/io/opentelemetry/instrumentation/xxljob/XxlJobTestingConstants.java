@@ -6,10 +6,9 @@
 package io.opentelemetry.instrumentation.xxljob;
 
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 
 public class XxlJobTestingConstants {
-
-  private XxlJobTestingConstants() {}
 
   public static final String GLUE_JOB_SHELL_SCRIPT = "echo 'hello'";
 
@@ -17,11 +16,14 @@ public class XxlJobTestingConstants {
 
   public static final Object METHOD_JOB_HANDLER_OBJECT = ReflectiveMethodsFactory.getTarget();
 
+  @Nullable
   public static final Method METHOD_JOB_HANDLER_METHOD = ReflectiveMethodsFactory.getMethod();
 
+  @Nullable
   public static final Method METHOD_JOB_HANDLER_INIT_METHOD =
       ReflectiveMethodsFactory.getInitMethod();
 
+  @Nullable
   public static final Method METHOD_JOB_HANDLER_DESTROY_METHOD =
       ReflectiveMethodsFactory.getDestroyMethod();
 
@@ -43,4 +45,6 @@ public class XxlJobTestingConstants {
           + "  void execute() throws Exception {\n"
           + "  }\n"
           + "}\n";
+
+  private XxlJobTestingConstants() {}
 }

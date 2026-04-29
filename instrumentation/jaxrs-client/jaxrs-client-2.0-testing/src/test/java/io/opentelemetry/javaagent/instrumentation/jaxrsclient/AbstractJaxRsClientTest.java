@@ -60,10 +60,13 @@ abstract class AbstractJaxRsClientTest extends AbstractHttpClientTest<Invocation
     try {
       Entity<String> body = BODY_METHODS.contains(method) ? Entity.text("") : null;
       Response response = request.build(method, body).invoke();
-      // read response body to avoid broken pipe errors on the server side
-      response.readEntity(String.class);
-      response.close();
-      return response.getStatus();
+      try {
+        // read response body to avoid broken pipe errors on the server side
+        response.readEntity(String.class);
+        return response.getStatus();
+      } finally {
+        response.close();
+      }
     } catch (ProcessingException e) {
       if (e.getCause() instanceof Exception) {
         throw (Exception) e.getCause();
@@ -89,9 +92,13 @@ abstract class AbstractJaxRsClientTest extends AbstractHttpClientTest<Invocation
             new InvocationCallback<Response>() {
               @Override
               public void completed(Response response) {
-                // read response body
-                response.readEntity(String.class);
-                requestResult.complete(response.getStatus());
+                try {
+                  // read response body
+                  response.readEntity(String.class);
+                  requestResult.complete(response.getStatus());
+                } finally {
+                  response.close();
+                }
               }
 
               @Override

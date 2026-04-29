@@ -30,22 +30,20 @@ class XxlJobTest extends AbstractXxlJobTest {
           METHOD_JOB_HANDLER_INIT_METHOD,
           METHOD_JOB_HANDLER_DESTROY_METHOD);
 
-  private static final IJobHandler groovyHandler;
+  private static final IJobHandler groovyHandler = createGroovyHandler();
+  private static final GlueJobHandler glueJobHandler =
+      new GlueJobHandler(groovyHandler, DEFAULT_GLUE_UPDATE_TIME);
+  private static final ScriptJobHandler scriptJobHandler =
+      new ScriptJobHandler(
+          2, DEFAULT_GLUE_UPDATE_TIME, GLUE_JOB_SHELL_SCRIPT, GlueTypeEnum.GLUE_SHELL);
 
-  static {
+  private static IJobHandler createGroovyHandler() {
     try {
-      groovyHandler = GlueFactory.getInstance().loadNewInstance(GLUE_JOB_GROOVY_SOURCE);
+      return GlueFactory.getInstance().loadNewInstance(GLUE_JOB_GROOVY_SOURCE);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
-
-  private static final GlueJobHandler glueJobHandler =
-      new GlueJobHandler(groovyHandler, DEFAULT_GLUE_UPDATE_TIME);
-
-  private static final ScriptJobHandler scriptJobHandler =
-      new ScriptJobHandler(
-          2, DEFAULT_GLUE_UPDATE_TIME, GLUE_JOB_SHELL_SCRIPT, GlueTypeEnum.GLUE_SHELL);
 
   @Override
   protected String getPackageName() {

@@ -3,13 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.flow
+package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow
 
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onCompletion
 
-fun <REQUEST, RESPONSE> onComplete(flow: Flow<*>, instrumenter: Instrumenter<REQUEST, RESPONSE>, context: Context, request: REQUEST & Any): Flow<*> = flow.onCompletion { cause: Throwable? ->
+fun <REQUEST, RESPONSE, T> onComplete(
+  flow: Flow<T>,
+  instrumenter: Instrumenter<REQUEST, RESPONSE>,
+  context: Context,
+  request: REQUEST & Any,
+): Flow<T> = flow.onCompletion { cause: Throwable? ->
   instrumenter.end(context, request, null, cause)
 }

@@ -7,6 +7,7 @@ muzzle {
     group.set("com.alibaba")
     module.set("druid")
     versions.set("(,)")
+    skip("1.0.30") // 1.0.30 pom references a non-existent parent
   }
 }
 

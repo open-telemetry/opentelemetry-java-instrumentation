@@ -25,8 +25,8 @@ import org.vibur.dbcp.ViburDBCPDataSource;
 public abstract class AbstractViburInstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
 
-  @Mock DataSource dataSourceMock;
-  @Mock Connection connectionMock;
+  @Mock private DataSource dataSourceMock;
+  @Mock private Connection connectionMock;
 
   protected abstract InstrumentationExtension testing();
 

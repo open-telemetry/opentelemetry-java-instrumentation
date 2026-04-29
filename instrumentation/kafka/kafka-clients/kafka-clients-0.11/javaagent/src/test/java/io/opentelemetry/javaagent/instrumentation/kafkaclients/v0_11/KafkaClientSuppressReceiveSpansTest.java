@@ -16,8 +16,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -90,8 +88,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
   }
 
   @Test
-  void testPassThroughTombstone()
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testPassThroughTombstone() throws Exception {
     producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, SECONDS);
     awaitUntilConsumerIsReady();
     ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
@@ -120,8 +117,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
   }
 
   @Test
-  void testRecordsWithTopicPartitionKafkaConsume()
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testRecordsWithTopicPartitionKafkaConsume() throws Exception {
     String greeting = "Hello from MockConsumer!";
     producer.send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting)).get(5, SECONDS);
 

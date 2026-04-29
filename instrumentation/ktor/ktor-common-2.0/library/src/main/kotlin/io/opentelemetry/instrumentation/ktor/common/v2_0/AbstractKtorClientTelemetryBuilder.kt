@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor
 import io.opentelemetry.instrumentation.ktor.common.v2_0.internal.KtorBuilderUtil
-import java.util.function.Function
 import java.util.function.UnaryOperator
 
 abstract class AbstractKtorClientTelemetryBuilder(
