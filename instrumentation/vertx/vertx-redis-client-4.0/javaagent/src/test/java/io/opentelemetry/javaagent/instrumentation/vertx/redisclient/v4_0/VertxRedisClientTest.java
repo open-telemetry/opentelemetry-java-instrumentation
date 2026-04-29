@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class VertxRedisClientTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -191,7 +192,6 @@ class VertxRedisClientTest {
                             redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static AttributeAssertion[] redisSpanAttributes(String operation, String queryText) {
     // not testing database/dup
     if (emitStableDatabaseSemconv()) {
