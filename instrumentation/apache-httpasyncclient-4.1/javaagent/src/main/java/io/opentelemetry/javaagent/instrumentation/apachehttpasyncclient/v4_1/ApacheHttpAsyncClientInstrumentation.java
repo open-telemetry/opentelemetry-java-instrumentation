@@ -68,7 +68,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       @ToArgument(value = 3, index = 1)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object[] methodEnter(
+    public static Object[] onEnter(
         @Advice.Argument(0) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(2) HttpContext httpContext,
         @Advice.Argument(3) FutureCallback<?> futureCallback) {

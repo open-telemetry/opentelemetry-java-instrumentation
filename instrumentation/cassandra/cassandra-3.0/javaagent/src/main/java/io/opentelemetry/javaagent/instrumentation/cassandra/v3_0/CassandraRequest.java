@@ -9,7 +9,7 @@ import com.datastax.driver.core.Session;
 import com.google.auto.value.AutoValue;
 
 @AutoValue
-public abstract class CassandraRequest {
+abstract class CassandraRequest {
 
   public static CassandraRequest create(
       Session session, String queryText, boolean parameterizedQuery) {

@@ -88,7 +88,8 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   }
 
   @Override
-  public Connection getConnection(String username, String password) throws SQLException {
+  public Connection getConnection(@Nullable String username, @Nullable String password)
+      throws SQLException {
     Connection connection = wrapCall(() -> delegate.getConnection(username, password));
     DbInfo dbInfo = getDbInfo(connection);
     return OpenTelemetryConnection.create(

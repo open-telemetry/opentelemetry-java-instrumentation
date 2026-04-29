@@ -252,7 +252,7 @@ testing {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-        val version = if (otelProps.testLatestDeps) "latest.release" else "4.0.0"
+        val version = baseVersion("4.0.0").orLatest()
         implementation("org.springframework.boot:spring-boot-starter-jdbc:$version")
         implementation("org.springframework.boot:spring-boot-restclient:$version")
         implementation("org.springframework.boot:spring-boot-webclient:$version")

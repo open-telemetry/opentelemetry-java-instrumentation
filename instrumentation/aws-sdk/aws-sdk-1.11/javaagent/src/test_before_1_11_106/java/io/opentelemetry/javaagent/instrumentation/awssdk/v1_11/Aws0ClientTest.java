@@ -115,7 +115,8 @@ class Aws0ClientTest {
   @ParameterizedTest
   @SuppressWarnings("unchecked")
   @MethodSource("provideArguments")
-  void testRequestHandlerIsHookedUpWithConstructor(boolean addHandler, int size) throws Exception {
+  void testRequestHandlerIsHookedUpWithConstructor(boolean addHandler, int size)
+      throws ReflectiveOperationException {
     BasicAWSCredentials credentials = new BasicAWSCredentials("asdf", "qwerty");
     AmazonS3Client client = new AmazonS3Client(credentials);
     if (addHandler) {
@@ -126,7 +127,7 @@ class Aws0ClientTest {
 
     assertThat(requestHandler2s).isNotNull();
     assertThat(requestHandler2s).hasSize(size);
-    assertThat(requestHandler2s.stream().findFirst().get().getClass().getSimpleName())
+    assertThat(requestHandler2s.get(0).getClass().getSimpleName())
         .isEqualTo("TracingRequestHandler");
   }
 
@@ -191,7 +192,7 @@ class Aws0ClientTest {
       Function<AmazonWebServiceClient, Object> call,
       Map<String, String> additionalAttributes,
       String body)
-      throws Exception {
+      throws ReflectiveOperationException {
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
 
     Object response = call.apply(client);
@@ -201,7 +202,7 @@ class Aws0ClientTest {
 
     assertThat(requestHandler2s).isNotNull();
     assertThat(requestHandler2s).hasSize(handlerCount);
-    assertThat(requestHandler2s.stream().findFirst().get().getClass().getSimpleName())
+    assertThat(requestHandler2s.get(0).getClass().getSimpleName())
         .isEqualTo("TracingRequestHandler");
 
     testing.waitAndAssertTraces(
@@ -362,7 +363,8 @@ class Aws0ClientTest {
   }
 
   @SuppressWarnings("unchecked")
-  private static List<RequestHandler2> extractRequestHandlers(Object client) throws Exception {
+  private static List<RequestHandler2> extractRequestHandlers(Object client)
+      throws ReflectiveOperationException {
     Field requestHandler2sField = AmazonWebServiceClient.class.getDeclaredField("requestHandler2s");
     requestHandler2sField.setAccessible(true);
     return (List<RequestHandler2>) requestHandler2sField.get(client);

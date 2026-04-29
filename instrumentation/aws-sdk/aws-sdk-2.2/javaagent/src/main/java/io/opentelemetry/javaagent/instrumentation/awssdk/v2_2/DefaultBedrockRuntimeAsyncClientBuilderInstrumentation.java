@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.AwsSdkSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -36,7 +37,7 @@ class DefaultBedrockRuntimeAsyncClientBuilderInstrumentation implements TypeInst
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static BedrockRuntimeAsyncClient methodExit(
         @Advice.Return BedrockRuntimeAsyncClient client) {
-      return AwsSdkSingletons.telemetry().wrapBedrockRuntimeClient(client);
+      return telemetry().wrapBedrockRuntimeClient(client);
     }
   }
 }

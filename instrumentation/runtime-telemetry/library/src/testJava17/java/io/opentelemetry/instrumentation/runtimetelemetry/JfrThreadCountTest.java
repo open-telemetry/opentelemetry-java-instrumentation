@@ -26,7 +26,7 @@ class JfrThreadCountTest {
           });
 
   @Test
-  void shouldHaveJfrThreadCountEvents() throws Exception {
+  void shouldHaveJfrThreadCountEvents() throws InterruptedException {
     Runnable work =
         () -> {
           try {

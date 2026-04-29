@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbS
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import javax.annotation.Nullable;
 
 /** Container used to carry state between enter and exit advices */
 public class InfluxDbScope {
@@ -27,7 +28,7 @@ public class InfluxDbScope {
     return new InfluxDbScope(influxDbRequest, context, context.makeCurrent());
   }
 
-  public void end(Throwable throwable) {
+  public void end(@Nullable Throwable throwable) {
     scope.close();
 
     instrumenter().end(context, influxDbRequest, null, throwable);

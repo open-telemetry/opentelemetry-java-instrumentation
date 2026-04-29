@@ -22,7 +22,7 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")

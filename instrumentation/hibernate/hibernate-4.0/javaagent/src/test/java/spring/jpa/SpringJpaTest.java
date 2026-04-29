@@ -39,9 +39,9 @@ class SpringJpaTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  AnnotationConfigApplicationContext context =
+  private final AnnotationConfigApplicationContext context =
       new AnnotationConfigApplicationContext(PersistenceConfig.class);
-  CustomerRepository repo = context.getBean(CustomerRepository.class);
+  private final CustomerRepository repo = context.getBean(CustomerRepository.class);
 
   @AfterEach
   void closeContext() {

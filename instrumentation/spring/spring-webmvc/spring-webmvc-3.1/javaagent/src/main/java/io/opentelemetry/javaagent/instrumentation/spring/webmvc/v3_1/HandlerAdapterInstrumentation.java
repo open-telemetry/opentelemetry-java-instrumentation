@@ -47,7 +47,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
             .and(nameStartsWith("handle"))
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArguments(3)),
-        HandlerAdapterInstrumentation.class.getName() + "$ControllerAdvice");
+        getClass().getName() + "$ControllerAdvice");
   }
 
   @SuppressWarnings("unused")

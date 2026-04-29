@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Reshaped the ktor `Experimental` helper from a class with a `companion object` to a top-level
+  `object`. Kotlin source callers (`Experimental.emitExperimentalTelemetry(...)`) are unaffected,
+  but pre-compiled consumers must be recompiled against the new artifact.
+  ([#18343](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18343))
 - Removed previously deprecated `SqlQueryAnalyzer.analyze(String)` and
   `SqlQueryAnalyzer.analyzeWithSummary(String)`; use the overloads that take a `SqlDialect`.
 - Removed the unused `DbClientAttributesGetter.getDbResponseStatusCode()` default method.
@@ -19,6 +23,20 @@
   use `setTraceIdRequestAttributeEnabled()` and `setCaptureRequestParameters()` respectively.
 - Removed the `opentelemetry-runtime-telemetry-java8` and `opentelemetry-runtime-telemetry-java17`
   library artifacts (deprecated aliases); use `opentelemetry-runtime-telemetry` instead.
+- Removed previously deprecated experimental config property
+  `otel.instrumentation.servlet.experimental.add-trace-id-request-attribute`; use
+  `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled` instead.
+- Removed the previously deprecated `captureEventName` library builder setting from the
+  logback-appender-1.0 and log4j-appender-2.17 `OpenTelemetryAppender`, and the corresponding
+  `otel.instrumentation.{logback-appender,log4j-appender,jboss-logmanager}.experimental.capture-event-name`
+  javaagent properties. Use the `otel.event.name` key in MDC / context data / key-value pairs /
+  Logstash markers / structured arguments instead.
+- Removed previously deprecated experimental config property
+  `otel.instrumentation.http.client.experimental.redact-query-parameters`; use
+  `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` instead.
+- Removed previously deprecated experimental config property
+  `otel.instrumentation.common.experimental.db-sqlcommenter.enabled`; use
+  `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` instead.
 
 ## Version 2.27.0 (2026-04-21)
 

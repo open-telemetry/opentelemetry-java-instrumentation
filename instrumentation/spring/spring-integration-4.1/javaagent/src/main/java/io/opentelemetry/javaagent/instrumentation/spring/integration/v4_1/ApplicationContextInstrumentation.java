@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationSingletons.interceptor;
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationSingletons.patterns;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
@@ -53,8 +55,8 @@ class ApplicationContextInstrumentation implements TypeInstrumentation {
 
         BeanDefinition globalChannelInterceptorBean =
             genericBeanDefinition(GlobalChannelInterceptorWrapper.class)
-                .addConstructorArgValue(SpringIntegrationSingletons.interceptor())
-                .addPropertyValue("patterns", SpringIntegrationSingletons.patterns())
+                .addConstructorArgValue(interceptor())
+                .addPropertyValue("patterns", patterns())
                 // it is important for the tracing interceptor to run first for CONSUMER spans so
                 // that they capture the whole operation and also so that users can write their own
                 // interceptors to enrich the CONSUMER span (similar to writing a servlet filter to

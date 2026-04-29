@@ -52,7 +52,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
       public void end(
           @Nullable Throwable throwable,
           RedisCommand<?, ?, ?> command,
-          AsyncCommand<?, ?, ?> asyncCommand) {
+          @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
         scope.close();
         InstrumentationPoints.afterCommand(command, context, throwable, asyncCommand);
       }

@@ -39,7 +39,7 @@ public class ContextPropagator {
   // RMI expects these operations to have negative identifier, as positive ones mean legacy
   // precompiled Stubs would be used instead
   private static final int CONTEXT_CHECK_CALL_OPERATION_ID = -1;
-  // Seconds step of context propagation which contains actual payload
+  // Second step of context propagation which contains actual payload
   private static final int CONTEXT_PAYLOAD_OPERATION_ID = -2;
 
   private static final ContextPropagator propagator = new ContextPropagator();

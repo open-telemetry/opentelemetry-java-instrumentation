@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
 
   private int clientId;

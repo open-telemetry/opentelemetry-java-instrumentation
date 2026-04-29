@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqSingletons.consumerReceiveInstrumenter;
+
 import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -37,7 +39,7 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
       VirtualFieldStore.setConsumerGroupByMessage(messageView, consumerGroup);
     }
     Instrumenter<ReceiveMessageRequest, List<MessageView>> receiveInstrumenter =
-        RocketMqSingletons.consumerReceiveInstrumenter();
+        consumerReceiveInstrumenter();
     Context parentContext = Context.current();
     if (receiveInstrumenter.shouldStart(parentContext, request)) {
       Context context =
@@ -58,7 +60,7 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
   @Override
   public void onFailure(Throwable throwable) {
     Instrumenter<ReceiveMessageRequest, List<MessageView>> receiveInstrumenter =
-        RocketMqSingletons.consumerReceiveInstrumenter();
+        consumerReceiveInstrumenter();
     Context parentContext = Context.current();
     if (receiveInstrumenter.shouldStart(parentContext, request)) {
       InstrumenterUtil.startAndEnd(

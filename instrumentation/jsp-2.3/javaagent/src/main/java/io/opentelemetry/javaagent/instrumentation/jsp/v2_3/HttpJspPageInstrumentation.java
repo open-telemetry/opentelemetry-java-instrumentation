@@ -72,6 +72,7 @@ class HttpJspPageInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) HttpServletRequest req) {
       return AdviceScope.start(req);

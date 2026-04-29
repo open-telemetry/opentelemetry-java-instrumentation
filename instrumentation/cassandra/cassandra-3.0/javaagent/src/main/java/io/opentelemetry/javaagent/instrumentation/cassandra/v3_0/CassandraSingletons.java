@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public class CassandraSingletons {
+class CassandraSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-3.0";
 
   // could use RESPONSE "ResultSet" here, but using RESPONSE "ExecutionInfo" in cassandra-4.0
@@ -43,7 +43,7 @@ public class CassandraSingletons {
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<CassandraRequest, ExecutionInfo> instrumenter() {
+  static Instrumenter<CassandraRequest, ExecutionInfo> instrumenter() {
     return instrumenter;
   }
 

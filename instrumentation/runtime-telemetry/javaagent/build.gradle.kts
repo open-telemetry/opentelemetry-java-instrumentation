@@ -7,6 +7,9 @@ dependencies {
 
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   compileOnly("io.opentelemetry:opentelemetry-api-incubator")
+
+  // used to verify jar analyzer package events
+  testImplementation("commons-io:commons-io")
 }
 
 tasks {

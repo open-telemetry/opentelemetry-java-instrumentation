@@ -64,7 +64,7 @@ class ServerInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent());
       }
 
-      public void end(Throwable exception, Request request, Response response) {
+      public void end(@Nullable Throwable exception, Request request, Response response) {
         scope.close();
 
         if (Status.CLIENT_ERROR_NOT_FOUND.equals(response.getStatus())) {
@@ -88,8 +88,7 @@ class ServerInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope beginRequest(
-        @Advice.Argument(0) Request request, @Advice.Argument(1) Response response) {
+    public static AdviceScope beginRequest(@Advice.Argument(0) Request request) {
       return AdviceScope.start(request);
     }
 
