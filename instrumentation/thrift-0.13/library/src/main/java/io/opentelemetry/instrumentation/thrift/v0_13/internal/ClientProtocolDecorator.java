@@ -67,7 +67,8 @@ public final class ClientProtocolDecorator extends TProtocolDecorator {
   @Override
   public void writeMessageBegin(TMessage message) throws TException {
     Context parentContext = Context.current();
-    ThriftRequest request = ThriftRequestAccess.newThriftRequest(message.name, serviceName, getSocket());
+    ThriftRequest request =
+        ThriftRequestAccess.newThriftRequest(message.name, serviceName, getSocket());
     if (!instrumenter.shouldStart(parentContext, request)) {
       super.writeMessageBegin(message);
       return;

@@ -209,11 +209,14 @@ public abstract class AbstractThriftTest {
   }
 
   @SuppressWarnings({"deprecation"}) // using deprecated semconv
-  protected SpanDataAssert assertClientSpan(SpanDataAssert span, String method, long port, boolean hasServerAttributes) {
+  protected SpanDataAssert assertClientSpan(
+      SpanDataAssert span, String method, long port, boolean hasServerAttributes) {
     return span.hasName(CustomService.class.getName() + "/" + method)
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(
-            equalTo(RPC_METHOD, emitStableRpcSemconv() ? CustomService.class.getName() + "/" + method : method),
+            equalTo(
+                RPC_METHOD,
+                emitStableRpcSemconv() ? CustomService.class.getName() + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? CustomService.class.getName() : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
@@ -229,7 +232,9 @@ public abstract class AbstractThriftTest {
     return span.hasName(CustomHandler.class.getName() + "/" + method)
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
-            equalTo(RPC_METHOD, emitStableRpcSemconv() ? CustomHandler.class.getName() + "/" + method : method),
+            equalTo(
+                RPC_METHOD,
+                emitStableRpcSemconv() ? CustomHandler.class.getName() + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? CustomHandler.class.getName() : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
@@ -247,7 +252,9 @@ public abstract class AbstractThriftTest {
     return span.hasName(CustomHandler.class.getName() + "/" + method)
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
-            equalTo(RPC_METHOD, emitStableRpcSemconv() ? CustomHandler.class.getName() + "/" + method : method),
+            equalTo(
+                RPC_METHOD,
+                emitStableRpcSemconv() ? CustomHandler.class.getName() + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? CustomHandler.class.getName() : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null));
@@ -309,7 +316,9 @@ public abstract class AbstractThriftTest {
                                           equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                           equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                           equalTo(SERVER_PORT, serverPort),
-                                          equalTo(RPC_METHOD, CustomHandler.class.getName() + "/say")))));
+                                          equalTo(
+                                              RPC_METHOD,
+                                              CustomHandler.class.getName() + "/say")))));
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",
@@ -325,7 +334,9 @@ public abstract class AbstractThriftTest {
                                           equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                           equalTo(SERVER_ADDRESS, "localhost"),
                                           equalTo(SERVER_PORT, serverPort),
-                                          equalTo(RPC_METHOD, CustomService.class.getName() + "/say")))));
+                                          equalTo(
+                                              RPC_METHOD,
+                                              CustomService.class.getName() + "/say")))));
     }
   }
 
@@ -503,7 +514,8 @@ public abstract class AbstractThriftTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertClientSpan(span, "withDelay", port, false).hasParent(trace.getSpan(0)),
+                span ->
+                    assertClientSpan(span, "withDelay", port, false).hasParent(trace.getSpan(0)),
                 span -> assertServerSpan(span, "withDelay").hasParent(trace.getSpan(1)),
                 span ->
                     span.hasName("callback")
@@ -558,7 +570,8 @@ public abstract class AbstractThriftTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span -> assertClientSpan(span, "oneWay", port, false).hasParent(trace.getSpan(0)),
+                    span ->
+                        assertClientSpan(span, "oneWay", port, false).hasParent(trace.getSpan(0)),
                     span -> assertServerSpan(span, "oneWay").hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")
