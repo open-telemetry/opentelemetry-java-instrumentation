@@ -41,7 +41,6 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -268,7 +267,7 @@ class TwilioClientTest {
   }
 
   @SuppressWarnings("CannotMockMethod")
-  private static @NotNull HttpClientBuilder getHttpClientBuilder(CloseableHttpClient httpClient) {
+  private static HttpClientBuilder getHttpClientBuilder(CloseableHttpClient httpClient) {
     HttpClientBuilder clientBuilder = spy(HttpClientBuilder.create());
     when(clientBuilder.build()).thenReturn(httpClient);
     return clientBuilder;

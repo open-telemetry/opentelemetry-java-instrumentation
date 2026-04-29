@@ -27,6 +27,7 @@ import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import io.opentelemetry.smoketest.TelemetryRetriever;
 import io.opentelemetry.smoketest.TelemetryRetrieverProvider;
 import io.restassured.http.ContentType;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.Properties;
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
@@ -95,6 +97,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   protected static int kafkaExposedPort;
 
   protected static OpenTelemetrySdk openTelemetry;
+
+  @TempDir static Path kafkaConnectLogsDir;
 
   // Abstract methods for database-specific setup
   protected abstract void setupDatabaseContainer();
@@ -253,11 +257,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withExposedPorts(CONNECT_REST_PORT_INTERNAL)
             .withLogConsumer(
                 new Slf4jLogConsumer(LoggerFactory.getLogger("kafka-connect-container")))
-            // Save logs to desktop
             .withFileSystemBind(
-                System.getProperty("user.home") + "/Desktop/kafka-connect-logs",
-                "/var/log/kafka-connect",
-                BindMode.READ_WRITE)
+                kafkaConnectLogsDir.toString(), "/var/log/kafka-connect", BindMode.READ_WRITE)
             // Copy the agent jar to the container
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")

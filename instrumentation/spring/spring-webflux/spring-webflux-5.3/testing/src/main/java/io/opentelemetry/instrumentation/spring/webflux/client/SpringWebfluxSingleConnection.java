@@ -51,7 +51,7 @@ class SpringWebfluxSingleConnection implements SingleConnection {
     WebClient.RequestBodySpec request =
         webClient.method(HttpMethod.GET).uri(uri).headers(h -> headers.forEach(h::add));
 
-    if (Webflux7Util.isWebflux7) {
+    if (Webflux7Util.IS_WEBFLUX_7) {
       return Webflux7Util.doRequest(
           request,
           response -> {

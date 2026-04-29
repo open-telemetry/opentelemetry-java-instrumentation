@@ -29,8 +29,6 @@ import org.springframework.web.server.ServerWebExchange;
  * at any time.
  */
 public final class SpringWebfluxBuilderUtil {
-  private SpringWebfluxBuilderUtil() {}
-
   @Nullable
   private static volatile Function<
           SpringWebfluxClientTelemetryBuilder,
@@ -76,4 +74,6 @@ public final class SpringWebfluxBuilderUtil {
           clientBuilderExtractor) {
     SpringWebfluxBuilderUtil.clientBuilderExtractor = clientBuilderExtractor;
   }
+
+  private SpringWebfluxBuilderUtil() {}
 }

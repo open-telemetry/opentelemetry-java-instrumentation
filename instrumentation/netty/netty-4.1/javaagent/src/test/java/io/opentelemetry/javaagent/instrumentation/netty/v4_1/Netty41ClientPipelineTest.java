@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -184,7 +185,7 @@ class Netty41ClientPipelineTest {
   void testAddInitializer() {
     // This test method replicates a scenario similar to how reactor 0.8.x register the
     // `HttpClientCodec` handler into the pipeline.
-    assumeTrue(Boolean.getBoolean("testLatestDeps"));
+    assumeTrue(testLatestDeps());
     EmbeddedChannel channel = new EmbeddedChannel();
 
     channel.pipeline().addLast(new TracedHandlerFromInitializerHandler());
@@ -227,6 +228,7 @@ class Netty41ClientPipelineTest {
 
     private TracedClass() {
       EventLoopGroup group = new NioEventLoopGroup();
+      cleanup.deferCleanup(group::shutdownGracefully);
       bootstrap = new Bootstrap();
       bootstrap
           .group(group)

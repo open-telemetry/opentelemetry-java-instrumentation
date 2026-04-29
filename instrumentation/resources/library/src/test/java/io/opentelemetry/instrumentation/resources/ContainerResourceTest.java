@@ -25,7 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ContainerResourceTest {
 
-  public static final String TEST_CONTAINER_ID = "abcdef123123deadbeef";
+  private static final String TEST_CONTAINER_ID = "abcdef123123deadbeef";
   @Mock CgroupV1ContainerIdExtractor v1;
   @Mock CgroupV2ContainerIdExtractor v2;
 

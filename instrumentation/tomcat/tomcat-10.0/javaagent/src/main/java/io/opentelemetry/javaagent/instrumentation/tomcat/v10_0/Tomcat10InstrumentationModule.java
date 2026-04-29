@@ -27,10 +27,9 @@ public class Tomcat10InstrumentationModule extends InstrumentationModule {
     // added in Servlet 5.0 (renamed from javax.servlet)
     return hasClassesNamed("jakarta.servlet.http.HttpServletRequest")
         .and(
-            // tomcat 10 has at least one of these two classes. Cache$EvictionOrder is present in
-            // 10.0.0, but is removed before 10.1.0. GenericUser is added before Cache$EvictionOrder
-            // is removed
+            // added in 10.0.11
             hasClassesNamed("org.apache.catalina.users.GenericUser")
+                // present in 10.0.0, removed in 10.0.26
                 .or(hasClassesNamed("org.apache.catalina.webresources.Cache$EvictionOrder")));
   }
 

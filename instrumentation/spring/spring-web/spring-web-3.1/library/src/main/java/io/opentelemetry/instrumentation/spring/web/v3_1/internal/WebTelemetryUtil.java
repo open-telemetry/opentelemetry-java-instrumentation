@@ -24,8 +24,6 @@ import org.springframework.http.client.ClientHttpResponse;
  * at any time.
  */
 public final class WebTelemetryUtil {
-  private WebTelemetryUtil() {}
-
   @Nullable
   private static volatile Function<
           SpringWebTelemetryBuilder,
@@ -48,4 +46,6 @@ public final class WebTelemetryUtil {
           builderExtractor) {
     WebTelemetryUtil.builderExtractor = builderExtractor;
   }
+
+  private WebTelemetryUtil() {}
 }

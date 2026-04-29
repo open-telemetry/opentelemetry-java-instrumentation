@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.getBootstrapLoader;
+import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.bootstrapLoader;
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -51,7 +51,7 @@ class MethodInstrumentation implements TypeInstrumentation {
       // hasClassesNamed does not support null class loader, so we provide a custom loader that
       // can be used to look up resources in bootstrap loader
       if (target == null) {
-        target = getBootstrapLoader();
+        target = bootstrapLoader();
       }
       return delegate.matches(target);
     };

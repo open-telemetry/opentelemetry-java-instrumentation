@@ -24,8 +24,6 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.ConnectionFactory;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -85,8 +83,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
   @ParameterizedTest
   @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
   @SuppressWarnings("unchecked")
-  void shouldCaptureHeaders(Class<?> configClass)
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void shouldCaptureHeaders(Class<?> configClass) throws Exception {
     // given
     SpringApplication app = new SpringApplication(configClass);
     app.setDefaultProperties(defaultConfig());

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -54,7 +55,7 @@ class ElasticsearchRest5Test {
 
   @BeforeAll
   static void setup() {
-    if (!Boolean.getBoolean("testLatestDeps")) {
+    if (!testLatestDeps()) {
       elasticsearch =
           new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:5.6.16")
               .withEnv("xpack.ml.enabled", "false")

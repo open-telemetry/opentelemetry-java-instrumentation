@@ -15,8 +15,6 @@ import org.restlet.Response;
  * any time.
  */
 public class RestletTelemetryBuilderFactory {
-  private RestletTelemetryBuilderFactory() {}
-
   public static DefaultHttpServerInstrumenterBuilder<Request, Response> create(
       OpenTelemetry openTelemetry) {
     return DefaultHttpServerInstrumenterBuilder.create(
@@ -25,4 +23,6 @@ public class RestletTelemetryBuilderFactory {
         new RestletHttpAttributesGetter(),
         new RestletHeadersGetter());
   }
+
+  private RestletTelemetryBuilderFactory() {}
 }

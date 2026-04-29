@@ -19,7 +19,7 @@ import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.MimeHeaders;
 
-public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
+class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
   @Override
   public String getHttpRequestMethod(Request request) {

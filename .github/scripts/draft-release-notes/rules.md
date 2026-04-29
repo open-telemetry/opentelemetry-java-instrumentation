@@ -92,6 +92,13 @@ behavior is a bug fix, not an enhancement — diffs that remove an
 over-restrictive condition, add a fallback branch, or invert an `&&`
 usually belong here. Describe the user-visible symptom.
 
+## metadata.yaml is documentation, not evidence
+
+`metadata.yaml` files are static documentation; they don't change
+runtime behavior. Treat any change to `metadata.yaml` as describing
+existing functionality. Don't emit an Enhancements bullet for a config
+property whose only diff evidence is a metadata.yaml entry.
+
 ## When to omit
 
 Omit only when the PR's `src/main` runtime changes are entirely limited
@@ -101,7 +108,8 @@ to one or more of:
 - test-only changes, cross-testing, moving tests out of default packages,
 - CI/build-tooling with no runtime effect,
 - renames of internal (not extension-API) fields, packages, or helpers,
-- new package-private, `internal`-package, or test-only methods.
+- new package-private, `internal`-package, or test-only methods,
+- `metadata.yaml` documentation (see section above).
 
 Trivial omits (renovate bumps, all-test/docs/build paths, post-release
 version bumps) are handled by `classify.py --preclassify-only`.

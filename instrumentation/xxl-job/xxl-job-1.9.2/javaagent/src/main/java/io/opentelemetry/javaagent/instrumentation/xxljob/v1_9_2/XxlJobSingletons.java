@@ -20,7 +20,7 @@ public class XxlJobSingletons {
       XxlJobHelper.create(
           instrumenter,
           object -> {
-            if (object != null && (object instanceof ReturnT)) {
+            if (object instanceof ReturnT) {
               ReturnT<?> result = (ReturnT<?>) object;
               return result.getCode() == ReturnT.FAIL_CODE;
             }
