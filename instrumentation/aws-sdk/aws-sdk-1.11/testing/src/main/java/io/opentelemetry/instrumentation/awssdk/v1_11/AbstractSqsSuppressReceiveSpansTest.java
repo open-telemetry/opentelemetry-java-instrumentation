@@ -47,14 +47,14 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSqsSuppressReceiveSpansTest {
 
+  private static int sqsPort;
+  private static SQSRestServer sqsRestServer;
+  private static AmazonSQSAsync sqsClient;
+
   protected abstract InstrumentationExtension testing();
 
   protected abstract AmazonSQSAsyncClientBuilder configureClient(
       AmazonSQSAsyncClientBuilder client);
-
-  private static int sqsPort;
-  private static SQSRestServer sqsRestServer;
-  private static AmazonSQSAsync sqsClient;
 
   @BeforeEach
   void setUp() {
