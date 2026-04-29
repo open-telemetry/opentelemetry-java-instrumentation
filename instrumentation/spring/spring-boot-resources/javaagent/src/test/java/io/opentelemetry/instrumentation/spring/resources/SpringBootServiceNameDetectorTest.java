@@ -165,10 +165,10 @@ class SpringBootServiceNameDetectorTest {
   @Test
   void getFromCommandlineArgsWithSystemProperty() {
     when(system.getProperty("sun.java.command"))
-        .thenReturn("/bin/java sweet-spring.jar --spring.application.name=bullpen-2 --quiet=never");
+        .thenReturn("/bin/java sweet-spring.jar --spring.application.name=bullpen-v2 --quiet=never");
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource result = guesser.createResource(config);
-    expectServiceName(result, "bullpen-2");
+    expectServiceName(result, "bullpen-v2");
   }
 
   @Test
