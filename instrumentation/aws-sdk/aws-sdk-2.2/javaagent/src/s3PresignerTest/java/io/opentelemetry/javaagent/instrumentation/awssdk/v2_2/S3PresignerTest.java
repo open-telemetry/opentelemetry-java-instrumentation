@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -26,6 +26,8 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 class S3PresignerTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
@@ -49,13 +51,7 @@ class S3PresignerTest {
             .region(Region.AP_NORTHEAST_1)
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
-  }
-
-  @AfterAll
-  static void tearDown() {
-    if (s3Presigner != null) {
-      s3Presigner.close();
-    }
+    cleanup.deferAfterAll(s3Presigner);
   }
 
   @Test

@@ -36,7 +36,6 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // this instrumentation module targets software.amazon.awssdk:aws-core
     // added in 2.2.0
     return hasClassesNamed("software.amazon.awssdk.core.interceptor.ExecutionInterceptor");
   }
