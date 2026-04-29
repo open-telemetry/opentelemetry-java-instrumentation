@@ -74,10 +74,12 @@ class JarDetails {
         int index = urlLower.indexOf(entry.getKey());
         if (index > 0) {
           String targetEntry = urlString.substring(index + entry.getKey().length());
-          try (JarFile jarFile =
-              new JarFile(
-                  urlString.substring(
-                      "jar:file:".length(), index + 1 + entry.getValue().length()))) {
+          // Outer URL substring up to (excluding) the "!/" separator, e.g.
+          // "jar:file:/C:/Program%20Files/app.war". Strip the leading "jar:" and parse as a URI
+          // so percent-encoded characters in the path are decoded before opening the file.
+          String outerUrl =
+              urlString.substring("jar:".length(), index + 1 + entry.getValue().length());
+          try (JarFile jarFile = new JarFile(UrlPaths.toFile(outerUrl))) {
             JarEntry jarEntry = jarFile.getJarEntry(targetEntry);
             if (jarEntry == null) {
               throw new IOException("Embedded jar entry not found: " + targetEntry);
@@ -91,7 +93,7 @@ class JarDetails {
         }
       }
     }
-    try (JarFile jarFile = new JarFile(url.getFile())) {
+    try (JarFile jarFile = new JarFile(UrlPaths.toFile(url))) {
       return new JarDetails(
           url, getPom(jarFile), getManifest(jarFile), computeDigest(url, SHA1.get()));
     }
