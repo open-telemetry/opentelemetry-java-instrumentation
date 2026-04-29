@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
@@ -84,6 +85,10 @@ public final class JdbcInstrumenterFactory {
         .addAttributesExtractors(extractors)
         .addOperationMetrics(DbClientMetrics.get())
         .setEnabled(enabled)
+        .setErrorCauseExtractor(
+            querySanitizationEnabled
+                ? JdbcSanitizingErrorCauseExtractor.INSTANCE
+                : ErrorCauseExtractor.getDefault())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
@@ -127,6 +132,7 @@ public final class JdbcInstrumenterFactory {
         .addAttributesExtractor(new TransactionAttributeExtractor())
         .addAttributesExtractors(extractors)
         .setEnabled(enabled)
+        .setErrorCauseExtractor(JdbcSanitizingErrorCauseExtractor.INSTANCE)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
