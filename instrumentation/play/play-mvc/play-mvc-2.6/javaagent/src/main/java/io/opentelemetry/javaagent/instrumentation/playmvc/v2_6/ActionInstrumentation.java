@@ -69,40 +69,42 @@ class ActionInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent());
       }
 
+      @Nullable
       public Future<Result> end(
           @Nullable Throwable throwable,
-          Future<Result> responseFuture,
+          @Nullable Future<Result> responseFuture,
           Action<?> thisAction,
           Request<?> req) {
         scope.close();
         updateSpan(context, req);
 
-        if (throwable == null) {
-          // span is finished when future completes
-          // not using responseFuture.onComplete() because that doesn't guarantee this handler span
-          // will be completed before the server span completes
-          responseFuture =
-              ResponseFutureWrapper.wrap(responseFuture, context, thisAction.executionContext());
-        } else {
+        // If the action threw, or didn't return a future to hook into, end the span now.
+        if (throwable != null || responseFuture == null) {
           instrumenter().end(context, null, null, throwable);
+          return responseFuture;
         }
 
-        return responseFuture;
+        // span is finished when future completes
+        // not using responseFuture.onComplete() because that doesn't guarantee this handler span
+        // will be completed before the server span completes
+        return ResponseFutureWrapper.wrap(responseFuture, context, thisAction.executionContext());
       }
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.Argument(0) Request<?> req) {
+    @Nullable
+    public static AdviceScope onEnter() {
       return AdviceScope.start(currentContext());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
+    @Nullable
     public static Future<Result> stopTraceOnResponse(
         @Advice.This Action<?> thisAction,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(0) Request<?> req,
-        @Advice.Return Future<Result> responseFuture,
+        @Advice.Return @Nullable Future<Result> responseFuture,
         @Advice.Enter @Nullable AdviceScope actionScope) {
       if (actionScope == null) {
         return responseFuture;

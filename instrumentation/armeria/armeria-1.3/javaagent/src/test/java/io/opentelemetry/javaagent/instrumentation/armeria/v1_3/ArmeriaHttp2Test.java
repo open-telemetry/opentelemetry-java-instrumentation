@@ -61,9 +61,9 @@ class ArmeriaHttp2Test {
 
   @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
-  void testHello() throws Exception {
+  void testHello() {
     // verify that spans are created and context is propagated
-    AggregatedHttpResponse result = createWebClient(server2).get("/").aggregate().get();
+    AggregatedHttpResponse result = createWebClient(server2).get("/").aggregate().join();
     assertThat(result.contentAscii()).isEqualTo("hello");
 
     testing.waitAndAssertTraces(

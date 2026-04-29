@@ -13,9 +13,9 @@ Any entry in state other than `include`/`omit`, or `include` without a
 section and bullet, is reported on stderr and excluded.
 
 By default writes to stdout. Use --splice to rewrite CHANGELOG.md in
-place, replacing just the `## Unreleased` block and preserving any
-unlinked summary bullets under `### 🚫 Deprecations` by pulling them
-forward into the new block.
+place, replacing the entire `## Unreleased` block. Any hand-written
+content in that block is discarded; review the resulting diff to recover
+anything worth keeping.
 """
 
 from __future__ import annotations
@@ -40,37 +40,6 @@ SECTION_ORDER = [
 ]
 
 PR_URL = "https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/{pr}"
-
-
-def extract_unlinked_deprecations(changelog_text: str) -> list[str]:
-    """Return bullet blocks under ## Unreleased / ### 🚫 Deprecations that
-    have no PR link, preserving multi-line wrapping."""
-    m = re.search(r"^## Unreleased\n(.*?)(?=^## |\Z)", changelog_text, re.S | re.M)
-    if not m:
-        return []
-    unreleased = m.group(1)
-    m = re.search(
-        r"^### 🚫 Deprecations\n(.*?)(?=^### |\Z)",
-        unreleased,
-        re.S | re.M,
-    )
-    if not m:
-        return []
-    section = m.group(1)
-    # Split into bullet blocks. A bullet starts with "- " at column 0 and runs
-    # until the next "- " at column 0; indented lines and blank lines inside
-    # a bullet are absorbed, anything else outside a bullet is dropped.
-    blocks: list[list[str]] = []
-    for line in section.splitlines():
-        if line.startswith("- "):
-            blocks.append([line])
-        elif blocks and (line.startswith(" ") or not line.strip()):
-            blocks[-1].append(line)
-    # Keep only blocks without a PR link.
-    return [
-        b for b in ("\n".join(lines).rstrip() for lines in blocks)
-        if b and not re.search(r"\[#\d+\]\(", b)
-    ]
 
 
 def load_decisions() -> list[dict]:
@@ -168,12 +137,6 @@ def main() -> int:
             continue
         grouped[section].append(d)
 
-    unlinked_deprecations: list[str] = []
-    if args.splice and CHANGELOG.exists():
-        unlinked_deprecations = extract_unlinked_deprecations(
-            CHANGELOG.read_text(encoding="utf-8")
-        )
-
     out_lines = [
         "## Unreleased",
         "",
@@ -181,13 +144,10 @@ def main() -> int:
 
     for key, header in SECTION_ORDER:
         items = sorted(grouped[key], key=lambda d: d["pr"])
-        preserved = unlinked_deprecations if key == "deprecations" else []
-        if not items and not preserved:
+        if not items:
             continue
         out_lines.append(header)
         out_lines.append("")
-        for block in preserved:
-            out_lines.append(block)
         for d in items:
             out_lines.append(format_bullet(d["bullet"], d["pr"]))
         out_lines.append("")
@@ -208,8 +168,7 @@ def main() -> int:
         new_text = text[: m.start()] + block + "\n" + text[m.end():]
         CHANGELOG.write_text(new_text, encoding="utf-8")
         bullet_count = sum(len(v) for v in grouped.values())
-        suffix = f", {len(unlinked_deprecations)} unlinked deprecation(s) preserved" if unlinked_deprecations else ""
-        print(f"Rewrote {CHANGELOG} ({bullet_count} PR-linked bullets{suffix})", file=sys.stderr)
+        print(f"Rewrote {CHANGELOG} ({bullet_count} PR-linked bullets)", file=sys.stderr)
     else:
         sys.stdout.write(block)
 
@@ -217,8 +176,6 @@ def main() -> int:
         print("Section counts:", file=sys.stderr)
         for key, header in SECTION_ORDER:
             print(f"  {key}: {len(grouped[key])}", file=sys.stderr)
-        if unlinked_deprecations:
-            print(f"  unlinked-deprecations preserved: {len(unlinked_deprecations)}", file=sys.stderr)
 
     return 1 if errors else 0
 

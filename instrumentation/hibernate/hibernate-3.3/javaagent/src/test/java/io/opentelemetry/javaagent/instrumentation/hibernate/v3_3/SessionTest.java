@@ -575,7 +575,7 @@ class SessionTest extends AbstractHibernateTest {
     }
   }
 
-  static void sessionAssertion(TraceAssert trace, String methodName, String resource) {
+  private static void sessionAssertion(TraceAssert trace, String methodName, String resource) {
     trace.hasSpansSatisfyingExactly(
         span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
         span -> assertSessionSpan(span, trace.getSpan(0), "Session." + methodName + " " + resource),

@@ -56,26 +56,25 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractAws2ClientRecordHttpErrorTest {
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
 
   private static final MockWebServerExtension server = new MockWebServerExtension();
-  protected static List<String> httpErrorMessages = new ArrayList<>();
+  protected static final List<String> httpErrorMessages = new ArrayList<>();
 
   @BeforeAll
-  public static void setup() {
+  static void setup() {
     server.start();
   }
 
   @AfterAll
-  public static void cleanup() {
+  static void cleanup() {
     server.stop();
   }
 
-  public abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
+  protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
   protected abstract InstrumentationExtension getTesting();
 
@@ -124,7 +123,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
     httpErrorMessages.clear();
   }
 
-  public boolean isRecordIndividualHttpErrorEnabled() {
+  protected boolean isRecordIndividualHttpErrorEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory
     return Boolean.getBoolean(
         "otel.instrumentation.aws-sdk.experimental-record-individual-http-error");
@@ -132,7 +131,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  public void testSendDynamoDbRequestWithRetries() {
+  void testSendDynamoDbRequestWithRetries() {
     cleanResponses();
     // Setup and configuration
     String service = "DynamoDb";

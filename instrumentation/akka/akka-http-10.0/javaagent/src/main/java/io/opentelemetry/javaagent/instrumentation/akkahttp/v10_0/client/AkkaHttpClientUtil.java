@@ -43,7 +43,7 @@ public class AkkaHttpClientUtil {
 
     try {
       return (ActorSystem) actorSystemAccessor.invoke(httpExt);
-    } catch (Throwable e) {
+    } catch (Throwable t) {
       return null;
     }
   }

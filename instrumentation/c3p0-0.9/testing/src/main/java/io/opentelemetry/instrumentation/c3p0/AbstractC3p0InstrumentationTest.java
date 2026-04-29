@@ -44,10 +44,10 @@ public abstract class AbstractC3p0InstrumentationTest {
     c3p0DataSource.setJdbcUrl("jdbc:mock:testDatabase");
 
     // when
-    Connection connection = c3p0DataSource.getConnection();
-    configure(c3p0DataSource);
-    MILLISECONDS.sleep(100);
-    connection.close();
+    try (Connection connection = c3p0DataSource.getConnection()) {
+      configure(c3p0DataSource);
+      MILLISECONDS.sleep(100);
+    }
 
     // then
     assertDataSourceMetrics(c3p0DataSource);

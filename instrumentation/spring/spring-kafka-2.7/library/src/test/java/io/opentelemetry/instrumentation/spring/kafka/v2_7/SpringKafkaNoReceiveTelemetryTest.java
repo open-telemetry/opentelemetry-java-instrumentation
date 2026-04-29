@@ -40,16 +40,16 @@ class SpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaNoReceiveTele
   }
 
   @Configuration
-  public static class KafkaInstrumentationConfig {
+  static class KafkaInstrumentationConfig {
 
     @Bean
-    public DefaultKafkaProducerFactoryCustomizer producerInstrumentation() {
+    DefaultKafkaProducerFactoryCustomizer producerInstrumentation() {
       KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(testing.getOpenTelemetry());
       return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
     }
 
     @Bean
-    public ContainerCustomizer<String, String, ConcurrentMessageListenerContainer<String, String>>
+    ContainerCustomizer<String, String, ConcurrentMessageListenerContainer<String, String>>
         listenerCustomizer() {
       SpringKafkaTelemetry springKafkaTelemetry =
           SpringKafkaTelemetry.create(testing.getOpenTelemetry());

@@ -48,7 +48,7 @@ class ActiveContextManager {
    * @param context The exchange
    * @param request The context
    */
-  public static void activate(@Nullable Context context, CamelRequest request) {
+  static void activate(@Nullable Context context, CamelRequest request) {
     Exchange exchange = request.getExchange();
     ContextWithScope parent = exchange.getProperty(ACTIVE_CONTEXT_PROPERTY, ContextWithScope.class);
     ContextWithScope contextWithScope = ContextWithScope.activate(parent, context, request);
@@ -64,7 +64,7 @@ class ActiveContextManager {
    * @param exchange The exchange
    */
   @Nullable
-  public static Context deactivate(Exchange exchange) {
+  static Context deactivate(Exchange exchange) {
     ContextWithScope contextWithScope =
         exchange.getProperty(ACTIVE_CONTEXT_PROPERTY, ContextWithScope.class);
 

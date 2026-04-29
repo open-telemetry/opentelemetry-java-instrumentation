@@ -55,7 +55,7 @@ class AwsLambdaStreamHandlerTest {
   }
 
   @Test
-  void handlerTraced() throws Exception {
+  void handlerTraced() throws IOException {
     InputStream input = new ByteArrayInputStream("hello\n".getBytes(UTF_8));
     OutputStream output = new ByteArrayOutputStream();
     RequestStreamHandlerTestImpl handler = new RequestStreamHandlerTestImpl();

@@ -12,16 +12,16 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AbstractSpringCloudStreamProducerTest {
+abstract class AbstractSpringCloudStreamProducerTest {
 
   private static final boolean HAS_PRODUCER_SPAN =
       Boolean.getBoolean("otel.instrumentation.spring-integration.producer.enabled");
 
   @RegisterExtension private final RabbitExtension rabbit;
 
-  protected final InstrumentationExtension testing;
+  private final InstrumentationExtension testing;
 
-  public AbstractSpringCloudStreamProducerTest(
+  AbstractSpringCloudStreamProducerTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
     this.testing = testing;
     rabbit = new RabbitExtension(additionalContextClass);

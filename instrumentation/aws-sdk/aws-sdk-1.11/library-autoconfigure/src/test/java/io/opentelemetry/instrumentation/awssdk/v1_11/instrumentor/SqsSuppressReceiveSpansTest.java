@@ -22,7 +22,7 @@ class SqsSuppressReceiveSpansTest extends AbstractSqsSuppressReceiveSpansTest {
   }
 
   @Override
-  public AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
+  protected AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client;
   }
 }

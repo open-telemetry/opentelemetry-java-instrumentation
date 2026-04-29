@@ -77,7 +77,7 @@ public abstract class AbstractBaseAwsClientTest {
       String operation,
       String method,
       List<AttributeAssertion> additionalAttributes)
-      throws Exception {
+      throws ReflectiveOperationException {
 
     assertThat(response).isNotNull();
 
@@ -125,7 +125,8 @@ public abstract class AbstractBaseAwsClientTest {
   }
 
   @SuppressWarnings("unchecked")
-  protected List<RequestHandler2> extractRequestHandlers(Object client) throws Exception {
+  protected List<RequestHandler2> extractRequestHandlers(Object client)
+      throws ReflectiveOperationException {
     Field requestHandler2sField = AmazonWebServiceClient.class.getDeclaredField("requestHandler2s");
     requestHandler2sField.setAccessible(true);
     return (List<RequestHandler2>) requestHandler2sField.get(client);

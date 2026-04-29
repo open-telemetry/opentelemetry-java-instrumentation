@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class VirtualThreadTest {
 
   @Test
-  void testDisableContextPropagation() throws Exception {
+  void testDisableContextPropagation() throws InterruptedException {
     // VirtualThread does not have executeOnCarrierThread method in jdk24
     Assumptions.assumeTrue(
         Double.parseDouble(System.getProperty("java.specification.version")) < 24);

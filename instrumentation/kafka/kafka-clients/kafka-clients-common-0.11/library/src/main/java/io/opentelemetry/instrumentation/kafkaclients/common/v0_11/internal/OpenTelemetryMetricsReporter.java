@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
@@ -42,9 +43,9 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
 
   private static final Logger logger =
       Logger.getLogger(OpenTelemetryMetricsReporter.class.getName());
-  private static volatile Listener listener;
+  @Nullable private static volatile Listener listener;
 
-  private volatile Meter meter;
+  @Nullable private volatile Meter meter;
   private final Object lock = new Object();
 
   @GuardedBy("lock")

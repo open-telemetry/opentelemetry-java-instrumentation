@@ -24,14 +24,10 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed(
-            // added in 1.0.0
-            "com.amazonaws.services.lambda.runtime.RequestHandler")
-        .and(
-            not(
-                hasClassesNamed(
-                    // added in 2.2.0 (in which case aws-lambda-events-2.2 is used)
-                    "com.amazonaws.services.lambda.runtime.events.SQSEvent")));
+    // added in 1.0.0
+    return hasClassesNamed("com.amazonaws.services.lambda.runtime.RequestHandler")
+        // added in 2.2.0 (in which case aws-lambda-events-2.2 is used)
+        .and(not(hasClassesNamed("com.amazonaws.services.lambda.runtime.events.SQSEvent")));
   }
 
   @Override

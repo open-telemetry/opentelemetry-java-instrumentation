@@ -89,12 +89,12 @@ public abstract class AbstractR2dbcStatementTest {
               "MYSQL_PASSWORD", PW_DB,
               "MYSQL_DATABASE", DB);
 
-  private static final Map<String, DbSystemProps> SYSTEMS = new LinkedHashMap<>();
+  private static final Map<String, DbSystemProps> systems = new LinkedHashMap<>();
 
   static {
-    SYSTEMS.put(POSTGRESQL.system, POSTGRESQL);
-    SYSTEMS.put(MYSQL.system, MYSQL);
-    SYSTEMS.put(MARIADB.system, MARIADB);
+    systems.put(POSTGRESQL.system, POSTGRESQL);
+    systems.put(MYSQL.system, MYSQL);
+    systems.put(MARIADB.system, MARIADB);
   }
 
   private static Integer port;
@@ -139,7 +139,7 @@ public abstract class AbstractR2dbcStatementTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
   void testQueries(Parameter parameter) {
-    DbSystemProps props = SYSTEMS.get(parameter.system);
+    DbSystemProps props = systems.get(parameter.system);
     startContainer(props);
     ConnectionFactory connectionFactory =
         createProxyConnectionFactory(
@@ -208,7 +208,7 @@ public abstract class AbstractR2dbcStatementTest {
   }
 
   private static Stream<Arguments> provideParameters() {
-    return SYSTEMS.values().stream()
+    return systems.values().stream()
         .flatMap(
             system ->
                 Stream.of(
@@ -262,7 +262,7 @@ public abstract class AbstractR2dbcStatementTest {
 
   @Test
   void testMetrics() {
-    DbSystemProps props = SYSTEMS.get(MARIADB.system);
+    DbSystemProps props = systems.get(MARIADB.system);
     startContainer(props);
     ConnectionFactory connectionFactory =
         createProxyConnectionFactory(

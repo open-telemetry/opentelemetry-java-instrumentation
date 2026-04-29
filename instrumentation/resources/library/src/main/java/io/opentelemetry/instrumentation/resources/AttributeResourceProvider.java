@@ -31,23 +31,9 @@ import java.util.function.Function;
 public abstract class AttributeResourceProvider<D> implements ConditionalResourceProvider {
 
   private final AttributeProvider<D> attributeProvider;
-
-  public class AttributeBuilder implements AttributeProvider.Builder<D> {
-
-    private AttributeBuilder() {}
-
-    @CanIgnoreReturnValue
-    @Override
-    @SuppressWarnings({"unchecked", "rawtypes"}) // we lose generic types when storing in map
-    public <T> AttributeBuilder add(AttributeKey<T> key, Function<D, Optional<T>> getter) {
-      attributeGetters.put((AttributeKey) key, requireNonNull((Function) getter));
-      return this;
-    }
-  }
-
-  private Set<AttributeKey<?>> filteredKeys;
   private final Map<AttributeKey<Object>, Function<D, Optional<?>>> attributeGetters =
       new HashMap<>();
+  private Set<AttributeKey<?>> filteredKeys;
 
   AttributeResourceProvider(AttributeProvider<D> attributeProvider) {
     this.attributeProvider = attributeProvider;
@@ -106,5 +92,18 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
     }
 
     return value == null;
+  }
+
+  public class AttributeBuilder implements AttributeProvider.Builder<D> {
+
+    private AttributeBuilder() {}
+
+    @CanIgnoreReturnValue
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"}) // we lose generic types when storing in map
+    public <T> AttributeBuilder add(AttributeKey<T> key, Function<D, Optional<T>> getter) {
+      attributeGetters.put((AttributeKey) key, requireNonNull((Function) getter));
+      return this;
+    }
   }
 }

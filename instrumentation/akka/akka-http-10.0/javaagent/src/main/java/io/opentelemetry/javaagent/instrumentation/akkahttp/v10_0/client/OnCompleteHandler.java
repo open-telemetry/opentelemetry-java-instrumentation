@@ -14,11 +14,11 @@ import javax.annotation.Nullable;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
-public class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
+class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
   private final Context context;
   private final HttpRequest request;
 
-  public OnCompleteHandler(Context context, HttpRequest request) {
+  OnCompleteHandler(Context context, HttpRequest request) {
     this.context = context;
     this.request = request;
   }

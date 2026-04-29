@@ -1,0 +1,77 @@
+name: Draft release notes
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: draft-release-notes
+
+jobs:
+  draft:
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
+    permissions:
+      contents: write  # for git push to PR branch
+    runs-on: ubuntu-latest
+    environment: protected
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # need full history and tags so the release-notes script can resolve
+          # the previous release tag (e.g. v2.27.0) when computing the commit range
+          fetch-depth: 0
+
+      - name: Install Copilot CLI
+        run: |
+          curl -fsSL https://gh.io/copilot-install | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - name: Run draft-release-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: python .github/scripts/draft-release-notes/draft-release-notes.py
+
+      - name: Upload draft diagnostics artifact
+        if: always()
+        id: upload-diagnostics
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: draft-release-notes-diagnostics-${{ github.run_id }}
+          path: build/changelog-bundle/**
+
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
+      - name: Create pull request against main
+        env:
+          ARTIFACT_URL: ${{ steps.upload-diagnostics.outputs.artifact-url }}
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        run: |
+          message="Draft release notes"
+          body=$(cat <<EOF
+          Automated draft of the \`## Unreleased\` section of \`CHANGELOG.md\`.
+
+          The entire \`## Unreleased\` block was regenerated from per-PR classifications. Review the diff to recover any hand-written content that should be retained.
+
+          [Download draft diagnostics]($ARTIFACT_URL)
+          EOF
+          )
+          branch="otelbot/draft-release-notes-${GITHUB_RUN_ID}"
+
+          git checkout -b $branch
+          git add CHANGELOG.md
+          git commit -m "$message"
+          git push --set-upstream origin $branch
+          gh pr create --title "$message" \
+                       --body "$body" \
+                       --base main

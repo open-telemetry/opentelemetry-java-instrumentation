@@ -29,9 +29,9 @@ public class AnnotationSingletons {
 
   private static final Logger logger = Logger.getLogger(AnnotationSingletons.class.getName());
   private static final Instrumenter<Method, Object> instrumenter = createInstrumenter();
-  private static final Instrumenter<MethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
+  private static final Instrumenter<MethodRequest, Object> instrumenterWithAttributes =
       createInstrumenterWithAttributes();
-  private static final SpanAttributesExtractor ATTRIBUTES = createAttributesExtractor();
+  private static final SpanAttributesExtractor attributes = createAttributesExtractor();
 
   // The reason for using reflection here is that it needs to be compatible with the old version of
   // @WithSpan annotation that does not include the inheritContext option to avoid failing the
@@ -58,11 +58,11 @@ public class AnnotationSingletons {
   }
 
   public static Instrumenter<MethodRequest, Object> instrumenterWithAttributes() {
-    return INSTRUMENTER_WITH_ATTRIBUTES;
+    return instrumenterWithAttributes;
   }
 
   public static SpanAttributesExtractor attributes() {
-    return ATTRIBUTES;
+    return attributes;
   }
 
   private static Instrumenter<Method, Object> createInstrumenter() {

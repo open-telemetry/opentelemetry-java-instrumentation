@@ -55,8 +55,8 @@ class JarDetails {
 
   private final URL url;
   protected final JarFile jarFile;
-  private final Properties pom;
-  private final Manifest manifest;
+  @Nullable private final Properties pom;
+  @Nullable private final Manifest manifest;
   private final String sha1Checksum;
 
   private JarDetails(URL url, JarFile jarFile) throws IOException {
@@ -79,6 +79,9 @@ class JarDetails {
               new JarFile(
                   urlString.substring("jar:file:".length(), index + 1 + entry.getValue().length()));
           JarEntry jarEntry = jarFile.getJarEntry(targetEntry);
+          if (jarEntry == null) {
+            throw new IOException("Embedded jar entry not found: " + targetEntry);
+          }
           return new EmbeddedJarDetails(url, jarFile, jarEntry);
         }
       }
@@ -179,12 +182,18 @@ class JarDetails {
 
   private String computeDigest(MessageDigest md) throws IOException {
     try (InputStream inputStream = getInputStream()) {
-      DigestInputStream dis = new DigestInputStream(inputStream, md);
-      byte[] buffer = new byte[8192];
-      while (dis.read(buffer) != -1) {}
-      byte[] digest = md.digest();
-      return String.format(Locale.ROOT, "%040x", new BigInteger(1, digest));
+      return computeDigest(inputStream, md);
     }
+  }
+
+  private static String computeDigest(InputStream inputStream, MessageDigest md)
+      throws IOException {
+    md.reset();
+    DigestInputStream dis = new DigestInputStream(inputStream, md);
+    byte[] buffer = new byte[8192];
+    while (dis.read(buffer) != -1) {}
+    byte[] digest = md.digest();
+    return String.format(Locale.ROOT, "%040x", new BigInteger(1, digest));
   }
 
   /**

@@ -11,7 +11,7 @@ import io.ktor.server.response.*
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 
-class KtorServerTracer(
+internal class KtorServerTracer(
   private val instrumenter: Instrumenter<ApplicationRequest, ApplicationResponse>,
 ) {
   fun start(call: ApplicationCall): Context? {

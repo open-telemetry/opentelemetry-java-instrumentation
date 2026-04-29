@@ -8,17 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
-import javax.annotation.Nullable;
 
 @AutoValue
 abstract class NettyClientRequestAndContexts {
 
   public static NettyClientRequestAndContexts create(
-      @Nullable Context parentContext, Context context, NettyRequest request) {
+      Context parentContext, Context context, NettyRequest request) {
     return new AutoValue_NettyClientRequestAndContexts(parentContext, context, request);
   }
 
-  @Nullable
   abstract Context parentContext();
 
   abstract Context context();

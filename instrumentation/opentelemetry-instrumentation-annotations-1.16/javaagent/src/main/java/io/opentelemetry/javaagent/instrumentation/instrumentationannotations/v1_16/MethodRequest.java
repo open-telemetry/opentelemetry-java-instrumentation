@@ -7,20 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1
 
 import java.lang.reflect.Method;
 
-public class MethodRequest {
+class MethodRequest {
   private final Method method;
   private final Object[] args;
 
-  public MethodRequest(Method method, Object[] args) {
+  MethodRequest(Method method, Object[] args) {
     this.method = method;
     this.args = args;
   }
 
-  public Method method() {
+  Method method() {
     return this.method;
   }
 
-  public Object[] args() {
+  Object[] args() {
     return this.args;
   }
 }

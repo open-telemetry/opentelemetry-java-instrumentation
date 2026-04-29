@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.BiConsumer;
+import javax.annotation.Nullable;
 
 public class EndOperationListener<T> implements BiConsumer<T, Throwable> {
   private final Instrumenter<RedissonRequest, Void> instrumenter;
@@ -22,7 +23,7 @@ public class EndOperationListener<T> implements BiConsumer<T, Throwable> {
   }
 
   @Override
-  public void accept(T t, Throwable error) {
+  public void accept(@Nullable T unused, @Nullable Throwable error) {
     instrumenter.end(context, request, null, error);
   }
 }

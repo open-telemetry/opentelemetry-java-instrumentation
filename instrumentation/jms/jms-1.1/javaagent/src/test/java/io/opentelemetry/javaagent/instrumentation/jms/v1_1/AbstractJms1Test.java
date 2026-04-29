@@ -232,7 +232,7 @@ abstract class AbstractJms1Test {
   @MethodSource("destinationArguments")
   void shouldFailWhenSendingReadOnlyMessage(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
-      throws Exception {
+      throws JMSException {
 
     // given
     Destination destination = destinationFactory.create(session);

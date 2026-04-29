@@ -108,11 +108,11 @@ public final class Servlet5TelemetryFilter implements Filter {
   public void destroy() {}
 
   private class OtelHttpServletRequest extends HttpServletRequestWrapper {
-    final Context context;
-    final ServletRequestContext<HttpServletRequest> requestContext;
-    final ServletResponseContext<HttpServletResponse> responseContext;
-    boolean hasAsyncListener = false;
-    @Nullable Throwable asyncException;
+    private final Context context;
+    private final ServletRequestContext<HttpServletRequest> requestContext;
+    private final ServletResponseContext<HttpServletResponse> responseContext;
+    private boolean hasAsyncListener = false;
+    @Nullable private Throwable asyncException;
 
     OtelHttpServletRequest(
         HttpServletRequest request,
@@ -235,6 +235,7 @@ public final class Servlet5TelemetryFilter implements Filter {
               runnable.run();
             } catch (Throwable t) {
               otelRequest.asyncException = t;
+              throw t;
             }
           });
     }

@@ -25,6 +25,7 @@ jobs:
     outputs:
       modules: ${{ steps.build-matrix.outputs.modules }}
       has_work: ${{ steps.build-matrix.outputs.has_work }}
+      model: ${{ steps.model.outputs.model }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -32,6 +33,12 @@ jobs:
 
       - name: Fetch progress branch
         run: git fetch origin otelbot/code-review-progress || true
+
+      - name: Resolve Copilot model
+        id: model
+        run: |
+          model=$(git show origin/otelbot/code-review-progress:model.txt | xargs)
+          echo "model=$model" >> "$GITHUB_OUTPUT"
 
       - name: Build review matrix
         id: build-matrix
@@ -58,7 +65,7 @@ jobs:
       contents: write  # for git push
     env:
       MODULES_JSON: ${{ needs.dispatch.outputs.modules }}
-      MODEL: "gpt-5.4"
+      MODEL: ${{ needs.dispatch.outputs.model }}
       # Stop processing further modules once at least this many files have been
       # modified (vs origin/main) at the end of a module.
       FILE_THRESHOLD: 10

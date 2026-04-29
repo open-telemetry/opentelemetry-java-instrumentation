@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 import org.apache.camel.Endpoint;
 import org.apache.camel.component.aws.sqs.SqsComponent;
@@ -36,7 +37,7 @@ class CamelPropagationUtilTest {
   }
 
   @Test
-  void shouldExtractHttpParentForHttpEndpoint() throws Exception {
+  void shouldExtractHttpParentForHttpEndpoint() throws URISyntaxException {
     // given
     Endpoint endpoint = new HttpEndpoint("", new HttpComponent(), URI.create(""));
     Map<String, Object> exchangeHeaders =
@@ -53,7 +54,7 @@ class CamelPropagationUtilTest {
   }
 
   @Test
-  void shouldNotFailExtractingNullHttpParentForHttpEndpoint() throws Exception {
+  void shouldNotFailExtractingNullHttpParentForHttpEndpoint() throws URISyntaxException {
     // given
     Endpoint endpoint = new HttpEndpoint("", new HttpComponent(), URI.create(""));
     Map<String, Object> exchangeHeaders = singletonMap("traceparent", null);

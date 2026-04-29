@@ -212,7 +212,9 @@ public class PulsarSingletons {
             timer.now());
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
-    messages.forEach(message -> VirtualFieldStore.inject(message, receiveContext));
+    for (Message<?> message : messages) {
+      VirtualFieldStore.inject(message, receiveContext);
+    }
     return receiveContext;
   }
 

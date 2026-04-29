@@ -13,10 +13,10 @@ import org.springframework.cloud.gateway.route.builder.UriSpec;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class GatewayTestApplication {
+class GatewayTestApplication {
 
   @Bean
-  public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+  RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
     // A simple echo gateway.
     return builder
         .routes()

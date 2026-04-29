@@ -13,7 +13,7 @@ import org.apache.camel.Exchange;
 @AutoValue
 abstract class CamelRequest {
 
-  public static CamelRequest create(
+  static CamelRequest create(
       SpanDecorator spanDecorator,
       Exchange exchange,
       Endpoint endpoint,
@@ -22,13 +22,13 @@ abstract class CamelRequest {
     return new AutoValue_CamelRequest(spanDecorator, exchange, endpoint, camelDirection, spanKind);
   }
 
-  public abstract SpanDecorator getSpanDecorator();
+  abstract SpanDecorator getSpanDecorator();
 
-  public abstract Exchange getExchange();
+  abstract Exchange getExchange();
 
-  public abstract Endpoint getEndpoint();
+  abstract Endpoint getEndpoint();
 
-  public abstract CamelDirection getCamelDirection();
+  abstract CamelDirection getCamelDirection();
 
-  public abstract SpanKind getSpanKind();
+  abstract SpanKind getSpanKind();
 }

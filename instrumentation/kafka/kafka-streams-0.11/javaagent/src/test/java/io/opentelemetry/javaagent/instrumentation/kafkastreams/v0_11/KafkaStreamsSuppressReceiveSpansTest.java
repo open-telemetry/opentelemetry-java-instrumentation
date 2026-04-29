@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -102,7 +103,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_SYSTEM, KAFKA),
                             equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                             equalTo(MESSAGING_OPERATION, "publish"),
-                            equalTo(MESSAGING_CLIENT_ID, "producer-1"),
+                            equalTo(stringKey("messaging.client_id"), "producer-1"),
                             satisfies(
                                 MESSAGING_DESTINATION_PARTITION_ID,
                                 val -> val.isInstanceOf(String.class)),
@@ -110,7 +111,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                             equalTo(
                                 stringKey("messaging.kafka.bootstrap.servers"),
-                                isExperimental ? kafka.getBootstrapServers() : null)),
+                                EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)),
                 // kafka-stream CONSUMER
                 span -> {
                   List<AttributeAssertion> assertions =
@@ -119,7 +120,9 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                               equalTo(MESSAGING_OPERATION, "process"),
-                              satisfies(MESSAGING_CLIENT_ID, val -> val.endsWith("consumer")),
+                              satisfies(
+                                  stringKey("messaging.client_id"),
+                                  val -> val.endsWith("consumer")),
                               satisfies(
                                   MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
                               satisfies(
@@ -128,13 +131,13 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                               equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                               equalTo(stringKey("asdf"), "testing")));
-                  if (isExperimental) {
+                  if (EXPERIMENTAL_ATTRIBUTES) {
                     assertions.add(
                         satisfies(
                             longKey("kafka.record.queue_time_ms"),
                             val -> val.isGreaterThanOrEqualTo(0)));
                   }
-                  if (Boolean.getBoolean("testLatestDeps")) {
+                  if (testLatestDeps()) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
                   }
                   span.hasName(STREAM_PENDING + " process")
@@ -154,14 +157,16 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_SYSTEM, KAFKA),
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                           equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(MESSAGING_CLIENT_ID, val -> val.isInstanceOf(String.class)),
+                          satisfies(
+                              stringKey("messaging.client_id"),
+                              val -> val.isInstanceOf(String.class)),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID,
                               val -> val.isInstanceOf(String.class)),
                           equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                           equalTo(
                               stringKey("messaging.kafka.bootstrap.servers"),
-                              isExperimental ? kafka.getBootstrapServers() : null));
+                              EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null));
                 },
                 // kafka-clients CONSUMER process
                 span -> {
@@ -171,7 +176,9 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                               equalTo(MESSAGING_OPERATION, "process"),
-                              satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                              satisfies(
+                                  stringKey("messaging.client_id"),
+                                  val -> val.startsWith("consumer")),
                               satisfies(
                                   MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
                               satisfies(
@@ -180,13 +187,13 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                               equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                               equalTo(longKey("testing"), 123)));
-                  if (isExperimental) {
+                  if (EXPERIMENTAL_ATTRIBUTES) {
                     assertions.add(
                         satisfies(
                             longKey("kafka.record.queue_time_ms"),
                             val -> val.isGreaterThanOrEqualTo(0)));
                   }
-                  if (Boolean.getBoolean("testLatestDeps")) {
+                  if (testLatestDeps()) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
                   }
                   span.hasName(STREAM_PROCESSED + " process")
