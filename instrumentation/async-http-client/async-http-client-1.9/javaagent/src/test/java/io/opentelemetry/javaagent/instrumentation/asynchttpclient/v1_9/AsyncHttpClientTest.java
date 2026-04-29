@@ -16,6 +16,7 @@ import com.ning.http.client.RequestBuilder;
 import com.ning.http.client.Response;
 import com.ning.http.client.uri.Uri;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -26,12 +27,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final int CONNECTION_TIMEOUT_MS = (int) CONNECTION_TIMEOUT.toMillis();
   private static final int READ_TIMEOUT_MS = (int) READ_TIMEOUT.toMillis();
@@ -46,6 +50,12 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
       builder.setReadTimeout(READ_TIMEOUT_MS);
     }
     return new AsyncHttpClient(builder.build());
+  }
+
+  @BeforeAll
+  static void setup() {
+    cleanup.deferAfterAll(client);
+    cleanup.deferAfterAll(clientWithReadTimeout);
   }
 
   private static AsyncHttpClient getClient(URI uri) {
