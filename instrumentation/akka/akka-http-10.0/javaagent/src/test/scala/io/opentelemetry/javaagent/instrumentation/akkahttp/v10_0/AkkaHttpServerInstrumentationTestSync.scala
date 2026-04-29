@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerInstrumentationExtension,
   HttpServerTestOptions
 }
+import io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -31,6 +32,6 @@ class AkkaHttpServerInstrumentationTestSync
   ): Unit = {
     super.configure(options)
     // FIXME: latest deps does not fill http.status_code
-    options.setTestException(!java.lang.Boolean.getBoolean("testLatestDeps"))
+    options.setTestException(!testLatestDeps())
   }
 }

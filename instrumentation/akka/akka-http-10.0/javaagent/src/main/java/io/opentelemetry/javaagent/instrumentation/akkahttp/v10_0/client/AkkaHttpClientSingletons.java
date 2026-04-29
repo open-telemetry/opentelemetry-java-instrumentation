@@ -14,11 +14,11 @@ import io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.AkkaHttpUtil;
 
 class AkkaHttpClientSingletons {
 
-  private static final HttpHeaderSetter headerSetter;
+  private static final HttpHeaderSetter setter;
   private static final Instrumenter<HttpRequest, HttpResponse> instrumenter;
 
   static {
-    headerSetter = new HttpHeaderSetter(GlobalOpenTelemetry.getPropagators());
+    setter = new HttpHeaderSetter(GlobalOpenTelemetry.getPropagators());
     instrumenter =
         JavaagentHttpClientInstrumenters.create(
             AkkaHttpUtil.instrumentationName(), new AkkaHttpClientAttributesGetter());
@@ -29,7 +29,7 @@ class AkkaHttpClientSingletons {
   }
 
   static HttpHeaderSetter setter() {
-    return headerSetter;
+    return setter;
   }
 
   private AkkaHttpClientSingletons() {}
