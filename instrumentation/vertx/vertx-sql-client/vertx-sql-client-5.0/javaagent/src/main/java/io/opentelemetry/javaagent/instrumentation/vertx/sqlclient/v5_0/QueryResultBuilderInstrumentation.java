@@ -35,7 +35,8 @@ class QueryResultBuilderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(
-        @Advice.Argument(1) Throwable throwable, @Advice.FieldValue("handler") Promise<?> promise) {
+        @Advice.Argument(1) @Nullable Throwable throwable,
+        @Advice.FieldValue("handler") Promise<?> promise) {
       return endQuerySpan(instrumenter(), promise, throwable);
     }
 
