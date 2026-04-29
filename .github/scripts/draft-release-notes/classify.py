@@ -128,6 +128,17 @@ def iter_bundles() -> list[PrBundle]:
 
 def preclassify(bundle: PrBundle) -> dict | None:
     """Return a decision dict if we can decide without the LLM, else None."""
+    labels = bundle.meta.get("labels") or []
+    if "automated code review" in labels:
+        return {
+            "decision": "omit",
+            "section": None,
+            "surface": "automated code review sweep",
+            "user_visible_effect": "none",
+            "bullet": None,
+            "evidence": "PR labeled 'automated code review'",
+            "source": "preclassify",
+        }
     if not bundle.meta.get("touches_src_main"):
         files = [f["path"] for f in bundle.meta.get("files", [])]
         return {
@@ -244,13 +255,34 @@ def parse_response(s: str) -> dict:
     s = s.strip()
     s = re.sub(r"^```(?:json)?\s*", "", s, flags=re.I)
     s = re.sub(r"\s*```$", "", s)
-    # Some CLIs prefix a status line; try to locate the first { and last }.
-    if not s.startswith("{"):
-        start = s.find("{")
-        end = s.rfind("}")
-        if start != -1 and end != -1:
-            s = s[start : end + 1]
-    return json.loads(s)
+    # The model sometimes emits scratchpad objects (e.g. {"intent": "..."})
+    # before the real decision object. Walk all top-level JSON objects in
+    # the string and return the last one that has a "decision" key, falling
+    # back to the last object if none match.
+    decoder = json.JSONDecoder()
+    objects: list[dict] = []
+    i = 0
+    n = len(s)
+    while i < n:
+        # Skip to the next object start.
+        j = s.find("{", i)
+        if j == -1:
+            break
+        try:
+            obj, end = decoder.raw_decode(s, j)
+        except json.JSONDecodeError:
+            i = j + 1
+            continue
+        if isinstance(obj, dict):
+            objects.append(obj)
+        i = end
+    if not objects:
+        # Force the original error path for callers that expect JSONDecodeError.
+        return json.loads(s)
+    for obj in reversed(objects):
+        if "decision" in obj:
+            return obj
+    return objects[-1]
 
 
 def validate(decision: dict) -> list[str]:
@@ -356,7 +388,7 @@ def process_one(bundle: PrBundle, args) -> tuple[str, str | None, dict | None]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--jobs", type=int, default=4, help="parallel CLI invocations (default 4)")
-    ap.add_argument("--timeout", type=int, default=300, help="per-PR CLI timeout seconds")
+    ap.add_argument("--timeout", type=int, default=900, help="per-PR CLI timeout seconds")
     ap.add_argument("--force", action="store_true", help="re-classify PRs with existing decision.json")
     ap.add_argument("--only", type=int, nargs="*", help="restrict to these PR numbers")
     ap.add_argument(

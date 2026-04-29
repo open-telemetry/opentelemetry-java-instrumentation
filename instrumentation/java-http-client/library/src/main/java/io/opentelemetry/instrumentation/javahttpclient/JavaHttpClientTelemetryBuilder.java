@@ -22,13 +22,13 @@ import java.util.function.UnaryOperator;
 /** Builder for {@link JavaHttpClientTelemetry}. */
 public final class JavaHttpClientTelemetryBuilder {
 
-  private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
-  private final OpenTelemetry openTelemetry;
-
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
   }
+
+  private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
+  private final OpenTelemetry openTelemetry;
 
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = JavaHttpClientInstrumenterBuilderFactory.create(openTelemetry);

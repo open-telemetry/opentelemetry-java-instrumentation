@@ -66,7 +66,7 @@ class ExceptionHandlingTest {
   }
 
   @Test
-  @SuppressWarnings({"unchecked"})
+  @SuppressWarnings("unchecked")
   void testProducerHandlesReadOnlyHeaders() {
     Producer<String, String> producer = mock(Producer.class);
     when(producer.send(any(), any())).thenReturn(CompletableFuture.completedFuture(null));

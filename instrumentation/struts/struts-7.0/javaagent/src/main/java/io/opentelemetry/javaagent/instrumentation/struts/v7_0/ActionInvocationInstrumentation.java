@@ -77,6 +77,7 @@ class ActionInvocationInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.This ActionInvocation actionInvocation) {
       return AdviceScope.start(actionInvocation);
     }

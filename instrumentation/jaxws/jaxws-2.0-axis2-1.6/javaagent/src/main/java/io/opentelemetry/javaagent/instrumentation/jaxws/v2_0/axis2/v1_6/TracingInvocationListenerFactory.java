@@ -16,7 +16,7 @@ public class TracingInvocationListenerFactory implements InvocationListenerFacto
     return new TracingInvocationListener(messageContext);
   }
 
-  static class TracingInvocationListener implements InvocationListener {
+  private static class TracingInvocationListener implements InvocationListener {
     private final MessageContext messageContext;
 
     TracingInvocationListener(MessageContext messageContext) {

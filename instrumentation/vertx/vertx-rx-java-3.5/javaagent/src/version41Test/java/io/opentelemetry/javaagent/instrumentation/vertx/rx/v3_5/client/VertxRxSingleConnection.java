@@ -18,12 +18,12 @@ import io.vertx.reactivex.ext.web.client.HttpResponse;
 import io.vertx.reactivex.ext.web.client.WebClient;
 import java.util.Map;
 
-public class VertxRxSingleConnection implements SingleConnection {
+class VertxRxSingleConnection implements SingleConnection {
   private final WebClient webClient;
   private final String host;
   private final int port;
 
-  public VertxRxSingleConnection(String host, int port) {
+  VertxRxSingleConnection(String host, int port) {
     this.host = host;
     this.port = port;
 

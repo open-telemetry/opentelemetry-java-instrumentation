@@ -10,16 +10,16 @@ import io.vertx.ext.web.RoutingContext;
 import javax.annotation.Nullable;
 
 public class RoutingContextUtil {
-  private static final VirtualField<RoutingContext, String> routeField =
+  private static final VirtualField<RoutingContext, String> ROUTE_FIELD =
       VirtualField.find(RoutingContext.class, String.class);
 
   static void setRoute(RoutingContext routingContext, @Nullable String route) {
-    routeField.set(routingContext, route);
+    ROUTE_FIELD.set(routingContext, route);
   }
 
   @Nullable
   public static String getRoute(RoutingContext routingContext) {
-    return routeField.get(routingContext);
+    return ROUTE_FIELD.get(routingContext);
   }
 
   private RoutingContextUtil() {}

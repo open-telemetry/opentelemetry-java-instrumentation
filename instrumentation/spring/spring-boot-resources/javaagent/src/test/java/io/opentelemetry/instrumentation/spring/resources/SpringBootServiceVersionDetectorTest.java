@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SpringBootServiceVersionDetectorTest {
 
-  static final String BUILD_INFO_PATH = "META-INF/build-info.properties";
+  private static final String BUILD_INFO_PATH = "META-INF/build-info.properties";
 
   @Mock ConfigProperties config;
   @Mock SystemHelper system;

@@ -108,7 +108,7 @@ dependencies {
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.10.0-alpha")
   testImplementation("org.assertj:assertj-core:3.27.7")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.3"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")

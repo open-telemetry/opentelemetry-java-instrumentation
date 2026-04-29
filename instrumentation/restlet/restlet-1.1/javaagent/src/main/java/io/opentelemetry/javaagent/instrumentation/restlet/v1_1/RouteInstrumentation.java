@@ -18,7 +18,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.restlet.Route;
-import org.restlet.data.Request;
 
 class RouteInstrumentation implements TypeInstrumentation {
   @Override
@@ -39,7 +38,7 @@ class RouteInstrumentation implements TypeInstrumentation {
   public static class RouteBeforeHandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void getRouteInfo(@Advice.This Route route, @Advice.Argument(0) Request request) {
+    public static void getRouteInfo(@Advice.This Route route) {
       String pattern = route.getTemplate().getPattern();
 
       HttpServerRoute.update(currentContext(), CONTROLLER, serverSpanName(), pattern);

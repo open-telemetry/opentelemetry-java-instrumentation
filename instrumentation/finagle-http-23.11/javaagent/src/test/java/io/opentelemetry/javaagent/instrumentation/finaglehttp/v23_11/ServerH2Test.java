@@ -20,6 +20,7 @@ import com.twitter.finagle.http2.param.PriorKnowledge;
 import com.twitter.util.Await;
 import com.twitter.util.Duration;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -30,8 +31,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ServerH2Test extends AbstractServerTest {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Override
   protected ListeningServer setupServer() {
@@ -61,6 +65,7 @@ class ServerH2Test extends AbstractServerTest {
             // must use http2 here
             .withHttp2()
             .newService(uri.getHost() + ":" + uri.getPort());
+    cleanup.deferCleanup(client::close);
 
     Response response =
         Await.result(
@@ -74,8 +79,6 @@ class ServerH2Test extends AbstractServerTest {
                         HttpHeaderNames.X_FORWARDED_FOR.toString(),
                         TEST_CLIENT_IP))),
             Duration.fromSeconds(20));
-
-    Await.result(client.close(), Duration.fromSeconds(5));
 
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentString()).isEqualTo(SUCCESS.getBody());

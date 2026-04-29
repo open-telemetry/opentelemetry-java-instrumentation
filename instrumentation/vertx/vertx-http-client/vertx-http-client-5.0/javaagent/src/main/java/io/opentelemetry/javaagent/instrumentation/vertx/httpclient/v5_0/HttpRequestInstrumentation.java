@@ -87,20 +87,20 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context) {
         this.context = context;
-        this.scope = scope;
+        this.scope = context.makeCurrent();
       }
 
       @Nullable
-      public static AdviceScope startAndAttachContext(HttpClientRequest request) {
+      public static AdviceScope start(HttpClientRequest request) {
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }
         Context context = instrumenter().start(parentContext, request);
         CONTEXTS.set(request, new Contexts(parentContext, context));
-        return new AdviceScope(context, context.makeCurrent());
+        return new AdviceScope(context);
       }
 
       public void end(HttpClientRequest request, @Nullable Throwable throwable) {
@@ -114,7 +114,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope attachContext(@Advice.This HttpClientRequest request) {
-      return AdviceScope.startAndAttachContext(request);
+      return AdviceScope.start(request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

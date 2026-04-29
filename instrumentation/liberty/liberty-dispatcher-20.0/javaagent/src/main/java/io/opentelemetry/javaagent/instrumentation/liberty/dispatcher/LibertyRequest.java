@@ -21,7 +21,7 @@ final class LibertyRequest {
   @Nullable private final String clientSocketAddress;
   private final int clientSocketPort;
 
-  public LibertyRequest(
+  LibertyRequest(
       HttpRequestMessage httpRequestMessage,
       @Nullable InetAddress serverInetAddress,
       int serverSocketPort,
@@ -36,33 +36,33 @@ final class LibertyRequest {
     this.clientSocketPort = clientSocketPort;
   }
 
-  public String getMethod() {
+  String getMethod() {
     return httpRequestMessage.getMethod();
   }
 
-  public String getScheme() {
+  String getScheme() {
     return httpRequestMessage.getScheme();
   }
 
-  public String getRequestUri() {
+  String getRequestUri() {
     return httpRequestMessage.getRequestURI();
   }
 
-  public String getQueryString() {
+  String getQueryString() {
     return httpRequestMessage.getQueryString();
   }
 
-  public List<String> getAllHeaderNames() {
+  List<String> getAllHeaderNames() {
     return httpRequestMessage.getAllHeaderNames();
   }
 
   @Nullable
-  public String getHeaderValue(String name) {
+  String getHeaderValue(String name) {
     HeaderField hf = httpRequestMessage.getHeader(name);
     return hf != null ? hf.asString() : null;
   }
 
-  public List<String> getHeaderValues(String name) {
+  List<String> getHeaderValues(String name) {
     List<HeaderField> headers = httpRequestMessage.getHeaders(name);
     if (headers.isEmpty()) {
       return emptyList();
@@ -74,25 +74,25 @@ final class LibertyRequest {
     return stringHeaders;
   }
 
-  public String getProtocol() {
+  String getProtocol() {
     return httpRequestMessage.getVersion();
   }
 
   @Nullable
-  public String getServerSocketAddress() {
+  String getServerSocketAddress() {
     return serverSocketAddress;
   }
 
-  public int getServerSocketPort() {
+  int getServerSocketPort() {
     return serverSocketPort;
   }
 
   @Nullable
-  public String getClientSocketAddress() {
+  String getClientSocketAddress() {
     return clientSocketAddress;
   }
 
-  public int getClientSocketPort() {
+  int getClientSocketPort() {
     return clientSocketPort;
   }
 }

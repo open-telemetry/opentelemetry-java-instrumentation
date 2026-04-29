@@ -5,5 +5,5 @@ plugins {
 dependencies {
   api("org.junit.jupiter:junit-jupiter-api")
 
-  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 }

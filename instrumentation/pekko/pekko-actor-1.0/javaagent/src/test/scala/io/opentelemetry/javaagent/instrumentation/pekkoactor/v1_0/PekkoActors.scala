@@ -56,8 +56,8 @@ class PekkoActors {
       howdyGreeter ! WhoToGreet("Pekko")
       howdyGreeter ! Greet
     } finally {
-      parentSpan.end()
       parentScope.close()
+      parentSpan.end()
     }
   }
 
@@ -69,8 +69,8 @@ class PekkoActors {
       howdyGreeter ! WhoToGreet("Pekko")
       howdyGreeter ? Greet
     } finally {
-      parentSpan.end()
       parentScope.close()
+      parentSpan.end()
     }
   }
 
@@ -82,8 +82,8 @@ class PekkoActors {
       helloGreeter ! WhoToGreet("Pekko")
       helloGreeter ? Greet
     } finally {
-      parentSpan.end()
       parentScope.close()
+      parentSpan.end()
     }
   }
 }

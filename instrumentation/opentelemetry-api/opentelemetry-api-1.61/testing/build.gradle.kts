@@ -2,10 +2,6 @@ plugins {
   id("otel.javaagent-testing")
 }
 
-dependencies {
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent"))
-}
-
 configurations.configureEach {
   if (name.endsWith("testRuntimeClasspath", true) || name.endsWith("testCompileClasspath", true)) {
     resolutionStrategy {

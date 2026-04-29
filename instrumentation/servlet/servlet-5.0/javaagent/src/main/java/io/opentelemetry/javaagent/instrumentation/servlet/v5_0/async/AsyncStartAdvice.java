@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
@@ -25,8 +26,9 @@ public class AsyncStartAdvice {
     return callDepth;
   }
 
-  @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void startAsyncExit(
+      @Advice.Thrown @Nullable Throwable throwable,
       @Advice.This(typing = Assigner.Typing.DYNAMIC) HttpServletRequest request,
       @Advice.Enter CallDepth callDepth) {
 
@@ -35,7 +37,7 @@ public class AsyncStartAdvice {
       return;
     }
 
-    if (request != null) {
+    if (throwable == null && request != null) {
       helper().attachAsyncListener(request, Java8BytecodeBridge.currentContext());
     }
   }

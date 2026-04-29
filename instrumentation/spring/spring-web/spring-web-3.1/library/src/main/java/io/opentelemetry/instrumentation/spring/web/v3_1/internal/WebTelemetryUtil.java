@@ -17,8 +17,6 @@ import org.springframework.http.client.ClientHttpResponse;
  * any time.
  */
 public class WebTelemetryUtil {
-  private WebTelemetryUtil() {}
-
   // allows access to the private field for the spring starter
   private static volatile Function<
           SpringWebTelemetryBuilder,
@@ -40,4 +38,6 @@ public class WebTelemetryUtil {
           builderExtractor) {
     WebTelemetryUtil.builderExtractor = builderExtractor;
   }
+
+  private WebTelemetryUtil() {}
 }

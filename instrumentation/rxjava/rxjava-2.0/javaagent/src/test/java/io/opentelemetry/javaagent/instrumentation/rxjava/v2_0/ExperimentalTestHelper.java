@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.rxjava.v2_0;
 
 class ExperimentalTestHelper {
-  private static final boolean isEnabled =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.rxjava.experimental-span-attributes");
 
   static Boolean experimentalCanceled(boolean value) {
-    if (isEnabled) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return value;
     }
     return null;

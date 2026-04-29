@@ -250,6 +250,8 @@ jobs:
           PRIOR_VERSION: ${{ needs.release.outputs.prior-version }}
         run: |
           ./gradlew japicmp -PapiBaseVersion=$PRIOR_VERSION -PapiNewVersion=$VERSION
+          # Pin the apidiff baseline to the just-released version.
+          sed -i "s/^val apidiffBaselineVersion = .*/val apidiffBaselineVersion = \"$VERSION\"/" version.gradle.kts
           ./gradlew --refresh-dependencies japicmp
 
       - name: Use CLA approved bot
@@ -274,6 +276,7 @@ jobs:
           git checkout -b $branch
           git add CHANGELOG.md
           git add docs/apidiffs
+          git add version.gradle.kts
           git commit -m "$message"
           git push --set-upstream origin $branch
           gh pr create --title "$message" \

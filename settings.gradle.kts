@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.5.3"
     id("com.gradle.plugin-publish") version "2.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.3.20"
+    id("org.jetbrains.kotlin.jvm") version "2.3.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.0"
     id("org.graalvm.buildtools.native") version "0.11.5"
@@ -32,12 +32,32 @@ dependencyResolutionManagement {
   }
 
   versionCatalogs {
+    val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+    val resolveLatestDeps = gradle.startParameter.projectProperties["resolveLatestDeps"] == "true"
+    val pinLatestDeps = testLatestDeps && !resolveLatestDeps
+
+    @Suppress("UNCHECKED_CAST")
+    val pinnedVersions: Map<String, String> = if (pinLatestDeps) {
+      val file = file(".github/config/latest-dep-versions.json")
+      if (!file.exists()) {
+        throw GradleException("Pinned latest-dep versions file is missing: $file.")
+      }
+      groovy.json.JsonSlurper().parse(file) as Map<String, String>
+    } else {
+      emptyMap()
+    }
+
     fun addSpringBootCatalog(name: String, minVersion: String, maxVersion: String) {
-      val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
       create(name) {
+        val pinnedVersion = pinnedVersions["org.springframework.boot:spring-boot-dependencies#$maxVersion"]
+        if (pinLatestDeps && pinnedVersion == null) {
+          throw GradleException(
+            "No pinned latest-dep version found for spring-boot-dependencies#$maxVersion."
+          )
+        }
         val version =
           gradle.startParameter.projectProperties["${name}Version"]
-            ?: (if (latestDepTest) maxVersion else minVersion)
+            ?: (if (testLatestDeps) (pinnedVersion ?: maxVersion) else minVersion)
         plugin("versions", "org.springframework.boot").version(version)
       }
     }
@@ -75,9 +95,7 @@ develocity {
       fileFingerprints = true
     }
 
-    if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
-      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")
-    ) {
+    if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
       buildScanPublished {
         File("build-scan.txt").printWriter().use { writer ->
           writer.println(buildScanUri)
@@ -130,7 +148,6 @@ include(":instrumentation-annotations-support-testing")
 // misc
 include(":dependencyManagement")
 include(":instrumentation-docs")
-include(":test-report")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:dependencies-shaded-for-testing")

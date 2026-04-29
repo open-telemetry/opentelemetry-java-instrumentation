@@ -27,6 +27,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
 | Testing | General test patterns | Test files in scope — assertion style, test method signatures and throws clauses, resource cleanup, attribute assertions | `testing-general-patterns.md` |
 | Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties | `testing-experimental-flags.md` |
+| Testing | Flag-gated / mode-dependent assertion shape (experimental, `testLatestDeps`, semconv) — shared accessor (`testLatestDeps()`, `emitStable*Semconv()`) or `EXPERIMENTAL_ATTRIBUTES` constant, inline ternary with `null` for "absent" | Test classes branching on `EXPERIMENTAL_ATTRIBUTES`, `testLatestDeps()`, or `emitOld*`/`emitStable*` | `testing-general-patterns.md` |
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
