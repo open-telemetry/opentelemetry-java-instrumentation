@@ -96,7 +96,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
                         .hasParent(trace.getSpan(0))));
   }
 
-  static class AsyncTask implements Runnable, Callable<Object> {
+  private static class AsyncTask implements Runnable, Callable<Object> {
 
     private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 

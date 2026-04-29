@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.filter;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -30,8 +31,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 class ServletFilterTest extends AbstractServletFilterTest {
 
-  private static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
-
   @RegisterExtension
   private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
@@ -55,7 +54,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
         Map.of(
             "server.port",
             port,
-            testLatestDeps ? "spring.web.error.include-message" : "server.error.include-message",
+            testLatestDeps() ? "spring.web.error.include-message" : "server.error.include-message",
             "always"));
     return app.run();
   }
@@ -63,7 +62,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    if (testLatestDeps && endpoint == ServerEndpoint.NOT_FOUND) {
+    if (testLatestDeps() && endpoint == ServerEndpoint.NOT_FOUND) {
       String handlerSpanName = "ResourceHttpRequestHandler.handleRequest";
       span.hasName(handlerSpanName)
           .hasKind(SpanKind.INTERNAL)
@@ -87,7 +86,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
-    if (testLatestDeps && endpoint == ServerEndpoint.NOT_FOUND) {
+    if (testLatestDeps() && endpoint == ServerEndpoint.NOT_FOUND) {
       span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
       span.hasKind(SpanKind.INTERNAL);
       // not verifying the parent span, in the latest version the responseSpan is the child of the

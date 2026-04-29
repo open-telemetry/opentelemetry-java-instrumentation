@@ -294,6 +294,7 @@ public class TestServlet3 {
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
       if (req.getServletPath().equals("/recursive")) {
         resp.getWriter().print("Hello Recursive");
+        return;
       }
 
       int depth = Integer.parseInt(req.getParameter("depth"));

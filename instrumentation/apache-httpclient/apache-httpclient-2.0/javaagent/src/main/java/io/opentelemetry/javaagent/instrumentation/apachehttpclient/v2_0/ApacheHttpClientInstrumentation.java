@@ -67,13 +67,14 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent(), httpMethod);
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, httpMethod, httpMethod, throwable);
       }
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope methodEnter(@Advice.Argument(1) HttpMethod httpMethod) {
       return AdviceScope.start(httpMethod);
     }

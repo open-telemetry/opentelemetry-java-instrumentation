@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeSta
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.util.ContextInitializer;
 import ch.qos.logback.core.spi.ContextAware;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.net.URL;
@@ -23,6 +24,8 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @BeforeEach
   void setup() throws Exception {
@@ -46,7 +49,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
       configuratorClass
           .getMethod("configure", LoggerContext.class)
           .invoke(configurator, loggerContext);
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       // logback versions prior to 1.3.0
       ContextInitializer ci = new ContextInitializer(loggerContext);
       URL url = LogReplayOpenTelemetryAppenderTest.class.getResource("/logback-test.xml");
@@ -59,6 +62,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
   @Override
   void executeAfterLogsExecution() {
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
+    cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
   }
 
   @Test
@@ -69,6 +73,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     // file)
 
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
+    cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
 
     testing.waitAndAssertLogRecords(
         logRecord ->

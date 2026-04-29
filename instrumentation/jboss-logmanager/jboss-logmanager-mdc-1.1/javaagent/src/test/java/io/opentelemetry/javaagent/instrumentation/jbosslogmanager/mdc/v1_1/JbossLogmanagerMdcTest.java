@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.mdc.v1_1;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,88 +49,100 @@ class JbossLogmanagerMdcTest {
 
   @Test
   void noIdsGeneratedWhenNoSpanProvided() {
-    Logger logger = LogContext.getLogContext().getLogger("TestLogger");
+    Logger logger = LogContext.getLogContext().getLogger("noIdsGeneratedWhenNoSpanProvided");
     LinkedList<ExtLogRecord> logRecords = new LinkedList<>();
+    LogHandler handler = new LogHandler(logRecords);
 
     logger.setLevel(Level.INFO);
-    logger.addHandler(new LogHandler(logRecords));
+    logger.addHandler(handler);
+    try {
+      logger.info("log message 1");
 
-    logger.info("log message 1");
+      assertThat(logRecords).extracting(ExtLogRecord::getMessage).containsExactly("log message 1");
 
-    assertThat(logRecords).hasSize(1);
-    assertThat(logRecords.get(0).getMessage()).isEqualTo("log message 1");
-    assertThat(logRecords.get(0).getMdc("trace_id")).isNull();
-    assertThat(logRecords.get(0).getMdc("span_id")).isNull();
-    assertThat(logRecords.get(0).getMdc("trace_flags")).isNull();
+      ExtLogRecord logRecord = logRecords.get(0);
+      assertThat(logRecord.getMdc("trace_id")).isNull();
+      assertThat(logRecord.getMdc("span_id")).isNull();
+      assertThat(logRecord.getMdc("trace_flags")).isNull();
+    } finally {
+      logger.removeHandler(handler);
+    }
   }
 
   @Test
-  void idsGeneratedWhenSpanProvided() throws InvocationTargetException, IllegalAccessException {
-    Logger logger = LogContext.getLogContext().getLogger("TestLogger");
+  void idsGeneratedWhenSpanProvided() throws ReflectiveOperationException {
+    Logger logger = LogContext.getLogContext().getLogger("idsGeneratedWhenSpanProvided");
     logger.setLevel(Level.DEBUG);
     LinkedList<ExtLogRecord> logRecords = new LinkedList<>();
-    logger.addHandler(new LogHandler(logRecords));
-
-    Span span1 =
-        testing.runWithSpan(
-            "test 1",
-            () -> {
-              logger.info("log message 1");
-              return Span.current();
-            });
-
-    logger.info("log message 2");
-
-    Span span2 =
-        testing.runWithSpan(
-            "test 2",
-            () -> {
-              logger.info("log message 3");
-              return Span.current();
-            });
-
-    assertThat(logRecords.size()).isEqualTo(3);
-
-    Method getMdcCopy = null;
+    LogHandler handler = new LogHandler(logRecords);
+    logger.addHandler(handler);
     try {
-      getMdcCopy = logRecords.get(0).getClass().getMethod("getMdcCopy");
-    } catch (NoSuchMethodException ignored) {
-      // ignored
-    }
+      Span span1 =
+          testing.runWithSpan(
+              "test 1",
+              () -> {
+                logger.info("log message 1");
+                return Span.current();
+              });
 
-    assertThat(logRecords.get(0).getMessage()).isEqualTo("log message 1");
-    assertThat(logRecords.get(0).getMdc("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
-    assertThat(logRecords.get(0).getMdc("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
-    assertThat(logRecords.get(0).getMdc("trace_flags"))
-        .isEqualTo(span1.getSpanContext().getTraceFlags().asHex());
+      logger.info("log message 2");
 
-    if (getMdcCopy != null) {
-      @SuppressWarnings("unchecked")
-      Map<String, String> copiedMdc = (Map<String, String>) getMdcCopy.invoke(logRecords.get(0));
-      assertThat(copiedMdc.get("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
-      assertThat(copiedMdc.get("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
-      assertThat(copiedMdc.get("trace_flags"))
+      Span span2 =
+          testing.runWithSpan(
+              "test 2",
+              () -> {
+                logger.info("log message 3");
+                return Span.current();
+              });
+
+      assertThat(logRecords)
+          .extracting(ExtLogRecord::getMessage)
+          .containsExactly("log message 1", "log message 2", "log message 3");
+
+      ExtLogRecord firstLogRecord = logRecords.get(0);
+      ExtLogRecord secondLogRecord = logRecords.get(1);
+      ExtLogRecord thirdLogRecord = logRecords.get(2);
+
+      Method getMdcCopy = null;
+      try {
+        getMdcCopy = firstLogRecord.getClass().getMethod("getMdcCopy");
+      } catch (NoSuchMethodException ignored) {
+        // ignored
+      }
+
+      assertThat(firstLogRecord.getMdc("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
+      assertThat(firstLogRecord.getMdc("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
+      assertThat(firstLogRecord.getMdc("trace_flags"))
           .isEqualTo(span1.getSpanContext().getTraceFlags().asHex());
-    }
 
-    assertThat(logRecords.get(1).getMessage()).isEqualTo("log message 2");
-    assertThat(logRecords.get(1).getMdc("trace_id")).isNull();
-    assertThat(logRecords.get(1).getMdc("span_id")).isNull();
-    assertThat(logRecords.get(1).getMdc("trace_flags")).isNull();
+      if (getMdcCopy != null) {
+        @SuppressWarnings("unchecked")
+        Map<String, String> copiedMdc = (Map<String, String>) getMdcCopy.invoke(firstLogRecord);
+        assertThat(copiedMdc.get("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
+        assertThat(copiedMdc.get("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
+        assertThat(copiedMdc.get("trace_flags"))
+            .isEqualTo(span1.getSpanContext().getTraceFlags().asHex());
+      }
 
-    assertThat(logRecords.get(2).getMessage()).isEqualTo("log message 3");
-    assertThat(logRecords.get(2).getMdc("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
-    assertThat(logRecords.get(2).getMdc("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
-    assertThat(logRecords.get(2).getMdc("trace_flags"))
-        .isEqualTo(span2.getSpanContext().getTraceFlags().asHex());
+      assertThat(secondLogRecord.getMdc("trace_id")).isNull();
+      assertThat(secondLogRecord.getMdc("span_id")).isNull();
+      assertThat(secondLogRecord.getMdc("trace_flags")).isNull();
 
-    if (getMdcCopy != null) {
-      @SuppressWarnings("unchecked")
-      Map<String, String> copiedMdc = (Map<String, String>) getMdcCopy.invoke(logRecords.get(2));
-      assertThat(copiedMdc.get("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
-      assertThat(copiedMdc.get("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
-      assertThat(copiedMdc.get("trace_flags"))
+      assertThat(thirdLogRecord.getMdc("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
+      assertThat(thirdLogRecord.getMdc("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
+      assertThat(thirdLogRecord.getMdc("trace_flags"))
           .isEqualTo(span2.getSpanContext().getTraceFlags().asHex());
+
+      if (getMdcCopy != null) {
+        @SuppressWarnings("unchecked")
+        Map<String, String> copiedMdc = (Map<String, String>) getMdcCopy.invoke(thirdLogRecord);
+        assertThat(copiedMdc.get("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
+        assertThat(copiedMdc.get("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
+        assertThat(copiedMdc.get("trace_flags"))
+            .isEqualTo(span2.getSpanContext().getTraceFlags().asHex());
+      }
+    } finally {
+      logger.removeHandler(handler);
     }
   }
 }

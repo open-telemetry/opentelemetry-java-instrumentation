@@ -62,7 +62,7 @@ jobs:
       - name: Update the change log with the approximate release date
         run: |
           date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Version $VERSION ($date)/" CHANGELOG.md
+          .github/scripts/update-changelog-for-release.sh "$VERSION" "$date"
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
@@ -119,7 +119,7 @@ jobs:
         run: |
           # the actual release date on main will be updated at the end of the release workflow
           date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version $VERSION ($date)/" CHANGELOG.md
+          .github/scripts/update-changelog-for-release.sh "$VERSION" "$date" --keep-unreleased-section
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh

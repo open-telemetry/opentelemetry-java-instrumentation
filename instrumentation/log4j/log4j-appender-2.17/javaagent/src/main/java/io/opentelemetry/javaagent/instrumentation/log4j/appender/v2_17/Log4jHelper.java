@@ -30,9 +30,6 @@ import org.apache.logging.log4j.message.Message;
 
 public class Log4jHelper {
 
-  private static final java.util.logging.Logger logger =
-      java.util.logging.Logger.getLogger(Log4jHelper.class.getName());
-
   private static final LogEventMapper<Map<String, String>> mapper;
   private static final boolean captureExperimentalAttributes;
   @Nullable private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
@@ -40,7 +37,7 @@ public class Log4jHelper {
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender");
-    DeclarativeConfigProperties comonConfig =
+    DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
 
     captureExperimentalAttributes =
@@ -52,13 +49,7 @@ public class Log4jHelper {
         config.getBoolean("capture_marker_attribute/development", false);
     List<String> captureContextDataAttributes =
         config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    boolean captureEventName = config.getBoolean("capture_event_name/development", false);
-    boolean v3Preview = comonConfig.getBoolean("v3_preview", false);
-    if (captureEventName) {
-      logger.warning(
-          "The otel.instrumentation.log4j-appender.experimental.capture-event-name setting is"
-              + " deprecated and will be removed in a future version.");
-    }
+    boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     mapper =
         new LogEventMapper<>(
@@ -68,7 +59,6 @@ public class Log4jHelper {
             captureMapMessageAttributes,
             captureMarkerAttribute,
             captureContextDataAttributes,
-            captureEventName,
             v3Preview);
   }
 

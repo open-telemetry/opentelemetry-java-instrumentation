@@ -64,7 +64,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
       String method,
       Function<AmazonS3, Object> call,
       List<AttributeAssertion> additionalAttributes)
-      throws Exception {
+      throws ReflectiveOperationException {
 
     AmazonS3 client =
         configureClient(clientBuilder)

@@ -233,6 +233,10 @@ Auto-fix boundaries:
     readers/writers/streams/response bodies).
     Do not apply this conversion in non-JUnit helper methods, `@BeforeAll`, or shared
     setup code.
+  - class-scoped resources created in `@BeforeAll` or other shared setup — prefer
+    `AutoCleanupExtension` with `deferAfterAll(...)` over nested `@AfterAll` cleanup
+    chains. Do not introduce or keep `AutoCleanupExtension` solely for a single
+    `deferAfterAll(...)` call — use a plain `@AfterAll` instead.
   - `hasAttributesSatisfying(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
     variant silently ignores unexpected attributes)
@@ -301,6 +305,12 @@ Auto-fix boundaries:
     add the correctly named/shaped method with the implementation, deprecate the old method
     to delegate to the new one, and add a `@deprecated` Javadoc tag naming the replacement.
     For stable modules, annotate instead: the fix requires a broader compatibility decision.
+    **Exception — javaagent modules**: javaagent modules (Gradle path ends with `:javaagent`,
+    including shared `-common` javaagent modules) are bundled into the agent jar and are not
+    a public API. Do **not** apply a deprecation cycle; rename or change the API directly
+    and update all in-repo callers in the same commit. A deprecation cycle is only required
+    for non-stable modules whose artifacts are published for external consumption (e.g.,
+    `:library`, `:testing`, `instrumentation-api*`).
 - Do not auto-fix (report in the final output instead):
   - missing `testExperimental` task — when experimental flags are set unconditionally
     on all test tasks instead of being isolated in a dedicated task

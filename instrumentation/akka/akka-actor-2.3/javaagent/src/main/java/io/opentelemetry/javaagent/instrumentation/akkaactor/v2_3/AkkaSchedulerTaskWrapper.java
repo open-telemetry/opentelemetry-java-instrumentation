@@ -1,0 +1,39 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.akkaactor.v2_3;
+
+import io.opentelemetry.context.Context;
+import javax.annotation.Nullable;
+
+public class AkkaSchedulerTaskWrapper {
+  @Nullable private static final Class<?> RUN_ON_CLOSE_TASK_CLASS = getRunOnCloseTaskClass();
+
+  @Nullable
+  private static Class<?> getRunOnCloseTaskClass() {
+    try {
+      return Class.forName("akka.actor.Scheduler$TaskRunOnClose");
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
+  }
+
+  public static Runnable wrap(Runnable runnable) {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13066
+    // Skip wrapping shutdown tasks. Shutdown process hangs when shutdown tasks are wrapped here.
+    if (isRunOnCloseTask(runnable)) {
+      return runnable;
+    }
+
+    Context context = Context.current();
+    return context.wrap(runnable);
+  }
+
+  private static boolean isRunOnCloseTask(Runnable runnable) {
+    return RUN_ON_CLOSE_TASK_CLASS != null && RUN_ON_CLOSE_TASK_CLASS.isInstance(runnable);
+  }
+
+  private AkkaSchedulerTaskWrapper() {}
+}

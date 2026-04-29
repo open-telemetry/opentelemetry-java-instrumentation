@@ -69,7 +69,7 @@ class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void deactivateScope(@Advice.Enter Scope scope) {
+    public static void deactivateScope(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

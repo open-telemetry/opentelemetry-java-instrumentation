@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs;
 
 public class JaxrsPathUtil {
-  private JaxrsPathUtil() {}
-
   public static String normalizePath(String path) {
     // ensure that non-empty path starts with /
     if (path == null || path.equals("/")) {
@@ -22,4 +20,6 @@ public class JaxrsPathUtil {
 
     return path;
   }
+
+  private JaxrsPathUtil() {}
 }

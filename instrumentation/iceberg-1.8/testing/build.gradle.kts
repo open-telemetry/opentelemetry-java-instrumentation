@@ -4,8 +4,8 @@ plugins {
 
 dependencies {
   implementation("org.apache.iceberg:iceberg-core:1.8.1")
-  // The following dependency allows us to use the following Iceberg test classes TestTables and TestTable
-  // which are not published by default
+  // The following dependency allows use of Iceberg test classes such as TestTables,
+  // which are not published by default.
   implementation("org.apache.iceberg:iceberg-core:1.8.1") {
     artifact {
       classifier = "tests"

@@ -19,7 +19,7 @@ public class WebClientHelper {
 
   private static final Instrumenter<ClientRequest, ClientResponse> instrumenter =
       JavaagentHttpClientInstrumenters.create(
-          "io.opentelemetry.spring-webflux-5.0", WebClientHttpAttributesGetter.INSTANCE);
+          "io.opentelemetry.spring-webflux-5.0", new WebClientHttpAttributesGetter());
 
   public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
     for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {

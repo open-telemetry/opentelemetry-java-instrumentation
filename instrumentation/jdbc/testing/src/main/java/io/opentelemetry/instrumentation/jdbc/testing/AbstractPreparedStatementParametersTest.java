@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.testing;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -374,7 +375,7 @@ public abstract class AbstractPreparedStatementParametersTest {
       String table)
       throws SQLException {
     // we are using old database drivers that don't support the tested setObject method
-    Assumptions.assumeTrue(Boolean.getBoolean("testLatestDeps"));
+    Assumptions.assumeTrue(testLatestDeps());
 
     test(
         system,
@@ -644,7 +645,7 @@ public abstract class AbstractPreparedStatementParametersTest {
                                     expectedParameterValue))));
   }
 
-  public interface ThrowingConsumer<T, E extends Throwable> {
+  private interface ThrowingConsumer<T, E extends Throwable> {
     void accept(T t) throws E;
   }
 }

@@ -68,22 +68,28 @@ class ScalaForkJoinTaskInstrumentation implements TypeInstrumentation {
     public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
       Scope scope =
           TaskAdviceHelper.makePropagatedContextCurrent(FORK_JOIN_TASK_PROPAGATED_CONTEXT, thiz);
-      Scope newScope = null;
       if (thiz instanceof Runnable) {
-        newScope =
+        Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
                 RUNNABLE_PROPAGATED_CONTEXT, (Runnable) thiz);
+        if (newScope != null) {
+          if (scope != null) {
+            newScope.close();
+          } else {
+            scope = newScope;
+          }
+        }
       }
       if (thiz instanceof Callable) {
-        newScope =
+        Scope newScope =
             TaskAdviceHelper.makePropagatedContextCurrent(
                 CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) thiz);
-      }
-      if (newScope != null) {
-        if (scope != null) {
-          newScope.close();
-        } else {
-          scope = newScope;
+        if (newScope != null) {
+          if (scope != null) {
+            newScope.close();
+          } else {
+            scope = newScope;
+          }
         }
       }
       return scope;

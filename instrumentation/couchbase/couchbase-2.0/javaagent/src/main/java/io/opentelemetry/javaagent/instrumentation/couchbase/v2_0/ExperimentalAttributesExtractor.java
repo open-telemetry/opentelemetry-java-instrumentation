@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import javax.annotation.Nullable;
 
 class ExperimentalAttributesExtractor implements AttributesExtractor<CouchbaseRequestInfo, Void> {

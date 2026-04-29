@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import net.bytebuddy.dynamic.DynamicType;
 
 public class HelperClassDefinition {

@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:async-http-client:async-http-client-1-common:javaagent"))
+  implementation(project(":instrumentation:async-http-client:async-http-client-common-1.8:javaagent"))
 
   library("com.ning:async-http-client:1.8.0")
 
@@ -55,7 +55,7 @@ configurations.configureEach {
   if (!name.contains("muzzle")) {
     resolutionStrategy {
       eachDependency {
-        // specifying a fixed version for all libraries with io.netty' group
+        // specify a fixed version for all libraries in the io.netty group
         if (requested.group == "io.netty" && requested.name != "netty-bom") {
           useVersion("3.9.0.Final")
         }

@@ -18,7 +18,7 @@ public class MetroHelper {
   private static final String SCOPE_KEY = MetroHelper.class.getName() + ".Scope";
   private static final String THROWABLE_KEY = MetroHelper.class.getName() + ".Throwable";
 
-  private static final MetroServerSpanNameUpdater SPAN_NAME_UPDATER =
+  private static final MetroServerSpanNameUpdater spanNameUpdater =
       new MetroServerSpanNameUpdater();
 
   private MetroHelper() {}
@@ -27,7 +27,7 @@ public class MetroHelper {
     Context parentContext = Context.current();
 
     MetroRequest request = new MetroRequest(endpoint, packet);
-    SPAN_NAME_UPDATER.updateServerSpanName(parentContext, request);
+    spanNameUpdater.updateServerSpanName(parentContext, request);
 
     if (!instrumenter().shouldStart(parentContext, request)) {
       return;

@@ -18,6 +18,21 @@ dependencies {
 }
 
 tasks {
+  test {
+    // DeclarativeConfigValidationTest walks ../instrumentation for metadata.yaml files,
+    // so changes to those files must invalidate this task's build cache entry.
+    // Eagerly resolve to a concrete file list (rather than passing a FileTree rooted at
+    // the instrumentation directory) to avoid Gradle's implicit-dependency validation
+    // flagging overlap with sibling subprojects' build/ output directories.
+    val metadataYamlFiles = fileTree(rootDir.resolve("instrumentation")) {
+      include("**/metadata.yaml")
+      exclude("**/build/**")
+    }.files
+    inputs.files(metadataYamlFiles)
+      .withPropertyName("instrumentationMetadataYamlFiles")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
+  }
+
   val runAnalysis by registering(JavaExec::class) {
     dependsOn(classes)
 

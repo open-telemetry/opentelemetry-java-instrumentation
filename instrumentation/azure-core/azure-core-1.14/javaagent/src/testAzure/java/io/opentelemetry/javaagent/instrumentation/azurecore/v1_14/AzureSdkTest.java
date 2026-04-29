@@ -34,12 +34,10 @@ class AzureSdkTest {
     HttpPolicyProviders.addAfterRetryPolicies(list);
 
     assertThat(list)
-        .satisfiesExactly(
-            item ->
-                assertThat(item.getClass().getName())
-                    .isEqualTo(
-                        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded"
-                            + ".com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy"));
+        .extracting(item -> item.getClass().getName())
+        .containsExactly(
+            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded"
+                + ".com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy");
   }
 
   @Test

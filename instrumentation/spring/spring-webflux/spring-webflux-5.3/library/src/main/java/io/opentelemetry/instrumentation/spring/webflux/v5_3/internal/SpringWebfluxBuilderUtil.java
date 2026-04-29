@@ -20,8 +20,6 @@ import org.springframework.web.server.ServerWebExchange;
  * any time.
  */
 public final class SpringWebfluxBuilderUtil {
-  private SpringWebfluxBuilderUtil() {}
-
   // allows access to the private field for the spring starter
   private static Function<
           SpringWebfluxClientTelemetryBuilder,
@@ -65,4 +63,6 @@ public final class SpringWebfluxBuilderUtil {
           clientBuilderExtractor) {
     SpringWebfluxBuilderUtil.clientBuilderExtractor = clientBuilderExtractor;
   }
+
+  private SpringWebfluxBuilderUtil() {}
 }

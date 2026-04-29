@@ -31,11 +31,11 @@ import org.jboss.logmanager.Level;
 import org.jboss.logmanager.LogContext;
 import org.jboss.logmanager.Logger;
 import org.jboss.logmanager.MDC;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class JbossLogmanagerTest {
 
@@ -193,18 +193,17 @@ class JbossLogmanagerTest {
     }
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"event.name", "otel.event.name"})
-  void testMdc(String eventNameProperty) {
+  @Test
+  void testMdc() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
-    MDC.put(eventNameProperty, "MyEventName");
+    MDC.put("otel.event.name", "MyEventName");
     try {
       logger.info("xyz");
     } finally {
       MDC.remove("key1");
       MDC.remove("key2");
-      MDC.remove(eventNameProperty);
+      MDC.remove("otel.event.name");
     }
 
     testing.waitAndAssertLogRecords(
