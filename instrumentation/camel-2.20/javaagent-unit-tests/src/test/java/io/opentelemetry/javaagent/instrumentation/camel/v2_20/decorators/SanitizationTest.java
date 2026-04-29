@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation")
 class SanitizationTest {
 
   @ParameterizedTest
@@ -108,7 +109,6 @@ class SanitizationTest {
             "insert into table where col=321", "insert into table where col=?", "INSERT table"));
   }
 
-  @SuppressWarnings("deprecation")
   private static void assertSanitizedQuery(
       DbSpanDecorator decorator,
       Exchange exchange,
