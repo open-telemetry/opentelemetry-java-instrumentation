@@ -41,6 +41,40 @@ import reactor.core.publisher.Mono;
 public abstract class AbstractSpringWebfluxClientInstrumentationTest
     extends AbstractHttpClientTest<WebClient.RequestBodySpec> {
 
+  private static final MethodHandle GET_STATUS_CODE;
+  private static final MethodHandle STATUS_CODE_VALUE;
+
+  static {
+    MethodHandle getStatusCode;
+    MethodHandle statusCodeValue;
+    Class<?> httpStatusCodeClass;
+
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+
+    try {
+      httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatusCode");
+    } catch (ClassNotFoundException e) {
+      try {
+        httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatus");
+      } catch (ClassNotFoundException f) {
+        throw new LinkageError("Did not find neither HttpStatus nor HttpStatusCode class", f);
+      }
+    }
+
+    try {
+      getStatusCode =
+          lookup.findVirtual(
+              ClientResponse.class, "statusCode", MethodType.methodType(httpStatusCodeClass));
+      statusCodeValue =
+          lookup.findVirtual(httpStatusCodeClass, "value", MethodType.methodType(int.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      throw new LinkageError("Did not find statusCode() method", e);
+    }
+
+    GET_STATUS_CODE = getStatusCode;
+    STATUS_CODE_VALUE = statusCodeValue;
+  }
+
   @Override
   public WebClient.RequestBodySpec buildRequest(
       String method, URI uri, Map<String, String> headers) {
@@ -124,40 +158,6 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
 
     optionsBuilder.setSingleConnectionFactory(
         (host, port) -> new SpringWebfluxSingleConnection(host, port, this::instrument));
-  }
-
-  private static final MethodHandle GET_STATUS_CODE;
-  private static final MethodHandle STATUS_CODE_VALUE;
-
-  static {
-    MethodHandle getStatusCode;
-    MethodHandle statusCodeValue;
-    Class<?> httpStatusCodeClass;
-
-    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-
-    try {
-      httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatusCode");
-    } catch (ClassNotFoundException e) {
-      try {
-        httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatus");
-      } catch (ClassNotFoundException f) {
-        throw new LinkageError("Did not find neither HttpStatus nor HttpStatusCode class", f);
-      }
-    }
-
-    try {
-      getStatusCode =
-          lookup.findVirtual(
-              ClientResponse.class, "statusCode", MethodType.methodType(httpStatusCodeClass));
-      statusCodeValue =
-          lookup.findVirtual(httpStatusCodeClass, "value", MethodType.methodType(int.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
-      throw new LinkageError("Did not find statusCode() method", e);
-    }
-
-    GET_STATUS_CODE = getStatusCode;
-    STATUS_CODE_VALUE = statusCodeValue;
   }
 
   private static int getStatusCode(ClientResponse response) {
