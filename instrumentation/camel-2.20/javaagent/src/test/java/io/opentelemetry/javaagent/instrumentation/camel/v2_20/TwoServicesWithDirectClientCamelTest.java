@@ -26,6 +26,7 @@ import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -33,7 +34,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -44,6 +44,8 @@ class TwoServicesWithDirectClientCamelTest
     extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static CamelContext clientContext;
 
@@ -74,14 +76,7 @@ class TwoServicesWithDirectClientCamelTest
   @BeforeAll
   protected void setUp() {
     startServer();
-  }
-
-  @AfterAll
-  protected void cleanUp() throws Exception {
-    cleanupServer();
-    if (clientContext != null) {
-      clientContext.stop();
-    }
+    cleanup.deferAfterAll(this::cleanupServer);
   }
 
   void createAndStartClient() throws Exception {
@@ -97,6 +92,7 @@ class TwoServicesWithDirectClientCamelTest
           }
         });
     clientContext.start();
+    cleanup.deferAfterAll(clientContext::stop);
   }
 
   @Test
