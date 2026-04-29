@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
-public class JavaLambdaMaker {
+class JavaLambdaMaker {
 
   @SuppressWarnings({"FunctionalExpressionCanBeFolded", "UnnecessaryMethodReference"})
-  public static Runnable lambda(Runnable runnable) {
+  static Runnable lambda(Runnable runnable) {
     return runnable::run;
   }
 

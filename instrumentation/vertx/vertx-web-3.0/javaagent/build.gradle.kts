@@ -49,7 +49,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
-        val version = if (otelProps.testLatestDeps) "latest.release" else "5.0.0"
+        val version = baseVersion("5.0.0").orLatest()
         implementation("io.vertx:vertx-web:$version")
         implementation("io.vertx:vertx-jdbc-client:$version")
         implementation("io.vertx:vertx-codegen:$version")

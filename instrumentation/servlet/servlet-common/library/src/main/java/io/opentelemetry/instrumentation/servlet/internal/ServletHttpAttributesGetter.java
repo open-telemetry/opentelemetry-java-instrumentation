@@ -89,7 +89,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
     if (response == null) {
       return emptyList();
     }
-    return accessor.getResponseHeaderValues(responseContext.response(), name);
+    return accessor.getResponseHeaderValues(response, name);
   }
 
   @Nullable

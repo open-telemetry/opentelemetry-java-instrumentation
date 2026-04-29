@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import javax.annotation.Nullable;
 
-public class CxfServerSpanNaming {
+class CxfServerSpanNaming {
   @Nullable
   private static final Class<?> JAVAX_SERVLET_REQUEST =
       loadClass("javax.servlet.http.HttpServletRequest");
@@ -30,7 +30,7 @@ public class CxfServerSpanNaming {
     }
   }
 
-  public static void updateServerSpanName(Context context, CxfRequest cxfRequest) {
+  static void updateServerSpanName(Context context, CxfRequest cxfRequest) {
     String spanName = cxfRequest.spanName();
 
     Span serverSpan = LocalRootSpan.fromContextOrNull(context);

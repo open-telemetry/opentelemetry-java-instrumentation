@@ -35,7 +35,6 @@ import org.apache.rocketmq.client.apis.consumer.FilterExpressionType;
 import org.apache.rocketmq.client.apis.message.Message;
 import org.apache.rocketmq.client.apis.producer.Producer;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -51,11 +50,7 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
   @BeforeAll
   static void setUp() {
     CONTAINER.start();
-  }
-
-  @AfterAll
-  static void tearDown() {
-    CONTAINER.close();
+    cleanup.deferAfterAll(CONTAINER::close);
   }
 
   @Test

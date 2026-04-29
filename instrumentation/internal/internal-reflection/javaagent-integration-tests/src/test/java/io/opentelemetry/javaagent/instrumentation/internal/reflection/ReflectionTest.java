@@ -34,10 +34,9 @@ class ReflectionTest {
 
     // although marker interfaces are removed from getInterfaces() result class is still assignable
     // to them
-    assertThat(VirtualFieldInstalledMarker.class.isAssignableFrom(TestClass.class)).isTrue();
-    assertThat(VirtualFieldAccessorMarker.class.isAssignableFrom(TestClass.class)).isTrue();
-    assertThat(TestClass.class.getInterfaces())
-        .containsExactlyInAnyOrder(Runnable.class, Serializable.class);
+    assertThat(TestClass.class).isAssignableTo(VirtualFieldInstalledMarker.class);
+    assertThat(TestClass.class).isAssignableTo(VirtualFieldAccessorMarker.class);
+    assertThat(TestClass.class.getInterfaces()).containsExactly(Runnable.class, Serializable.class);
   }
 
   @Test

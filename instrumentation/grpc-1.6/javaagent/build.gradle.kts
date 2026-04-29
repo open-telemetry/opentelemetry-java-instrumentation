@@ -53,6 +53,12 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
+    // breaks the tests
+    classpath = classpath.filter {
+      !it.absolutePath.contains("opentelemetry-grpc-1.6")
+    }
+
     systemProperty("metadataConfig", "otel.instrumentation.grpc.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
   }
@@ -61,6 +67,12 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
+    // breaks the tests
+    classpath = classpath.filter {
+      !it.absolutePath.contains("opentelemetry-grpc-1.6")
+    }
+
     jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
   }
@@ -68,6 +80,12 @@ tasks {
   val testBothSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+
+    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
+    // breaks the tests
+    classpath = classpath.filter {
+      !it.absolutePath.contains("opentelemetry-grpc-1.6")
+    }
 
     jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")

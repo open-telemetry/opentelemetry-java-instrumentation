@@ -28,6 +28,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -35,7 +36,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,10 +53,10 @@ import org.apache.rocketmq.client.apis.message.Message;
 import org.apache.rocketmq.client.apis.producer.Producer;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.apache.rocketmq.client.java.impl.ClientImpl;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -71,6 +71,8 @@ abstract class AbstractRocketMqClientTest {
 
   private static final RocketMqProxyContainer CONTAINER = new RocketMqProxyContainer();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private final ClientServiceProvider provider = ClientServiceProvider.loadService();
   private PushConsumer consumer;
   private Producer producer;
@@ -80,6 +82,7 @@ abstract class AbstractRocketMqClientTest {
   @BeforeAll
   void setUp() throws ClientException {
     CONTAINER.start();
+    cleanup.deferAfterAll(CONTAINER::close);
     ClientConfiguration clientConfiguration =
         ClientConfiguration.newBuilder()
             .setEndpoints(CONTAINER.endpoints)
@@ -102,24 +105,15 @@ abstract class AbstractRocketMqClientTest {
                   return ConsumeResult.SUCCESS;
                 })
             .build();
+    // Not calling consumer.close(); because it takes a lot of time to complete.
+    cleanup.deferAfterAll(() -> ((ClientImpl) consumer).stopAsync());
     producer =
         provider
             .newProducerBuilder()
             .setClientConfiguration(clientConfiguration)
             .setTopics(NORMAL_TOPIC)
             .build();
-  }
-
-  @AfterAll
-  void tearDown() throws IOException {
-    if (producer != null) {
-      producer.close();
-    }
-    if (consumer != null) {
-      // Not calling consumer.close(); because it takes a lot of time to complete
-      ((ClientImpl) consumer).stopAsync();
-    }
-    CONTAINER.close();
+    cleanup.deferAfterAll(producer);
   }
 
   @Test

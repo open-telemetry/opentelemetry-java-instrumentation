@@ -207,11 +207,13 @@ class JavaagentInstrumentationTest {
                 span ->
                     span.hasName("otel-span")
                         .hasNoParent()
-                        .hasAttribute(booleanKey("present-on-otel"), true),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(booleanKey("present-on-otel"), true)),
                 span ->
                     span.hasName("oc-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(booleanKey("present-on-oc"), true)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(booleanKey("present-on-oc"), true))));
   }
 
   @Test
@@ -240,11 +242,12 @@ class JavaagentInstrumentationTest {
                 span ->
                     span.hasName("oc-span")
                         .hasNoParent()
-                        .hasAttribute(booleanKey("present-on-oc"), true),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("present-on-oc"), true)),
                 span ->
                     span.hasName("otel-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(booleanKey("present-on-otel"), true)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(booleanKey("present-on-otel"), true))));
   }
 
   @Test

@@ -24,6 +24,7 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.vertx.core.AsyncResult;
@@ -42,9 +43,9 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -56,6 +57,10 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class AbstractVertxKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractVertxKafkaTest.class);
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   KafkaContainer kafka;
   Vertx vertx;
@@ -82,25 +87,15 @@ public abstract class AbstractVertxKafkaTest {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
+    cleanup.deferAfterAll(kafka::stop);
     kafka.start();
 
     vertx = Vertx.vertx();
+    cleanup.deferAfterAll(() -> closeVertx(vertx));
     kafkaProducer = KafkaProducer.create(vertx, producerProps());
+    cleanup.deferAfterAll(() -> closeKafkaProducer(kafkaProducer));
     kafkaConsumer = KafkaConsumer.create(vertx, consumerProps());
-  }
-
-  @AfterAll
-  void tearDownAll() {
-    if (kafkaConsumer != null) {
-      closeKafkaConsumer(kafkaConsumer);
-    }
-    if (kafkaProducer != null) {
-      closeKafkaProducer(kafkaProducer);
-    }
-    if (vertx != null) {
-      closeVertx(vertx);
-    }
-    kafka.stop();
+    cleanup.deferAfterAll(() -> closeKafkaConsumer(kafkaConsumer));
   }
 
   private Properties producerProps() {
@@ -180,7 +175,7 @@ public abstract class AbstractVertxKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
-    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(
               stringKey("messaging.kafka.bootstrap.servers"),
@@ -228,7 +223,7 @@ public abstract class AbstractVertxKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
-    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }

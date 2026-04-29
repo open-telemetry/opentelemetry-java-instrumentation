@@ -17,7 +17,7 @@ class ServletSpanNameProvider<REQUEST>
     implements HttpServerRouteBiGetter<MappingResolver, REQUEST> {
   private final ServletAccessor<REQUEST, ?> servletAccessor;
 
-  public ServletSpanNameProvider(ServletAccessor<REQUEST, ?> servletAccessor) {
+  ServletSpanNameProvider(ServletAccessor<REQUEST, ?> servletAccessor) {
     this.servletAccessor = servletAccessor;
   }
 

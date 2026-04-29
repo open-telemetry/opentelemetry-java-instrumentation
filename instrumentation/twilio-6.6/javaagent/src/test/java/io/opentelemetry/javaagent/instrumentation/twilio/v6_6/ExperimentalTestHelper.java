@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.twilio.v6_6;
 
 class ExperimentalTestHelper {
-  private static final boolean isEnabled =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.twilio.experimental-span-attributes");
 
   static String experimental(String value) {
-    if (isEnabled) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return value;
     }
     return null;

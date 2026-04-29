@@ -36,6 +36,37 @@ public abstract class RedissonRequest {
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "redisson"));
 
+  @Nullable
+  private static final MethodHandle COMMAND_DATA_GET_PROMISE =
+      findGetPromiseMethod(CommandData.class);
+
+  @Nullable
+  private static final MethodHandle COMMANDS_DATA_GET_PROMISE =
+      findGetPromiseMethod(CommandsData.class);
+
+  @Nullable
+  private static MethodHandle findGetPromiseMethod(Class<?> commandClass) {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    try {
+      Class<?> promiseClass =
+          Class.forName(
+              "org.redisson.misc.RPromise", false, RedissonRequest.class.getClassLoader());
+      // try versions older than 3.16.8
+      return lookup.findVirtual(commandClass, "getPromise", MethodType.methodType(promiseClass));
+    } catch (NoSuchMethodException | ClassNotFoundException ignored) {
+      // in 3.16.8 CommandsData#getPromise() and CommandData#getPromise() return type was changed in
+      // a backwards-incompatible way from RPromise to CompletableFuture
+      try {
+        return lookup.findVirtual(
+            commandClass, "getPromise", MethodType.methodType(CompletableFuture.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
+        return null;
+      }
+    } catch (IllegalAccessException ignored) {
+      return null;
+    }
+  }
+
   public static RedissonRequest create(InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);
   }
@@ -141,32 +172,5 @@ public abstract class RedissonRequest {
       }
     }
     return null;
-  }
-
-  private static final MethodHandle COMMAND_DATA_GET_PROMISE =
-      findGetPromiseMethod(CommandData.class);
-  private static final MethodHandle COMMANDS_DATA_GET_PROMISE =
-      findGetPromiseMethod(CommandsData.class);
-
-  private static MethodHandle findGetPromiseMethod(Class<?> commandClass) {
-    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-    try {
-      Class<?> promiseClass =
-          Class.forName(
-              "org.redisson.misc.RPromise", false, RedissonRequest.class.getClassLoader());
-      // try versions older than 3.16.8
-      return lookup.findVirtual(commandClass, "getPromise", MethodType.methodType(promiseClass));
-    } catch (NoSuchMethodException | ClassNotFoundException ignored) {
-      // in 3.16.8 CommandsData#getPromise() and CommandData#getPromise() return type was changed in
-      // a backwards-incompatible way from RPromise to CompletableFuture
-      try {
-        return lookup.findVirtual(
-            commandClass, "getPromise", MethodType.methodType(CompletableFuture.class));
-      } catch (NoSuchMethodException | IllegalAccessException ignore) {
-        return null;
-      }
-    } catch (IllegalAccessException ignored) {
-      return null;
-    }
   }
 }

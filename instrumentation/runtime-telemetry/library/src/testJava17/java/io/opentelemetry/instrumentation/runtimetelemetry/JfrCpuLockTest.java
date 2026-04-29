@@ -25,7 +25,7 @@ class JfrCpuLockTest {
           });
 
   @Test
-  void shouldHaveLockEvents() throws Exception {
+  void shouldHaveLockEvents() throws InterruptedException {
     AtomicBoolean done = new AtomicBoolean(false);
     synchronized (done) {
       new Thread(
@@ -49,7 +49,7 @@ class JfrCpuLockTest {
       }
     }
 
-    assertThat(done.get()).isEqualTo(true);
+    assertThat(done.get()).isTrue();
 
     jfrExtension.waitAndAssertMetrics(
         metric ->

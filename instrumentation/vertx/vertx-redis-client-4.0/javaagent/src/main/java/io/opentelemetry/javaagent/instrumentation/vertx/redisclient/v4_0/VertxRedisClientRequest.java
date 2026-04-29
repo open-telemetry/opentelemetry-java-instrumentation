@@ -17,7 +17,7 @@ class VertxRedisClientRequest {
   private final RedisURI redisUri;
   private final NetSocket netSocket;
 
-  public VertxRedisClientRequest(
+  VertxRedisClientRequest(
       String command, List<byte[]> args, RedisURI redisUri, NetSocket netSocket) {
     this.command = command.toUpperCase(Locale.ROOT);
     this.args = args;
@@ -25,46 +25,46 @@ class VertxRedisClientRequest {
     this.netSocket = netSocket;
   }
 
-  public String getCommand() {
+  String getCommand() {
     return command;
   }
 
-  public List<byte[]> getArgs() {
+  List<byte[]> getArgs() {
     return args;
   }
 
   @Nullable
-  public String getUser() {
+  String getUser() {
     return redisUri.user();
   }
 
   @Nullable
-  public Long getDatabaseIndex() {
+  Long getDatabaseIndex() {
     Integer select = redisUri.select();
     return select != null ? select.longValue() : null;
   }
 
   @Nullable
-  public String getConnectionString() {
+  String getConnectionString() {
     return null;
   }
 
-  public String getHost() {
+  String getHost() {
     return redisUri.socketAddress().host();
   }
 
   @Nullable
-  public Integer getPort() {
+  Integer getPort() {
     int port = redisUri.socketAddress().port();
     return port != -1 ? port : null;
   }
 
-  public String getPeerAddress() {
+  String getPeerAddress() {
     return netSocket.remoteAddress().hostAddress();
   }
 
   @Nullable
-  public Integer getPeerPort() {
+  Integer getPeerPort() {
     int port = netSocket.remoteAddress().port();
     return port != -1 ? port : null;
   }

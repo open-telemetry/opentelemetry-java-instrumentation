@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0.OpenSearchRestSingletons.convertResponse;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0.OpenSearchRestSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -87,7 +86,8 @@ class RestClientInstrumentation implements TypeInstrumentation {
 
     public void endWithResponse(@Nullable Response response, @Nullable Throwable throwable) {
       scope.close();
-      instrumenter().end(context, otelRequest, convertResponse(response), throwable);
+      instrumenter()
+          .end(context, otelRequest, OpenSearchRestSingletons.convertResponse(response), throwable);
     }
 
     public void endWithListener(@Nullable Throwable throwable) {

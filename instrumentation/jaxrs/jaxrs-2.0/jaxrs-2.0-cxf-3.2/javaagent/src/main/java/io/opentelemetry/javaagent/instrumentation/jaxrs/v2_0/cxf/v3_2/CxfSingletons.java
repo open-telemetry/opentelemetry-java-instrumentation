@@ -11,11 +11,11 @@ import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory
 
 public class CxfSingletons {
 
-  private static final Instrumenter<HandlerData, Void> INSTANCE =
+  private static final Instrumenter<HandlerData, Void> instrumenter =
       JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxrs-2.0-cxf-3.2");
 
   public static Instrumenter<HandlerData, Void> instrumenter() {
-    return INSTANCE;
+    return instrumenter;
   }
 
   private CxfSingletons() {}

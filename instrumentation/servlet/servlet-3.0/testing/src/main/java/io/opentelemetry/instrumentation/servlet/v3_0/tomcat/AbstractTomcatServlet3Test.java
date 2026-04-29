@@ -122,7 +122,7 @@ public abstract class AbstractTomcatServlet3Test extends AbstractServlet3Test<To
 
   @BeforeEach
   void setUp() {
-    accessLogValve.getLoggedIds().clear();
+    accessLogValve.clearLoggedIds();
     testing().clearAllExportedData();
   }
 

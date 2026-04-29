@@ -44,9 +44,9 @@ public final class ClassHierarchyIterable implements Iterable<Class<?>> {
   }
 
   private final class ClassIterator implements Iterator<Class<?>> {
-    @Nullable private Class<?> next;
     private final Set<Class<?>> queuedInterfaces = new HashSet<>();
     private final Queue<Class<?>> classesToExpand = new ArrayDeque<>();
+    @Nullable private Class<?> next;
 
     ClassIterator() {
       classesToExpand.add(baseClass);

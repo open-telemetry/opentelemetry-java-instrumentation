@@ -27,8 +27,8 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 1.42
     return hasClassesNamed("application.io.opentelemetry.api.common.Value")
+        // added in 1.42
         .and(
-            // added in 1.42
             not(hasClassesNamed("application.io.opentelemetry.api.incubator.logs.ExtendedLogger")));
   }
 
