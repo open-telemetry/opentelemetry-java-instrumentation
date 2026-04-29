@@ -14,6 +14,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,6 +30,8 @@ PR_SUFFIX_RE = re.compile(r"\s*\(#(\d+)\)$")
 VERSION_RE = re.compile(r'val stableVersion = "(\d+\.\d+\.\d+)')
 ISSUE_REF_RE = re.compile(r"(?:issues|pull)/(\d+)|(?<![A-Za-z0-9/])#(\d+)\b")
 GH_FETCH_WORKERS = 8
+GH_FETCH_RETRIES = 3
+GH_FETCH_RETRY_DELAY = 5.0
 
 
 @dataclass
@@ -101,6 +104,25 @@ def run_command(args: list[str], check: bool = True) -> subprocess.CompletedProc
 def load_json(args: list[str]) -> Any:
     result = run_command(args)
     return json.loads(result.stdout)
+
+
+def load_json_with_retry(args: list[str]) -> Any:
+    """Run a `gh` command with retries to absorb transient API failures."""
+    last_error: subprocess.CalledProcessError | None = None
+    for attempt in range(1, GH_FETCH_RETRIES + 1):
+        try:
+            return load_json(args)
+        except subprocess.CalledProcessError as e:
+            last_error = e
+            if attempt == GH_FETCH_RETRIES:
+                break
+            warn(
+                f"gh command failed (attempt {attempt}/{GH_FETCH_RETRIES}): "
+                f"{' '.join(args)}\nstderr: {e.stderr}"
+            )
+            time.sleep(GH_FETCH_RETRY_DELAY * attempt)
+    assert last_error is not None
+    raise last_error
 
 
 def warn(message: str) -> None:
@@ -411,7 +433,7 @@ def fetch_parallel(
 
 
 def fetch_pr_data(pr_number: int) -> dict[str, Any]:
-    return load_json(
+    return load_json_with_retry(
         [
             "gh",
             "pr",
@@ -426,7 +448,7 @@ def fetch_pr_data(pr_number: int) -> dict[str, Any]:
 
 
 def fetch_ref_data(ref_number: int) -> dict[str, Any]:
-    return load_json(
+    return load_json_with_retry(
         [
             "gh",
             "issue",
