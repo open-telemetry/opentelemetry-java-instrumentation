@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpCl
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.READ_TIMEOUT;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
@@ -27,7 +26,7 @@ import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.io.CloseMode;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -36,8 +35,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ApacheHttpClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
-
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private final CloseableHttpClient client = createClient();
   private final CloseableHttpClient clientWithReadTimeout = createClientWithReadTimeout();
@@ -62,10 +59,10 @@ class ApacheHttpClientTest {
     return HttpClients.custom().setDefaultRequestConfig(requestConfigWithReadTimeout()).build();
   }
 
-  @BeforeAll
-  void setUp() {
-    cleanup.deferAfterAll(() -> client.close(CloseMode.GRACEFUL));
-    cleanup.deferAfterAll(() -> clientWithReadTimeout.close(CloseMode.GRACEFUL));
+  @AfterAll
+  void tearDown() {
+    client.close(CloseMode.GRACEFUL);
+    clientWithReadTimeout.close(CloseMode.GRACEFUL);
   }
 
   private CloseableHttpClient getClient(URI uri) {
