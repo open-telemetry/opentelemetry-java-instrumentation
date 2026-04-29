@@ -60,7 +60,9 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
   }
 
   private Optional<String> getServiceVersionFromBuildInfo() {
-    try (InputStream in = system.openClasspathResource("META-INF", "build-info.properties")) {
+    // build-info.properties is placed by Spring Boot's buildInfo() at the jar root under META-INF/
+    // (not under BOOT-INF/classes/), so look it up at the jar root.
+    try (InputStream in = system.openJarRootResource("META-INF/build-info.properties")) {
       return in != null ? getServiceVersionPropertyFromStream(in) : Optional.empty();
     } catch (IOException e) {
       return Optional.empty();
