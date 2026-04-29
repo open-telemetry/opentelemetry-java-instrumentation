@@ -471,3 +471,14 @@ spring-integration-4.1:testing
 spring-jms-2.0:javaagent
 spring-jms-2.0:testing
 spring-jms-6.0:javaagent
+spring-kafka-2.7:javaagent
+spring-kafka-2.7:library
+spring-kafka-2.7:testing
+spring-pulsar-1.0:javaagent
+spring-pulsar-1.0:testing
+spring-rabbit-1.0:javaagent
+spring-rmi-4.0:javaagent
+spring-scheduling-3.1:bootstrap
+spring-scheduling-3.1:javaagent
+spring-security-config-6.0:javaagent
+spring-security-config-6.0:library
