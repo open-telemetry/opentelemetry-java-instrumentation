@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.internal.Initializer;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetryBuilder;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
@@ -20,20 +21,21 @@ import org.springframework.web.server.ServerWebExchange;
  * any time.
  */
 public final class SpringWebfluxBuilderUtil {
-  private SpringWebfluxBuilderUtil() {}
-
   // allows access to the private field for the spring starter
+  @Nullable
   private static Function<
           SpringWebfluxClientTelemetryBuilder,
           DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse>>
       clientBuilderExtractor;
 
   // allows access to the private field for the spring starter
+  @Nullable
   private static Function<
           SpringWebfluxServerTelemetryBuilder,
           DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>>
       serverBuilderExtractor;
 
+  @Nullable
   public static Function<
           SpringWebfluxServerTelemetryBuilder,
           DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange>>
@@ -50,6 +52,7 @@ public final class SpringWebfluxBuilderUtil {
     SpringWebfluxBuilderUtil.serverBuilderExtractor = serverBuilderExtractor;
   }
 
+  @Nullable
   public static Function<
           SpringWebfluxClientTelemetryBuilder,
           DefaultHttpClientInstrumenterBuilder<ClientRequest, ClientResponse>>
@@ -65,4 +68,6 @@ public final class SpringWebfluxBuilderUtil {
           clientBuilderExtractor) {
     SpringWebfluxBuilderUtil.clientBuilderExtractor = clientBuilderExtractor;
   }
+
+  private SpringWebfluxBuilderUtil() {}
 }
