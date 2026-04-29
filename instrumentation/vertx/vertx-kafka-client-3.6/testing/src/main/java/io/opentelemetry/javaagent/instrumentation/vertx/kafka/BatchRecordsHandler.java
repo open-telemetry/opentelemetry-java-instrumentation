@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.vertx.core.Handler;
@@ -44,7 +45,7 @@ public class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String,
   }
 
   public static void waitForMessages() throws InterruptedException {
-    messageReceived.await(30, SECONDS);
+    assertThat(messageReceived.await(30, SECONDS)).isTrue();
   }
 
   public static int getLastBatchSize() {
