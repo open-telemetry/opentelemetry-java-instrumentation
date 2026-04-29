@@ -104,9 +104,8 @@ Reason about visibility from "what does the advice method directly reference?".
 
 ## [Style] `@SuppressWarnings` Usage
 
-- Method-level `@SuppressWarnings` is preferred over class-level for tighter scope, but
-  if more than one method in the class needs the same suppression, class-level is fine.
-  Do not flag class-level `@SuppressWarnings` when multiple methods use the suppressed API.
+- Place `@SuppressWarnings` on the single member that needs it, or on the class when two
+  or more members in the class need the same suppression.
 - **Do not add `@SuppressWarnings("deprecation")` unless the build fails without it.**
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
