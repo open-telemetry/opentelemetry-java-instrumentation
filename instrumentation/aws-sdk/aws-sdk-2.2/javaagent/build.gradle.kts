@@ -9,6 +9,7 @@ muzzle {
     group.set("software.amazon.awssdk")
     module.set("aws-core")
     versions.set("[2.2.0,)")
+    assertInverse.set(true)
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
@@ -36,6 +37,7 @@ muzzle {
     group.set("software.amazon.awssdk")
     module.set("sqs")
     versions.set("[2.2.0,)")
+    assertInverse.set(true)
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
