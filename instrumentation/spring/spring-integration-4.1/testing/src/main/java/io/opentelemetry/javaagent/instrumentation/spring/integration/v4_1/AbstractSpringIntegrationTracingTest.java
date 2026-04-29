@@ -37,7 +37,7 @@ import org.springframework.messaging.support.MessageBuilder;
 
 abstract class AbstractSpringIntegrationTracingTest {
 
-  protected final InstrumentationExtension testing;
+  private final InstrumentationExtension testing;
 
   private final Class<?> additionalContextClass;
 

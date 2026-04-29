@@ -67,6 +67,10 @@ tasks {
   // this does not apply to testReceiveSpansDisabled
   test {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {

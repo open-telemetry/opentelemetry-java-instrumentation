@@ -57,7 +57,7 @@ class SpringTemplateTest extends AbstractJmsTest {
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static HornetQServer server;
-  private static final String messageText = "a message";
+  private static final String MESSAGE_TEXT = "a message";
   private static JmsTemplate template;
   private static Session session;
   private static Connection connection;
@@ -112,11 +112,11 @@ class SpringTemplateTest extends AbstractJmsTest {
   @Test
   void sendingMessageToDestinationNameGeneratesSpans() throws JMSException {
     Queue queue = session.createQueue("SpringTemplateJms2");
-    template.convertAndSend(queue, messageText);
+    template.convertAndSend(queue, MESSAGE_TEXT);
     TextMessage receivedMessage = (TextMessage) template.receive(queue);
 
     assertThat(receivedMessage).isNotNull();
-    assertThat(receivedMessage.getText()).isEqualTo(messageText);
+    assertThat(receivedMessage.getText()).isEqualTo(MESSAGE_TEXT);
 
     String receivedMsgId = receivedMessage.getJMSMessageID();
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
@@ -148,7 +148,7 @@ class SpringTemplateTest extends AbstractJmsTest {
           TextMessage msg = (TextMessage) template.receive(queue);
           assertThat(msg).isNotNull();
           try {
-            assertThat(msg.getText()).isEqualTo(messageText);
+            assertThat(msg.getText()).isEqualTo(MESSAGE_TEXT);
             msgId.set(msg.getJMSMessageID());
             // There's a chance this might be reported last, messing up the assertion.
             template.send(
@@ -167,7 +167,8 @@ class SpringTemplateTest extends AbstractJmsTest {
             template.sendAndReceive(
                 queue,
                 session ->
-                    requireNonNull(template.getMessageConverter()).toMessage(messageText, session));
+                    requireNonNull(template.getMessageConverter())
+                        .toMessage(MESSAGE_TEXT, session));
 
     assertThat(receivedMessage).isNotNull();
     assertThat(receivedMessage.getText()).isEqualTo("responded!");
@@ -219,7 +220,7 @@ class SpringTemplateTest extends AbstractJmsTest {
     Queue queue = session.createQueue("SpringTemplateJms2");
     template.convertAndSend(
         queue,
-        messageText,
+        MESSAGE_TEXT,
         new MessagePostProcessor() {
           @Override
           public @NotNull Message postProcessMessage(@NotNull Message message) throws JMSException {
@@ -231,7 +232,7 @@ class SpringTemplateTest extends AbstractJmsTest {
     TextMessage receivedMessage = (TextMessage) template.receive(queue);
 
     assertThat(receivedMessage).isNotNull();
-    assertThat(receivedMessage.getText()).isEqualTo(messageText);
+    assertThat(receivedMessage.getText()).isEqualTo(MESSAGE_TEXT);
 
     String receivedMsgId = receivedMessage.getJMSMessageID();
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
