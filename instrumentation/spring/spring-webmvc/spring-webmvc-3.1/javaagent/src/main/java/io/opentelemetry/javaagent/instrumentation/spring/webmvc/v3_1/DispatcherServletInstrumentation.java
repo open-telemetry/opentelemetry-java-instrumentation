@@ -57,7 +57,7 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void afterRefresh(
         @Advice.Argument(0) ApplicationContext springCtx,
-        @Advice.FieldValue("handlerMappings") List<HandlerMapping> handlerMappings) {
+        @Advice.FieldValue("handlerMappings") @Nullable List<HandlerMapping> handlerMappings) {
 
       if (handlerMappings == null || !springCtx.containsBean("otelAutoDispatcherFilter")) {
         return;
