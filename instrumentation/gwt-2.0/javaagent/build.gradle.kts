@@ -27,31 +27,18 @@ sourceSets {
   }
 }
 
-// GWT moved from `com.google.gwt` to `org.gwtproject` in 2.10.0. In latest-deps mode,
-// rewrite the compileOnly `com.google.gwt:gwt-{user,dev}` coordinates to the new group so
-// the agent compiles against the modern artifacts. `gwt-servlet` is declared directly with
-// its post-2.10 coordinates in the dependencies block below, so it doesn't need substitution.
-if (otelProps.testLatestDeps) {
-  configurations.configureEach {
-    resolutionStrategy.dependencySubstitution {
-      listOf("gwt-user", "gwt-dev").forEach { artifact ->
-        substitute(module("com.google.gwt:$artifact"))
-          .using(module("org.gwtproject:$artifact:latest.release"))
-      }
-    }
-  }
-}
-
 dependencies {
+  // GWT moved from `com.google.gwt` to `org.gwtproject` in 2.10.0
   if (otelProps.testLatestDeps) {
     library("org.gwtproject:gwt-servlet:latest.release")
+    library("org.gwtproject:gwt-user:latest.release")
+    library("org.gwtproject:gwt-dev:latest.release")
   } else {
     library("com.google.gwt:gwt-servlet:2.0.0")
+    // these are needed for compileGwt task
+    compileOnly("com.google.gwt:gwt-user:2.0.0")
+    compileOnly("com.google.gwt:gwt-dev:2.0.0")
   }
-
-  // these are needed for compileGwt task
-  compileOnly("com.google.gwt:gwt-user:2.0.0")
-  compileOnly("com.google.gwt:gwt-dev:2.0.0")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))

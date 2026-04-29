@@ -162,23 +162,42 @@ configurations {
   //    "latest.release" or "+" versions (e.g. transitive deps) gets pinned to a concrete
   //    version from the JSON file.
   if (otelProps.testLatestDeps) {
-    // Apply latestDepTestLibrary overrides and pinned versions to every resolvable
-    // configuration. Both maps only contain entries the module author explicitly opted into
-    // (`latestDepTestLibrary(...)` declarations and `library`/`testLibrary` artifacts pinned
-    // in latest-dep-versions.json), and the lookups are no-ops for unrelated artifacts and
-    // for concrete versions — so broad application costs nothing but keeps every dynamic
-    // version in the build reproducible, including custom JvmTestSuite source sets and
-    // `compileClasspath` entries rewritten via dependencySubstitution (e.g. gwt-2.0).
+    // Pinning and overrides must NOT leak into build-tool configurations like Zinc (the
+    // Scala compiler), where forcing e.g. scala-library to a JSON-pinned version breaks
+    // compilation. They also must not affect e.g. japicmp's `tempConfig`, which resolves
+    // `opentelemetry-instrumentation-bom:latest.release` directly against Maven Central.
+    // Use an allow-list of configuration names rather than a deny-list so new build-tool
+    // configurations stay safe by default.
     configureEach {
       if (!isCanBeResolved) return@configureEach
+      // `latestDepTestLibrary` overrides apply ONLY to test-classpath configurations.
+      // They must NOT touch `compileClasspath`, because the whole point of `library(old)` +
+      // `latestDepTestLibrary(newRange)` is to keep the agent compiling against the old API
+      // while testing against the new one. Forcing the override onto compileClasspath would
+      // upgrade the compileOnly `library(...)` version and break compilation (e.g.
+      // scala-fork-join-2.8 compiles against scala 2.8 APIs, vertx-sql-client-4.0 against
+      // generic vertx 4.0 APIs, elasticsearch-transport-5.0 against generic ES 5.0 APIs).
+      val applyOverrides = name.contains("test", ignoreCase = true)
+      // Pinning of `latest.release`/`+` versions is applied across test-related
+      // configurations and the main `compileClasspath`. compileClasspath is included so
+      // that modules whose `library(...)` declarations resolve `latest.release` in latest
+      // mode (e.g. gwt-2.0, which uses the post-2.10 `org.gwtproject` group only in latest
+      // mode) get pinned versions on the agent's compile classpath. Pinning is safe on
+      // compileClasspath because `lookupPinnedVersion` is a no-op for the concrete versions
+      // declared via `library(...)`; only dynamic versions (latest.release / +) are affected.
+      val applyPinning = pinLatestDeps &&
+        (name.contains("test", ignoreCase = true) || name == "compileClasspath")
+      if (!applyOverrides && !applyPinning) return@configureEach
       resolutionStrategy.eachDependency {
-        // latestDepTestLibrary overrides take priority over pinned versions
-        val override = latestDepTestLibraryOverrides["${requested.group}:${requested.name}"]
-        if (override != null) {
-          useVersion(override)
-          return@eachDependency
+        if (applyOverrides) {
+          // latestDepTestLibrary overrides take priority over pinned versions
+          val override = latestDepTestLibraryOverrides["${requested.group}:${requested.name}"]
+          if (override != null) {
+            useVersion(override)
+            return@eachDependency
+          }
         }
-        if (pinLatestDeps) {
+        if (applyPinning) {
           val pinnedVersion = lookupPinnedVersion(requested.group, requested.name, requested.version)
           if (pinnedVersion != null) {
             useVersion(pinnedVersion)
