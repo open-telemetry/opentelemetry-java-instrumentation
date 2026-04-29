@@ -84,18 +84,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     super.readMessageEnd();
     // message didn't include context propagation field
     if (currentContext == null) {
-      /*
-      Socket socket = SocketAccessor.getSocket(super.getTransport());
-      if (socket == null) {
-        // The non-blocking processing method cannot obtain the corresponding Transport with a
-        // socket through super.getTransport().
-        // Instrumentation has been added to the invoke methods of FrameBuffer and AsyncFrameBuffer
-        // to actively set TNonblockingTransport.
-        // This serves as a compensation here.
-        socket = SocketAccessor.getSocket(this.transport);
-      }
-
-       */
+      // for non-blocking server, the socket may not be available through super.getTransport()
       Socket socket = SocketAccessor.getSocket(super.getTransport());
       ThriftRequest request = newThriftRequest(this.methodName, this.serviceName, socket);
       Context parentContext = Context.current();
