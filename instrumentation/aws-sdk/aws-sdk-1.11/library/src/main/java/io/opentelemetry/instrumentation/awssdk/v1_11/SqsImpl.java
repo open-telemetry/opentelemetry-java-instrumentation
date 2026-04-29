@@ -33,7 +33,7 @@ final class SqsImpl {
   static boolean afterResponse(
       Request<?> request,
       Response<?> response,
-      @Nullable Timer timer,
+      Timer timer,
       Context parentContext,
       TracingRequestHandler requestHandler) {
     if (response.getAwsResponse() instanceof ReceiveMessageResult) {
@@ -46,7 +46,7 @@ final class SqsImpl {
   private static void afterConsumerResponse(
       Request<?> request,
       Response<?> response,
-      @Nullable Timer timer,
+      Timer timer,
       Context parentContext,
       TracingRequestHandler requestHandler) {
     ReceiveMessageResult receiveMessageResult = (ReceiveMessageResult) response.getAwsResponse();
