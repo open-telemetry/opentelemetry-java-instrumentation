@@ -8,11 +8,6 @@ package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -33,6 +28,18 @@ final class ApiGatewayProxyAttributesExtractor
 
   // copied from FaasIncubatingAttributes
   private static final AttributeKey<String> FAAS_TRIGGER = AttributeKey.stringKey("faas.trigger");
+  // copied from HttpAttributes
+  private static final AttributeKey<String> HTTP_REQUEST_METHOD =
+      AttributeKey.stringKey("http.request.method");
+  private static final AttributeKey<String> HTTP_REQUEST_METHOD_ORIGINAL =
+      AttributeKey.stringKey("http.request.method_original");
+  private static final AttributeKey<Long> HTTP_RESPONSE_STATUS_CODE =
+      AttributeKey.longKey("http.response.status_code");
+  // copied from UrlAttributes
+  private static final AttributeKey<String> URL_FULL = AttributeKey.stringKey("url.full");
+  // copied from UserAgentAttributes
+  private static final AttributeKey<String> USER_AGENT_ORIGINAL =
+      AttributeKey.stringKey("user_agent.original");
   // copied from FaasIncubatingAttributes.FaasTriggerValues
   private static final String HTTP = "http";
 
