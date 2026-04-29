@@ -61,9 +61,7 @@ jobs:
           body=$(cat <<EOF
           Automated draft of the \`## Unreleased\` section of \`CHANGELOG.md\`.
 
-          The entire \`## Unreleased\` block was regenerated from per-PR
-          classifications. Review the diff to recover any hand-written
-          content that should be retained.
+          The entire \`## Unreleased\` block was regenerated from per-PR classifications. Review the diff to recover any hand-written content that should be retained.
 
           [Download draft diagnostics]($ARTIFACT_URL)
           EOF
