@@ -60,3 +60,16 @@ c3p0-0.9:testing
 camel-2.20:javaagent
 camel-2.20:javaagent-unit-tests
 cassandra-3.0:javaagent
+cassandra-4.0:javaagent
+cassandra-4.4:javaagent
+cassandra-4.4:library
+cassandra-4.4:testing
+cassandra-common-4.0:testing
+clickhouse-client-common:javaagent
+clickhouse-client-v1-0.5:javaagent
+clickhouse-client-v2-0.8:javaagent
+couchbase-2.0:javaagent
+couchbase-2.6:javaagent
+couchbase-3.1.6:javaagent
+couchbase-3.1.6:tracing-opentelemetry-shaded
+couchbase-3.1:javaagent
