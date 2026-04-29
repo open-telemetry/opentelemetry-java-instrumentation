@@ -1,10 +1,7 @@
 plugins {
   id("otel.java-conventions")
   alias(springBoot40.plugins.versions)
-}
-
-if (gradle.startParameter.taskNames.any { it.contains("nativeTest") }) {
-  apply(plugin = "org.graalvm.buildtools.native")
+  id("otel.spring-native-test-conventions")
 }
 
 description = "smoke-tests-otel-starter-spring-boot-4"
@@ -12,8 +9,6 @@ description = "smoke-tests-otel-starter-spring-boot-4"
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
-
-val repositoryMetadata by configurations.creating
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
@@ -41,8 +36,6 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-kafka")
   testImplementation("org.testcontainers:testcontainers-mongodb")
   testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
-
-  repositoryMetadata("org.graalvm.buildtools:graalvm-reachability-metadata:1.0.0:repository@zip")
 }
 
 springBoot {
@@ -64,27 +57,6 @@ tasks {
 }
 
 plugins.withId("org.graalvm.buildtools.native") {
-  tasks.named<JavaCompile>("compileAotJava").configure {
-    with(options) {
-      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
-      // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
-      // -deprecation,-unchecked and none are required (none is not enough)
-    }
-  }
-  tasks.named<JavaCompile>("compileAotTestJava").configure {
-    with(options) {
-      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
-      // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
-      // -deprecation,-unchecked and none are required (none is not enough)
-    }
-  }
-  tasks.named("checkstyleAot").configure {
-    enabled = false
-  }
-  tasks.named("checkstyleAotTest").configure {
-    enabled = false
-  }
-
   // Spring Boot 4 requires GraalVM native-image with Java 25+ support
   // Disable native test tasks if running on Java < 25
   val javaVersionSupportsNative = JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_25)
@@ -93,37 +65,5 @@ plugins.withId("org.graalvm.buildtools.native") {
   }
   tasks.named("nativeTestCompile").configure {
     enabled = javaVersionSupportsNative
-  }
-
-  val extractRepositoryMetadata by tasks.registering(Copy::class) {
-    inputs.files(repositoryMetadata)
-    from({
-      zipTree(repositoryMetadata.singleFile)
-    })
-    into(rootProject.layout.buildDirectory.dir("metadata-repository"))
-  }
-  tasks.named("nativeTestCompile").configure {
-    dependsOn(extractRepositoryMetadata)
-  }
-
-  // See https://github.com/graalvm/native-build-tools/issues/572
-  (extensions.getByName("graalvmNative") as ExtensionAware).extensions
-    .configure<org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension> {
-      enabled.set(false)
-      // manully set up the metadata repository to avoid resolving the default repository, which
-      // currently fails with
-      // Resolution of the configuration ':smoke-tests-otel-starter:spring-boot-3:detachedConfiguration1' was attempted without an exclusive lock. This is unsafe and not allowed.
-      uri.set(extractRepositoryMetadata.get().destinationDir.toURI())
-    }
-
-  tasks.named<Test>("test").configure {
-    useJUnitPlatform()
-    setForkEvery(1)
-  }
-
-  // Disable collectReachabilityMetadata task to avoid configuration isolation issues
-  // See https://github.com/gradle/gradle/issues/17559
-  tasks.named("collectReachabilityMetadata").configure {
-    enabled = false
   }
 }
