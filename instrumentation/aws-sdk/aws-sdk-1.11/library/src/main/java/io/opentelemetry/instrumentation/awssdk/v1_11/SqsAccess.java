@@ -20,7 +20,7 @@ final class SqsAccess {
   static boolean afterResponse(
       Request<?> request,
       Response<?> response,
-      Timer timer,
+      @Nullable Timer timer,
       Context parentContext,
       TracingRequestHandler requestHandler) {
     return enabled
