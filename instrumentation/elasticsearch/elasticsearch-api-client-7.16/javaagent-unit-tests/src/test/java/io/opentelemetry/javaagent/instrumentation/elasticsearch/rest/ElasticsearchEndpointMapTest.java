@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,16 +24,17 @@ import org.junit.jupiter.api.Test;
 class ElasticsearchEndpointMapTest {
 
   private static final Set<String> SEARCH_ENDPOINTS =
-      new HashSet<>(
-          asList(
-              "search",
-              "async_search.submit",
-              "msearch",
-              "eql.search",
-              "terms_enum",
-              "search_template",
-              "msearch_template",
-              "render_search_template"));
+      unmodifiableSet(
+          new HashSet<>(
+              asList(
+                  "search",
+                  "async_search.submit",
+                  "msearch",
+                  "eql.search",
+                  "terms_enum",
+                  "search_template",
+                  "msearch_template",
+                  "render_search_template")));
 
   private static List<String> getPathParts(String route) {
     List<String> pathParts = new ArrayList<>();
@@ -61,8 +63,11 @@ class ElasticsearchEndpointMapTest {
     for (ElasticsearchEndpointDefinition esEndpointDefinition :
         ElasticsearchEndpointMap.getAllEndpoints()) {
       String endpointId = esEndpointDefinition.getEndpointName();
-      assertThat(SEARCH_ENDPOINTS.contains(endpointId))
-          .isEqualTo(esEndpointDefinition.isSearchEndpoint());
+      if (esEndpointDefinition.isSearchEndpoint()) {
+        assertThat(SEARCH_ENDPOINTS).contains(endpointId);
+      } else {
+        assertThat(SEARCH_ENDPOINTS).doesNotContain(endpointId);
+      }
     }
   }
 
@@ -82,7 +87,7 @@ class ElasticsearchEndpointMapTest {
         Map<String, String> expectedMap = new HashMap<>();
         pathParts.forEach(part -> expectedMap.put(part, part));
 
-        assertThat(expectedMap).isEqualTo(observedParams);
+        assertThat(observedParams).isEqualTo(expectedMap);
       }
     }
   }
@@ -94,7 +99,7 @@ class ElasticsearchEndpointMapTest {
     esEndpoint.processPathParts(
         "/test-index-1,test-index-2/_search", (k, v) -> observedParams.put(k, v));
 
-    assertThat(observedParams.get("index")).isEqualTo("test-index-1,test-index-2");
+    assertThat(observedParams).containsEntry("index", "test-index-1,test-index-2");
   }
 
   @Test
