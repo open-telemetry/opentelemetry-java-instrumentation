@@ -52,5 +52,5 @@ tasks.sourcesJar {
 }
 
 tasks.named<Checkstyle>("checkstyleMain") {
-  exclude("**/thrift/**")
+  exclude("**/custom/**")
 }

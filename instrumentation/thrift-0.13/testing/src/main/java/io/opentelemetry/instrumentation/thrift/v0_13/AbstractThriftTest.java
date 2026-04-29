@@ -25,6 +25,7 @@ package io.opentelemetry.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
@@ -41,6 +42,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import custom.Address;
 import custom.CustomService;
@@ -439,6 +441,10 @@ public abstract class AbstractThriftTest {
 
   @Test
   void async() throws Exception {
+    // with thrift 0.13 fails on Java 8 due to java.lang.NoSuchMethodError:
+    // java.nio.ByteBuffer.rewind()Ljava/nio/ByteBuffer;
+    assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
+
     int port = startAsyncServer();
     CustomService.AsyncIface asyncClient = createAsyncClient(port);
 
@@ -480,6 +486,10 @@ public abstract class AbstractThriftTest {
 
   @Test
   void asyncMany() throws Exception {
+    // with thrift 0.13 fails on Java 8 due to java.lang.NoSuchMethodError:
+    // java.nio.ByteBuffer.rewind()Ljava/nio/ByteBuffer;
+    assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
+
     int port = startAsyncServer();
 
     List<CompletableFuture<String>> results = new ArrayList<>();
