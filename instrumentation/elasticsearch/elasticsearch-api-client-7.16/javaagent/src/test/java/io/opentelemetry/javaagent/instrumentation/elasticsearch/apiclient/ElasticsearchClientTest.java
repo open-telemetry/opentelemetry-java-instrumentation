@@ -58,6 +58,8 @@ class ElasticsearchClientTest {
 
   static HttpHost httpHost;
 
+  static RestClient restClient;
+
   static ElasticsearchClient client;
   static ElasticsearchAsyncClient asyncClient;
 
@@ -72,7 +74,7 @@ class ElasticsearchClientTest {
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
 
-    RestClient restClient =
+    restClient =
         RestClient.builder(httpHost)
             .setRequestConfigCallback(
                 builder ->
@@ -88,7 +90,8 @@ class ElasticsearchClientTest {
   }
 
   @AfterAll
-  static void cleanUp() {
+  static void cleanUp() throws IOException {
+    restClient.close();
     elasticsearch.stop();
   }
 
