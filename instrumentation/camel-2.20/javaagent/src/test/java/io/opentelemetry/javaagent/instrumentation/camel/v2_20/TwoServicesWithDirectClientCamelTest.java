@@ -77,8 +77,11 @@ class TwoServicesWithDirectClientCamelTest
   }
 
   @AfterAll
-  protected void cleanUp() {
+  protected void cleanUp() throws Exception {
     cleanupServer();
+    if (clientContext != null) {
+      clientContext.stop();
+    }
   }
 
   void createAndStartClient() throws Exception {

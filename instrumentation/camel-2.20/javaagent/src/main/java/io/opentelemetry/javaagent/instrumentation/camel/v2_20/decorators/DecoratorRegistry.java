@@ -12,8 +12,8 @@ import java.util.Map;
 
 public class DecoratorRegistry {
 
-  private static final SpanDecorator DEFAULT = new BaseSpanDecorator();
-  private static final Map<String, SpanDecorator> DECORATORS = loadDecorators();
+  private static final SpanDecorator defaultDecorator = new BaseSpanDecorator();
+  private static final Map<String, SpanDecorator> decorators = loadDecorators();
 
   private static Map<String, SpanDecorator> loadDecorators() {
     Map<String, SpanDecorator> result = new HashMap<>();
@@ -64,6 +64,6 @@ public class DecoratorRegistry {
 
   public SpanDecorator forComponent(String component) {
 
-    return DECORATORS.getOrDefault(component, DEFAULT);
+    return decorators.getOrDefault(component, defaultDecorator);
   }
 }
