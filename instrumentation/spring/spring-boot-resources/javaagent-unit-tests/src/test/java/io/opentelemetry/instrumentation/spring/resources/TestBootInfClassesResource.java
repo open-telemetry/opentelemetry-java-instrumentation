@@ -38,8 +38,7 @@ class TestBootInfClassesResource {
     // layout: build-info.properties lives at the jar root under META-INF/, not under
     // BOOT-INF/classes/
     assertThat(getClass().getResource("/META-INF/build-info.properties")).isNotNull();
-    assertThat(getClass().getResource("/BOOT-INF/classes/META-INF/build-info.properties"))
-        .isNull();
+    assertThat(getClass().getResource("/BOOT-INF/classes/META-INF/build-info.properties")).isNull();
 
     SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector();
     Resource result = guesser.createResource(config);
