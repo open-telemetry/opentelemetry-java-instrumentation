@@ -162,29 +162,21 @@ configurations {
   //    "latest.release" or "+" versions (e.g. transitive deps) gets pinned to a concrete
   //    version from the JSON file.
   if (otelProps.testLatestDeps) {
+    // Apply latestDepTestLibrary overrides and pinned versions to every resolvable
+    // configuration. Both maps only contain entries the module author explicitly opted into
+    // (`latestDepTestLibrary(...)` declarations and `library`/`testLibrary` artifacts pinned
+    // in latest-dep-versions.json), and the lookups are no-ops for unrelated artifacts and
+    // for concrete versions — so broad application costs nothing but keeps every dynamic
+    // version in the build reproducible, including custom JvmTestSuite source sets and
+    // `compileClasspath` entries rewritten via dependencySubstitution (e.g. gwt-2.0).
     configureEach {
       if (!isCanBeResolved) return@configureEach
-      // latestDepTestLibrary overrides only apply to the main test/latestDepTest configurations.
-      // Custom JvmTestSuite source sets (e.g. `version20TestRuntimeClasspath`,
-      // `play24TestRuntimeClasspath`) declare their own explicit versions and must not be
-      // affected by overrides intended for the main test suite. Overrides also must not leak
-      // into build-tool configurations like Zinc (the Scala compiler) where overriding
-      // scala-library would break compilation.
-      val applyOverrides = name.startsWith("test") || name.startsWith("latestDepTest")
-      // Pinning of `latest.release`/`+` versions is applied to every configuration. The pin
-      // lookup is a no-op for concrete versions (the only kind in build-tool configurations
-      // like Zinc), so applying broadly costs nothing but keeps every dynamic version in the
-      // build reproducible — including custom JvmTestSuite source sets and `compileClasspath`
-      // entries rewritten via dependencySubstitution (e.g. gwt-2.0).
-      if (!applyOverrides && !pinLatestDeps) return@configureEach
       resolutionStrategy.eachDependency {
-        if (applyOverrides) {
-          // latestDepTestLibrary overrides take priority over pinned versions
-          val override = latestDepTestLibraryOverrides["${requested.group}:${requested.name}"]
-          if (override != null) {
-            useVersion(override)
-            return@eachDependency
-          }
+        // latestDepTestLibrary overrides take priority over pinned versions
+        val override = latestDepTestLibraryOverrides["${requested.group}:${requested.name}"]
+        if (override != null) {
+          useVersion(override)
+          return@eachDependency
         }
         if (pinLatestDeps) {
           val pinnedVersion = lookupPinnedVersion(requested.group, requested.name, requested.version)
