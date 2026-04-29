@@ -35,6 +35,8 @@ public final class SpringMvcBuilderUtil {
   @CanIgnoreReturnValue
   public static SpringWebMvcTelemetryBuilder applyCommonConfig(
       SpringWebMvcTelemetryBuilder builder, OpenTelemetry openTelemetry) {
+    // builderExtractor is guaranteed non-null because the builder class registers it during
+    // static initialization, before a builder instance can be passed here
     if (builderExtractor != null) {
       builderExtractor.apply(builder).configure(new CommonConfig(openTelemetry));
     }

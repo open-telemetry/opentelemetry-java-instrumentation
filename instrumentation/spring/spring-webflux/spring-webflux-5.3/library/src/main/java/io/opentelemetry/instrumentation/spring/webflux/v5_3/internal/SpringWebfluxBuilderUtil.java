@@ -44,6 +44,8 @@ public final class SpringWebfluxBuilderUtil {
   @CanIgnoreReturnValue
   public static SpringWebfluxClientTelemetryBuilder applyClientCommonConfig(
       SpringWebfluxClientTelemetryBuilder builder, OpenTelemetry openTelemetry) {
+    // clientBuilderExtractor is guaranteed non-null because the builder class registers it during
+    // static initialization, before a builder instance can be passed here
     if (clientBuilderExtractor != null) {
       clientBuilderExtractor.apply(builder).configure(new CommonConfig(openTelemetry));
     }
@@ -53,6 +55,8 @@ public final class SpringWebfluxBuilderUtil {
   @CanIgnoreReturnValue
   public static SpringWebfluxServerTelemetryBuilder applyServerCommonConfig(
       SpringWebfluxServerTelemetryBuilder builder, OpenTelemetry openTelemetry) {
+    // serverBuilderExtractor is guaranteed non-null because the builder class registers it during
+    // static initialization, before a builder instance can be passed here
     if (serverBuilderExtractor != null) {
       serverBuilderExtractor.apply(builder).configure(new CommonConfig(openTelemetry));
     }
