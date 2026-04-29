@@ -96,7 +96,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   @Override
   public int sendRequest(
       WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers) {
-    if (Webflux7Util.isWebflux7) {
+    if (Webflux7Util.IS_WEBFLUX_7) {
       return Webflux7Util.doRequest(request);
     }
 
@@ -111,7 +111,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
       URI uri,
       Map<String, String> headers,
       HttpClientResult httpClientResult) {
-    if (Webflux7Util.isWebflux7) {
+    if (Webflux7Util.IS_WEBFLUX_7) {
       Webflux7Util.sendRequestWithCallback(
           request, httpClientResult::complete, httpClientResult::complete);
     } else {
@@ -180,7 +180,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                     () -> {
                       WebClient.RequestBodySpec request = buildRequest("GET", uri, emptyMap());
                       Mono<ClientResponse> mono;
-                      if (Webflux7Util.isWebflux7) {
+                      if (Webflux7Util.IS_WEBFLUX_7) {
                         mono = Webflux7Util.exchangeToMono(request);
                       } else {
                         mono = request.exchange();
