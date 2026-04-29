@@ -27,6 +27,10 @@ abstract class LibertySmokeTest extends AppServerTest {
                 Duration.ofMinutes(3), ".*server is ready to run a smarter planet.*"));
   }
 
+  /*
+   * OpenLiberty 20.0.0.12
+   */
+
   @AppServer(version = "20.0.0.12", jdk = "8")
   static class Liberty20Jdk8 extends LibertySmokeTest {}
 
@@ -38,6 +42,10 @@ abstract class LibertySmokeTest extends AppServerTest {
 
   @AppServer(version = "20.0.0.12", jdk = "11-openj9")
   static class Liberty20Jdk11Openj9 extends LibertySmokeTest {}
+
+  /*
+   * OpenLiberty 21.0.0.12
+   */
 
   @AppServer(version = "21.0.0.12", jdk = "8")
   static class Liberty21Jdk8 extends LibertySmokeTest {}
@@ -57,6 +65,10 @@ abstract class LibertySmokeTest extends AppServerTest {
   @AppServer(version = "21.0.0.12", jdk = "17-openj9")
   static class Liberty21Jdk17Openj9 extends LibertySmokeTest {}
 
+  /*
+   * OpenLiberty 22.0.0.12
+   */
+
   @AppServer(version = "22.0.0.12", jdk = "8")
   static class Liberty22Jdk8 extends LibertySmokeTest {}
 
@@ -74,6 +86,10 @@ abstract class LibertySmokeTest extends AppServerTest {
 
   @AppServer(version = "22.0.0.12", jdk = "17-openj9")
   static class Liberty22Jdk17Openj9 extends LibertySmokeTest {}
+
+  /*
+   * OpenLiberty 23.0.0.12
+   */
 
   @AppServer(version = "23.0.0.12", jdk = "8")
   static class Liberty23Jdk8 extends LibertySmokeTest {
@@ -108,4 +124,48 @@ abstract class LibertySmokeTest extends AppServerTest {
 
   @AppServer(version = "23.0.0.12", jdk = "21-openj9")
   static class Liberty23Jdk21Openj9 extends LibertySmokeTest {}
+
+  /*
+   * OpenLiberty 26.0.0.3
+   */
+
+  @AppServer(version = "26.0.0.3", jdk = "8")
+  static class Liberty26Jdk8 extends LibertySmokeTest {
+    @Override
+    protected boolean testJsp() {
+      return false;
+    }
+  }
+
+  @AppServer(version = "26.0.0.3", jdk = "8-openj9")
+  static class Liberty26Jdk8Openj9 extends LibertySmokeTest {
+    @Override
+    protected boolean testJsp() {
+      return false;
+    }
+  }
+
+  @AppServer(version = "26.0.0.3", jdk = "11")
+  static class Liberty26Jdk11 extends LibertySmokeTest {}
+
+  @AppServer(version = "26.0.0.3", jdk = "11-openj9")
+  static class Liberty26Jdk11Openj9 extends LibertySmokeTest {}
+
+  @AppServer(version = "26.0.0.3", jdk = "17")
+  static class Liberty26Jdk17 extends LibertySmokeTest {}
+
+  @AppServer(version = "26.0.0.3", jdk = "17-openj9")
+  static class Liberty26Jdk17Openj9 extends LibertySmokeTest {}
+
+  @AppServer(version = "26.0.0.3", jdk = "21")
+  static class Liberty26Jdk21 extends LibertySmokeTest {}
+
+  @AppServer(version = "26.0.0.3", jdk = "21-openj9")
+  static class Liberty26Jdk21Openj9 extends LibertySmokeTest {}
+
+  @AppServer(version = "26.0.0.3", jdk = "25")
+  static class Liberty26Jdk25 extends LibertySmokeTest {}
+
+  @AppServer(version = "26.0.0.3", jdk = "25-openj9")
+  static class Liberty26Jdk25Openj9 extends LibertySmokeTest {}
 }
