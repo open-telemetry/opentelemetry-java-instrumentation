@@ -26,7 +26,7 @@ final class ArmeriaHttpClientAttributesGetter
         protected Method computeValue(Class<?> type) {
           try {
             return type.getMethod("authority");
-          } catch (NoSuchMethodException e) {
+          } catch (NoSuchMethodException ignored) {
             return null;
           }
         }
@@ -118,7 +118,7 @@ final class ArmeriaHttpClientAttributesGetter
     }
     try {
       return Integer.parseInt(authority.substring(separatorPos + 1));
-    } catch (NumberFormatException e) {
+    } catch (NumberFormatException ignored) {
       return null;
     }
   }
@@ -151,7 +151,7 @@ final class ArmeriaHttpClientAttributesGetter
     if (method != null) {
       try {
         return (String) method.invoke(ctx);
-      } catch (Exception e) {
+      } catch (Exception ignored) {
         return null;
       }
     }
