@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseScope;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -48,8 +49,9 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAndWaitAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static ClickHouseScope onEnter(
-        @Advice.Argument(0) ClickHouseRequest<?> clickHouseRequest) {
+        @Advice.Argument(0) @Nullable ClickHouseRequest<?> clickHouseRequest) {
 
       CallDepth callDepth = CallDepth.forClass(ClickHouseClient.class);
       if (callDepth.getAndIncrement() > 0 || clickHouseRequest == null) {
@@ -71,7 +73,8 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown Throwable throwable, @Advice.Enter ClickHouseScope scope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable ClickHouseScope scope) {
 
       CallDepth callDepth = CallDepth.forClass(ClickHouseClient.class);
       if (callDepth.decrementAndGet() > 0 || scope == null) {
