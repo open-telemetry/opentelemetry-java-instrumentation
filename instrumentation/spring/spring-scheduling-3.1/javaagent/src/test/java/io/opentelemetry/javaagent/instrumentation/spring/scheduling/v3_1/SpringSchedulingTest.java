@@ -73,7 +73,7 @@ class SpringSchedulingTest {
     task.blockUntilExecute();
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(TriggerTask.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), experimentalJobSystem()));
+    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
 
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
@@ -95,7 +95,7 @@ class SpringSchedulingTest {
     task.blockUntilExecute();
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(IntervalTask.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), experimentalJobSystem()));
+    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
 
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
@@ -118,7 +118,7 @@ class SpringSchedulingTest {
 
     List<AttributeAssertion> assertions =
         codeFunctionPrefixAssertions(LambdaTaskConfigurer.class.getName() + "$$Lambda", "run");
-    assertions.add(equalTo(stringKey("job.system"), experimentalJobSystem()));
+    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
 
     assertThat(configurer).isNotNull();
     testing.waitAndAssertTraces(
@@ -141,7 +141,7 @@ class SpringSchedulingTest {
 
     List<AttributeAssertion> assertions =
         codeFunctionAssertions(EnhancedClassTaskConfig.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), experimentalJobSystem()));
+    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
 
     assertThat(latch).isNotNull();
     testing.waitAndAssertTraces(
@@ -163,7 +163,7 @@ class SpringSchedulingTest {
     task.blockUntilExecute();
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(TaskWithError.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), experimentalJobSystem()));
+    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
 
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
@@ -189,7 +189,7 @@ class SpringSchedulingTest {
   }
 
   @Nullable
-  private static String experimentalJobSystem() {
-    return EXPERIMENTAL_ATTRIBUTES ? "spring_scheduling" : null;
+  private static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 }
