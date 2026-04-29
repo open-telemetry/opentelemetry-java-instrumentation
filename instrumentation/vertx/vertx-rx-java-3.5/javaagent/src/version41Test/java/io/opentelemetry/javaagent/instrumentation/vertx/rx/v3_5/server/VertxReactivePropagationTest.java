@@ -158,11 +158,7 @@ class VertxReactivePropagationTest {
     cleanup.deferCleanup(pool::shutdownNow);
     TextMapPropagator propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
     TextMapSetter<HttpRequestBuilder> setter =
-        (carrier, name, value) -> {
-          if (carrier != null) {
-            carrier.header(name, value);
-          }
-        };
+        (carrier, name, value) -> carrier.header(name, value);
 
     for (int i = 0; i < count; i++) {
       int index = i;
