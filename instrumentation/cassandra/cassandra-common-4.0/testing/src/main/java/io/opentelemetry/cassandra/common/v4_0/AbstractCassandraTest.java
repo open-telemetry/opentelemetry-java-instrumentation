@@ -158,7 +158,7 @@ public abstract class AbstractCassandraTest {
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAsyncParameters")
-  void asyncTest(Parameter parameter) throws Exception {
+  void asyncTest(Parameter parameter) {
     CqlSession session = getSession(parameter.keyspace);
     cleanup.deferCleanup(session);
 
@@ -170,7 +170,7 @@ public abstract class AbstractCassandraTest {
                     .executeAsync(parameter.queryText)
                     .toCompletableFuture()
                     .whenComplete((result, throwable) -> testing().runWithSpan("child", () -> {}))
-                    .get());
+                    .join());
 
     testing()
         .waitAndAssertTraces(

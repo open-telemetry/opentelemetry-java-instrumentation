@@ -18,7 +18,7 @@ public class SessionInfo {
   }
 
   @Nullable
-  public String getSessionId() {
+  String getSessionId() {
     return sessionId;
   }
 

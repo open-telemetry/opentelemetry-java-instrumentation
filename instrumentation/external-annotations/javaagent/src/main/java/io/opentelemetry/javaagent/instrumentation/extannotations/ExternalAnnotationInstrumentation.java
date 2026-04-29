@@ -74,7 +74,7 @@ class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   /** This matcher matches all methods that should be excluded from transformation. */
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
-  public ExternalAnnotationInstrumentation() {
+  ExternalAnnotationInstrumentation() {
     Set<String> additionalTraceAnnotations =
         configureAdditionalTraceAnnotations(
             DeclarativeConfigUtil.getInstrumentationConfig(
@@ -202,6 +202,7 @@ class ExternalAnnotationInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {

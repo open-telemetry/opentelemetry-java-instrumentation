@@ -37,16 +37,21 @@
   wrapping when the lambda already needs its own error handling for behavioral reasons.
 - Do **not** choose `CompletableFuture.runAsync(...)` over the simpler
   `executor.submit(runnable).get()` just to avoid the checked exceptions thrown by `Future.get()`.
+- Do **not** wrap a call in `assertThatCode(() -> ...).doesNotThrowAnyException()`
+  solely to narrow a test method's `throws` clause by swallowing checked exceptions
+  into an `AssertionError`. If the call throws, the test already fails via its
+  `throws` clause. Prefer calling the method directly and leaving `throws Exception`
+  (or the narrowest checked type) on the `@Test` method.
 
 ## Test Resource Cleanup
 
 - In JUnit tests, when an `AutoCloseable` is intended to remain live for most or all of the test
   and only needs cleanup at test end, prefer `AutoCleanupExtension` with `deferCleanup(...)`
   over wrapping most of the test body in try-with-resources.
-- For resources created in `@BeforeAll` or other class-scoped setup, prefer
-  `AutoCleanupExtension` with `deferAfterAll(...)` over nested `@AfterAll` cleanup
-  chains. Do not introduce or keep `AutoCleanupExtension` solely for a single
-  `deferAfterAll(...)` call — use a plain `@AfterAll` instead.
+- Use `AutoCleanupExtension.deferAfterAll(...)` only for cleanup actions registered
+  dynamically (from inside test methods or other runtime-conditional setup). For a
+  fixed set of class-scoped fields known at class-init time, use a plain `@AfterAll`
+  that closes each field directly.
 - Reuse an existing `cleanup` extension when one is already in scope.
   Otherwise, add a `@RegisterExtension` field when the deferred-cleanup pattern improves
   clarity or avoids wrapping most of the test body.
@@ -130,3 +135,41 @@ unless the span ordering within a trace is genuinely non-deterministic (e.g., co
 producers/consumers, thread-pool fan-out, or channel interleaving). Sequential operations
 like `repeat {}` loops, single-child traces, and `flux` sequential emission produce spans
 in deterministic order — use `hasSpansSatisfyingExactly` for those.
+
+## Flag-Gated / Mode-Dependent Assertions
+
+Several test modes change which attributes, span names, status codes, or span indexes are
+expected:
+
+- Experimental attributes (`-Dotel.instrumentation.<module>.experimental-*=true`) — see
+  [testing-experimental-flags.md](testing-experimental-flags.md).
+- Semconv stability (`-Dotel.semconv-stability.opt-in=...`) — see
+  [testing-semconv-stability.md](testing-semconv-stability.md).
+- `testLatestDeps` Gradle property — runs against the newest supported library versions
+  instead of the pinned earliest-supported ones.
+
+### Read the flag through a shared static helper, not a per-class field
+
+Each flag has a shared static accessor; static-import it and call it directly. Never call
+`Boolean.getBoolean("…")` inline and never duplicate the property-name string at the call
+site.
+
+| Flag | Shared accessor | Where it lives |
+| --- | --- | --- |
+| `-PtestLatestDeps=true` | `testLatestDeps()` | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
+| `otel.semconv-stability.opt-in=…` | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc. | `io.opentelemetry.instrumentation.api.internal.SemconvStability` |
+| `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class |
+
+### Inline ternary in `equalTo(...)` with `null` for "absent"
+
+Push the ternary as deep as possible — into the `equalTo` value or single attribute key —
+rather than duplicating two whole `hasAttributesSatisfyingExactly(...)` blocks under a
+`flag ? a : b`. The assertion API treats `null` as "expect attribute absent":
+
+```java
+equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
+equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)
+equalTo(SOME_KEY, EXPERIMENTAL_ATTRIBUTES ? "value" : null)
+span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
+.hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
+```

@@ -8,8 +8,8 @@ muzzle {
     group.set("org.springframework.boot")
     module.set("spring-boot-actuator-autoconfigure")
     versions.set("[2.0.0.RELEASE,)")
-    extraDependency("io.micrometer:micrometer-core:1.5.0")
     assertInverse.set(true)
+    extraDependency("io.micrometer:micrometer-core:1.5.0")
   }
 }
 

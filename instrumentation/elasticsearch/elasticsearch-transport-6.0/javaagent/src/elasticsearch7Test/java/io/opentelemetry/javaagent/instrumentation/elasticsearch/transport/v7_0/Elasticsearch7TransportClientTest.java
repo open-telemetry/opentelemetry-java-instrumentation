@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v7_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0.AbstractElasticsearch6TransportClientTest;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0.NodeFactory;
 
@@ -22,6 +24,6 @@ class Elasticsearch7TransportClientTest extends AbstractElasticsearch6TransportC
 
   @Override
   protected String getPutMappingActionName() {
-    return Boolean.getBoolean("testLatestDeps") ? "AutoPutMappingAction" : "PutMappingAction";
+    return testLatestDeps() ? "AutoPutMappingAction" : "PutMappingAction";
   }
 }

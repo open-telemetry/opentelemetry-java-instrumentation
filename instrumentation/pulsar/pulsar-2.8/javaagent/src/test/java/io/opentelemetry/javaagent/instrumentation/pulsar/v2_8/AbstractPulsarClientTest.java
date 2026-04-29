@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.Nullable;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -62,7 +61,6 @@ abstract class AbstractPulsarClientTest {
   private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
       Boolean.getBoolean("otel.instrumentation.pulsar.experimental-span-attributes");
 
-  @Nullable
   static <T> T experimental(T value) {
     return EXPERIMENTAL_ATTRIBUTES_ENABLED ? value : null;
   }

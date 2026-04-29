@@ -30,7 +30,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.pekko.http.scaladsl.Http;
@@ -115,17 +114,17 @@ public abstract class AbstractAws2SqsBaseTest {
     return true;
   }
 
-  protected void configureSdkClient(SqsClientBuilder builder) throws URISyntaxException {
+  protected void configureSdkClient(SqsClientBuilder builder) {
     builder
         .overrideConfiguration(createOverrideConfigurationBuilder().build())
-        .endpointOverride(new URI("http://localhost:" + sqsPort));
+        .endpointOverride(URI.create("http://localhost:" + sqsPort));
     builder.region(Region.AP_NORTHEAST_1).credentialsProvider(CREDENTIALS_PROVIDER);
   }
 
-  protected void configureSdkClient(SqsAsyncClientBuilder builder) throws URISyntaxException {
+  protected void configureSdkClient(SqsAsyncClientBuilder builder) {
     builder
         .overrideConfiguration(createOverrideConfigurationBuilder().build())
-        .endpointOverride(new URI("http://localhost:" + sqsPort));
+        .endpointOverride(URI.create("http://localhost:" + sqsPort));
     builder.region(Region.AP_NORTHEAST_1).credentialsProvider(CREDENTIALS_PROVIDER);
   }
 
@@ -150,7 +149,7 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @Test
-  void testSimpleSqsProducerConsumerServicesSync() throws URISyntaxException {
+  void testSimpleSqsProducerConsumerServicesSync() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -167,7 +166,7 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @Test
-  void testSimpleSqsProducerConsumerServicesWithParentSync() throws URISyntaxException {
+  void testSimpleSqsProducerConsumerServicesWithParentSync() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -184,17 +183,16 @@ public abstract class AbstractAws2SqsBaseTest {
     assertSqsTraces(true, false);
   }
 
-  @SuppressWarnings("InterruptedExceptionSwallowed")
   @Test
-  void testSimpleSqsProducerConsumerServicesAsync() throws Exception {
+  void testSimpleSqsProducerConsumerServicesAsync() {
     SqsAsyncClientBuilder builder = SqsAsyncClient.builder();
     configureSdkClient(builder);
     SqsAsyncClient client = configureSqsClient(builder.build());
 
-    client.createQueue(createQueueRequest).get();
-    client.sendMessage(sendMessageRequest).get();
+    client.createQueue(createQueueRequest).join();
+    client.sendMessage(sendMessageRequest).join();
 
-    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest).get();
+    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest).join();
 
     assertThat(response.messages()).hasSize(1);
 

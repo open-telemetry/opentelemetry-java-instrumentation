@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -191,7 +192,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     AtomicReference<SpanData> producer = new AtomicReference<>();
     // trace structure differs in latest dep tests because CommonErrorHandler is only set for latest
     // dep tests
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       testing.waitAndAssertSortedTraces(
           orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
           trace -> {
@@ -446,7 +447,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           producer.set(trace.getSpan(1));
         });
 
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       // latest dep tests call receive once and only retry the failed process step
       assertions.add(
           trace ->

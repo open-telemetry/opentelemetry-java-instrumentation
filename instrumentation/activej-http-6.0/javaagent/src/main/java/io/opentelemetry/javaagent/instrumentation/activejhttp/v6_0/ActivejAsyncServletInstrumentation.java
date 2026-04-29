@@ -94,7 +94,7 @@ class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Promise<HttpResponse> methodExit(
         @Advice.Return Promise<HttpResponse> responsePromise,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope == null) {

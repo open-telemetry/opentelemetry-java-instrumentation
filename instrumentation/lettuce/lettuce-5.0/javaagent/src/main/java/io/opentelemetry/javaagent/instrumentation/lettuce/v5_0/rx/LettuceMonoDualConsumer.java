@@ -16,9 +16,9 @@ import reactor.core.publisher.Mono;
 
 public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T, Throwable> {
 
-  private Context context;
   private final RedisCommand<?, ?, ?> command;
   private final boolean finishSpanOnClose;
+  private Context context;
 
   public LettuceMonoDualConsumer(RedisCommand<?, ?, ?> command, boolean finishSpanOnClose) {
     this.command = command;

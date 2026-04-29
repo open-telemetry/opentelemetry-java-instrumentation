@@ -92,7 +92,14 @@ class VertxRxCircuitBreakerHttpServerTest extends AbstractVertxRxHttpServerTest 
           .createHttpServer()
           .requestHandler(router)
           .listen(port)
-          .onComplete(httpServerAsyncResult -> startPromise.complete());
+          .onComplete(
+              httpServerAsyncResult -> {
+                if (httpServerAsyncResult.failed()) {
+                  startPromise.fail(httpServerAsyncResult.cause());
+                  return;
+                }
+                startPromise.complete();
+              });
     }
   }
 }

@@ -7,20 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.axis2.v1_6;
 
 import org.apache.axis2.jaxws.core.MessageContext;
 
-public class Axis2Request {
+class Axis2Request {
   private final MessageContext message;
   private final String spanName;
 
-  public Axis2Request(MessageContext message) {
+  Axis2Request(MessageContext message) {
     this.message = message;
     this.spanName = getSpanName(message);
   }
 
-  public MessageContext message() {
+  MessageContext message() {
     return message;
   }
 
-  public String spanName() {
+  String spanName() {
     return spanName;
   }
 

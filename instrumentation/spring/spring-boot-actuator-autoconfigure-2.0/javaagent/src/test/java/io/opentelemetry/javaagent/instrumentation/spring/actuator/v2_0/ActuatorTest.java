@@ -60,7 +60,8 @@ class ActuatorTest {
     Set<MeterRegistry> registries = ((CompositeMeterRegistry) meterRegistry).getRegistries();
     ArrayList<MeterRegistry> list = new ArrayList<>(registries);
 
-    String last = list.get(list.size() - 1).getClass().getSimpleName();
-    assertThat(last).isEqualTo("OpenTelemetryMeterRegistry");
+    assertThat(list)
+        .extracting(registry -> registry.getClass().getSimpleName())
+        .endsWith("OpenTelemetryMeterRegistry");
   }
 }

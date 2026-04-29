@@ -55,9 +55,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
     SPECIAL_MAPPINGS.put(
-        "java.common.http.client.redact_query_parameters/development",
-        "otel.instrumentation.http.client.experimental.redact-query-parameters");
-    SPECIAL_MAPPINGS.put(
         "java.common.http.client.emit_experimental_telemetry/development",
         "otel.instrumentation.http.client.emit-experimental-telemetry");
     SPECIAL_MAPPINGS.put(
@@ -86,6 +83,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     // jmx properties don't have an "instrumentation" segment
     SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
+    // otel.jmx.discovery.delay also has a dedicated branch in getLong() that reads it as a
+    // Duration and falls back to otel.metric.export.interval; this mapping is here only to keep
+    // it consistent with the rest of the jmx.* properties.
+    SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
   }
 

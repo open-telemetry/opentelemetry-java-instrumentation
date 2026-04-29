@@ -20,7 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public abstract class Log4j2Test {
-  public abstract InstrumentationExtension getInstrumentationExtension();
+  protected abstract InstrumentationExtension getInstrumentationExtension();
 
   @BeforeEach
   void setUp() {

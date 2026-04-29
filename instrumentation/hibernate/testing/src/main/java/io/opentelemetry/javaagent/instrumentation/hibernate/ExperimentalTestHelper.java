@@ -20,7 +20,7 @@ public class ExperimentalTestHelper {
   public static final AttributeKey<String> HIBERNATE_SESSION_ID = stringKey("hibernate.session_id");
 
   @Nullable
-  public static String experimental(String value) {
+  public static String experimental(@Nullable String value) {
     if (isEnabled) {
       return value;
     }

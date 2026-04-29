@@ -84,7 +84,7 @@ public final class JettyClientTracingListener
     ListIterator<Request.RequestListener> iterator = requestListeners.listIterator();
 
     while (iterator.hasNext()) {
-      List<Class<?>> interfaces = new ArrayList<>();
+      List<Class<?>> interfaces = new ArrayList<>(REQUEST_LISTENER_INTERFACES.length);
       Request.RequestListener listener = iterator.next();
 
       Class<?> listenerClass = listener.getClass();
