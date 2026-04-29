@@ -8,4 +8,4 @@ pluginManagement {
   }
 }
 
-rootProject.name = 'opentelemetry-java-instrumentation-extension-demo'
+rootProject.name = "opentelemetry-java-instrumentation-extension-demo"

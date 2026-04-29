@@ -1,5 +1,5 @@
 plugins {
-  id "java"
+  id("otel.java-conventions")
 }
 
 dependencies {
