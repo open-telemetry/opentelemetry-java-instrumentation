@@ -51,6 +51,10 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
 
   private static String getRoute(Context otelContext, RoutingContext routingContext) {
     String route = routingContext.currentRoute().getPath();
+    String mountPoint = routingContext.mountPoint();
+    if (mountPoint != null) {
+      return mountPoint.endsWith("/") ? mountPoint + route.substring(1) : mountPoint + route;
+    }
     String existingRoute = RouteHolder.get(otelContext);
     return existingRoute != null ? existingRoute + route : route;
   }
