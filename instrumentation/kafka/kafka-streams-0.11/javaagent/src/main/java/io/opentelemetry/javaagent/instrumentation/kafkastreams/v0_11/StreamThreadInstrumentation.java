@@ -34,7 +34,7 @@ class StreamThreadInstrumentation implements TypeInstrumentation {
       return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
       KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
     }
