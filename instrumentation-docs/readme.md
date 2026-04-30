@@ -236,7 +236,7 @@ We parse gradle files in order to determine several pieces of metadata:
 ### Scope
 
 For now, the scope name is the only value that is implemented in our instrumentations. The scope
-name is determined by the instrumentation module name:  `io.opentelemetry.{instrumentation name}`
+name is determined by the instrumentation module name: `io.opentelemetry.{instrumentation name}`
 
 We will implement gatherers for the schemaUrl and scope attributes when instrumentations start
 implementing them.
