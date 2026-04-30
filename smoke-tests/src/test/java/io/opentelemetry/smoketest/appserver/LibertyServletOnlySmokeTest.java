@@ -40,4 +40,7 @@ abstract class LibertyServletOnlySmokeTest extends AppServerTest {
 
   @AppServer(version = "23.0.0.12", jdk = "11")
   static class LibertyServletOnly23Jdk11 extends LibertyServletOnlySmokeTest {}
+
+  @AppServer(version = "26.0.0.3", jdk = "11")
+  static class LibertyServletOnly26Jdk11 extends LibertyServletOnlySmokeTest {}
 }
