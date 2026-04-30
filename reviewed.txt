@@ -130,3 +130,11 @@ hibernate-3.3:javaagent
 hibernate-4.0:javaagent
 hibernate-6.0:javaagent
 hibernate-6.0:spring-testing
+hibernate-common:javaagent
+hibernate-procedure-call-4.3:javaagent
+hibernate-reactive-1.0:hibernate-reactive-2.0-testing
+hibernate-reactive-1.0:javaagent
+hibernate:testing
+hikaricp-3.0:javaagent
+hikaricp-3.0:library
+hikaricp-3.0:testing
