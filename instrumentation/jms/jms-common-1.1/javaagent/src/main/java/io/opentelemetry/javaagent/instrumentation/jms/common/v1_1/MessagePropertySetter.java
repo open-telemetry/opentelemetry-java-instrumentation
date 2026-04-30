@@ -11,9 +11,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-enum MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
-  INSTANCE;
-
+class MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
   private static final Logger logger = Logger.getLogger(MessagePropertySetter.class.getName());
 
   static final String DASH = "__dash__";
