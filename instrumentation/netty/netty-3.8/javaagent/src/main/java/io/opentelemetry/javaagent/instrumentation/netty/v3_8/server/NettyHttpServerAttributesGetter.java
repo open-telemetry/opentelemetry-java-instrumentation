@@ -53,6 +53,7 @@ final class NettyHttpServerAttributesGetter
     return separatorPos == -1 ? fullPath : fullPath.substring(0, separatorPos);
   }
 
+  @Nullable
   @Override
   public String getUrlQuery(NettyRequest requestAndChannel) {
     String fullPath = requestAndChannel.request().getUri();

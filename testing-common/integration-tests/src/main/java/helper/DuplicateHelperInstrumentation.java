@@ -14,7 +14,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DuplicateHelperInstrumentation implements TypeInstrumentation {
+class DuplicateHelperInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("helper.DuplicateHelperTestClass");
@@ -22,13 +22,13 @@ public class DuplicateHelperInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("transform"), this.getClass().getName() + "$TestAdvice");
+    transformer.applyAdviceToMethod(named("transform"), getClass().getName() + "$TestAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class TestAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static String addSuffix(@Advice.Return String string) {
       return DuplicateHelper.addSuffix(string, " foo");
     }

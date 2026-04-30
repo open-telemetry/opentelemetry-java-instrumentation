@@ -12,18 +12,18 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class JavaAsyncChild extends ForkJoinTask<Object> implements Runnable, Callable<Object> {
+class JavaAsyncChild extends ForkJoinTask<Object> implements Runnable, Callable<Object> {
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;
   private final CountDownLatch latch = new CountDownLatch(1);
 
-  public JavaAsyncChild() {
+  JavaAsyncChild() {
     this(/* doTraceableWork= */ true, /* blockThread= */ false);
   }
 
-  public JavaAsyncChild(boolean doTraceableWork, boolean blockThread) {
+  JavaAsyncChild(boolean doTraceableWork, boolean blockThread) {
     this.doTraceableWork = doTraceableWork;
     this.blockThread = new AtomicBoolean(blockThread);
   }
@@ -42,7 +42,7 @@ public class JavaAsyncChild extends ForkJoinTask<Object> implements Runnable, Ca
     return true;
   }
 
-  public void unblock() {
+  void unblock() {
     blockThread.set(false);
   }
 
@@ -57,7 +57,7 @@ public class JavaAsyncChild extends ForkJoinTask<Object> implements Runnable, Ca
     return null;
   }
 
-  public void waitForCompletion() throws InterruptedException {
+  void waitForCompletion() throws InterruptedException {
     latch.await();
   }
 

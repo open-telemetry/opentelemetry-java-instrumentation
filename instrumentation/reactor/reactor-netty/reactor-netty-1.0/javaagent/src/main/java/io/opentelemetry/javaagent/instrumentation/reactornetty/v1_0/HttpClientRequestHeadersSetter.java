@@ -9,11 +9,13 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 import reactor.netty.http.client.HttpClientRequest;
 
-enum HttpClientRequestHeadersSetter implements TextMapSetter<HttpClientRequest> {
-  INSTANCE;
+class HttpClientRequestHeadersSetter implements TextMapSetter<HttpClientRequest> {
 
   @Override
   public void set(@Nullable HttpClientRequest request, String key, String value) {
+    if (request == null) {
+      return;
+    }
     request.header(key, value);
   }
 }

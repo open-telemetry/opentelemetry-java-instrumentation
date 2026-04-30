@@ -1,5 +1,5 @@
 /*
- * Instrumentation for Hibernate between 3.5 and 4.
+ * Instrumentation for Hibernate between 3.3 and 4.
  * Has the same logic as the Hibernate 4+ instrumentation, but is copied rather than sharing a codebase. This is because
  * the root interface for Session/StatelessSession - SharedSessionContract - isn't present before version 4. So the
  * instrumentation isn't able to reference it.
@@ -21,11 +21,12 @@ muzzle {
 dependencies {
   library("org.hibernate:hibernate-core:3.3.0.GA")
 
-  implementation(project(":instrumentation:hibernate:hibernate-common:javaagent"))
+  implementation(project(":instrumentation:hibernate:hibernate-common-3.3:javaagent"))
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   // Added to ensure cross compatibility:
   testInstrumentation(project(":instrumentation:hibernate:hibernate-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:hibernate:hibernate-6.0:javaagent"))
   testInstrumentation(project(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent"))
 
   testImplementation("org.hibernate:hibernate-annotations:3.4.0.GA")
@@ -40,7 +41,7 @@ dependencies {
   latestDepTestLibrary("org.hibernate:hibernate-core:3.+") // see hibernate-4.0 module
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
+if (otelProps.testLatestDeps) {
   configurations {
     // Needed for test, but for latestDepTest this would otherwise bundle a second incompatible version of hibernate-core.
     testImplementation {
@@ -55,7 +56,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {

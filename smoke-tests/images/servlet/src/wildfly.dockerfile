@@ -32,10 +32,11 @@ RUN echo curl -O -L $DOWNLOAD_URL
 # Add the WildFly distribution to /opt, and make wildfly the owner of the extracted tar content
 # Make sure the distribution is available from a well-known place
 RUN cd $HOME \
+    && archive=$(basename "$DOWNLOAD_URL") \
     && wget -nv $DOWNLOAD_URL \
-    && tar xf wildfly-$WILDFLY_VERSION.tar.gz \
+    && tar xf "$archive" \
     && mv $HOME/wildfly-$WILDFLY_VERSION $JBOSS_HOME \
-    && rm wildfly-$WILDFLY_VERSION.tar.gz \
+    && rm "$archive" \
     && chown -R jboss:0 ${JBOSS_HOME} \
     && chmod -R g+rw ${JBOSS_HOME}
 

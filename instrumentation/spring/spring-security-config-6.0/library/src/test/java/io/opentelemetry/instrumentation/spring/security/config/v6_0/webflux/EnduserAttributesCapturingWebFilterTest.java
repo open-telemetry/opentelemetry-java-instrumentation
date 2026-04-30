@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
 class EnduserAttributesCapturingWebFilterTest {
 
   @RegisterExtension
-  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   /**
    * Tests to ensure enduser attributes are captured.

@@ -43,8 +43,8 @@ public abstract class AbstractJavalinTest {
 
   protected abstract String getJettyInstrumentation();
 
-  private Javalin app;
   private int port;
+  private Javalin app;
   private WebClient client;
 
   @BeforeAll
@@ -55,10 +55,8 @@ public abstract class AbstractJavalinTest {
   }
 
   @AfterAll
-  void cleanup() {
-    if (app != null) {
-      app.stop();
-    }
+  void stopJavalin() {
+    app.stop();
   }
 
   @Test
@@ -165,14 +163,12 @@ public abstract class AbstractJavalinTest {
     testing()
         .waitAndAssertMetrics(
             getJettyInstrumentation(),
-            "http.server.request.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}")))));
+            metric ->
+                metric
+                    .hasName("http.server.request.duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}"))));
   }
 }

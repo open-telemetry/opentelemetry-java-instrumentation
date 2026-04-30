@@ -17,8 +17,6 @@ import javax.servlet.http.HttpServletResponse;
  * any time.
  */
 public final class SpringMvcBuilderUtil {
-  private SpringMvcBuilderUtil() {}
-
   // allows access to the private field for the spring starter
   private static Function<
           SpringWebMvcTelemetryBuilder,
@@ -40,4 +38,6 @@ public final class SpringMvcBuilderUtil {
           builderExtractor) {
     SpringMvcBuilderUtil.builderExtractor = builderExtractor;
   }
+
+  private SpringMvcBuilderUtil() {}
 }

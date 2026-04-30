@@ -56,7 +56,7 @@ class Slf4j2Test {
         .addKeyValue("long key", 4L)
         .addKeyValue("float key", 5.0f)
         .addKeyValue("double key", 6.0)
-        .addKeyValue("event.name", "MyEventName")
+        .addKeyValue("otel.event.name", "MyEventName")
         .log();
 
     testing.waitAndAssertLogRecords(
@@ -76,6 +76,26 @@ class Slf4j2Test {
                     equalTo(longKey("long key"), 4),
                     equalTo(doubleKey("float key"), 5.0),
                     equalTo(doubleKey("double key"), 6.0)));
+  }
+
+  @Test
+  void otelEventNameKeyValue() {
+    logger
+        .atInfo()
+        .setMessage("log message 1")
+        .addKeyValue("otel.event.name", "MyEventName")
+        .addKeyValue("key1", "val1")
+        .log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("log message 1")
+                .hasEventName("MyEventName")
+                .hasTotalAttributeCount(codeAttributesLogCount() + 1)
+                .hasAttributesSatisfying(equalTo(stringKey("key1"), "val1")));
   }
 
   @Test

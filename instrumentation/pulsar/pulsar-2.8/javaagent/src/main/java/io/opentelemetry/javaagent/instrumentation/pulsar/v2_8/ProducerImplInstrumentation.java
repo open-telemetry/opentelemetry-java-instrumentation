@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -26,7 +25,7 @@ import org.apache.pulsar.client.impl.ProducerImpl;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.client.impl.SendCallback;
 
-public class ProducerImplInstrumentation implements TypeInstrumentation {
+class ProducerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -40,19 +39,18 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
             .and(isPublic())
             .and(
                 takesArgument(0, hasSuperType(named("org.apache.pulsar.client.api.PulsarClient")))),
-        ProducerImplInstrumentation.class.getName() + "$ProducerImplConstructorAdvice");
+        getClass().getName() + "$ProducerImplConstructorAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("sendAsync"))
+        named("sendAsync")
             .and(takesArgument(1, named("org.apache.pulsar.client.impl.SendCallback"))),
-        ProducerImplInstrumentation.class.getName() + "$ProducerSendAsyncMethodAdvice");
+        getClass().getName() + "$ProducerSendAsyncMethodAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ProducerImplConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void intercept(
         @Advice.This ProducerImpl<?> producer, @Advice.Argument(value = 0) PulsarClient client) {
       PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
@@ -65,7 +63,7 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerSendAsyncMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void before(
         @Advice.This ProducerImpl<?> producer,
         @Advice.Argument(value = 0) Message<?> message,

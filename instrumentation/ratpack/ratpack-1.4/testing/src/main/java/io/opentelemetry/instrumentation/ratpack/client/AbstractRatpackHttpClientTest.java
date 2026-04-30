@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.ratpack.client;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -13,6 +14,7 @@ import static java.util.Collections.emptySet;
 import io.netty.channel.ConnectTimeoutException;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -21,9 +23,9 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import ratpack.exec.Operation;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
@@ -33,6 +35,8 @@ import ratpack.http.client.ReceivedResponse;
 import ratpack.test.exec.ExecHarness;
 
 public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void> {
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected final ExecHarness exec = ExecHarness.harness();
 
@@ -46,13 +50,9 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           client = buildHttpClient();
           singleConnectionClient = buildHttpClient(spec -> spec.poolSize(1));
         });
-  }
-
-  @AfterAll
-  void cleanUpClient() {
-    client.close();
-    singleConnectionClient.close();
-    exec.close();
+    cleanup.deferAfterAll(exec);
+    cleanup.deferAfterAll(client);
+    cleanup.deferAfterAll(singleConnectionClient);
   }
 
   protected HttpClient buildHttpClient() throws Exception {
@@ -76,7 +76,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  public final void sendRequestWithCallback(
+  public void sendRequestWithCallback(
       Void request,
       String method,
       URI uri,
@@ -172,7 +172,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
     if (uri.toString().equals("https://192.0.2.1/")) {
       return new ConnectTimeoutException(
           "connection timed out"
-              + (Boolean.getBoolean("testLatestDeps") ? " after 2000 ms" : "")
+              + (!Boolean.getBoolean("ratpack14Test") && testLatestDeps() ? " after 2000 ms" : "")
               + ": /192.0.2.1:443");
     } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
       return new ConnectTimeoutException("connection timed out: localhost/127.0.0.1:61");

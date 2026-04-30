@@ -20,7 +20,7 @@ import reactor.netty.http.client.HttpClientConfig;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
 
-public final class HttpResponseReceiverInstrumenter {
+public class HttpResponseReceiverInstrumenter {
 
   // this method adds several stateful listeners that execute the instrumenter lifecycle during HTTP
   // request processing

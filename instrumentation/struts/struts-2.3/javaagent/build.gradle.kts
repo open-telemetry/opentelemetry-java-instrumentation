@@ -28,8 +28,8 @@ dependencies {
   latestDepTestLibrary("org.apache.struts:struts2-core:6.+") // see struts2-7.0 module
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

@@ -8,9 +8,6 @@ muzzle {
     module.set("jnats")
     versions.set("[2.17.2,)")
 
-    // Could not find io.nats:nats-parent:1.0-SNAPSHOT
-    skip("0.5.0", "0.5.1")
-
     assertInverse.set(true)
   }
 }
@@ -25,25 +22,6 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  }
-
-  val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("NatsExperimentalTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.capture-headers=captured-header")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("NatsExperimentalTest")
-    }
-  }
-
-  check {
-    dependsOn(testExperimental)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }

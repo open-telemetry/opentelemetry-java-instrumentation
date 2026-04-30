@@ -37,11 +37,11 @@ public abstract class AbstractStepFunctionsClientTest extends AbstractBaseAwsCli
 
   @ParameterizedTest
   @MethodSource("provideArguments")
-  public void testSendRequestWithMockedResponse(
+  void testSendRequestWithMockedResponse(
       String operation,
       List<AttributeAssertion> additionalAttributes,
       Function<AWSStepFunctions, Object> call)
-      throws Exception {
+      throws ReflectiveOperationException {
 
     AWSStepFunctionsClientBuilder clientBuilder = AWSStepFunctionsClientBuilder.standard();
 

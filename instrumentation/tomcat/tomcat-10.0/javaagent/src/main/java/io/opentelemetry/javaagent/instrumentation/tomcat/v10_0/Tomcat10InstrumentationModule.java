@@ -11,14 +11,12 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServerHandlerInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Tomcat10InstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class Tomcat10InstrumentationModule extends InstrumentationModule {
 
   public Tomcat10InstrumentationModule() {
     super("tomcat", "tomcat-10.0");
@@ -26,13 +24,12 @@ public class Tomcat10InstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // only matches tomcat 10.0+
+    // added in Servlet 5.0 (renamed from javax.servlet)
     return hasClassesNamed("jakarta.servlet.http.HttpServletRequest")
         .and(
-            // tomcat 10 has at least one of these two classes. Cache$EvictionOrder is present in
-            // 10.0.0, but is removed before 10.1.0. GenericUser is added before Cache$EvictionOrder
-            // is removed
+            // added in 10.0.11
             hasClassesNamed("org.apache.catalina.users.GenericUser")
+                // present in 10.0.0, removed in 10.0.26
                 .or(hasClassesNamed("org.apache.catalina.webresources.Cache$EvictionOrder")));
   }
 
@@ -43,10 +40,5 @@ public class Tomcat10InstrumentationModule extends InstrumentationModule
         new TomcatServerHandlerInstrumentation(
             packageName + ".Tomcat10ServerHandlerAdvice",
             packageName + ".Tomcat10AttachResponseAdvice"));
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

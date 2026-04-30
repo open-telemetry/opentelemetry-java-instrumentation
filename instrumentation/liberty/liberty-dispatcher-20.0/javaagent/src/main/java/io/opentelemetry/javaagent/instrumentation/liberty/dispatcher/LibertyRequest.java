@@ -14,14 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class LibertyRequest {
+final class LibertyRequest {
   private final HttpRequestMessage httpRequestMessage;
-  private final String serverSocketAddress;
+  @Nullable private final String serverSocketAddress;
   private final int serverSocketPort;
-  private final String clientSocketAddress;
+  @Nullable private final String clientSocketAddress;
   private final int clientSocketPort;
 
-  public LibertyRequest(
+  LibertyRequest(
       HttpRequestMessage httpRequestMessage,
       @Nullable InetAddress serverInetAddress,
       int serverSocketPort,
@@ -36,32 +36,33 @@ public class LibertyRequest {
     this.clientSocketPort = clientSocketPort;
   }
 
-  public String getMethod() {
+  String getMethod() {
     return httpRequestMessage.getMethod();
   }
 
-  public String getScheme() {
+  String getScheme() {
     return httpRequestMessage.getScheme();
   }
 
-  public String getRequestUri() {
+  String getRequestUri() {
     return httpRequestMessage.getRequestURI();
   }
 
-  public String getQueryString() {
+  String getQueryString() {
     return httpRequestMessage.getQueryString();
   }
 
-  public List<String> getAllHeaderNames() {
+  List<String> getAllHeaderNames() {
     return httpRequestMessage.getAllHeaderNames();
   }
 
-  public String getHeaderValue(String name) {
+  @Nullable
+  String getHeaderValue(String name) {
     HeaderField hf = httpRequestMessage.getHeader(name);
     return hf != null ? hf.asString() : null;
   }
 
-  public List<String> getHeaderValues(String name) {
+  List<String> getHeaderValues(String name) {
     List<HeaderField> headers = httpRequestMessage.getHeaders(name);
     if (headers.isEmpty()) {
       return emptyList();
@@ -73,23 +74,25 @@ public class LibertyRequest {
     return stringHeaders;
   }
 
-  public String getProtocol() {
+  String getProtocol() {
     return httpRequestMessage.getVersion();
   }
 
-  public String getServerSocketAddress() {
+  @Nullable
+  String getServerSocketAddress() {
     return serverSocketAddress;
   }
 
-  public int getServerSocketPort() {
+  int getServerSocketPort() {
     return serverSocketPort;
   }
 
-  public String getClientSocketAddress() {
+  @Nullable
+  String getClientSocketAddress() {
     return clientSocketAddress;
   }
 
-  public int getClientSocketPort() {
+  int getClientSocketPort() {
     return clientSocketPort;
   }
 }

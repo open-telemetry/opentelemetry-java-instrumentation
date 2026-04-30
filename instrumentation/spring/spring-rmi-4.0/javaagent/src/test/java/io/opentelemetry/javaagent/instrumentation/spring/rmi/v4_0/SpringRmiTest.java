@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -31,7 +32,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import javax.ejb.EJBException;
 import javax.ejb.embeddable.EJBContainer;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -53,6 +53,8 @@ class SpringRmiTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static ConfigurableApplicationContext serverAppContext;
   private static ConfigurableApplicationContext clientAppContext;
@@ -96,6 +98,7 @@ class SpringRmiTest {
     map.put(EJBContainer.APP_NAME, "test");
     map.put(EJBContainer.MODULES, new File("build/classes/java/test"));
     ejbContainer = EJBContainer.createEJBContainer(map);
+    cleanup.deferAfterAll(ejbContainer);
 
     Map<String, Object> props = new HashMap<>();
     props.put("spring.jmx.enabled", false);
@@ -104,20 +107,15 @@ class SpringRmiTest {
     SpringApplication serverApp = new SpringApplication(ServerConfig.class);
     serverApp.setDefaultProperties(props);
     serverAppContext = serverApp.run();
+    cleanup.deferAfterAll(serverAppContext);
 
     SpringApplication clientApp = new SpringApplication(ClientConfig.class);
     clientApp.setDefaultProperties(props);
     clientAppContext = clientApp.run();
+    cleanup.deferAfterAll(clientAppContext);
 
     xmlAppContext = new ClassPathXmlApplicationContext("spring-rmi.xml");
-  }
-
-  @AfterAll
-  static void afterAll() {
-    serverAppContext.close();
-    clientAppContext.close();
-    xmlAppContext.close();
-    ejbContainer.close();
+    cleanup.deferAfterAll(xmlAppContext);
   }
 
   @SuppressWarnings("ImmutableEnumChecker")
@@ -161,7 +159,7 @@ class SpringRmiTest {
                   span.hasName("springrmi.app.SpringRmiGreeter/hello")
                       .hasKind(SpanKind.CLIENT)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfying(
+                      .hasAttributesSatisfyingExactly(
                           equalTo(RPC_SYSTEM, "spring_rmi"),
                           equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
                           equalTo(RPC_METHOD, "hello")));
@@ -171,7 +169,7 @@ class SpringRmiTest {
                     span.hasName(testSource.remoteClassName + "/hello")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, testSource.serverSystem),
                             equalTo(RPC_SERVICE, testSource.remoteClassName),
                             equalTo(RPC_METHOD, "hello")));
@@ -200,7 +198,7 @@ class SpringRmiTest {
                           event ->
                               event
                                   .hasName("exception")
-                                  .hasAttributesSatisfying(
+                                  .hasAttributesSatisfyingExactly(
                                       equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
                                       equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                       satisfies(
@@ -216,13 +214,13 @@ class SpringRmiTest {
                           event ->
                               event
                                   .hasName("exception")
-                                  .hasAttributesSatisfying(
+                                  .hasAttributesSatisfyingExactly(
                                       equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
                                       equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                       satisfies(
                                           EXCEPTION_STACKTRACE,
                                           val -> val.isInstanceOf(String.class))))
-                      .hasAttributesSatisfying(
+                      .hasAttributesSatisfyingExactly(
                           equalTo(RPC_SYSTEM, "spring_rmi"),
                           equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
                           equalTo(RPC_METHOD, "exceptional")));
@@ -237,14 +235,14 @@ class SpringRmiTest {
                             event ->
                                 event
                                     .hasName("exception")
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(
                                             EXCEPTION_TYPE, error.getClass().getCanonicalName()),
                                         equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                         satisfies(
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, testSource.serverSystem),
                             equalTo(RPC_SERVICE, testSource.remoteClassName),
                             equalTo(RPC_METHOD, "exceptional")));

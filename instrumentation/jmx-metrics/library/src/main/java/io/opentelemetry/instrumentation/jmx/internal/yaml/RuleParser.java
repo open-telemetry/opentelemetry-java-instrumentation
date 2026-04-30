@@ -172,15 +172,14 @@ public class RuleParser {
   public void addMetricDefsTo(MetricConfiguration conf, InputStream is) {
     try {
       JmxConfig config = loadConfig(is);
-      logger.log(FINE, "found {1} metric rules", config.getRules().size());
+      logger.log(FINE, "Found {0} metric rules", config.getRules().size());
       config.addMetricDefsTo(conf);
-    } catch (Exception exception) {
+    } catch (Exception e) {
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
       String msg =
-          String.format(
-              "Failed to parse YAML rules : %s %s", rootCause(exception), exception.getMessage());
-      throw new IllegalArgumentException(msg, exception);
+          String.format("Failed to parse YAML rules : %s %s", rootCause(e), e.getMessage());
+      throw new IllegalArgumentException(msg, e);
     }
   }
 

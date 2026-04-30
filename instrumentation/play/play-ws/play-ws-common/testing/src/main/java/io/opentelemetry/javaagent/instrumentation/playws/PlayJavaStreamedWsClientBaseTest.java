@@ -6,12 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.playws;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import play.libs.ws.StandaloneWSClient;
 import play.libs.ws.StandaloneWSRequest;
@@ -26,14 +24,10 @@ public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stand
   @BeforeAll
   static void setup() {
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer);
+    cleanup.deferAfterAll(wsClient);
     wsClientWithReadTimeout =
         new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer);
-  }
-
-  @AfterAll
-  static void cleanup() throws IOException {
-    wsClient.close();
-    wsClientWithReadTimeout.close();
+    cleanup.deferAfterAll(wsClientWithReadTimeout);
   }
 
   @Override
@@ -62,7 +56,8 @@ public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stand
         .whenComplete(
             (response, throwable) -> {
               if (throwable != null) {
-                requestResult.complete(throwable.getCause());
+                requestResult.complete(
+                    throwable.getCause() != null ? throwable.getCause() : throwable);
               } else {
                 requestResult.complete(response.getStatus());
               }
@@ -72,7 +67,7 @@ public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stand
   private static CompletionStage<StandaloneWSResponse> internalSendRequest(
       StandaloneWSRequest request) {
     CompletionStage<? extends StandaloneWSResponse> stream = request.stream();
-    // The status can be ready before the body so explicitly call wait for body to be ready
+    // The status can be ready before the body, so explicitly wait for the body to be ready.
     return stream
         .thenCompose(
             response -> response.getBodyAsSource().runFold("", (acc, out) -> "", materializer))

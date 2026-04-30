@@ -10,4 +10,4 @@ import org.springframework.jms.annotation.EnableJms;
 
 @ComponentScan
 @EnableJms
-public class AnnotatedListenerConfig extends AbstractConfig {}
+class AnnotatedListenerConfig extends AbstractConfig {}

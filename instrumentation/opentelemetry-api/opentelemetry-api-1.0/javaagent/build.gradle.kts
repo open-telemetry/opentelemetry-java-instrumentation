@@ -7,8 +7,6 @@ muzzle {
     group.set("io.opentelemetry")
     module.set("opentelemetry-api")
     versions.set("[0.17.0,)")
-    skip("0.13.0") // has a bad dependency on non-alpha api-metric 0.13.0
-    skip("0.9.0") // has no pom file in maven central
     assertInverse.set(true)
   }
 }

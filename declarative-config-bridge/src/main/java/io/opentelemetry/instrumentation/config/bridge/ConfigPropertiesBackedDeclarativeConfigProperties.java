@@ -50,24 +50,16 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "general.sanitization.url.sensitive_query_parameters/development",
         "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
+    SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     // moving common http, database, messaging, and gen_ai configs under common
     SPECIAL_MAPPINGS.put(
         "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
-    SPECIAL_MAPPINGS.put(
-        "java.common.http.client.redact_query_parameters/development",
-        "otel.instrumentation.http.client.experimental.redact-query-parameters");
     SPECIAL_MAPPINGS.put(
         "java.common.http.client.emit_experimental_telemetry/development",
         "otel.instrumentation.http.client.emit-experimental-telemetry");
     SPECIAL_MAPPINGS.put(
         "java.common.http.server.emit_experimental_telemetry/development",
         "otel.instrumentation.http.server.emit-experimental-telemetry");
-    SPECIAL_MAPPINGS.put(
-        "java.common.database.statement_sanitizer.enabled",
-        "otel.instrumentation.common.db-statement-sanitizer.enabled");
-    SPECIAL_MAPPINGS.put(
-        "java.common.database.sqlcommenter/development.enabled",
-        "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
     SPECIAL_MAPPINGS.put(
         "java.common.messaging.receive_telemetry/development.enabled",
         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
@@ -91,6 +83,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     // jmx properties don't have an "instrumentation" segment
     SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
+    // otel.jmx.discovery.delay also has a dedicated branch in getLong() that reads it as a
+    // Duration and falls back to otel.metric.export.interval; this mapping is here only to keep
+    // it consistent with the rest of the jmx.* properties.
+    SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
   }
 

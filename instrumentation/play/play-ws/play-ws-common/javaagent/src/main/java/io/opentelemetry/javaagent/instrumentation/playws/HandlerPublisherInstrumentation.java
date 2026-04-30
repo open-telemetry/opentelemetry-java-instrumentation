@@ -26,15 +26,14 @@ public class HandlerPublisherInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("subscribe"),
-        HandlerPublisherInstrumentation.class.getName() + "$WrapSubscriberAdvice");
+        named("subscribe"), getClass().getName() + "$WrapSubscriberAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class WrapSubscriberAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Subscriber<?> enter(@Advice.Argument(0) Subscriber<?> subscriber) {
       return new SubscriberWrapper<>(subscriber, Java8BytecodeBridge.currentContext());
     }

@@ -106,4 +106,3 @@ the javaagent will apply shading dynamically in the runtime, when the extension 
 ## Class loader hierarchy graph
 
 ![Agent class loader hierarchy](class-loader-hierarchy.svg)
-[Image source](https://docs.google.com/drawings/d/1DOftemu_96_0RggzOV3hFXejqeZWTmPBgbkaUhHw--g)

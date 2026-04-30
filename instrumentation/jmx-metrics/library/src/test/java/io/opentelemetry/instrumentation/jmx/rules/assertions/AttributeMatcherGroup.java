@@ -11,14 +11,13 @@ import static java.util.stream.Collectors.toMap;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Predicate;
-import javax.annotation.Nullable;
 
 /** Group of attribute matchers */
 public class AttributeMatcherGroup {
 
   // stored as a Map for easy lookup by name
   private final Map<String, AttributeMatcher> matchers;
-  @Nullable private Predicate<Map<String, String>> applicabilityPredicate;
+  private Predicate<Map<String, String>> applicabilityPredicate;
 
   /**
    * Constructor for a set of attribute matchers

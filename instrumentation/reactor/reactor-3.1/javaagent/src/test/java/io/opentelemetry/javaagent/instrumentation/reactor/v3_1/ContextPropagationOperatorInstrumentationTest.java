@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.lang.invoke.MethodType.methodType;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,12 +40,12 @@ class ContextPropagationOperatorInstrumentationTest {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
       return lookup.findVirtual(type, "contextWrite", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     try {
       return lookup.findVirtual(type, "subscriberContext", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     return null;
@@ -72,7 +73,7 @@ class ContextPropagationOperatorInstrumentationTest {
                     span.hasName("parent")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(attributeEntry("foo", "bar"))));
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("foo"), "bar"))));
   }
 
   @Test
@@ -97,7 +98,7 @@ class ContextPropagationOperatorInstrumentationTest {
                     span.hasName("parent")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(attributeEntry("foo", "bar"))));
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("foo"), "bar"))));
   }
 
   @Test
@@ -175,8 +176,8 @@ class ContextPropagationOperatorInstrumentationTest {
                     (Mono<String>)
                         MONO_CONTEXT_WRITE_METHOD.invoke(
                             interim, new StoreOpenTelemetryContext(span));
-              } catch (Throwable e) {
-                throw new RuntimeException(e);
+              } catch (Throwable t) {
+                throw new RuntimeException(t);
               }
               return interim.doFinally(unused -> span.end());
             });

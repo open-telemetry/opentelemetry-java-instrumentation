@@ -22,7 +22,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:jms:jms-common:javaagent"))
+  implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
 
   library("jakarta.jms:jakarta.jms-api:3.0.0")
 
@@ -36,9 +36,9 @@ otelJava {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {

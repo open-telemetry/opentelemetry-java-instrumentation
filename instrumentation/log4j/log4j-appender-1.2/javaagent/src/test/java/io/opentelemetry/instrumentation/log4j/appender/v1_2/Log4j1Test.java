@@ -68,7 +68,7 @@ class Log4j1Test {
   }
 
   @Test
-  public void testCodeAttributes() {
+  void testCodeAttributes() {
     logger.info("this is test message");
     List<AttributeAssertion> assertions =
         SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java");
@@ -89,7 +89,7 @@ class Log4j1Test {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean logException, boolean withParent) throws InterruptedException {
+  void test(boolean logException, boolean withParent) throws InterruptedException {
     test(Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing.clearData();
     test(Logger::info, Logger::info, logException, withParent, "abc", Severity.INFO, "INFO");
@@ -150,7 +150,7 @@ class Log4j1Test {
                       equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                       equalTo(EXCEPTION_MESSAGE, "hello"),
                       satisfies(
-                          EXCEPTION_STACKTRACE, v -> v.contains(Log4j1Test.class.getName()))));
+                          EXCEPTION_STACKTRACE, val -> val.contains(Log4j1Test.class.getName()))));
             }
             attributeAsserts.addAll(
                 SemconvCodeStabilityUtil.codeFunctionAssertions(
@@ -173,13 +173,13 @@ class Log4j1Test {
   void testMdc() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
-    MDC.put("event.name", "MyEventName");
+    MDC.put("otel.event.name", "MyEventName");
     try {
       logger.info("xyz");
     } finally {
       MDC.remove("key1");
       MDC.remove("key2");
-      MDC.remove("event.name");
+      MDC.remove("otel.event.name");
     }
 
     List<AttributeAssertion> assertions =

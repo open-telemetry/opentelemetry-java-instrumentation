@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
@@ -31,8 +32,10 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
@@ -47,7 +50,7 @@ import java.net.URI;
 
 public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
 
-  static final LoggingHandler LOGGING_HANDLER =
+  private static final LoggingHandler loggingHandler =
       new LoggingHandler(AbstractNetty41ServerTest.class, LogLevel.DEBUG);
 
   protected abstract void configurePipeline(ChannelPipeline channelPipeline);
@@ -56,6 +59,7 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
   protected void configure(HttpServerTestOptions options) {
     options.setTestException(false);
     options.setHttpAttributes(unused -> DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE);
+    options.setTestHttpBodyPipelining(true);
   }
 
   @Override
@@ -65,14 +69,15 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
     ServerBootstrap bootstrap =
         new ServerBootstrap()
             .group(eventLoopGroup)
-            .handler(LOGGING_HANDLER)
+            .handler(loggingHandler)
             .childHandler(
                 new ChannelInitializer<SocketChannel>() {
                   @Override
                   protected void initChannel(SocketChannel socketChannel) {
                     ChannelPipeline pipeline = socketChannel.pipeline();
-                    pipeline.addFirst("logger", LOGGING_HANDLER);
+                    pipeline.addFirst("logger", loggingHandler);
                     pipeline.addLast(new HttpServerCodec());
+                    pipeline.addLast(new HttpObjectAggregator(65536));
                     pipeline.addLast(new HttpHandler());
                     configurePipeline(pipeline);
                   }
@@ -82,6 +87,7 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
       bootstrap.bind(port).sync();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted while binding Netty server", e);
     }
 
     return eventLoopGroup;
@@ -117,6 +123,13 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
         endpoint.collectSpanAttributes(
             name ->
                 new QueryStringDecoder(uri).parameters().get(name).stream().findFirst().orElse(""));
+        response =
+            new DefaultFullHttpResponse(
+                HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
+      } else if (INDEXED_CHILD_FROM_REQUEST_BODY.equals(endpoint)) {
+        String body = ((FullHttpRequest) request).content().toString(CharsetUtil.UTF_8);
+        content = Unpooled.copiedBuffer(body, CharsetUtil.UTF_8);
+        bodyConsumer(endpoint, body);
         response =
             new DefaultFullHttpResponse(
                 HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);

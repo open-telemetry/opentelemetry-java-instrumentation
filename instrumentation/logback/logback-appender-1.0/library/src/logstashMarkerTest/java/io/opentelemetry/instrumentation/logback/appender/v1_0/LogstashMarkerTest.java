@@ -48,7 +48,7 @@ class LogstashMarkerTest {
         .atInfo()
         .setMessage("log message 1")
         .addMarker(Markers.append("field1", "value1"))
-        .addMarker(Markers.append("event.name", "MyEventName"))
+        .addMarker(Markers.append("otel.event.name", "MyEventName"))
         .addMarker(Markers.appendEntries(entries))
         .log();
 
@@ -56,9 +56,8 @@ class LogstashMarkerTest {
         logRecord ->
             logRecord
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(3) // 3 markers (event.name handled separately)
                 .hasEventName("MyEventName")
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
                     equalTo(stringKey("field1"), "value1"),
                     equalTo(longKey("field2"), 2L),
                     equalTo(stringKey("field3"), "value3")));
@@ -93,9 +92,7 @@ class LogstashMarkerTest {
         logRecord ->
             logRecord
                 .hasBody("log message 1")
-                // 14 fields (including map keys)
-                .hasTotalAttributeCount(14)
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
                     equalTo(longKey("field1"), 1L),
                     equalTo(doubleKey("field2"), 2.0),
                     equalTo(stringKey("field3"), "text-1"),
@@ -130,5 +127,21 @@ class LogstashMarkerTest {
 
     testing.waitAndAssertLogRecords(
         logRecord -> logRecord.hasBody("log message 1").hasTotalAttributeCount(0));
+  }
+
+  @Test
+  void otelEventNameInMapEntriesMarker() {
+    Map<String, Object> entries = new HashMap<>();
+    entries.put("otel.event.name", "MyEventName");
+    entries.put("key1", "val1");
+
+    logger.atInfo().setMessage("log message 1").addMarker(Markers.appendEntries(entries)).log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("log message 1")
+                .hasEventName("MyEventName")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
   }
 }

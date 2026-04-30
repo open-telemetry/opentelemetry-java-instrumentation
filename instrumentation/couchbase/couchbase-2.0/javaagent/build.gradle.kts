@@ -19,7 +19,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:couchbase:couchbase-2-common:javaagent"))
+  implementation(project(":instrumentation:couchbase:couchbase-common-2.0:javaagent"))
   implementation(project(":instrumentation:rxjava:rxjava-1.0:library"))
 
   library("com.couchbase.client:java-client:2.0.0")
@@ -43,7 +43,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -58,7 +58,7 @@ tasks {
     dependsOn(testStableSemconv)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
     extends ServletMappingResolverFactory {
 
+  @Nullable
   protected abstract FILTERREGISTRATION getFilterRegistration();
 
   protected abstract Collection<String> getUrlPatternMappings(
@@ -27,6 +28,7 @@ public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
   protected abstract Collection<String> getServletNameMappings(
       FILTERREGISTRATION filterRegistration);
 
+  @Nullable
   protected abstract Collection<String> getServletMappings(String servletName);
 
   @Override
@@ -57,7 +59,7 @@ public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
 
     List<String> mappingsList = new ArrayList<>(mappings);
     // sort the longest mapping first
-    mappingsList.sort((s1, s2) -> s2.length() - s1.length());
+    mappingsList.sort((s1, s2) -> Integer.compare(s2.length(), s1.length()));
 
     return new Mappings(mappingsList);
   }

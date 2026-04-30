@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.mapping;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5MappingTest;
 import jakarta.servlet.Servlet;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.UUID;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
@@ -28,7 +29,7 @@ class TomcatServlet5MappingTest extends AbstractServlet5MappingTest<Tomcat, Cont
     tomcatServer.getConnector().setEnableLookups(true); // get localhost instead of 127.0.0.1
 
     File applicationDir = new File(baseDir, "/webapps/ROOT");
-    applicationDir.mkdirs();
+    Files.createDirectories(applicationDir.toPath());
 
     Context servletContext =
         tomcatServer.addWebapp(getContextPath(), applicationDir.getAbsolutePath());

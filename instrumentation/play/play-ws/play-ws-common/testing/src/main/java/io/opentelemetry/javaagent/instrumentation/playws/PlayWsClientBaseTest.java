@@ -14,17 +14,16 @@ import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import akka.stream.ActorMaterializerSettings;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import play.shaded.ahc.io.netty.resolver.InetNameResolver;
@@ -42,6 +41,8 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static ActorSystem system;
   protected static AsyncHttpClient asyncHttpClient;
   protected static AsyncHttpClient asyncHttpClientWithReadTimeout;
@@ -51,23 +52,19 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
   static void setupHttpClient() {
     String name = "play-ws";
     system = ActorSystem.create(name);
+    cleanup.deferAfterAll(() -> system.terminate());
     materializer = ActorMaterializer.create(ActorMaterializerSettings.create(system), system, name);
 
-    // Replace dns name resolver with custom implementation that returns only once address for each
-    // host. This is needed for "connection error dropped request" because in case of connection
+    // Replace the DNS name resolver with a custom implementation that returns one address per host.
+    // This is needed for "connection error dropped request" because in case of connection
     // failure ahc will try the next address which isn't necessary for this test.
     RequestBuilderBase.DEFAULT_NAME_RESOLVER =
         new CustomNameResolver(ImmediateEventExecutor.INSTANCE);
 
     asyncHttpClient = createClient(false);
+    cleanup.deferAfterAll(asyncHttpClient);
     asyncHttpClientWithReadTimeout = createClient(true);
-  }
-
-  @AfterAll
-  static void cleanupHttpClient() throws IOException {
-    asyncHttpClient.close();
-    asyncHttpClientWithReadTimeout.close();
-    system.terminate();
+    cleanup.deferAfterAll(asyncHttpClientWithReadTimeout);
   }
 
   @Override
@@ -117,8 +114,8 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
     protected void doResolve(String inetHost, Promise<InetAddress> promise) throws Exception {
       try {
         promise.setSuccess(InetAddress.getByName(inetHost));
-      } catch (UnknownHostException exception) {
-        promise.setFailure(exception);
+      } catch (UnknownHostException e) {
+        promise.setFailure(e);
       }
     }
 
@@ -128,8 +125,8 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
       try {
         // default implementation calls InetAddress.getAllByName
         promise.setSuccess(singletonList(InetAddress.getByName(inetHost)));
-      } catch (UnknownHostException exception) {
-        promise.setFailure(exception);
+      } catch (UnknownHostException e) {
+        promise.setFailure(e);
       }
     }
   }

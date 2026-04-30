@@ -29,26 +29,26 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
-
-  private GenericContainer<?> rabbitMqContainer;
-  protected ConfigurableApplicationContext producerContext;
-  private ConfigurableApplicationContext consumerContext;
+class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
 
   private final Class<?> additionalContextClass;
 
-  public RabbitExtension(Class<?> additionalContextClass) {
+  private GenericContainer<?> rabbitMqContainer;
+  private ConfigurableApplicationContext producerContext;
+  private ConfigurableApplicationContext consumerContext;
+
+  RabbitExtension(Class<?> additionalContextClass) {
     this.additionalContextClass = additionalContextClass;
   }
 
-  public <T> T getBean(String name, Class<T> requiredType) {
+  <T> T getBean(String name, Class<T> requiredType) {
     return producerContext.getBean(name, requiredType);
   }
 
   @Override
   public void beforeEach(ExtensionContext context) {
     rabbitMqContainer =
-        new GenericContainer<>("rabbitmq:latest")
+        new GenericContainer<>("rabbitmq:4.2")
             .withExposedPorts(5672)
             .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
             .withStartupTimeout(Duration.ofMinutes(2));
@@ -106,7 +106,7 @@ public class RabbitExtension implements BeforeEachCallback, AfterEachCallback {
   @EnableAutoConfiguration
   @EnableBinding(Source.class)
   static class ProducerConfig {
-    @Autowired Source source;
+    @Autowired private Source source;
 
     @Bean
     Runnable producer() {

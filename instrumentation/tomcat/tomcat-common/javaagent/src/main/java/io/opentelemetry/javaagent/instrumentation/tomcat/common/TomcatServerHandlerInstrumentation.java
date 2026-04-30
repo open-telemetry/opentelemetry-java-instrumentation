@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -34,16 +33,14 @@ public class TomcatServerHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("service"))
             .and(takesArgument(0, named("org.apache.coyote.Request")))
             .and(takesArgument(1, named("org.apache.coyote.Response"))),
         handlerAdviceClassName);
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("postParseRequest"))
+        named("postParseRequest")
             .and(takesArgument(0, named("org.apache.coyote.Request")))
             .and(takesArgument(2, named("org.apache.coyote.Response")))
             .and(returns(boolean.class)),

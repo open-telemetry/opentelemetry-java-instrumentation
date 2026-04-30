@@ -268,8 +268,8 @@ class OpenTelemetryDriverTest {
   @Test
   void verifyGetPropertyInfoWithNullUrl() {
     assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(null, null))
-        .describedAs("url is required")
-        .isInstanceOf(IllegalArgumentException.class);
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("url is required");
   }
 
   @DisplayName("verify get property info with empty url")
@@ -283,15 +283,6 @@ class OpenTelemetryDriverTest {
   @DisplayName("verify get property info with unknown driver url")
   @Test
   void verifyGetPropertyInfoWithUnknownDriverUrl() {
-    String unknownUrl = "jdbc:unknown";
-    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Unable to find a driver that accepts url: " + unknownUrl);
-  }
-
-  @DisplayName("verify get property info with test driver url")
-  @Test
-  void verifyGetPropertyInfoWithUnknowDriverUrl() {
     String unknownUrl = "jdbc:unknown";
     assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(unknownUrl, null))
         .isInstanceOf(IllegalStateException.class)

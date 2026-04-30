@@ -24,6 +24,6 @@ public final class NettyClientInstrumenterBuilderFactory {
         instrumentationName,
         openTelemetry,
         new NettyHttpClientAttributesGetter(),
-        HttpRequestHeadersSetter.INSTANCE);
+        new HttpRequestHeadersSetter());
   }
 }

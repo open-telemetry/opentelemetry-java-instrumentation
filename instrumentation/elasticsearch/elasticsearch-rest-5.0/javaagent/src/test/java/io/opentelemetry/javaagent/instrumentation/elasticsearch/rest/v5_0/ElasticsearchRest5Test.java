@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -18,10 +19,12 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
@@ -31,7 +34,6 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -43,6 +45,8 @@ class ElasticsearchRest5Test {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   static ElasticsearchContainer elasticsearch;
 
   static HttpHost httpHost;
@@ -53,7 +57,7 @@ class ElasticsearchRest5Test {
 
   @BeforeAll
   static void setup() {
-    if (!Boolean.getBoolean("testLatestDeps")) {
+    if (!testLatestDeps()) {
       elasticsearch =
           new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:5.6.16")
               .withEnv("xpack.ml.enabled", "false")
@@ -67,6 +71,7 @@ class ElasticsearchRest5Test {
         "ES_JAVA_OPTS",
         "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     elasticsearch.start();
+    cleanup.deferAfterAll(elasticsearch::stop);
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
     client =
@@ -78,21 +83,16 @@ class ElasticsearchRest5Test {
                         .setConnectTimeout(Integer.MAX_VALUE)
                         .setSocketTimeout(Integer.MAX_VALUE))
             .build();
+    cleanup.deferAfterAll(client);
 
     objectMapper = new ObjectMapper();
   }
 
-  @AfterAll
-  static void cleanUp() {
-    elasticsearch.stop();
-  }
-
   @Test
-  @SuppressWarnings("rawtypes")
   void elasticsearchStatus() throws IOException {
     Response response = client.performRequest("GET", "_cluster/health");
 
-    Map result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
+    Map<?, ?> result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
 
     // usually this test reports green status, but sometimes it is yellow
     assertThat(result.get("status")).isIn("green", "yellow");
@@ -132,7 +132,6 @@ class ElasticsearchRest5Test {
   }
 
   @Test
-  @SuppressWarnings("rawtypes")
   void elasticsearchStatusAsync() throws Exception {
     Response[] requestResponse = {null};
     Exception[] exception = {null};
@@ -162,11 +161,12 @@ class ElasticsearchRest5Test {
 
     testing.runWithSpan(
         "parent", () -> client.performRequestAsync("GET", "_cluster/health", responseListener));
-    countDownLatch.await();
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
     if (exception[0] != null) {
       throw exception[0];
     }
-    Map result = objectMapper.readValue(requestResponse[0].getEntity().getContent(), Map.class);
+    Map<?, ?> result =
+        objectMapper.readValue(requestResponse[0].getEntity().getContent(), Map.class);
 
     // usually this test reports green status, but sometimes it is yellow
     assertThat(result.get("status")).isIn("green", "yellow");

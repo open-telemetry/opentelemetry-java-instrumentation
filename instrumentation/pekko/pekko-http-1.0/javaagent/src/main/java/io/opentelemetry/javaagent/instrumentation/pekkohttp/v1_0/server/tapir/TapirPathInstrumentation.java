@@ -19,7 +19,7 @@ import scala.Function1;
 import scala.concurrent.Future;
 import sttp.tapir.server.ServerEndpoint;
 
-public class TapirPathInstrumentation implements TypeInstrumentation {
+class TapirPathInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,13 +30,13 @@ public class TapirPathInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("toRoute").and(takesArgument(0, named("sttp.tapir.server.ServerEndpoint"))),
-        this.getClass().getName() + "$ApplyAdvice");
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
     @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Object onExit(
         @Advice.Argument(0) ServerEndpoint<?, ?> endpoint,
         @Advice.Return Function1<RequestContext, Future<RouteResult>> route) {

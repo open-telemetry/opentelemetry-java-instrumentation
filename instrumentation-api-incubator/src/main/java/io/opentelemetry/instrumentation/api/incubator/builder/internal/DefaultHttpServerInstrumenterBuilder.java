@@ -65,20 +65,6 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   private boolean emitExperimentalHttpServerTelemetry = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
-  private DefaultHttpServerInstrumenterBuilder(
-      String instrumentationName,
-      OpenTelemetry openTelemetry,
-      HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      @Nullable TextMapGetter<REQUEST> headerGetter) {
-    this.instrumentationName = requireNonNull(instrumentationName, "instrumentationName");
-    this.openTelemetry = requireNonNull(openTelemetry, "openTelemetry");
-    this.attributesGetter = requireNonNull(attributesGetter, "attributesGetter");
-    httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(attributesGetter);
-    httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
-    httpServerRouteBuilder = HttpServerRoute.builder(attributesGetter);
-    this.headerGetter = headerGetter;
-  }
-
   public static <REQUEST, RESPONSE> DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> create(
       String instrumentationName,
       OpenTelemetry openTelemetry,
@@ -97,6 +83,20 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
         openTelemetry,
         attributesGetter,
         requireNonNull(headerGetter, "headerGetter"));
+  }
+
+  private DefaultHttpServerInstrumenterBuilder(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      @Nullable TextMapGetter<REQUEST> headerGetter) {
+    this.instrumentationName = requireNonNull(instrumentationName, "instrumentationName");
+    this.openTelemetry = requireNonNull(openTelemetry, "openTelemetry");
+    this.attributesGetter = requireNonNull(attributesGetter, "attributesGetter");
+    httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(attributesGetter);
+    httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
+    httpServerRouteBuilder = HttpServerRoute.builder(attributesGetter);
+    this.headerGetter = headerGetter;
   }
 
   /**

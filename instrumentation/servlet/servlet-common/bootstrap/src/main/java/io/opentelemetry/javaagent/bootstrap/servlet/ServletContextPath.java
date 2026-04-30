@@ -15,10 +15,10 @@ import javax.annotation.Nullable;
  * that routing framework instrumentation that updates the span name with a more specific route can
  * prepend the servlet context path in front of that route.
  *
- * <p>This needs to be in the instrumentation-api module, instead of injected as a helper class into
- * the different modules that need it, in order to make sure that there is only a single instance of
- * the context key, since otherwise instrumentation across different class loaders would use
- * different context keys and not be able to share the servlet context path.
+ * <p>This needs to be in the bootstrap module, instead of injected as a helper class into the
+ * different modules that need it, in order to make sure that there is only a single instance of the
+ * context key, since otherwise instrumentation across different class loaders would use different
+ * context keys and not be able to share the servlet context path.
  */
 public final class ServletContextPath {
 
@@ -35,7 +35,7 @@ public final class ServletContextPath {
     }
     String contextPath = contextPathExtractor.apply(request);
     if (contextPath == null) {
-      // context path isn't know yet
+      // context path isn't known yet
       return context;
     }
     if (contextPath.isEmpty() || contextPath.equals("/")) {

@@ -96,7 +96,7 @@ class HttpServletResponseTest {
   }
 
   @Test
-  void testSendWithException() throws ServletException, IOException {
+  void testSendWithException() throws Exception {
     RuntimeException ex = new RuntimeException("some error");
     TestResponse response =
         new TestResponse() {
@@ -133,7 +133,7 @@ class HttpServletResponseTest {
 
   /** Tests deprecated methods */
   @SuppressWarnings("deprecation")
-  public static class TestResponse implements HttpServletResponse {
+  static class TestResponse implements HttpServletResponse {
     @Override
     public void addCookie(Cookie cookie) {}
 

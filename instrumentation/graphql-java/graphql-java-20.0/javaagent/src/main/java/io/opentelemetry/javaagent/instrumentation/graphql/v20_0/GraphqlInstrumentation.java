@@ -5,17 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.graphql.v20_0;
 
-import static io.opentelemetry.javaagent.instrumentation.graphql.v20_0.GraphqlSingletons.addInstrumentation;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -38,8 +35,7 @@ class GraphqlInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), this.getClass().getName() + "$AddInstrumentationAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$InitAdvice");
 
     transformer.applyTransformer(
         (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
@@ -107,12 +103,13 @@ class GraphqlInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class AddInstrumentationAdvice {
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static Instrumentation onExit(@Advice.Return Instrumentation instrumentation) {
-      // this advice is here only to get GraphqlSingletons injected and checked by muzzle
-      return addInstrumentation(instrumentation);
+  public static class InitAdvice {
+    @Advice.OnMethodEnter(inline = false)
+    @SuppressWarnings("ReturnValueIgnored")
+    public static void init() {
+      // the sole purpose of this advice is to ensure that GraphqlSingletons is recognized as
+      // helper class and injected into the application class loader
+      GraphqlSingletons.class.getName();
     }
   }
 }

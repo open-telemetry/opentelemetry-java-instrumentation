@@ -19,7 +19,6 @@ import static java.util.logging.Level.WARNING;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
@@ -28,9 +27,9 @@ import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
-public final class JavaUtilLoggingHelper {
+public class JavaUtilLoggingHelper {
 
-  private static final Formatter FORMATTER = new AccessibleFormatter();
+  private static final Formatter formatter = new AccessibleFormatter();
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
@@ -69,7 +68,7 @@ public final class JavaUtilLoggingHelper {
    */
   private static void mapLogRecord(LogRecordBuilder builder, LogRecord logRecord) {
     // message
-    String message = FORMATTER.formatMessage(logRecord);
+    String message = formatter.formatMessage(logRecord);
     if (message != null) {
       builder.setBody(message);
     }
@@ -83,7 +82,7 @@ public final class JavaUtilLoggingHelper {
     Level level = logRecord.getLevel();
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
-      builder.setSeverityText(logRecord.getLevel().getName());
+      builder.setSeverityText(level.getName());
     }
 
     AttributesBuilder attributes = Attributes.builder();
@@ -91,8 +90,7 @@ public final class JavaUtilLoggingHelper {
     // throwable
     Throwable throwable = logRecord.getThrown();
     if (throwable != null) {
-      // this cast is safe within java agent instrumentation
-      ((ExtendedLogRecordBuilder) builder).setException(throwable);
+      builder.setException(throwable);
     }
 
     if (captureExperimentalAttributes) {

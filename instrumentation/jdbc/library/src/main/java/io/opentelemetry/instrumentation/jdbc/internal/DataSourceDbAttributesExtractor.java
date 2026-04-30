@@ -19,8 +19,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 
-enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, DbInfo> {
-  INSTANCE;
+final class DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, DbInfo> {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
@@ -44,18 +43,14 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
       return;
     }
     if (emitStableDatabaseSemconv()) {
-      attributes.put(DB_NAMESPACE, getName(dbInfo));
-      attributes.put(DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getSystem()));
+      attributes.put(DB_NAMESPACE, dbInfo.getDbNamespace());
+      attributes.put(DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getDbSystemName()));
     }
     if (emitOldDatabaseSemconv()) {
-      attributes.put(DB_USER, dbInfo.getUser());
-      attributes.put(DB_NAME, getName(dbInfo));
-      attributes.put(DB_CONNECTION_STRING, dbInfo.getShortUrl());
-      attributes.put(DB_SYSTEM, dbInfo.getSystem());
+      attributes.put(DB_USER, dbInfo.getDbUser());
+      attributes.put(DB_NAME, dbInfo.getDbName());
+      attributes.put(DB_CONNECTION_STRING, dbInfo.getDbConnectionString());
+      attributes.put(DB_SYSTEM, dbInfo.getDbSystem());
     }
-  }
-
-  private static String getName(DbInfo dbInfo) {
-    return dbInfo.getName();
   }
 }

@@ -5,36 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
+import javax.annotation.Nullable;
 import org.apache.shardingsphere.elasticjob.api.ShardingContext;
 
-public final class ElasticJobProcessRequest {
+public class ElasticJobProcessRequest {
   private final String jobName;
   private final String taskId;
   private final int shardingItemIndex;
   private final int shardingTotalCount;
-  private final String shardingItemParameter;
+  @Nullable private final String shardingItemParameter;
   private final ElasticJobType jobType;
   private final Class<?> userJobClass;
   private final String userMethodName;
-
-  private ElasticJobProcessRequest(
-      ShardingContext shardingContext,
-      ElasticJobType jobType,
-      Class<?> userJobClass,
-      String userMethodNam) {
-    this.jobName = shardingContext.getJobName();
-    this.taskId = shardingContext.getTaskId();
-    this.shardingItemIndex = shardingContext.getShardingItem();
-    this.shardingTotalCount = shardingContext.getShardingTotalCount();
-    this.shardingItemParameter = emptyToNull(shardingContext.getShardingParameter());
-    this.jobType = jobType;
-    this.userJobClass = userJobClass;
-    this.userMethodName = userMethodNam;
-  }
-
-  private static String emptyToNull(String string) {
-    return string == null || string.isEmpty() ? null : string;
-  }
 
   public static ElasticJobProcessRequest create(
       ShardingContext shardingContext,
@@ -42,6 +24,26 @@ public final class ElasticJobProcessRequest {
       Class<?> userJobClass,
       String userMethodName) {
     return new ElasticJobProcessRequest(shardingContext, jobType, userJobClass, userMethodName);
+  }
+
+  private ElasticJobProcessRequest(
+      ShardingContext shardingContext,
+      ElasticJobType jobType,
+      Class<?> userJobClass,
+      String userMethodName) {
+    this.jobName = shardingContext.getJobName();
+    this.taskId = shardingContext.getTaskId();
+    this.shardingItemIndex = shardingContext.getShardingItem();
+    this.shardingTotalCount = shardingContext.getShardingTotalCount();
+    this.shardingItemParameter = emptyToNull(shardingContext.getShardingParameter());
+    this.jobType = jobType;
+    this.userJobClass = userJobClass;
+    this.userMethodName = userMethodName;
+  }
+
+  @Nullable
+  private static String emptyToNull(@Nullable String string) {
+    return string == null || string.isEmpty() ? null : string;
   }
 
   public String getJobName() {
@@ -60,6 +62,7 @@ public final class ElasticJobProcessRequest {
     return this.shardingTotalCount;
   }
 
+  @Nullable
   public String getShardingItemParameter() {
     return this.shardingItemParameter;
   }

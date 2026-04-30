@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.graphql.common.v12_0.internal;
 
 import graphql.ExecutionResult;
+import graphql.language.OperationDefinition.Operation;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -41,12 +42,9 @@ final class GraphqlAttributesExtractor
       @Nullable ExecutionResult response,
       @Nullable Throwable error) {
     attributes.put(GRAPHQL_OPERATION_NAME, request.getOperationName());
-    if (request.getOperation() != null) {
-      attributes.put(
-          GRAPHQL_OPERATION_TYPE, request.getOperation().name().toLowerCase(Locale.ROOT));
-    }
-    if (request.getQuery() != null) {
-      attributes.put(GRAPHQL_DOCUMENT, request.getQuery());
-    }
+    Operation operation = request.getOperation();
+    String operationType = operation == null ? null : operation.name().toLowerCase(Locale.ROOT);
+    attributes.put(GRAPHQL_OPERATION_TYPE, operationType);
+    attributes.put(GRAPHQL_DOCUMENT, request.getQuery());
   }
 }

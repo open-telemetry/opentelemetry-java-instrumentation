@@ -10,9 +10,11 @@ dependencies {
 
   compileOnly("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
   compileOnly("org.springframework.boot:spring-boot-starter-data-r2dbc:$springBootVersion")
+  compileOnly("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
 
   compileOnly(project(":instrumentation:micrometer:micrometer-1.5:library"))
   compileOnly(project(":instrumentation:spring:spring-boot-autoconfigure"))
+  compileOnly("io.micrometer:micrometer-core:1.5.0")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-testing-common")
   compileOnly("io.opentelemetry:opentelemetry-sdk")
   compileOnly("io.opentelemetry:opentelemetry-sdk-testing")

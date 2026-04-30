@@ -49,10 +49,6 @@ public abstract class AbstractLogbackTest {
     return true;
   }
 
-  protected boolean expectEventName() {
-    return true;
-  }
-
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
         Arguments.of(false, false),
@@ -63,7 +59,7 @@ public abstract class AbstractLogbackTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean logException, boolean withParent) throws InterruptedException {
+  void test(boolean logException, boolean withParent) throws InterruptedException {
     test(abcLogger, Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing().clearData();
     test(
@@ -178,7 +174,7 @@ public abstract class AbstractLogbackTest {
                           equalTo(EXCEPTION_MESSAGE, "hello"),
                           satisfies(
                               EXCEPTION_STACKTRACE,
-                              v -> v.contains(AbstractLogbackTest.class.getName()))));
+                              val -> val.contains(AbstractLogbackTest.class.getName()))));
                 }
                 logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
               });
@@ -192,7 +188,6 @@ public abstract class AbstractLogbackTest {
   void testMdc() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
-    MDC.put("event.name", "MyEventName");
     try {
       abcLogger.info("xyz: {}", 123);
     } finally {
@@ -208,27 +203,51 @@ public abstract class AbstractLogbackTest {
     assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testMdc"));
     assertions.add(equalTo(stringKey("key1"), "val1"));
     assertions.add(equalTo(stringKey("key2"), "val2"));
-    if (!expectEventName()) {
-      assertions.add(equalTo(stringKey("event.name"), "MyEventName"));
-    }
 
     testing()
         .waitAndAssertLogRecords(
-            logRecord -> {
-              logRecord
-                  .hasBody("xyz: 123")
-                  .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                  .hasSeverity(Severity.INFO)
-                  .hasSeverityText("INFO")
-                  .hasAttributesSatisfyingExactly(assertions);
-              if (expectEventName()) {
-                logRecord.hasEventName("MyEventName");
-              }
-            });
+            logRecord ->
+                logRecord
+                    .hasBody("xyz: 123")
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
-  public void testMarker() {
+  void testEventNameMdc() {
+    MDC.put("key1", "val1");
+    MDC.put("otel.event.name", "MyEventName");
+    try {
+      abcLogger.info("xyz: {}", 123);
+    } finally {
+      MDC.clear();
+    }
+
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    if (expectThreadAttributes()) {
+      assertions.addAll(threadAssertions());
+    }
+    assertions.addAll(
+        codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
+    assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testEventNameMdc"));
+    assertions.add(equalTo(stringKey("key1"), "val1"));
+
+    testing()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasBody("xyz: 123")
+                    .hasEventName("MyEventName")
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
+  }
+
+  @Test
+  void testMarker() {
 
     String markerName = "aMarker";
     Marker marker = MarkerFactory.getMarker(markerName);
@@ -267,12 +286,12 @@ public abstract class AbstractLogbackTest {
   }
 
   @FunctionalInterface
-  public interface OneArgLoggerMethod {
+  private interface OneArgLoggerMethod {
     void call(Logger logger, String msg, Object arg);
   }
 
   @FunctionalInterface
-  public interface TwoArgLoggerMethod {
+  private interface TwoArgLoggerMethod {
     void call(Logger logger, String msg, Object arg1, Object arg2);
   }
 }

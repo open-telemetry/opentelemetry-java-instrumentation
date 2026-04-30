@@ -15,7 +15,7 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  test {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 }

@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -93,9 +95,12 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           satisfies(
                               MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                           equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                          satisfies(
-                              MESSAGING_CLIENT_ID,
-                              stringAssert -> stringAssert.startsWith("producer"))));
+                          satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                          equalTo(
+                              stringKey("messaging.kafka.bootstrap.servers"),
+                              EXPERIMENTAL_ATTRIBUTES_ENABLED
+                                  ? kafka.getBootstrapServers()
+                                  : null)));
 
           producer.set(trace.getSpan(1));
         },
@@ -110,9 +115,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                             equalTo(MESSAGING_OPERATION, "receive"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)),
                 span ->
                     span.hasName("testSingleTopic process")
@@ -132,9 +135,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
                                 val -> {
@@ -167,8 +168,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                     equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                     equalTo(MESSAGING_OPERATION, "receive"),
                     equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
-                    satisfies(
-                        MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
+                    satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                     equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
     List<AttributeAssertion> processAttributes =
         asList(
@@ -180,7 +180,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
-            satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
+            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
             satisfies(
                 longKey("kafka.record.queue_time_ms"),
                 val -> {
@@ -192,7 +192,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     AtomicReference<SpanData> producer = new AtomicReference<>();
     // trace structure differs in latest dep tests because CommonErrorHandler is only set for latest
     // dep tests
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       testing.waitAndAssertSortedTraces(
           orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
           trace -> {
@@ -212,9 +212,12 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             satisfies(
                                 MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("producer"))));
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                            equalTo(
+                                stringKey("messaging.kafka.bootstrap.servers"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED
+                                    ? kafka.getBootstrapServers()
+                                    : null)));
 
             producer.set(trace.getSpan(1));
           },
@@ -269,9 +272,12 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             satisfies(
                                 MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("producer"))));
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                            equalTo(
+                                stringKey("messaging.kafka.bootstrap.servers"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED
+                                    ? kafka.getBootstrapServers()
+                                    : null)));
 
             producer.set(trace.getSpan(1));
           },
@@ -340,9 +346,12 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           satisfies(
                               MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                           equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                          satisfies(
-                              MESSAGING_CLIENT_ID,
-                              stringAssert -> stringAssert.startsWith("producer"))),
+                          satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                          equalTo(
+                              stringKey("messaging.kafka.bootstrap.servers"),
+                              EXPERIMENTAL_ATTRIBUTES_ENABLED
+                                  ? kafka.getBootstrapServers()
+                                  : null)),
               span ->
                   span.hasName("testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
@@ -356,9 +365,12 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           satisfies(
                               MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                           equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "20"),
-                          satisfies(
-                              MESSAGING_CLIENT_ID,
-                              stringAssert -> stringAssert.startsWith("producer"))));
+                          satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                          equalTo(
+                              stringKey("messaging.kafka.bootstrap.servers"),
+                              EXPERIMENTAL_ATTRIBUTES_ENABLED
+                                  ? kafka.getBootstrapServers()
+                                  : null)));
 
           producer1.set(trace.getSpan(1));
           producer2.set(trace.getSpan(2));
@@ -374,9 +386,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(MESSAGING_OPERATION, "receive"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2)),
                 span ->
                     span.hasName("testBatchTopic process")
@@ -390,9 +400,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(MESSAGING_OPERATION, "process"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
@@ -429,14 +437,17 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           satisfies(
                               MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                           equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                          satisfies(
-                              MESSAGING_CLIENT_ID,
-                              stringAssert -> stringAssert.startsWith("producer"))));
+                          satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                          equalTo(
+                              stringKey("messaging.kafka.bootstrap.servers"),
+                              EXPERIMENTAL_ATTRIBUTES_ENABLED
+                                  ? kafka.getBootstrapServers()
+                                  : null)));
 
           producer.set(trace.getSpan(1));
         });
 
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       // latest dep tests call receive once and only retry the failed process step
       assertions.add(
           trace ->
@@ -481,7 +492,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
             equalTo(MESSAGING_OPERATION, "receive"),
             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-            satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
+            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
   }
 
@@ -496,7 +507,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
             equalTo(MESSAGING_OPERATION, "process"),
             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-            satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
+            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
     if (failed) {
       span.hasStatus(StatusData.error()).hasException(new IllegalArgumentException("boom"));

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -50,8 +51,14 @@ public final class KafkaPropagation {
 
   public static <K, V> ProducerRecord<K, V> propagateContext(
       Context context, ProducerRecord<K, V> record) {
+    return propagateContext(
+        GlobalOpenTelemetry.getPropagators().getTextMapPropagator(), context, record);
+  }
+
+  public static <K, V> ProducerRecord<K, V> propagateContext(
+      TextMapPropagator propagator, Context context, ProducerRecord<K, V> record) {
     try {
-      inject(context, record);
+      inject(propagator, context, record);
     } catch (IllegalStateException e) {
       // headers must be read-only from reused record. try again with new one.
       record =
@@ -63,15 +70,14 @@ public final class KafkaPropagation {
               record.value(),
               record.headers());
 
-      inject(context, record);
+      inject(propagator, context, record);
     }
     return record;
   }
 
-  private static <K, V> void inject(Context context, ProducerRecord<K, V> record) {
-    GlobalOpenTelemetry.getPropagators()
-        .getTextMapPropagator()
-        .inject(context, record.headers(), SETTER);
+  private static <K, V> void inject(
+      TextMapPropagator propagator, Context context, ProducerRecord<K, V> record) {
+    propagator.inject(context, record.headers(), SETTER);
   }
 
   private KafkaPropagation() {}

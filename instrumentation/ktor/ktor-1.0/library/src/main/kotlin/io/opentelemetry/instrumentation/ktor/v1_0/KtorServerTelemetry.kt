@@ -104,8 +104,8 @@ class KtorServerTelemetry private constructor(
   companion object Feature : ApplicationFeature<Application, Configuration, KtorServerTelemetry> {
     private const val INSTRUMENTATION_NAME = "io.opentelemetry.ktor-1.0"
 
-    private val contextKey = AttributeKey<Context>("OpenTelemetry")
-    private val errorKey = AttributeKey<Throwable>("OpenTelemetryException")
+    private val CONTEXT_KEY = AttributeKey<Context>("OpenTelemetry")
+    private val ERROR_KEY = AttributeKey<Throwable>("OpenTelemetryException")
 
     override val key: AttributeKey<KtorServerTelemetry> = AttributeKey("OpenTelemetry")
 
@@ -130,14 +130,14 @@ class KtorServerTelemetry private constructor(
         val context = feature.start(call)
 
         if (context != null) {
-          call.attributes.put(contextKey, context)
+          call.attributes.put(CONTEXT_KEY, context)
           withContext(context.asContextElement()) {
             try {
               proceed()
-            } catch (err: Throwable) {
+            } catch (t: Throwable) {
               // Stash error for reporting later since need ktor to finish setting up the response
-              call.attributes.put(errorKey, err)
-              throw err
+              call.attributes.put(ERROR_KEY, t)
+              throw t
             }
           }
         } else {
@@ -148,9 +148,9 @@ class KtorServerTelemetry private constructor(
       val postSendPhase = PipelinePhase("OpenTelemetryPostSend")
       pipeline.sendPipeline.insertPhaseAfter(ApplicationSendPipeline.After, postSendPhase)
       pipeline.sendPipeline.intercept(postSendPhase) {
-        val context = call.attributes.getOrNull(contextKey)
+        val context = call.attributes.getOrNull(CONTEXT_KEY)
         if (context != null) {
-          var error: Throwable? = call.attributes.getOrNull(errorKey)
+          var error: Throwable? = call.attributes.getOrNull(ERROR_KEY)
           try {
             proceed()
           } catch (t: Throwable) {
@@ -165,7 +165,7 @@ class KtorServerTelemetry private constructor(
       }
 
       pipeline.environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
-        val context = call.attributes.getOrNull(contextKey)
+        val context = call.attributes.getOrNull(CONTEXT_KEY)
         if (context != null) {
           HttpServerRoute.update(context, HttpServerRouteSource.SERVER, { _, arg -> arg!!.route.parent.toString() }, call)
         }

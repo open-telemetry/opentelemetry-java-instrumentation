@@ -62,7 +62,11 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true"
+    )
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
@@ -70,7 +74,11 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
+        "otel.semconv-stability.opt-in=service.peer"
+    )
   }
 
   check {
@@ -85,7 +93,7 @@ configurations.configureEach {
 
 // async-http-client 2.0 does not work with Netty versions newer than this due to referencing an
 // internal file.
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!otelProps.testLatestDeps) {
   configurations.configureEach {
     resolutionStrategy {
       eachDependency {

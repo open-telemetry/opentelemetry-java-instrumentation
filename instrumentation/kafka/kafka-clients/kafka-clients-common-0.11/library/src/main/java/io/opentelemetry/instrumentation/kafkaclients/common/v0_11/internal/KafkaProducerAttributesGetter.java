@@ -18,9 +18,8 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-enum KafkaProducerAttributesGetter
+final class KafkaProducerAttributesGetter
     implements MessagingAttributesGetter<KafkaProducerRequest, RecordMetadata> {
-  INSTANCE;
 
   @Override
   public String getSystem(KafkaProducerRequest request) {

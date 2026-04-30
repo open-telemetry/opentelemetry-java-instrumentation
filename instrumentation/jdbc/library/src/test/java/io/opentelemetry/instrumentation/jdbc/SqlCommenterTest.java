@@ -24,7 +24,7 @@ class SqlCommenterTest extends AbstractSqlCommenterTest {
 
   static {
     JdbcTelemetryBuilder builder = JdbcTelemetry.builder(testing.getOpenTelemetry());
-    Experimental.setEnableSqlCommenter(builder, true);
+    Experimental.setSqlCommenterEnabled(builder, true);
     telemetry = builder.build();
   }
 

@@ -14,8 +14,8 @@ import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.common.naming.TopicName;
 
-enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<PulsarRequest, Void> {
-  INSTANCE;
+final class PulsarMessagingAttributesGetter
+    implements MessagingAttributesGetter<PulsarRequest, Void> {
 
   @Override
   public String getSystem(PulsarRequest request) {

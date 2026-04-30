@@ -10,13 +10,13 @@ import io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientInstrumente
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
-public final class PlayWs20Singletons {
+public class PlayWs20Singletons {
 
-  private static final Instrumenter<Request, Response> INSTANCE =
+  private static final Instrumenter<Request, Response> instrumenter =
       PlayWsClientInstrumenterFactory.createInstrumenter("io.opentelemetry.play-ws-2.0");
 
   public static Instrumenter<Request, Response> instrumenter() {
-    return INSTANCE;
+    return instrumenter;
   }
 
   private PlayWs20Singletons() {}

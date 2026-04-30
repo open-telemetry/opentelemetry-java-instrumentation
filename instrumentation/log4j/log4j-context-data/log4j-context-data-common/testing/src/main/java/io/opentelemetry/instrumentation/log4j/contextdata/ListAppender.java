@@ -24,15 +24,15 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
     printObject = true)
 public class ListAppender extends AbstractAppender {
 
+  private static final ListAppender INSTANCE = new ListAppender();
+
   public static ListAppender get() {
     return INSTANCE;
   }
 
-  private static final ListAppender INSTANCE = new ListAppender();
-
   private final List<LoggedEvent> events = Collections.synchronizedList(new ArrayList<>());
 
-  public ListAppender() {
+  private ListAppender() {
     super("ListAppender", null, null, /* ignoreExceptions= */ true);
   }
 
@@ -56,7 +56,7 @@ public class ListAppender extends AbstractAppender {
 
   @PluginFactory
   public static ListAppender createAppender(@PluginAttribute("name") String name) {
-    if (!name.equals("ListAppender")) {
+    if (!"ListAppender".equals(name)) {
       throw new IllegalArgumentException(
           "Use name=\"ListAppender\" in log4j2-test.xml instead of " + name);
     }

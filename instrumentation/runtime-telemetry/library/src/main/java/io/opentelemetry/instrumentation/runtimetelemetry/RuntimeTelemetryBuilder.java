@@ -37,8 +37,9 @@ public final class RuntimeTelemetryBuilder {
 
   static {
     Experimental.internalSetEmitExperimentalMetrics(
+        (builder, emit) -> builder.emitExperimentalMetrics = emit);
+    Experimental.internalSetEmitExperimentalJfrMetrics(
         (builder, emit) -> {
-          builder.emitExperimentalMetrics = emit;
           if (emit) {
             builder.jfrConfig.enableExperimentalFeatures();
           }
@@ -104,13 +105,14 @@ public final class RuntimeTelemetryBuilder {
 
     Meter jmxMeter = getMeter(openTelemetry, jmxName);
     Meter jfrMeter = getMeter(openTelemetry, jfrName);
+    boolean effectivePreferJfrMetrics = preferJfrMetrics && jfrConfig.isJfrAvailable();
 
     List<AutoCloseable> observables =
         disableJmx
             ? emptyList()
             : JmxRuntimeMetricsFactory.buildObservables(
-                emitExperimentalMetrics, captureGcCause, preferJfrMetrics, jmxMeter);
-    AutoCloseable jfrTelemetry = jfrConfig.buildJfrTelemetry(preferJfrMetrics, jfrMeter);
+                emitExperimentalMetrics, captureGcCause, effectivePreferJfrMetrics, jmxMeter);
+    AutoCloseable jfrTelemetry = jfrConfig.buildJfrTelemetry(effectivePreferJfrMetrics, jfrMeter);
     return new RuntimeTelemetry(observables, jfrTelemetry);
   }
 

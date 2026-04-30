@@ -12,7 +12,7 @@ To control the time interval between MBean detection attempts, one can use the `
 
 ## Predefined metrics
 
-JMX is a popular metrics technology used throughout the JVM (see [runtime metrics](../runtime-telemetry/runtime-telemetry-java8/library/README.md)), application servers, third-party libraries, and applications.
+JMX is a popular metrics technology used throughout the JVM (see [runtime metrics](../runtime-telemetry/library/README.md)), application servers, third-party libraries, and applications.
 JMX Metric Insight comes with a number of predefined configurations containing curated sets of JMX metrics for frequently used application servers or frameworks.
 To enable collection of the predefined metrics, specify a list of targets as the value for the `otel.jmx.target.system` property. For example
 
@@ -29,6 +29,7 @@ No targets are enabled by default. The supported target environments are listed 
 - [camel](library/camel.md)
 - [jetty](library/jetty.md)
 - [kafka-broker](javaagent/kafka-broker.md)
+- [kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
 - [hadoop](library/hadoop.md)

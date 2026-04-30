@@ -25,12 +25,16 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // skip instrumentation when opentelemetry-api-incubator is present, instrumentation is
-    // handled by OpenTelemetryApiIncubatorInstrumentationModule
-    return hasClassesNamed("application.io.opentelemetry.api.metrics.LongGauge")
+    // this instrumentation module targets io.opentelemetry:opentelemetry-api
+    return hasClassesNamed(
+            // added in 1.38.0
+            "application.io.opentelemetry.api.metrics.LongGauge")
         .and(
             not(
                 hasClassesNamed(
+                    // artifact presence gate
+                    // added in opentelemetry-api-incubator 1.37.0
+                    // (renamed from io.opentelemetry.extension.incubator)
                     "application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder")));
   }
 
@@ -42,10 +46,5 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   @Override
   public String getModuleGroup() {
     return "opentelemetry-api-bridge";
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

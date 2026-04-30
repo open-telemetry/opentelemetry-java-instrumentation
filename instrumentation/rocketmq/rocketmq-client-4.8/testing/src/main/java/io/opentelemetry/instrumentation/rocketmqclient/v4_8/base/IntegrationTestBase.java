@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8.base;
 
 import static java.util.Collections.emptyMap;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -28,35 +29,32 @@ import org.apache.rocketmq.namesrv.NamesrvController;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.netty.NettyServerConfig;
 import org.apache.rocketmq.store.config.MessageStoreConfig;
-import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class IntegrationTestBase {
-  public static final Logger logger = LoggerFactory.getLogger(IntegrationTestBase.class);
+public class IntegrationTestBase {
+  private static final Logger logger = LoggerFactory.getLogger(IntegrationTestBase.class);
 
-  static final String BROKER_NAME_PREFIX = "TestBrokerName_";
-  static final AtomicInteger BROKER_INDEX = new AtomicInteger(0);
-  static final List<File> TMPE_FILES = new ArrayList<>();
-  static final List<BrokerController> BROKER_CONTROLLERS = new ArrayList<>();
-  static final List<NamesrvController> NAMESRV_CONTROLLERS = new ArrayList<>();
-  static final int COMMIT_LOG_SIZE = 1024 * 1024 * 100;
-  static final int INDEX_NUM = 1000;
+  private static final String BROKER_NAME_PREFIX = "TestBrokerName_";
+  private static final AtomicInteger brokerIndex = new AtomicInteger(0);
+  private static final List<File> tempFiles = new ArrayList<>();
+  private static final List<BrokerController> brokerControllers = new ArrayList<>();
+  private static final List<NamesrvController> namesrvControllers = new ArrayList<>();
+  private static final int COMMIT_LOG_SIZE = 1024 * 1024 * 100;
+  private static final int INDEX_NUM = 1000;
 
   private static String createTempDir() {
-    String path = null;
     try {
       File file = Files.createTempDirectory("opentelemetry-rocketmq-client-temp").toFile();
-      TMPE_FILES.add(file);
-      path = file.getCanonicalPath();
+      tempFiles.add(file);
+      return file.getCanonicalPath();
     } catch (IOException e) {
-      logger.warn("Error creating temporary directory.", e);
+      throw new IllegalStateException("Error creating temporary directory.", e);
     }
-    return path;
   }
 
   public static void deleteTempDir() {
-    for (File file : TMPE_FILES) {
+    for (File file : tempFiles) {
       boolean deleted = file.delete();
       if (!deleted) {
         file.deleteOnExit();
@@ -81,13 +79,13 @@ public final class IntegrationTestBase {
     NamesrvController namesrvController =
         new NamesrvController(namesrvConfig, nameServerNettyServerConfig);
     try {
-      Assert.assertTrue(namesrvController.initialize());
+      assertThat(namesrvController.initialize()).isTrue();
       logger.info("Name Server Start:{}", nameServerNettyServerConfig.getListenPort());
       namesrvController.start();
     } catch (Exception e) {
-      logger.info("Name Server start failed", e);
+      throw new IllegalStateException("Name Server start failed", e);
     }
-    NAMESRV_CONTROLLERS.add(namesrvController);
+    namesrvControllers.add(namesrvController);
     return namesrvController;
   }
 
@@ -97,7 +95,7 @@ public final class IntegrationTestBase {
 
     BrokerConfig brokerConfig = new BrokerConfig();
     MessageStoreConfig storeConfig = new MessageStoreConfig();
-    brokerConfig.setBrokerName(BROKER_NAME_PREFIX + BROKER_INDEX.getAndIncrement());
+    brokerConfig.setBrokerName(BROKER_NAME_PREFIX + brokerIndex.getAndIncrement());
     brokerConfig.setBrokerIP1("127.0.0.1");
     brokerConfig.setNamesrvAddr(nsAddr);
     brokerConfig.setEnablePropertyFilter(true);
@@ -118,7 +116,7 @@ public final class IntegrationTestBase {
     BrokerController brokerController =
         new BrokerController(brokerConfig, nettyServerConfig, nettyClientConfig, storeConfig);
     try {
-      Assert.assertTrue(brokerController.initialize());
+      assertThat(brokerController.initialize()).isTrue();
       logger.info(
           "Broker Start name:{} addr:{}",
           brokerConfig.getBrokerName(),
@@ -128,7 +126,7 @@ public final class IntegrationTestBase {
       logger.error("Broker start failed", t);
       throw new IllegalStateException("Broker start failed", t);
     }
-    BROKER_CONTROLLERS.add(brokerController);
+    brokerControllers.add(brokerController);
     return brokerController;
   }
 
@@ -164,8 +162,8 @@ public final class IntegrationTestBase {
                   createTopic.invoke(null, nsAddr, clusterName, topic, 20, emptyMap(), 3);
                   return true;
                 });
-      } catch (ClassNotFoundException | NoSuchMethodException ex) {
-        throw new IllegalStateException("Could not initialize topic", ex);
+      } catch (ClassNotFoundException | NoSuchMethodException f) {
+        throw new IllegalStateException("Could not initialize topic", f);
       }
     }
   }

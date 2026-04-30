@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.metrics.LongGaugeBuilder;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import java.util.function.Consumer;
 
 public class ApplicationLongGaugeBuilder
@@ -37,11 +38,12 @@ public class ApplicationLongGaugeBuilder
   public application.io.opentelemetry.api.metrics.ObservableLongGauge buildWithCallback(
       Consumer<application.io.opentelemetry.api.metrics.ObservableLongMeasurement>
           applicationCallback) {
+    Consumer<ObservableLongMeasurement> callback =
+        agentMeasurement ->
+            applicationCallback.accept(new ApplicationObservableLongMeasurement(agentMeasurement));
     return new ApplicationObservableLongGauge(
-        agentBuilder.buildWithCallback(
-            agentMeasurement ->
-                applicationCallback.accept(
-                    new ApplicationObservableLongMeasurement(agentMeasurement))));
+        CallbackAnchor.anchor(agentBuilder::buildWithCallback, callback),
+        CallbackAnchor.releaseOnClose(callback));
   }
 
   // added in 1.15.0

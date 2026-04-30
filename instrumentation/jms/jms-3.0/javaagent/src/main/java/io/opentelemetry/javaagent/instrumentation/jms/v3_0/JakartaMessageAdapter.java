@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
-import io.opentelemetry.javaagent.instrumentation.jms.DestinationAdapter;
-import io.opentelemetry.javaagent.instrumentation.jms.MessageAdapter;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public final class JakartaMessageAdapter implements MessageAdapter {
+public class JakartaMessageAdapter implements MessageAdapter {
 
   public static MessageAdapter create(Message message) {
     return new JakartaMessageAdapter(message);

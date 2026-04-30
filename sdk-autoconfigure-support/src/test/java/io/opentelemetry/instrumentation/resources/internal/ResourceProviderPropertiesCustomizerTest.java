@@ -27,7 +27,7 @@ import org.junit.jupiter.api.TestFactory;
 
 class ResourceProviderPropertiesCustomizerTest {
 
-  public static final class Provider implements ResourceProvider {
+  public static class Provider implements ResourceProvider {
     @Override
     public Resource createResource(ConfigProperties config) {
       return Resource.create(Attributes.of(stringKey("key"), "value"));

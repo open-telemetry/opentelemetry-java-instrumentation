@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.docs.utils;
 
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,6 +22,7 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -49,27 +48,20 @@ public class YamlHelper {
 
     Yaml yaml = new Yaml(options);
 
-    // Add library modules
     Map<String, Object> libraries = getLibraryInstrumentations(list);
     if (!libraries.isEmpty()) {
-      yaml.dump(getLibraryInstrumentations(list), writer);
-    }
-
-    // Add internal modules
-    Map<String, Object> internal = generateBaseYaml(list, InstrumentationClassification.INTERNAL);
-    if (!internal.isEmpty()) {
-      yaml.dump(internal, writer);
+      yaml.dump(libraries, writer);
     }
 
     // add custom instrumentation modules
-    Map<String, Object> custom = generateBaseYaml(list, InstrumentationClassification.CUSTOM);
+    Map<String, Object> custom = getCustomInstrumentations(list);
     if (!custom.isEmpty()) {
       yaml.dump(custom, writer);
     }
   }
 
   private static Map<String, Object> getLibraryInstrumentations(List<InstrumentationModule> list) {
-    Map<String, List<InstrumentationModule>> libraryInstrumentations =
+    List<InstrumentationModule> libraryInstrumentations =
         list.stream()
             .filter(
                 module ->
@@ -77,40 +69,32 @@ public class YamlHelper {
                         .getMetadata()
                         .getClassification()
                         .equals(InstrumentationClassification.LIBRARY))
-            .collect(
-                groupingBy(
-                    InstrumentationModule::getGroup,
-                    TreeMap::new,
-                    collectingAndThen(
-                        toList(),
-                        modules ->
-                            modules.stream()
-                                .sorted(InstrumentationNameComparator.BY_NAME_AND_VERSION)
-                                .collect(toList()))));
+            .sorted(InstrumentationNameComparator.BY_NAME_AND_VERSION)
+            .toList();
+
+    if (libraryInstrumentations.isEmpty()) {
+      return new TreeMap<>();
+    }
+
+    List<Map<String, Object>> instrumentations = new ArrayList<>();
+    for (InstrumentationModule module : libraryInstrumentations) {
+      instrumentations.add(baseProperties(module));
+    }
 
     Map<String, Object> output = new TreeMap<>();
-    libraryInstrumentations.forEach(
-        (group, modules) -> {
-          List<Map<String, Object>> instrumentations = new ArrayList<>();
-          for (InstrumentationModule module : modules) {
-            instrumentations.add(baseProperties(module));
-          }
-          output.put(group, instrumentations);
-        });
-
-    Map<String, Object> newOutput = new TreeMap<>();
-    if (output.isEmpty()) {
-      return newOutput;
-    }
-    newOutput.put("libraries", output);
-    return newOutput;
+    output.put("libraries", instrumentations);
+    return output;
   }
 
-  private static Map<String, Object> generateBaseYaml(
-      List<InstrumentationModule> list, InstrumentationClassification classification) {
+  private static Map<String, Object> getCustomInstrumentations(List<InstrumentationModule> list) {
     List<InstrumentationModule> filtered =
         list.stream()
-            .filter(module -> module.getMetadata().getClassification().equals(classification))
+            .filter(
+                module ->
+                    module
+                        .getMetadata()
+                        .getClassification()
+                        .equals(InstrumentationClassification.CUSTOM))
             .sorted(InstrumentationNameComparator.BY_NAME_AND_VERSION)
             .toList();
 
@@ -123,7 +107,7 @@ public class YamlHelper {
     if (instrumentations.isEmpty()) {
       return newOutput;
     }
-    newOutput.put(classification.toString(), instrumentations);
+    newOutput.put(InstrumentationClassification.CUSTOM.toString(), instrumentations);
     return newOutput;
   }
 
@@ -145,8 +129,14 @@ public class YamlHelper {
       moduleMap.put("has_standalone_library", true);
     }
 
+    if (module.hasJavaAgent()) {
+      moduleMap.put("has_javaagent", true);
+    }
+
     if (module.getAgentTargetVersions() != null && !module.getAgentTargetVersions().isEmpty()) {
-      moduleMap.put("javaagent_target_versions", new ArrayList<>(module.getAgentTargetVersions()));
+      List<String> agentTargetVersions = new ArrayList<>(module.getAgentTargetVersions());
+      Collections.sort(agentTargetVersions);
+      moduleMap.put("javaagent_target_versions", agentTargetVersions);
     }
 
     addConfigurations(module, moduleMap);
@@ -263,6 +253,9 @@ public class YamlHelper {
   private static Map<String, Object> configurationToMap(ConfigurationOption configuration) {
     Map<String, Object> conf = new LinkedHashMap<>();
     conf.put("name", configuration.name());
+    if (configuration.declarativeName() != null) {
+      conf.put("declarative_name", configuration.declarativeName());
+    }
     conf.put("description", configuration.description());
     conf.put("type", configuration.type().toString());
     if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
@@ -271,6 +264,9 @@ public class YamlHelper {
       conf.put("default", Integer.parseInt(configuration.defaultValue()));
     } else {
       conf.put("default", configuration.defaultValue());
+    }
+    if (configuration.examples() != null && !configuration.examples().isEmpty()) {
+      conf.put("examples", configuration.examples());
     }
     return conf;
   }

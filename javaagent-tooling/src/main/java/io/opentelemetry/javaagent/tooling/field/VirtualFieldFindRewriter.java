@@ -87,10 +87,10 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
           int access, String name, String descriptor, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
         return new MethodVisitor(api, mv) {
-          /** The most recent objects pushed to the stack. */
+          // The most recent objects pushed to the stack.
           private final Object[] stack = {null, null};
 
-          /** Most recent instructions. */
+          // Most recent instructions.
           private final int[] insnStack = {-1, -1, -1};
 
           @Override
@@ -152,13 +152,13 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
             }
           }
 
-          /** Tracking the most recently used opcodes to assert proper api usage. */
+          // Tracking the most recently used opcodes to assert proper api usage.
           private void pushOpcode(int opcode) {
             System.arraycopy(insnStack, 0, insnStack, 1, insnStack.length - 1);
             insnStack[0] = opcode;
           }
 
-          /** Tracking the most recently pushed objects on the stack to assert proper api usage. */
+          // Tracking the most recently pushed objects on the stack to assert proper api usage.
           private void pushStack(Object o) {
             System.arraycopy(stack, 0, stack, 1, stack.length - 1);
             stack[0] = o;

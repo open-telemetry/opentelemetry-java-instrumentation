@@ -15,14 +15,14 @@ import org.restlet.Response;
  * any time.
  */
 public class RestletTelemetryBuilderFactory {
-  private RestletTelemetryBuilderFactory() {}
-
   public static DefaultHttpServerInstrumenterBuilder<Request, Response> create(
       OpenTelemetry openTelemetry) {
     return DefaultHttpServerInstrumenterBuilder.create(
         "io.opentelemetry.restlet-2.0",
         openTelemetry,
-        RestletHttpAttributesGetter.INSTANCE,
+        new RestletHttpAttributesGetter(),
         new RestletHeadersGetter());
   }
+
+  private RestletTelemetryBuilderFactory() {}
 }

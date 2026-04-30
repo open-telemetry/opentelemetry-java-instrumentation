@@ -37,7 +37,7 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("org.eclipse.jetty.server.Response")))
             .and(takesArgument(2, named("org.eclipse.jetty.util.Callback")))
             .and(isPublic()),
-        this.getClass().getName() + "$HandlerAdvice");
+        getClass().getName() + "$HandlerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -53,7 +53,7 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope start(Object source, Request request, Response response) {
+      public static AdviceScope start(Request request, Response response) {
         Context parentContext = Context.current();
         if (!helper().shouldStart(parentContext, request)) {
           return null;
@@ -61,7 +61,7 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
         Context context = helper().start(parentContext, request, response);
         Scope scope = context.makeCurrent();
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(context, response, Jetty12ResponseMutator.INSTANCE);
+            .customize(context, response, new Jetty12ResponseMutator());
         return new AdviceScope(context, scope);
       }
 
@@ -74,15 +74,13 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
-        @Advice.This Object source,
-        @Advice.Argument(0) Request request,
-        @Advice.Argument(1) Response response) {
-      return AdviceScope.start(source, request, response);
+        @Advice.Argument(0) Request request, @Advice.Argument(1) Response response) {
+      return AdviceScope.start(request, response);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) Response response,

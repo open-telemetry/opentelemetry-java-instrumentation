@@ -10,21 +10,30 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import org.restlet.Component;
 import org.restlet.Router;
 import org.restlet.Server;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public abstract class AbstractSpringServerTest extends AbstractRestletServerTest {
 
   protected Router router;
+  private ClassPathXmlApplicationContext context;
 
   protected abstract String getConfigurationName();
 
   @Override
   protected void setupServer(Component component) {
-    ApplicationContext context = new ClassPathXmlApplicationContext(getConfigurationName());
+    context = new ClassPathXmlApplicationContext(getConfigurationName());
     router = (Router) context.getBean("testRouter");
     Server server = (Server) context.getBean("testServer", new Object[] {"http", port});
     component.getServers().add(server);
+  }
+
+  @Override
+  protected void stopServer(Component component) throws Exception {
+    try {
+      super.stopServer(component);
+    } finally {
+      context.close();
+    }
   }
 
   @Override

@@ -40,7 +40,7 @@ class KtorServerSpanKindExtractorTest : AbstractHttpServerUsingTest<ApplicationE
   companion object {
     @JvmStatic
     @RegisterExtension
-    val testing: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
+    private val testing: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
   }
 
   @BeforeAll

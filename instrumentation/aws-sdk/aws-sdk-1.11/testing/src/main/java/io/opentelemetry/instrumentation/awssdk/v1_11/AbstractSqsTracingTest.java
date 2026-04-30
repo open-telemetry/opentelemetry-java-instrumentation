@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -27,7 +27,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -41,7 +40,6 @@ import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -63,14 +61,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSqsTracingTest {
 
+  private static int sqsPort;
+  private static SQSRestServer sqsRestServer;
+  private static AmazonSQSAsync sqsClient;
+
   protected abstract InstrumentationExtension testing();
 
   protected abstract AmazonSQSAsyncClientBuilder configureClient(
       AmazonSQSAsyncClientBuilder client);
-
-  private static int sqsPort;
-  private static SQSRestServer sqsRestServer;
-  private static AmazonSQSAsync sqsClient;
 
   @BeforeEach
   void setUp() {
@@ -109,13 +107,16 @@ public abstract class AbstractSqsTracingTest {
       sendMessageRequest.addMessageAttributesEntry(
           "Test-Message-Header",
           new MessageAttributeValue().withDataType("String").withStringValue("test"));
+      sendMessageRequest.addMessageAttributesEntry(
+          "Uncaptured-Header",
+          new MessageAttributeValue().withDataType("String").withStringValue("password"));
     }
     sqsClient.sendMessage(sendMessageRequest);
 
     ReceiveMessageRequest receiveMessageRequest =
         new ReceiveMessageRequest("http://localhost:" + sqsPort + "/000000000000/testSdkSqs");
     if (testCaptureHeaders) {
-      receiveMessageRequest.withMessageAttributeNames("Test-Message-Header");
+      receiveMessageRequest.withMessageAttributeNames("Test-Message-Header", "Uncaptured-Header");
     }
     ReceiveMessageResult receiveMessageResult = sqsClient.receiveMessage(receiveMessageRequest);
 
@@ -180,8 +181,8 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                                headerAttributeKey("Test-Message-Header"),
+                                val -> val.containsExactly("test")));
                       }
 
                       span.hasName("testSdkSqs publish")
@@ -217,8 +218,8 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                                headerAttributeKey("Test-Message-Header"),
+                                val -> val.containsExactly("test")));
                       }
 
                       span.hasName("testSdkSqs receive")
@@ -253,8 +254,8 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                                headerAttributeKey("Test-Message-Header"),
+                                val -> val.containsExactly("test")));
                       }
                       span.hasName("testSdkSqs process")
                           .hasKind(SpanKind.CONSUMER)
@@ -264,7 +265,7 @@ public abstract class AbstractSqsTracingTest {
                     span ->
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
-                            .hasAttributes(Attributes.empty())));
+                            .hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -341,10 +342,7 @@ public abstract class AbstractSqsTracingTest {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
                       asList(
-                          span ->
-                              span.hasName("parent")
-                                  .hasNoParent()
-                                  .hasAttributes(Attributes.empty()),
+                          span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                           span ->
                               span.hasName("SQS.ReceiveMessage")
                                   .hasKind(SpanKind.CLIENT)
@@ -424,7 +422,7 @@ public abstract class AbstractSqsTracingTest {
                           span ->
                               span.hasName("process child")
                                   .hasParent(processSpan.get())
-                                  .hasAttributes(Attributes.empty())));
+                                  .hasTotalAttributeCount(0)));
 
               // on jdk8 the order of the "SQS.ReceiveMessage" and "testSdkSqs receive"
               // spans can vary
@@ -448,13 +446,13 @@ public abstract class AbstractSqsTracingTest {
     sqsClient.createQueue("testSdkSqs2");
     SendMessageRequest send =
         new SendMessageRequest(
-            "http://localhost:$sqsPort/000000000000/testSdkSqs2", "{\"type\": \"hello\"}");
+            "http://localhost:" + sqsPort + "/000000000000/testSdkSqs2", "{\"type\": \"hello\"}");
     sqsClient.sendMessage(send);
     ReceiveMessageRequest receive =
-        new ReceiveMessageRequest("http://localhost:$sqsPort/000000000000/testSdkSqs2");
+        new ReceiveMessageRequest("http://localhost:" + sqsPort + "/000000000000/testSdkSqs2");
     sqsClient.receiveMessage(receive);
     sqsClient.sendMessage(send);
     sqsClient.receiveMessage(receive);
-    assertThat(receive.getAttributeNames()).isEqualTo(singletonList("AWSTraceHeader"));
+    assertThat(receive.getAttributeNames()).containsExactly("AWSTraceHeader");
   }
 }

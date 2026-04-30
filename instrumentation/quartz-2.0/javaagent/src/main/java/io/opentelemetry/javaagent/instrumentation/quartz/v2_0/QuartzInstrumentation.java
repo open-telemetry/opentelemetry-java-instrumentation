@@ -7,18 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.quartz.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.instrumentation.quartz.v2_0.QuartzSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.quartz.Scheduler;
 
-public class QuartzInstrumentation implements TypeInstrumentation {
+class QuartzInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.quartz.Scheduler");
@@ -31,14 +33,13 @@ public class QuartzInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(Scheduler.class);
       callDepth.getAndIncrement();
@@ -46,15 +47,15 @@ public class QuartzInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addTracingInterceptor(
-        @Advice.This Scheduler scheduler, @Advice.Enter CallDepth callDepth) {
+        @Advice.This Scheduler scheduler, @Advice.Enter @Nullable CallDepth callDepth) {
       // No-args constructor is automatically called by constructors with args, but we only want to
       // run once from the constructor with args because that is where the dedupe needs to happen.
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth == null || callDepth.decrementAndGet() > 0) {
         return;
       }
-      QuartzSingletons.TELEMETRY.configure(scheduler);
+      telemetry().configure(scheduler);
     }
   }
 }

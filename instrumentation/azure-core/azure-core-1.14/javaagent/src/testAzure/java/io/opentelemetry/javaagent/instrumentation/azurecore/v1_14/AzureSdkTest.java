@@ -11,7 +11,6 @@ import com.azure.core.http.policy.HttpPipelinePolicy;
 import com.azure.core.http.policy.HttpPolicyProviders;
 import com.azure.core.util.Context;
 import com.azure.core.util.tracing.TracerProxy;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -24,7 +23,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class AzureSdkTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void testHelperClassesInjected() {
@@ -35,12 +34,10 @@ class AzureSdkTest {
     HttpPolicyProviders.addAfterRetryPolicies(list);
 
     assertThat(list)
-        .satisfiesExactly(
-            item ->
-                assertThat(item.getClass().getName())
-                    .isEqualTo(
-                        "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded"
-                            + ".com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy"));
+        .extracting(item -> item.getClass().getName())
+        .containsExactly(
+            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_14.shaded"
+                + ".com.azure.core.tracing.opentelemetry.OpenTelemetryHttpPolicy");
   }
 
   @Test
@@ -55,6 +52,6 @@ class AzureSdkTest {
                     span.hasName("hello")
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.ok())
-                        .hasAttributes(Attributes.empty())));
+                        .hasTotalAttributeCount(0)));
   }
 }

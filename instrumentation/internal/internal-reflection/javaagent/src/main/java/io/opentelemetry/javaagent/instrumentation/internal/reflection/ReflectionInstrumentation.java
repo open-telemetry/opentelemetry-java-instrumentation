@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -21,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ReflectionInstrumentation implements TypeInstrumentation {
+class ReflectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,24 +30,22 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("filterFields"))
+        named("filterFields")
             .and(takesArguments(2))
             .and(takesArgument(0, Class.class))
             .and(takesArgument(1, Field[].class))
             .and(isPublic())
             .and(isStatic()),
-        ReflectionInstrumentation.class.getName() + "$FilterFieldsAdvice");
+        getClass().getName() + "$FilterFieldsAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("filterMethods"))
+        named("filterMethods")
             .and(takesArguments(2))
             .and(takesArgument(0, Class.class))
             .and(takesArgument(1, Method[].class))
             .and(isPublic())
             .and(isStatic()),
-        ReflectionInstrumentation.class.getName() + "$FilterMethodsAdvice");
+        getClass().getName() + "$FilterMethodsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -57,7 +54,7 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
     // using AsScalar is needed to return the array itself instead of "advice Object[] return"
     @Advice.AssignReturned.ToReturned
     @Advice.AssignReturned.AsScalar
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Field[] filter(
         @Advice.Argument(0) Class<?> containingClass, @Advice.Return Field[] fields) {
       return ReflectionHelper.filterFields(containingClass, fields);
@@ -70,7 +67,7 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
     // using AsScalar is needed to return the array itself instead of "advice Object[] return"
     @Advice.AssignReturned.ToReturned
     @Advice.AssignReturned.AsScalar
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Method[] filter(
         @Advice.Argument(0) Class<?> containingClass, @Advice.Return Method[] methods) {
       return ReflectionHelper.filterMethods(containingClass, methods);

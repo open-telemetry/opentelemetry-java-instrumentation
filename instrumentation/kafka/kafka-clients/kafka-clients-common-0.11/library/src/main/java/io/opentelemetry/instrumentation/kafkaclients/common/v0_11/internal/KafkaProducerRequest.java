@@ -21,34 +21,46 @@ public final class KafkaProducerRequest {
 
   private final ProducerRecord<?, ?> record;
   @Nullable private final String clientId;
+  @Nullable private final String bootstrapServers;
 
-  public static KafkaProducerRequest create(ProducerRecord<?, ?> record, Producer<?, ?> producer) {
-    return create(record, extractClientId(producer));
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record, Producer<?, ?> producer, @Nullable String bootstrapServers) {
+    return create(record, extractClientId(producer), bootstrapServers);
   }
 
-  public static KafkaProducerRequest create(ProducerRecord<?, ?> record, String clientId) {
-    return new KafkaProducerRequest(record, clientId);
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
+    return new KafkaProducerRequest(record, clientId, bootstrapServers);
   }
 
-  private KafkaProducerRequest(ProducerRecord<?, ?> record, String clientId) {
+  private KafkaProducerRequest(
+      ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
     this.record = record;
     this.clientId = clientId;
+    this.bootstrapServers = bootstrapServers;
   }
 
   public ProducerRecord<?, ?> getRecord() {
     return record;
   }
 
+  @Nullable
   public String getClientId() {
     return clientId;
   }
 
+  @Nullable
+  public String getBootstrapServers() {
+    return bootstrapServers;
+  }
+
+  @Nullable
   private static String extractClientId(Producer<?, ?> producer) {
     try {
       Map<MetricName, ? extends Metric> metrics = producer.metrics();
       Iterator<MetricName> metricIterator = metrics.keySet().iterator();
       return metricIterator.hasNext() ? metricIterator.next().tags().get("client-id") : null;
-    } catch (RuntimeException exception) {
+    } catch (RuntimeException ignored) {
       // ExceptionHandlingTest uses a Producer that throws exception on every method call
       return null;
     }

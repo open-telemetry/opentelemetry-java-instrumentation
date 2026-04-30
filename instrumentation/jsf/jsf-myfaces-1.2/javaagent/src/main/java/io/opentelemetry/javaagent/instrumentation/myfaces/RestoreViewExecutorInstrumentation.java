@@ -11,13 +11,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jsf.javax.JsfServerSpanNaming;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.JsfServerSpanNaming;
 import javax.faces.context.FacesContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RestoreViewExecutorInstrumentation implements TypeInstrumentation {
+class RestoreViewExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,13 +28,13 @@ public class RestoreViewExecutorInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, named("javax.faces.context.FacesContext"))),
-        RestoreViewExecutorInstrumentation.class.getName() + "$ExecuteAdvice");
+        getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Argument(0) FacesContext facesContext) {
       JsfServerSpanNaming.updateViewName(currentContext(), facesContext);
     }

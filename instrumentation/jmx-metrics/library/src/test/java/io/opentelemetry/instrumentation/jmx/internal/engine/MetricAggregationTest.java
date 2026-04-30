@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
@@ -92,8 +91,7 @@ class MetricAggregationTest {
             });
   }
 
-  private static ObjectName getObjectName(@Nullable String a, @Nullable String b)
-      throws MalformedObjectNameException {
+  private static ObjectName getObjectName(String a, String b) throws MalformedObjectNameException {
     StringBuilder parts = new StringBuilder();
     parts.append("otel.jmx.test:type=").append(Hello.class.getSimpleName());
     if (a != null) {

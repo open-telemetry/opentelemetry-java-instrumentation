@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.internal.classloader.AdviceUtil.applyInlineAdvice;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -38,7 +37,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * <p>This instrumentation forces all class loaders to delegate to the bootstrap class loader for
  * the classes that we have put in the bootstrap class loader.
  */
-public class BootDelegationInstrumentation implements TypeInstrumentation {
+class BootDelegationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -51,8 +50,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     ElementMatcher.Junction<MethodDescription> methodMatcher =
-        isMethod()
-            .and(named("loadClass"))
+        named("loadClass")
             .and(
                 takesArguments(1)
                     .and(takesArgument(0, String.class))
@@ -63,7 +61,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
             .and(isPublic().or(isProtected()))
             .and(not(isStatic()));
     // Inline instrumentation to prevent problems with invokedynamic-recursion
-    applyInlineAdvice(transformer, methodMatcher, this.getClass().getName() + "$LoadClassAdvice");
+    applyInlineAdvice(transformer, methodMatcher, getClass().getName() + "$LoadClassAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -109,7 +107,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static Class<?> onExit(
         @Advice.Return Class<?> originalResult, @Advice.Enter Class<?> resultFromBootstrapLoader) {
       Class<?> result = originalResult;

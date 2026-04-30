@@ -22,7 +22,7 @@ import org.apache.logging.log4j.util.ReadOnlyStringMap;
 import org.apache.logging.log4j.util.SortedArrayStringMap;
 import org.apache.logging.log4j.util.StringMap;
 
-public final class SpanDecoratingContextDataInjector implements ContextDataInjector {
+public class SpanDecoratingContextDataInjector implements ContextDataInjector {
   private static final boolean BAGGAGE_ENABLED =
       DeclarativeConfigUtil.getInstrumentationConfig(
               GlobalOpenTelemetry.get(), "log4j_context_data")

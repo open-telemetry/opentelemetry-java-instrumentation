@@ -15,39 +15,40 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import javax.annotation.Nullable;
 
-public final class AgentSpanTestingInstrumenter {
+public class AgentSpanTestingInstrumenter {
 
   private static final ContextKey<String> REQUEST_CONTEXT_KEY =
       ContextKey.named("test-request-key");
 
-  private static final Instrumenter<String, Void> INSTRUMENTER =
+  private static final Instrumenter<String, Void> instrumenter =
       Instrumenter.<String, Void>builder(GlobalOpenTelemetry.get(), "test", request -> request)
           .addContextCustomizer(
               (context, request, startAttributes) -> context.with(REQUEST_CONTEXT_KEY, request))
           .buildInstrumenter(SpanKindExtractor.alwaysInternal());
 
-  private static final Instrumenter<String, Void> HTTP_SERVER_INSTRUMENTER =
+  private static final Instrumenter<String, Void> httpServerInstrumenter =
       Instrumenter.<String, Void>builder(GlobalOpenTelemetry.get(), "test", request -> request)
           .addAttributesExtractor(
-              HttpServerAttributesExtractor.create(MockHttpServerAttributesGetter.INSTANCE))
-          .addContextCustomizer(HttpServerRoute.create(MockHttpServerAttributesGetter.INSTANCE))
+              HttpServerAttributesExtractor.create(new MockHttpServerAttributesGetter()))
+          .addContextCustomizer(HttpServerRoute.create(new MockHttpServerAttributesGetter()))
           .addContextCustomizer(
               (context, request, startAttributes) -> context.with(REQUEST_CONTEXT_KEY, request))
           .buildInstrumenter(SpanKindExtractor.alwaysServer());
 
   public static Context startHttpServerSpan(String name) {
-    Context context = HTTP_SERVER_INSTRUMENTER.start(Context.current(), name);
+    Context context = httpServerInstrumenter.start(Context.current(), name);
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/test/server/*");
     return context;
   }
 
-  public static void endHttpServer(Context context, Throwable error) {
-    HTTP_SERVER_INSTRUMENTER.end(context, context.get(REQUEST_CONTEXT_KEY), null, error);
+  public static void endHttpServer(Context context, @Nullable Throwable error) {
+    httpServerInstrumenter.end(context, context.get(REQUEST_CONTEXT_KEY), null, error);
   }
 
   public static Context startSpanWithAllKeys(String name) {
-    Context context = INSTRUMENTER.start(Context.current(), name);
+    Context context = instrumenter.start(Context.current(), name);
     Span span = Span.fromContext(context);
     for (SpanKey spanKey : getAllSpanKeys()) {
       context = spanKey.storeInContext(context, span);
@@ -55,8 +56,8 @@ public final class AgentSpanTestingInstrumenter {
     return context;
   }
 
-  public static void end(Context context, Throwable error) {
-    INSTRUMENTER.end(context, context.get(REQUEST_CONTEXT_KEY), null, error);
+  public static void end(Context context, @Nullable Throwable error) {
+    instrumenter.end(context, context.get(REQUEST_CONTEXT_KEY), null, error);
   }
 
   private static SpanKey[] getAllSpanKeys() {

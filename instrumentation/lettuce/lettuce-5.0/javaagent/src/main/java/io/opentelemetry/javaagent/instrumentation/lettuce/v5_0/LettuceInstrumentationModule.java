@@ -12,20 +12,19 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx.LettuceReactiveCommandsInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class LettuceInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class LettuceInstrumentationModule extends InstrumentationModule {
   public LettuceInstrumentationModule() {
     super("lettuce", "lettuce-5.0");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 5.1
     return not(hasClassesNamed("io.lettuce.core.tracing.Tracing"));
   }
 
@@ -36,10 +35,5 @@ public class LettuceInstrumentationModule extends InstrumentationModule
         new LettuceAsyncCommandsInstrumentation(),
         new LettuceClientInstrumentation(),
         new LettuceReactiveCommandsInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

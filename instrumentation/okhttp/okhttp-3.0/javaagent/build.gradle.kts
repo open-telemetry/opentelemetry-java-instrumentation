@@ -23,13 +23,11 @@ dependencies {
   testInstrumentation(project(":instrumentation:okhttp:okhttp-2.2:javaagent"))
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
-
 testing {
   suites {
     val http2Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (testLatestDeps) {
+        if (otelProps.testLatestDeps) {
           implementation("com.squareup.okhttp3:okhttp:latest.release")
           compileOnly("com.google.android:annotations:4.1.1.4")
         } else {
@@ -46,8 +44,8 @@ tasks {
     dependsOn(testing.suites)
   }
 
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
