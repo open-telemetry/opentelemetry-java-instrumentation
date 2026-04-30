@@ -352,6 +352,7 @@ def fetch_pr_context(
     # Fetch per-commit diffs for the most recent commits, in parallel.
     recent_commits = commits[-MAX_COMMITS:]
     patches: dict[str, str] = {}
+    merge_shas: set[str] = set()
     if recent_commits:
         with ThreadPoolExecutor(max_workers=4) as pool:
             futs = {
@@ -365,6 +366,8 @@ def fetch_pr_context(
                 except Exception:
                     detail = {}
                 patches[sha] = format_commit_patch(detail, MAX_COMMIT_DIFF_CHARS)
+                if len(detail.get("parents") or []) >= 2:
+                    merge_shas.add(sha)
 
     # Build unified activity timeline.
     events: list[dict[str, Any]] = []
@@ -386,6 +389,7 @@ def fetch_pr_context(
             "login": login,
             "body": body,
             "sha": sha_full[:7],
+            "is_merge": sha_full in merge_shas,
         })
     for c in issue_comments:
         events.append({
@@ -412,28 +416,14 @@ def fetch_pr_context(
     events = [e for e in events if e["ts"]]
     events.sort(key=lambda e: e["ts"])
 
-    base_ref = pr.get("baseRefName") or "main"
-    merge_subject_prefixes = (
-        f"merge branch '{base_ref}'",
-        f"merge remote-tracking branch 'upstream/{base_ref}'",
-        f"merge remote-tracking branch 'origin/{base_ref}'",
-        f"merge {base_ref} into",
-    )
-
-    def _is_merge_from_base(e: dict[str, Any]) -> bool:
-        if e["kind"] != "commit":
-            return False
-        subject = ((e.get("body") or "").splitlines() or [""])[0].strip().lower()
-        return any(subject.startswith(p) for p in merge_subject_prefixes)
-
     # Last substantive event = last event whose body is non-empty OR whose
-    # kind is not "review:COMMENTED" (state changes always count). Merges
-    # of the base branch into the PR don't count as substantive — they
-    # don't move the conversation forward.
+    # kind is not "review:COMMENTED" (state changes always count). Merge
+    # commits (≥2 parents — e.g. "Update branch" merging base into the PR)
+    # don't count as substantive: they don't move the conversation forward.
     def is_substantive(e: dict[str, Any]) -> bool:
         if e["kind"].startswith("review:") and e["kind"] != "review:COMMENTED":
             return True
-        if _is_merge_from_base(e):
+        if e.get("is_merge"):
             return False
         return bool((e.get("body") or "").strip())
 
