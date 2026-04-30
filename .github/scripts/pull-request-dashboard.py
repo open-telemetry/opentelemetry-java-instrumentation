@@ -250,6 +250,12 @@ def role_for(login: str, author: str, reviewers: set[str]) -> str:
 # fix-up) pass through and are eligible to be picked as the delegator.
 _BOT_COMMITTER_LOGINS = {"copilot"}
 
+# PR author logins that delegate work to a human (the Copilot SWE-agent
+# opens the PR but a human triggered it). Only for these authors do we look
+# up a human delegator from the first commit's committer. For other bots
+# (renovate, dependabot, etc.) we keep the bot as the author.
+_DELEGATING_BOT_AUTHORS = {"app/copilot-swe-agent", "copilot"}
+
 
 def _is_bot_login(login: str) -> bool:
     if not login:
@@ -312,9 +318,10 @@ def fetch_pr_context(
 
     # For Copilot SWE-agent PRs the API author is the bot; surface the human
     # who delegated the task so reviews/comments by that person are classified
-    # as "author" activity instead of "approver".
+    # as "author" activity instead of "approver". Other bot authors
+    # (renovate, dependabot, ...) have no human delegator, so we keep the bot.
     delegator = ""
-    if _is_bot_login(author):
+    if author.lower() in _DELEGATING_BOT_AUTHORS:
         delegator = detect_human_delegator(commits)
         if delegator:
             author = delegator
