@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.graphql.common.v12_0.internal;
 
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-
 import graphql.ExecutionResult;
 import graphql.GraphQLError;
 import graphql.execution.instrumentation.InstrumentationContext;
@@ -29,6 +26,7 @@ import graphql.util.TraversalControl;
 import graphql.util.TraverserContext;
 import graphql.util.TreeTransformerUtil;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -45,6 +43,14 @@ import java.util.Locale;
  * any time.
  */
 public final class OpenTelemetryInstrumentationHelper {
+  // copied from ExceptionAttributes
+  private static final AttributeKey<String> EXCEPTION_MESSAGE =
+      AttributeKey.stringKey("exception.message");
+
+  // copied from ExceptionAttributes
+  private static final AttributeKey<String> EXCEPTION_TYPE =
+      AttributeKey.stringKey("exception.type");
+
   private static final NodeVisitor sanitizingVisitor = new SanitizingVisitor();
   private static final AstTransformer astTransformer = new AstTransformer();
 
