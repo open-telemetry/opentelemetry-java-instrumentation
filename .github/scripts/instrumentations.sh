@@ -192,7 +192,6 @@ readonly INSTRUMENTATIONS=(
   "mongo:mongo-async-3.3:javaagent:testStableSemconv"
   "mybatis-3.2:javaagent:test"
   "nats:nats-2.17:javaagent:test"
-  "nats:nats-2.17:javaagent:testExperimental"
   "netty:netty-3.8:javaagent:test"
   "netty:netty-4.0:javaagent:test"
   "netty:netty-4.1:javaagent:test"
