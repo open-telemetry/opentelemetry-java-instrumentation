@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -24,11 +25,13 @@ import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.Result;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private HttpClient client;
   private HttpClient httpsClient;
@@ -42,17 +45,13 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     client = createStandardClient();
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
     client.start();
+    cleanup.deferCleanup(client::stop);
 
     SslContextFactory.Client tlsCtx = new SslContextFactory.Client();
     httpsClient = createHttpsClient(tlsCtx);
     httpsClient.setFollowRedirects(false);
     httpsClient.start();
-  }
-
-  @AfterEach
-  void after() throws Exception {
-    client.stop();
-    httpsClient.stop();
+    cleanup.deferCleanup(httpsClient::stop);
   }
 
   @Override
