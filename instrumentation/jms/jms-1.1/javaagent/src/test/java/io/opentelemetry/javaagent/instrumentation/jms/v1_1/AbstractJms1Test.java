@@ -167,7 +167,7 @@ abstract class AbstractJms1Test {
     Destination destination = destinationFactory.create(session);
     TextMessage sentMessage = session.createTextMessage("a message");
     sentMessage.setStringProperty("Test_Message_Header", "test");
-    sentMessage.setStringProperty("Uncaptured-Header", "password");
+    sentMessage.setStringProperty("Uncaptured_Header", "password");
     sentMessage.setIntProperty("Test_Message_Int_Header", 1234);
 
     MessageProducer producer = session.createProducer(destination);
