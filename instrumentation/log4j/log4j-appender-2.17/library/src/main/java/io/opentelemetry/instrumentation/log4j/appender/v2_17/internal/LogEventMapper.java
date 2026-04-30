@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
+import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -42,8 +43,6 @@ public final class LogEventMapper<T> {
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = stringKey("thread.name");
-  // copied from OtelIncubatingAttributes
-  private static final AttributeKey<String> OTEL_EVENT_NAME = stringKey("otel.event.name");
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
