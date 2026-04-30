@@ -225,7 +225,7 @@ class SpringTemplateTest extends AbstractJmsTest {
           @Override
           public @NotNull Message postProcessMessage(@NotNull Message message) throws JMSException {
             message.setStringProperty("Test_Message_Header", "test");
-            message.setStringProperty("Uncaptured-Header", "password");
+            message.setStringProperty("Uncaptured_Header", "password");
             message.setIntProperty("Test_Message_Int_Header", 1234);
             return message;
           }
