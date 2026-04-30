@@ -10,6 +10,10 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 
 final class HelidonServerResponseMutator implements HttpServerResponseMutator<ServerResponse> {
 
+  static final HelidonServerResponseMutator INSTANCE = new HelidonServerResponseMutator();
+
+  private HelidonServerResponseMutator() {}
+
   @Override
   public void appendHeader(ServerResponse res, String name, String value) {
     res.header(name, value);

@@ -96,6 +96,7 @@ class FinatraRouteInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope nameSpan(
         @Advice.This Route route,
         @Advice.FieldValue("routeInfo") RouteInfo routeInfo,
