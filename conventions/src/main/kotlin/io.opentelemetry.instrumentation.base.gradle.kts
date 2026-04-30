@@ -170,14 +170,19 @@ configurations {
     // configurations stay safe by default.
     configureEach {
       if (!isCanBeResolved) return@configureEach
-      // `latestDepTestLibrary` overrides apply ONLY to test-classpath configurations.
-      // They must NOT touch `compileClasspath`, because the whole point of `library(old)` +
-      // `latestDepTestLibrary(newRange)` is to keep the agent compiling against the old API
-      // while testing against the new one. Forcing the override onto compileClasspath would
-      // upgrade the compileOnly `library(...)` version and break compilation (e.g.
-      // scala-fork-join-2.8 compiles against scala 2.8 APIs, vertx-sql-client-4.0 against
-      // generic vertx 4.0 APIs, elasticsearch-transport-5.0 against generic ES 5.0 APIs).
-      val applyOverrides = name.contains("test", ignoreCase = true)
+      // `latestDepTestLibrary` overrides apply ONLY to the main test/latestDepTest
+      // configurations. They must NOT touch `compileClasspath`, because the whole point of
+      // `library(old)` + `latestDepTestLibrary(newRange)` is to keep the agent compiling
+      // against the old API while testing against the new one. Forcing the override onto
+      // compileClasspath would upgrade the compileOnly `library(...)` version and break
+      // compilation (e.g. scala-fork-join-2.8 compiles against scala 2.8 APIs,
+      // vertx-sql-client-4.0 against generic vertx 4.0 APIs, elasticsearch-transport-5.0
+      // against generic ES 5.0 APIs). Overrides must also NOT touch custom JvmTestSuite
+      // source sets (e.g. `play24Test*`, `version20Test*`, `tapirTest*`) which declare
+      // their own explicit older versions; using `contains("test")` here would let the
+      // main suite's `latestDepTestLibrary("...:2.5.+")` upgrade play-mvc-2.4's
+      // `play24Test` classpath off Play 2.4. Use a strict prefix match instead.
+      val applyOverrides = name.startsWith("test") || name.startsWith("latestDepTest")
       // Pinning of `latest.release`/`+` versions is applied across test-related
       // configurations and the main `compileClasspath`. compileClasspath is included so
       // that modules whose `library(...)` declarations resolve `latest.release` in latest

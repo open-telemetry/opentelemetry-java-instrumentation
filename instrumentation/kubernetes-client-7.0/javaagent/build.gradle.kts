@@ -21,12 +21,20 @@ dependencies {
 
 testing {
   suites {
-    val version20Test by registering(JvmTestSuite::class) {
+    // version22Test reuses the same test source against `latest.release` in latest-deps mode
+    // (currently 26.x), and against 22.0.0 otherwise, to exercise the upper end of the v20+
+    // builder API line.
+    val version22Test by registering(JvmTestSuite::class) {
+      sources {
+        java {
+          setSrcDirs(listOf("src/version20Test/java"))
+        }
+      }
       dependencies {
         if (otelProps.testLatestDeps) {
           implementation("io.kubernetes:client-java-api:latest.release")
         } else {
-          implementation("io.kubernetes:client-java-api:20.0.0")
+          implementation("io.kubernetes:client-java-api:22.0.0")
         }
       }
     }

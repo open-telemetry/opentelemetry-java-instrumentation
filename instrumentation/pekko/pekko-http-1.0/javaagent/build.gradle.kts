@@ -71,6 +71,9 @@ testing {
           implementation("com.typesafe.akka:akka-http_2.13:latest.release")
           implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
           implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:latest.release")
+          implementation("org.apache.pekko:pekko-actor_2.13:latest.release")
+          implementation("org.apache.pekko:pekko-stream_2.13:latest.release")
+          implementation("org.apache.pekko:pekko-slf4j_2.13:latest.release")
         } else {
           implementation("org.apache.pekko:pekko-http_2.12:1.0.0")
           implementation("org.apache.pekko:pekko-stream_2.12:1.0.1")
