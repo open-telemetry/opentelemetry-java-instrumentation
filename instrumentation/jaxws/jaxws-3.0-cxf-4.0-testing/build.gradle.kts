@@ -19,6 +19,6 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }
