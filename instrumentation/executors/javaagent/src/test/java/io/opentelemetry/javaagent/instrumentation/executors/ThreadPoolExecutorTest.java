@@ -12,6 +12,7 @@ import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
@@ -19,8 +20,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ThreadPoolExecutorTest {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void virtualFieldsAdded() {
@@ -33,6 +37,7 @@ class ThreadPoolExecutorTest {
     Runnable task = latch::countDown;
 
     RunnableCheckingThreadPoolExecutor executor = new RunnableCheckingThreadPoolExecutor(task);
+    cleanup.deferCleanup(executor::shutdownNow);
 
     Baggage baggage = Baggage.builder().put("test", "test").build();
     try (Scope ignored = baggage.makeCurrent()) {

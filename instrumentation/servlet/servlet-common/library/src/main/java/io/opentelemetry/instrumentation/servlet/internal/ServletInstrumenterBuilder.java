@@ -24,6 +24,10 @@ import java.util.List;
  */
 public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
+  private final DefaultHttpServerInstrumenterBuilder<
+          ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+      builder;
+  private final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
 
@@ -31,11 +35,6 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private boolean captureExperimentalAttributes;
   private boolean captureEnduserId;
   private List<String> captureRequestParameters = new ArrayList<>();
-
-  private final DefaultHttpServerInstrumenterBuilder<
-          ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-      builder;
-  private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
   public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create(
       String instrumentationName,

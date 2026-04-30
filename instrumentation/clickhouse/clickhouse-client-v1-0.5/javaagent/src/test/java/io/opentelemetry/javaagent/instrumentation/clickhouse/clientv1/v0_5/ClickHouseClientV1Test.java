@@ -290,7 +290,7 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testAsyncExecuteQuery() throws Exception {
+  void testAsyncExecuteQuery() {
     CompletableFuture<ClickHouseResponse> response =
         client
             .read(server)
@@ -298,7 +298,7 @@ class ClickHouseClientV1Test {
             .query("select * from " + tableName)
             .execute();
 
-    ClickHouseResponse result = response.get();
+    ClickHouseResponse result = response.join();
     assertThat(result).isNotNull();
     result.close();
 
@@ -326,13 +326,13 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testSendQuery() throws Exception {
+  void testSendQuery() {
     testing.runWithSpan(
         "parent",
         () -> {
           CompletableFuture<List<ClickHouseResponseSummary>> future =
               ClickHouseClient.send(server, "select * from " + tableName + " limit 1");
-          List<ClickHouseResponseSummary> results = future.get();
+          List<ClickHouseResponseSummary> results = future.join();
           assertThat(results).hasSize(1);
         });
 
@@ -364,7 +364,7 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testSendMultipleQueries() throws Exception {
+  void testSendMultipleQueries() {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -373,7 +373,7 @@ class ClickHouseClientV1Test {
                   server,
                   "insert into " + tableName + " values('1')('2')('3')",
                   "select * from " + tableName + " limit 1");
-          List<ClickHouseResponseSummary> results = future.get();
+          List<ClickHouseResponseSummary> results = future.join();
           assertThat(results).hasSize(2);
         });
 
@@ -508,7 +508,7 @@ class ClickHouseClientV1Test {
   // that this syntax error isn't detected when running with the agent as it is also ignored when
   // running without the agent.
   @Test
-  void testPlaceholderQueryInput() throws Exception {
+  void testPlaceholderQueryInput() {
     ClickHouseRequest<?> request =
         client.read(server).format(ClickHouseFormat.RowBinaryWithNamesAndTypes);
     testing.runWithSpan(
@@ -520,7 +520,7 @@ class ClickHouseClientV1Test {
                   .query("select * from " + tableName + " where s={s:String}")
                   .settings(ImmutableMap.of("param_s", "" + Instant.now().getEpochSecond()))
                   .execute()
-                  .get();
+                  .join();
           response.close();
         });
 

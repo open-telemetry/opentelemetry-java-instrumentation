@@ -31,11 +31,11 @@ public class ContextPayload {
 
   private final Map<String, String> context;
 
-  public ContextPayload() {
+  private ContextPayload() {
     this(new HashMap<>());
   }
 
-  public ContextPayload(Map<String, String> context) {
+  private ContextPayload(Map<String, String> context) {
     this.context = context;
   }
 

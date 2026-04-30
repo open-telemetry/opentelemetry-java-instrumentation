@@ -75,7 +75,7 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
       // return type is different in latest version
       Method method = VirtualHost.class.getMethod("attach", String.class, Restlet.class);
       return (Route) method.invoke(host, path, restlet);
-    } catch (Exception e) {
+    } catch (ReflectiveOperationException e) {
       throw new IllegalStateException(e);
     }
   }
@@ -87,7 +87,7 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
       // return type is different in latest version
       Method method = VirtualHost.class.getMethod("attach", Restlet.class);
       method.invoke(host, restlet);
-    } catch (Exception e) {
+    } catch (ReflectiveOperationException e) {
       throw new IllegalStateException(e);
     }
   }
@@ -96,7 +96,7 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
     try {
       Method getTemplate = route.getClass().getMethod("getTemplate");
       return (Template) getTemplate.invoke(route);
-    } catch (Exception e) {
+    } catch (ReflectiveOperationException e) {
       throw new IllegalStateException(e);
     }
   }

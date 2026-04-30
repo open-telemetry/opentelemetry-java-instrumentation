@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.server;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -24,7 +25,7 @@ public abstract class AbstractImmediateHandlerSpringWebFluxServerTest
 
   @Test
   void nestedPath() {
-    assumeTrue(Boolean.getBoolean("testLatestDeps"));
+    assumeTrue(testLatestDeps());
 
     String method = "GET";
     AggregatedHttpRequest request = request(NESTED_PATH, method);

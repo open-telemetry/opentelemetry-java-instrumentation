@@ -74,16 +74,16 @@ public final class KafkaUtil {
   }
 
   @Nullable
-  public static String getConsumerGroup(Consumer<?, ?> consumer) {
+  public static String getConsumerGroup(@Nullable Consumer<?, ?> consumer) {
     return getConsumerInfo(consumer).get(CONSUMER_GROUP);
   }
 
   @Nullable
-  public static String getClientId(Consumer<?, ?> consumer) {
+  public static String getClientId(@Nullable Consumer<?, ?> consumer) {
     return getConsumerInfo(consumer).get(CLIENT_ID);
   }
 
-  private static Map<String, String> getConsumerInfo(Consumer<?, ?> consumer) {
+  private static Map<String, String> getConsumerInfo(@Nullable Consumer<?, ?> consumer) {
     if (consumer == null) {
       return emptyMap();
     }

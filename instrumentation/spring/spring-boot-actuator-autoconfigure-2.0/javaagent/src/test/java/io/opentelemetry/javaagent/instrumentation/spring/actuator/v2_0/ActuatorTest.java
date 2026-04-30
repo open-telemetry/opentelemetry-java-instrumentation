@@ -40,21 +40,19 @@ class ActuatorTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.micrometer-1.5",
-        "test-counter",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("thingies")
-                        .hasDoubleSumSatisfying(
-                            sum ->
-                                sum.isMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("tag"), "value"))))));
+        metric ->
+            metric
+                .hasName("test-counter")
+                .hasUnit("thingies")
+                .hasDoubleSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
 
     MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
     assertThat(meterRegistry).isInstanceOf(CompositeMeterRegistry.class);
@@ -62,7 +60,8 @@ class ActuatorTest {
     Set<MeterRegistry> registries = ((CompositeMeterRegistry) meterRegistry).getRegistries();
     ArrayList<MeterRegistry> list = new ArrayList<>(registries);
 
-    String last = list.get(list.size() - 1).getClass().getSimpleName();
-    assertThat(last).isEqualTo("OpenTelemetryMeterRegistry");
+    assertThat(list)
+        .extracting(registry -> registry.getClass().getSimpleName())
+        .endsWith("OpenTelemetryMeterRegistry");
   }
 }

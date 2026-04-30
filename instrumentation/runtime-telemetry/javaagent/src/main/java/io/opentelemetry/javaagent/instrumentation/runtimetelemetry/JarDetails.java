@@ -55,8 +55,8 @@ class JarDetails {
 
   private final URL url;
   protected final JarFile jarFile;
-  private final Properties pom;
-  private final Manifest manifest;
+  @Nullable private final Properties pom;
+  @Nullable private final Manifest manifest;
   private final String sha1Checksum;
 
   private JarDetails(URL url, JarFile jarFile) throws IOException {
@@ -79,6 +79,9 @@ class JarDetails {
               new JarFile(
                   urlString.substring("jar:file:".length(), index + 1 + entry.getValue().length()));
           JarEntry jarEntry = jarFile.getJarEntry(targetEntry);
+          if (jarEntry == null) {
+            throw new IOException("Embedded jar entry not found: " + targetEntry);
+          }
           return new EmbeddedJarDetails(url, jarFile, jarEntry);
         }
       }
@@ -161,13 +164,15 @@ class JarDetails {
 
     Attributes mainAttributes = manifest.getMainAttributes();
     String name = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
-    String description = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
+    String vendor = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
 
-    String packageDescription = name;
-    if (description != null && !description.isEmpty()) {
-      packageDescription += " by " + description;
+    if (name == null || name.isEmpty()) {
+      return vendor == null || vendor.isEmpty() ? null : vendor;
     }
-    return packageDescription;
+    if (vendor == null || vendor.isEmpty()) {
+      return name;
+    }
+    return name + " by " + vendor;
   }
 
   /** Returns the SHA1 hash of this file, e.g. {@code 30d16ec2aef6d8094c5e2dce1d95034ca8b6cb42}. */
@@ -177,12 +182,18 @@ class JarDetails {
 
   private String computeDigest(MessageDigest md) throws IOException {
     try (InputStream inputStream = getInputStream()) {
-      DigestInputStream dis = new DigestInputStream(inputStream, md);
-      byte[] buffer = new byte[8192];
-      while (dis.read(buffer) != -1) {}
-      byte[] digest = md.digest();
-      return new BigInteger(1, digest).toString(16);
+      return computeDigest(inputStream, md);
     }
+  }
+
+  private static String computeDigest(InputStream inputStream, MessageDigest md)
+      throws IOException {
+    md.reset();
+    DigestInputStream dis = new DigestInputStream(inputStream, md);
+    byte[] buffer = new byte[8192];
+    while (dis.read(buffer) != -1) {}
+    byte[] digest = md.digest();
+    return String.format(Locale.ROOT, "%040x", new BigInteger(1, digest));
   }
 
   /**

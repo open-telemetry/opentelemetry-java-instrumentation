@@ -19,9 +19,8 @@ class NamingConventionTest extends AbstractNamingConventionTest {
   static final MicrometerTestingExtension micrometerExtension =
       new MicrometerTestingExtension(testing) {
         @Override
-        MeterRegistry configureMeterRegistry(MeterRegistry registry) {
+        void configureMeterRegistry(MeterRegistry registry) {
           registry.config().namingConvention(AbstractNamingConventionTest.namingConvention());
-          return registry;
         }
       };
 

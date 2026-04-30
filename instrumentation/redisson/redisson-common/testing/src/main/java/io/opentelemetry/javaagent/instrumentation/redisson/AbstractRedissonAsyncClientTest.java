@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -135,7 +136,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
@@ -168,7 +169,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
                             equalTo(maybeStable(DB_OPERATION), "SADD"))
@@ -179,8 +180,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6033
   @Test
-  void scheduleCallable()
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+  void scheduleCallable() throws ReflectiveOperationException {
     RScheduledExecutorService executorService = redisson.getExecutorService("EXECUTOR");
     //  Adapt different method signature:
     // `java.util.concurrent.ScheduledFuture<V> schedule(Callable,long,TimeUnit)` in 3.0.1
@@ -195,7 +195,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   private static Object invokeSchedule(RScheduledExecutorService executorService)
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+      throws ReflectiveOperationException {
     return executorService
         .getClass()
         .getMethod("schedule", Callable.class, long.class, TimeUnit.class)
@@ -242,7 +242,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
@@ -252,7 +252,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))
@@ -263,7 +263,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "EXEC"),
                             equalTo(maybeStable(DB_OPERATION), "EXEC"))
@@ -272,7 +272,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   protected boolean useRedisProtocol() {
-    return Boolean.getBoolean("testLatestDeps");
+    return testLatestDeps();
   }
 
   private static class MyCallable implements Serializable, Callable<Object> {

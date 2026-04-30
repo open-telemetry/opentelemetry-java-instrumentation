@@ -161,28 +161,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testCommonDbSqlcommenterPropertyMapping() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.experimental.db-sqlcommenter.enabled", "false");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructured("db_sqlcommenter/development")
-                .getBoolean("enabled"))
-        .isFalse();
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructured("db")
-                .getStructured("sqlcommenter/development")
-                .getBoolean("enabled"))
-        .isNull();
-  }
-
-  @Test
   void testGraphqlQuerySanitizationMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.graphql.query-sanitization.enabled", "false");

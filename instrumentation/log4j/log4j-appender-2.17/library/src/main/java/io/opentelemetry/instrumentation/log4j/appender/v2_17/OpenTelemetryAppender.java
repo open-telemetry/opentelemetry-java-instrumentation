@@ -63,7 +63,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
-  private volatile OpenTelemetry openTelemetry;
+  @Nullable private volatile OpenTelemetry openTelemetry;
 
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
@@ -112,8 +112,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureCodeAttributes;
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
-    @PluginBuilderAttribute private String captureContextDataAttributes;
-    @PluginBuilderAttribute private boolean captureEventName;
+    @Nullable @PluginBuilderAttribute private String captureContextDataAttributes;
     @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
     @Nullable private OpenTelemetry openTelemetry;
@@ -169,28 +168,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     /**
-     * Sets whether the value of the {@code event.name} attribute is used as the log event name.
-     *
-     * <p>The {@code event.name} attribute is captured via any other mechanism supported by this
-     * appender, such as when {@code captureContextDataAttributes} includes {@code event.name}.
-     *
-     * <p>When {@code captureEventName} is true, then the value of the {@code event.name} attribute
-     * will be used as the log event name, and {@code event.name} attribute will be removed.
-     *
-     * @param captureEventName to enable or disable capturing the {@code event.name} attribute as
-     *     the log event name
-     */
-    @CanIgnoreReturnValue
-    public B setCaptureEventName(boolean captureEventName) {
-      this.captureEventName = captureEventName;
-      return asBuilder();
-    }
-
-    /**
-     * Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with
-     * an {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used
-     * to replay the logs that were emitted prior to setting the OpenTelemetry instance into the
-     * Logback appender.
+     * Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an
+     * {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used to
+     * replay the logs that were emitted prior to setting the OpenTelemetry instance into the
+     * OpenTelemetry Log4j appender.
      */
     @CanIgnoreReturnValue
     public B setNumLogsCapturedBeforeOtelInstall(int numLogsCapturedBeforeOtelInstall) {
@@ -207,10 +188,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Override
     public OpenTelemetryAppender build() {
-      if (captureEventName) {
-        LOGGER.warn(
-            "The captureEventName setting is deprecated and will be removed in a future version.");
-      }
       OpenTelemetry openTelemetry = this.openTelemetry;
       return new OpenTelemetryAppender(
           getName(),
@@ -223,7 +200,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureMapMessageAttributes,
           captureMarkerAttribute,
           captureContextDataAttributes,
-          captureEventName,
           numLogsCapturedBeforeOtelInstall,
           openTelemetry);
     }
@@ -239,15 +215,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
-      String captureContextDataAttributes,
-      boolean captureEventName,
+      @Nullable String captureContextDataAttributes,
       int numLogsCapturedBeforeOtelInstall,
-      OpenTelemetry openTelemetry) {
+      @Nullable OpenTelemetry openTelemetry) {
     super(name, filter, layout, ignoreExceptions, properties);
 
-    DeclarativeConfigProperties comonConfig =
+    DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
-    boolean v3Preview = comonConfig.getBoolean("v3_preview", false);
+    boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     this.mapper =
         new LogEventMapper<>(
@@ -257,7 +232,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureMapMessageAttributes,
             captureMarkerAttribute,
             splitAndFilterBlanksAndNulls(captureContextDataAttributes),
-            captureEventName,
             v3Preview);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
@@ -268,7 +242,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
   }
 
-  private static List<String> splitAndFilterBlanksAndNulls(String value) {
+  private static List<String> splitAndFilterBlanksAndNulls(@Nullable String value) {
     if (value == null) {
       return emptyList();
     }

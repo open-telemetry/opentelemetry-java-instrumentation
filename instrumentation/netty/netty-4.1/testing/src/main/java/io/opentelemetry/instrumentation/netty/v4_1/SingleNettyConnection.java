@@ -30,13 +30,13 @@ we cannot concurrently send several requests across the same channel. Thus doReq
 class is synchronised. Yes, it seems kinda pointless, but at least we test that our instrumentation
 does not wreak havoc on Netty channel.
  */
-public class SingleNettyConnection implements SingleConnection {
+class SingleNettyConnection implements SingleConnection {
   private final String host;
   private final int port;
   private final Consumer<Channel> channelConsumer;
   private final Channel channel;
 
-  public SingleNettyConnection(
+  SingleNettyConnection(
       Bootstrap bootstrap, String host, int port, Consumer<Channel> channelConsumer) {
     this.host = host;
     this.port = port;

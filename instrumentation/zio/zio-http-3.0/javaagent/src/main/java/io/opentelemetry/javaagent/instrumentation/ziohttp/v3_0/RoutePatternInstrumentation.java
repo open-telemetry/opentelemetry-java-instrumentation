@@ -32,7 +32,7 @@ class RoutePatternInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static final class CreateRouteAdvice {
+  public static class CreateRouteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))

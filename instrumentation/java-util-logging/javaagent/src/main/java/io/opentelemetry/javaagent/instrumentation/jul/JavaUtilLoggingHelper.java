@@ -29,7 +29,7 @@ import java.util.logging.LogRecord;
 
 public class JavaUtilLoggingHelper {
 
-  private static final Formatter FORMATTER = new AccessibleFormatter();
+  private static final Formatter formatter = new AccessibleFormatter();
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
@@ -68,7 +68,7 @@ public class JavaUtilLoggingHelper {
    */
   private static void mapLogRecord(LogRecordBuilder builder, LogRecord logRecord) {
     // message
-    String message = FORMATTER.formatMessage(logRecord);
+    String message = formatter.formatMessage(logRecord);
     if (message != null) {
       builder.setBody(message);
     }
@@ -82,7 +82,7 @@ public class JavaUtilLoggingHelper {
     Level level = logRecord.getLevel();
     if (level != null) {
       builder.setSeverity(levelToSeverity(level));
-      builder.setSeverityText(logRecord.getLevel().getName());
+      builder.setSeverityText(level.getName());
     }
 
     AttributesBuilder attributes = Attributes.builder();

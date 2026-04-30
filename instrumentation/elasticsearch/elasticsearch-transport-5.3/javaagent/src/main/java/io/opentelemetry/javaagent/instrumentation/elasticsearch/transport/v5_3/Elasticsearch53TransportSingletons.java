@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.Elasti
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportInstrumenterFactory;
 import org.elasticsearch.action.ActionResponse;
 
-public class Elasticsearch53TransportSingletons {
+class Elasticsearch53TransportSingletons {
 
   private static final Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter =
       ElasticsearchTransportInstrumenterFactory.create(
@@ -18,7 +18,7 @@ public class Elasticsearch53TransportSingletons {
           new Elasticsearch53TransportExperimentalAttributesExtractor(),
           new Elasticsearch53TransportAttributesGetter());
 
-  public static Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter() {
+  static Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter() {
     return instrumenter;
   }
 

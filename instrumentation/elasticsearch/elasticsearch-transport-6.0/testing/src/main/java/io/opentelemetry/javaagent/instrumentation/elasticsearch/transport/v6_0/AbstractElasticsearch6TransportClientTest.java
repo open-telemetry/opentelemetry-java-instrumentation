@@ -19,7 +19,6 @@ import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.transport.TransportService;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
@@ -46,6 +45,7 @@ public abstract class AbstractElasticsearch6TransportClientTest
             .put("discovery.type", "single-node")
             .build();
     testNode = getNodeFactory().newNode(settings);
+    cleanup.deferAfterAll(testNode);
     startNode(testNode);
 
     tcpPublishAddress =
@@ -59,6 +59,7 @@ public abstract class AbstractElasticsearch6TransportClientTest
                 .put("thread_pool.listener.size", 1)
                 .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
                 .build());
+    cleanup.deferAfterAll(client);
     client.addTransportAddress(tcpPublishAddress);
     testing.runWithSpan(
         "setup",
@@ -86,12 +87,6 @@ public abstract class AbstractElasticsearch6TransportClientTest
         });
     testing.waitForTraces(1);
     testing.clearData();
-  }
-
-  @AfterAll
-  void cleanUp() throws Exception {
-    client.close();
-    testNode.close();
   }
 
   protected abstract NodeFactory getNodeFactory();

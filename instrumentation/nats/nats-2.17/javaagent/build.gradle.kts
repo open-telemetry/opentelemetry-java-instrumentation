@@ -24,23 +24,4 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
-
-  val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("NatsExperimentalTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.capture-headers=captured-header")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("NatsExperimentalTest")
-    }
-  }
-
-  check {
-    dependsOn(testExperimental)
-  }
 }

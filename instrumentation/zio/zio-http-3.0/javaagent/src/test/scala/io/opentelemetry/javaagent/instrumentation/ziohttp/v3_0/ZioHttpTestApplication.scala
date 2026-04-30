@@ -11,7 +11,7 @@ import zio.http._
 import java.util.concurrent.CountDownLatch
 
 object ZioHttpTestApplication extends ZIOAppDefault {
-  val routes =
+  private val routes =
     Routes(
       Method.GET / "greet" / string("name") -> handler {
         (name: String, _: Request) =>

@@ -149,8 +149,8 @@ class SnippetPrintWriterTest {
 
   private static class InMemoryHttpServletResponse extends HttpServletResponseWrapper {
 
-    private PrintWriter printWriter;
-    private StringWriter stringWriter;
+    private final StringWriter stringWriter = new StringWriter();
+    private final PrintWriter printWriter = new PrintWriter(stringWriter);
 
     InMemoryHttpServletResponse(HttpServletResponse delegate) {
       super(delegate);
@@ -158,10 +158,6 @@ class SnippetPrintWriterTest {
 
     @Override
     public PrintWriter getWriter() {
-      if (printWriter == null) {
-        stringWriter = new StringWriter();
-        printWriter = new PrintWriter(stringWriter);
-      }
       return printWriter;
     }
 

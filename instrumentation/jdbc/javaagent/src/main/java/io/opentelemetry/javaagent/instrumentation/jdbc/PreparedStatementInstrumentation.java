@@ -239,7 +239,7 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class ClearParametersAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void clearBatch(@Advice.This PreparedStatement statement) {
+    public static void clearParameters(@Advice.This PreparedStatement statement) {
       JdbcData.clearParameters(statement);
     }
   }

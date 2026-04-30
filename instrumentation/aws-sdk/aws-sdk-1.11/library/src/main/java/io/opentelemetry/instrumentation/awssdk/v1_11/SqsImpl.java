@@ -86,7 +86,7 @@ final class SqsImpl {
       Field field = ReceiveMessageResult.class.getDeclaredField("messages");
       field.setAccessible(true);
       return field;
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       return null;
     }
   }
@@ -96,7 +96,7 @@ final class SqsImpl {
       Request<?> request,
       Response<?> response,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
-      Context receiveContext) {
+      @Nullable Context receiveContext) {
     if (messagesField == null) {
       return;
     }

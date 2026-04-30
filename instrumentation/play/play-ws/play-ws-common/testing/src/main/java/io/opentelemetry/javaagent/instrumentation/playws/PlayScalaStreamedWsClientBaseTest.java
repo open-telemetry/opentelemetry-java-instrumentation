@@ -8,10 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.playws;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import play.api.libs.ws.StandaloneWSClient;
 import play.api.libs.ws.StandaloneWSRequest;
@@ -33,14 +31,10 @@ public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stan
   @BeforeAll
   static void setup() {
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer);
+    cleanup.deferAfterAll(wsClient);
     wsClientWithReadTimeout =
         new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer);
-  }
-
-  @AfterAll
-  static void cleanup() throws IOException {
-    wsClient.close();
-    wsClientWithReadTimeout.close();
+    cleanup.deferAfterAll(wsClientWithReadTimeout);
   }
 
   @Override
@@ -85,7 +79,7 @@ public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stan
 
   private static Future<StandaloneWSResponse> internalSendRequest(StandaloneWSRequest request) {
     Future<StandaloneWSResponse> futureResponse = request.stream();
-    // The status can be ready before the body so explicitly call wait for body to be ready
+    // The status can be ready before the body, so explicitly wait for the body to be ready.
     Future<String> bodyResponse =
         futureResponse.flatMap(
             new Function1<StandaloneWSResponse, Future<String>>() {
