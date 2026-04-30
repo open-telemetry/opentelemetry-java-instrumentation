@@ -51,8 +51,7 @@ class PromiseKInstrumentation implements TypeInstrumentation {
         @Advice.This
             @SuppressWarnings("rawtypes") // type is from compile-stub and masks private type
             Promise.K thiz) {
-      Context current = Context.current();
-      TwitterUtilCoreHelpers.PROMISE_K_CONTEXT_FIELD.set(thiz, current);
+      TwitterUtilCoreHelpers.PROMISE_K_CONTEXT_FIELD.set(thiz, Context.current());
     }
   }
 

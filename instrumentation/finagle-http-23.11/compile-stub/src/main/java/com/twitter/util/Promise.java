@@ -6,7 +6,8 @@
 package com.twitter.util;
 
 // public accessible stubs of mirrored types in com.twitter.util to ensure compilation;
-// these must be stripped out at jar construction -- see build.gradle.kts
+// these classes are consumed as a compileOnly module and replaced at runtime with their
+// stubbed counterparts
 public class Promise {
   private Promise() {}
 

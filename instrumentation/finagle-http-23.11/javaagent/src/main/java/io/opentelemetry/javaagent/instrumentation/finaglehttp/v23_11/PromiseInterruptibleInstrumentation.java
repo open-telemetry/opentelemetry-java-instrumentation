@@ -44,8 +44,7 @@ class PromiseInterruptibleInstrumentation implements TypeInstrumentation {
       if (handler instanceof TwitterUtilCoreHelpers.InterruptibleWithContext) {
         return handler;
       }
-      Context context = Context.current();
-      return new TwitterUtilCoreHelpers.InterruptibleWithContext(context, handler);
+      return new TwitterUtilCoreHelpers.InterruptibleWithContext(Context.current(), handler);
     }
   }
 }
