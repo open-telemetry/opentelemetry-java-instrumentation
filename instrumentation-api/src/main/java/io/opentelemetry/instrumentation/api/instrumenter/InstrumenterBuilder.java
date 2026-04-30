@@ -71,6 +71,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
+  SpanExceptionHandler spanExceptionHandler = SpanExceptionHandler.getDefault();
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
 
@@ -193,6 +194,17 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   public InstrumenterBuilder<REQUEST, RESPONSE> setErrorCauseExtractor(
       ErrorCauseExtractor errorCauseExtractor) {
     this.errorCauseExtractor = requireNonNull(errorCauseExtractor, "errorCauseExtractor");
+    return this;
+  }
+
+  /**
+   * Sets the {@link SpanExceptionHandler} that will record exception events on spans. Can be used
+   * to sanitize or otherwise customize how exceptions are recorded.
+   */
+  @CanIgnoreReturnValue
+  public InstrumenterBuilder<REQUEST, RESPONSE> setSpanExceptionHandler(
+      SpanExceptionHandler spanExceptionHandler) {
+    this.spanExceptionHandler = requireNonNull(spanExceptionHandler, "spanExceptionHandler");
     return this;
   }
 

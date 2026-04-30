@@ -59,7 +59,8 @@ public class JdbcSingletons {
             singletonList(servicePeerExtractor),
             DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
                 .get("transaction/development")
-                .getBoolean("enabled", false));
+                .getBoolean("enabled", false),
+            DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jdbc"));
   }
 
   public static Instrumenter<DbRequest, Void> transactionInstrumenter() {

@@ -16,8 +16,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanExceptionHandler;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -85,10 +85,10 @@ public final class JdbcInstrumenterFactory {
         .addAttributesExtractors(extractors)
         .addOperationMetrics(DbClientMetrics.get())
         .setEnabled(enabled)
-        .setErrorCauseExtractor(
+        .setSpanExceptionHandler(
             querySanitizationEnabled
-                ? JdbcSanitizingErrorCauseExtractor.INSTANCE
-                : ErrorCauseExtractor.getDefault())
+                ? JdbcSanitizingSpanExceptionHandler.INSTANCE
+                : SpanExceptionHandler.getDefault())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
@@ -113,18 +113,28 @@ public final class JdbcInstrumenterFactory {
                 "enabled",
                 ConfigPropertiesUtil.getBoolean(
                     "otel.instrumentation.jdbc.experimental.transaction.enabled", false));
-    return createTransactionInstrumenter(openTelemetry, enabled);
+    @SuppressWarnings("deprecation") // using deprecated config property
+    boolean querySanitizationEnabled =
+        DbConfig.isCommonQuerySanitizationEnabled(
+            openTelemetry,
+            ConfigPropertiesUtil.getBoolean(
+                "otel.instrumentation.common.db.query-sanitization.enabled",
+                ConfigPropertiesUtil.getBoolean(
+                    "otel.instrumentation.common.db-statement-sanitizer.enabled", true)));
+    return createTransactionInstrumenter(openTelemetry, enabled, querySanitizationEnabled);
   }
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
-      OpenTelemetry openTelemetry, boolean enabled) {
-    return createTransactionInstrumenter(openTelemetry, emptyList(), enabled);
+      OpenTelemetry openTelemetry, boolean enabled, boolean querySanitizationEnabled) {
+    return createTransactionInstrumenter(
+        openTelemetry, emptyList(), enabled, querySanitizationEnabled);
   }
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
       OpenTelemetry openTelemetry,
       List<AttributesExtractor<DbRequest, Void>> extractors,
-      boolean enabled) {
+      boolean enabled,
+      boolean querySanitizationEnabled) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperationName)
         .addAttributesExtractor(
@@ -132,7 +142,10 @@ public final class JdbcInstrumenterFactory {
         .addAttributesExtractor(new TransactionAttributeExtractor())
         .addAttributesExtractors(extractors)
         .setEnabled(enabled)
-        .setErrorCauseExtractor(JdbcSanitizingErrorCauseExtractor.INSTANCE)
+        .setSpanExceptionHandler(
+            querySanitizationEnabled
+                ? JdbcSanitizingSpanExceptionHandler.INSTANCE
+                : SpanExceptionHandler.getDefault())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

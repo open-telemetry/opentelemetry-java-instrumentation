@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -69,9 +70,7 @@ class JdbcExceptionSanitizationTest {
                                     satisfies(
                                         EXCEPTION_STACKTRACE,
                                         stack -> stack.doesNotContain("mysecret")),
-                                    equalTo(
-                                        EXCEPTION_MESSAGE,
-                                        "SQL error [1054/42P01]")))));
+                                    equalTo(EXCEPTION_MESSAGE, "SQL error [1054/42P01]")))));
   }
 
   @Test
@@ -119,7 +118,7 @@ class JdbcExceptionSanitizationTest {
   }
 
   @Test
-  void exceptionTypePreservedAfterSanitization() throws Exception {
+  void sqlExceptionSubclassTypePreservedAfterSanitization() throws Exception {
     JdbcTelemetry telemetry =
         JdbcTelemetry.builder(testing.getOpenTelemetry()).setQuerySanitizationEnabled(true).build();
 
@@ -127,7 +126,8 @@ class JdbcExceptionSanitizationTest {
     when(mockStatement.executeQuery(anyString()))
         .thenAnswer(
             invocation -> {
-              throw new SQLException("Error in query: " + invocation.getArgument(0), "42P01", 1054);
+              throw new SQLIntegrityConstraintViolationException(
+                  "Duplicate entry for: " + invocation.getArgument(0), "23000", 1062);
             });
 
     Connection conn =
@@ -152,11 +152,13 @@ class JdbcExceptionSanitizationTest {
                             event
                                 .hasName("exception")
                                 .hasAttributesSatisfyingExactly(
+                                    equalTo(
+                                        EXCEPTION_TYPE,
+                                        "java.sql.SQLIntegrityConstraintViolationException"),
                                     satisfies(
                                         EXCEPTION_STACKTRACE,
-                                        stack -> stack.isInstanceOf(String.class)),
-                                    equalTo(EXCEPTION_MESSAGE, "SQL error [1054/42P01]"),
-                                    equalTo(EXCEPTION_TYPE, "java.sql.SQLException")))));
+                                        stack -> stack.doesNotContain("mysecret")),
+                                    equalTo(EXCEPTION_MESSAGE, "SQL error [1062/23000]")))));
   }
 
   @Test

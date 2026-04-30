@@ -82,6 +82,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final AttributesExtractor<? super REQUEST, ? super RESPONSE>[]
       operationListenerAttributesExtractors;
   private final ErrorCauseExtractor errorCauseExtractor;
+  private final SpanExceptionHandler spanExceptionHandler;
   private final boolean propagateOperationListenersToOnEnd;
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
@@ -101,6 +102,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.operationListenerAttributesExtractors =
         builder.operationListenerAttributesExtractors.toArray(new AttributesExtractor[0]);
     this.errorCauseExtractor = builder.errorCauseExtractor;
+    this.spanExceptionHandler = builder.spanExceptionHandler;
     this.propagateOperationListenersToOnEnd = builder.propagateOperationListenersToOnEnd;
     this.enabled = builder.enabled;
     this.spanSuppressor = builder.buildSpanSuppressor();
@@ -260,7 +262,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     if (error != null) {
       error = errorCauseExtractor.extract(error);
-      span.recordException(error);
+      spanExceptionHandler.handle(span, error);
     }
 
     UnsafeAttributes attributes = new UnsafeAttributes();
