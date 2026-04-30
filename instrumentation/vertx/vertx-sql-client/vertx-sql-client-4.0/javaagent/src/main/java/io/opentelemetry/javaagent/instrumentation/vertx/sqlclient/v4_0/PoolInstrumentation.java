@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.getDbSystemNameFromClassName;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.getPoolSqlConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setPoolConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setSqlConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.wrapContext;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getPoolSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.attachConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0.VertxSqlClientSingletons.storeConnectOptionsDbSystem;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
