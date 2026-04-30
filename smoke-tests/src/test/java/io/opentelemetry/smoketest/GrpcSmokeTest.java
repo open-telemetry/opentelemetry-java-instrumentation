@@ -5,7 +5,7 @@
 
 package io.opentelemetry.smoketest;
 
-import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION;
+import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.grpc.ManagedChannel;
