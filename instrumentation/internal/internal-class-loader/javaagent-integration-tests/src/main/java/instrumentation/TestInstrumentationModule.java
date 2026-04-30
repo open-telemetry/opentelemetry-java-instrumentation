@@ -5,7 +5,6 @@
 
 package instrumentation;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -42,11 +41,6 @@ public class TestInstrumentationModule extends InstrumentationModule {
   }
 
   private static class TestTypeInstrumentation implements TypeInstrumentation {
-    @Override
-    public ElementMatcher<ClassLoader> classLoaderOptimization() {
-      return hasClassesNamed("org.apache.commons.lang3.SystemUtils");
-    }
-
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.apache.commons.lang3.SystemUtils");
