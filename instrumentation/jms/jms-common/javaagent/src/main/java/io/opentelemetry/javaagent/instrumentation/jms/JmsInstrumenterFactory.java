@@ -55,7 +55,7 @@ public class JmsInstrumenterFactory {
             instrumentationName,
             MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(createMessagingAttributesExtractor(operation))
-        .buildProducerInstrumenter(MessagePropertySetter.INSTANCE);
+        .buildProducerInstrumenter(new MessagePropertySetter());
   }
 
   public Instrumenter<MessageWithDestination, Void> createConsumerReceiveInstrumenter() {
