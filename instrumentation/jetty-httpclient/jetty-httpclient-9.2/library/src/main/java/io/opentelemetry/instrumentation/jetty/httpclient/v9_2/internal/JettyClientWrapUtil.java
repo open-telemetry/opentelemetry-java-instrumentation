@@ -48,8 +48,6 @@ public final class JettyClientWrapUtil {
     return interfaces.toArray(new Class<?>[0]);
   }
 
-  private JettyClientWrapUtil() {}
-
   /**
    * Utility to wrap the response listeners only, this includes the important CompleteListener.
    *
@@ -95,4 +93,6 @@ public final class JettyClientWrapUtil {
               }
             });
   }
+
+  private JettyClientWrapUtil() {}
 }
