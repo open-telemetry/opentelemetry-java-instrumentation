@@ -44,6 +44,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
 class ProcedureCallTest {
 
   @RegisterExtension
@@ -83,7 +84,6 @@ class ProcedureCallTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void testProcedureCall() {
 
