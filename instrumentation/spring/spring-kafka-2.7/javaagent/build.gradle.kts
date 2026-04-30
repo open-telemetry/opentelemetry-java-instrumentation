@@ -30,6 +30,7 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
+  testLibrary("org.testcontainers:testcontainers-kafka")
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-kafka:latest.release")
 }
 
@@ -40,8 +41,8 @@ testing {
         implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
 
         // the "library" configuration is not recognized by the test suite plugin
-        val springKafkaVersion = if (otelProps.testLatestDeps) "latest.release" else "2.7.0"
-        val springBootVersion = if (otelProps.testLatestDeps) "latest.release" else "2.5.3"
+        val springKafkaVersion = baseVersion("2.7.0").orLatest()
+        val springBootVersion = baseVersion("2.5.3").orLatest()
         implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
         implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
         implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")

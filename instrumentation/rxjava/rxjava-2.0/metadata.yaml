@@ -8,6 +8,7 @@ features:
   - CONTEXT_PROPAGATION
 configurations:
   - name: otel.instrumentation.rxjava.experimental-span-attributes
+    declarative_name: java.rxjava.experimental_span_attributes/development
     description: >
       Enables the experimental span attribute `rxjava.canceled`.
     type: boolean

@@ -68,10 +68,10 @@ final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory 
         metrics.connectionCreateTime(),
         metrics.connectionWaitTime(),
         metrics.connectionUseTime(),
-        metrics.getAttributes());
+        attributes);
   }
 
-  enum NoopMetricsTracker implements IMetricsTracker {
+  private enum NoopMetricsTracker implements IMetricsTracker {
     INSTANCE
   }
 }

@@ -36,19 +36,13 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // We don't actually transform it but want to make sure we only apply the instrumentation when
-    // our key dependency is present.
+    // added in 2.2.0
     return hasClassesNamed("software.amazon.awssdk.core.interceptor.ExecutionInterceptor");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ResourceInjectingTypeInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 
   abstract void doTransform(TypeTransformer transformer);

@@ -52,7 +52,7 @@ class HttpSecurityInstrumentationTest {
   }
 
   private static HttpSecurity createHttpSecurity(ApplicationContext applicationContext)
-      throws Exception {
+      throws ReflectiveOperationException {
 
     Class<?> processorClass = getObjectPostProcessorClass();
     Object processor = mock(processorClass);

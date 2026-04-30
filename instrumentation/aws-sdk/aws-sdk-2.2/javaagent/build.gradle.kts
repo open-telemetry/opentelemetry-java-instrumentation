@@ -9,6 +9,7 @@ muzzle {
     group.set("software.amazon.awssdk")
     module.set("aws-core")
     versions.set("[2.2.0,)")
+    assertInverse.set(true)
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
@@ -17,9 +18,6 @@ muzzle {
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-sns")
     excludeInstrumentationName("aws-sdk-2.2-lambda")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
   }
 
   fail {
@@ -33,15 +31,13 @@ muzzle {
     // "fail" asserts that *all* the instrumentation modules fail to load, but the core one is
     // actually expected to succeed, so exclude it from checks.
     excludeInstrumentationName("aws-sdk-2.2-core")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
   }
 
   pass {
     group.set("software.amazon.awssdk")
     module.set("sqs")
     versions.set("[2.2.0,)")
+    assertInverse.set(true)
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
@@ -49,9 +45,6 @@ muzzle {
     excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
     excludeInstrumentationName("aws-sdk-2.2-sns")
     excludeInstrumentationName("aws-sdk-2.2-lambda")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
   }
 
   pass {
@@ -65,9 +58,6 @@ muzzle {
     excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-lambda")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
   }
   pass {
     group.set("software.amazon.awssdk")
@@ -80,13 +70,10 @@ muzzle {
     excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-sns")
-
-    // several software.amazon.awssdk artifacts are missing for this version
-    skip("2.17.200")
   }
   pass {
     group.set("software.amazon.awssdk")
-    module.set("bedrock-runtime")
+    module.set("bedrockruntime")
     versions.set("[2.25.63,)")
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
@@ -115,6 +102,7 @@ dependencies {
   // Make sure these don't add HTTP headers
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
+  testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
   testLibrary("software.amazon.awssdk:dynamodb:2.2.0")
@@ -134,7 +122,7 @@ testing {
   suites {
     val s3PresignerTest by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (otelProps.testLatestDeps) "latest.release" else "2.10.12"
+        val version = baseVersion("2.10.12").orLatest()
         implementation("software.amazon.awssdk:s3:$version")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
       }
@@ -142,8 +130,8 @@ testing {
 
     val s3CrtTest by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("software.amazon.awssdk:s3:" + if (otelProps.testLatestDeps) "latest.release" else "2.27.21")
-        implementation("software.amazon.awssdk.crt:aws-crt:" + if (otelProps.testLatestDeps) "latest.release" else "0.30.11")
+        implementation("software.amazon.awssdk:s3:${baseVersion("2.27.21").orLatest()}")
+        implementation("software.amazon.awssdk.crt:aws-crt:${baseVersion("0.30.11").orLatest()}")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
         implementation("org.testcontainers:testcontainers-localstack")
       }
@@ -161,7 +149,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         // 2.25.63 is the first release with Converse API
-        val version = if (otelProps.testLatestDeps) "latest.release" else "2.25.63"
+        val version = baseVersion("2.25.63").orLatest()
         implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
 

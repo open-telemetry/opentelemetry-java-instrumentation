@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.boot;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -36,8 +37,6 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   @RegisterExtension
   private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
-
-  private static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
 
   private ConfigurableApplicationContext context;
 
@@ -72,7 +71,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    if (testLatestDeps && endpoint == ServerEndpoint.NOT_FOUND) {
+    if (testLatestDeps() && endpoint == ServerEndpoint.NOT_FOUND) {
       String handlerSpanName = "ResourceHttpRequestHandler.handleRequest";
       span.hasName(handlerSpanName)
           .hasKind(SpanKind.INTERNAL)
@@ -98,7 +97,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
-    if (testLatestDeps && endpoint == ServerEndpoint.NOT_FOUND) {
+    if (testLatestDeps() && endpoint == ServerEndpoint.NOT_FOUND) {
       // not verifying the parent span, in the latest version the responseSpan is the child of the
       // SERVER span, not the handler span
       return super.assertResponseSpan(span, method, endpoint);

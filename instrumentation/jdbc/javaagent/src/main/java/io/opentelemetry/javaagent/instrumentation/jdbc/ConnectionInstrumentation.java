@@ -130,7 +130,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
       }
 
       String originalSql = prepareContext.get();
-      JdbcData.preparedStatement.set(statement, originalSql);
+      JdbcData.PREPARED_STATEMENT.set(statement, originalSql);
     }
   }
 
@@ -170,6 +170,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Connection connection, @Advice.Origin("#m") String methodName) {

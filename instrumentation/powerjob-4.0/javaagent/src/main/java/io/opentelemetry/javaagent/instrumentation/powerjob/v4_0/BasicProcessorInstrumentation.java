@@ -82,7 +82,7 @@ class BasicProcessorInstrumentation implements TypeInstrumentation {
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
-      public void end(ProcessResult result, Throwable throwable) {
+      public void end(@Nullable ProcessResult result, @Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, request, result, throwable);
       }
@@ -96,7 +96,7 @@ class BasicProcessorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Return ProcessResult result,
+        @Advice.Return @Nullable ProcessResult result,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {

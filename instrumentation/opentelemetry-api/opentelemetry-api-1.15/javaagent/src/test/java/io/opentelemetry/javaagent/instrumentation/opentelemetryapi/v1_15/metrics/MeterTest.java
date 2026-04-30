@@ -60,27 +60,25 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(11)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(11)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
@@ -106,27 +104,25 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasDoubleSumSatisfying(
-                            sum ->
-                                sum.isMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(12.1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasDoubleSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12.1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
@@ -152,27 +148,25 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(11)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isNotMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(11)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
@@ -203,27 +197,25 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasDoubleSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(12.1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasDoubleSumSatisfying(
+                    sum ->
+                        sum.isNotMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12.1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
@@ -249,26 +241,24 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasLongGaugeSatisfying(
-                            gauge ->
-                                gauge.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(123)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasLongGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(123)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
@@ -294,26 +284,24 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasDoubleGaugeSatisfying(
-                            gauge ->
-                                gauge.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1.23)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasDoubleGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(1.23)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("q"), "r")))));
 
     callback.close();
 

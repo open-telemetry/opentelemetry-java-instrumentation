@@ -10,27 +10,10 @@ import java.lang.reflect.Method;
 
 class ReflectiveMethodsFactory {
 
-  private ReflectiveMethodsFactory() {}
-
-  public static class ReflectObject {
-
-    private ReflectObject() {}
-
-    public void initMethod() {}
-
-    public void destroyMethod() {}
-
-    public Response<String> echo(String param) {
-      Response<String> result = new Response<>();
-      result.setData("echo: " + param);
-      return result;
-    }
-  }
-
-  private static final Object SINGLETON_OBJECT = new ReflectObject();
+  private static final Object singletonObject = new ReflectObject();
 
   static Object getTarget() {
-    return SINGLETON_OBJECT;
+    return singletonObject;
   }
 
   static Method getMethod() {
@@ -47,9 +30,26 @@ class ReflectiveMethodsFactory {
 
   private static Method getRequiredMethod(String name, Class<?>... parameterTypes) {
     try {
-      return SINGLETON_OBJECT.getClass().getMethod(name, parameterTypes);
+      return singletonObject.getClass().getMethod(name, parameterTypes);
     } catch (ReflectiveOperationException e) {
       throw new IllegalStateException("Failed to resolve reflective method: " + name, e);
+    }
+  }
+
+  private ReflectiveMethodsFactory() {}
+
+  public static class ReflectObject {
+
+    private ReflectObject() {}
+
+    public void initMethod() {}
+
+    public void destroyMethod() {}
+
+    public Response<String> echo(String param) {
+      Response<String> result = new Response<>();
+      result.setData("echo: " + param);
+      return result;
     }
   }
 }

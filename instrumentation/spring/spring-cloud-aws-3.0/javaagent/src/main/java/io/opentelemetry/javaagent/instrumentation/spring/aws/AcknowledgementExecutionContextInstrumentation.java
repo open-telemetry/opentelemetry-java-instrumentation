@@ -39,7 +39,7 @@ class AcknowledgementExecutionContextInstrumentation implements TypeInstrumentat
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter Scope scope) {
+    public static void methodExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

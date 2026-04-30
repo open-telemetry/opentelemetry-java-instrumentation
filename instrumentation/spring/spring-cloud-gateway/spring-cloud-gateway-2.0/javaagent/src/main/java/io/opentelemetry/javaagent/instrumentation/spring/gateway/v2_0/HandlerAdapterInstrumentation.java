@@ -51,7 +51,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class HandleAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void methodEnter(@Advice.Argument(0) ServerWebExchange exchange) {
       Context context = Context.current();
       // Update route info for server span.

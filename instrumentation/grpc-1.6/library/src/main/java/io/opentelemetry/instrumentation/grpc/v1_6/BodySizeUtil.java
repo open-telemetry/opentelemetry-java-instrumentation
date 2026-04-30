@@ -15,6 +15,7 @@ final class BodySizeUtil {
   private static final Method serializedSizeMethod =
       messageLiteClass != null ? getSerializedSizeMethod(messageLiteClass) : null;
 
+  @Nullable
   private static Class<?> getMessageLiteClass() {
     try {
       return Class.forName("com.google.protobuf.MessageLite");
@@ -23,6 +24,7 @@ final class BodySizeUtil {
     }
   }
 
+  @Nullable
   private static Method getSerializedSizeMethod(Class<?> clazz) {
     try {
       return clazz.getMethod("getSerializedSize");

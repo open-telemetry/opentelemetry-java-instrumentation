@@ -23,8 +23,6 @@ import org.elasticsearch.client.Response;
  */
 public final class ElasticsearchRestInstrumenterFactory {
 
-  private ElasticsearchRestInstrumenterFactory() {}
-
   public static Instrumenter<ElasticsearchRestRequest, Response> create(
       OpenTelemetry openTelemetry,
       String instrumentationName,
@@ -51,4 +49,6 @@ public final class ElasticsearchRestInstrumenterFactory {
         .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
+
+  private ElasticsearchRestInstrumenterFactory() {}
 }

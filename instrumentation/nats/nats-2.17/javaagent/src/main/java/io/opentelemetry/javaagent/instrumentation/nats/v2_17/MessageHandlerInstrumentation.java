@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.getConsumerProcessInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -48,7 +48,7 @@ class MessageHandlerInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(NatsRequest request, Context context, Scope scope) {
+      private AdviceScope(NatsRequest request, Context context, Scope scope) {
         this.request = request;
         this.context = context;
         this.scope = scope;
@@ -58,27 +58,29 @@ class MessageHandlerInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(Message message) {
         Context parentContext = Context.current();
         NatsRequest request = NatsRequest.create(message.getConnection(), message);
-        if (!getConsumerProcessInstrumenter().shouldStart(parentContext, request)) {
+        if (!consumerProcessInstrumenter().shouldStart(parentContext, request)) {
           return null;
         }
-        Context context = getConsumerProcessInstrumenter().start(parentContext, request);
+        Context context = consumerProcessInstrumenter().start(parentContext, request);
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        getConsumerProcessInstrumenter().end(context, request, null, throwable);
+        consumerProcessInstrumenter().end(context, request, null, throwable);
       }
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(0) Message message) {
       return AdviceScope.start(message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(throwable);
       }

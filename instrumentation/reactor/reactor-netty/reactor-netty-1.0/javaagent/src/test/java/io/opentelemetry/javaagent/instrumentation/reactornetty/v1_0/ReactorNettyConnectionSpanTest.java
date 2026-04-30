@@ -44,7 +44,7 @@ class ReactorNettyConnectionSpanTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static HttpClientTestServer server;
+  private static HttpClientTestServer server;
 
   @BeforeAll
   static void setUp() {

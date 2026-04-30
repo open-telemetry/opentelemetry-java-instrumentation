@@ -33,7 +33,7 @@ class JbossLogmanagerInstrumentation implements TypeInstrumentation {
             .and(named("logRaw"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.jboss.logmanager.ExtLogRecord"))),
-        JbossLogmanagerInstrumentation.class.getName() + "$CallLogRawAdvice");
+        getClass().getName() + "$CallLogRawAdvice");
   }
 
   @SuppressWarnings("unused")

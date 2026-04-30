@@ -78,6 +78,11 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         "emit[a-zA-Z0-9]*",
       ),
       Rule(
+        "TestLatestDeps",
+        "io.opentelemetry.instrumentation.testing.util.TestLatestDeps",
+        "testLatestDeps",
+      ),
+      Rule(
         "SqlDialect",
         "io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect",
         "DOUBLE_QUOTES_ARE_[A-Z_]+"

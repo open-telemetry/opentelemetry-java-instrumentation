@@ -14,8 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-public class CassandraAttributesExtractor
-    implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
+class CassandraAttributesExtractor implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
   @Override
   public void onStart(AttributesBuilder attributes, Context context, CassandraRequest request) {}
 

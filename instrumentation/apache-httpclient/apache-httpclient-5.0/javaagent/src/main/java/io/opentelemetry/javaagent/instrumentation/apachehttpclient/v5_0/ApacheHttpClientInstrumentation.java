@@ -202,7 +202,6 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Argument(0) ClassicHttpRequest request,
         @Advice.Return @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
@@ -238,7 +237,6 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Argument(0) ClassicHttpRequest request,
         @Advice.Return @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
@@ -256,7 +254,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(
-        @Advice.Argument(0) HttpHost host, @Advice.Argument(1) ClassicHttpRequest request) {
+        @Advice.Argument(0) @Nullable HttpHost host,
+        @Advice.Argument(1) ClassicHttpRequest request) {
 
       return AdviceScope.start(new RequestWithHost(host, request));
     }
@@ -279,7 +278,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
-        @Advice.Argument(0) HttpHost host,
+        @Advice.Argument(0) @Nullable HttpHost host,
         @Advice.Argument(1) ClassicHttpRequest request,
         @Advice.Argument(2) HttpClientResponseHandler<?> originalHandler) {
 
@@ -316,7 +315,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(value = 3, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
-        @Advice.Argument(0) HttpHost host,
+        @Advice.Argument(0) @Nullable HttpHost host,
         @Advice.Argument(1) ClassicHttpRequest request,
         @Advice.Argument(3) HttpClientResponseHandler<?> originalHandler) {
 

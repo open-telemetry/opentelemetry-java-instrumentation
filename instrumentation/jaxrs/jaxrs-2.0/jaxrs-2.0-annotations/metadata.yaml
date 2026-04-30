@@ -9,10 +9,12 @@ features:
 disabled_by_default: true
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    declarative_name: java.common.controller_telemetry/development.enabled
     description: Enables the creation of experimental controller spans.
     type: boolean
     default: false
   - name: otel.instrumentation.jaxrs.experimental-span-attributes
+    declarative_name: java.jaxrs.experimental_span_attributes/development
     type: boolean
     description: Enables the experimental `jaxrs.canceled` span attribute.
     default: false

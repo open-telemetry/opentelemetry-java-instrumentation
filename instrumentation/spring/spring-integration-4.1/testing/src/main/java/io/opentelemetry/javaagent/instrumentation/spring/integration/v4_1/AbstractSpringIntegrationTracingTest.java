@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,11 +37,11 @@ import org.springframework.messaging.support.MessageBuilder;
 
 abstract class AbstractSpringIntegrationTracingTest {
 
-  protected final InstrumentationExtension testing;
+  private final InstrumentationExtension testing;
 
   private final Class<?> additionalContextClass;
 
-  ConfigurableApplicationContext applicationContext;
+  private ConfigurableApplicationContext applicationContext;
 
   AbstractSpringIntegrationTracingTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
@@ -209,7 +210,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   @EnableAutoConfiguration
   public static class MessageChannelsConfig {
 
-    SubscribableChannel problematicSharedChannel = new DirectChannel();
+    private final SubscribableChannel problematicSharedChannel = new DirectChannel();
 
     @Bean
     public SubscribableChannel directChannel() {
@@ -235,7 +236,7 @@ abstract class AbstractSpringIntegrationTracingTest {
     public SubscribableChannel executorChannel(GlobalChannelInterceptorWrapper otelInterceptor) {
       ExecutorSubscribableChannel channel =
           new ExecutorSubscribableChannel(executorChannelExecutor());
-      if (!Boolean.getBoolean("testLatestDeps")) {
+      if (!testLatestDeps()) {
         // spring does not inject the interceptor in 4.1 because ExecutorSubscribableChannel isn't
         // ChannelInterceptorAware
         // in later versions spring injects the global interceptor into InterceptableChannel (which

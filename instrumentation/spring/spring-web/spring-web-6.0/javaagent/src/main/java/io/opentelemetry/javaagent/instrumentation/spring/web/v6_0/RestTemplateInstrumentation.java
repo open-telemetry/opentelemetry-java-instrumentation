@@ -36,9 +36,9 @@ class RestTemplateInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class UrlTemplateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static Scope onEnter(@Advice.Argument(1) String uriTemplate) {
+    public static Scope onEnter(@Advice.Argument(1) @Nullable String uriTemplate) {
       if (uriTemplate != null) {
         String path = UrlParser.getPath(uriTemplate);
         if (path != null) {
@@ -48,7 +48,7 @@ class RestTemplateInstrumentation implements TypeInstrumentation {
       return null;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

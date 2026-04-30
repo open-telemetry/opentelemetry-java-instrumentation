@@ -17,7 +17,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.4.0")
 }
 
-// spring 6 (which spring-kafka 3.+ uses) requires java 17
+// Spring 6 (which Spring Boot 3+ uses) requires Java 17
 if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
@@ -34,7 +34,7 @@ if (!otelProps.testLatestDeps) {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 

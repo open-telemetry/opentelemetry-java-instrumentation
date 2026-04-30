@@ -47,6 +47,9 @@ To run these checks locally:
 Follow the principle of minimal necessary visibility. Use the most restrictive access modifier that
 still allows the code to function correctly.
 
+Static fields should be `private`, except for constant-like static fields with an
+uppercase (`SCREAMING_SNAKE_CASE`) name.
+
 ### Internal packages
 
 Classes in `.internal` packages are not considered public API and may change without notice. These
@@ -73,6 +76,11 @@ methods below the non-private methods that use them.
 private static method or a `static {}` block, it is acceptable to place the method or block
 immediately after the field to keep initialization logic co-located, even when this contradicts
 the general method ordering above.
+
+**Static factory entry points**: When a class exposes public static factory methods as its primary
+creation API (for example `create*(...)` or `builder(...)`), place those methods below fields and
+immediately above constructors. Treat static factory methods and constructors as a single
+construction section.
 
 **Static utility classes**: Place the private constructor (used to prevent instantiation) after all
 methods.

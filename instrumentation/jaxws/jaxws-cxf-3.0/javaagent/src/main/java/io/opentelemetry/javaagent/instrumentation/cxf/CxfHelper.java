@@ -13,12 +13,12 @@ import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
 
-public class CxfHelper {
+class CxfHelper {
   private static final String REQUEST_KEY = CxfHelper.class.getName() + ".Request";
   private static final String CONTEXT_KEY = CxfHelper.class.getName() + ".Context";
   private static final String SCOPE_KEY = CxfHelper.class.getName() + ".Scope";
 
-  public static void start(Message message) {
+  static void start(Message message) {
     Context parentContext = Context.current();
 
     CxfRequest request = new CxfRequest(message);
@@ -38,7 +38,7 @@ public class CxfHelper {
     exchange.put(SCOPE_KEY, scope);
   }
 
-  public static void end(Message message) {
+  static void end(Message message) {
     Exchange exchange = message.getExchange();
     Scope scope = (Scope) exchange.remove(SCOPE_KEY);
     if (scope == null) {

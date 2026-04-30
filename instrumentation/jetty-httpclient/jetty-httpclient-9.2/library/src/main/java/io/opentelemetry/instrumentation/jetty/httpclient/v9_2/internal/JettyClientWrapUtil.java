@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -22,7 +21,7 @@ import org.eclipse.jetty.client.api.Response;
  */
 public final class JettyClientWrapUtil {
 
-  private static final Class<?>[] listenerInterfaces = buildListenerInterfaces();
+  private static final Class<?>[] LISTENER_INTERFACES = buildListenerInterfaces();
 
   private static Class<?>[] buildListenerInterfaces() {
     List<Class<?>> interfaces =
@@ -60,10 +59,11 @@ public final class JettyClientWrapUtil {
    */
   public static List<Response.ResponseListener> wrapResponseListeners(
       Context parentContext, List<Response.ResponseListener> listeners) {
-
-    return listeners.stream()
-        .map(listener -> wrapTheListener(listener, parentContext))
-        .collect(toList());
+    List<Response.ResponseListener> wrappedListeners = new ArrayList<>(listeners.size());
+    for (Response.ResponseListener listener : listeners) {
+      wrappedListeners.add(wrapTheListener(listener, parentContext));
+    }
+    return wrappedListeners;
   }
 
   private static Response.ResponseListener wrapTheListener(
@@ -73,8 +73,8 @@ public final class JettyClientWrapUtil {
     }
 
     Class<?> listenerClass = listener.getClass();
-    List<Class<?>> interfaces = new ArrayList<>();
-    for (Class<?> type : listenerInterfaces) {
+    List<Class<?>> interfaces = new ArrayList<>(LISTENER_INTERFACES.length);
+    for (Class<?> type : LISTENER_INTERFACES) {
       if (type.isInstance(listener)) {
         interfaces.add(type);
       }

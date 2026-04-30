@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -28,6 +28,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -35,7 +36,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,10 +53,10 @@ import org.apache.rocketmq.client.apis.message.Message;
 import org.apache.rocketmq.client.apis.producer.Producer;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.apache.rocketmq.client.java.impl.ClientImpl;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -71,6 +71,8 @@ abstract class AbstractRocketMqClientTest {
 
   private static final RocketMqProxyContainer CONTAINER = new RocketMqProxyContainer();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private final ClientServiceProvider provider = ClientServiceProvider.loadService();
   private PushConsumer consumer;
   private Producer producer;
@@ -80,6 +82,7 @@ abstract class AbstractRocketMqClientTest {
   @BeforeAll
   void setUp() throws ClientException {
     CONTAINER.start();
+    cleanup.deferAfterAll(CONTAINER::close);
     ClientConfiguration clientConfiguration =
         ClientConfiguration.newBuilder()
             .setEndpoints(CONTAINER.endpoints)
@@ -102,28 +105,19 @@ abstract class AbstractRocketMqClientTest {
                   return ConsumeResult.SUCCESS;
                 })
             .build();
+    // Not calling consumer.close(); because it takes a lot of time to complete.
+    cleanup.deferAfterAll(() -> ((ClientImpl) consumer).stopAsync());
     producer =
         provider
             .newProducerBuilder()
             .setClientConfiguration(clientConfiguration)
             .setTopics(NORMAL_TOPIC)
             .build();
-  }
-
-  @AfterAll
-  void tearDown() throws IOException {
-    if (producer != null) {
-      producer.close();
-    }
-    if (consumer != null) {
-      // Not calling consumer.close(); because it takes a lot of time to complete
-      ((ClientImpl) consumer).stopAsync();
-    }
-    CONTAINER.close();
+    cleanup.deferAfterAll(producer);
   }
 
   @Test
-  void testSendAndConsumeNormalMessage() throws Throwable {
+  void testSendAndConsumeNormalMessage() throws ClientException {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     Message message =
@@ -138,7 +132,8 @@ abstract class AbstractRocketMqClientTest {
     SendReceipt sendReceipt =
         testing()
             .runWithSpan(
-                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+                "parent",
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
@@ -173,7 +168,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testSendAsyncMessage() throws Exception {
+  void testSendAsyncMessage() {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     Message message =
@@ -196,7 +191,7 @@ abstract class AbstractRocketMqClientTest {
                             (result, throwable) -> {
                               testing().runWithSpan("child", () -> {});
                             })
-                        .get());
+                        .join());
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
@@ -232,7 +227,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testSendAndConsumeFifoMessage() throws Throwable {
+  void testSendAndConsumeFifoMessage() throws ClientException {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     String messageGroup = "yourMessageGroup";
@@ -249,7 +244,8 @@ abstract class AbstractRocketMqClientTest {
     SendReceipt sendReceipt =
         testing()
             .runWithSpan(
-                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+                "parent",
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
@@ -286,7 +282,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testSendAndConsumeDelayMessage() throws Throwable {
+  void testSendAndConsumeDelayMessage() throws ClientException {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     long deliveryTimestamp = System.currentTimeMillis();
@@ -303,7 +299,8 @@ abstract class AbstractRocketMqClientTest {
     SendReceipt sendReceipt =
         testing()
             .runWithSpan(
-                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+                "parent",
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
@@ -340,7 +337,7 @@ abstract class AbstractRocketMqClientTest {
   }
 
   @Test
-  void testCapturedMessageHeaders() throws Throwable {
+  void testCapturedMessageHeaders() throws ClientException {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     Message message =
@@ -356,7 +353,8 @@ abstract class AbstractRocketMqClientTest {
     SendReceipt sendReceipt =
         testing()
             .runWithSpan(
-                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+                "parent",
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
@@ -373,8 +371,7 @@ abstract class AbstractRocketMqClientTest {
                               body,
                               sendReceipt,
                               equalTo(
-                                  stringArrayKey("messaging.header.Test_Message_Header"),
-                                  singletonList("test")))
+                                  headerAttributeKey("Test-Message-Header"), singletonList("test")))
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
             },
@@ -392,7 +389,7 @@ abstract class AbstractRocketMqClientTest {
                                 body,
                                 sendReceipt,
                                 equalTo(
-                                    stringArrayKey("messaging.header.Test_Message_Header"),
+                                    headerAttributeKey("Test-Message-Header"),
                                     singletonList("test")))
                             // As the child of receive span.
                             .hasParent(trace.getSpan(0)),

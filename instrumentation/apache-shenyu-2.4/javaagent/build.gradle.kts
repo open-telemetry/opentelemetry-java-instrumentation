@@ -39,7 +39,7 @@ if (otelProps.testLatestDeps) {
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.apache-shenyu.experimental-span-attributes=true")
 
   systemProperty("metadataConfig", "otel.instrumentation.apache-shenyu.experimental-span-attributes=true")

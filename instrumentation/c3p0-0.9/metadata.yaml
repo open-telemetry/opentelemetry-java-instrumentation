@@ -1,3 +1,4 @@
+display_name: c3p0
 description: The c3p0 instrumentation provides connection pool metrics for c3p0 data sources.
 semantic_conventions:
   - DATABASE_POOL_METRICS

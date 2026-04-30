@@ -22,7 +22,7 @@ class OkHttp3Http2Test extends AbstractOkHttp3Test {
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   @Override
-  public Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder) {
+  protected Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder) {
     clientBuilder.protocols(singletonList(Protocol.H2_PRIOR_KNOWLEDGE));
     return clientBuilder.build();
   }

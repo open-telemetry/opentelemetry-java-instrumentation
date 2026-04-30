@@ -42,6 +42,7 @@ testing {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
         }
       }
       dependencies {
@@ -60,6 +61,7 @@ testing {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
         }
       }
       dependencies {
@@ -106,6 +108,7 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
       }
     }
 

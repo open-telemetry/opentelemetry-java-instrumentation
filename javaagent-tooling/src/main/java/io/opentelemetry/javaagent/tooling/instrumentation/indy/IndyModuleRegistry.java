@@ -101,15 +101,12 @@ public class IndyModuleRegistry {
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
     InstrumentationModuleClassLoader cl =
         new InstrumentationModuleClassLoader(instrumentedClassLoader, agentOrExtensionCl);
-    cl.installModule(module);
+    cl.installModule(module, true);
     return cl;
   }
 
   public static AgentBuilder.Identified.Extendable initializeModuleLoaderOnMatch(
       InstrumentationModule module, AgentBuilder.Identified.Extendable agentBuilder) {
-    if (!module.isIndyModule()) {
-      throw new IllegalArgumentException("Provided module is not an indy module!");
-    }
     String moduleName = module.getClass().getName();
     InstrumentationModule existingRegistration = modulesByClassName.putIfAbsent(moduleName, module);
     if (existingRegistration != null && existingRegistration != module) {

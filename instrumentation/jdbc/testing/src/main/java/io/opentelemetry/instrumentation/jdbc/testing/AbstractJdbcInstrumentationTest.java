@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -46,7 +47,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.beans.PropertyVetoException;
 import java.io.Closeable;
-import java.io.IOException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -68,7 +68,6 @@ import org.apache.derby.jdbc.EmbeddedDriver;
 import org.assertj.core.api.ThrowingConsumer;
 import org.h2.jdbcx.JdbcDataSource;
 import org.hsqldb.jdbc.JDBCDriver;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -128,32 +127,19 @@ public abstract class AbstractJdbcInstrumentationTest {
     prepareConnectionPoolDatasources();
   }
 
-  @AfterAll
-  static void tearDown() {
-    cpDatasources
-        .values()
-        .forEach(
-            k ->
-                k.values()
-                    .forEach(
-                        dataSource -> {
-                          if (dataSource instanceof Closeable) {
-                            try {
-                              ((Closeable) dataSource).close();
-                            } catch (IOException ignored) {
-                              // ignore exceptions during close
-                            }
-                          }
-                        }));
-  }
-
   static void prepareConnectionPoolDatasources() {
     List<String> connectionPoolNames = asList("tomcat", "hikari", "c3p0");
     connectionPoolNames.forEach(
         cpName -> {
           Map<String, DataSource> dbDsMapping = new HashMap<>();
           jdbcUrls.forEach(
-              (dbType, jdbcUrl) -> dbDsMapping.put(dbType, createDs(cpName, dbType, jdbcUrl)));
+              (dbType, jdbcUrl) -> {
+                DataSource dataSource = createDs(cpName, dbType, jdbcUrl);
+                if (dataSource instanceof Closeable) {
+                  cleanup.deferAfterAll((Closeable) dataSource);
+                }
+                dbDsMapping.put(dbType, dataSource);
+              });
           cpDatasources.put(cpName, dbDsMapping);
         });
   }
@@ -1040,7 +1026,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       throws SQLException {
     Connection connection = wrap(conn);
 
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       testPreparedStatementUpdateImpl(
           system,
           connection,
@@ -1503,8 +1489,8 @@ public abstract class AbstractJdbcInstrumentationTest {
   }
 
   @FunctionalInterface
-  public interface ThrowingBiConsumer<T, U> {
-    void accept(T t, U u) throws Exception;
+  private interface ThrowingBiConsumer<T, U> {
+    void accept(T t, U u) throws SQLException;
   }
 
   static Stream<Arguments> recursiveStatementsStream() {
@@ -1539,7 +1525,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String desc,
       boolean usePreparedStatementInConnection,
       ThrowingBiConsumer<Connection, String> executeQueryFunction)
-      throws Exception {
+      throws SQLException {
     Connection connection =
         wrap(new DbCallingConnection(usePreparedStatementInConnection, "jdbc:testdb://localhost"));
 
@@ -1586,10 +1572,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testProxyStatement() throws Exception {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
-
     Statement proxyStatement = ProxyStatementFactory.proxyStatementWithCustomClassLoader(statement);
     ResultSet resultSet =
         testing().runWithSpan("parent", () -> proxyStatement.executeQuery("SELECT 3"));
@@ -1616,9 +1601,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testProxyPreparedStatement() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     PreparedStatement statement = connection.prepareStatement("SELECT 3");
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
 
     PreparedStatement proxyStatement = ProxyStatementFactory.proxyPreparedStatement(statement);
     ResultSet resultSet = testing().runWithSpan("parent", () -> proxyStatement.executeQuery());
@@ -1676,7 +1661,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     statement.addBatch("INSERT INTO simple_batch_test_large VALUES(1)");
     statement.addBatch("INSERT INTO simple_batch_test_large VALUES(2)");
 
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       assertThat(statement.executeLargeBatch()).isEqualTo(new long[] {1, 1});
     } else {
       // Older drivers don't support JDBC 4.2, expect UnsupportedOperationException
@@ -1919,10 +1904,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   void testSqlCommenterNotEnabled() throws SQLException {
     List<String> executedSql = new ArrayList<>();
     Connection connection = new TestConnection(executedSql::add);
-    Statement statement = connection.createStatement();
-
-    cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
 
     String query = "SELECT 1";
     testing().runWithSpan("parent", () -> statement.execute(query));
@@ -2112,6 +2096,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testPreparedStatementWrapper() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Connection proxyConnection =
         ProxyStatementFactory.proxy(
             Connection.class,
@@ -2125,7 +2110,6 @@ public abstract class AbstractJdbcInstrumentationTest {
             });
     PreparedStatement statement = proxyConnection.prepareStatement("SELECT 3");
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
 
     ResultSet resultSet = testing().runWithSpan("parent", () -> statement.executeQuery());
 
@@ -2155,9 +2139,9 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testStatementWrapper() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
-    cleanup.deferCleanup(connection);
 
     Statement proxyStatement =
         ProxyStatementFactory.proxyStatement(

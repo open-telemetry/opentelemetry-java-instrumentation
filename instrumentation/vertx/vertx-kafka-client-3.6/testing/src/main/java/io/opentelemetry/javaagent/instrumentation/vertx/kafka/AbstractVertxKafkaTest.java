@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -23,7 +24,7 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.vertx.core.AsyncResult;
@@ -42,9 +43,9 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -56,9 +57,10 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class AbstractVertxKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractVertxKafkaTest.class);
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
-  private static final AttributeKey<String> MESSAGING_CLIENT_ID =
-      AttributeKey.stringKey("messaging.client_id");
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   KafkaContainer kafka;
   Vertx vertx;
@@ -85,25 +87,15 @@ public abstract class AbstractVertxKafkaTest {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
+    cleanup.deferAfterAll(kafka::stop);
     kafka.start();
 
     vertx = Vertx.vertx();
+    cleanup.deferAfterAll(() -> closeVertx(vertx));
     kafkaProducer = KafkaProducer.create(vertx, producerProps());
+    cleanup.deferAfterAll(() -> closeKafkaProducer(kafkaProducer));
     kafkaConsumer = KafkaConsumer.create(vertx, consumerProps());
-  }
-
-  @AfterAll
-  void tearDownAll() {
-    if (kafkaConsumer != null) {
-      closeKafkaConsumer(kafkaConsumer);
-    }
-    if (kafkaProducer != null) {
-      closeKafkaProducer(kafkaProducer);
-    }
-    if (vertx != null) {
-      closeVertx(vertx);
-    }
-    kafka.stop();
+    cleanup.deferAfterAll(() -> closeKafkaConsumer(kafkaConsumer));
   }
 
   private Properties producerProps() {
@@ -180,9 +172,15 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(MESSAGING_SYSTEM, KAFKA),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "publish"),
-                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+    if (EXPERIMENTAL_ATTRIBUTES) {
+      assertions.add(
+          satisfies(
+              stringKey("messaging.kafka.bootstrap.servers"),
+              val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
+    }
     String messageKey = record.key();
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
@@ -206,7 +204,7 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(MESSAGING_SYSTEM, KAFKA),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION, operation),
-                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));
     if (hasConsumerGroup()) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
@@ -222,10 +220,10 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(MESSAGING_SYSTEM, KAFKA),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "process"),
-                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
-    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }

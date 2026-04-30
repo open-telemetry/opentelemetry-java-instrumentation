@@ -8,9 +8,6 @@ muzzle {
     group.set("org.springframework")
     module.set("spring-webmvc")
     versions.set("[3.1.0.RELEASE,6)")
-    // these versions depend on org.springframework:spring-web which has a bad dependency on
-    // javax.faces:jsf-api:1.1 which was released as pom only
-    skip("1.2.1", "1.2.2", "1.2.3", "1.2.4")
     // 3.2.1.RELEASE has transitive dependencies like spring-web as "provided" instead of "compile"
     skip("3.2.1.RELEASE")
     extraDependency("javax.servlet:javax.servlet-api:3.0.1")
@@ -27,9 +24,9 @@ dependencies {
   compileOnly("javax.servlet:javax.servlet-api:3.1.0")
 
   // Include servlet instrumentation for verifying the tomcat requests
+  testInstrumentation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
-  testInstrumentation(project(":instrumentation:spring:spring-web:spring-web-3.1:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing"))
   testImplementation("com.google.guava:guava")

@@ -12,13 +12,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import java.util.function.BiConsumer;
 
-public class SpanFinisher implements BiConsumer<Message, Throwable> {
+class SpanFinisher implements BiConsumer<Message, Throwable> {
   private final Instrumenter<NatsRequest, NatsRequest> instrumenter;
   private final Context context;
   private final Connection connection;
   private final NatsRequest request;
 
-  public SpanFinisher(
+  SpanFinisher(
       Instrumenter<NatsRequest, NatsRequest> instrumenter,
       Context context,
       Connection connection,

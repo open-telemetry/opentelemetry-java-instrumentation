@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jaxrs;
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -49,7 +50,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
   }
 
   protected boolean shouldTestCompletableStageAsync() {
-    return Boolean.getBoolean("testLatestDeps");
+    return testLatestDeps();
   }
 
   @Override
@@ -145,7 +146,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                             .hasParent(trace.getSpan(3))));
   }
 
-  enum AsyncResponseTestKind {
+  private enum AsyncResponseTestKind {
     SUCCESSFUL("succeed", 200) {
       @Override
       void assertBody(String body) {
@@ -239,7 +240,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
             });
   }
 
-  enum CompletionStageTestKind {
+  private enum CompletionStageTestKind {
     SUCCESSFUL("succeed", 200) {
       @Override
       void assertBody(String body) {

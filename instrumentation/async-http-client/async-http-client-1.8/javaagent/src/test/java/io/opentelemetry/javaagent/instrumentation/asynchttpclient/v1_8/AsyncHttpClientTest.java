@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_8;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 
 import com.ning.http.client.AsyncCompletionHandler;
@@ -30,8 +31,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   private static final int CONNECTION_TIMEOUT_MS = (int) CONNECTION_TIMEOUT.toMillis();
   private static final int READ_TIMEOUT_MS = (int) READ_TIMEOUT.toMillis();
@@ -105,7 +105,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.disableTestHttps();
 
     // disable read timeout test for non latest because it is flaky with 1.8.x
-    if (!Boolean.getBoolean("testLatestDeps")) {
+    if (!testLatestDeps()) {
       optionsBuilder.disableTestReadTimeout();
     }
 

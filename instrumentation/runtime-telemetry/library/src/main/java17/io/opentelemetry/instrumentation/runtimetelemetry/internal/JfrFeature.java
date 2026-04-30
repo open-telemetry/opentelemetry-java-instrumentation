@@ -10,7 +10,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
  *
  * <p>Features that overlap with stable JMX-based instrumentation are disabled by default to avoid
  * duplicate metrics. Experimental features (those not marked stable in the semantic conventions)
- * are also disabled by default and require {@code emit_experimental_metrics=true} to enable.
+ * are also disabled by default and require explicit JFR opt-in to enable.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.

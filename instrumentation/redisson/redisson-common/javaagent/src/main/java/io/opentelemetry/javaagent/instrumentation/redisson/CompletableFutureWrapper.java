@@ -8,10 +8,23 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 
 public class CompletableFutureWrapper<T> extends CompletableFuture<T> implements PromiseWrapper<T> {
-  private static final Class<?> batchPromiseClass = getBatchPromiseClass();
-  private volatile EndOperationListener<T> endOperationListener;
+  @Nullable private static final Class<?> BATCH_PROMISE_CLASS = getBatchPromiseClass();
+
+  @Nullable
+  private static Class<?> getBatchPromiseClass() {
+    try {
+      // using Class.forName because this class is not available in the redisson version we compile
+      // against
+      return Class.forName("org.redisson.command.BatchPromise");
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable private volatile EndOperationListener<T> endOperationListener;
 
   private CompletableFutureWrapper(CompletableFuture<T> delegate) {
     Context context = Context.current();
@@ -37,7 +50,7 @@ public class CompletableFutureWrapper<T> extends CompletableFuture<T> implements
    */
   public static <T> CompletableFuture<T> wrap(CompletableFuture<T> delegate) {
     if (delegate instanceof CompletableFutureWrapper
-        || (batchPromiseClass != null && batchPromiseClass.isInstance(delegate))) {
+        || (BATCH_PROMISE_CLASS != null && BATCH_PROMISE_CLASS.isInstance(delegate))) {
       return delegate;
     }
 
@@ -47,15 +60,5 @@ public class CompletableFutureWrapper<T> extends CompletableFuture<T> implements
   @Override
   public void setEndOperationListener(EndOperationListener<T> endOperationListener) {
     this.endOperationListener = endOperationListener;
-  }
-
-  private static Class<?> getBatchPromiseClass() {
-    try {
-      // using Class.forName because this class is not available in the redisson version we compile
-      // against
-      return Class.forName("org.redisson.command.BatchPromise");
-    } catch (ClassNotFoundException ignored) {
-      return null;
-    }
   }
 }

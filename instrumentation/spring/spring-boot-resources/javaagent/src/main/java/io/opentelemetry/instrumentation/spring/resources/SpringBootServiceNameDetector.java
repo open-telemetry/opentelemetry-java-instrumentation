@@ -37,14 +37,19 @@ import org.snakeyaml.engine.v2.api.LoadSettings;
  * strategy wins:
  *
  * <ul>
- *   <li>Check for the SPRING_APPLICATION_NAME environment variable
- *   <li>Check for spring.application.name system property
- *   <li>Check for application.properties file on the classpath
- *   <li>Check for application.properties in the current working dir
- *   <li>Check for application.yml on the classpath
- *   <li>Check for application.yml in the current working dir
  *   <li>Check for --spring.application.name program argument (not jvm arg) via ProcessHandle
  *   <li>Check for --spring.application.name program argument via sun.java.command system property
+ *   <li>Check for spring.application.name system property
+ *   <li>Check for the SPRING_APPLICATION_NAME environment variable
+ *   <li>Check for application.properties in the current working dir
+ *   <li>Check for application.yml in the current working dir
+ *   <li>Check for application.yaml in the current working dir
+ *   <li>Check for application.properties file on the classpath
+ *   <li>Check for application.yml on the classpath
+ *   <li>Check for application.yaml on the classpath
+ *   <li>Check for bootstrap.properties file on the classpath
+ *   <li>Check for bootstrap.yml on the classpath
+ *   <li>Check for bootstrap.yaml on the classpath
  * </ul>
  *
  * <p>Note: The spring starter already includes provider in
@@ -57,7 +62,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
       Logger.getLogger(SpringBootServiceNameDetector.class.getName());
   private static final String COMMANDLINE_ARG_PREFIX = "--spring.application.name=";
   private static final Pattern COMMANDLINE_PATTERN =
-      Pattern.compile("--spring\\.application\\.name=([a-zA-Z.\\-_]+)");
+      Pattern.compile("--spring\\.application\\.name=(\\S+)");
   private final SystemHelper system;
 
   @SuppressWarnings("unused")
@@ -158,7 +163,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     String result = null;
     try (InputStream in = system.openFile("application.properties")) {
       result = getAppNamePropertyFromStream(in);
-    } catch (Exception e) {
+    } catch (IOException | RuntimeException e) {
       // expected to fail sometimes
     }
     logger.log(FINER, "Checking application.properties in current dir: {0}", result);
@@ -209,7 +214,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     String result = null;
     try (InputStream in = system.openFile(fileName)) {
       result = parseNameFromYaml(in);
-    } catch (Exception e) {
+    } catch (IOException | RuntimeException e) {
       // expected to fail sometimes
     }
     if (logger.isLoggable(FINER)) {
@@ -258,7 +263,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     try {
       String[] args = system.attemptGetCommandLineArgsViaReflection();
       return parseNameFromProcessArgs(args);
-    } catch (Exception e) {
+    } catch (ReflectiveOperationException e) {
       return null;
     }
   }
@@ -313,7 +318,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   private String loadFromClasspath(String filename, Function<InputStream, String> parser) {
     try (InputStream in = system.openClasspathResource(filename)) {
       return in != null ? parser.apply(in) : null;
-    } catch (Exception e) {
+    } catch (IOException | RuntimeException e) {
       return null;
     }
   }

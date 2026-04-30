@@ -1,0 +1,72 @@
+name: Reusable PR build
+
+# Always invoked from build-pull-request.yml (the dispatcher).
+# All gating decisions are made by the dispatcher and passed in as inputs.
+on:
+  workflow_call:
+    inputs:
+      skip-native-tests:
+        type: boolean
+        default: false
+      skip-openj9-tests:
+        type: boolean
+        default: false
+      skip-windows-smoke-tests:
+        type: boolean
+        default: false
+      reduced-smoke-tests:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  common:
+    uses: ./.github/workflows/build-common.yml
+    with:
+      skip-openj9-tests: ${{ inputs.skip-openj9-tests }}
+      skip-windows-smoke-tests: ${{ inputs.skip-windows-smoke-tests }}
+      reduced-smoke-tests: ${{ inputs.reduced-smoke-tests }}
+      cache-read-only: true
+
+  test-latest-deps:
+    uses: ./.github/workflows/reusable-test-latest-deps.yml
+    with:
+      cache-read-only: true
+
+  test-native:
+    uses: ./.github/workflows/reusable-native-tests.yml
+    with:
+      skip-native-tests: ${{ inputs.skip-native-tests }}
+
+  muzzle:
+    uses: ./.github/workflows/reusable-muzzle.yml
+    with:
+      cache-read-only: true
+
+  # this is not a required check to avoid blocking pull requests if external links break
+  markdown-check:
+    # release branches are excluded because the README.md javaagent download link has to be updated
+    # on release branches before the release download has been published
+    if: "!startsWith(github.ref_name, 'release/') && !startsWith(github.base_ref, 'release/')"
+    uses: ./.github/workflows/reusable-link-check.yml
+
+  markdown-lint-check:
+    uses: ./.github/workflows/reusable-markdown-lint-check.yml
+
+  required-status-check:
+    needs:
+      - common
+      - test-latest-deps
+      - muzzle
+      - markdown-lint-check
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+      - if: |
+          needs.common.result != 'success' ||
+          needs.test-latest-deps.result != 'success' ||
+          needs.muzzle.result != 'success' ||
+          needs.markdown-lint-check.result != 'success'
+        run: exit 1 # fail

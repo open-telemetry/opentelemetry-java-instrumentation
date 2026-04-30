@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -35,7 +35,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableList;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -95,7 +94,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       if (captureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                headerAttributeKey("Test-Message-Header"),
                                 val -> val.isEqualTo(ImmutableList.of("test"))));
                       }
                       span.hasName("testSdkSqs publish")
@@ -167,7 +166,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
-                                  stringArrayKey("messaging.header.Test_Message_Header"),
+                                  headerAttributeKey("Test-Message-Header"),
                                   val -> val.isEqualTo(ImmutableList.of("test"))));
                         }
 
@@ -207,7 +206,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
-                                  stringArrayKey("messaging.header.Test_Message_Header"),
+                                  headerAttributeKey("Test-Message-Header"),
                                   val -> val.isEqualTo(singletonList("test"))));
                         }
 
@@ -233,7 +232,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
   }
 
   @Test
-  void testCaptureMessageHeaderAsAttributeSpan() throws URISyntaxException {
+  void testCaptureMessageHeaderAsAttributeSpan() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -260,7 +259,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
   }
 
   @Test
-  void testBatchSqsProducerConsumerServicesSync() throws URISyntaxException {
+  void testBatchSqsProducerConsumerServicesSync() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());

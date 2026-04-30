@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 
+import static io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4.ApacheShenYuSingletons.httpRouteGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -38,7 +39,7 @@ class ContextBuilderInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Argument(0) ServerWebExchange exchange) {
       Context context = Context.current();
       MetaData metaData = exchange.getAttribute(Constants.META_DATA);
@@ -46,10 +47,7 @@ class ContextBuilderInstrumentation implements TypeInstrumentation {
         return;
       }
       HttpServerRoute.update(
-          context,
-          HttpServerRouteSource.NESTED_CONTROLLER,
-          ApacheShenYuSingletons.httpRouteGetter(),
-          metaData);
+          context, HttpServerRouteSource.NESTED_CONTROLLER, httpRouteGetter(), metaData);
       MetaDataHelper.extractAttributes(metaData, context);
     }
   }

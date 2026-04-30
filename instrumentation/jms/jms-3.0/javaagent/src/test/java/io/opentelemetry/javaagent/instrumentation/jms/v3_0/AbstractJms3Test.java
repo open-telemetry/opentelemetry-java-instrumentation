@@ -38,7 +38,6 @@ import java.util.stream.Stream;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
 import org.assertj.core.api.AbstractAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -76,6 +75,7 @@ abstract class AbstractJms3Test {
             .withStartupTimeout(Duration.ofMinutes(2))
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
+    cleanup.deferAfterAll(broker);
 
     connectionFactory =
         new ActiveMQConnectionFactory(
@@ -87,28 +87,15 @@ abstract class AbstractJms3Test {
     connection.start();
 
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-  }
-
-  @AfterAll
-  static void tearDown() throws JMSException {
-    if (session != null) {
-      session.close();
-    }
-    if (connection != null) {
-      connection.close();
-    }
-    if (connectionFactory != null) {
-      connectionFactory.close();
-    }
-    if (broker != null) {
-      broker.close();
-    }
+    cleanup.deferAfterAll(connectionFactory);
+    cleanup.deferAfterAll(connection);
+    cleanup.deferAfterAll(session);
   }
 
   @ParameterizedTest
   @MethodSource("destinationArguments")
   void testMessageListener(DestinationFactory destinationFactory, boolean isTemporary)
-      throws Exception {
+      throws JMSException {
 
     // given
     Destination destination = destinationFactory.create(session);
@@ -129,7 +116,7 @@ abstract class AbstractJms3Test {
     testing.runWithSpan("parent", () -> producer.send(destination, sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.orTimeout(10, SECONDS).join();
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String actualDestinationName = ((ActiveMQDestination) destination).getName();
@@ -186,7 +173,7 @@ abstract class AbstractJms3Test {
   @ParameterizedTest
   @MethodSource("destinationArguments")
   void shouldCaptureMessageHeaders(DestinationFactory destinationFactory, boolean isTemporary)
-      throws Exception {
+      throws JMSException {
 
     // given
     Destination destination = destinationFactory.create(session);
@@ -209,7 +196,7 @@ abstract class AbstractJms3Test {
     testing.runWithSpan("parent", () -> producer.send(sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.orTimeout(10, SECONDS).join();
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String actualDestinationName = ((ActiveMQDestination) destination).getName();

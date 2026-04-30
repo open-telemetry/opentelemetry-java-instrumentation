@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.log4j.Category;
 import org.apache.log4j.MDC;
@@ -35,8 +34,6 @@ import org.apache.log4j.Priority;
 import org.apache.log4j.spi.LocationInfo;
 
 public class LogEventMapper {
-
-  private static final Logger logger = Logger.getLogger(LogEventMapper.class.getName());
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
@@ -47,8 +44,6 @@ public class LogEventMapper {
   private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   private static final AttributeKey<String> CODE_NAMESPACE =
       AttributeKey.stringKey("code.namespace");
-  // copied from EventIncubatingAttributes
-  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
   private static final int TRACE_INT = 5000;
 
@@ -60,10 +55,6 @@ public class LogEventMapper {
 
   // cached as an optimization
   private final boolean captureAllMdcAttributes;
-
-  private final boolean captureEventName =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
-          .getBoolean("capture_event_name/development", false);
 
   private final boolean captureCodeAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
@@ -80,17 +71,11 @@ public class LogEventMapper {
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
       for (String key : captureMdcAttributes) {
-        if (!OTEL_EVENT_NAME.getKey().equals(key)
-            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
           keys.add(getMdcAttributeKey(key));
         }
       }
       this.captureMdcAttributeKeys = keys;
-    }
-    if (captureEventName) {
-      logger.warning(
-          "The otel.instrumentation.log4j-appender.experimental.capture-event-name setting is"
-              + " deprecated and will be removed in a future version.");
     }
   }
 
@@ -161,7 +146,7 @@ public class LogEventMapper {
       if (!lineNumber.equals("?")) {
         try {
           codeLineNo = Integer.parseInt(lineNumber);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException ignored) {
           // ignore
         }
       }
@@ -189,22 +174,15 @@ public class LogEventMapper {
       return;
     }
 
-    // otel.event.name takes priority over event.name
     Object otelEventName = context.get(OTEL_EVENT_NAME.getKey());
     if (otelEventName instanceof String) {
       builder.setEventName((String) otelEventName);
-    } else if (captureEventName) {
-      Object eventName = context.get(EVENT_NAME.getKey());
-      if (eventName != null) {
-        builder.setEventName(eventName.toString());
-      }
     }
 
     if (captureAllMdcAttributes) {
       for (Map.Entry<?, ?> entry : context.entrySet()) {
         String key = String.valueOf(entry.getKey());
-        if (!OTEL_EVENT_NAME.getKey().equals(key)
-            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
           Object value = entry.getValue();
           if (value != null) {
             builder.setAttribute(getMdcAttributeKey(key), value.toString());

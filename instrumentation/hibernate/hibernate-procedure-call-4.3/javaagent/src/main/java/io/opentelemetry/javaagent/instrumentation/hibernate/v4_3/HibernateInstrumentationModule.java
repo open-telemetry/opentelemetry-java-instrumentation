@@ -38,9 +38,4 @@ public class HibernateInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new ProcedureCallInstrumentation(), new SessionInstrumentation());
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

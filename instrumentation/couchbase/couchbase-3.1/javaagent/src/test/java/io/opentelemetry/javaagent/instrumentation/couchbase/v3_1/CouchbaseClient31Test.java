@@ -14,11 +14,11 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.ClusterOptions;
 import com.couchbase.client.java.Collection;
 import com.couchbase.client.java.env.ClusterEnvironment;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -35,6 +35,9 @@ import org.testcontainers.couchbase.CouchbaseService;
 class CouchbaseClient31Test {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final Logger logger = LoggerFactory.getLogger("couchbase-container");
 
@@ -53,17 +56,20 @@ class CouchbaseClient31Test {
             .withStartupAttempts(5)
             .withStartupTimeout(Duration.ofMinutes(2));
     couchbase.start();
+    cleanup.deferAfterAll(couchbase::stop);
 
     ClusterEnvironment environment =
         ClusterEnvironment.builder()
             .timeoutConfig(TimeoutConfig.kvTimeout(Duration.ofSeconds(30)))
             .build();
+    cleanup.deferAfterAll(environment::shutdown);
 
     cluster =
         Cluster.connect(
             couchbase.getConnectionString(),
             ClusterOptions.clusterOptions(couchbase.getUsername(), couchbase.getPassword())
                 .environment(environment));
+    cleanup.deferAfterAll(cluster::disconnect);
 
     Bucket bucket = cluster.bucket("test");
     collection = bucket.defaultCollection();
@@ -72,17 +78,11 @@ class CouchbaseClient31Test {
     bucket.waitUntilReady(Duration.ofMinutes(1));
   }
 
-  @AfterAll
-  static void cleanup() {
-    cluster.disconnect();
-    couchbase.stop();
-  }
-
   @Test
   void testEmitsSpans() {
     try {
       collection.get("id");
-    } catch (DocumentNotFoundException e) {
+    } catch (DocumentNotFoundException ignored) {
       // Expected
     }
 

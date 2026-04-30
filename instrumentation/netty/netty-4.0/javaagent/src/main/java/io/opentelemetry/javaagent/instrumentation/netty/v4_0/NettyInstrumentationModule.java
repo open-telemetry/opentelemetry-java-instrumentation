@@ -45,9 +45,4 @@ public class NettyInstrumentationModule extends InstrumentationModule
         new NettyChannelPipelineInstrumentation(),
         new AbstractChannelHandlerContextInstrumentation());
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

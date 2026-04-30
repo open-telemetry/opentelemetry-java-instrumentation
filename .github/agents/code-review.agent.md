@@ -91,9 +91,8 @@ For each file in scope:
    - PR mode: changed lines only
    - File/directory mode: all lines
 4. Apply checklist rules (below) and insert comments above offending lines.
-5. Do not flag a non-capturing lambda or method reference as an unnecessary allocation,
-   because on modern JDKs these are typically cached at the call site rather than
-   allocated on every invocation.
+5. Do not flag a non-capturing lambda or method reference as an allocation issue.
+   On HotSpot / OpenJDK 8+, these are cached at the call site.
 6. Flag a missing version-boundary comment on a single-class `hasClassesNamed(...)`
    check in `classLoaderMatcher()` only after validating the stated boundary from
    repository or upstream evidence. Use `// added in X.Y` for a pure lower bound.
