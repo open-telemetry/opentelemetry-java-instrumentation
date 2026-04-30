@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.glassfish.grizzly.Transport;
@@ -31,12 +32,16 @@ final class GrizzlyHttpAttributesGetter
   }
 
   private static List<String> toHeaderList(Iterable<String> values) {
-    if (values.iterator().hasNext()) {
-      List<String> result = new ArrayList<>();
-      values.forEach(result::add);
-      return result;
+    Iterator<String> iterator = values.iterator();
+    if (!iterator.hasNext()) {
+      return emptyList();
     }
-    return emptyList();
+
+    List<String> result = new ArrayList<>();
+    do {
+      result.add(iterator.next());
+    } while (iterator.hasNext());
+    return result;
   }
 
   @Override
