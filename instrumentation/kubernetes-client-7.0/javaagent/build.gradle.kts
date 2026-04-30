@@ -19,6 +19,8 @@ dependencies {
   latestDepTestLibrary("io.kubernetes:client-java-api:19.+") // see test suite below
 }
 
+val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+
 testing {
   suites {
     // version22Test reuses the same test source against `latest.release` in latest-deps mode
@@ -35,6 +37,16 @@ testing {
           implementation("io.kubernetes:client-java-api:latest.release")
         } else {
           implementation("io.kubernetes:client-java-api:22.0.0")
+        }
+      }
+      targets {
+        all {
+          testTask.configure {
+            // client-java-api 22.0.0+ requires Java 11+
+            if (testJavaVersion.isJava8) {
+              enabled = false
+            }
+          }
         }
       }
     }
