@@ -22,8 +22,8 @@ final class Elasticsearch5TransportAttributesGetter extends ElasticsearchTranspo
     return null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public Integer getNetworkPeerPort(
       ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {

@@ -72,7 +72,7 @@ class EntityManagerTest extends AbstractHibernateTest {
         () -> {
           try {
             parameter.sessionMethodTest.accept(entityManager, entity);
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this, we should see the error field set on the span.
           }
           entityTransaction.commit();
