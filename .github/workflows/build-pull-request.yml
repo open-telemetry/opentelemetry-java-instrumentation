@@ -1,12 +1,26 @@
 name: Build pull request
 
+# Optional test variants (openj9, windows) are gated by `test openj9` /
+# `test windows` labels on the PR, read from the event payload. We
+# deliberately do NOT subscribe to `pull_request: [labeled]` — see the
+# description of PR #18446 for the history of why every previous attempt
+# to use that trigger failed.
+#
+# Practical consequence: adding a `test openj9` / `test windows` label
+# doesn't retrigger the build. Push another commit or close/reopen the
+# PR to pick it up. `comment-on-test-label.yml` posts a reminder when
+# one of those labels is added.
+#
+# `test native` is detected automatically from the PR's changed paths
+# (the `resolve-native` job below). The manual `test native` label is
+# still honored as a force-enable.
+
 on:
   pull_request:
     types:
       - opened
       - synchronize
       - reopened
-      - labeled
 
 concurrency:
   group: build-pull-request-${{ github.event.pull_request.number }}
@@ -16,22 +30,44 @@ permissions:
   contents: read
 
 jobs:
+  # Run native tests automatically when the PR touches a library
+  # instrumentation module with native support (logback-appender, jdbc,
+  # spring), the native smoke test harness, or the top-level build config
+  # that affects them.
+  resolve-native:
+    runs-on: ubuntu-latest
+    outputs:
+      run-native-tests: ${{ steps.filter.outputs.native }}
+    steps:
+      - name: Detect native-relevant changes
+        id: filter
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # `|| true` so an empty result from `grep -v` (everything filtered)
+          # doesn't fail the step under pipefail.
+          files=$(
+            gh api --paginate "/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
+              --jq '.[].filename' |
+              grep -Ev '^instrumentation/spring/.+/javaagent/' || true
+          )
+          include='^instrumentation/logback/logback-appender-1\.0/library/'
+          include+='|^instrumentation/jdbc/library/'
+          include+='|^instrumentation/spring/'
+          include+='|^smoke-tests-otel-starter/'
+          include+='|^dependencyManagement/build\.gradle\.kts$'
+          include+='|^settings\.gradle\.kts$'
+          if grep -Eq "$include" <<<"$files"; then
+            echo "native=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "native=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
-    # On `labeled` events, only proceed when the added label affects what we
-    # build. All other event types (opened, synchronize, reopened) always
-    # proceed.
-    if: |
-      github.event.action != 'labeled' ||
-      github.event.label.name == 'test native' ||
-      github.event.label.name == 'test openj9' ||
-      github.event.label.name == 'test windows'
+    needs: [resolve-native]
     uses: ./.github/workflows/reusable-pr-build.yml
     with:
-      # it's rare for only the openj9 tests, openj9 smoke variants, the windows
-      # smoke tests, or the native tests to break, so they are gated by labels.
-      # `test native` is applied automatically by .github/labeler.yml when the
-      # PR diff touches native-relevant paths; `test openj9` and `test windows`
-      # are applied manually.
-      skip-native-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test native') }}
+      skip-native-tests: ${{ !(needs.resolve-native.outputs.run-native-tests == 'true' || contains(github.event.pull_request.labels.*.name, 'test native')) }}
       skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
