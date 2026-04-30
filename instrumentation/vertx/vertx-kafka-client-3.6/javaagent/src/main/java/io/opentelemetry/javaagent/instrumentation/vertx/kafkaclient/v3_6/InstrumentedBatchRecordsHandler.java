@@ -39,7 +39,7 @@ public class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRe
     }
 
     // the instrumenter iterates over records when adding links, we need to suppress that
-    boolean previousWrappingEnabled = KafkaClientsConsumerProcessTracing.setEnabled(false);
+    boolean previousWrappingEnabled = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
     try {
       Context context = batchProcessInstrumenter().start(parentContext, request);
       try (Scope ignored = context.makeCurrent()) {
@@ -50,7 +50,7 @@ public class InstrumentedBatchRecordsHandler<K, V> implements Handler<ConsumerRe
       }
       batchProcessInstrumenter().end(context, request, null, null);
     } finally {
-      KafkaClientsConsumerProcessTracing.setEnabled(previousWrappingEnabled);
+      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousWrappingEnabled);
     }
   }
 

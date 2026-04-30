@@ -70,7 +70,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too
-      boolean previousValue = KafkaClientsConsumerProcessTracing.setEnabled(false);
+      boolean previousValue = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
       try {
         Context context = null;
         if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
@@ -97,7 +97,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
           KafkaConsumerContextUtil.set(record, context, consumer);
         }
       } finally {
-        KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
+        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
       }
     }
   }
