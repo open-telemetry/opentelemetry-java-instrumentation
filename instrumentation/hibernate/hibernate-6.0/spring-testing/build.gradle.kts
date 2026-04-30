@@ -28,8 +28,12 @@ otelJava {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-javaagent:" + springAgent.singleFile.absolutePath)
+  }
 
-    // TODO run tests both with and without experimental span attributes
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
@@ -41,6 +45,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testExperimental, testStableSemconv)
   }
 }
