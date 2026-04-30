@@ -6,13 +6,17 @@
 package io.opentelemetry.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import io.nats.client.Dispatcher;
+import io.nats.client.Message;
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -68,6 +72,48 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
               d1.unsubscribe(s1);
               connection.closeDispatcher(d1);
             });
+  }
+
+  @Test
+  void testCapturedHeaders() {
+    // given
+    Dispatcher dispatcher = connection.createDispatcher(msg -> {}).subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
+
+    // when
+    Headers headers = new Headers();
+    headers.put("Test-Message-Header", "test");
+    headers.put("Uncaptured-Header", "password");
+    testing()
+        .runWithSpan(
+            "parent",
+            () -> {
+              Message message =
+                  NatsMessage.builder().subject("sub").headers(headers).data("x").build();
+              connection.publish(message);
+            });
+
+    // then
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("sub publish")
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                messagingAttributes(
+                                    "publish",
+                                    "sub",
+                                    clientId,
+                                    equalTo(
+                                        MessageHeaderUtil.headerAttributeKey("Test-Message-Header"),
+                                        singletonList("test")))),
+                    span ->
+                        span.hasName("sub process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(1))));
   }
 
   void publishAndAssertTraceAndSpans() {

@@ -406,6 +406,7 @@ abstract class AbstractRocketMqClientTest {
                   new Message(
                       sharedTopic, "TagA", "Hello RocketMQ".getBytes(Charset.defaultCharset()));
               msg.putUserProperty("Test-Message-Header", "test");
+              msg.putUserProperty("Uncaptured-Header", "password");
               SendResult sendResult = producer.send(msg);
               assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
             });
