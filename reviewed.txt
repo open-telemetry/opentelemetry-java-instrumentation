@@ -120,3 +120,11 @@ grizzly-2.3:javaagent
 grpc-1.6:javaagent
 grpc-1.6:library
 grpc-1.6:testing
+guava-10.0:javaagent
+guava-10.0:library
+gwt-2.0:javaagent
+helidon-4.3:javaagent
+helidon-4.3:library
+helidon-4.3:testing
+hibernate-3.3:javaagent
+hibernate-4.0:javaagent
