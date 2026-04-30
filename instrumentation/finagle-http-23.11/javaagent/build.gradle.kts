@@ -34,19 +34,16 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  implementation(project(":instrumentation:netty:netty-4.1:library"))
-  implementation(project(":instrumentation:netty:netty-common-4.0:javaagent"))
-  implementation(project(":instrumentation:netty:netty-common-4.0:library"))
-}
-
-tasks.withType<Jar>().configureEach {
   // Exclude the Promise stub and its nested classes;
   // this allows us to compile against these types in the instrumentation
   // despite them being private in their original inner class;
   // this is required for VirtualField to have a concrete type to find/get/set on.
-  exclude("com/twitter/util/Promise.class")
-  exclude("com/twitter/util/Promise$*.class")
+  compileOnly(project(":instrumentation:finagle-http-23.11:compile-stub"))
+
+  implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  implementation(project(":instrumentation:netty:netty-4.1:library"))
+  implementation(project(":instrumentation:netty:netty-common-4.0:javaagent"))
+  implementation(project(":instrumentation:netty:netty-common-4.0:library"))
 }
 
 tasks {

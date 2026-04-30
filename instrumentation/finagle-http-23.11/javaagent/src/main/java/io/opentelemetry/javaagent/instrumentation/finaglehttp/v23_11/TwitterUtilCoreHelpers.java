@@ -16,6 +16,7 @@ import scala.runtime.AbstractPartialFunction;
 import scala.runtime.BoxedUnit;
 
 public class TwitterUtilCoreHelpers {
+  @SuppressWarnings("rawtypes") // type is from compile-stub and masks private type
   public static final VirtualField<Promise.K, Context> PROMISE_K_CONTEXT_FIELD =
       VirtualField.find(Promise.K.class, Context.class);
 
@@ -35,7 +36,7 @@ public class TwitterUtilCoreHelpers {
     @Override
     public boolean isDefinedAt(Throwable x) {
       try (Scope ignored = context.makeCurrent()) {
-        // Return true only for inputs this function handles`
+        // Return true only for inputs this function handles
         return delegate.isDefinedAt(x);
       }
     }
@@ -49,7 +50,7 @@ public class TwitterUtilCoreHelpers {
   }
 
   public static <T, O> Function1<T, O> wrap(Context context, Function1<T, O> fn) {
-    return (t) -> {
+    return t -> {
       // always set it: you never know what might be polluting the thread local context at the time
       try (Scope ignored = context.makeCurrent()) {
         return fn.apply(t);

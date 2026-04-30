@@ -47,7 +47,10 @@ class PromiseKInstrumentation implements TypeInstrumentation {
   public static class TrapContextAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Promise.K thiz) {
+    public static void onExit(
+        @Advice.This
+            @SuppressWarnings("rawtypes") // type is from compile-stub and masks private type
+            Promise.K thiz) {
       Context current = Context.current();
       TwitterUtilCoreHelpers.PROMISE_K_CONTEXT_FIELD.set(thiz, current);
     }
@@ -57,7 +60,10 @@ class PromiseKInstrumentation implements TypeInstrumentation {
   public static class ApplyAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static Scope onApplyEnter(@Advice.This Promise.K thiz) {
+    public static Scope onApplyEnter(
+        @Advice.This
+            @SuppressWarnings("rawtypes") // type is from compile-stub and masks private type
+            Promise.K thiz) {
       // if this is null, there's a bug in the instrumentation
       Context savedContext = TwitterUtilCoreHelpers.PROMISE_K_CONTEXT_FIELD.get(thiz);
       return savedContext != null ? savedContext.makeCurrent() : null;

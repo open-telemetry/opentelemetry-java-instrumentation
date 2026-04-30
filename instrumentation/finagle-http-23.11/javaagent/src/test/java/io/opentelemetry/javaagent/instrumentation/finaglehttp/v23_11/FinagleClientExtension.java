@@ -29,8 +29,8 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
  * Class-scoped JUnit extension that owns a Finagle {@link Http.Client} per {@link ClientType} and
- * the underlying {@link EventLoopGroup} for the duration of the test class. Modeled on {@code
- * Netty41ClientExtension}: build once in {@code beforeAll}, tear down once in {@code afterAll}.
+ * the underlying {@link EventLoopGroup} for the duration of the test class. Clients and services
+ * are created lazily on first use and torn down once in {@code afterAll}.
  */
 public class FinagleClientExtension implements AfterAllCallback {
 

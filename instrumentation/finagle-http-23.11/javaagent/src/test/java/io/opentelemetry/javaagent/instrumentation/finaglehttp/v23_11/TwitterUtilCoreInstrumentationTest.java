@@ -112,7 +112,7 @@ class TwitterUtilCoreInstrumentationTest {
                           return 1;
                         })));
 
-    assertThat((int) Await.result(f, AWAIT)).isEqualTo(1);
+    assertThat(Await.result(f, AWAIT)).isEqualTo(1);
     assertParentAndChild("parent", "pool-child");
   }
 
