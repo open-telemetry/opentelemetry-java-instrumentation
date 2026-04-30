@@ -60,8 +60,6 @@ class ElasticsearchClientTest {
 
   static HttpHost httpHost;
 
-  static RestClient restClient;
-
   static ElasticsearchClient client;
   static ElasticsearchAsyncClient asyncClient;
 
@@ -77,7 +75,7 @@ class ElasticsearchClientTest {
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
 
-    restClient =
+    RestClient restClient =
         RestClient.builder(httpHost)
             .setRequestConfigCallback(
                 builder ->
