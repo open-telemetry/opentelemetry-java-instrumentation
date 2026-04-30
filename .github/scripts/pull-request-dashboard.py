@@ -49,10 +49,10 @@ PROMPT_TEMPLATE = """You are triaging pull request #{number} in {repo} for \
 the pull request dashboard.
 
 Decide who needs to act next on this PR using ONLY the context below. \
-The context deliberately omits CI status and merge-conflict status — \
-those are shown in separate deterministic columns of the dashboard. Do \
-not infer them or factor them into your decision; focus on the \
-conversation (comments, reviews, commits).
+Merge-conflict status is shown in a separate deterministic column of the \
+dashboard — do not infer it. CI is summarized as a single boolean \
+(failing yes/no); pending checks are treated as not-failing. Focus on \
+the conversation (comments, reviews, commits).
 
 Guidelines:
   - If the latest substantive activity is from the AUTHOR and there is an \
@@ -69,7 +69,7 @@ Respond with a single JSON object and nothing else (no prose, no fences):
 
 Where:
   - "approver" = an approver should act (review, approve, request changes, decide to close)
-  - "author" = the PR author should act (respond, rebase)
+  - "author" = the PR author should act (respond, rebase, fix CI)
   - "external" = waiting on something outside this repo (upstream PR, etc.)
 
 ---BEGIN CONTEXT---
@@ -497,6 +497,8 @@ def render_context(ctx: dict[str, Any]) -> str:
         f"State: open | draft={pr.get('isDraft')} "
         f"| reviewDecision={pr.get('reviewDecision')}"
     )
+    ci_failing = bool(ctx["checks_failing"])
+    lines.append(f"CI failing: {'yes' if ci_failing else 'no'}")
     lines.append(f"Created: {pr.get('createdAt')} ({pr_age}d ago)")
     lines.append(f"Updated: {pr.get('updatedAt')} ({updated_age}d ago)")
     lines.append(f"Size: +{pr.get('additions', 0)}/-{pr.get('deletions', 0)} across {pr.get('changedFiles', 0)} files")
