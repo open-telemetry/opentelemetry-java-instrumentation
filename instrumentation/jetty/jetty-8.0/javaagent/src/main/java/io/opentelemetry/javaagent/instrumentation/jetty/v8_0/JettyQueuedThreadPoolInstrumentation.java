@@ -39,6 +39,7 @@ class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static PropagatedContext enterJobSubmit(@Advice.Argument(0) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
@@ -50,7 +51,7 @@ class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitJobSubmit(
         @Advice.Argument(0) Runnable task,
-        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Enter @Nullable PropagatedContext propagatedContext,
         @Advice.Thrown @Nullable Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
           propagatedContext, throwable, PROPAGATED_CONTEXT, task);
