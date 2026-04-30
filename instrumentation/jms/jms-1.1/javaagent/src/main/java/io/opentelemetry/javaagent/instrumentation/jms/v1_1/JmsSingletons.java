@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.instrumentation.jms.JmsInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.JmsInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 
 public class JmsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-1.1";

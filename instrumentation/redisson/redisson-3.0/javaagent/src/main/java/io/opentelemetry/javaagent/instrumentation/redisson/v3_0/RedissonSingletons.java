@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.redisson.RedissonInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.redisson.RedissonRequest;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonRequest;
 
 public class RedissonSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.redisson-3.0";
