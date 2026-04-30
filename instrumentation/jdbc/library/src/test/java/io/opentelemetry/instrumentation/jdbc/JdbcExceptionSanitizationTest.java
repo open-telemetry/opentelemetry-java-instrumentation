@@ -8,12 +8,12 @@ package io.opentelemetry.instrumentation.jdbc;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -37,12 +37,11 @@ class JdbcExceptionSanitizationTest {
         JdbcTelemetry.builder(testing.getOpenTelemetry()).setQuerySanitizationEnabled(true).build();
 
     Statement mockStatement = mock(Statement.class);
-    doAnswer(
-            invoc -> {
-              throw new SQLException("Error in query: " + invoc.getArgument(0), "42P01", 1054);
-            })
-        .when(mockStatement)
-        .executeQuery(anyString());
+    when(mockStatement.executeQuery(anyString()))
+        .thenAnswer(
+            invocation -> {
+              throw new SQLException("Error in query: " + invocation.getArgument(0), "42P01", 1054);
+            });
 
     Connection conn =
         ConnectionWrapper.wrap(
@@ -65,11 +64,14 @@ class JdbcExceptionSanitizationTest {
                         event ->
                             event
                                 .hasName("exception")
-                                .hasAttributesSatisfying(
+                                .hasAttributesSatisfyingExactly(
                                     equalTo(EXCEPTION_TYPE, "java.sql.SQLException"),
                                     satisfies(
+                                        EXCEPTION_STACKTRACE,
+                                        stack -> stack.doesNotContain("mysecret")),
+                                    equalTo(
                                         EXCEPTION_MESSAGE,
-                                        msg -> msg.doesNotContain("mysecret"))))));
+                                        "SQL error [1054/42P01]")))));
   }
 
   @Test
@@ -80,12 +82,11 @@ class JdbcExceptionSanitizationTest {
             .build();
 
     Statement mockStatement = mock(Statement.class);
-    doAnswer(
-            invoc -> {
-              throw new SQLException("Error in query: " + invoc.getArgument(0), "42P01", 1054);
-            })
-        .when(mockStatement)
-        .executeQuery(anyString());
+    when(mockStatement.executeQuery(anyString()))
+        .thenAnswer(
+            invocation -> {
+              throw new SQLException("Error in query: " + invocation.getArgument(0), "42P01", 1054);
+            });
 
     Connection conn =
         ConnectionWrapper.wrap(
@@ -108,8 +109,11 @@ class JdbcExceptionSanitizationTest {
                         event ->
                             event
                                 .hasName("exception")
-                                .hasAttributesSatisfying(
+                                .hasAttributesSatisfyingExactly(
                                     equalTo(EXCEPTION_TYPE, "java.sql.SQLException"),
+                                    satisfies(
+                                        EXCEPTION_STACKTRACE,
+                                        stack -> stack.isInstanceOf(String.class)),
                                     satisfies(
                                         EXCEPTION_MESSAGE, msg -> msg.contains("mysecret"))))));
   }
@@ -120,12 +124,11 @@ class JdbcExceptionSanitizationTest {
         JdbcTelemetry.builder(testing.getOpenTelemetry()).setQuerySanitizationEnabled(true).build();
 
     Statement mockStatement = mock(Statement.class);
-    doAnswer(
-            invoc -> {
-              throw new SQLException("Error in query: " + invoc.getArgument(0), "42P01", 1054);
-            })
-        .when(mockStatement)
-        .executeQuery(anyString());
+    when(mockStatement.executeQuery(anyString()))
+        .thenAnswer(
+            invocation -> {
+              throw new SQLException("Error in query: " + invocation.getArgument(0), "42P01", 1054);
+            });
 
     Connection conn =
         ConnectionWrapper.wrap(
@@ -148,7 +151,11 @@ class JdbcExceptionSanitizationTest {
                         event ->
                             event
                                 .hasName("exception")
-                                .hasAttributesSatisfying(
+                                .hasAttributesSatisfyingExactly(
+                                    satisfies(
+                                        EXCEPTION_STACKTRACE,
+                                        stack -> stack.isInstanceOf(String.class)),
+                                    equalTo(EXCEPTION_MESSAGE, "SQL error [1054/42P01]"),
                                     equalTo(EXCEPTION_TYPE, "java.sql.SQLException")))));
   }
 
@@ -158,7 +165,7 @@ class JdbcExceptionSanitizationTest {
         JdbcTelemetry.builder(testing.getOpenTelemetry()).setQuerySanitizationEnabled(true).build();
 
     Statement mockStatement = mock(Statement.class);
-    doThrow(new RuntimeException("boom")).when(mockStatement).executeQuery(anyString());
+    when(mockStatement.executeQuery(anyString())).thenThrow(new RuntimeException("boom"));
 
     Connection conn =
         ConnectionWrapper.wrap(
@@ -181,8 +188,11 @@ class JdbcExceptionSanitizationTest {
                         event ->
                             event
                                 .hasName("exception")
-                                .hasAttributesSatisfying(
+                                .hasAttributesSatisfyingExactly(
                                     equalTo(EXCEPTION_TYPE, "java.lang.RuntimeException"),
+                                    satisfies(
+                                        EXCEPTION_STACKTRACE,
+                                        stack -> stack.isInstanceOf(String.class)),
                                     equalTo(EXCEPTION_MESSAGE, "boom")))));
   }
 }
