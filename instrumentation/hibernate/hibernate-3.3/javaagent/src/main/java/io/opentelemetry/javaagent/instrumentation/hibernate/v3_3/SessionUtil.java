@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.SessionInfo;
 import javax.annotation.Nullable;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;

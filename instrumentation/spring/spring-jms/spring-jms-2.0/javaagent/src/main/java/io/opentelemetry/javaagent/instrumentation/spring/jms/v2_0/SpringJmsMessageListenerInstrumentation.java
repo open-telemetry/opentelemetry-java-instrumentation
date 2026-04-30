@@ -18,7 +18,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import io.opentelemetry.javaagent.instrumentation.jms.v1_1.JavaxMessageAdapter;
 import javax.annotation.Nullable;
 import javax.jms.Message;

@@ -21,7 +21,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.spring.webmvc.IsGrailsHandler;
+import io.opentelemetry.javaagent.instrumentation.spring.webmvc.common.IsGrailsHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
