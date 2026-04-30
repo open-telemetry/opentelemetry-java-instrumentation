@@ -116,7 +116,7 @@ public abstract class AbstractSqsTracingTest {
     ReceiveMessageRequest receiveMessageRequest =
         new ReceiveMessageRequest("http://localhost:" + sqsPort + "/000000000000/testSdkSqs");
     if (testCaptureHeaders) {
-      receiveMessageRequest.withMessageAttributeNames("Test-Message-Header");
+      receiveMessageRequest.withMessageAttributeNames("Test-Message-Header", "Uncaptured-Header");
     }
     ReceiveMessageResult receiveMessageResult = sqsClient.receiveMessage(receiveMessageRequest);
 
