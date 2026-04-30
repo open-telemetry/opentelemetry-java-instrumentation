@@ -185,3 +185,17 @@ jaxrs-3.0-common:javaagent
 jaxrs-3.0-common:testing
 jaxrs-3.0-jersey-3.0:javaagent
 jaxrs-3.0-resteasy-6.0:javaagent
+jaxrs-common:bootstrap
+jaxrs-common:javaagent
+jaxrs-common:testing
+jaxws:jaxws-2.0-arquillian-testing
+jaxws-2.0-axis2-1.6:javaagent
+jaxws:jaxws-2.0-common-testing
+jaxws:jaxws-2.0-tomee-testing
+jaxws:jaxws-2.0-wildfly-testing
+jaxws-2.0:javaagent
+jaxws:jaxws-3.0-axis2-2.0-testing
+jaxws:jaxws-3.0-common-testing
+jaxws:jaxws-3.0-cxf-4.0-testing
+jaxws:jaxws-3.0-metro-3.0-testing
+jaxws-common:javaagent
