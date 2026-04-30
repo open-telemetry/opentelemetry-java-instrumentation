@@ -62,6 +62,7 @@ class CouchbaseClient316Test {
         ClusterEnvironment.builder()
             .timeoutConfig(TimeoutConfig.kvTimeout(Duration.ofSeconds(30)))
             .build();
+    cleanup.deferAfterAll(environment::shutdown);
 
     cluster =
         Cluster.connect(
