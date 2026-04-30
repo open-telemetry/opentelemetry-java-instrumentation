@@ -412,11 +412,29 @@ def fetch_pr_context(
     events = [e for e in events if e["ts"]]
     events.sort(key=lambda e: e["ts"])
 
+    base_ref = pr.get("baseRefName") or "main"
+    merge_subject_prefixes = (
+        f"merge branch '{base_ref}'",
+        f"merge remote-tracking branch 'upstream/{base_ref}'",
+        f"merge remote-tracking branch 'origin/{base_ref}'",
+        f"merge {base_ref} into",
+    )
+
+    def _is_merge_from_base(e: dict[str, Any]) -> bool:
+        if e["kind"] != "commit":
+            return False
+        subject = ((e.get("body") or "").splitlines() or [""])[0].strip().lower()
+        return any(subject.startswith(p) for p in merge_subject_prefixes)
+
     # Last substantive event = last event whose body is non-empty OR whose
-    # kind is not "review:COMMENTED" (state changes always count).
+    # kind is not "review:COMMENTED" (state changes always count). Merges
+    # of the base branch into the PR don't count as substantive — they
+    # don't move the conversation forward.
     def is_substantive(e: dict[str, Any]) -> bool:
         if e["kind"].startswith("review:") and e["kind"] != "review:COMMENTED":
             return True
+        if _is_merge_from_base(e):
+            return False
         return bool((e.get("body") or "").strip())
 
     substantive = [e for e in events if is_substantive(e)]
