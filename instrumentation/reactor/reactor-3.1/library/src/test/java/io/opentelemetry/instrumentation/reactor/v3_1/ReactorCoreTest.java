@@ -190,12 +190,11 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
-                span -> {
-                  span.hasName("middle").hasParent(trace.getSpan(0));
-                  if (!testLatestDeps()) {
-                    span.hasAttributesSatisfyingExactly(equalTo(stringKey("middle"), "foo"));
-                  }
-                },
+                span ->
+                    span.hasName("middle")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("middle"), testLatestDeps() ? null : "foo")),
                 span ->
                     span.hasName("inner")
                         .hasParent(trace.getSpan(1))

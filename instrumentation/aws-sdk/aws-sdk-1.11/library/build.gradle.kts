@@ -43,7 +43,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
-        val version = if (otelProps.testLatestDeps) "latest.release" else "1.12.80"
+        val version = baseVersion("1.12.80").orLatest()
         implementation("com.amazonaws:aws-java-sdk-secretsmanager:$version")
       }
     }

@@ -9,6 +9,7 @@ muzzle {
     group.set("software.amazon.awssdk")
     module.set("aws-core")
     versions.set("[2.2.0,)")
+    assertInverse.set(true)
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
@@ -36,6 +37,7 @@ muzzle {
     group.set("software.amazon.awssdk")
     module.set("sqs")
     versions.set("[2.2.0,)")
+    assertInverse.set(true)
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
@@ -120,7 +122,7 @@ testing {
   suites {
     val s3PresignerTest by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (otelProps.testLatestDeps) "latest.release" else "2.10.12"
+        val version = baseVersion("2.10.12").orLatest()
         implementation("software.amazon.awssdk:s3:$version")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
       }
@@ -128,8 +130,8 @@ testing {
 
     val s3CrtTest by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("software.amazon.awssdk:s3:" + if (otelProps.testLatestDeps) "latest.release" else "2.27.21")
-        implementation("software.amazon.awssdk.crt:aws-crt:" + if (otelProps.testLatestDeps) "latest.release" else "0.30.11")
+        implementation("software.amazon.awssdk:s3:${baseVersion("2.27.21").orLatest()}")
+        implementation("software.amazon.awssdk.crt:aws-crt:${baseVersion("0.30.11").orLatest()}")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
         implementation("org.testcontainers:testcontainers-localstack")
       }
@@ -147,7 +149,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         // 2.25.63 is the first release with Converse API
-        val version = if (otelProps.testLatestDeps) "latest.release" else "2.25.63"
+        val version = baseVersion("2.25.63").orLatest()
         implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
 

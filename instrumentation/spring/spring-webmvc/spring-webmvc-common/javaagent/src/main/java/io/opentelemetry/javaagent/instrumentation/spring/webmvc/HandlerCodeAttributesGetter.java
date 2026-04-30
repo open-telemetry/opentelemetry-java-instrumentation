@@ -17,7 +17,6 @@ class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
   @Nullable private static final Class<?> JAVAX_SERVLET = loadOrNull("javax.servlet.Servlet");
   @Nullable private static final Class<?> JAKARTA_SERVLET = loadOrNull("jakarta.servlet.Servlet");
 
-  @Nullable
   @Override
   public Class<?> getCodeClass(Object handler) {
     if (handler instanceof HandlerMethod) {
@@ -29,7 +28,6 @@ class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
     }
   }
 
-  @Nullable
   @Override
   public String getMethodName(Object handler) {
     if (handler instanceof HandlerMethod) {
@@ -60,7 +58,7 @@ class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
   private static Class<?> loadOrNull(String className) {
     try {
       return Class.forName(className);
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

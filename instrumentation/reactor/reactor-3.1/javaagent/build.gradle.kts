@@ -48,7 +48,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
         implementation(project(":instrumentation-annotations"))
-        val version = if (otelProps.testLatestDeps) "latest.release" else "3.1.0.RELEASE"
+        val version = baseVersion("3.1.0.RELEASE").orLatest()
         implementation("io.projectreactor:reactor-test:$version")
       }
     }

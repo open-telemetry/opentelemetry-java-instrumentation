@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 class VertxRxCircuitBreakerSingleConnection extends VertxRxSingleConnection {
   private final CircuitBreaker breaker;
 
-  public VertxRxCircuitBreakerSingleConnection(String host, int port, CircuitBreaker breaker) {
+  VertxRxCircuitBreakerSingleConnection(String host, int port, CircuitBreaker breaker) {
     super(host, port);
     this.breaker = breaker;
   }

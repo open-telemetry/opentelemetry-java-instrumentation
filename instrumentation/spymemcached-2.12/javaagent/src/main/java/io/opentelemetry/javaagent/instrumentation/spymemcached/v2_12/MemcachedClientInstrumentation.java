@@ -167,6 +167,7 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
   }
 
   public interface Handler<F, T extends CompletionListener<?>> {
+    @Nullable
     T create(Context parentContext, MemcachedConnection connection, String methodName);
 
     default void addListener(F future, T listener) {}
@@ -177,6 +178,7 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     INSTANCE;
 
     @Override
+    @Nullable
     public OperationCompletionListener create(
         Context parentContext, MemcachedConnection connection, String methodName) {
       return OperationCompletionListener.create(parentContext, connection, methodName);
@@ -192,6 +194,7 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     INSTANCE;
 
     @Override
+    @Nullable
     public GetCompletionListener create(
         Context parentContext, MemcachedConnection connection, String methodName) {
       return GetCompletionListener.create(parentContext, connection, methodName);
@@ -207,6 +210,7 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     INSTANCE;
 
     @Override
+    @Nullable
     public BulkGetCompletionListener create(
         Context parentContext, MemcachedConnection connection, String methodName) {
       return BulkGetCompletionListener.create(parentContext, connection, methodName);
@@ -222,6 +226,7 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     INSTANCE;
 
     @Override
+    @Nullable
     public SyncCompletionListener create(
         Context parentContext, MemcachedConnection connection, String methodName) {
       return SyncCompletionListener.create(parentContext, connection, methodName);

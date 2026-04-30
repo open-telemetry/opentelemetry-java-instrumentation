@@ -1,0 +1,22 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.extensionannotations.v1_0;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import java.lang.reflect.Method;
+
+final class MethodCodeAttributesGetter implements CodeAttributesGetter<Method> {
+
+  @Override
+  public Class<?> getCodeClass(Method method) {
+    return method.getDeclaringClass();
+  }
+
+  @Override
+  public String getMethodName(Method method) {
+    return method.getName();
+  }
+}

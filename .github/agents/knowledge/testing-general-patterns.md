@@ -48,10 +48,17 @@
 - In JUnit tests, when an `AutoCloseable` is intended to remain live for most or all of the test
   and only needs cleanup at test end, prefer `AutoCleanupExtension` with `deferCleanup(...)`
   over wrapping most of the test body in try-with-resources.
-- For resources created in `@BeforeAll` or other class-scoped setup, prefer
-  `AutoCleanupExtension` with `deferAfterAll(...)` over nested `@AfterAll` cleanup
-  chains. Do not introduce or keep `AutoCleanupExtension` solely for a single
-  `deferAfterAll(...)` call — use a plain `@AfterAll` instead.
+- For class-scoped cleanup, prefer `AutoCleanupExtension.deferAfterAll(...)`
+  registered next to the resource's construction in `@BeforeAll`. The same
+  applies to per-test cleanup with `deferCleanup(...)` registered in
+  `@BeforeEach` or in the test body. This keeps creation and cleanup together
+  and avoids a separate `@AfterAll` / `@AfterEach` that re-references and
+  null-checks the field. Prefer a plain `@AfterAll` / `@AfterEach` when
+  null-checking the field is not needed for correct cleanup. Null-checking is
+  needed when a later step in `@BeforeAll` / `@BeforeEach` can throw before all
+  closeable fields are assigned — JUnit still runs the teardown in that case,
+  and an unguarded close on a null field NPEs and skips cleanup of resources
+  initialized earlier (e.g. a still-running test container).
 - Reuse an existing `cleanup` extension when one is already in scope.
   Otherwise, add a `@RegisterExtension` field when the deferred-cleanup pattern improves
   clarity or avoids wrapping most of the test body.

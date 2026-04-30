@@ -59,22 +59,22 @@ import org.slf4j.LoggerFactory;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractRocketMqClientTest {
 
-  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.rocketmq-client.experimental-span-attributes");
 
   @Nullable
   static <T> T experimental(T value) {
-    return EXPERIMENTAL_ATTRIBUTES_ENABLED ? value : null;
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
   private static void experimentalString(AbstractStringAssert<?> val) {
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       val.isInstanceOf(String.class);
     }
   }
 
   private static void experimentalLong(AbstractLongAssert<?> val) {
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       val.isInstanceOf(Long.class);
     }
   }
@@ -293,7 +293,7 @@ abstract class AbstractRocketMqClientTest {
       tracingMessageListener.waitForMessages();
       if (tracingMessageListener.getLastBatchSize() == 2) {
         break;
-      } else if (i < maxAttempts) {
+      } else if (i < maxAttempts - 1) {
         // if messages weren't received as a batch we get 1 trace instead of 2
         testing().waitForTraces(1);
         Thread.sleep(2_000);
@@ -358,25 +358,13 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
                                 satisfies(
                                     stringKey("messaging.rocketmq.broker_address"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotEmpty();
-                                      }
-                                    }),
+                                    val -> experimentalString(val)),
                                 satisfies(
                                     longKey("messaging.rocketmq.queue_id"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotNull();
-                                      }
-                                    }),
+                                    val -> experimentalLong(val)),
                                 satisfies(
                                     longKey("messaging.rocketmq.queue_offset"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotNull();
-                                      }
-                                    })),
+                                    val -> experimentalLong(val))),
                     span ->
                         span.hasName(sharedTopic + " process")
                             .hasKind(SpanKind.CONSUMER)
@@ -394,25 +382,13 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagB")),
                                 satisfies(
                                     stringKey("messaging.rocketmq.broker_address"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotEmpty();
-                                      }
-                                    }),
+                                    val -> experimentalString(val)),
                                 satisfies(
                                     longKey("messaging.rocketmq.queue_id"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotNull();
-                                      }
-                                    }),
+                                    val -> experimentalLong(val)),
                                 satisfies(
                                     longKey("messaging.rocketmq.queue_offset"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotNull();
-                                      }
-                                    })),
+                                    val -> experimentalLong(val))),
                     span ->
                         span.hasName("messageListener")
                             .hasParent(trace.getSpan(0))

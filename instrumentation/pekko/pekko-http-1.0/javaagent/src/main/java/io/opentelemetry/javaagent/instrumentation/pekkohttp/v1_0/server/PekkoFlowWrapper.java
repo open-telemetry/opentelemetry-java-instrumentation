@@ -112,7 +112,7 @@ public class PekkoFlowWrapper
                 // Remove HttpRequest attribute before passing it to user code
                 request = (HttpRequest) request.removeAttribute(PekkoTracingRequest.ATTR_KEY);
               }
-              // event if span wasn't started we need to push TracingRequest to match response
+              // even if span wasn't started we need to push TracingRequest to match response
               // with request
               requests.add(tracingRequest);
 

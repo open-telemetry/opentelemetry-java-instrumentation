@@ -44,19 +44,6 @@ public abstract class AbstractQuarkusJaxRsTest {
     port = Integer.parseInt(System.getProperty("quarkus.http.test-port"));
   }
 
-  private static AggregatedHttpResponse request(String path) {
-    return request(path, emptyMap());
-  }
-
-  private static AggregatedHttpResponse request(String path, Map<String, String> headers) {
-    AggregatedHttpRequest request =
-        AggregatedHttpRequest.of(HttpMethod.GET, "h1c://localhost:" + port + path);
-    if (!headers.isEmpty()) {
-      request = AggregatedHttpRequest.of(request.headers().toBuilder().add(headers).build());
-    }
-    return client.execute(request).aggregate().join();
-  }
-
   @Test
   void testPathOnMethod() {
     AggregatedHttpResponse response = request("/test");
@@ -117,5 +104,18 @@ public abstract class AbstractQuarkusJaxRsTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("GET /hello").hasKind(SpanKind.SERVER)));
+  }
+
+  private static AggregatedHttpResponse request(String path) {
+    return request(path, emptyMap());
+  }
+
+  private static AggregatedHttpResponse request(String path, Map<String, String> headers) {
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(HttpMethod.GET, "h1c://localhost:" + port + path);
+    if (!headers.isEmpty()) {
+      request = AggregatedHttpRequest.of(request.headers().toBuilder().add(headers).build());
+    }
+    return client.execute(request).aggregate().join();
   }
 }

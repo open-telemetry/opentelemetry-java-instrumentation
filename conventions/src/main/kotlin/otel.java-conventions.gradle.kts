@@ -9,7 +9,7 @@ plugins {
   checkstyle
   idea
 
-  id("otel.props-conventions")
+  id("otel.dsl-conventions")
   id("otel.errorprone-conventions")
   id("otel.spotless-conventions")
   id("org.sonatype.gradle.plugins.scan")
