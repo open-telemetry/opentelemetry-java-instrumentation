@@ -13,6 +13,7 @@ jobs:
   update-dashboard:
     permissions:
       issues: write
+    environment: protected
     runs-on: ubuntu-latest
     env:
       DASHBOARD_TITLE: "Pull Request Dashboard"
