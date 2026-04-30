@@ -24,14 +24,17 @@ jobs:
       github.event.action != 'labeled' ||
       github.event.label.name == 'test native' ||
       github.event.label.name == 'test openj9' ||
-      github.event.label.name == 'test windows'
+      github.event.label.name == 'test windows' ||
+      github.event.label.name == 'test full smoke'
     uses: ./.github/workflows/reusable-pr-build.yml
     with:
       # it's rare for only the openj9 tests, openj9 smoke variants, the windows
-      # smoke tests, or the native tests to break, so they are gated by labels.
+      # smoke tests, the full smoke matrix, or the native tests to break, so
+      # they are gated by labels.
       # `test native` is applied automatically by .github/labeler.yml when the
-      # PR diff touches native-relevant paths; `test openj9` and `test windows`
-      # are applied manually.
+      # PR diff touches native-relevant paths; `test openj9`, `test windows`,
+      # and `test full smoke` are applied manually.
       skip-native-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test native') }}
       skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
+      reduced-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test full smoke') }}

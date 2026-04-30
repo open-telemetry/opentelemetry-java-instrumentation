@@ -198,8 +198,8 @@ tasks {
     description = "Builds all Windows Docker images for the test matrix"
   }
 
-  val linuxImages = createDockerTasks(buildLinuxTestImages, false)
-  val windowsImages = createDockerTasks(buildWindowsTestImages, true)
+  val linuxImages = createDockerTasks(buildLinuxTestImages, false, targets)
+  val windowsImages = createDockerTasks(buildWindowsTestImages, true, targets)
 
   val pushLinuxImages by registering(DockerPushImage::class) {
     dependsOn(buildLinuxTestImages)
@@ -376,7 +376,7 @@ fun configureImage(
   return image
 }
 
-fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean): Set<String> {
+fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean, targets: Map<String, List<ImageTarget>>): Set<String> {
   val resultImages = mutableSetOf<String>()
   for ((server, matrices) in targets) {
     val smokeTestServer = findProperty("smokeTestServer")

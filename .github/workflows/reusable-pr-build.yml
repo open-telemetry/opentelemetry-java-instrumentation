@@ -14,6 +14,9 @@ on:
       skip-windows-smoke-tests:
         type: boolean
         default: false
+      reduced-smoke-tests:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -24,6 +27,7 @@ jobs:
     with:
       skip-openj9-tests: ${{ inputs.skip-openj9-tests }}
       skip-windows-smoke-tests: ${{ inputs.skip-windows-smoke-tests }}
+      reduced-smoke-tests: ${{ inputs.reduced-smoke-tests }}
       cache-read-only: true
 
   test-latest-deps:
