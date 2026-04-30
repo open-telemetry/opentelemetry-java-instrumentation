@@ -109,13 +109,11 @@ tasks {
 
     // add test app classes to classpath
     classpath = sourceSets.test.get().runtimeClasspath.plus(files(layout.buildDirectory.dir("testapp/classes")))
-  }
-}
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
 }

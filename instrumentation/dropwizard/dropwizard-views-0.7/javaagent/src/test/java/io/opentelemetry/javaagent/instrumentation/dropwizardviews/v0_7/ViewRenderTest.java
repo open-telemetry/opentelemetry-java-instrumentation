@@ -59,7 +59,7 @@ class ViewRenderTest {
   }
 
   @Test
-  void testDoesNotCreateSpanWithoutParent() throws InterruptedException, IOException {
+  void testDoesNotCreateSpanWithoutParent() throws Exception {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     View view = new View("/views/ftl/utf8.ftl", UTF_8) {};
     new FreemarkerViewRenderer().render(view, Locale.ENGLISH, outputStream);

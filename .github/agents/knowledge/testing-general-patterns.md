@@ -54,7 +54,11 @@
   `@BeforeEach` or in the test body. This keeps creation and cleanup together
   and avoids a separate `@AfterAll` / `@AfterEach` that re-references and
   null-checks the field. Prefer a plain `@AfterAll` / `@AfterEach` when
-  null-checking the field is not needed for correct cleanup.
+  null-checking the field is not needed for correct cleanup. Null-checking is
+  needed when a later step in `@BeforeAll` / `@BeforeEach` can throw before all
+  closeable fields are assigned — JUnit still runs the teardown in that case,
+  and an unguarded close on a null field NPEs and skips cleanup of resources
+  initialized earlier (e.g. a still-running test container).
 - Reuse an existing `cleanup` extension when one is already in scope.
   Otherwise, add a `@RegisterExtension` field when the deferred-cleanup pattern improves
   clarity or avoids wrapping most of the test body.

@@ -53,7 +53,7 @@ testing {
   suites {
     val latestDepTest by registering(JvmTestSuite::class) {
       dependencies {
-        // finatra is included via finatraLatest configuation
+        // finatra is included via finatraLatest configuration
         implementation("io.netty:netty-transport-native-epoll:4.1.51.Final:linux-x86_64")
       }
     }
