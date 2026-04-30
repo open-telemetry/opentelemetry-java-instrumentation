@@ -43,6 +43,10 @@ testing {
         all {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+            systemProperty(
+              "metadataConfig",
+              "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+            )
           }
         }
       }
@@ -72,6 +76,10 @@ tasks {
       excludeTestsMatching("Jms1SuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {

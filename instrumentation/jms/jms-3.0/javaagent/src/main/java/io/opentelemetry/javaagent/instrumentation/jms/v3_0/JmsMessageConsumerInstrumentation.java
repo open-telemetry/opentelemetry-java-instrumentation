@@ -60,11 +60,9 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Enter Timer timer,
-        @Advice.Return @Nullable Message message,
-        @Advice.Thrown @Nullable Throwable throwable) {
+        @Advice.Enter Timer timer, @Advice.Return @Nullable Message message) {
       if (message == null) {
         // Do not create span when no message is received
         return;
@@ -73,7 +71,7 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
       MessageWithDestination request =
           MessageWithDestination.create(JakartaMessageAdapter.create(message), null);
 
-      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, throwable);
+      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, null);
     }
   }
 }
