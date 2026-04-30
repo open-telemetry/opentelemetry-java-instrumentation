@@ -49,14 +49,37 @@ PROMPT_TEMPLATE = """You are triaging pull request #{number} in {repo} for \
 the pull request dashboard.
 
 Decide who needs to act next on this PR using ONLY the context below. \
-Merge-conflict and CI-failure status are shown in separate columns of the \
-dashboard, so do NOT use those alone to decide; focus on the conversation.
+Merge-conflict status is shown in a separate deterministic column of the \
+dashboard — do not infer it. CI is summarized as a single boolean \
+(failing yes/no); pending checks are treated as not-failing. CI failure \
+on its own is NOT a reason to assign the PR to the author: \
+PRs can still be reviewed and approved while CI is failing. Treat CI \
+status only as weak supporting evidence and focus on the conversation \
+(comments, reviews, commits).
 
-Guidelines:
-  - If the latest substantive activity is from the AUTHOR and there is an \
-outstanding approver question, an approver should respond next.
-  - If an approver's most recent comment asks for a specific change and the \
-author has not responded, the author should act next.
+The single most important signal is the latest substantive event in the \
+timeline. Apply these rules in order (first match wins):
+
+  1. EXTERNAL — Use "external" when the conversation explicitly indicates \
+the PR is blocked on something outside this repo (e.g., links to an \
+upstream PR/issue, "reported at <other-repo>", a spec change, or a \
+release in another project). Look especially at the latest comments. \
+A new PR with no reviews yet is NOT external. CI failing alone is \
+NOT external unless an upstream cause is named.
+  2. AUTHOR — If the latest substantive event is an approver review or \
+review-comment with content (a question, suggestion, change \
+request, clarification ask, or [APPROVED/CHANGES_REQUESTED] state) \
+and the AUTHOR has not posted any comment, review, or commit AFTER \
+it, the AUTHOR should act next. This holds even when the comment \
+is just a question or a soft suggestion — the ball is in the \
+author's court until they respond. (Note: a *commit* by an approver \
+does not count here — that's an approver pushing a fix, not asking \
+the author for something.)
+  3. APPROVER — Otherwise, an APPROVER should act next. This includes: \
+fresh PRs with no reviews yet; PRs where the author has posted the \
+latest substantive event (comment, review, or commit) addressing \
+prior approver feedback; and PRs where an approver pushed the \
+latest commit (waiting for someone to review/merge).
 
 Respond with a single JSON object and nothing else (no prose, no fences):
 {{"side": "approver" | "author" | "external"}}
@@ -250,6 +273,12 @@ def role_for(login: str, author: str, reviewers: set[str]) -> str:
 # fix-up) pass through and are eligible to be picked as the delegator.
 _BOT_COMMITTER_LOGINS = {"copilot"}
 
+# PR author logins that delegate work to a human (the Copilot SWE-agent
+# opens the PR but a human triggered it). Only for these authors do we look
+# up a human delegator from the first commit's committer. For other bots
+# (renovate, dependabot, etc.) we keep the bot as the author.
+_DELEGATING_BOT_AUTHORS = {"app/copilot-swe-agent", "copilot"}
+
 
 def _is_bot_login(login: str) -> bool:
     if not login:
@@ -312,9 +341,10 @@ def fetch_pr_context(
 
     # For Copilot SWE-agent PRs the API author is the bot; surface the human
     # who delegated the task so reviews/comments by that person are classified
-    # as "author" activity instead of "approver".
+    # as "author" activity instead of "approver". Other bot authors
+    # (renovate, dependabot, ...) have no human delegator, so we keep the bot.
     delegator = ""
-    if _is_bot_login(author):
+    if author.lower() in _DELEGATING_BOT_AUTHORS:
         delegator = detect_human_delegator(commits)
         if delegator:
             author = delegator
@@ -322,6 +352,7 @@ def fetch_pr_context(
     # Fetch per-commit diffs for the most recent commits, in parallel.
     recent_commits = commits[-MAX_COMMITS:]
     patches: dict[str, str] = {}
+    merge_shas: set[str] = set()
     if recent_commits:
         with ThreadPoolExecutor(max_workers=4) as pool:
             futs = {
@@ -335,6 +366,8 @@ def fetch_pr_context(
                 except Exception:
                     detail = {}
                 patches[sha] = format_commit_patch(detail, MAX_COMMIT_DIFF_CHARS)
+                if len(detail.get("parents") or []) >= 2:
+                    merge_shas.add(sha)
 
     # Build unified activity timeline.
     events: list[dict[str, Any]] = []
@@ -356,6 +389,7 @@ def fetch_pr_context(
             "login": login,
             "body": body,
             "sha": sha_full[:7],
+            "is_merge": sha_full in merge_shas,
         })
     for c in issue_comments:
         events.append({
@@ -383,10 +417,14 @@ def fetch_pr_context(
     events.sort(key=lambda e: e["ts"])
 
     # Last substantive event = last event whose body is non-empty OR whose
-    # kind is not "review:COMMENTED" (state changes always count).
+    # kind is not "review:COMMENTED" (state changes always count). Merge
+    # commits (≥2 parents — e.g. "Update branch" merging base into the PR)
+    # don't count as substantive: they don't move the conversation forward.
     def is_substantive(e: dict[str, Any]) -> bool:
         if e["kind"].startswith("review:") and e["kind"] != "review:COMMENTED":
             return True
+        if e.get("is_merge"):
+            return False
         return bool((e.get("body") or "").strip())
 
     substantive = [e for e in events if is_substantive(e)]
@@ -481,9 +519,11 @@ def render_context(ctx: dict[str, Any]) -> str:
             f"@{author} is treated as the effective author for triage.)"
         )
     lines.append(
-        f"State: open | draft={pr.get('isDraft')} | mergeable={pr.get('mergeable')} "
-        f"| mergeStateStatus={pr.get('mergeStateStatus')} | reviewDecision={pr.get('reviewDecision')}"
+        f"State: open | draft={pr.get('isDraft')} "
+        f"| reviewDecision={pr.get('reviewDecision')}"
     )
+    ci_failing = bool(ctx["checks_failing"])
+    lines.append(f"CI failing: {'yes' if ci_failing else 'no'}")
     lines.append(f"Created: {pr.get('createdAt')} ({pr_age}d ago)")
     lines.append(f"Updated: {pr.get('updatedAt')} ({updated_age}d ago)")
     lines.append(f"Size: +{pr.get('additions', 0)}/-{pr.get('deletions', 0)} across {pr.get('changedFiles', 0)} files")
@@ -498,18 +538,6 @@ def render_context(ctx: dict[str, Any]) -> str:
     lines.append("")
     lines.append("PR description:")
     lines.append(truncate(pr.get("body") or "", 800))
-    lines.append("")
-
-    # Checks
-    lines.append("CI checks summary:")
-    lines.append(
-        f"  successful={len(ctx['checks_successful'])}  failing={len(ctx['checks_failing'])}  "
-        f"pending={len(ctx['checks_pending'])}  skipped={len(ctx['checks_skipped'])}"
-    )
-    for c in ctx["checks_failing"][:10]:
-        lines.append(f"  FAIL: {c.get('name')} ({c.get('workflow') or ''})")
-    for c in ctx["checks_pending"][:5]:
-        lines.append(f"  PENDING: {c.get('name')}")
     lines.append("")
 
     # Commits
@@ -561,12 +589,6 @@ def render_context(ctx: dict[str, Any]) -> str:
     signals: list[str] = []
     if pr.get("isDraft"):
         signals.append("PR is a draft")
-    if pr.get("mergeable") == "CONFLICTING" or pr.get("mergeStateStatus") == "DIRTY":
-        signals.append("merge conflict with base")
-    if ctx["checks_failing"]:
-        signals.append(f"{len(ctx['checks_failing'])} CI checks failing")
-    if pr.get("reviewDecision") == "APPROVED" and not ctx["checks_failing"] and pr.get("mergeStateStatus") == "CLEAN":
-        signals.append("approved + clean + green = mergeable")
     if last_role == "author" and ctx["approvers"]:
         signals.append("latest substantive activity is from author after approvals")
     if last_role == "approver" and last_sub:
