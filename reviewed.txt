@@ -225,3 +225,13 @@ jetty-12.0:javaagent
 jetty-8.0:javaagent
 jetty-common:javaagent
 jfinal-3.2:javaagent
+jms-1.1:javaagent
+jms-3.0:javaagent
+jms-common:bootstrap
+jms-common:javaagent
+jms-common:javaagent-unit-tests
+jmx-metrics:javaagent
+jmx-metrics:library
+testing-apps:camel-testing-app
+testing-apps:testing-webapp
+jodd-http-4.2:javaagent
