@@ -47,6 +47,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
               new ProducerRecord<>(SHARED_TOPIC, 10, greeting);
           if (testHeaders) {
             producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
+            producerRecord.headers().add("Uncaptured-Header", "password".getBytes(UTF_8));
           }
           producer
               .send(

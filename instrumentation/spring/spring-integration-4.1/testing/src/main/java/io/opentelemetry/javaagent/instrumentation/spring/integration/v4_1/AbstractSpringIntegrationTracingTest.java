@@ -184,7 +184,10 @@ abstract class AbstractSpringIntegrationTracingTest {
     channel.subscribe(messageHandler);
 
     channel.send(
-        MessageBuilder.withPayload("test").setHeader("Test-Message-Header", "test").build());
+        MessageBuilder.withPayload("test")
+            .setHeader("Test-Message-Header", "test")
+            .setHeader("Uncaptured-Header", "password")
+            .build());
 
     Message<?> capturedMessage = messageHandler.join();
 

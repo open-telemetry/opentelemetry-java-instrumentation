@@ -107,6 +107,9 @@ public abstract class AbstractSqsTracingTest {
       sendMessageRequest.addMessageAttributesEntry(
           "Test-Message-Header",
           new MessageAttributeValue().withDataType("String").withStringValue("test"));
+      sendMessageRequest.addMessageAttributesEntry(
+          "Uncaptured-Header",
+          new MessageAttributeValue().withDataType("String").withStringValue("password"));
     }
     sqsClient.sendMessage(sendMessageRequest);
 

@@ -146,6 +146,7 @@ class SpringRabbitMqTest {
                     "test",
                     message -> {
                       message.getMessageProperties().setHeader("Test-Message-Header", "test");
+                      message.getMessageProperties().setHeader("Uncaptured-Header", "password");
                       return message;
                     });
           } else {
