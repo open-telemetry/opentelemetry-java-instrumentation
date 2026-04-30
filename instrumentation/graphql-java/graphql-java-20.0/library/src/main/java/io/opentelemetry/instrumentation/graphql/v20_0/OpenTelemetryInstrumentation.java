@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
 import static graphql.execution.instrumentation.InstrumentationState.ofState;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import graphql.ExecutionResult;
 import graphql.GraphQLError;
@@ -22,6 +20,7 @@ import graphql.execution.instrumentation.parameters.InstrumentationExecutionPara
 import graphql.execution.instrumentation.parameters.InstrumentationFieldFetchParameters;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -34,6 +33,14 @@ import java.util.concurrent.CompletionStage;
 import javax.annotation.Nullable;
 
 final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation {
+  // copied from ExceptionAttributes
+  private static final AttributeKey<String> EXCEPTION_MESSAGE =
+      AttributeKey.stringKey("exception.message");
+
+  // copied from ExceptionAttributes
+  private static final AttributeKey<String> EXCEPTION_TYPE =
+      AttributeKey.stringKey("exception.type");
+
   private final OpenTelemetryInstrumentationHelper helper;
   private final Instrumenter<DataFetchingEnvironment, Object> dataFetcherInstrumenter;
   private final boolean createSpansForTrivialDataFetcher;
