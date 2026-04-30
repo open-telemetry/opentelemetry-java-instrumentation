@@ -162,7 +162,7 @@ class ProcedureCallTest {
           call.setParameter(parameterRegistration, 420L);
           try {
             call.getOutputs();
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this.
           }
           session.getTransaction().commit();
