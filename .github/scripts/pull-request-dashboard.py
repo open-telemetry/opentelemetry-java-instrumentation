@@ -51,8 +51,11 @@ the pull request dashboard.
 Decide who needs to act next on this PR using ONLY the context below. \
 Merge-conflict status is shown in a separate deterministic column of the \
 dashboard — do not infer it. CI is summarized as a single boolean \
-(failing yes/no); pending checks are treated as not-failing. Focus on \
-the conversation (comments, reviews, commits).
+(failing yes/no); pending checks are treated as not-failing. CI failure \
+on its own is NOT a reason to assign the PR to the author or to external: \
+PRs can still be reviewed and approved while CI is failing. Treat CI \
+status only as weak supporting evidence and focus on the conversation \
+(comments, reviews, commits).
 
 Guidelines:
   - If the latest substantive activity is from the AUTHOR and there is an \
@@ -62,7 +65,8 @@ author has not responded, the author should act next.
   - Use "external" ONLY when the conversation explicitly indicates the PR \
 is blocked on something outside this repo (e.g., an upstream PR, a \
 spec change, a release in another project). A new PR with no reviews \
-yet is NOT external — it is waiting on an approver.
+yet is NOT external — it is waiting on an approver. CI failing alone \
+is NOT external.
 
 Respond with a single JSON object and nothing else (no prose, no fences):
 {{"side": "approver" | "author" | "external"}}
