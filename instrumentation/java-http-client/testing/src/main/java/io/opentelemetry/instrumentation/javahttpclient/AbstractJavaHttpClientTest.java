@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.javahttpclient;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -13,6 +14,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -172,12 +174,21 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(URL_FULL, uri.toString()),
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, method),
-                            equalTo(ERROR_TYPE, CancellationException.class.getName())),
+                            equalTo(ERROR_TYPE, CancellationException.class.getName()),
+                            equalTo(
+                                maybeStablePeerService(),
+                                "opentelemetry-java-instrumentation"
+                                        .equals(
+                                            span.actual()
+                                                .getResource()
+                                                .getAttribute(TELEMETRY_DISTRO_NAME))
+                                    ? "test-peer-service"
+                                    : null)),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)
