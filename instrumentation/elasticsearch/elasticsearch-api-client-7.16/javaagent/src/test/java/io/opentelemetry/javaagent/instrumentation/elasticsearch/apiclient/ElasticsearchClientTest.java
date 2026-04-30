@@ -32,13 +32,13 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -53,6 +53,8 @@ class ElasticsearchClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   static ElasticsearchContainer elasticsearch;
 
@@ -71,6 +73,7 @@ class ElasticsearchClientTest {
     elasticsearch.withEnv("ES_JAVA_OPTS", "-Xmx256m -Xms256m");
     elasticsearch.withLogConsumer(new Slf4jLogConsumer(logger));
     elasticsearch.start();
+    cleanup.deferAfterAll(elasticsearch::stop);
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
 
@@ -82,17 +85,12 @@ class ElasticsearchClientTest {
                         .setConnectTimeout(Integer.MAX_VALUE)
                         .setSocketTimeout(Integer.MAX_VALUE))
             .build();
+    cleanup.deferAfterAll(restClient);
 
     ElasticsearchTransport transport =
         new RestClientTransport(restClient, new JacksonJsonpMapper());
     client = new ElasticsearchClient(transport);
     asyncClient = new ElasticsearchAsyncClient(transport);
-  }
-
-  @AfterAll
-  static void cleanUp() throws IOException {
-    restClient.close();
-    elasticsearch.stop();
   }
 
   @Test
