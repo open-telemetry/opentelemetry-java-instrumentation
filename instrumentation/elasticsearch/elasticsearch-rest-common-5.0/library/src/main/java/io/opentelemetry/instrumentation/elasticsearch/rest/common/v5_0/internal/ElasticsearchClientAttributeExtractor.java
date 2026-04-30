@@ -6,6 +6,11 @@
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -26,20 +31,6 @@ final class ElasticsearchClientAttributeExtractor
     implements AttributesExtractor<ElasticsearchRestRequest, Response> {
 
   private static final String PATH_PARTS_ATTRIBUTE_PREFIX = "db.elasticsearch.path_parts.";
-
-  // copied from HttpAttributes
-  private static final AttributeKey<String> HTTP_REQUEST_METHOD =
-      AttributeKey.stringKey("http.request.method");
-  // copied from HttpAttributes
-  private static final AttributeKey<String> HTTP_REQUEST_METHOD_ORIGINAL =
-      AttributeKey.stringKey("http.request.method_original");
-  // copied from ServerAttributes
-  private static final AttributeKey<String> SERVER_ADDRESS =
-      AttributeKey.stringKey("server.address");
-  // copied from ServerAttributes
-  private static final AttributeKey<Long> SERVER_PORT = AttributeKey.longKey("server.port");
-  // copied from UrlAttributes
-  private static final AttributeKey<String> URL_FULL = AttributeKey.stringKey("url.full");
 
   private static final Cache<String, AttributeKey<String>> pathPartKeysCache = Cache.bounded(64);
 
