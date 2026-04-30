@@ -16,22 +16,15 @@ import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.cluster.Directory;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation")
 class DubboRegistryUtilTest {
 
   private static final URL DUMMY_URL =
       URL.valueOf("dubbo://192.168.1.100:20880/com.example.Service");
-
-  @AfterEach
-  void tearDown() {
-    DubboRegistryUtil.restoreCapturedRegistryAddress(null);
-  }
 
   @ParameterizedTest
   @MethodSource("serviceTargetProvider")
@@ -81,7 +74,6 @@ class DubboRegistryUtilTest {
     Object registry;
   }
 
-  @SuppressWarnings("unchecked")
   private static Directory<?> mockDirectoryWithRegistry(Object registry) throws Exception {
     MockableRegistryDirectory dir = mock(MockableRegistryDirectory.class);
     Field f = MockableRegistryDirectory.class.getDeclaredField("registry");

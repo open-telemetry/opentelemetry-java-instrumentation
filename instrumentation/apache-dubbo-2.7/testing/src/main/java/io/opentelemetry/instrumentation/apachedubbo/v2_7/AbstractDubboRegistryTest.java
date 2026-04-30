@@ -58,6 +58,7 @@ public abstract class AbstractDubboRegistryTest {
   private static final String SERVICE_GROUP = "testGroup";
 
   private static TestingServer zkServer;
+  private static InetAddress originalLocalAddress;
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -73,18 +74,24 @@ public abstract class AbstractDubboRegistryTest {
     System.setProperty("dubbo.application.qos-enable", "false");
     Field field = NetUtils.class.getDeclaredField("LOCAL_ADDRESS");
     field.setAccessible(true);
+    originalLocalAddress = (InetAddress) field.get(null);
     field.set(null, InetAddress.getLoopbackAddress());
   }
 
   @AfterAll
   static void tearDown() throws Exception {
     System.clearProperty("dubbo.application.qos-enable");
+    if (originalLocalAddress != null) {
+      Field field = NetUtils.class.getDeclaredField("LOCAL_ADDRESS");
+      field.setAccessible(true);
+      field.set(null, originalLocalAddress);
+    }
     if (zkServer != null) {
       zkServer.close();
     }
   }
 
-  static String zkAddress() {
+  private static String zkAddress() {
     return "zookeeper://127.0.0.1:" + zkServer.getPort();
   }
 

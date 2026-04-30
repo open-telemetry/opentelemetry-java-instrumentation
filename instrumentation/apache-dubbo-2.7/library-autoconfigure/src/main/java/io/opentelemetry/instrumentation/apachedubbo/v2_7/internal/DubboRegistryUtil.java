@@ -9,9 +9,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.Invoker;
@@ -26,12 +24,12 @@ public final class DubboRegistryUtil {
 
   private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
-  private static final Map<Class<?>, Optional<MethodHandle>> DIRECTORY_ACCESSOR_CACHE =
-      new ConcurrentHashMap<>();
-  private static final Map<Class<?>, Optional<MethodHandle>> REGISTRY_ACCESSOR_CACHE =
-      new ConcurrentHashMap<>();
-  private static final Map<Class<?>, Optional<MethodHandle>> URL_ACCESSOR_CACHE =
-      new ConcurrentHashMap<>();
+  private static final ClassValue<Optional<MethodHandle>> DIRECTORY_ACCESSOR =
+      createAccessor("getDirectory", "directory");
+  private static final ClassValue<Optional<MethodHandle>> REGISTRY_ACCESSOR =
+      createAccessor("getRegistry", "registry");
+  private static final ClassValue<Optional<MethodHandle>> URL_ACCESSOR =
+      createAccessor("getUrl", null);
 
   private static final ThreadLocal<String> CAPTURED_REGISTRY_ADDRESS = new ThreadLocal<>();
 
@@ -108,8 +106,7 @@ public final class DubboRegistryUtil {
 
   @Nullable
   private static Directory<?> getDirectory(Invoker<?> invoker) {
-    MethodHandle mh =
-        findAccessor(invoker.getClass(), "getDirectory", "directory", DIRECTORY_ACCESSOR_CACHE);
+    MethodHandle mh = DIRECTORY_ACCESSOR.get(invoker.getClass()).orElse(null);
     if (mh == null) {
       return null;
     }
@@ -129,8 +126,7 @@ public final class DubboRegistryUtil {
    */
   @Nullable
   public static String tryExtractRegistryAddressFromDirectory(Directory<?> directory) {
-    MethodHandle getRegistry =
-        findAccessor(directory.getClass(), "getRegistry", "registry", REGISTRY_ACCESSOR_CACHE);
+    MethodHandle getRegistry = REGISTRY_ACCESSOR.get(directory.getClass()).orElse(null);
     if (getRegistry == null) {
       return null;
     }
@@ -139,7 +135,7 @@ public final class DubboRegistryUtil {
       if (registry == null) {
         return null;
       }
-      MethodHandle getUrl = findAccessor(registry.getClass(), "getUrl", null, URL_ACCESSOR_CACHE);
+      MethodHandle getUrl = URL_ACCESSOR.get(registry.getClass()).orElse(null);
       if (getUrl == null) {
         return null;
       }
@@ -154,29 +150,24 @@ public final class DubboRegistryUtil {
     }
   }
 
-  @Nullable
-  private static MethodHandle findAccessor(
-      Class<?> clazz,
-      String methodName,
-      @Nullable String fieldName,
-      Map<Class<?>, Optional<MethodHandle>> cache) {
-    return cache
-        .computeIfAbsent(
-            clazz,
-            cls -> {
-              MethodHandle mh = resolveMethod(cls, methodName);
-              if (mh != null) {
-                return Optional.of(mh);
-              }
-              if (fieldName != null) {
-                mh = resolveField(cls, fieldName);
-                if (mh != null) {
-                  return Optional.of(mh);
-                }
-              }
-              return Optional.empty();
-            })
-        .orElse(null);
+  private static ClassValue<Optional<MethodHandle>> createAccessor(
+      String methodName, @Nullable String fieldName) {
+    return new ClassValue<Optional<MethodHandle>>() {
+      @Override
+      protected Optional<MethodHandle> computeValue(Class<?> type) {
+        MethodHandle mh = resolveMethod(type, methodName);
+        if (mh != null) {
+          return Optional.of(mh);
+        }
+        if (fieldName != null) {
+          mh = resolveField(type, fieldName);
+          if (mh != null) {
+            return Optional.of(mh);
+          }
+        }
+        return Optional.empty();
+      }
+    };
   }
 
   @Nullable

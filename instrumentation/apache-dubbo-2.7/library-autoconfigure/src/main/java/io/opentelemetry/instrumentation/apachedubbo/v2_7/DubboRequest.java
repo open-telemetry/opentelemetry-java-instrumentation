@@ -17,22 +17,18 @@ import org.apache.dubbo.rpc.RpcInvocation;
 public abstract class DubboRequest {
 
   static DubboRequest create(RpcInvocation invocation, RpcContext context) {
-    // In dubbo 3 RpcContext delegates to a ThreadLocal context. We copy the url and remote address
-    // here to ensure we can access them from the thread that ends the span.
+    // In dubbo 3 RpcContext delegates to a ThreadLocal context. We copy the url, remote address,
+    // and registry address here to ensure we can access them from the thread that ends the span.
     return new AutoValue_DubboRequest(
         invocation,
         context,
         context.getUrl(),
         context.getRemoteAddress(),
-        context.getLocalAddress());
+        context.getLocalAddress(),
+        DubboRegistryUtil.extractRegistryAddress(invocation));
   }
 
   abstract RpcInvocation invocation();
-
-  @Nullable
-  public String registryAddress() {
-    return DubboRegistryUtil.extractRegistryAddress(invocation());
-  }
 
   public abstract RpcContext context();
 
@@ -43,4 +39,7 @@ public abstract class DubboRequest {
 
   @Nullable
   public abstract InetSocketAddress localAddress();
+
+  @Nullable
+  public abstract String registryAddress();
 }

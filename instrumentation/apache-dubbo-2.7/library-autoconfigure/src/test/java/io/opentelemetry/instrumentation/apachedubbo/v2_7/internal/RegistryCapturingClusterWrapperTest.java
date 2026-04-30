@@ -23,7 +23,6 @@ class RegistryCapturingClusterWrapperTest {
       URL.valueOf("dubbo://192.168.1.100:20880/com.example.Service");
 
   @Test
-  @SuppressWarnings("unchecked")
   void joinDoesNotWrapStaticDirectory() {
     Invoker<Object> innerInvoker = new NoopInvoker(DUMMY_URL);
     RegistryCapturingClusterWrapper wrapper =
