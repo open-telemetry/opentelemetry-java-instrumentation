@@ -56,7 +56,7 @@ class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
     private final Scope scope;
     private final HttpRequest request;
 
-    public AdviceScope(Context context, Scope scope, HttpRequest request) {
+    private AdviceScope(Context context, Scope scope, HttpRequest request) {
       this.context = context;
       this.scope = scope;
       this.request = request;

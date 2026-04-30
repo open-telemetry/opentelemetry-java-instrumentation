@@ -137,7 +137,7 @@ class SessionTest extends AbstractHibernateTest {
           session.beginTransaction();
           try {
             session.replicate(123L /* Not a valid entity */, ReplicationMode.OVERWRITE);
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this, we should see the error field set on the span.
           }
           session.getTransaction().commit();

@@ -1808,10 +1808,7 @@ public abstract class AbstractGrpcTest {
                                           equalTo(RPC_SYSTEM, "grpc"),
                                           equalTo(RPC_GRPC_STATUS_CODE, (long) statusCode.value()),
                                           equalTo(
-                                              NETWORK_TYPE,
-                                              Boolean.getBoolean("testLatestDeps")
-                                                  ? "ipv4"
-                                                  : null)))));
+                                              NETWORK_TYPE, testLatestDeps() ? "ipv4" : null)))));
 
       testing()
           .waitAndAssertMetrics(
@@ -1832,10 +1829,7 @@ public abstract class AbstractGrpcTest {
                                           equalTo(RPC_SYSTEM, "grpc"),
                                           equalTo(RPC_GRPC_STATUS_CODE, (long) statusCode.value()),
                                           equalTo(
-                                              NETWORK_TYPE,
-                                              Boolean.getBoolean("testLatestDeps")
-                                                  ? "ipv4"
-                                                  : null)))));
+                                              NETWORK_TYPE, testLatestDeps() ? "ipv4" : null)))));
       if (hasSizeMetric) {
         testing()
             .waitAndAssertMetrics(
@@ -1857,10 +1851,7 @@ public abstract class AbstractGrpcTest {
                                             equalTo(
                                                 RPC_GRPC_STATUS_CODE, (long) statusCode.value()),
                                             equalTo(
-                                                NETWORK_TYPE,
-                                                Boolean.getBoolean("testLatestDeps")
-                                                    ? "ipv4"
-                                                    : null)))));
+                                                NETWORK_TYPE, testLatestDeps() ? "ipv4" : null)))));
       }
     }
     if (emitStableRpcSemconv()) {
