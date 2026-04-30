@@ -57,16 +57,29 @@ PRs can still be reviewed and approved while CI is failing. Treat CI \
 status only as weak supporting evidence and focus on the conversation \
 (comments, reviews, commits).
 
-Guidelines:
-  - If the latest substantive activity is from the AUTHOR and there is an \
-outstanding approver question, an approver should respond next.
-  - If an approver's most recent comment asks for a specific change and the \
-author has not responded, the author should act next.
-  - Use "external" ONLY when the conversation explicitly indicates the PR \
-is blocked on something outside this repo (e.g., an upstream PR, a \
-spec change, a release in another project). A new PR with no reviews \
-yet is NOT external — it is waiting on an approver. CI failing alone \
-is NOT external.
+The single most important signal is the latest substantive event in the \
+timeline. Apply these rules in order (first match wins):
+
+  1. EXTERNAL — Use "external" when the conversation explicitly indicates \
+the PR is blocked on something outside this repo (e.g., links to an \
+upstream PR/issue, "reported at <other-repo>", a spec change, or a \
+release in another project). Look especially at the latest comments. \
+A new PR with no reviews yet is NOT external. CI failing alone is \
+NOT external unless an upstream cause is named.
+  2. AUTHOR — If the latest substantive event is an approver review or \
+review-comment with content (a question, suggestion, change \
+request, clarification ask, or [APPROVED/CHANGES_REQUESTED] state) \
+and the AUTHOR has not posted any comment, review, or commit AFTER \
+it, the AUTHOR should act next. This holds even when the comment \
+is just a question or a soft suggestion — the ball is in the \
+author's court until they respond. (Note: a *commit* by an approver \
+does not count here — that's an approver pushing a fix, not asking \
+the author for something.)
+  3. APPROVER — Otherwise, an APPROVER should act next. This includes: \
+fresh PRs with no reviews yet; PRs where the author has posted the \
+latest substantive event (comment, review, or commit) addressing \
+prior approver feedback; and PRs where an approver pushed the \
+latest commit (waiting for someone to review/merge).
 
 Respond with a single JSON object and nothing else (no prose, no fences):
 {{"side": "approver" | "author" | "external"}}
