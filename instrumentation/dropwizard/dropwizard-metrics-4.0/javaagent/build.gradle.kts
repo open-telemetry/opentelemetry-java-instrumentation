@@ -15,6 +15,6 @@ dependencies {
   library("io.dropwizard.metrics:metrics-core:4.0.0")
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.dropwizard-metrics.enabled=true")
 }

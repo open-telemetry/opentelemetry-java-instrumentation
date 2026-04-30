@@ -35,7 +35,7 @@ dependencies {
   latestDepTestLibrary("com.sun.xml.stream.buffer:streambuffer:1.+") // see jaxws-3.0-metro-3.0-testing module
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   // required on jdk17
   jvmArgs("--add-exports=java.xml/com.sun.org.apache.xerces.internal.dom=ALL-UNNAMED")
   jvmArgs("--add-exports=java.xml/com.sun.org.apache.xerces.internal.jaxp=ALL-UNNAMED")

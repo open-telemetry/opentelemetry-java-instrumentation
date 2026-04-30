@@ -569,6 +569,7 @@ libraries:
   - org.apache.dubbo:dubbo:[2.7,)
   configurations:
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -761,6 +762,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -873,29 +875,35 @@ libraries:
   - commons-httpclient:commons-httpclient:[2.0,4.0)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
       attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: list
@@ -993,15 +1001,18 @@ libraries:
   - org.apache.httpcomponents:httpclient:[4.0,)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ''
@@ -1011,11 +1022,13 @@ libraries:
     type: map
     default: ''
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
       attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: list
@@ -14337,8 +14350,8 @@ libraries:
     name: io.opentelemetry.spring-cloud-gateway-2.0
   has_javaagent: true
   javaagent_target_versions:
+  - org.springframework.cloud:spring-cloud-starter-gateway-server-webflux:[4.3.0,)
   - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,)
-  - org.springframework.cloud:spring-cloud-starter-gateway-server-webflux:[4.3.0,]
   configurations:
   - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
     declarative_name: java.spring_cloud_gateway.experimental_span_attributes/development
@@ -14388,8 +14401,8 @@ libraries:
     name: io.opentelemetry.spring-data-1.8
   has_javaagent: true
   javaagent_target_versions:
-  - org.springframework:spring-aop:[1.2,]
-  - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,]
+  - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)
+  - org.springframework:spring-aop:[1.2,)
   telemetry:
   - when: default
     spans:
@@ -14471,7 +14484,7 @@ libraries:
     type: list
     default: ''
   telemetry:
-  - when: default
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -14510,7 +14523,7 @@ libraries:
     type: list
     default: ''
   telemetry:
-  - when: default
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -15306,7 +15319,7 @@ libraries:
     type: boolean
     default: false
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true,otel.instrumentation.common.experimental.view-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -15314,7 +15327,7 @@ libraries:
         type: STRING
       - name: code.namespace
         type: STRING
-  - when: otel.instrumentation.spring-webmvc.experimental-span-attributes=true
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true,otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.spring-webmvc.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -15448,6 +15461,7 @@ libraries:
   - org.apache.struts:struts2-core:[2.1.0,7)
   configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    declarative_name: java.common.controller_telemetry/development.enabled
     description: Enables the creation of experimental controller spans.
     type: boolean
     default: false
@@ -15989,29 +16003,35 @@ libraries:
   - io.vertx:vertx-core:[3.0.0,4.0.0)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
       attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: list
@@ -16100,29 +16120,35 @@ libraries:
   - io.vertx:vertx-core:[4.0.0,5)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
       attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: list
@@ -16232,29 +16258,35 @@ libraries:
   - io.vertx:vertx-core:[5.0.0,)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
       attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: list
@@ -16384,7 +16416,7 @@ libraries:
     type: boolean
     default: false
   telemetry:
-  - when: default
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -16406,7 +16438,7 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.instrumentation.kafka.experimental-span-attributes=true
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -16446,6 +16478,7 @@ libraries:
   - io.vertx:vertx-redis-client:[4.0.0,)
   configurations:
   - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
     description: Enables query sanitization for database queries.
     type: boolean
     default: true

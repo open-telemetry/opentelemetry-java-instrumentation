@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.vertx.client.AbstractVertxHttpAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.AbstractVertxHttpAttributesGetter;
 import io.vertx.core.http.HttpClientRequest;
 import javax.annotation.Nullable;
 

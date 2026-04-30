@@ -102,6 +102,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                 message,
                 jmsMessage -> {
                   jmsMessage.setStringProperty("Test_Message_Header", "test");
+                  jmsMessage.setStringProperty("Uncaptured_Header", "password");
                   jmsMessage.setIntProperty("Test_Message_Int_Header", 1234);
                   return jmsMessage;
                 }));

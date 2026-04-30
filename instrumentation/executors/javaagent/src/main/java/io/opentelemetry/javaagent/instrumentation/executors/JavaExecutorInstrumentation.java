@@ -12,7 +12,6 @@ import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldH
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.FORKJOINTASK_PROPAGATED_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.FUTURE_PROPAGATED_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.RUNNABLE_PROPAGATED_CONTEXT;
-import static java.util.Collections.emptyList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -338,7 +337,7 @@ class JavaExecutorInstrumentation implements TypeInstrumentation {
       public static CallableCollectionAdviceScope start(
           CallDepth callDepth, Collection<? extends Callable<?>> tasks) {
         if (callDepth.getAndIncrement() > 0) {
-          return new CallableCollectionAdviceScope(callDepth, tasks != null ? tasks : emptyList());
+          return new CallableCollectionAdviceScope(callDepth, tasks);
         }
         Context context = Context.current();
 
@@ -401,7 +400,8 @@ class JavaExecutorInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] submitEnter(
-        @Advice.This Object executor, @Advice.Argument(0) Collection<? extends Callable<?>> tasks) {
+        @Advice.This Object executor,
+        @Advice.Argument(0) @Nullable Collection<? extends Callable<?>> tasks) {
       if (tasks == null) {
         return new Object[] {null, null};
       }
