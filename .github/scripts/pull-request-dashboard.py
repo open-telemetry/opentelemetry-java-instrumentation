@@ -49,21 +49,27 @@ PROMPT_TEMPLATE = """You are triaging pull request #{number} in {repo} for \
 the pull request dashboard.
 
 Decide who needs to act next on this PR using ONLY the context below. \
-Merge-conflict and CI-failure status are shown in separate columns of the \
-dashboard, so do NOT use those alone to decide; focus on the conversation.
+The context deliberately omits CI status and merge-conflict status — \
+those are shown in separate deterministic columns of the dashboard. Do \
+not infer them or factor them into your decision; focus on the \
+conversation (comments, reviews, commits).
 
 Guidelines:
   - If the latest substantive activity is from the AUTHOR and there is an \
 outstanding approver question, an approver should respond next.
   - If an approver's most recent comment asks for a specific change and the \
 author has not responded, the author should act next.
+  - Use "external" ONLY when the conversation explicitly indicates the PR \
+is blocked on something outside this repo (e.g., an upstream PR, a \
+spec change, a release in another project). A new PR with no reviews \
+yet is NOT external — it is waiting on an approver.
 
 Respond with a single JSON object and nothing else (no prose, no fences):
 {{"side": "approver" | "author" | "external"}}
 
 Where:
   - "approver" = an approver should act (review, approve, request changes, decide to close)
-  - "author" = the PR author should act (respond, rebase, fix CI)
+  - "author" = the PR author should act (respond, rebase)
   - "external" = waiting on something outside this repo (upstream PR, etc.)
 
 ---BEGIN CONTEXT---
@@ -488,8 +494,8 @@ def render_context(ctx: dict[str, Any]) -> str:
             f"@{author} is treated as the effective author for triage.)"
         )
     lines.append(
-        f"State: open | draft={pr.get('isDraft')} | mergeable={pr.get('mergeable')} "
-        f"| mergeStateStatus={pr.get('mergeStateStatus')} | reviewDecision={pr.get('reviewDecision')}"
+        f"State: open | draft={pr.get('isDraft')} "
+        f"| reviewDecision={pr.get('reviewDecision')}"
     )
     lines.append(f"Created: {pr.get('createdAt')} ({pr_age}d ago)")
     lines.append(f"Updated: {pr.get('updatedAt')} ({updated_age}d ago)")
@@ -505,18 +511,6 @@ def render_context(ctx: dict[str, Any]) -> str:
     lines.append("")
     lines.append("PR description:")
     lines.append(truncate(pr.get("body") or "", 800))
-    lines.append("")
-
-    # Checks
-    lines.append("CI checks summary:")
-    lines.append(
-        f"  successful={len(ctx['checks_successful'])}  failing={len(ctx['checks_failing'])}  "
-        f"pending={len(ctx['checks_pending'])}  skipped={len(ctx['checks_skipped'])}"
-    )
-    for c in ctx["checks_failing"][:10]:
-        lines.append(f"  FAIL: {c.get('name')} ({c.get('workflow') or ''})")
-    for c in ctx["checks_pending"][:5]:
-        lines.append(f"  PENDING: {c.get('name')}")
     lines.append("")
 
     # Commits
@@ -568,12 +562,6 @@ def render_context(ctx: dict[str, Any]) -> str:
     signals: list[str] = []
     if pr.get("isDraft"):
         signals.append("PR is a draft")
-    if pr.get("mergeable") == "CONFLICTING" or pr.get("mergeStateStatus") == "DIRTY":
-        signals.append("merge conflict with base")
-    if ctx["checks_failing"]:
-        signals.append(f"{len(ctx['checks_failing'])} CI checks failing")
-    if pr.get("reviewDecision") == "APPROVED" and not ctx["checks_failing"] and pr.get("mergeStateStatus") == "CLEAN":
-        signals.append("approved + clean + green = mergeable")
     if last_role == "author" and ctx["approvers"]:
         signals.append("latest substantive activity is from author after approvals")
     if last_role == "approver" and last_sub:
