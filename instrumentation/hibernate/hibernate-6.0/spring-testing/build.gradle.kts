@@ -15,6 +15,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent"))
 
   testImplementation("org.hsqldb:hsqldb:2.0.0")
+  testImplementation(project(":instrumentation:hibernate:testing"))
   testLibrary("org.springframework.data:spring-data-jpa:3.0.0")
 
   springAgent("org.springframework:spring-instrument:6.0.7")
