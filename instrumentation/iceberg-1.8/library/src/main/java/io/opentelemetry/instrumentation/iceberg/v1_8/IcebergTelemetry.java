@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
-import static java.util.Objects.requireNonNull;
-
 import io.opentelemetry.api.OpenTelemetry;
 import org.apache.iceberg.Scan;
 import org.apache.iceberg.ScanTask;
@@ -22,7 +20,7 @@ public final class IcebergTelemetry {
   }
 
   private IcebergTelemetry(OpenTelemetry openTelemetry) {
-    this.openTelemetry = requireNonNull(openTelemetry);
+    this.openTelemetry = openTelemetry;
   }
 
   /**
@@ -39,6 +37,6 @@ public final class IcebergTelemetry {
    */
   public <T1, T2 extends ScanTask, T3 extends ScanTaskGroup<T2>> T1 wrapScan(
       Scan<T1, T2, T3> scan) {
-    return requireNonNull(scan).metricsReporter(new IcebergMetricsReporter(openTelemetry));
+    return scan.metricsReporter(new IcebergMetricsReporter(openTelemetry));
   }
 }
