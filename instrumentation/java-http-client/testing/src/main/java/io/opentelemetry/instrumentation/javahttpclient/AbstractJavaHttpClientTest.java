@@ -14,7 +14,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -56,6 +55,10 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
   protected abstract void configureHttpClientBuilder(HttpClient.Builder httpClientBuilder);
 
   protected abstract HttpClient configureHttpClient(HttpClient httpClient);
+
+  protected boolean hasServicePeerName() {
+    return false;
+  }
 
   @Override
   public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -182,13 +185,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                             equalTo(ERROR_TYPE, CancellationException.class.getName()),
                             equalTo(
                                 maybeStablePeerService(),
-                                "opentelemetry-java-instrumentation"
-                                        .equals(
-                                            span.actual()
-                                                .getResource()
-                                                .getAttribute(TELEMETRY_DISTRO_NAME))
-                                    ? "test-peer-service"
-                                    : null)),
+                                hasServicePeerName() ? "test-peer-service" : null)),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)
