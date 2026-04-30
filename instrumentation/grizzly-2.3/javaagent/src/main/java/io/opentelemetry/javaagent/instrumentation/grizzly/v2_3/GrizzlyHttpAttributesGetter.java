@@ -38,9 +38,9 @@ final class GrizzlyHttpAttributesGetter
     }
 
     List<String> result = new ArrayList<>();
-    do {
+    while (iterator.hasNext()) {
       result.add(iterator.next());
-    } while (iterator.hasNext());
+    }
     return result;
   }
 
