@@ -44,7 +44,7 @@ class InvocationInstrumentation implements TypeInstrumentation {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
 
-      public AdviceScope(
+      private AdviceScope(
           CallDepth callDepth,
           @Nullable ClassAndMethod request,
           @Nullable Context context,
