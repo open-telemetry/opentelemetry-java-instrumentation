@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
 import java.io.Serializable;
 
-public class TestClass implements Runnable, Serializable {
+class TestClass implements Runnable, Serializable {
 
   @Override
   public void run() {}
