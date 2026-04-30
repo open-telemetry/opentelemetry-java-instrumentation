@@ -52,7 +52,7 @@ Decide who needs to act next on this PR using ONLY the context below. \
 Merge-conflict status is shown in a separate deterministic column of the \
 dashboard — do not infer it. CI is summarized as a single boolean \
 (failing yes/no); pending checks are treated as not-failing. CI failure \
-on its own is NOT a reason to assign the PR to the author or to external: \
+on its own is NOT a reason to assign the PR to the author: \
 PRs can still be reviewed and approved while CI is failing. Treat CI \
 status only as weak supporting evidence and focus on the conversation \
 (comments, reviews, commits).
