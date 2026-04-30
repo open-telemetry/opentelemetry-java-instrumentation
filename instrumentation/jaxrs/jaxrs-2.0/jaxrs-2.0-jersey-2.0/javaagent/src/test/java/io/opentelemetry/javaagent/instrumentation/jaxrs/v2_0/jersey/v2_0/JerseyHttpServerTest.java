@@ -20,6 +20,9 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -71,6 +74,6 @@ class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
 
   @Override
   protected boolean testExperimental() {
-    return Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 }
