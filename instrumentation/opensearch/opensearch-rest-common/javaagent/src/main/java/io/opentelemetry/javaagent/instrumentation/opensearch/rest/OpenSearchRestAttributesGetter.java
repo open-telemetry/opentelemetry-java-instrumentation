@@ -72,8 +72,11 @@ final class OpenSearchRestAttributesGetter
   @Nullable
   public String getNetworkPeerAddress(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (response != null && response.getAddress() != null) {
-      return response.getAddress().getHostAddress();
+    if (response != null) {
+      InetAddress address = response.getAddress();
+      if (address != null) {
+        return address.getHostAddress();
+      }
     }
     return null;
   }
