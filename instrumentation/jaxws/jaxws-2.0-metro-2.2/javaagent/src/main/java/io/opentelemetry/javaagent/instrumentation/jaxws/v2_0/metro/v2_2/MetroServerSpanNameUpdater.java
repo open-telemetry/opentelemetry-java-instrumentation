@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.metro.v2_2;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.logging.Level.FINE;
 
 import com.sun.xml.ws.api.message.Packet;
 import io.opentelemetry.api.trace.Span;
@@ -158,14 +159,9 @@ final class MetroServerSpanNameUpdater {
         // servlet path to the span name
         // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10986
         return null;
-      } catch (RuntimeException | Error e) {
-        throw e;
       } catch (Throwable t) {
-        /*
-         * This is impossible, because the methods being invoked do not throw checked exceptions,
-         * and unchecked exceptions and errors are handled above
-         */
-        throw new AssertionError(t);
+        logger.log(FINE, "Failed to get servlet path for jaxws metro span name", t);
+        return null;
       }
     }
   }
