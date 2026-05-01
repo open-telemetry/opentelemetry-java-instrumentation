@@ -273,3 +273,9 @@ ktor-3.0:library
 ktor-3.0:testing
 ktor-common-2.0:library
 kubernetes-client-7.0:javaagent
+kubernetes-client-7.0:javaagent-unit-tests
+lettuce-4.0:javaagent
+lettuce-5.0:javaagent
+lettuce-5.1:javaagent
+lettuce-5.1:library
+lettuce-5.1:testing
