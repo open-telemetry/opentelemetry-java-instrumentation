@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_PRINT_WRITER;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -154,10 +155,12 @@ public class TestServlet5 {
                       context.complete();
                     } else if (EXCEPTION.equals(endpoint)) {
                       resp.setStatus(endpoint.getStatus());
-                      resp.setContentLength(endpoint.getBody().length());
+                      if (isOldTomcat(req)) {
+                        resp.setContentLength(endpoint.getBody().length());
+                      }
                       PrintWriter writer = resp.getWriter();
                       writer.print(endpoint.getBody());
-                      if (req.getClass().getName().contains("catalina")) {
+                      if (isOldTomcat(req)) {
                         // on tomcat close the writer to ensure response is sent immediately,
                         // otherwise there is a chance that tomcat resets the connection before the
                         // response is sent
@@ -239,7 +242,7 @@ public class TestServlet5 {
                 resp.setStatus(endpoint.getStatus());
                 PrintWriter writer = resp.getWriter();
                 writer.print(endpoint.getBody());
-                if (req.getClass().getName().contains("catalina")) {
+                if (isOldTomcat(req)) {
                   // on tomcat close the writer to ensure response is sent immediately,
                   // otherwise there is a chance that tomcat resets the connection before the
                   // response is sent
@@ -310,6 +313,10 @@ public class TestServlet5 {
         req.startAsync().dispatch("/recursive");
       }
     }
+  }
+
+  private static boolean isOldTomcat(HttpServletRequest req) {
+    return req.getClass().getName().contains("catalina") && !testLatestDeps();
   }
 
   private TestServlet5() {}
