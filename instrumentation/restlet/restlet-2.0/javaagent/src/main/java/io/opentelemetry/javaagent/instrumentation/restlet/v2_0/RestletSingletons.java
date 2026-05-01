@@ -20,12 +20,14 @@ public class RestletSingletons {
       JavaagentHttpServerInstrumenters.create(
           RestletTelemetryBuilderFactory.create(GlobalOpenTelemetry.get()));
 
+  private static final HttpServerRouteGetter<String> serverSpanName = ServletContextPath::prepend;
+
   public static Instrumenter<Request, Response> instrumenter() {
     return instrumenter;
   }
 
   public static HttpServerRouteGetter<String> serverSpanName() {
-    return ServletContextPath::prepend;
+    return serverSpanName;
   }
 
   private RestletSingletons() {}
