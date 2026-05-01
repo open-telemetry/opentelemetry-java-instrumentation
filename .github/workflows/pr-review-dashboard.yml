@@ -2,15 +2,44 @@ name: PR dashboard
 
 on:
   schedule:
-    # hourly
+    # hourly safety net
     - cron: "0 * * * *"
   workflow_dispatch:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - closed
+      - ready_for_review
+      - converted_to_draft
+      - labeled
+      - unlabeled
+      - synchronize
+      - review_requested
+      - review_request_removed
+  pull_request_review:
+    types: [submitted, dismissed, edited]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+# Debounce bursts of PR events without canceling the in-flight run: at most
+# one run executes and one is queued. If more events arrive while a run is
+# queued, the older queued run is replaced by the newer one, so events
+# coalesce instead of stacking up indefinitely.
+concurrency:
+  group: pr-review-dashboard
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
   update-dashboard:
+    # Skip issue_comment events that aren't on a PR (the event fires for both
+    # issues and PRs, but only PR comments affect the dashboard).
+    if: ${{ github.event_name != 'issue_comment' || github.event.issue.pull_request != null }}
     permissions:
       issues: write
     environment: protected
