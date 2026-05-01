@@ -9,9 +9,12 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_RESEND_COUNT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.ExceptionEventExtractorProvider;
+import io.opentelemetry.instrumentation.api.internal.InternalExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
@@ -31,7 +34,7 @@ import javax.annotation.Nullable;
 public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, HttpClientAttributesGetter<REQUEST, RESPONSE>>
-    implements SpanKeyProvider {
+    implements SpanKeyProvider, ExceptionEventExtractorProvider {
 
   /**
    * Creates the HTTP client attributes extractor with default configuration.
@@ -104,6 +107,18 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.HTTP_CLIENT;
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @Override
+  public InternalExceptionEventExtractor<?> internalGetExceptionEventExtractor() {
+    return (logRecordBuilder, context, request) -> {
+      logRecordBuilder.setEventName("http.client.request.exception");
+      logRecordBuilder.setSeverity(Severity.WARN);
+    };
   }
 
   @Nullable

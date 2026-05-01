@@ -33,7 +33,9 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.internal.ExceptionEventExtractorProvider;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
+import io.opentelemetry.instrumentation.api.internal.InternalExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -149,6 +151,39 @@ class InstrumenterTest {
     }
   }
 
+  static class AttributesExtractorWithExceptionEventExtractor
+      implements AttributesExtractor<Map<String, String>, Map<String, String>>,
+          ExceptionEventExtractorProvider {
+
+    private final InternalExceptionEventExtractor<Object> exceptionEventExtractor;
+
+    AttributesExtractorWithExceptionEventExtractor(String eventName, Severity severity) {
+      exceptionEventExtractor =
+          (logRecordBuilder, context, request) -> {
+            logRecordBuilder.setEventName(eventName);
+            logRecordBuilder.setSeverity(severity);
+          };
+    }
+
+    @Override
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, Map<String, String> request) {}
+
+    @Override
+    public void onEnd(
+        AttributesBuilder attributes,
+        Context context,
+        Map<String, String> request,
+        @Nullable Map<String, String> response,
+        @Nullable Throwable error) {}
+
+    @Nullable
+    @Override
+    public InternalExceptionEventExtractor<?> internalGetExceptionEventExtractor() {
+      return exceptionEventExtractor;
+    }
+  }
+
   static class LinksExtractor implements SpanLinksExtractor<Map<String, String>> {
 
     @Override
@@ -228,19 +263,15 @@ class InstrumenterTest {
 
   @Test
   void server_error() {
-    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractor(new AttributesExtractor1())
-            .addAttributesExtractor(new AttributesExtractor2());
-    Experimental.setExceptionEventExtractor(
-        builder,
-        (logRecordBuilder, context1, request) -> {
-          logRecordBuilder.setEventName("http.server.request.exception");
-          logRecordBuilder.setSeverity(Severity.ERROR);
-        });
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        builder.buildServerInstrumenter(new MapGetter());
+            .addAttributesExtractor(new AttributesExtractor2())
+            .addAttributesExtractor(
+                new AttributesExtractorWithExceptionEventExtractor(
+                    "http.server.request.exception", Severity.ERROR))
+            .buildServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
@@ -356,19 +387,15 @@ class InstrumenterTest {
 
   @Test
   void client_error() {
-    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractor(new AttributesExtractor1())
-            .addAttributesExtractor(new AttributesExtractor2());
-    Experimental.setExceptionEventExtractor(
-        builder,
-        (logRecordBuilder, context1, request) -> {
-          logRecordBuilder.setEventName("http.client.request.exception");
-          logRecordBuilder.setSeverity(Severity.WARN);
-        });
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        builder.buildClientInstrumenter(Map::put);
+            .addAttributesExtractor(new AttributesExtractor2())
+            .addAttributesExtractor(
+                new AttributesExtractorWithExceptionEventExtractor(
+                    "http.client.request.exception", Severity.WARN))
+            .buildClientInstrumenter(Map::put);
 
     Map<String, String> request = new HashMap<>(REQUEST);
     Context context = instrumenter.start(Context.root(), request);
@@ -404,56 +431,8 @@ class InstrumenterTest {
   }
 
   @Test
-  void consumer_error_with_explicit_severity() {
-    // Verifies that log event severity comes from setExceptionEventExtractor, not from span status.
-    // The span gets ERROR status (because there's an error), but the exception log event
-    // should use the extractor's severity (WARN), not mirror the span status.
-    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
-        Instrumenter.<Map<String, String>, Map<String, String>>builder(
-            otelTesting.getOpenTelemetry(), "test", unused -> "span");
-    Experimental.setExceptionEventExtractor(
-        builder,
-        (logRecordBuilder, context1, request) -> {
-          logRecordBuilder.setEventName("messaging.process.exception");
-          logRecordBuilder.setSeverity(Severity.WARN);
-        });
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        builder.buildConsumerInstrumenter(new MapGetter());
-
-    Context context = instrumenter.start(Context.root(), REQUEST);
-    assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
-
-    IllegalStateException error = new IllegalStateException("test");
-    instrumenter.end(context, REQUEST, RESPONSE, error);
-
-    otelTesting
-        .assertTraces()
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("span")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasStatus(StatusData.error())
-                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
-
-    if (emitExceptionAsLogs()) {
-      List<LogRecordData> logs = otelTesting.getLogRecords();
-      assertThat(logs).hasSize(1);
-      assertThat(logs.get(0))
-          // Should be WARN (from setExceptionEventExtractor), not ERROR (from span status)
-          .hasSeverity(Severity.WARN)
-          .hasEventName("messaging.process.exception")
-          .hasAttributesSatisfyingExactly(
-              equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
-              equalTo(EXCEPTION_MESSAGE, "test"),
-              satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull));
-    }
-  }
-
-  @Test
   void error_default_exception_event_extractor() {
-    // When no ExceptionEventExtractor is explicitly set, a default should be used
+    // When no exception event extractor is provided, a default should be used
     // that sets event name to "exception" and severity to WARN.
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
