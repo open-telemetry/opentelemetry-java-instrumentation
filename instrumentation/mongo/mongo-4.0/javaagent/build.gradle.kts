@@ -22,7 +22,6 @@ dependencies {
   testLibrary("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
 
   testImplementation(project(":instrumentation:mongo:mongo-common:testing"))
-  testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:1.50.5")
 
   testInstrumentation(project(":instrumentation:mongo:mongo-async-3.3:javaagent"))
   testInstrumentation(project(":instrumentation:mongo:mongo-3.1:javaagent"))

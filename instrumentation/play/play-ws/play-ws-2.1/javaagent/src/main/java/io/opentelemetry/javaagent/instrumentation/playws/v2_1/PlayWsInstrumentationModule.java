@@ -49,6 +49,11 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) AsyncHandler<?> originalAsyncHandler) {
       AsyncHandler<?> asyncHandler = originalAsyncHandler;
+      if (asyncHandler instanceof WebSocketUpgradeHandler) {
+        // websocket upgrade handlers aren't supported
+        return new Object[] {null, asyncHandler};
+      }
+
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return new Object[] {null, asyncHandler};
@@ -60,8 +65,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         asyncHandler =
             new StreamedAsyncHandlerWrapper<>(
                 (StreamedAsyncHandler<?>) asyncHandler, request, context, parentContext);
-      } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
-        // websocket upgrade handlers aren't supported
+      } else {
         asyncHandler = new AsyncHandlerWrapper<>(asyncHandler, request, context, parentContext);
       }
       return new Object[] {context, asyncHandler};
@@ -71,7 +75,10 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
     public static void methodExit(
         @Advice.Argument(0) Request request,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter Object[] enterResult) {
+        @Advice.Enter @Nullable Object[] enterResult) {
+      if (enterResult == null) {
+        return;
+      }
       Context context = (Context) enterResult[0];
       if (context != null && throwable != null) {
         instrumenter().end(context, request, null, throwable);

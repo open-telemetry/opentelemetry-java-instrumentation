@@ -83,6 +83,11 @@
   `hasAttributesSatisfyingExactly(...)` in the same assertion chain, because the exact
   variant already validates the total attribute count. Remove the `hasTotalAttributeCount`
   call.
+- These rules apply to **span** attribute assertions only. Metric point assertions are
+  different: metric point assertions do not have a `hasTotalAttributeCount(...)` method, so
+  the span guidance about preferring `hasTotalAttributeCount(0)` for zero-attribute checks
+  does not apply. For metric points, used `point.hasAttributes(Attributes.empty())` — it
+  reads more clearly than the no-arg `hasAttributesSatisfyingExactly()` form.
 - For non-semconv attribute keys in `equalTo(...)`, use inline `AttributeKey` factory
   methods — `longKey("name")`, `stringKey("name")`, etc. — directly in the assertion.
   Do **not** extract them into class-level `private static final AttributeKey<T>` constants.

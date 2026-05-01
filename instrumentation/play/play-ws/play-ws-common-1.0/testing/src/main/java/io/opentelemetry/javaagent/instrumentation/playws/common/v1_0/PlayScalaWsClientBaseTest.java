@@ -20,7 +20,6 @@ import scala.Function1;
 import scala.collection.JavaConverters;
 import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
-import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import scala.util.Try;
 
@@ -52,14 +51,7 @@ public class PlayScalaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWS
   public int sendRequest(
       StandaloneWSRequest request, String method, URI uri, Map<String, String> headers)
       throws Exception {
-    Future<StandaloneWSResponse> futureResponse = request.execute();
-    Await.ready(futureResponse, Duration.apply(10, SECONDS));
-    Try<StandaloneWSResponse> value = futureResponse.value().get();
-    if (value.isSuccess()) {
-      return value.get().status();
-    }
-    // Catch the Throwable and rethrow it
-    throw (Exception) value.failed().get();
+    return Await.result(request.execute(), Duration.apply(10, SECONDS)).status();
   }
 
   @Override
