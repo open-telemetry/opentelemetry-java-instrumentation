@@ -84,26 +84,17 @@ class JavaagentInstrumentationTest {
                 span ->
                     span.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("outer"), true),
-                            equalTo(booleanKey("inner"), null),
-                            equalTo(booleanKey("middle"), null)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("outer"), true)),
                 // middle span
                 span ->
                     span.hasName("mid-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("middle"), true),
-                            equalTo(booleanKey("inner"), null),
-                            equalTo(booleanKey("outer"), null)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("middle"), true)),
                 // inner span
                 span ->
                     span.hasName("inner-span")
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("inner"), true),
-                            equalTo(booleanKey("middle"), null),
-                            equalTo(booleanKey("outer"), null))));
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("inner"), true))));
   }
 
   @Test
@@ -152,26 +143,17 @@ class JavaagentInstrumentationTest {
                 span ->
                     span.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("outer"), true),
-                            equalTo(booleanKey("inner"), null),
-                            equalTo(booleanKey("middle"), null)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("outer"), true)),
                 // middle span
                 span ->
                     span.hasName("mid-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("middle"), true),
-                            equalTo(booleanKey("inner"), null),
-                            equalTo(booleanKey("outer"), null)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("middle"), true)),
                 // inner span
                 span ->
                     span.hasName("inner-span")
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("inner"), true),
-                            equalTo(booleanKey("middle"), null),
-                            equalTo(booleanKey("outer"), null))));
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("inner"), true))));
   }
 
   @Test
@@ -286,25 +268,16 @@ class JavaagentInstrumentationTest {
                 span ->
                     span.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("outer"), true),
-                            equalTo(booleanKey("inner"), null),
-                            equalTo(booleanKey("middle"), null)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("outer"), true)),
                 // middle span
                 span ->
                     span.hasName("mid-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("middle"), true),
-                            equalTo(booleanKey("inner"), null),
-                            equalTo(booleanKey("outer"), null)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("middle"), true)),
                 // inner span
                 span ->
                     span.hasName("inner-span")
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("inner"), true),
-                            equalTo(booleanKey("middle"), null),
-                            equalTo(booleanKey("outer"), null))));
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("inner"), true))));
   }
 }
