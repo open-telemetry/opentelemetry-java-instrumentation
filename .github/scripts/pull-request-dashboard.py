@@ -418,12 +418,14 @@ def fetch_pr_context(
 
     # Last substantive event = last event whose body is non-empty OR whose
     # kind is not "review:COMMENTED" (state changes always count). Merge
-    # commits (≥2 parents — e.g. "Update branch" merging base into the PR)
-    # don't count as substantive: they don't move the conversation forward.
+    # commits (≥2 parents) by someone *other* than the author — e.g. an
+    # approver clicking "Update branch" — don't count as substantive: they
+    # don't move the conversation forward and shouldn't be confused with
+    # the author addressing feedback.
     def is_substantive(e: dict[str, Any]) -> bool:
         if e["kind"].startswith("review:") and e["kind"] != "review:COMMENTED":
             return True
-        if e.get("is_merge"):
+        if e.get("is_merge") and (e.get("login") or "").lower() != author.lower():
             return False
         return bool((e.get("body") or "").strip())
 
@@ -432,16 +434,34 @@ def fetch_pr_context(
 
     # Commit summaries (subject only) for the brief table in the rendered
     # context. Full commit messages and diffs travel via timeline events.
+    # Merge commits authored by someone other than the PR author (e.g. an
+    # approver clicking "Update branch") are flagged so the model doesn't
+    # treat them as the author addressing feedback.
     commit_rows = []
     for c in recent_commits:
-        sha = (c.get("sha") or "")[:7]
+        sha_full = c.get("sha") or ""
+        sha = sha_full[:7]
         msg = (c.get("commit") or {}).get("message", "").splitlines()[0] if c.get("commit") else ""
         a = c.get("author") or {}
         commit_login = a.get("login") or ((c.get("commit") or {}).get("author") or {}).get("name") or "?"
         commit_date = ((c.get("commit") or {}).get("author") or {}).get("date") or ""
-        commit_rows.append({"sha": sha, "msg": msg, "author": commit_login, "date": commit_date})
+        is_non_author_merge = (
+            sha_full in merge_shas
+            and (commit_login or "").lower() != author.lower()
+        )
+        commit_rows.append({
+            "sha": sha,
+            "msg": msg,
+            "author": commit_login,
+            "date": commit_date,
+            "is_non_author_merge": is_non_author_merge,
+        })
 
-    last_commit_date = parse_ts(commit_rows[-1]["date"]) if commit_rows else None
+    # "Last commit pushed" is meant to surface real author activity, so
+    # skip non-author merge commits (e.g. approvers clicking "Update
+    # branch") when picking the timestamp.
+    real_rows = [r for r in commit_rows if not r["is_non_author_merge"]]
+    last_commit_date = parse_ts(real_rows[-1]["date"]) if real_rows else None
 
     # Checks summary.
     failing = [c for c in checks if (c.get("state") or "").upper() in ("FAILURE", "ERROR")]
@@ -543,7 +563,8 @@ def render_context(ctx: dict[str, Any]) -> str:
     # Commits
     lines.append(f"Last {len(ctx['commits'])} commits (oldest first):")
     for c in ctx["commits"]:
-        lines.append(f"  {c['sha']} {c['date'][:10]} @{c['author']}: {truncate(c['msg'], 120)}")
+        suffix = " [merge from base by non-author — not substantive activity]" if c.get("is_non_author_merge") else ""
+        lines.append(f"  {c['sha']} {c['date'][:10]} @{c['author']}: {truncate(c['msg'], 120)}{suffix}")
     lines.append("")
 
     # Last substantive event highlight
