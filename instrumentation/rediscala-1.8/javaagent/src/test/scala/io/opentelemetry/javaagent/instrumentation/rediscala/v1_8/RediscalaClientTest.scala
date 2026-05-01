@@ -6,7 +6,7 @@
 package rediscala
 
 import io.opentelemetry.api.trace.SpanKind.CLIENT
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
@@ -27,6 +27,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SuppressWarnings(Array("deprecation"))
 class RediscalaClientTest {
 
   @RegisterExtension val testing = AgentInstrumentationExtension.create
@@ -122,8 +123,8 @@ class RediscalaClientTest {
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(SemconvStabilityUtil.maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(SemconvStabilityUtil.maybeStable(DB_OPERATION), "SET")
+                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                  equalTo(maybeStable(DB_OPERATION), "SET")
                 )
             }
           }
@@ -175,8 +176,8 @@ class RediscalaClientTest {
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(SemconvStabilityUtil.maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(SemconvStabilityUtil.maybeStable(DB_OPERATION), "SET")
+                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                  equalTo(maybeStable(DB_OPERATION), "SET")
                 )
             }
           },
@@ -187,8 +188,8 @@ class RediscalaClientTest {
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(SemconvStabilityUtil.maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(SemconvStabilityUtil.maybeStable(DB_OPERATION), "GET")
+                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                  equalTo(maybeStable(DB_OPERATION), "GET")
                 )
             }
           }
