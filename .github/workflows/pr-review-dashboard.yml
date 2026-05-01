@@ -28,7 +28,7 @@ jobs:
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Install Copilot CLI
-        run: npm install -g @github/copilot
+        run: npm install -g @github/copilot@1.0.40
 
       - name: Generate dashboard
         env:
