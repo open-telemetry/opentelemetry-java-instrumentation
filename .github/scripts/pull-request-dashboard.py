@@ -771,6 +771,12 @@ def render_markdown_compact(
         res = results.get(pr["number"]) or {}
         decision = res.get("decision") or {}
         side = _infer_side(decision) if decision else "unknown"
+        # PRs authored by app/otelbot are never "waiting on authors" — the
+        # bot doesn't respond to review feedback, so the ball is always in
+        # an approver's court (review, close, or take over).
+        pr_author_login = ((pr.get("author") or {}).get("login") or "").lower()
+        if side == "author" and pr_author_login == "app/otelbot":
+            side = "approver"
         # Promote approved PRs that are waiting on approvers into the
         # "maintainer" bucket (deterministic): GitHub already says they have
         # the required approvals, so a maintainer can merge them.
