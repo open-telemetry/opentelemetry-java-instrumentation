@@ -420,7 +420,7 @@ targets:
       target: ':instrumentation:cassandra:cassandra-4.4:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:clickhouse:clickhouse-client-common:javaagent'
+      target: ':instrumentation:clickhouse:clickhouse-client-common-0.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:clickhouse:clickhouse-client-v1-0.5:javaagent'

@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:clickhouse:clickhouse-client-common:javaagent"))
+  implementation(project(":instrumentation:clickhouse:clickhouse-client-common-0.5:javaagent"))
   compileOnly("com.clickhouse:clickhouse-client:0.5.0")
 
   testImplementation("com.google.guava:guava")
