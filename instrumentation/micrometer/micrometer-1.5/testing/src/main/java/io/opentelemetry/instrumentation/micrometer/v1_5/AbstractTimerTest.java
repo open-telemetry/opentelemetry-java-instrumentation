@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.within;
 
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import java.time.Duration;
@@ -115,7 +116,7 @@ public abstract class AbstractTimerTest {
                                     point
                                         .hasSum(0.001234)
                                         .hasCount(1)
-                                        .hasAttributesSatisfyingExactly())));
+                                        .hasAttributes(Attributes.empty()))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -126,7 +127,7 @@ public abstract class AbstractTimerTest {
                         gauge ->
                             gauge.hasPointsSatisfying(
                                 point ->
-                                    point.hasValue(0.001234).hasAttributesSatisfyingExactly())));
+                                    point.hasValue(0.001234).hasAttributes(Attributes.empty()))));
   }
 
   @Test

@@ -14,6 +14,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Metrics;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -203,7 +204,7 @@ public abstract class AbstractFunctionTimerTest {
                         sum ->
                             sum.hasPointsSatisfying(
                                 point ->
-                                    point.hasValue(0.001234).hasAttributesSatisfyingExactly())));
+                                    point.hasValue(0.001234).hasAttributes(Attributes.empty()))));
   }
 
   @Test
