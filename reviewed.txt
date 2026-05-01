@@ -400,3 +400,17 @@ reactor-3.1:library
 reactor-3.1:testing
 reactor-3.4:javaagent
 reactor-kafka-1.0:javaagent
+reactor-kafka-1.0:testing
+reactor-netty-0.9:javaagent
+reactor-netty-1.0:javaagent
+reactor-netty-1.0:javaagent-unit-tests
+rediscala-1.8:javaagent
+redisson-3.0:javaagent
+redisson-3.17:javaagent
+redisson-common-3.0:javaagent
+redisson-common-3.0:testing
+resources:library
+restlet-1.1:javaagent
+restlet-1.1:library
+restlet-1.1:testing
+restlet-2.0:javaagent
