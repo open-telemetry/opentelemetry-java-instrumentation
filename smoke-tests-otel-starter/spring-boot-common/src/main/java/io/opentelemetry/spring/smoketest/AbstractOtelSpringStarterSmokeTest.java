@@ -291,6 +291,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // JFR based metrics
+    // Note: jvm.network.io is intentionally omitted because it is flaky across all JDK versions.
     for (String metric :
         asList(
             "jvm.cpu.count",
@@ -303,14 +304,9 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             "jvm.memory.init",
             "jvm.memory.used",
             "jvm.memory.allocation",
-            "jvm.network.io",
             "jvm.thread.count")) {
       // cpu longlock is missing on jdk 25
       if (javaVersion >= 25 && "jvm.cpu.longlock".equals(metric)) {
-        continue;
-      }
-      // jvm.network.io is flaky on all JDK versions
-      if ("jvm.network.io".equals(metric)) {
         continue;
       }
       testing.waitAndAssertMetrics(
