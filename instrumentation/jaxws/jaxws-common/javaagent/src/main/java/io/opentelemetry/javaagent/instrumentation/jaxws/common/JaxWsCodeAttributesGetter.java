@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.common;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 
-final class JaxWsCodeAttributesGetter implements CodeAttributesGetter<JaxWsRequest> {
+class JaxWsCodeAttributesGetter implements CodeAttributesGetter<JaxWsRequest> {
 
   @Override
   public Class<?> getCodeClass(JaxWsRequest request) {

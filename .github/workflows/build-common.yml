@@ -18,8 +18,6 @@ on:
     secrets:
       DEVELOCITY_ACCESS_KEY:
         required: false
-      FLAKY_TEST_REPORTER_ACCESS_KEY:
-        required: false
 
 permissions:
   contents: read
@@ -286,7 +284,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Node
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
@@ -337,48 +335,6 @@ jobs:
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
         run: cat build-scan.txt
-
-      - name: Get current job url
-        id: jobs
-        if: ${{ !cancelled() }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          matrix: ${{ toJson(matrix) }}
-        with:
-          result-encoding: string
-          script: |
-            try {
-              const matrix = JSON.parse(process.env.matrix);
-              const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm }, indy ${ matrix['test-indy'] })`;
-              const workflow_jobs_nested = await github.paginate(
-                github.rest.actions.listJobsForWorkflowRun,
-                {
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  run_id: context.runId,
-                  per_page: 100
-                },
-                (response) => {
-                  return response.data;
-                },
-              );
-              const job = workflow_jobs_nested.flat().find((job) => job.name === job_name);
-              return job ? job.html_url : '';
-            } catch (e) {
-              core.warning(`Failed to get current job url: ${e}`);
-              return '';
-            }
-
-      - name: Flaky test report
-        if: ${{ !cancelled() }}
-        env:
-          FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
-          JOB_URL: ${{ steps.jobs.outputs.result }}
-        run: |
-          if [ -s build-scan.txt ]; then
-            export BUILD_SCAN_URL=$(cat build-scan.txt)
-          fi
-          ./gradlew :test-report:reportFlakyTests
 
       - name: Upload deadlock detector artifacts if any
         if: failure()

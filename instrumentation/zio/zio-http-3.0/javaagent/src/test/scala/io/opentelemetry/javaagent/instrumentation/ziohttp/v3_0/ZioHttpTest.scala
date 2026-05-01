@@ -43,8 +43,8 @@ import java.util.function.Consumer
 class ZioHttpTest {
   @RegisterExtension private val testing = AgentInstrumentationExtension.create
 
-  var port = 0
-  var client: WebClient = null
+  private var port = 0
+  private var client: WebClient = null
 
   @BeforeAll
   def setup(): Unit = {
@@ -86,8 +86,8 @@ class ZioHttpTest {
                 satisfies(
                   USER_AGENT_ORIGINAL,
                   new StringAssertConsumer {
-                    override def accept(t: AbstractStringAssert[_]): Unit =
-                      t.isInstanceOf(classOf[String])
+                    override def accept(value: AbstractStringAssert[_]): Unit =
+                      value.isInstanceOf(classOf[String])
                   }
                 ),
                 equalTo(HTTP_ROUTE, "/greet/{name}"),
@@ -99,8 +99,8 @@ class ZioHttpTest {
                 satisfies(
                   NETWORK_PEER_PORT,
                   new LongAssertConsumer {
-                    override def accept(t: AbstractLongAssert[_]): Unit =
-                      t.isInstanceOf(classOf[java.lang.Long])
+                    override def accept(value: AbstractLongAssert[_]): Unit =
+                      value.isInstanceOf(classOf[java.lang.Long])
                   }
                 )
               )

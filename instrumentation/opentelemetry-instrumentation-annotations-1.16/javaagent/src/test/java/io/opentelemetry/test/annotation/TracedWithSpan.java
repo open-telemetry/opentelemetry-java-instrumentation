@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-public class TracedWithSpan {
+class TracedWithSpan {
 
   TracedWithSpan() {}
 
@@ -20,32 +20,32 @@ public class TracedWithSpan {
   TracedWithSpan(String unused) {}
 
   @WithSpan
-  public String otel() {
+  String otel() {
     return "hello!";
   }
 
   @WithSpan("manualName")
-  public String namedOtel() {
+  String namedOtel() {
     return "hello!";
   }
 
   @WithSpan
-  public String ignored() {
+  String ignored() {
     return "hello!";
   }
 
   @WithSpan(kind = SpanKind.PRODUCER)
-  public String someKind() {
+  String someKind() {
     return "hello!";
   }
 
   @WithSpan(kind = SpanKind.SERVER)
-  public String server() {
+  String server() {
     return otel();
   }
 
   @WithSpan
-  public String withSpanAttributes(
+  String withSpanAttributes(
       @SpanAttribute String implicitName,
       @SpanAttribute("explicitName") String parameter,
       @SpanAttribute("nullAttribute") String nullAttribute,
@@ -55,22 +55,22 @@ public class TracedWithSpan {
   }
 
   @WithSpan
-  public CompletionStage<String> completionStage(CompletableFuture<String> future) {
+  CompletionStage<String> completionStage(CompletableFuture<String> future) {
     return future;
   }
 
   @WithSpan
-  public CompletableFuture<String> completableFuture(CompletableFuture<String> future) {
+  CompletableFuture<String> completableFuture(CompletableFuture<String> future) {
     return future;
   }
 
   @WithSpan(inheritContext = false)
-  public String withoutParent() {
+  String withoutParent() {
     return "hello!";
   }
 
   @WithSpan(kind = SpanKind.CONSUMER)
-  public String consumer() {
+  String consumer() {
     return withoutParent();
   }
 }

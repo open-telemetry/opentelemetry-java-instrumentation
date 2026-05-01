@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -102,7 +103,7 @@ class AzureSdkTest {
                         .hasTotalAttributeCount(0),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasName(Boolean.getBoolean("testLatestDeps") ? "GET" : "HTTP GET")
+                        .hasName(testLatestDeps() ? "GET" : "HTTP GET")
                         .hasStatus(StatusData.unset())
                         .hasAttribute(HTTP_RESPONSE_STATUS_CODE, 200L)));
   }

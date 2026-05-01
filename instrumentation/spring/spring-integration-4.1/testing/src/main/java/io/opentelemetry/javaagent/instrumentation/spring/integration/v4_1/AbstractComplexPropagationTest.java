@@ -33,14 +33,14 @@ import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.SubscribableChannel;
 
-public abstract class AbstractComplexPropagationTest {
+abstract class AbstractComplexPropagationTest {
 
   private final Class<?> additionalContextClass;
-  protected final InstrumentationExtension testing;
+  private final InstrumentationExtension testing;
 
   private ConfigurableApplicationContext applicationContext;
 
-  public AbstractComplexPropagationTest(
+  AbstractComplexPropagationTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
     this.testing = testing;
     this.additionalContextClass = additionalContextClass;

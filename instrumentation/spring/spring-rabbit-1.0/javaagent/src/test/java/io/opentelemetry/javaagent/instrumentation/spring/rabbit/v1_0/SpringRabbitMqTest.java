@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -73,10 +72,11 @@ class SpringRabbitMqTest {
   @BeforeAll
   static void setUp() throws UnknownHostException {
     rabbitMqContainer =
-        new GenericContainer<>("rabbitmq:latest")
+        new GenericContainer<>("rabbitmq:4.2")
             .withExposedPorts(5672)
             .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1))
             .withStartupTimeout(Duration.ofMinutes(2));
+    cleanup.deferAfterAll(rabbitMqContainer::stop);
     rabbitMqContainer.start();
 
     SpringApplication app = new SpringApplication(ConsumerConfig.class);
@@ -88,21 +88,12 @@ class SpringRabbitMqTest {
     app.setDefaultProperties(props);
 
     applicationContext = app.run();
+    cleanup.deferAfterAll(applicationContext);
 
     connectionFactory = new ConnectionFactory();
     connectionFactory.setHost(rabbitMqContainer.getHost());
     connectionFactory.setPort(rabbitMqContainer.getMappedPort(5672));
     ip = InetAddress.getByName(rabbitMqContainer.getHost()).getHostAddress();
-  }
-
-  @AfterAll
-  static void teardown() {
-    if (rabbitMqContainer != null) {
-      rabbitMqContainer.stop();
-    }
-    if (applicationContext != null) {
-      applicationContext.close();
-    }
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -155,6 +146,7 @@ class SpringRabbitMqTest {
                     "test",
                     message -> {
                       message.getMessageProperties().setHeader("Test-Message-Header", "test");
+                      message.getMessageProperties().setHeader("Uncaptured-Header", "password");
                       return message;
                     });
           } else {

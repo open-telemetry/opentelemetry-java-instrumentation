@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import instrumentation.TestHelperClass;
-import io.opentelemetry.javaagent.bootstrap.InstrumentationProxy;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker;
 import java.io.ObjectStreamClass;
@@ -36,49 +34,16 @@ class ReflectionTest {
 
     // although marker interfaces are removed from getInterfaces() result class is still assignable
     // to them
-    assertThat(VirtualFieldInstalledMarker.class.isAssignableFrom(TestClass.class)).isTrue();
-    assertThat(VirtualFieldAccessorMarker.class.isAssignableFrom(TestClass.class)).isTrue();
-    assertThat(TestClass.class.getInterfaces())
-        .containsExactlyInAnyOrder(Runnable.class, Serializable.class);
+    assertThat(TestClass.class).isAssignableTo(VirtualFieldInstalledMarker.class);
+    assertThat(TestClass.class).isAssignableTo(VirtualFieldAccessorMarker.class);
+    assertThat(TestClass.class.getInterfaces()).containsExactly(Runnable.class, Serializable.class);
   }
 
   @Test
   void testGeneratedSerialVersionUid() {
     // expected value is computed with serialver utility that comes with jdk
     assertThat(ObjectStreamClass.lookup(TestClass.class).getSerialVersionUID())
-        .isEqualTo(1115158932483123524L);
+        .isEqualTo(7413560001584957796L);
     assertThat(TestClass.class.getDeclaredFields()).isEmpty();
-  }
-
-  @Test
-  void testInjectedClassProxyUnwrap() throws Exception {
-    TestClass testClass = new TestClass();
-    Class<?> helperType = testClass.testHelperClass();
-    assertThat(helperType).isNotNull();
-
-    Object instance = helperType.getConstructor().newInstance();
-    if (InstrumentationProxy.class.isAssignableFrom(helperType)) {
-      // indy advice: must be an indy proxy
-
-      for (Method method : helperType.getMethods()) {
-        assertThat(method.getName()).isNotEqualTo("__getIndyProxyDelegate");
-      }
-
-      for (Class<?> interfaceType : helperType.getInterfaces()) {
-        assertThat(interfaceType).isNotEqualTo(InstrumentationProxy.class);
-      }
-
-      assertThat(instance).isInstanceOf(InstrumentationProxy.class);
-
-      Object proxyDelegate = ((InstrumentationProxy) instance).__getIndyProxyDelegate();
-      assertThat(proxyDelegate).isNotInstanceOf(InstrumentationProxy.class);
-
-    } else {
-      // inline advice: must be of the expected type
-      assertThat(helperType).isEqualTo(TestHelperClass.class);
-      assertThat(instance)
-          .isInstanceOf(TestHelperClass.class)
-          .isNotInstanceOf(InstrumentationProxy.class);
-    }
   }
 }

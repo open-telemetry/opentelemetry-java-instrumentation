@@ -118,7 +118,7 @@ public class NettyChannelPipelineInstrumentation
           pipeline.addAfter(name, ourHandler.getClass().getName(), ourHandler);
           // associate our handle with original handler so they could be removed together
           CHANNEL_HANDLER.set(handler, ourHandler);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException ignored) {
           // Prevented adding duplicate handlers.
         }
       }

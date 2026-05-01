@@ -25,9 +25,9 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
-import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TEMPLATE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -756,17 +756,14 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
-        "http.client.request.duration",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("Duration of HTTP client requests.")
-                        .hasUnit("s")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point -> point.hasSumGreaterThan(0.0)))));
+        metric ->
+            metric
+                .hasName("http.client.request.duration")
+                .hasDescription("Duration of HTTP client requests.")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
   }
 
   /**

@@ -42,7 +42,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  void sendRequestWithMockedResponse() throws Exception {
+  void sendRequestWithMockedResponse() throws ReflectiveOperationException {
     AmazonDynamoDBClientBuilder clientBuilder = AmazonDynamoDBClientBuilder.standard();
     AmazonDynamoDB client =
         configureClient(clientBuilder)

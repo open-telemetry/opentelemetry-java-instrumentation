@@ -63,7 +63,7 @@ class JettyHttpClient12Instrumentation implements TypeInstrumentation {
       if (context == null) {
         return null;
       }
-      // set context for responseListeners
+      // store the parent context for request/response listener callbacks
       request.attribute(JETTY_CLIENT_CONTEXT_KEY, parentContext);
 
       return new AdviceLocals(context, context.makeCurrent());
@@ -72,7 +72,7 @@ class JettyHttpClient12Instrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExitSend(
         @Advice.This HttpRequest request,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceLocals locals) {
 
       if (locals == null) {

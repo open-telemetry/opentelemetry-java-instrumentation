@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndP
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseInstrumenterFactory;
+import javax.annotation.Nullable;
 
 public class ClickHouseClientV2Singletons {
 
@@ -37,11 +38,12 @@ public class ClickHouseClientV2Singletons {
     return instrumenter;
   }
 
+  @Nullable
   public static AddressAndPort getAddressAndPort(Client client) {
     return ADDRESS_AND_PORT.get(client);
   }
 
-  public static AddressAndPort setAddressAndPort(Client client, String endpoint) {
+  public static AddressAndPort setAddressAndPort(Client client, @Nullable String endpoint) {
     AddressAndPort addressAndPort = new AddressAndPort();
 
     if (endpoint != null) {

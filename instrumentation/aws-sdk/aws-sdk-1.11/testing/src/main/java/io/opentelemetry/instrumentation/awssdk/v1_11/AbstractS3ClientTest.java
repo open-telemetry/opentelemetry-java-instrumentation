@@ -47,10 +47,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
 
-  public abstract AmazonS3ClientBuilder configureClient(AmazonS3ClientBuilder client);
-
   private final AmazonS3ClientBuilder clientBuilder =
       AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true);
+
+  public abstract AmazonS3ClientBuilder configureClient(AmazonS3ClientBuilder client);
 
   @Override
   protected boolean hasRequestId() {
@@ -64,7 +64,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
       String method,
       Function<AmazonS3, Object> call,
       List<AttributeAssertion> additionalAttributes)
-      throws Exception {
+      throws ReflectiveOperationException {
 
     AmazonS3 client =
         configureClient(clientBuilder)

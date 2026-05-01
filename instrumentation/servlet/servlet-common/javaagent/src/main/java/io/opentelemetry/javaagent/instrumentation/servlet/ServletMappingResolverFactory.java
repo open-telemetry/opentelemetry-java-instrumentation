@@ -62,7 +62,7 @@ public abstract class ServletMappingResolverFactory implements MappingResolver.F
       this.mappings = mappings;
     }
 
-    public Collection<String> getMappings() {
+    Collection<String> getMappings() {
       return mappings;
     }
   }

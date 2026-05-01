@@ -10,6 +10,7 @@ import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRest
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestRequest;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestResponse;
 import java.net.InetAddress;
+import javax.annotation.Nullable;
 import org.opensearch.client.Response;
 
 public class OpenSearchRestSingletons {
@@ -21,7 +22,11 @@ public class OpenSearchRestSingletons {
     return instrumenter;
   }
 
-  public static OpenSearchRestResponse convertResponse(Response response) {
+  @Nullable
+  public static OpenSearchRestResponse convertResponse(@Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
     return new OpenSearchRestResponse() {
 
       @Override
@@ -30,6 +35,7 @@ public class OpenSearchRestSingletons {
       }
 
       @Override
+      @Nullable
       public InetAddress getAddress() {
         return response.getHost().getAddress();
       }

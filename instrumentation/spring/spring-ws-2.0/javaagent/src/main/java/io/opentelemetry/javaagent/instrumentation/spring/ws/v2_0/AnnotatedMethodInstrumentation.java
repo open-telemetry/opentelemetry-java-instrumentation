@@ -81,7 +81,7 @@ class AnnotatedMethodInstrumentation implements TypeInstrumentation {
         }
 
         Context context = instrumenter().start(parentContext, request);
-        return new AdviceScope(callDepth, request, context, parentContext.makeCurrent());
+        return new AdviceScope(callDepth, request, context, context.makeCurrent());
       }
 
       public void exit(@Nullable Throwable throwable) {

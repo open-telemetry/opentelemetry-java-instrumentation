@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.TestUtil.readFileAsString;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -150,8 +150,8 @@ class SnippetPrintWriterTest {
 
   private static class InMemoryHttpServletResponse extends HttpServletResponseWrapper {
 
-    private PrintWriter printWriter;
-    private StringWriter stringWriter;
+    private final StringWriter stringWriter = new StringWriter();
+    private final PrintWriter printWriter = new PrintWriter(stringWriter);
 
     InMemoryHttpServletResponse(HttpServletResponse delegate) {
       super(delegate);
@@ -159,10 +159,6 @@ class SnippetPrintWriterTest {
 
     @Override
     public PrintWriter getWriter() {
-      if (printWriter == null) {
-        stringWriter = new StringWriter();
-        printWriter = new PrintWriter(stringWriter);
-      }
       return printWriter;
     }
 

@@ -51,6 +51,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
               new ProducerRecord<>(SHARED_TOPIC, greeting);
           if (testHeaders) {
             producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
+            producerRecord.headers().add("Uncaptured-Header", "password".getBytes(UTF_8));
           }
           wrappedProducer.send(
               producerRecord,

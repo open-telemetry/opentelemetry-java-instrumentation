@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -30,8 +31,11 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import jakarta.servlet.Servlet;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttpServerTest<SERVER> {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   public static final ServerEndpoint HTML_PRINT_WRITER =
       new ServerEndpoint(
@@ -157,6 +161,8 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
 
     ExperimentalSnippetHolder.setSnippet(
         "\n  <script type=\"text/javascript\"> Test Test</script>");
+    cleanup.deferCleanup(() -> ExperimentalSnippetHolder.setSnippet(""));
+
     AggregatedHttpRequest request = request(HTML_SERVLET_OUTPUT_STREAM, "GET");
     AggregatedHttpResponse response = client.execute(request).aggregate().join();
 
@@ -175,8 +181,6 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
             + "</html>";
     assertThat(response.contentUtf8()).isEqualTo(result);
     assertThat(response.headers().contentLength()).isEqualTo(result.length());
-
-    ExperimentalSnippetHolder.setSnippet("");
 
     String expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM, "GET");
     testing()
@@ -198,6 +202,8 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
     assumeTrue(isAgentTest());
 
     ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
+    cleanup.deferCleanup(() -> ExperimentalSnippetHolder.setSnippet(""));
+
     AggregatedHttpRequest request = request(HTML_PRINT_WRITER, "GET");
     AggregatedHttpResponse response = client.execute(request).aggregate().join();
 
@@ -217,8 +223,6 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
 
     assertThat(response.contentUtf8()).isEqualTo(result);
     assertThat(response.headers().contentLength()).isEqualTo(result.length());
-
-    ExperimentalSnippetHolder.setSnippet("");
 
     String expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER, "GET");
     testing()

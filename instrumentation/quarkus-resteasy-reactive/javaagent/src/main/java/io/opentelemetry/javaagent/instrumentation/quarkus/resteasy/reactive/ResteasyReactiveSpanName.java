@@ -21,9 +21,7 @@ final class ResteasyReactiveSpanName {
   private static final VirtualField<ResteasyReactiveRequestContext, String> pathField =
       VirtualField.find(ResteasyReactiveRequestContext.class, String.class);
 
-  public static final ResteasyReactiveSpanName INSTANCE = new ResteasyReactiveSpanName();
-
-  void updateServerSpanName(ResteasyReactiveRequestContext requestContext) {
+  static void updateServerSpanName(ResteasyReactiveRequestContext requestContext) {
     Context context = Context.current();
     String jaxRsName = calculateJaxRsName(requestContext);
     HttpServerRoute.update(context, HttpServerRouteSource.NESTED_CONTROLLER, jaxRsName);

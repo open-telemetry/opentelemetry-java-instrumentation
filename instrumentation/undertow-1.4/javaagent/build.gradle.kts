@@ -19,7 +19,7 @@ dependencies {
   bootstrap(project(":instrumentation:undertow-1.4:bootstrap"))
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 

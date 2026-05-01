@@ -68,7 +68,7 @@ class SessionTest extends AbstractHibernateTest {
         () -> {
           try {
             parameter.sessionMethodTest.accept(session, value);
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this, we should see the error field set on the span.
           }
           session.getTransaction().commit();
@@ -87,7 +87,7 @@ class SessionTest extends AbstractHibernateTest {
           session.beginTransaction();
           try {
             parameter.statelessSessionMethodTest.accept(session, prepopulated.get(0));
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this, we should see the error field set on the span.
           }
           session.getTransaction().commit();
@@ -132,7 +132,7 @@ class SessionTest extends AbstractHibernateTest {
           session.beginTransaction();
           try {
             parameter.sessionMethodTest.accept(session, prepopulated.get(0));
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this, we should see the error field set on the span.
           }
           session.getTransaction().commit();
@@ -168,7 +168,7 @@ class SessionTest extends AbstractHibernateTest {
           try {
             session.replicate(
                 Long.valueOf(123) /* Not a valid entity */, ReplicationMode.OVERWRITE);
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this, we should see the error field set on the span.
           }
           session.getTransaction().commit();
@@ -207,7 +207,7 @@ class SessionTest extends AbstractHibernateTest {
           session.beginTransaction();
           try {
             parameter.sessionMethodTest.accept(session, prepopulated.get(0));
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this, we should see the error field set on the span.
           }
           session.getTransaction().commit();
@@ -347,7 +347,7 @@ class SessionTest extends AbstractHibernateTest {
                         span, trace.getSpan(0), "Transaction.commit", sessionId1.get()),
                 span -> assertClientSpan(span, trace.getSpan(6), "INSERT")));
 
-    if (ExperimentalTestHelper.isEnabled) {
+    if (ExperimentalTestHelper.EXPERIMENTAL_ATTRIBUTES) {
       assertThat(sessionId2.get()).isNotEqualTo(sessionId1.get());
       assertThat(sessionId3.get()).isNotEqualTo(sessionId2.get());
       assertThat(sessionId3.get()).isNotEqualTo(sessionId1.get());

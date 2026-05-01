@@ -12,8 +12,7 @@ import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
-enum NettyHeadersGetter implements TextMapGetter<NettyRequest> {
-  INSTANCE;
+final class NettyHeadersGetter implements TextMapGetter<NettyRequest> {
 
   @Override
   public Iterable<String> keys(NettyRequest requestAndChannel) {
@@ -22,11 +21,11 @@ enum NettyHeadersGetter implements TextMapGetter<NettyRequest> {
 
   @Nullable
   @Override
-  public String get(@Nullable NettyRequest requestAndChannel, String s) {
+  public String get(@Nullable NettyRequest requestAndChannel, String key) {
     if (requestAndChannel == null) {
       return null;
     }
-    return requestAndChannel.request().headers().get(s);
+    return requestAndChannel.request().headers().get(key);
   }
 
   @Override
