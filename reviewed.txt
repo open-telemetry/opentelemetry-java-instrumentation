@@ -414,3 +414,15 @@ restlet-1.1:javaagent
 restlet-1.1:library
 restlet-1.1:testing
 restlet-2.0:javaagent
+restlet-2.0:library
+restlet-2.0:testing
+rmi:bootstrap
+rmi:javaagent
+rocketmq-client-4.8:javaagent
+rocketmq-client-4.8:library
+rocketmq-client-4.8:testing
+rocketmq-client-5.0:javaagent
+runtime-telemetry:javaagent
+runtime-telemetry:jfr-testing
+runtime-telemetry:library
+runtime-telemetry:testing
