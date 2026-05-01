@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
@@ -158,7 +159,7 @@ public class TestServlet3 {
                       resp.setStatus(endpoint.getStatus());
                       PrintWriter writer = resp.getWriter();
                       writer.print(endpoint.getBody());
-                      if (req.getClass().getName().contains("catalina")) {
+                      if (req.getClass().getName().contains("catalina") && !testLatestDeps()) {
                         // on tomcat close the writer to ensure response is sent immediately,
                         // otherwise there is a chance that tomcat resets the connection before the
                         // response is sent

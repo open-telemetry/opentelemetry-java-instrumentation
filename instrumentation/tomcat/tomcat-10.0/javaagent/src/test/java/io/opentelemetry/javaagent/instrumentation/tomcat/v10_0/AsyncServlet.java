@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
@@ -61,7 +62,12 @@ class AsyncServlet extends HttpServlet {
                     resp.setStatus(endpoint.getStatus());
                     PrintWriter writer = resp.getWriter();
                     writer.print(endpoint.getBody());
-                    writer.close();
+                    if (!testLatestDeps()) {
+                      // on tomcat close the writer to ensure response is sent immediately,
+                      // otherwise there is a chance that tomcat resets the connection before the
+                      // response is sent
+                      writer.close();
+                    }
                     throw new IllegalStateException(endpoint.getBody());
                   }
                 });
