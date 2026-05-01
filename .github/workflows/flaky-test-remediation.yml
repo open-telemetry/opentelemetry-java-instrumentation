@@ -4,9 +4,12 @@ name: Flaky Test Remediation
 # attempts an automated fix using the Copilot CLI agent. Opens one PR per
 # successful run.
 #
-# Manual trigger only (workflow_dispatch). No inputs: defaults are baked in.
+# Weekly run plus manual trigger (workflow_dispatch). No inputs: defaults are
+# baked in.
 
 on:
+  schedule:
+    - cron: "0 10 * * 1"
   workflow_dispatch:
 
 permissions:
