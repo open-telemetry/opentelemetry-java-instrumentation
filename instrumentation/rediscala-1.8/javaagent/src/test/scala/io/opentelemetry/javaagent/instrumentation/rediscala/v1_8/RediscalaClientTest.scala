@@ -27,7 +27,6 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SuppressWarnings(Array("deprecation"))
 class RediscalaClientTest {
 
   @RegisterExtension val testing = AgentInstrumentationExtension.create
