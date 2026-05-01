@@ -16,9 +16,24 @@ import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEven
  */
 public final class MessagingExceptionEventExtractors {
 
-  /** Exception event extractor for messaging client operation spans. */
-  public static <REQUEST> ExceptionEventExtractor<REQUEST> client() {
-    return ExceptionEventExtractor.create("messaging.client.operation.exception", Severity.WARN);
+  /** Exception event extractor for messaging create operation spans. */
+  public static <REQUEST> ExceptionEventExtractor<REQUEST> create() {
+    return ExceptionEventExtractor.create("messaging.create.exception", Severity.WARN);
+  }
+
+  /** Exception event extractor for messaging send operation spans. */
+  public static <REQUEST> ExceptionEventExtractor<REQUEST> send() {
+    return ExceptionEventExtractor.create("messaging.send.exception", Severity.WARN);
+  }
+
+  /** Exception event extractor for messaging receive operation spans. */
+  public static <REQUEST> ExceptionEventExtractor<REQUEST> receive() {
+    return ExceptionEventExtractor.create("messaging.receive.exception", Severity.WARN);
+  }
+
+  /** Exception event extractor for messaging settle operation spans. */
+  public static <REQUEST> ExceptionEventExtractor<REQUEST> settle() {
+    return ExceptionEventExtractor.create("messaging.settle.exception", Severity.WARN);
   }
 
   /** Exception event extractor for messaging process spans. */

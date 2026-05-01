@@ -414,7 +414,7 @@ class InstrumenterTest {
     Experimental.setExceptionEventExtractor(
         builder,
         (logRecordBuilder, context1, request) -> {
-          logRecordBuilder.setEventName("messaging.client.operation.exception");
+          logRecordBuilder.setEventName("messaging.process.exception");
           logRecordBuilder.setSeverity(Severity.WARN);
         });
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
@@ -443,7 +443,7 @@ class InstrumenterTest {
       assertThat(logs.get(0))
           // Should be WARN (from setExceptionEventExtractor), not ERROR (from span status)
           .hasSeverity(Severity.WARN)
-          .hasEventName("messaging.client.operation.exception")
+          .hasEventName("messaging.process.exception")
           .hasAttributesSatisfyingExactly(
               equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
               equalTo(EXCEPTION_MESSAGE, "test"),

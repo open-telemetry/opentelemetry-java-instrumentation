@@ -118,7 +118,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       this.exceptionEventExtractor =
           builder.exceptionEventExtractor != null
               ? builder.exceptionEventExtractor
-              : defaultExceptionEventExtractor();
+              : defaultExceptionEventExtractor(this.spanKindExtractor);
     } else {
       this.logger = null;
       this.exceptionEventExtractor = null;
@@ -338,11 +338,18 @@ public class Instrumenter<REQUEST, RESPONSE> {
     logRecordBuilder.emit();
   }
 
-  private static <REQUEST>
-      InternalExceptionEventExtractor<REQUEST> defaultExceptionEventExtractor() {
+  // Per semconv (docs/exceptions/exceptions-logs.md), SERVER and CONSUMER spans should record
+  // exceptions with ERROR severity, while CLIENT and PRODUCER spans should use WARN.
+  private static <REQUEST> InternalExceptionEventExtractor<REQUEST> defaultExceptionEventExtractor(
+      SpanKindExtractor<? super REQUEST> spanKindExtractor) {
     return (logRecordBuilder, context, request) -> {
       logRecordBuilder.setEventName("exception");
-      logRecordBuilder.setSeverity(Severity.WARN);
+      SpanKind spanKind = spanKindExtractor.extract(request);
+      Severity severity =
+          (spanKind == SpanKind.SERVER || spanKind == SpanKind.CONSUMER)
+              ? Severity.ERROR
+              : Severity.WARN;
+      logRecordBuilder.setSeverity(severity);
     };
   }
 
