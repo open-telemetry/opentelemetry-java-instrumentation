@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
+@SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
 @TestInstance(PER_CLASS)
 public abstract class AbstractMongoClientTest<T> {
 
@@ -538,8 +539,6 @@ public abstract class AbstractMongoClientTest<T> {
     return "testCollection-" + collectionIndex.getAndIncrement();
   }
 
-  @SuppressWarnings("deprecation")
-  // TODO DB_CONNECTION_STRING deprecation
   void mongoSpan(
       SpanDataAssert span,
       String operation,
