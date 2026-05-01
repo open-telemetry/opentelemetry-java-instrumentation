@@ -1,15 +1,8 @@
 name: Flaky Test Remediation
 
-# Identifies the most-flaky test from Develocity over a recent window and
-# attempts an automated fix using the Copilot CLI agent. Opens one PR per
-# successful run.
-#
-# Weekly run plus manual trigger (workflow_dispatch). No inputs: defaults are
-# baked in.
-
 on:
   schedule:
-    - cron: "0 10 * * 1"
+    - cron: "0 7 * * 3"
   workflow_dispatch:
 
 permissions:
