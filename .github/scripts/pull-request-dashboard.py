@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -98,14 +99,16 @@ Where:
 # ---------------------------------------------------------------- gh helpers
 
 
-def gh_api(path: str, paginate: bool = False) -> Any:
+def gh_api(path: str, paginate: bool = False, token: str | None = None) -> Any:
     cmd = ["gh", "api", "-H", "Accept: application/vnd.github+json"]
     if paginate:
         cmd += ["--paginate", "--slurp"]
     cmd.append(path)
+    env = {**os.environ, "GH_TOKEN": token} if token else None
     proc = subprocess.run(
         cmd, capture_output=True, text=True, check=False,
         encoding="utf-8", errors="replace",
+        env=env,
     )
     if proc.returncode != 0:
         raise RuntimeError(f"gh api {path} failed: {proc.stderr.strip()}")
@@ -219,14 +222,22 @@ def detect_repo() -> str:
 
 
 def load_reviewer_set(org: str) -> set[str]:
+    # Reading org team membership requires a token with org:read scope.
+    # The default Actions GITHUB_TOKEN can't do this, so use OTELBOT_TOKEN
+    # (a GitHub App installation token) when present; fall back to the
+    # default GH_TOKEN otherwise (useful for local runs with a user token).
+    token = os.environ.get("OTELBOT_TOKEN") or None
     reviewers: set[str] = set()
     for slug in APPROVER_TEAM_SLUGS:
-        members = gh_api(f"/orgs/{org}/teams/{slug}/members?per_page=100", paginate=True)
+        members = gh_api(
+            f"/orgs/{org}/teams/{slug}/members?per_page=100",
+            paginate=True, token=token,
+        )
         reviewers.update(m["login"] for m in members)
     if not reviewers:
         raise RuntimeError(
             f"no reviewers found in teams {APPROVER_TEAM_SLUGS}; "
-            f"the GH_TOKEN must have org:read permission"
+            f"the token must have org:read permission"
         )
     return {r.lower() for r in reviewers}
 
@@ -771,6 +782,12 @@ def render_markdown_compact(
         res = results.get(pr["number"]) or {}
         decision = res.get("decision") or {}
         side = _infer_side(decision) if decision else "unknown"
+        # PRs authored by app/otelbot are never "waiting on authors" — the
+        # bot doesn't respond to review feedback, so the ball is always in
+        # an approver's court (review, close, or take over).
+        pr_author_login = ((pr.get("author") or {}).get("login") or "").lower()
+        if side == "author" and pr_author_login == "app/otelbot":
+            side = "approver"
         # Promote approved PRs that are waiting on approvers into the
         # "maintainer" bucket (deterministic): GitHub already says they have
         # the required approvals, so a maintainer can merge them.

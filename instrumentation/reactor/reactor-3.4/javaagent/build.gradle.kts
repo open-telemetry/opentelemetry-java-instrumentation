@@ -26,7 +26,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
 
-  testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
   testImplementation(project(":instrumentation-annotations-support-testing"))
   testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))
   testImplementation(project(":instrumentation-annotations"))
