@@ -15,8 +15,6 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRe
  * any time.
  */
 public final class NettyClientInstrumenterBuilderFactory {
-  private NettyClientInstrumenterBuilderFactory() {}
-
   public static DefaultHttpClientInstrumenterBuilder<NettyCommonRequest, HttpResponse> create(
       String instrumentationName, OpenTelemetry openTelemetry) {
 
@@ -26,4 +24,6 @@ public final class NettyClientInstrumenterBuilderFactory {
         new NettyHttpClientAttributesGetter(),
         new HttpRequestHeadersSetter());
   }
+
+  private NettyClientInstrumenterBuilderFactory() {}
 }
