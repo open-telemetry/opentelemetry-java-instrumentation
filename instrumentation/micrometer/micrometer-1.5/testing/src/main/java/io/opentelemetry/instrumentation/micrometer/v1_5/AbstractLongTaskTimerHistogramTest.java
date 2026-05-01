@@ -13,7 +13,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.MockClock;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -56,7 +55,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                         sum ->
                             sum.isNotMonotonic()
                                 .hasPointsSatisfying(
-                                    point -> point.hasValue(3).hasAttributes(Attributes.empty()))));
+                                    point -> point.hasValue(3).hasAttributesSatisfyingExactly())));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -71,7 +70,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                                 .hasPointsSatisfying(
                                     point ->
                                         point
-                                            .hasAttributes(Attributes.empty())
+                                            .hasAttributesSatisfyingExactly()
                                             .satisfies(
                                                 pointData ->
                                                     assertThat(pointData.getValue())
@@ -115,7 +114,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                         sum ->
                             sum.isNotMonotonic()
                                 .hasPointsSatisfying(
-                                    point -> point.hasValue(0).hasAttributes(Attributes.empty()))));
+                                    point -> point.hasValue(0).hasAttributesSatisfyingExactly())));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -128,7 +127,7 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                         sum ->
                             sum.isNotMonotonic()
                                 .hasPointsSatisfying(
-                                    point -> point.hasValue(0).hasAttributes(Attributes.empty()))));
+                                    point -> point.hasValue(0).hasAttributesSatisfyingExactly())));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
