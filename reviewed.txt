@@ -338,3 +338,12 @@ opensearch-rest-common:testing
 opentelemetry-api-1.0:javaagent
 opentelemetry-api-1.0:testing
 opentelemetry-api-1.10:javaagent
+opentelemetry-api-1.15:javaagent
+opentelemetry-api-1.27:javaagent
+opentelemetry-api-1.31:javaagent
+opentelemetry-api-1.32:javaagent
+opentelemetry-api-1.37:javaagent
+opentelemetry-api-1.38:javaagent
+opentelemetry-api-1.40:javaagent
+opentelemetry-api-1.42:javaagent
+opentelemetry-api-1.47:javaagent
