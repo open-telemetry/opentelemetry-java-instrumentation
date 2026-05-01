@@ -32,11 +32,7 @@ public abstract class AbstractLettuceClientTest {
 
   protected static final int DB_INDEX = 0;
 
-  protected static GenericContainer<?> redisServer =
-      new GenericContainer<>("redis:6.2.3-alpine")
-          .withExposedPorts(6379)
-          .withLogConsumer(new Slf4jLogConsumer(logger))
-          .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
+  protected static GenericContainer<?> redisServer = newRedisServer();
 
   protected static RedisClient redisClient;
   protected static StatefulRedisConnection<String, String> connection;
@@ -49,12 +45,15 @@ public abstract class AbstractLettuceClientTest {
 
   protected abstract InstrumentationExtension testing();
 
+  protected static GenericContainer<?> newRedisServer() {
+    return new GenericContainer<>("redis:6.2.3-alpine")
+        .withExposedPorts(6379)
+        .withLogConsumer(new Slf4jLogConsumer(logger))
+        .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
+  }
+
   protected ContainerConnection newContainerConnection() {
-    GenericContainer<?> server =
-        new GenericContainer<>("redis:6.2.3-alpine")
-            .withExposedPorts(6379)
-            .withLogConsumer(new Slf4jLogConsumer(logger))
-            .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
+    GenericContainer<?> server = newRedisServer();
     server.start();
     cleanup.deferCleanup(server::stop);
 

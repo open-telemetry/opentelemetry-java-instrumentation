@@ -38,11 +38,10 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
 
   @BeforeAll
   void setUp() throws UnknownHostException {
-    redisServer = redisServer.withCommand("redis-server", "--requirepass password");
+    redisServer = newRedisServer().withCommand("redis-server", "--requirepass", "password");
     redisServer.start();
     // Set back so other tests don't fail due to NOAUTH error.
-    cleanup.deferAfterAll(
-        () -> redisServer = redisServer.withCommand("redis-server", "--requirepass \"\""));
+    cleanup.deferAfterAll(() -> redisServer = newRedisServer());
     cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
