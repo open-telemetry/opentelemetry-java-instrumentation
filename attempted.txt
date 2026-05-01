@@ -1,2 +1,3 @@
 io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcTest.clientCallAfterServerCompleted()
 io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1.ApacheHttpAsyncClientTest
+io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTest.shouldSendTelemetry()
