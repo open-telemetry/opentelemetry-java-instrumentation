@@ -23,13 +23,8 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
-var quarkusVersion = "2.16.7.Final"
-if (otelProps.testLatestDeps) {
-  quarkusVersion = "2.16.12.Final"
-}
-
 dependencies {
-  implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:$quarkusVersion"))
+  implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:2.16.7.Final"))
   // fails with junit 5.11.+
   implementation(enforcedPlatform("org.junit:junit-bom:5.10.3"))
   implementation("io.quarkus:quarkus-resteasy-reactive")
