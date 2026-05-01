@@ -92,9 +92,13 @@ class ContextBridgeTest {
     // from GlobalOpenTelemetry
     Span span = openTelemetry.getTracer("test").spanBuilder("test").startSpan();
 
-    Context context = SpanKey.HTTP_CLIENT.storeInContext(Context.current(), span);
-    assertThat(context).isNotNull();
-    assertThat(SpanKey.HTTP_CLIENT.fromContextOrNull(context)).isEqualTo(span);
+    try {
+      Context context = SpanKey.HTTP_CLIENT.storeInContext(Context.current(), span);
+      assertThat(context).isNotNull();
+      assertThat(SpanKey.HTTP_CLIENT.fromContextOrNull(context)).isEqualTo(span);
+    } finally {
+      span.end();
+    }
   }
 
   @Test
