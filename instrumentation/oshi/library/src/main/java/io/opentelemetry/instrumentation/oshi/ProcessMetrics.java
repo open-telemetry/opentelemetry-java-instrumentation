@@ -21,8 +21,7 @@ public final class ProcessMetrics {
   private static final AttributeKey<String> TYPE_KEY = AttributeKey.stringKey("type");
 
   // getResidentSetSize() was deprecated in oshi 6.11.0 and removed in 7.0.0; the replacement
-  // getResidentMemory() was added in 6.11.0. Look up via reflection so the bytecode does not
-  // hard-reference either method, keeping muzzle happy across the supported version range.
+  // getResidentMemory() was added in 6.11.0.
   private static final Method RESIDENT_MEMORY_METHOD = findResidentMemoryMethod();
 
   private static Method findResidentMemoryMethod() {
