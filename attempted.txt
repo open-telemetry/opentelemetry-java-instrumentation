@@ -1,0 +1,1 @@
+io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcTest.clientCallAfterServerCompleted()
