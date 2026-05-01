@@ -154,6 +154,7 @@ public class TestServlet5 {
                       context.complete();
                     } else if (EXCEPTION.equals(endpoint)) {
                       resp.setStatus(endpoint.getStatus());
+                      resp.setContentLength(endpoint.getBody().length());
                       PrintWriter writer = resp.getWriter();
                       writer.print(endpoint.getBody());
                       if (req.getClass().getName().contains("catalina")) {
