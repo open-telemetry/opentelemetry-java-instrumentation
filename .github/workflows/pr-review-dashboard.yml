@@ -32,10 +32,9 @@ jobs:
 
       - name: Generate dashboard
         env:
-          # Use the otelbot app token so the script can read approver/maintainer
-          # team membership via /orgs/.../teams/.../members (the default
-          # GITHUB_TOKEN cannot read org team membership).
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # needed for reading approver team membership (org:read)
+          OTELBOT_TOKEN: ${{ steps.otelbot-token.outputs.token }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
         run: |
           python3 .github/scripts/pull-request-dashboard.py \
