@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Collections.singletonList;
-import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
@@ -34,7 +33,7 @@ class CamelTest extends TargetSystemTest {
     GenericContainer<?> target =
         new GenericContainer<>("eclipse-temurin:17.0.18_8-jre")
             .withCommand(String.format("java %s -jar /camel_test.jar", String.join(" ", jvmArgs)))
-            .waitingFor(Wait.forLogMessage(".*Camel test application started.*", 1))
+            .waitingFor(Wait.forLogMessage(".*Apache Camel .* started in .*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
 
     copyAgentToTarget(target);
@@ -44,12 +43,6 @@ class CamelTest extends TargetSystemTest {
         getArtifactPath("io.opentelemetry.cameltestapp.path"), target, "/camel_test.jar");
 
     startTarget(target);
-
-    // Wait for Camel routes, processors, and thread pools to fully initialize and register JMX
-    // MBeans. The "started" log message only indicates the application started, but MBeans for
-    // individual routes/processors may register asynchronously after that. This additional delay
-    // ensures at least one complete metrics export cycle (5s interval) after full initialization.
-    await().pollDelay(Duration.ofSeconds(10)).atMost(Duration.ofSeconds(10)).until(() -> true);
 
     verifyMetrics(createMetricsVerifier());
   }
