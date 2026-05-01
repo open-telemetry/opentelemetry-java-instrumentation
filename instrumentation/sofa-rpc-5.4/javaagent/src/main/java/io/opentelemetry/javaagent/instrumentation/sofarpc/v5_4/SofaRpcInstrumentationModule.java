@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -13,8 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilde
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -39,15 +38,10 @@ public class SofaRpcInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public void injectClasses(ClassInjector injector) {
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4.OpenTelemetryClientFilter")
-        .inject(InjectionMode.CLASS_ONLY);
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4.OpenTelemetryServerFilter")
-        .inject(InjectionMode.CLASS_ONLY);
+  public List<String> exposedClassNames() {
+    return asList(
+        "io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4.OpenTelemetryClientFilter",
+        "io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4.OpenTelemetryServerFilter");
   }
 
   @Override
