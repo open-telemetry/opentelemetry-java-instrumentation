@@ -28,30 +28,15 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceClientTest {
 
-  @BeforeAll
-  void setUp() throws UnknownHostException {
-    redisServer = newRedisServer().withCommand("redis-server", "--requirepass", "password");
-    redisServer.start();
-    // Set back so other tests don't fail due to NOAUTH error.
-    cleanup.deferAfterAll(() -> redisServer = newRedisServer());
-    cleanup.deferAfterAll(redisServer::stop);
-
-    host = redisServer.getHost();
-    ip = InetAddress.getByName(host).getHostAddress();
-    port = redisServer.getMappedPort(6379);
-    embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
-
-    redisClient = createClient(embeddedDbUri);
-    cleanup.deferAfterAll(redisClient::shutdown);
-    redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
+  @Override
+  protected GenericContainer<?> createRedisServer() {
+    return newRedisServer().withCommand("redis-server", "--requirepass", "password");
   }
 
   @Test

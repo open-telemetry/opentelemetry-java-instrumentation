@@ -25,8 +25,6 @@ import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,18 +36,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   protected static RedisReactiveCommands<String, String> reactiveCommands;
 
   @BeforeAll
-  void setUp() throws UnknownHostException {
-    redisServer.start();
-    cleanup.deferAfterAll(redisServer::stop);
-
-    host = redisServer.getHost();
-    ip = InetAddress.getByName(host).getHostAddress();
-    port = redisServer.getMappedPort(6379);
-    embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
-    redisClient = createClient(embeddedDbUri);
-    cleanup.deferAfterAll(redisClient::shutdown);
-    redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
-
+  void setUp() {
     connection = redisClient.connect();
     cleanup.deferAfterAll(connection);
     reactiveCommands = connection.reactive();

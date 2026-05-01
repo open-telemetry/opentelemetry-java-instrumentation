@@ -15,7 +15,10 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -32,7 +35,7 @@ public abstract class AbstractLettuceClientTest {
 
   protected static final int DB_INDEX = 0;
 
-  protected static GenericContainer<?> redisServer = newRedisServer();
+  protected static GenericContainer<?> redisServer;
 
   protected static RedisClient redisClient;
   protected static StatefulRedisConnection<String, String> connection;
@@ -44,6 +47,26 @@ public abstract class AbstractLettuceClientTest {
   protected abstract RedisClient createClient(String uri);
 
   protected abstract InstrumentationExtension testing();
+
+  @BeforeAll
+  void setUpRedis() throws UnknownHostException {
+    redisServer = createRedisServer();
+    redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
+
+    host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
+    port = redisServer.getMappedPort(6379);
+    embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
+
+    redisClient = createClient(embeddedDbUri);
+    cleanup.deferAfterAll(redisClient::shutdown);
+    redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
+  }
+
+  protected GenericContainer<?> createRedisServer() {
+    return newRedisServer();
+  }
 
   protected static GenericContainer<?> newRedisServer() {
     return new GenericContainer<>("redis:6.2.3-alpine")
