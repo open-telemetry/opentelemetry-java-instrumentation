@@ -279,6 +279,10 @@ class TargetSystemTest {
             });
   }
 
+  protected void resetMetrics() {
+    otlpServer.reset();
+  }
+
   /** Minimal OTLP gRPC backend to capture metrics */
   private static class OtlpGrpcServer extends ServerExtension {
 

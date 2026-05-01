@@ -9,9 +9,15 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +38,7 @@ class WildflyTest extends TargetSystemTest {
         // recent/latest to be maintained as newer versions are released
         "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
       })
-  void testWildflyMetrics(String dockerImage) {
+  void testWildflyMetrics(String dockerImage) throws IOException {
     List<String> yamlFiles = singletonList("wildfly.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
@@ -53,8 +59,42 @@ class WildflyTest extends TargetSystemTest {
     copyTestWebAppToTarget(target, "/opt/jboss/wildfly/standalone/deployments/testapp.war");
 
     startTarget(target);
+    exerciseTestApp(target, dockerImage);
+    resetMetrics();
 
     verifyMetrics(createMetricsVerifier());
+  }
+
+  private static void exerciseTestApp(GenericContainer<?> target, String dockerImage) throws IOException {
+    URL url =
+        URI.create(
+            "http://"
+                + target.getHost()
+                + ":"
+                + target.getMappedPort(WILDFLY_SERVICE_PORT)
+                + testAppPath(dockerImage))
+            .toURL();
+
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .pollInterval(Duration.ofSeconds(1))
+        .ignoreException(IOException.class)
+        .untilAsserted(() -> assertThat(getStatusCode(url)).isEqualTo(200));
+  }
+
+  private static int getStatusCode(URL url) throws IOException {
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setConnectTimeout(1_000);
+    connection.setReadTimeout(5_000);
+    try {
+      return connection.getResponseCode();
+    } finally {
+      connection.disconnect();
+    }
+  }
+
+  private static String testAppPath(String dockerImage) {
+    return dockerImage.startsWith("jboss/wildfly:") ? "/testapp/javax/" : "/testapp/jakarta/";
   }
 
   private static MetricsVerifier createMetricsVerifier() {
