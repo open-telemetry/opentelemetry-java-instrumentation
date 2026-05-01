@@ -356,7 +356,7 @@ class MeterTest {
                 .hasLongGaugeSatisfying(
                     gauge ->
                         gauge.hasPointsSatisfying(
-                            point -> point.hasValue(321).hasAttributesSatisfyingExactly(),
+                            point -> point.hasValue(321).hasAttributes(Attributes.empty()),
                             point ->
                                 point
                                     .hasValue(123)
@@ -440,7 +440,7 @@ class MeterTest {
                 .hasDoubleGaugeSatisfying(
                     gauge ->
                         gauge.hasPointsSatisfying(
-                            point -> point.hasValue(3.21).hasAttributesSatisfyingExactly(),
+                            point -> point.hasValue(3.21).hasAttributes(Attributes.empty()),
                             point ->
                                 point
                                     .hasValue(1.23)
