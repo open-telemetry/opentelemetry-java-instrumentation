@@ -2,7 +2,7 @@ name: Flaky Test Remediation
 
 on:
   schedule:
-    - cron: "0 0 * * 3"
+    - cron: "0 0 * * 3" # weekly at 00:00 UTC on Wednesday
   workflow_dispatch:
 
 permissions:

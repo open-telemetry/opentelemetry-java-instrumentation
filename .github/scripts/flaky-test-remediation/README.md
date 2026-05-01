@@ -53,6 +53,7 @@ python .github/scripts/flaky-test-remediation/run-local.py --draft    # opens a 
 ```
 
 Requires:
+
 - `git` remotes `origin` (your fork) and `upstream`
   (`open-telemetry/opentelemetry-java-instrumentation`)
 - `gh` authenticated for the upstream repo
