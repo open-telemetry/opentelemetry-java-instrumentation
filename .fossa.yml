@@ -570,7 +570,7 @@ targets:
       target: ':instrumentation:jaxws:jaxws-2.0-metro-2.2:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxws:jaxws-common:javaagent'
+      target: ':instrumentation:jaxws:jaxws-common-2.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxws:jaxws-jws-api-1.1:javaagent'
@@ -1053,7 +1053,7 @@ targets:
       target: ':instrumentation:xxl-job:xxl-job-2.3.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:xxl-job:xxl-job-common:javaagent'
+      target: ':instrumentation:xxl-job:xxl-job-common-1.9.2:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:zio:zio-2.0:javaagent'
