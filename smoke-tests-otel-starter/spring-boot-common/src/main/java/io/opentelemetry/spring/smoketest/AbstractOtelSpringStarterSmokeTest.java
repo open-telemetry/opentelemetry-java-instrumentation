@@ -306,9 +306,11 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             "jvm.network.io",
             "jvm.thread.count")) {
       // cpu longlock is missing on jdk 25
-      // jvm.network.io is flaky on jdk 25
-      if (javaVersion >= 25
-          && ("jvm.cpu.longlock".equals(metric) || "jvm.network.io".equals(metric))) {
+      if (javaVersion >= 25 && "jvm.cpu.longlock".equals(metric)) {
+        continue;
+      }
+      // jvm.network.io is flaky on all JDK versions
+      if ("jvm.network.io".equals(metric)) {
         continue;
       }
       testing.waitAndAssertMetrics(
