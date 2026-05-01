@@ -57,11 +57,8 @@ class ContextExtensionInstrumentation implements TypeInstrumentation {
         inline = false)
     public static CoroutineContext enter(
         @Advice.Argument(0) application.io.opentelemetry.context.Context applicationContext) {
-      if (applicationContext != null) {
-        Context agentContext = AgentContextStorage.getAgentContext(applicationContext);
-        return ContextExtensionsKt.asContextElement(agentContext);
-      }
-      return null;
+      Context agentContext = AgentContextStorage.getAgentContext(applicationContext);
+      return ContextExtensionsKt.asContextElement(agentContext);
     }
 
     @AssignReturned.ToReturned
@@ -84,13 +81,10 @@ class ContextExtensionInstrumentation implements TypeInstrumentation {
     public static CoroutineContext enter(
         @Advice.Argument(0)
             application.io.opentelemetry.context.ImplicitContextKeyed implicitContextKeyed) {
-      if (implicitContextKeyed != null) {
-        application.io.opentelemetry.context.Context applicationContext =
-            application.io.opentelemetry.context.Context.current().with(implicitContextKeyed);
-        Context agentContext = AgentContextStorage.getAgentContext(applicationContext);
-        return ContextExtensionsKt.asContextElement(agentContext);
-      }
-      return null;
+      application.io.opentelemetry.context.Context applicationContext =
+          application.io.opentelemetry.context.Context.current().with(implicitContextKeyed);
+      Context agentContext = AgentContextStorage.getAgentContext(applicationContext);
+      return ContextExtensionsKt.asContextElement(agentContext);
     }
 
     @AssignReturned.ToReturned
@@ -112,11 +106,8 @@ class ContextExtensionInstrumentation implements TypeInstrumentation {
         inline = false)
     public static application.io.opentelemetry.context.Context enter(
         @Advice.Argument(0) CoroutineContext coroutineContext) {
-      if (coroutineContext != null) {
-        Context agentContext = ContextExtensionsKt.getOpenTelemetryContext(coroutineContext);
-        return AgentContextStorage.toApplicationContext(agentContext);
-      }
-      return null;
+      Context agentContext = ContextExtensionsKt.getOpenTelemetryContext(coroutineContext);
+      return AgentContextStorage.toApplicationContext(agentContext);
     }
 
     @Nullable
