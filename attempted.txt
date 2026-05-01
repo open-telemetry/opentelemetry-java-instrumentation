@@ -5,3 +5,4 @@ io.opentelemetry.instrumentation.servlet.v5_0.tomcat.TomcatServlet5Test.requestW
 io.opentelemetry.instrumentation.jmx.rules.CamelTest.testCollectedMetrics()
 io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.LettuceSyncClientAuthTest.testAuthCommand()
 io.opentelemetry.instrumentation.lettuce.v5_1.LettuceSyncClientAuthTest.testAuthCommand()
+io.opentelemetry.instrumentation.servlet.v5_0.tomcat.TomcatDispatchTest.requestWithException()[1]
