@@ -2,8 +2,8 @@ name: Code Review Sweep
 
 on:
   schedule:
-    # Every 15 minutes
-    - cron: "*/15 * * * *"
+    # Hourly
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 permissions:

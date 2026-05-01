@@ -11,27 +11,30 @@ For each open non-draft PR we:
 Output: pull-request-dashboard.md (one section per PR, grouped by category).
 
 Usage:
-  python .github/scripts/pull-request-dashboard.py [--output FILE]
-                                                   [--jobs N]
-                                                   [--model NAME]
+    python .github/scripts/pull-request-dashboard.py
 """
 
 from __future__ import annotations
 
-import argparse
 import json
+import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-DEFAULT_OUTPUT = "pull-request-dashboard.md"
-DEFAULT_JOBS = 4
-DEFAULT_MODEL = "gpt-5.4-mini"
+DASHBOARD_OUTPUT = "pull-request-dashboard.md"
+DASHBOARD_TITLE = "Pull Request Dashboard"
+PARALLEL_JOBS = 4
+COPILOT_MODEL = "gpt-5.4-mini"
+CACHE_PATH = Path(tempfile.gettempdir()) / "pull-request-dashboard-cache.json"
+LOOP_MINUTES = 120
+REFRESH_INTERVAL_SECONDS = 120
 PER_PR_TIMEOUT = 180
 MAX_COMMENTS = 20
 MAX_COMMITS = 5
@@ -829,27 +832,114 @@ def render_markdown_compact(
 # ---------------------------------------------------------------- main
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--output", default=DEFAULT_OUTPUT, help=f"output file (default: {DEFAULT_OUTPUT})")
-    ap.add_argument("--jobs", type=int, default=DEFAULT_JOBS, help=f"parallel workers (default: {DEFAULT_JOBS})")
-    ap.add_argument("--model", default=DEFAULT_MODEL, help=f"copilot model (default: {DEFAULT_MODEL})")
-    args = ap.parse_args()
+def load_cache(path: Path) -> dict[int, dict[str, Any]]:
+    """Load the per-PR decision cache. Returns an empty dict on any error."""
+    if not path.exists():
+        return {}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    out: dict[int, dict[str, Any]] = {}
+    for k, v in raw.items():
+        try:
+            out[int(k)] = v
+        except (TypeError, ValueError):
+            continue
+    return out
 
-    repo = detect_repo()
-    owner, repo_name = repo.split("/", 1)
 
-    reviewers = load_reviewer_set(owner)
-    print(f"reviewer set ({len(reviewers)})", file=sys.stderr)
+def save_cache(path: Path, cache: dict[int, dict[str, Any]]) -> None:
+    try:
+        path.write_text(
+            json.dumps({str(k): v for k, v in cache.items()}, indent=2),
+            encoding="utf-8",
+        )
+    except OSError as e:
+        print(f"warning: failed to write cache to {path}: {e}", file=sys.stderr)
 
+
+def publish_dashboard_issue(title: str, body_file: Path) -> None:
+    token = os.environ.get("GH_TOKEN")
+    if not token:
+        raise RuntimeError("GH_TOKEN is not set")
+    env = {**os.environ, "GH_TOKEN": token}
+
+    number_proc = subprocess.run(
+        [
+            "gh", "issue", "list",
+            "--search", f"in:title {title}",
+            "--state", "open",
+            "--limit", "20",
+            "--json", "number,title",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
+    )
+    issues = json.loads(number_proc.stdout or "[]")
+    number = ""
+    for issue in issues:
+        if issue.get("title") == title:
+            number = str(issue.get("number") or "")
+            break
+
+    if number:
+        print(f"updating existing issue #{number}", file=sys.stderr)
+        subprocess.run(
+            ["gh", "issue", "edit", number, "--body-file", str(body_file)],
+            check=True,
+            env=env,
+        )
+    else:
+        print("creating new dashboard issue", file=sys.stderr)
+        subprocess.run(
+            ["gh", "issue", "create", "--title", title, "--body-file", str(body_file)],
+            check=True,
+            env=env,
+        )
+
+
+def generate_dashboard_once(
+    repo: str,
+    owner: str,
+    repo_name: str,
+    reviewers: set[str],
+    output: Path,
+    jobs: int,
+    model: str,
+    cache_path: Path,
+    cache: dict[int, dict[str, Any]],
+) -> dict[int, dict[str, Any]]:
     prs = list_open_prs(repo)
     drafts = [p for p in prs if p.get("isDraft")]
     non_drafts = [p for p in prs if not p.get("isDraft")]
     if drafts:
         print(f"skipping {len(drafts)} draft PR(s)", file=sys.stderr)
 
-    print(f"processing {len(non_drafts)} PR(s) in {repo} (model={args.model}, jobs={args.jobs})",
-          file=sys.stderr)
+    # Partition PRs into cache hits (skip LLM) and misses (process normally).
+    # The cache entry stores the PR's updatedAt at the time the decision was
+    # made; if it matches the current updatedAt the conversation, commits,
+    # labels, etc. have not changed and we can reuse the prior result.
+    hits: dict[int, dict[str, Any]] = {}
+    misses: list[dict[str, Any]] = []
+    for pr in non_drafts:
+        entry = cache.get(pr["number"])
+        if entry and entry.get("updatedAt") == pr.get("updatedAt") and entry.get("result"):
+            hits[pr["number"]] = entry["result"]
+        else:
+            misses.append(pr)
+
+    print(
+        f"processing {len(misses)} PR(s) in {repo} "
+        f"(cached: {len(hits)}, model={model}, jobs={jobs})",
+        file=sys.stderr,
+    )
 
     def process_one(pr: dict[str, Any]) -> dict[str, Any]:
         number = pr["number"]
@@ -876,16 +966,26 @@ def main() -> int:
             "effective_author": ctx.get("author") or "",
         }
         try:
-            r = run_llm(repo, number, context_text, args.model)
+            r = run_llm(repo, number, context_text, model)
         except subprocess.TimeoutExpired:
             return {"pr": number, "returncode": -1, "decision": None, "raw_stderr": "timeout", "facts": facts}
         r["pr"] = number
         r["facts"] = facts
         return r
 
-    results: dict[int, dict[str, Any]] = {}
-    with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        futures = {pool.submit(process_one, p): p for p in non_drafts}
+    results: dict[int, dict[str, Any]] = dict(hits)
+    new_cache: dict[int, dict[str, Any]] = {}
+    # Preserve cache hits (with their original updatedAt) so they survive
+    # iterations where the PR doesn't change.
+    for pr in non_drafts:
+        if pr["number"] in hits:
+            new_cache[pr["number"]] = {
+                "updatedAt": pr.get("updatedAt"),
+                "result": hits[pr["number"]],
+            }
+
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        futures = {pool.submit(process_one, p): p for p in misses}
         for i, fut in enumerate(as_completed(futures), 1):
             pr = futures[fut]
             try:
@@ -894,12 +994,76 @@ def main() -> int:
                 res = {"pr": pr["number"], "returncode": -1, "decision": None, "raw_stderr": repr(e)}
             results[pr["number"]] = res
             side = (res.get("decision") or {}).get("side", "?")
-            print(f"  [{i}/{len(non_drafts)}] #{pr['number']} -> {side}", file=sys.stderr)
+            print(f"  [{i}/{len(misses)}] #{pr['number']} -> {side}", file=sys.stderr)
+            # Only cache successful decisions; failures (timeouts, parse
+            # errors) should be retried on the next run.
+            if res.get("decision") and res.get("returncode") == 0:
+                new_cache[pr["number"]] = {
+                    "updatedAt": pr.get("updatedAt"),
+                    "result": res,
+                }
+
+    save_cache(cache_path, new_cache)
 
     workflow_issues = fetch_workflow_failure_issues(repo)
     md = render_markdown_compact(prs, results, workflow_issues)
-    Path(args.output).write_text(md, encoding="utf-8")
-    print(f"wrote {args.output}", file=sys.stderr)
+    output.write_text(md, encoding="utf-8")
+    print(f"wrote {output}", file=sys.stderr)
+    return new_cache
+
+
+def main() -> int:
+    if len(sys.argv) > 1:
+        if sys.argv[1:] in (["-h"], ["--help"]):
+            print(__doc__.strip())
+            return 0
+        raise SystemExit(f"unexpected arguments: {' '.join(sys.argv[1:])}")
+
+    repo = detect_repo()
+    owner, repo_name = repo.split("/", 1)
+
+    workflow_token = os.environ.get("GH_TOKEN")
+    otelbot_token = os.environ.get("OTELBOT_TOKEN")
+    if otelbot_token:
+        # The otelbot app token is only needed for org team membership and
+        # expires after about an hour. Use it only for this initial lookup.
+        os.environ["GH_TOKEN"] = otelbot_token
+    reviewers = load_reviewer_set(owner)
+    print(f"reviewer set ({len(reviewers)})", file=sys.stderr)
+    if workflow_token:
+        os.environ["GH_TOKEN"] = workflow_token
+
+    output = Path(DASHBOARD_OUTPUT)
+    cache = load_cache(CACHE_PATH)
+
+    end = time.monotonic() + (LOOP_MINUTES * 60)
+    next_run = time.monotonic()
+    iteration = 1
+
+    while True:
+        print(f"refreshing dashboard (iteration {iteration})", file=sys.stderr)
+        cache = generate_dashboard_once(
+            repo,
+            owner,
+            repo_name,
+            reviewers,
+            output,
+            PARALLEL_JOBS,
+            COPILOT_MODEL,
+            CACHE_PATH,
+            cache,
+        )
+        publish_dashboard_issue(DASHBOARD_TITLE, output)
+
+        next_run += REFRESH_INTERVAL_SECONDS
+        if next_run > end:
+            break
+
+        sleep_for = next_run - time.monotonic()
+        if sleep_for > 0:
+            time.sleep(sleep_for)
+        iteration += 1
+
     return 0
 
 

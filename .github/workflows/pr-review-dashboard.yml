@@ -2,51 +2,27 @@ name: PR dashboard
 
 on:
   schedule:
-    # hourly safety net
+    # Hourly
     - cron: "0 * * * *"
   workflow_dispatch:
-  pull_request_target:
-    types:
-      - opened
-      - reopened
-      - closed
-      - ready_for_review
-      - converted_to_draft
-      - labeled
-      - unlabeled
-      - synchronize
-      - review_requested
-      - review_request_removed
-  pull_request_review:
-    types: [submitted, dismissed, edited]
-  pull_request_review_comment:
-    types: [created]
-  issue_comment:
-    types: [created]
 
-# Debounce bursts of PR events without canceling the in-flight run: at most
-# one run executes and one is queued. If more events arrive while a run is
-# queued, the older queued run is replaced by the newer one, so events
-# coalesce instead of stacking up indefinitely.
 concurrency:
   group: pr-review-dashboard
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   update-dashboard:
-    # Skip issue_comment events that aren't on a PR (the event fires for both
-    # issues and PRs, but only PR comments affect the dashboard).
-    if: ${{ github.event_name != 'issue_comment' || github.event.issue.pull_request != null }}
     permissions:
+      checks: read
+      contents: read
       issues: write
+      pull-requests: read
     environment: protected
     runs-on: ubuntu-latest
-    env:
-      DASHBOARD_TITLE: "Pull Request Dashboard"
-      DASHBOARD_OUTPUT: pull-request-dashboard.md
+    timeout-minutes: 130
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -59,37 +35,15 @@ jobs:
       - name: Install Copilot CLI
         run: npm install -g @github/copilot
 
-      - name: Generate dashboard
+      - name: Refresh dashboard
         env:
           # Use the otelbot app token so the script can read approver/maintainer
           # team membership via /orgs/.../teams/.../members (the default
-          # GITHUB_TOKEN cannot read org team membership).
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          # GITHUB_TOKEN cannot read org team membership). After loading team
+          # membership, the script uses GH_TOKEN for the long refresh loop so
+          # the expiring app token is not needed again.
+          OTELBOT_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
         run: |
-          python3 .github/scripts/pull-request-dashboard.py \
-            --output "$DASHBOARD_OUTPUT"
-
-      - name: Update or create dashboard issue
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Find the open issue with an exact title match. The search API
-          # does not support exact phrases, so filter the results in jq.
-          number=$(gh issue list \
-            --search "in:title $DASHBOARD_TITLE" \
-            --state open \
-            --limit 20 \
-            --json number,title \
-            --jq ".[] | select(.title == \"$DASHBOARD_TITLE\") | .number" \
-            | head -1)
-
-          if [[ -n "$number" ]]; then
-            echo "Updating existing issue #$number"
-            gh issue edit "$number" --body-file "$DASHBOARD_OUTPUT"
-          else
-            echo "Creating new dashboard issue"
-            gh issue create \
-              --title "$DASHBOARD_TITLE" \
-              --body-file "$DASHBOARD_OUTPUT"
-          fi
+          python3 .github/scripts/pull-request-dashboard.py
