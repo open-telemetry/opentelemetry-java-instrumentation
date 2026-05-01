@@ -72,7 +72,6 @@ Use the **Knowledge File** column in the checklist table inside `general-rules.m
 1. Skip non-reviewable files:
    - binary files
    - files under `licenses/`
-   - `*.md` except `CHANGELOG.md`
 2. Read each changed file's full content.
 3. Scan file contents to decide which additional knowledge articles to load
    (e.g., load `javaagent-advice-patterns.md` when `@Advice` classes are in scope).
