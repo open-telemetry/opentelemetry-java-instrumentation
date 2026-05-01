@@ -104,7 +104,7 @@ public abstract class AbstractDubboRegistryTest {
   }
 
   @Test
-  void testRegistryModeServerAddress() throws ReflectiveOperationException {
+  void testRegistryModeServerAddress() throws Exception {
     int port = PortUtils.findOpenPort();
     String zkAddr = zkAddress();
 

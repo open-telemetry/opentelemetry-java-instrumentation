@@ -37,14 +37,12 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
     MethodHandle one = null;
     try {
       Method m = Cluster.class.getMethod("join", Directory.class, boolean.class);
-      m.setAccessible(true);
       two = LOOKUP.unreflect(m);
     } catch (ReflectiveOperationException ignored) {
       // Dubbo 2.7 / 3.0.0-3.0.3
     }
     try {
       Method m = Cluster.class.getMethod("join", Directory.class);
-      m.setAccessible(true);
       one = LOOKUP.unreflect(m);
     } catch (ReflectiveOperationException ignored) {
       // Dubbo 3.0.4+

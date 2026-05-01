@@ -44,7 +44,7 @@ public final class DubboRegistryUtil {
     return previous;
   }
 
-  public static void restoreCapturedRegistryAddress(@Nullable String previous) {
+  static void restoreCapturedRegistryAddress(@Nullable String previous) {
     if (previous == null) {
       CAPTURED_REGISTRY_ADDRESS.remove();
     } else {
@@ -125,7 +125,7 @@ public final class DubboRegistryUtil {
    * wraps the cluster invoker.
    */
   @Nullable
-  public static String tryExtractRegistryAddressFromDirectory(Directory<?> directory) {
+  static String tryExtractRegistryAddressFromDirectory(Directory<?> directory) {
     MethodHandle getRegistry = REGISTRY_ACCESSOR.get(directory.getClass()).orElse(null);
     if (getRegistry == null) {
       return null;
@@ -174,7 +174,6 @@ public final class DubboRegistryUtil {
   private static MethodHandle resolveMethod(Class<?> clazz, String name) {
     try {
       Method m = clazz.getMethod(name);
-      m.setAccessible(true);
       return LOOKUP.unreflect(m);
     } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
