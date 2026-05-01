@@ -47,9 +47,7 @@ public class Helpers {
 
   private Helpers() {}
 
-  /*
-  Bridges the netty instrumentation to the finagle-netty integration.
-   */
+  /** Bridges the netty instrumentation to the finagle-netty integration. */
   public static <C extends Channel> ChannelInitializer<C> wrapServer(ChannelInitializer<C> inner) {
     return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
 
@@ -86,9 +84,7 @@ public class Helpers {
     };
   }
 
-  /*
-  Bridges the netty instrumentation to the finagle-netty integration (for h2).
-   */
+  /** Bridges the netty instrumentation to the finagle-netty integration (for h2). */
   public static <C extends Channel> ChannelInitializer<C> wrapClient(ChannelInitializer<C> inner) {
     return new OpenTelemetryChannelInitializerDelegate<C>(inner) {
 
@@ -126,9 +122,7 @@ public class Helpers {
     };
   }
 
-  /*
-  Part 1/3 of bridging the otel Context from netty to finagle (for h2).
-   */
+  /** Part 1/3 of bridging the otel Context from netty to finagle (for h2). */
   public static void mutateHandlerPipeline(Channel ch) {
     ChannelHandler h1Handler = ch.pipeline().get(Netty4HttpPackageHelpers.getHttpCodecName());
     Http2StreamMessageHandler h2Handler = ch.pipeline().get(Http2StreamMessageHandler.class);
@@ -171,9 +165,7 @@ public class Helpers {
     }
   }
 
-  /*
-  Part 2/3 of bridging the otel Context from netty to finagle.
-   */
+  /** Part 2/3 of bridging the otel Context from netty to finagle. */
   public static void chainContextToFinagle(Object msg, Request request) {
     Context context = null;
     // type switch courtesy of com.twitter.finagle.netty4.http.Netty4ServerStreamTransport.read()

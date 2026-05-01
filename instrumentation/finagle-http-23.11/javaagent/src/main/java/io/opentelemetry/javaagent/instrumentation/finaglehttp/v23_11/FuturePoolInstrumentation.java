@@ -18,8 +18,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function0;
 
 /**
- * Instruments the Promise state machine so that all chains in the Futures/Fibers are
- * otel-Context-coherent.
+ * Instruments {@link com.twitter.util.ExecutorServiceFuturePool#apply} to wrap the submitted {@link
+ * Function0} so it executes under the caller's otel {@link Context}.
  */
 class FuturePoolInstrumentation implements TypeInstrumentation {
 

@@ -68,8 +68,7 @@ tasks {
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-        "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
-        "io.opentelemetry.context.enableStrictContext=true"
+        "otel.instrumentation.http.server.emit-experimental-telemetry=true"
     )
   }
 
@@ -90,8 +89,7 @@ tasks {
       "metadataConfig",
       "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
         "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
-        "otel.semconv-stability.opt-in=service.peer," +
-        "io.opentelemetry.context.enableStrictContext=true"
+        "otel.semconv-stability.opt-in=service.peer"
     )
   }
 

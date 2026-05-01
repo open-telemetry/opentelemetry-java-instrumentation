@@ -56,9 +56,7 @@ class ServerH2Test extends AbstractServerTest {
             equalTo(ProtocolSpecificEvent.SWITCHING_PROTOCOLS_TO_KEY, singletonList("h2c")));
   }
 
-  /*
-  Bonus is that this implicitly tests both the server & client h2 upgrades.
-   */
+  /* Bonus is that this implicitly tests both the server & client h2 upgrades. */
   @Test
   void h2ProtocolUpgrade() throws Exception {
     URI uri = URI.create("http://localhost:" + port + SUCCESS.getPath());
