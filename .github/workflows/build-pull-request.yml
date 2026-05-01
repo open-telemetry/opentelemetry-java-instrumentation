@@ -2,9 +2,9 @@ name: Build pull request
 
 # Optional test variants (openj9, windows) are gated by `test openj9` /
 # `test windows` labels on the PR, read from the event payload. We
-# deliberately do NOT subscribe to `pull_request: [labeled]` — see the
-# description of PR #18446 for the history of why every previous attempt
-# to use that trigger failed.
+# deliberately do NOT subscribe to `pull_request: [labeled]` — see
+# https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18446
+# for the history of why every previous attempt to use that trigger failed.
 #
 # Practical consequence: adding a `test openj9` / `test windows` label
 # doesn't retrigger the build. Push another commit or close/reopen the
