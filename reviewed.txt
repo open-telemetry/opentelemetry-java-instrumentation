@@ -316,3 +316,11 @@ nats-2.17:testing
 netty-3.8:javaagent
 netty-4.0:javaagent
 netty-4.1:javaagent
+netty-4.1:library
+netty-4.1:testing
+netty-common-4.0:javaagent
+netty-common-4.0:library
+netty-common:library
+okhttp-2.2:javaagent
+okhttp-3.0:javaagent
+okhttp-3.0:library
