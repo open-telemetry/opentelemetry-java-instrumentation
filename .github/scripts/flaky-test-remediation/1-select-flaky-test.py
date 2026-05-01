@@ -7,8 +7,8 @@ since the public ``/api/builds`` endpoint requires an access key with the
 ``DEVELOCITY_ACCESS_KEY`` does not have. The dashboard endpoints are
 unauthenticated and return JSON.
 
-Reads the skip list from ``build/flaky-fix/skip.txt`` (one fully-qualified
-test name per line) and writes ``build/flaky-fix/selected.json``.
+Reads the skip list from ``build/flaky-test-remediation/skip.txt`` (one fully-qualified
+test name per line) and writes ``build/flaky-test-remediation/selected.json``.
 """
 
 import json
@@ -37,7 +37,7 @@ RECENT_MODIFY_DAYS = 7
 def http_get_json(url, *, timeout=60):
     headers = {
         "Accept": "application/json",
-        "User-Agent": "otel-flaky-test-fix/1.0",
+        "User-Agent": "otel-flaky-test-remediation/1.0",
     }
     with urlopen(Request(url, headers=headers), timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))

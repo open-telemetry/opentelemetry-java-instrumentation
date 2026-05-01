@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Local driver for the flaky-test-fix pipeline.
+"""Local driver for the flaky-test-remediation pipeline.
 
-Mirrors ``.github/workflows/flaky-test-fix.yml`` but runs on the developer's
+Mirrors ``.github/workflows/flaky-test-remediation.yml`` but runs on the developer's
 machine. Pushes the fix branch to your fork (``origin``), opens the PR
 against ``upstream/main``, and reads/writes the progress branch on
 ``upstream`` so all attempts are tracked in one canonical place.
@@ -19,7 +19,7 @@ from pathlib import Path
 from _paths import OUT_DIR, SELECTED, SKIP
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROGRESS_BRANCH = "otelbot/flaky-test-fix-progress"
+PROGRESS_BRANCH = "otelbot/flaky-test-remediation-progress"
 FORK_REMOTE = "origin"
 UPSTREAM_REMOTE = "upstream"
 BASE_BRANCH = "main"
@@ -43,7 +43,7 @@ def stash_toolkit(start_branch, dest):
     for fname in TOOLKIT_FILES:
         blob = subprocess.check_output(
             ["git", "show",
-             f"{start_branch}:.github/scripts/flaky-test-fix/{fname}"])
+             f"{start_branch}:.github/scripts/flaky-test-remediation/{fname}"])
         (Path(dest) / fname).write_bytes(blob)
 
 
@@ -87,13 +87,13 @@ def main():
     print(f"Selected: {fq}")
     print(f"Source:   {selection['source_file']}")
 
-    with tempfile.TemporaryDirectory(prefix="flaky-fix-toolkit-") as toolkit:
+    with tempfile.TemporaryDirectory(prefix="flaky-test-remediation-toolkit-") as toolkit:
         stash_toolkit(start_branch, toolkit)
 
         # ---- step 2: branch + render prompt + Copilot fix ------------------
         slug = re.sub(r"[^A-Za-z0-9]+", "-", fq).strip("-")[:60]
         ts = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d%H%M%S")
-        branch = f"otelbot/flaky-fix-{slug}-{ts}"
+        branch = f"otelbot/flaky-test-remediation-{slug}-{ts}"
 
         print(f"==> Checking out {branch} from {UPSTREAM_REMOTE}/{BASE_BRANCH}")
         git("fetch", UPSTREAM_REMOTE, BASE_BRANCH, "--quiet")

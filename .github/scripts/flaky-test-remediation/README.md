@@ -2,7 +2,7 @@
 
 A small pipeline that picks the most-flaky JUnit test from Develocity and asks
 the Copilot CLI agent to fix it. Drives both the
-[`flaky-test-fix.yml`](../../workflows/flaky-test-fix.yml) workflow and a
+[`flaky-test-remediation.yml`](../../workflows/flaky-test-remediation.yml) workflow and a
 local equivalent.
 
 ## Pipeline
@@ -24,7 +24,7 @@ local equivalent.
                                                                        +------------------+
 ```
 
-All intermediate files live under `build/flaky-fix/` (gitignored). Paths are
+All intermediate files live under `build/flaky-test-remediation/` (gitignored). Paths are
 centralized in [`_paths.py`](_paths.py).
 
 ## Files
@@ -34,13 +34,13 @@ centralized in [`_paths.py`](_paths.py).
 | `1-select-flaky-test.py` | Hits Develocity dashboard endpoints, picks one flaky test, writes `selected.json`. |
 | `2-fix-flaky-test.py` | Renders `prompt.txt` and invokes the Copilot CLI agent to fix the test (writes `copilot-output.jsonl`, `copilot-stderr.log`, and — if Copilot follows the protocol — `diagnosis.md`). |
 | `3-open-pr.py` | Renders `pr-body.md` (incorporates `diagnosis.md` if Copilot wrote one) and opens the PR via `gh pr create`. |
-| `_paths.py` | Single source of truth for every file under `build/flaky-fix/`. |
+| `_paths.py` | Single source of truth for every file under `build/flaky-test-remediation/`. |
 | `_render.py` | Tiny formatting helpers shared by the renderers. |
 | `run-local.py` | Local driver: runs the same pipeline as CI, pushes to `origin`, opens the PR against `upstream/main`. |
 
 ## Skip list / progress tracking
 
-The orphan branch `otelbot/flaky-test-fix-progress` carries a single
+The orphan branch `otelbot/flaky-test-remediation-progress` carries a single
 `attempted.txt` file (one fully-qualified test name per line). Both the CI
 workflow and `run-local.py` read it as a skip list so we don't keep retrying
 the same test, and append to it after each successful attempt.
@@ -48,8 +48,8 @@ the same test, and append to it after each successful attempt.
 ## Local usage
 
 ```bash
-python .github/scripts/flaky-test-fix/run-local.py            # opens a PR
-python .github/scripts/flaky-test-fix/run-local.py --draft    # opens a draft
+python .github/scripts/flaky-test-remediation/run-local.py            # opens a PR
+python .github/scripts/flaky-test-remediation/run-local.py --draft    # opens a draft
 ```
 
 Requires:

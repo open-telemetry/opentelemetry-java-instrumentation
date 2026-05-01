@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Render the PR body markdown and open the PR via ``gh``.
 
-Reads ``build/flaky-fix/selected.json`` and (optionally)
-``build/flaky-fix/diagnosis.md``; writes ``build/flaky-fix/pr-body.md``;
+Reads ``build/flaky-test-remediation/selected.json`` and (optionally)
+``build/flaky-test-remediation/diagnosis.md``; writes ``build/flaky-test-remediation/pr-body.md``;
 then runs ``gh pr create``.
 
 Required env: ``PR_HEAD`` (head ref, e.g. ``branch`` for same-repo or

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Render the Copilot prompt and invoke the Copilot CLI agent.
 
-Reads ``build/flaky-fix/selected.json``, writes ``build/flaky-fix/prompt.txt``,
+Reads ``build/flaky-test-remediation/selected.json``, writes ``build/flaky-test-remediation/prompt.txt``,
 then runs ``copilot -p ...`` capturing stdout/stderr to
-``build/flaky-fix/copilot-output.jsonl`` and ``copilot-stderr.log``.
+``build/flaky-test-remediation/copilot-output.jsonl`` and ``copilot-stderr.log``.
 
 Exits with the Copilot CLI's exit code so the caller can decide whether to
 upload diagnostics and gate downstream steps.
@@ -65,7 +65,7 @@ Goals:
 Output protocol:
 - Apply the fix to the working tree (do not produce JSON output).
 - After applying the fix, write a Markdown diagnosis to
-  `build/flaky-fix/diagnosis.md` (path relative to the repo root) with these
+  `build/flaky-test-remediation/diagnosis.md` (path relative to the repo root) with these
   sections, in this order:
   1. `## Root cause` - 2-4 sentences explaining what caused the flake.
   2. `## Fix` - bullet list summarizing the code changes you made.
