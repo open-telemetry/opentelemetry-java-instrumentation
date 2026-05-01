@@ -44,7 +44,7 @@ public final class TracingSingleObserver<T> implements SingleObserver<T>, Dispos
     if (!DisposableHelper.validate(disposable, d)) {
       return;
     }
-    this.disposable = d;
+    disposable = d;
     actual.onSubscribe(this);
   }
 
