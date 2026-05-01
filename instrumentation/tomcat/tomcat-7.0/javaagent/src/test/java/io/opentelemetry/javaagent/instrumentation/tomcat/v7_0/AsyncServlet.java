@@ -62,9 +62,8 @@ class AsyncServlet extends HttpServlet {
                     PrintWriter writer = resp.getWriter();
                     writer.print(endpoint.getBody());
                     if (!testLatestDeps()) {
-                      // on tomcat close the writer to ensure response is sent immediately,
-                      // otherwise there is a chance that tomcat resets the connection before the
-                      // response is sent
+                      // Older Tomcat versions may close the connection before sending an async
+                      // response when the servlet throws after writing the response body.
                       writer.close();
                     }
                     throw new IllegalStateException(endpoint.getBody());
