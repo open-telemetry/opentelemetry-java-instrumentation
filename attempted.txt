@@ -4,3 +4,4 @@ io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTest.shouldSendTelemetry
 io.opentelemetry.instrumentation.servlet.v5_0.tomcat.TomcatServlet5Test.requestWithException()[2]
 io.opentelemetry.instrumentation.jmx.rules.CamelTest.testCollectedMetrics()
 io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.LettuceSyncClientAuthTest.testAuthCommand()
+io.opentelemetry.instrumentation.lettuce.v5_1.LettuceSyncClientAuthTest.testAuthCommand()
