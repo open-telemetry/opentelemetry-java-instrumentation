@@ -109,7 +109,7 @@ public final class LogEventMapper<T> {
       @Nullable Marker marker,
       @Nullable Throwable throwable,
       T contextData,
-      String threadName,
+      @Nullable String threadName,
       long threadId,
       Supplier<StackTraceElement> sourceSupplier,
       Context context) {
@@ -145,13 +145,11 @@ public final class LogEventMapper<T> {
       StackTraceElement source = sourceSupplier.get();
       if (source != null) {
         String fileName = source.getFileName();
-        if (fileName != null) {
-          if (emitStableCodeSemconv()) {
-            builder.setAttribute(CODE_FILE_PATH, fileName);
-          }
-          if (emitOldCodeSemconv()) {
-            builder.setAttribute(CODE_FILEPATH, fileName);
-          }
+        if (emitStableCodeSemconv()) {
+          builder.setAttribute(CODE_FILE_PATH, fileName);
+        }
+        if (emitOldCodeSemconv()) {
+          builder.setAttribute(CODE_FILEPATH, fileName);
         }
         if (emitStableCodeSemconv()) {
           builder.setAttribute(

@@ -70,7 +70,7 @@ public final class LettuceTelemetryBuilder {
                   if (response != null && response.getErrorMessage() != null) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
                   } else {
-                    SpanStatusExtractor.<LettuceRequest, LettuceResponse>getDefault()
+                    SpanStatusExtractor.getDefault()
                         .extract(spanStatusBuilder, request, response, error);
                   }
                 })

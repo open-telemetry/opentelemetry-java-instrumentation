@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.RedisClient;
-import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceSyncClientTest;
+import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceSyncClientAuthTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class LettuceSyncClientAuthTest extends AbstractLettuceSyncClientTest {
+class LettuceSyncClientAuthTest extends AbstractLettuceSyncClientAuthTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 

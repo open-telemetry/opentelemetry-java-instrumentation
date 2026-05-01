@@ -143,10 +143,10 @@ public final class KafkaInstrumenterFactory {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
-              KafkaConsumerRecordGetter.INSTANCE));
+              new KafkaConsumerRecordGetter()));
       return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else {
-      return builder.buildConsumerInstrumenter(KafkaConsumerRecordGetter.INSTANCE);
+      return builder.buildConsumerInstrumenter(new KafkaConsumerRecordGetter());
     }
   }
 
