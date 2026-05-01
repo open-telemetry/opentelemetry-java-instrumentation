@@ -60,7 +60,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.reactor-netty.connection-telemetry.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.reactor-netty.connection-telemetry.enabled=true",
+      "otel.instrumentation.netty.ssl-telemetry.enabled=true,otel.instrumentation.reactor-netty.connection-telemetry.enabled=true",
     )
   }
 
