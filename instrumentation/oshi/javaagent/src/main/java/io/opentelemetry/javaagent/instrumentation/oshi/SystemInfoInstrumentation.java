@@ -27,8 +27,7 @@ class SystemInfoInstrumentation implements TypeInstrumentation {
     // getCurrentPlatformEnum()/getCurrentPlatform() entry points, but oshi 7.0.0 removed both, so
     // we trigger registration on instantiation instead (works across all supported versions).
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArguments(0)),
-        getClass().getName() + "$ConstructAdvice");
+        isConstructor().and(takesArguments(0)), getClass().getName() + "$ConstructAdvice");
   }
 
   @SuppressWarnings("unused")
