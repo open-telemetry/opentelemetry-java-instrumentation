@@ -9,6 +9,7 @@ io.opentelemetry.instrumentation.jmx.rules.CamelTest.testCollectedMetrics()
 io.opentelemetry.javaagent.instrumentation.lettuce.v5_1.LettuceSyncClientAuthTest.testAuthCommand()
 io.opentelemetry.instrumentation.lettuce.v5_1.LettuceSyncClientAuthTest.testAuthCommand()
 io.opentelemetry.instrumentation.servlet.v5_0.tomcat.TomcatDispatchTest.requestWithException()[1]
+io.opentelemetry.instrumentation.jmx.rules.WildflyTest
 io.opentelemetry.instrumentation.jmx.rules.WildflyTest.testWildflyMetrics(String)[1]
 io.opentelemetry.instrumentation.jmx.rules.HadoopTest.testMetrics_Hadoop2x()
 io.opentelemetry.javaagent.instrumentation.vertx.rx.v3_5.server.VertxReactivePropagationTest.highConcurrency()
