@@ -450,3 +450,12 @@ servlet-5.0:jetty12-testing
 servlet-5.0:library
 servlet-5.0:testing
 servlet-5.0:tomcat-testing
+servlet-common-javax:library
+servlet-common:bootstrap
+servlet-common:javaagent
+servlet-common:library
+spark-2.3:javaagent
+spring-batch-3.0:javaagent
+spring-boot-actuator-autoconfigure-2.0:javaagent
+spring:spring-boot-autoconfigure
+spring-boot-autoconfigure:testing
