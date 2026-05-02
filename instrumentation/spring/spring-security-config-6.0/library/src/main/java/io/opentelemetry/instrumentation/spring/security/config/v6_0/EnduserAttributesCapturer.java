@@ -82,7 +82,7 @@ public final class EnduserAttributesCapturer {
       StringBuilder scopeBuilder = null;
       if (enduserRoleEnabled || enduserScopeEnabled) {
         for (GrantedAuthority authority : authentication.getAuthorities()) {
-          @Nullable String authorityString = authority.getAuthority();
+          String authorityString = authority.getAuthority();
           if (authorityString == null) {
             continue;
           }

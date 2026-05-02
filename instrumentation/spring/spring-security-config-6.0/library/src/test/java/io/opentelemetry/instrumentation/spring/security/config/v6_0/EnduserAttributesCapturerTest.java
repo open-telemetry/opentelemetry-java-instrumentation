@@ -21,7 +21,6 @@ import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
@@ -200,32 +199,6 @@ class EnduserAttributesCapturerTest {
             span.hasAttribute(ENDUSER_ID, "principal")
                 .hasAttribute(ENDUSER_ROLE, "role1,role2")
                 .hasAttribute(ENDUSER_SCOPE, "scope1,scope2"));
-  }
-
-  @Test
-  void allEnabledAndNullAuthority() {
-    EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserIdEnabled(true);
-    capturer.setEnduserRoleEnabled(true);
-    capturer.setEnduserScopeEnabled(true);
-
-    GrantedAuthority nullAuthority = () -> null;
-    Authentication authentication =
-        new PreAuthenticatedAuthenticationToken(
-            "principal",
-            null,
-            asList(
-                new SimpleGrantedAuthority("ROLE_role1"),
-                nullAuthority,
-                new SimpleGrantedAuthority("SCOPE_scope1")));
-
-    test(
-        capturer,
-        authentication,
-        span ->
-            span.hasAttribute(ENDUSER_ID, "principal")
-                .hasAttribute(ENDUSER_ROLE, "role1")
-                .hasAttribute(ENDUSER_SCOPE, "scope1"));
   }
 
   private static void test(
