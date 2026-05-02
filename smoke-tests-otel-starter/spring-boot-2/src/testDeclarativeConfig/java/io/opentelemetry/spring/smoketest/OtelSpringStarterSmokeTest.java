@@ -11,6 +11,8 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_INSTANCE_ID;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
 import io.opentelemetry.api.trace.SpanKind;
 import org.assertj.core.api.AbstractCharSequenceAssert;
@@ -72,7 +74,10 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
                                         satisfies(
                                             SERVICE_INSTANCE_ID,
                                             AbstractCharSequenceAssert::isNotBlank)))
-                        .hasAttribute(HTTP_ROUTE, "/ping"),
+                        .hasAttribute(HTTP_ROUTE, "/ping")
+                        .hasAttributesSatisfying(
+                            satisfies(THREAD_ID, val -> val.isNotZero()),
+                            satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 AbstractSpringStarterSmokeTest::withSpanAssert));
   }
 }
