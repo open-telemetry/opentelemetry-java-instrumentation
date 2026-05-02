@@ -6,13 +6,14 @@
 package io.opentelemetry.instrumentation.viburdbcp;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import javax.sql.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import org.vibur.dbcp.ViburDBCPDataSource;
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractViburInstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
+  private static final Duration EXPORTER_INTERVAL = Duration.ofMillis(100);
 
   @Mock private DataSource dataSourceMock;
   @Mock private Connection connectionMock;
@@ -35,7 +37,7 @@ public abstract class AbstractViburInstrumentationTest {
   protected abstract void shutdown(ViburDBCPDataSource viburDataSource);
 
   @Test
-  void shouldReportMetrics() throws SQLException, InterruptedException {
+  void shouldReportMetrics() throws SQLException {
     // given
     when(dataSourceMock.getConnection()).thenReturn(connectionMock);
 
@@ -47,7 +49,7 @@ public abstract class AbstractViburInstrumentationTest {
 
     // when
     Connection viburConnection = viburDataSource.getConnection();
-    MILLISECONDS.sleep(100);
+    await().pollDelay(EXPORTER_INTERVAL).until(() -> true);
     viburConnection.close();
 
     // then
@@ -68,9 +70,9 @@ public abstract class AbstractViburInstrumentationTest {
     shutdown(viburDataSource);
 
     // sleep exporter interval
-    Thread.sleep(100);
+    await().pollDelay(EXPORTER_INTERVAL).until(() -> true);
     testing().clearData();
-    Thread.sleep(100);
+    await().pollDelay(EXPORTER_INTERVAL).until(() -> true);
 
     // then
     String countMetricName =
