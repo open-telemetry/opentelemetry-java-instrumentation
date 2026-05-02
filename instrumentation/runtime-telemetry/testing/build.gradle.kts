@@ -25,17 +25,12 @@ tasks.war {
   }
 }
 
-tasks.named("test") {
-  dependsOn(tasks.getByName("war"))
-}
-
-tasks {
-  withType<Test>().configureEach {
-    environment(
-      mapOf(
-        // Expose dummy app war location to test
-        "DUMMY_APP_WAR" to "${layout.buildDirectory.asFile.get()}/libs/app.war"
-      )
+tasks.test {
+  dependsOn(tasks.war)
+  environment(
+    mapOf(
+      // Expose dummy app war location to test
+      "DUMMY_APP_WAR" to "${layout.buildDirectory.asFile.get()}/libs/app.war"
     )
-  }
+  )
 }

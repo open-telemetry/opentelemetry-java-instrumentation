@@ -59,6 +59,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+    systemProperty("metadataConfig", "otel.instrumentation.http.server.emit-experimental-telemetry=true")
   }
 
   val testStableSemconv by registering(Test::class) {

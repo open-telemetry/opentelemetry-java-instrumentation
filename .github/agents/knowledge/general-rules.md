@@ -105,7 +105,8 @@ Reason about visibility from "what does the advice method directly reference?".
 ## [Style] `@SuppressWarnings` Usage
 
 - Place `@SuppressWarnings` on the single member that needs it, or on the class when two
-  or more members in the class need the same suppression.
+  or more members in the class need the same suppression. Do not move an existing
+  suppression from a member to the class unless multiple members need it.
 - **Do not add `@SuppressWarnings("deprecation")` unless the build fails without it.**
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually

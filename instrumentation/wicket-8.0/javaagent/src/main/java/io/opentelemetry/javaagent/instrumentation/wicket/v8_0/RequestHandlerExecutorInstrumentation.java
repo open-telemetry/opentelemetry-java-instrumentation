@@ -18,6 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.wicket.core.request.handler.IPageClassRequestHandler;
 import org.apache.wicket.request.IRequestHandler;
+import org.apache.wicket.request.handler.resource.ResourceReferenceRequestHandler;
 
 class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
 
@@ -44,6 +45,13 @@ class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
             CONTROLLER,
             WicketServerSpanNaming.getServerSpanName(),
             (IPageClassRequestHandler) handler);
+      }
+      if (handler instanceof ResourceReferenceRequestHandler) {
+        HttpServerRoute.update(
+            Java8BytecodeBridge.currentContext(),
+            CONTROLLER,
+            WicketServerSpanNaming.getServerSpanNameResource(),
+            (ResourceReferenceRequestHandler) handler);
       }
     }
   }

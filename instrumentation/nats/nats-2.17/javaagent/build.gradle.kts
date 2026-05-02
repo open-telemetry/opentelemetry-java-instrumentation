@@ -7,7 +7,6 @@ muzzle {
     group.set("io.nats")
     module.set("jnats")
     versions.set("[2.17.2,)")
-
     assertInverse.set(true)
   }
 }
@@ -20,7 +19,7 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }

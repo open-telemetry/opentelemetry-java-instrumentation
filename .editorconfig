@@ -761,3 +761,7 @@ ij_properties_spaces_around_key_value_delimiter = false
 [{*.yaml, *.yml}]
 ij_yaml_keep_indents_on_empty_lines = false
 ij_yaml_keep_line_breaks = true
+
+[*.md]
+# Markdown line length is handled by rumdl
+max_line_length = off

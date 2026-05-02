@@ -21,7 +21,7 @@ public abstract class AbstractR2DbcInstrumentationAutoConfigurationTest {
 
   protected abstract AutoConfigurations autoConfigurations();
 
-  protected final ApplicationContextRunner contextRunner =
+  private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withConfiguration(autoConfigurations())
           .withBean("openTelemetry", OpenTelemetry.class, testing()::getOpenTelemetry);

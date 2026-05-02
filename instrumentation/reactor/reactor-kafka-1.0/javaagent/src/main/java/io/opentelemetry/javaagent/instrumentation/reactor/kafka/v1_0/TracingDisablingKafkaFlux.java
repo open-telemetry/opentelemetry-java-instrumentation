@@ -51,11 +51,11 @@ public class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
     @Override
     public void onNext(T record) {
-      boolean previous = KafkaClientsConsumerProcessTracing.setEnabled(false);
+      boolean previous = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
       try {
         actual.onNext(record);
       } finally {
-        KafkaClientsConsumerProcessTracing.setEnabled(previous);
+        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previous);
       }
     }
 

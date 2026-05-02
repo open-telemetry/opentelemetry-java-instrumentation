@@ -347,7 +347,7 @@ class SessionTest extends AbstractHibernateTest {
                         span, trace.getSpan(0), "Transaction.commit", sessionId1.get()),
                 span -> assertClientSpan(span, trace.getSpan(6), "INSERT")));
 
-    if (ExperimentalTestHelper.isEnabled) {
+    if (ExperimentalTestHelper.EXPERIMENTAL_ATTRIBUTES) {
       assertThat(sessionId2.get()).isNotEqualTo(sessionId1.get());
       assertThat(sessionId3.get()).isNotEqualTo(sessionId2.get());
       assertThat(sessionId3.get()).isNotEqualTo(sessionId1.get());

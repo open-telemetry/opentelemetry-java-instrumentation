@@ -51,7 +51,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 abstract class AbstractJms3Test {
-  static final Logger logger = LoggerFactory.getLogger(AbstractJms3Test.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractJms3Test.class);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

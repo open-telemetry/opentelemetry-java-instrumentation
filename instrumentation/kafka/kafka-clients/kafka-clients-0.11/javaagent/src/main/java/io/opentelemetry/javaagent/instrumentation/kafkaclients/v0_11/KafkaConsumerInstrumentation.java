@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTra
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -58,8 +59,8 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?, ?> consumer,
-        @Advice.Return ConsumerRecords<?, ?> records,
-        @Advice.Thrown Throwable error) {
+        @Advice.Return @Nullable ConsumerRecords<?, ?> records,
+        @Advice.Thrown @Nullable Throwable error) {
 
       // don't create spans when no records were received
       if (records == null || records.isEmpty()) {
@@ -70,7 +71,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too
-      boolean previousValue = KafkaClientsConsumerProcessTracing.setEnabled(false);
+      boolean previousValue = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
       try {
         Context context = null;
         if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
@@ -97,7 +98,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
           KafkaConsumerContextUtil.set(record, context, consumer);
         }
       } finally {
-        KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
+        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
       }
     }
   }

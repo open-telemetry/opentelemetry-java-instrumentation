@@ -18,8 +18,8 @@ import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndP
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseDbRequest;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseScope;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseScope;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;

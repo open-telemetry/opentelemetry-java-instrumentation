@@ -20,6 +20,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.Experimental;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.r2dbc.proxy.ProxyConnectionFactory;
@@ -32,7 +33,6 @@ import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,6 +49,8 @@ class SqlCommenterTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static final ContextPropagationOperator tracingOperator =
       ContextPropagationOperator.create();
 
@@ -62,6 +64,7 @@ class SqlCommenterTest {
   @BeforeAll
   static void setup() {
     tracingOperator.registerOnEachOperator();
+    cleanup.deferAfterAll(tracingOperator::resetOnEachOperator);
 
     container =
         new GenericContainer<>("mariadb:10.3.6")
@@ -72,15 +75,10 @@ class SqlCommenterTest {
             .withExposedPorts(3306)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
+    cleanup.deferAfterAll(container::stop);
 
     container.start();
     port = container.getMappedPort(3306);
-  }
-
-  @AfterAll
-  static void stop() {
-    container.stop();
-    tracingOperator.resetOnEachOperator();
   }
 
   @ParameterizedTest

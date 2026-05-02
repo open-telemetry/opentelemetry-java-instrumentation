@@ -10,15 +10,16 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.boot.SpringApplication;
@@ -36,6 +37,8 @@ import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
 
 abstract class AbstractSpringIntegrationTracingTest {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private final InstrumentationExtension testing;
 
@@ -61,13 +64,7 @@ abstract class AbstractSpringIntegrationTracingTest {
     springApplication.setDefaultProperties(
         singletonMap("spring.main.web-application-type", "none"));
     applicationContext = springApplication.run();
-  }
-
-  @AfterEach
-  void tearDown() {
-    if (applicationContext != null) {
-      applicationContext.close();
-    }
+    cleanup.deferCleanup(applicationContext);
   }
 
   @ParameterizedTest

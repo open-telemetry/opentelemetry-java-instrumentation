@@ -82,7 +82,7 @@ public final class UrlParsingUtils {
                   : null;
           queryPairs.put(key, value);
         }
-      } catch (UnsupportedEncodingException e) {
+      } catch (UnsupportedEncodingException ignored) {
         // Ignore.
       }
     }
