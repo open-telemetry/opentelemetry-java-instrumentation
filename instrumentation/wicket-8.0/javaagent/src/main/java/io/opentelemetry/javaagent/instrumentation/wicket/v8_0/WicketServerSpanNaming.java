@@ -34,11 +34,11 @@ public class WicketServerSpanNaming {
             return ServletContextPath.prepend(context, filterPath + "/" + resourceName);
           };
 
-  public static HttpServerRouteGetter<IPageClassRequestHandler> getServerSpanName() {
+  public static HttpServerRouteGetter<IPageClassRequestHandler> serverSpanName() {
     return serverSpanName;
   }
 
-  public static HttpServerRouteGetter<ResourceReferenceRequestHandler> getServerSpanNameResource() {
+  public static HttpServerRouteGetter<ResourceReferenceRequestHandler> serverSpanNameResource() {
     return serverSpanNameResource;
   }
 
