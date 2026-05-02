@@ -46,7 +46,7 @@ public class BedrockRuntimeInstrumentationModule extends AbstractAwsSdkInstrumen
 
   @SuppressWarnings("unused")
   public static class RegisterAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(inline = false)
     public static void onExit() {
       // (indirectly) using BedrockRuntimeImpl class here to make sure it is available from
       // BedrockRuntimeAccess (injected into app classloader) and checked by Muzzle

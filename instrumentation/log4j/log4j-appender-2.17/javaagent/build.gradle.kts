@@ -16,8 +16,6 @@ dependencies {
 
   library("org.apache.logging.log4j:log4j-core:2.0")
 
-  compileOnly(project(":javaagent-bootstrap"))
-
   implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
 
   testImplementation(project(":instrumentation:log4j:log4j-appender-2.17:testing"))

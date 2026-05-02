@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -31,7 +32,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.config.ApplicationConfig;
@@ -187,7 +187,7 @@ public abstract class AbstractDubboTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                    hasServicePeerName() && testLatestDeps()
                                         ? "test-peer-service"
                                         : null),
                                 satisfies(
@@ -280,8 +280,7 @@ public abstract class AbstractDubboTest {
   }
 
   @Test
-  void testApacheDubboTest()
-      throws ExecutionException, InterruptedException, ReflectiveOperationException {
+  void testApacheDubboTest() throws ReflectiveOperationException {
     int port = PortUtils.findOpenPort();
     protocolConfig.setPort(port);
 
@@ -315,7 +314,7 @@ public abstract class AbstractDubboTest {
                 genericService.$invokeAsync(
                     "hello", new String[] {String.class.getName()}, new Object[] {"hello"}));
 
-    assertThat(response.get()).isEqualTo("hello");
+    assertThat(response.join()).isEqualTo("hello");
 
     testing()
         .waitAndAssertTraces(
@@ -372,7 +371,7 @@ public abstract class AbstractDubboTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                    hasServicePeerName() && testLatestDeps()
                                         ? "test-peer-service"
                                         : null),
                                 satisfies(
@@ -486,7 +485,7 @@ public abstract class AbstractDubboTest {
 
   static void assertLatestDeps(
       AbstractAssert<?, ?> assertion, Consumer<AbstractAssert<?, ?>> action) {
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       action.accept(assertion);
     } else {
       assertion.isNull();

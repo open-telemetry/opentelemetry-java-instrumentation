@@ -7,16 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.finatra.v2_9;
 
 import javax.annotation.Nullable;
 
-public class FinatraRequest {
+class FinatraRequest {
   private final Class<?> controllerClass;
   @Nullable private final Class<?> declaringClass;
   @Nullable private final String methodName;
 
-  public static FinatraRequest create(Class<?> controllerClass) {
+  static FinatraRequest create(Class<?> controllerClass) {
     return new FinatraRequest(controllerClass, null, null);
   }
 
-  public static FinatraRequest create(
+  static FinatraRequest create(
       Class<?> controllerClass, @Nullable Class<?> declaringClass, @Nullable String methodName) {
     return new FinatraRequest(controllerClass, declaringClass, methodName);
   }
@@ -28,17 +28,17 @@ public class FinatraRequest {
     this.methodName = methodName;
   }
 
-  public Class<?> controllerClass() {
+  Class<?> controllerClass() {
     return controllerClass;
   }
 
   @Nullable
-  public Class<?> declaringClass() {
+  Class<?> declaringClass() {
     return declaringClass;
   }
 
   @Nullable
-  public String methodName() {
+  String methodName() {
     return methodName;
   }
 }

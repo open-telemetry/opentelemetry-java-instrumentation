@@ -66,7 +66,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
   }
 
   @Test
-  void handlerTraced() throws Exception {
+  void handlerTraced() throws IOException {
     String content =
         "{"
             + "\"headers\" : {"

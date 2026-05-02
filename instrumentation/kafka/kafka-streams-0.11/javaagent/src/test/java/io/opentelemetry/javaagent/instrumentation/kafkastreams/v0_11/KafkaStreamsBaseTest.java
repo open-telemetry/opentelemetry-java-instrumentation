@@ -12,10 +12,10 @@ import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
@@ -38,7 +38,6 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -50,8 +49,8 @@ abstract class KafkaStreamsBaseTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
-      AttributeKey.stringKey("messaging.client_id");
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   protected static final String STREAM_PENDING = "test.pending";
   protected static final String STREAM_PROCESSED = "test.processed";
 
@@ -60,7 +59,7 @@ abstract class KafkaStreamsBaseTest {
   static Consumer<Integer, String> consumer;
   static CountDownLatch consumerReady = new CountDownLatch(1);
 
-  protected static final boolean isExperimental =
+  protected static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
   @BeforeAll
@@ -71,6 +70,7 @@ abstract class KafkaStreamsBaseTest {
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
+    cleanup.deferAfterAll(kafka::stop);
 
     // create test topic
     try (AdminClient adminClient =
@@ -85,6 +85,7 @@ abstract class KafkaStreamsBaseTest {
     }
 
     producer = new KafkaProducer<>(producerProps(kafka.getBootstrapServers()));
+    cleanup.deferAfterAll(producer);
 
     Map<String, Object> consumerProps =
         ImmutableMap.of(
@@ -103,6 +104,7 @@ abstract class KafkaStreamsBaseTest {
             "value.deserializer",
             StringDeserializer.class);
     consumer = new KafkaConsumer<>(consumerProps);
+    cleanup.deferAfterAll(consumer);
     consumer.subscribe(
         singleton(STREAM_PROCESSED),
         new ConsumerRebalanceListener() {
@@ -114,13 +116,6 @@ abstract class KafkaStreamsBaseTest {
             consumerReady.countDown();
           }
         });
-  }
-
-  @AfterAll
-  static void cleanup() {
-    consumer.close();
-    producer.close();
-    kafka.stop();
   }
 
   static Map<String, Object> producerProps(String servers) {

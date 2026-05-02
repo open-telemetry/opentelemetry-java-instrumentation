@@ -37,7 +37,7 @@ class GradleParserTest {
         """
             muzzle {
               pass {
-                coreJdk()
+                coreJdk.set(true)
               }
             }
             """;
@@ -54,7 +54,7 @@ class GradleParserTest {
         """
           muzzle {
             pass {
-              coreJdk()
+              coreJdk.set(true)
             }
           }
 
@@ -76,7 +76,7 @@ class GradleParserTest {
         """
           muzzle {
             pass {
-              coreJdk()
+              coreJdk.set(true)
             }
           }
 

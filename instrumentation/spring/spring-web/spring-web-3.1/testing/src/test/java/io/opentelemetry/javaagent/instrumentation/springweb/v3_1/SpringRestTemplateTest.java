@@ -26,10 +26,11 @@ import org.springframework.web.client.RestTemplate;
 class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  private static final InstrumentationExtension testing =
+      HttpClientInstrumentationExtension.forAgent();
 
-  static final RestTemplate restTemplate = buildClient(false);
-  static final RestTemplate restTemplateWithReadTimeout = buildClient(true);
+  private static final RestTemplate restTemplate = buildClient(false);
+  private static final RestTemplate restTemplateWithReadTimeout = buildClient(true);
 
   private static RestTemplate buildClient(boolean readTimeout) {
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();

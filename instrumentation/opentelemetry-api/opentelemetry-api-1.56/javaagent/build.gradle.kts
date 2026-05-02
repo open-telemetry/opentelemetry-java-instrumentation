@@ -25,7 +25,7 @@ configurations.configureEach {
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs(
     "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
   )

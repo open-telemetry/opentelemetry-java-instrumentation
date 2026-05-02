@@ -61,8 +61,11 @@ class ElasticsearchEndpointMapTest {
     for (ElasticsearchEndpointDefinition esEndpointDefinition :
         ElasticsearchEndpointMap.getAllEndpoints()) {
       String endpointId = esEndpointDefinition.getEndpointName();
-      assertThat(SEARCH_ENDPOINTS.contains(endpointId))
-          .isEqualTo(esEndpointDefinition.isSearchEndpoint());
+      if (esEndpointDefinition.isSearchEndpoint()) {
+        assertThat(SEARCH_ENDPOINTS).contains(endpointId);
+      } else {
+        assertThat(SEARCH_ENDPOINTS).doesNotContain(endpointId);
+      }
     }
   }
 
@@ -82,7 +85,7 @@ class ElasticsearchEndpointMapTest {
         Map<String, String> expectedMap = new HashMap<>();
         pathParts.forEach(part -> expectedMap.put(part, part));
 
-        assertThat(expectedMap).isEqualTo(observedParams);
+        assertThat(observedParams).isEqualTo(expectedMap);
       }
     }
   }
@@ -94,7 +97,7 @@ class ElasticsearchEndpointMapTest {
     esEndpoint.processPathParts(
         "/test-index-1,test-index-2/_search", (k, v) -> observedParams.put(k, v));
 
-    assertThat(observedParams.get("index")).isEqualTo("test-index-1,test-index-2");
+    assertThat(observedParams).containsEntry("index", "test-index-1,test-index-2");
   }
 
   @Test

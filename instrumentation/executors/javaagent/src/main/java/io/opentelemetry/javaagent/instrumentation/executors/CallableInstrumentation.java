@@ -32,7 +32,7 @@ class CallableInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("call").and(takesArguments(0)).and(isPublic()),
-        CallableInstrumentation.class.getName() + "$CallableAdvice");
+        getClass().getName() + "$CallableAdvice");
   }
 
   @SuppressWarnings("unused")

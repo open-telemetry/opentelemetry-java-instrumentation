@@ -23,7 +23,7 @@ public abstract class AbstractRestClientInstrumentationAutoConfigurationTest {
 
   protected abstract ClientHttpRequestInterceptor getInterceptor(OpenTelemetry openTelemetry);
 
-  protected final ApplicationContextRunner contextRunner =
+  private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withBean(RestClient.class, RestClient::create)
@@ -66,9 +66,7 @@ public abstract class AbstractRestClientInstrumentationAutoConfigurationTest {
   void instrumentationDisabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=false")
-        .run(
-            context ->
-                assertThat(context.containsBean("otelRestClientBeanPostProcessor")).isFalse());
+        .run(context -> assertThat(context).doesNotHaveBean("otelRestClientBeanPostProcessor"));
   }
 
   @Test
@@ -105,17 +103,14 @@ public abstract class AbstractRestClientInstrumentationAutoConfigurationTest {
               processed
                   .mutate()
                   .requestInterceptors(
-                      interceptors -> {
-                        long count =
-                            interceptors.stream()
-                                .filter(
-                                    rti ->
-                                        rti.getClass()
-                                            .getName()
-                                            .startsWith("io.opentelemetry.instrumentation"))
-                                .count();
-                        assertThat(count).isEqualTo(1);
-                      });
+                      interceptors ->
+                          assertThat(interceptors)
+                              .filteredOn(
+                                  rti ->
+                                      rti.getClass()
+                                          .getName()
+                                          .startsWith("io.opentelemetry.instrumentation"))
+                              .hasSize(1));
             });
   }
 }

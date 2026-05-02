@@ -8,6 +8,7 @@ semantic_conventions:
 library_link: https://github.com/couchbase/spymemcached
 configurations:
   - name: otel.instrumentation.spymemcached.experimental-span-attributes
+    declarative_name: java.spymemcached.experimental_span_attributes/development
     description: >
       Enables experimental span attributes `spymemcached.result` and
       `spymemcached.command.cancelled`.

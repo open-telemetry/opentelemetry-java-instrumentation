@@ -64,7 +64,7 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
 
   @Nullable
   static Series<?> getHeaders(@Nullable Message carrier) {
-    if (GET_ATTRIBUTES == null) {
+    if (carrier == null || GET_ATTRIBUTES == null) {
       return null;
     }
     try {

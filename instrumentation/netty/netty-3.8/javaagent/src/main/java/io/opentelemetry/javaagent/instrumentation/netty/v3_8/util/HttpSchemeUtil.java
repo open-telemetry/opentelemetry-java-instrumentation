@@ -11,6 +11,7 @@ import org.jboss.netty.channel.ChannelHandler;
 
 public class HttpSchemeUtil {
 
+  @Nullable
   private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
 
   @Nullable

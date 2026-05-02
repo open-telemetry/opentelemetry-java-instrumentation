@@ -7,12 +7,14 @@ package io.opentelemetry.instrumentation.spring.resources;
 
 import static java.util.logging.Level.FINER;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 class SystemHelper {
   private static final Logger logger = Logger.getLogger(SystemHelper.class.getName());
@@ -30,25 +32,38 @@ class SystemHelper {
     }
   }
 
+  @Nullable
   String getenv(String name) {
     return System.getenv(name);
   }
 
+  @Nullable
   String getProperty(String key) {
     return System.getProperty(key);
   }
 
+  /**
+   * Opens a classpath resource that lives alongside the application's classes. In Spring Boot
+   * bootJar layouts the application classes live under {@code BOOT-INF/classes/}, so the prefix is
+   * applied when that layout is detected.
+   */
+  @Nullable
   InputStream openClasspathResource(String filename) {
     String path = addBootInfPrefix ? "BOOT-INF/classes/" + filename : filename;
     return classLoader.getResourceAsStream(path);
   }
 
-  InputStream openClasspathResource(String directory, String filename) {
-    String path = directory + "/" + filename;
+  /**
+   * Opens a classpath resource that always lives at the jar root, regardless of bootJar layout.
+   * This is used for things like {@code META-INF/build-info.properties}, which Spring Boot places
+   * at the jar root rather than under {@code BOOT-INF/classes/}.
+   */
+  @Nullable
+  InputStream openJarRootResource(String path) {
     return classLoader.getResourceAsStream(path);
   }
 
-  InputStream openFile(String filename) throws Exception {
+  InputStream openFile(String filename) throws IOException {
     return Files.newInputStream(Paths.get(filename));
   }
 
@@ -57,7 +72,7 @@ class SystemHelper {
    * main method arguments). Will only succeed on java 9+.
    */
   @SuppressWarnings("unchecked")
-  String[] attemptGetCommandLineArgsViaReflection() throws Exception {
+  String[] attemptGetCommandLineArgsViaReflection() throws ReflectiveOperationException {
     Class<?> clazz = Class.forName("java.lang.ProcessHandle");
     Method currentMethod = clazz.getDeclaredMethod("current");
     Method infoMethod = clazz.getDeclaredMethod("info");

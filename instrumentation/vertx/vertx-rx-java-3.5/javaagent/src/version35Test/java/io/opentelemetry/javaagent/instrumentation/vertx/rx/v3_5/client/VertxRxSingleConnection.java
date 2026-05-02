@@ -23,7 +23,7 @@ class VertxRxSingleConnection implements SingleConnection {
   private final String host;
   private final int port;
 
-  public VertxRxSingleConnection(String host, int port) {
+  VertxRxSingleConnection(String host, int port) {
     this.host = host;
     this.port = port;
 

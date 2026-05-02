@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.testing;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -59,14 +60,14 @@ public abstract class AbstractPreparedStatementParametersTest {
     return connection;
   }
 
-  private static final String databaseName = "jdbcUnitTest";
-  private static final String databaseNameLower = databaseName.toLowerCase(Locale.ROOT);
+  private static final String DATABASE_NAME = "jdbcUnitTest";
+  private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
 
   private static final Map<String, String> jdbcUrls =
       ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + databaseName,
-          "derby", "jdbc:derby:memory:" + databaseName,
-          "hsqldb", "jdbc:hsqldb:mem:" + databaseName);
+          "h2", "jdbc:h2:mem:" + DATABASE_NAME,
+          "derby", "jdbc:derby:memory:" + DATABASE_NAME,
+          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
   private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
   private static final Properties connectionProps = new Properties();
 
@@ -88,7 +89,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
@@ -374,7 +375,7 @@ public abstract class AbstractPreparedStatementParametersTest {
       String table)
       throws SQLException {
     // we are using old database drivers that don't support the tested setObject method
-    Assumptions.assumeTrue(Boolean.getBoolean("testLatestDeps"));
+    Assumptions.assumeTrue(testLatestDeps());
 
     test(
         system,
@@ -625,7 +626,7 @@ public abstract class AbstractPreparedStatementParametersTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),

@@ -12,6 +12,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
+import io.opentelemetry.javaagent.tooling.muzzle.AdviceInspector;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
@@ -36,6 +37,7 @@ import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
 import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.pool.TypePool;
 import org.objectweb.asm.ClassVisitor;
@@ -58,6 +60,8 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
   private static final String MUZZLE_REFERENCES_METHOD_NAME = "getMuzzleReferences";
   private static final String MUZZLE_HELPER_CLASSES_METHOD_NAME = "getMuzzleHelperClassNames";
   private static final String MUZZLE_VIRTUAL_FIELDS_METHOD_NAME = "registerMuzzleVirtualFields";
+  private static final String MUZZLE_USE_ISOLATED_HELPER_CLASSES_METHOD_NAME =
+      "getMuzzleUseIsolatedHelperClasses";
   private final URLClassLoader classLoader;
 
   public MuzzleCodeGenerator(URLClassLoader classLoader) {
@@ -99,6 +103,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
     private boolean generateReferencesMethod = true;
     private boolean generateHelperClassNamesMethod = true;
     private boolean generateVirtualFieldsMethod = true;
+    private boolean generateUseIsolatedHelperClassesMethod = true;
 
     GenerateMuzzleMethodsAndFields(ClassVisitor classVisitor, URLClassLoader classLoader) {
       super(AsmApi.VERSION, classVisitor);
@@ -154,6 +159,10 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
         generateVirtualFieldsMethod = false;
         logMethodAlreadyExistsMessage(MUZZLE_VIRTUAL_FIELDS_METHOD_NAME);
       }
+      if (MUZZLE_USE_ISOLATED_HELPER_CLASSES_METHOD_NAME.equals(name)) {
+        generateUseIsolatedHelperClassesMethod = false;
+        logMethodAlreadyExistsMessage(MUZZLE_USE_ISOLATED_HELPER_CLASSES_METHOD_NAME);
+      }
       return super.visitMethod(access, name, descriptor, signature, exceptions);
     }
 
@@ -169,7 +178,8 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
     @Override
     public void visitEnd() {
-      ReferenceCollector collector = collectReferences();
+      AdviceClassNameCollector adviceClassNames = collectAdviceClassNames();
+      ReferenceCollector collector = collectReferences(adviceClassNames);
       if (generateReferencesMethod) {
         generateMuzzleReferencesMethod(collector);
       }
@@ -179,10 +189,13 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       if (generateVirtualFieldsMethod) {
         generateMuzzleVirtualFieldsMethod(collector);
       }
+      if (generateUseIsolatedHelperClassesMethod) {
+        generateMuzzleUseIsolatedHelperClassesMethod(adviceClassNames);
+      }
       super.visitEnd();
     }
 
-    private ReferenceCollector collectReferences() {
+    private AdviceClassNameCollector collectAdviceClassNames() {
       InstrumentationModule module =
           requireNonNull(
               instrumentationModule, "instrumentationModule must be set by visit() before use");
@@ -190,6 +203,14 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       for (TypeInstrumentation typeInstrumentation : module.typeInstrumentations()) {
         typeInstrumentation.transform(adviceClassNameCollector);
       }
+      return adviceClassNameCollector;
+    }
+
+    private ReferenceCollector collectReferences(
+        AdviceClassNameCollector adviceClassNameCollector) {
+      InstrumentationModule module =
+          requireNonNull(
+              instrumentationModule, "instrumentationModule must be set by visit() before use");
 
       // the class loader has a parent including the Gradle classpath, such as buildSrc
       // dependencies.
@@ -565,6 +586,47 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       mv.visitInsn(Opcodes.POP);
       // stack: <empty>
       mv.visitInsn(Opcodes.RETURN);
+
+      mv.visitMaxs(0, 0);
+      mv.visitEnd();
+    }
+
+    private void generateMuzzleUseIsolatedHelperClassesMethod(
+        AdviceClassNameCollector adviceClassNames) {
+      InstrumentationModule module =
+          requireNonNull(
+              instrumentationModule, "instrumentationModule must be set by visit() before use");
+
+      AdviceInspector adviceInspector =
+          new AdviceInspector(ClassFileLocator.ForClassLoader.of(classLoader));
+      Boolean result =
+          adviceInspector.useIsolatedAdvice(module, adviceClassNames.getAdviceClassNames());
+      if (result == null) {
+        return;
+      }
+
+      /*
+       * public Boolean getMuzzleUseIsolatedHelperClasses() {
+       *   return Boolean.valueOf(...);
+       * }
+       */
+      MethodVisitor mv =
+          super.visitMethod(
+              Opcodes.ACC_PUBLIC,
+              MUZZLE_USE_ISOLATED_HELPER_CLASSES_METHOD_NAME,
+              "()Ljava/lang/Boolean;",
+              null,
+              null);
+      mv.visitCode();
+
+      mv.visitInsn(result ? Opcodes.ICONST_1 : Opcodes.ICONST_0);
+      mv.visitMethodInsn(
+          Opcodes.INVOKESTATIC,
+          "java/lang/Boolean",
+          "valueOf",
+          "(Z)Ljava/lang/Boolean;",
+          /* isInterface= */ false);
+      mv.visitInsn(Opcodes.ARETURN);
 
       mv.visitMaxs(0, 0);
       mv.visitEnd();
