@@ -17,11 +17,18 @@ Optional env:
 
 import json
 import os
+import re
 import subprocess
 import sys
 
 from _paths import DIAGNOSIS, PR_BODY, SELECTED
 from _render import utc_day
+
+
+def pr_title_target(selected):
+    class_name = selected["class"].rsplit(".", 1)[-1]
+    method_name = re.sub(r"\[\d+\]$", "", selected["method"])
+    return f"{class_name}.{method_name}"
 
 
 def render(selected):
@@ -100,9 +107,8 @@ def main():
     PR_BODY.write_text(body, encoding="utf-8")
     print(f"Rendered PR body to {PR_BODY}")
 
-    fq = selected["fully_qualified"]
     cmd = ["gh", "pr", "create",
-           "--title", f"Reduce flakiness in {fq}",
+           "--title", f"Reduce flakiness in {pr_title_target(selected)}",
            "--body-file", str(PR_BODY),
            "--base", base,
            "--head", head]
