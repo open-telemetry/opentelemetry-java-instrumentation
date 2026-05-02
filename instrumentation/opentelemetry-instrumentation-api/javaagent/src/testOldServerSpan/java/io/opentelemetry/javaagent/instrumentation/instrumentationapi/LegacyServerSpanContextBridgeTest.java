@@ -27,7 +27,7 @@ class LegacyServerSpanContextBridgeTest {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
         () -> {
-          assertThat(Span.current()).isNotNull();
+          assertThat(Span.fromContextOrNull(Context.current())).isNotNull();
           assertThat(ServerSpan.fromContextOrNull(Context.current())).isNotNull();
 
           Span internalSpan = tracer.spanBuilder("internal").startSpan();

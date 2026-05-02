@@ -37,7 +37,7 @@ class PekkoSchedulerTest {
     } finally {
       scope.close()
       initialSpan.end()
-      system.terminate()
+      Await.result(system.terminate(), 5.seconds)
     }
   }
 

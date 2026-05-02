@@ -9,7 +9,7 @@ dependencies {
   testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
   testImplementation(project(":instrumentation:jaxws:jaxws-3.0-common-testing"))
 
-  testInstrumentation(project(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
@@ -19,6 +19,6 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

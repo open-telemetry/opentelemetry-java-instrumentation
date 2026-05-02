@@ -13,6 +13,8 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -162,10 +164,16 @@ public abstract class AbstractElasticsearchTransportClientTest
                             event ->
                                 event
                                     .hasName("exception")
-                                    .hasAttributesSatisfying(
+                                    .hasAttributesSatisfyingExactly(
                                         equalTo(
                                             EXCEPTION_TYPE,
-                                            RemoteTransportException.class.getName())))
+                                            RemoteTransportException.class.getName()),
+                                        satisfies(
+                                            EXCEPTION_MESSAGE,
+                                            val -> val.contains("indices:data/read/get")),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.contains("IndexNotFoundException"))))
                         .hasAttributesSatisfyingExactly(assertions),
                 span ->
                     span.hasName("callback")

@@ -154,7 +154,7 @@ public abstract class AbstractHikariInstrumentationTest {
     Exception thrown = catchException(hikariDataSource::getConnection);
 
     // then
-    assertThat(thrown).isNotNull();
+    assertThat(thrown).isInstanceOf(SQLException.class);
 
     DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "timingOutPool")
         .disableMaxIdleConnections()

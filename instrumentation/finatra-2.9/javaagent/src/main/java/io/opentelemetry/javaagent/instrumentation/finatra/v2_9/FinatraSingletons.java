@@ -24,6 +24,9 @@ public class FinatraSingletons {
   public static final VirtualField<Response, Throwable> THROWABLE =
       VirtualField.find(Response.class, Throwable.class);
 
+  private static final VirtualField<Route, Class<?>> callbackClassField =
+      VirtualField.find(Route.class, Class.class);
+
   private static final Instrumenter<FinatraRequest, Void> instrumenter;
 
   static {
@@ -48,9 +51,6 @@ public class FinatraSingletons {
   public static void updateServerSpanName(Context context, RouteInfo routeInfo) {
     HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, routeInfo.path());
   }
-
-  private static final VirtualField<Route, Class<?>> callbackClassField =
-      VirtualField.find(Route.class, Class.class);
 
   public static void setCallbackClass(Route route, Class<?> clazz) {
     callbackClassField.set(route, clazz);

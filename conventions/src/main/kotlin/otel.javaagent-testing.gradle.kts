@@ -8,7 +8,7 @@ evaluationDependsOn(":testing:agent-for-testing")
 
 dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
-  compileOnly("com.google.auto.service:auto-service")
+  compileOnly("com.google.auto.service:auto-service-annotations")
 
   testImplementation("org.testcontainers:testcontainers")
 }

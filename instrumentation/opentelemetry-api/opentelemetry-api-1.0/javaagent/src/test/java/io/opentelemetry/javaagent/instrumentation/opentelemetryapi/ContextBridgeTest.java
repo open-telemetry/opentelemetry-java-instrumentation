@@ -171,7 +171,7 @@ class ContextBridgeTest {
     }
 
     // Then
-    assertThat(ref.get().size()).isEqualTo(1);
+    assertThat(ref.get().asMap()).hasSize(1);
     assertThat(ref.get().getEntryValue("cat")).isEqualTo("yes");
   }
 

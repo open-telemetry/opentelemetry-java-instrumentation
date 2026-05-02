@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0.VertxClientSingletons.CONTEXTS;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0.VertxClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,8 +18,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.client.Contexts;
-import io.opentelemetry.javaagent.instrumentation.vertx.client.ExceptionHandlerWrapper;
+import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.Contexts;
+import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.ExceptionHandlerWrapper;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
@@ -60,8 +59,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(nameStartsWith("end").or(named("sendHead"))),
-        getClass().getName() + "$EndRequestAdvice");
+        nameStartsWith("end").or(named("sendHead")), getClass().getName() + "$EndRequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("handleException"), getClass().getName() + "$HandleExceptionAdvice");
@@ -72,7 +70,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$HandleResponseAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(isPrivate()).and(nameStartsWith("write").or(nameStartsWith("connected"))),
+        isPrivate().and(nameStartsWith("write").or(nameStartsWith("connected"))),
         getClass().getName() + "$MountContextAdvice");
 
     transformer.applyAdviceToMethod(

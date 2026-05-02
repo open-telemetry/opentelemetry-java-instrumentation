@@ -15,6 +15,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CxfJettyHttpServerTest extends JaxRsJettyHttpServerTest {
 
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -27,6 +30,6 @@ class CxfJettyHttpServerTest extends JaxRsJettyHttpServerTest {
 
   @Override
   protected boolean testExperimental() {
-    return Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 }

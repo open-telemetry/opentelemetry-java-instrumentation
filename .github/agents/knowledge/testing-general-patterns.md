@@ -48,10 +48,17 @@
 - In JUnit tests, when an `AutoCloseable` is intended to remain live for most or all of the test
   and only needs cleanup at test end, prefer `AutoCleanupExtension` with `deferCleanup(...)`
   over wrapping most of the test body in try-with-resources.
-- Use `AutoCleanupExtension.deferAfterAll(...)` only for cleanup actions registered
-  dynamically (from inside test methods or other runtime-conditional setup). For a
-  fixed set of class-scoped fields known at class-init time, use a plain `@AfterAll`
-  that closes each field directly.
+- For class-scoped cleanup, prefer `AutoCleanupExtension.deferAfterAll(...)`
+  registered next to the resource's construction in `@BeforeAll`. The same
+  applies to per-test cleanup with `deferCleanup(...)` registered in
+  `@BeforeEach` or in the test body. This keeps creation and cleanup together
+  and avoids a separate `@AfterAll` / `@AfterEach` that re-references and
+  null-checks the field. Prefer a plain `@AfterAll` / `@AfterEach` when
+  null-checking the field is not needed for correct cleanup. Null-checking is
+  needed when a later step in `@BeforeAll` / `@BeforeEach` can throw before all
+  closeable fields are assigned — JUnit still runs the teardown in that case,
+  and an unguarded close on a null field NPEs and skips cleanup of resources
+  initialized earlier (e.g. a still-running test container).
 - Reuse an existing `cleanup` extension when one is already in scope.
   Otherwise, add a `@RegisterExtension` field when the deferred-cleanup pattern improves
   clarity or avoids wrapping most of the test body.
@@ -76,6 +83,11 @@
   `hasAttributesSatisfyingExactly(...)` in the same assertion chain, because the exact
   variant already validates the total attribute count. Remove the `hasTotalAttributeCount`
   call.
+- These rules apply to **span** attribute assertions only. Metric point assertions are
+  different: metric point assertions do not have a `hasTotalAttributeCount(...)` method, so
+  the span guidance about preferring `hasTotalAttributeCount(0)` for zero-attribute checks
+  does not apply. For metric points, used `point.hasAttributes(Attributes.empty())` — it
+  reads more clearly than the no-arg `hasAttributesSatisfyingExactly()` form.
 - For non-semconv attribute keys in `equalTo(...)`, use inline `AttributeKey` factory
   methods — `longKey("name")`, `stringKey("name")`, etc. — directly in the assertion.
   Do **not** extract them into class-level `private static final AttributeKey<T>` constants.

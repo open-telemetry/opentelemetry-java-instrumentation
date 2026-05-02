@@ -48,7 +48,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
                 isAnnotatedWith(
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.SpanAttribute"))));
-    // exclude all kotlin suspend methods, these are handle in kotlinx-coroutines instrumentation
+    // exclude all kotlin suspend methods, these are handled in kotlinx-coroutines instrumentation
     excludedMethodsMatcher =
         AnnotationExcludedMethods.configureExcludedMethods().or(isKotlinSuspendMethod());
   }
@@ -122,7 +122,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable WithSpanAdviceScope adviceScope) {
       if (adviceScope != null) {

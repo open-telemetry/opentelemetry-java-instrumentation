@@ -14,8 +14,6 @@ muzzle {
 dependencies {
   library("org.jboss.logmanager:jboss-logmanager:1.1.0.GA")
 
-  compileOnly(project(":javaagent-bootstrap"))
-
   // ensure no cross interference
   testInstrumentation(project(":instrumentation:java-util-logging:javaagent"))
 }
@@ -26,7 +24,7 @@ if (otelProps.testLatestDeps) {
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true")
