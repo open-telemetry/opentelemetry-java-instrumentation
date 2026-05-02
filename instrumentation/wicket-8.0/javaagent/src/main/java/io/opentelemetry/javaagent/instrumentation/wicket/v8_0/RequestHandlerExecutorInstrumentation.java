@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.wicket.v8_0;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
+import static io.opentelemetry.javaagent.instrumentation.wicket.v8_0.WicketServerSpanNaming.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -42,7 +43,7 @@ class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
         HttpServerRoute.update(
             Java8BytecodeBridge.currentContext(),
             CONTROLLER,
-            WicketServerSpanNaming.serverSpanName(),
+            serverSpanName(),
             (IPageClassRequestHandler) handler);
       }
     }
