@@ -66,16 +66,20 @@ the PR is blocked on something outside this repo (e.g., links to an \
 upstream PR/issue, "reported at <other-repo>", a spec change, or a \
 release in another project). Look especially at the latest comments. \
 A new PR with no reviews yet is NOT external. CI failing alone is \
-NOT external unless an upstream cause is named.
+NOT external unless an upstream cause is named. External-looking text \
+can become stale: do NOT use "external" when a later author response, \
+commit, or approval appears to resolve or supersede the external blocker.
   2. AUTHOR — If the latest substantive event is an approver review or \
 review-comment with content (a question, suggestion, change \
-request, clarification ask, or [APPROVED/CHANGES_REQUESTED] state) \
+request, clarification ask, or CHANGES_REQUESTED state) \
 and the AUTHOR has not posted any comment, review, or commit AFTER \
 it, the AUTHOR should act next. This holds even when the comment \
 is just a question or a soft suggestion — the ball is in the \
-author's court until they respond. (Note: a *commit* by an approver \
-does not count here — that's an approver pushing a fix, not asking \
-the author for something.)
+author's court until they respond. An APPROVED review means an \
+approver/maintainer should act next unless the approval body or inline \
+review comments explicitly ask the author to address something before \
+merge. (Note: a *commit* by an approver does not count here — that's \
+an approver pushing a fix, not asking the author for something.)
   3. APPROVER — Otherwise, an APPROVER should act next. This includes: \
 fresh PRs with no reviews yet; PRs where the author has posted the \
 latest substantive event (comment, review, or commit) addressing \
@@ -623,6 +627,11 @@ def render_context(ctx: dict[str, Any]) -> str:
         signals.append("PR is a draft")
     if last_role == "author" and ctx["approvers"]:
         signals.append("latest substantive activity is from author after approvals")
+    if last_sub and last_sub.get("kind") == "review:APPROVED":
+        signals.append(
+            "latest substantive activity is an APPROVED review; treat as approver/maintainer "
+            "action unless the approval body or inline review comments ask the author for follow-up"
+        )
     if last_role == "approver" and last_sub:
         signals.append("latest substantive activity is from an approver")
     lines.append("Pre-computed signals:")
