@@ -38,7 +38,7 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     }
     HttpServerRoute.update(otelContext, HttpServerRouteSource.NESTED_CONTROLLER, route);
 
-    try (Scope ignore = RouteHolder.init(otelContext, route).makeCurrent()) {
+    try (Scope ignored = RouteHolder.init(otelContext, route).makeCurrent()) {
       handler.handle(context);
     } catch (Throwable t) {
       Span serverSpan = LocalRootSpan.fromContextOrNull(otelContext);
