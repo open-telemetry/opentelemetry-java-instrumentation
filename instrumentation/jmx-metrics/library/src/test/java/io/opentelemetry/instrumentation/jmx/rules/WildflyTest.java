@@ -46,7 +46,7 @@ class WildflyTest extends TargetSystemTest {
             .withStartupTimeout(Duration.ofMinutes(2))
             .withExposedPorts(WILDFLY_SERVICE_PORT)
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
-            .waitingFor(Wait.forListeningPorts(WILDFLY_SERVICE_PORT));
+            .waitingFor(Wait.forLogMessage(".*WFLYSRV0025: WildFly.*started in.*", 1));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
