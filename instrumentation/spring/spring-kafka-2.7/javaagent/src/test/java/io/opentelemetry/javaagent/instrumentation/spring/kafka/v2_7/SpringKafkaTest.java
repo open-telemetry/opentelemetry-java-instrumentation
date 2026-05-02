@@ -60,7 +60,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     return emptyList();
   }
 
-  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
   @Test
@@ -98,9 +98,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                           equalTo(
                               stringKey("messaging.kafka.bootstrap.servers"),
-                              EXPERIMENTAL_ATTRIBUTES_ENABLED
-                                  ? kafka.getBootstrapServers()
-                                  : null)));
+                              EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
 
           producer.set(trace.getSpan(1));
         },
@@ -139,7 +137,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
                                 val -> {
-                                  if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                  if (EXPERIMENTAL_ATTRIBUTES) {
                                     val.isNotNegative();
                                   }
                                 })),
@@ -184,7 +182,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             satisfies(
                 longKey("kafka.record.queue_time_ms"),
                 val -> {
-                  if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                  if (EXPERIMENTAL_ATTRIBUTES) {
                     val.isNotNegative();
                   }
                 }));
@@ -215,9 +213,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                             equalTo(
                                 stringKey("messaging.kafka.bootstrap.servers"),
-                                EXPERIMENTAL_ATTRIBUTES_ENABLED
-                                    ? kafka.getBootstrapServers()
-                                    : null)));
+                                EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
 
             producer.set(trace.getSpan(1));
           },
@@ -275,9 +271,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                             equalTo(
                                 stringKey("messaging.kafka.bootstrap.servers"),
-                                EXPERIMENTAL_ATTRIBUTES_ENABLED
-                                    ? kafka.getBootstrapServers()
-                                    : null)));
+                                EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
 
             producer.set(trace.getSpan(1));
           },
@@ -349,9 +343,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                           equalTo(
                               stringKey("messaging.kafka.bootstrap.servers"),
-                              EXPERIMENTAL_ATTRIBUTES_ENABLED
-                                  ? kafka.getBootstrapServers()
-                                  : null)),
+                              EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)),
               span ->
                   span.hasName("testBatchTopic publish")
                       .hasKind(SpanKind.PRODUCER)
@@ -368,9 +360,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                           equalTo(
                               stringKey("messaging.kafka.bootstrap.servers"),
-                              EXPERIMENTAL_ATTRIBUTES_ENABLED
-                                  ? kafka.getBootstrapServers()
-                                  : null)));
+                              EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
 
           producer1.set(trace.getSpan(1));
           producer2.set(trace.getSpan(2));
@@ -440,9 +430,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                           equalTo(
                               stringKey("messaging.kafka.bootstrap.servers"),
-                              EXPERIMENTAL_ATTRIBUTES_ENABLED
-                                  ? kafka.getBootstrapServers()
-                                  : null)));
+                              EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
 
           producer.set(trace.getSpan(1));
         });
