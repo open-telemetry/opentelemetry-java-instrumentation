@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 class SystemHelper {
   private static final Logger logger = Logger.getLogger(SystemHelper.class.getName());
@@ -31,10 +32,12 @@ class SystemHelper {
     }
   }
 
+  @Nullable
   String getenv(String name) {
     return System.getenv(name);
   }
 
+  @Nullable
   String getProperty(String key) {
     return System.getProperty(key);
   }
@@ -44,6 +47,7 @@ class SystemHelper {
    * bootJar layouts the application classes live under {@code BOOT-INF/classes/}, so the prefix is
    * applied when that layout is detected.
    */
+  @Nullable
   InputStream openClasspathResource(String filename) {
     String path = addBootInfPrefix ? "BOOT-INF/classes/" + filename : filename;
     return classLoader.getResourceAsStream(path);
@@ -54,6 +58,7 @@ class SystemHelper {
    * This is used for things like {@code META-INF/build-info.properties}, which Spring Boot places
    * at the jar root rather than under {@code BOOT-INF/classes/}.
    */
+  @Nullable
   InputStream openJarRootResource(String path) {
     return classLoader.getResourceAsStream(path);
   }
