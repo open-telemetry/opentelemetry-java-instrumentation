@@ -67,8 +67,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             + "    emit(meta.id, null);"
                             + " }"
                             + "}"))));
-    CouchbaseConfig.environment = environment;
-    CouchbaseConfig.bucketSettings = bucketCouchbase;
+    CouchbaseConfig.configure(environment, bucketCouchbase);
 
     // Close all buckets and disconnect
     couchbaseCluster.disconnect();

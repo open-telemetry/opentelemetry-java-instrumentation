@@ -50,7 +50,7 @@ import java.net.URI;
 
 public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
 
-  static final LoggingHandler loggingHandler =
+  private static final LoggingHandler loggingHandler =
       new LoggingHandler(AbstractNetty41ServerTest.class, LogLevel.DEBUG);
 
   protected abstract void configurePipeline(ChannelPipeline channelPipeline);

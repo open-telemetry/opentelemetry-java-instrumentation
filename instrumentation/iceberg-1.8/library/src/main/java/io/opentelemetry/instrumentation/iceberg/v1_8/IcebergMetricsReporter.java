@@ -85,7 +85,7 @@ final class IcebergMetricsReporter implements MetricsReporter {
     }
   }
 
-  void reportScanMetrics(ScanReport scanReport) {
+  private void reportScanMetrics(ScanReport scanReport) {
     Attributes scanAttributes =
         Attributes.of(
             SCHEMA_ID,

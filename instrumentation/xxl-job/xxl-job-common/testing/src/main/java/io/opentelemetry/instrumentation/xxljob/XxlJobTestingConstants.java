@@ -10,8 +10,6 @@ import javax.annotation.Nullable;
 
 public class XxlJobTestingConstants {
 
-  private XxlJobTestingConstants() {}
-
   public static final String GLUE_JOB_SHELL_SCRIPT = "echo 'hello'";
 
   public static final long DEFAULT_GLUE_UPDATE_TIME = System.currentTimeMillis();
@@ -47,4 +45,6 @@ public class XxlJobTestingConstants {
           + "  void execute() throws Exception {\n"
           + "  }\n"
           + "}\n";
+
+  private XxlJobTestingConstants() {}
 }

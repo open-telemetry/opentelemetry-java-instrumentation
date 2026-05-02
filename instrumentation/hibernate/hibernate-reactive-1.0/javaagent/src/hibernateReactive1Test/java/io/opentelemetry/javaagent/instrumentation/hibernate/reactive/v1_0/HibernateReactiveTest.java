@@ -23,6 +23,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.vertx.core.Vertx;
@@ -32,7 +33,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.reactive.stage.Stage;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -51,17 +51,18 @@ class HibernateReactiveTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static final Vertx vertx = Vertx.vertx();
-  private static GenericContainer<?> container;
   private static String host;
   private static int port;
-  private static EntityManagerFactory entityManagerFactory;
   private static Mutiny.SessionFactory mutinySessionFactory;
   private static Stage.SessionFactory stageSessionFactory;
 
   @BeforeAll
   static void setUp() throws Exception {
-    container =
+    GenericContainer<?> container =
         new GenericContainer<>("postgres:9.6.8")
             .withEnv("POSTGRES_USER", USER_DB)
             .withEnv("POSTGRES_PASSWORD", PW_DB)
@@ -69,14 +70,16 @@ class HibernateReactiveTest {
             .withExposedPorts(5432)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
+    cleanup.deferAfterAll(container::stop);
     container.start();
+    cleanup.deferAfterAll(vertx::close);
 
     host = container.getHost();
     port = container.getMappedPort(5432);
     System.setProperty("db.host", host);
     System.setProperty("db.port", String.valueOf(port));
 
-    entityManagerFactory =
+    EntityManagerFactory entityManagerFactory =
         vertx
             .getOrCreateContext()
             .<EntityManagerFactory>executeBlocking(
@@ -84,32 +87,20 @@ class HibernateReactiveTest {
             .toCompletionStage()
             .toCompletableFuture()
             .get(30, SECONDS);
+    cleanup.deferAfterAll(entityManagerFactory::close);
 
     Value value = new Value("name");
     value.setId(1L);
 
     mutinySessionFactory = entityManagerFactory.unwrap(Mutiny.SessionFactory.class);
+    cleanup.deferAfterAll(mutinySessionFactory);
     stageSessionFactory = entityManagerFactory.unwrap(Stage.SessionFactory.class);
+    cleanup.deferAfterAll(stageSessionFactory);
 
     mutinySessionFactory
         .withTransaction((session, tx) -> session.merge(value))
         .await()
         .atMost(Duration.ofSeconds(30));
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    if (entityManagerFactory != null) {
-      entityManagerFactory.close();
-    }
-    if (mutinySessionFactory != null) {
-      mutinySessionFactory.close();
-    }
-    if (stageSessionFactory != null) {
-      stageSessionFactory.close();
-    }
-    vertx.close();
-    container.stop();
   }
 
   @Test

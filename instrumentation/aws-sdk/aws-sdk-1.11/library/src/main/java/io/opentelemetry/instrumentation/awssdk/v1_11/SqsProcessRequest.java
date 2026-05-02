@@ -11,7 +11,7 @@ final class SqsProcessRequest extends AbstractSqsRequest {
   private final Request<?> request;
   private final SqsMessage message;
 
-  public static SqsProcessRequest create(Request<?> request, SqsMessage message) {
+  static SqsProcessRequest create(Request<?> request, SqsMessage message) {
     return new SqsProcessRequest(request, message);
   }
 
@@ -21,11 +21,11 @@ final class SqsProcessRequest extends AbstractSqsRequest {
   }
 
   @Override
-  public Request<?> getRequest() {
+  Request<?> getRequest() {
     return request;
   }
 
-  public SqsMessage getMessage() {
+  SqsMessage getMessage() {
     return message;
   }
 }

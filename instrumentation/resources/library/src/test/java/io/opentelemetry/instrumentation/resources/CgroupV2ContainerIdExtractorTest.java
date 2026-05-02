@@ -65,10 +65,17 @@ class CgroupV2ContainerIdExtractorTest {
   }
 
   @Test
-  void extractSuccess_podman() throws IOException {
+  void extractSuccess_podman1() throws IOException {
     verifyContainerId(
-        "podman_proc_self_mountinfo",
+        "podman_proc_self_mountinfo1",
         "2a33efc76e519c137fe6093179653788bed6162d4a15e5131c8e835c968afbe6");
+  }
+
+  @Test
+  void extractSuccess_podman2() throws IOException {
+    verifyContainerId(
+        "podman_proc_self_mountinfo2",
+        "1b8f3c3819fbae7b858e55c52ec5783d06aa9cbf337815ecb9b96f47babcee5d");
   }
 
   @Test

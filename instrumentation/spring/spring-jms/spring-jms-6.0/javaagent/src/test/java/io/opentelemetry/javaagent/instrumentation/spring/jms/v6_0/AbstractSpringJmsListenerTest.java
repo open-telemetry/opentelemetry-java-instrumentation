@@ -16,8 +16,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,14 +30,14 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 abstract class AbstractSpringJmsListenerTest {
-  static final Logger logger = LoggerFactory.getLogger(AbstractSpringJmsListenerTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractSpringJmsListenerTest.class);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static GenericContainer<?> broker;
+  private static GenericContainer<?> broker;
 
   @BeforeAll
   static void setUp() {
@@ -59,8 +57,7 @@ abstract class AbstractSpringJmsListenerTest {
   @ParameterizedTest
   @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
   @SuppressWarnings("unchecked")
-  void testSpringJmsListener(Class<?> configClass)
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testSpringJmsListener(Class<?> configClass) throws Exception {
     // given
     SpringApplication app = new SpringApplication(configClass);
     app.setDefaultProperties(defaultConfig());

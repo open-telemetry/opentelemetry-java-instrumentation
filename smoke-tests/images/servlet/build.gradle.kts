@@ -81,6 +81,12 @@ val targets = mapOf(
       listOf("hotspot", "openj9"),
       listOf("8", "11", "17", "21")
     ),
+    ImageTarget(
+      listOf("open-liberty:26.0.0.3-full-java11-openj9@sha256:0f1e49d15b6de21cdf65b032a20103598c30f20f764b45ba1044d36d762f6165"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11", "17", "21", "25"),
+      mapOf("release" to "26.0.0.3")
+    ),
   ),
   "payara" to listOf(
     ImageTarget(
@@ -153,8 +159,8 @@ val targets = mapOf(
   "websphere" to listOf(
     ImageTarget(
       listOf(
-        "ibmcom/websphere-traditional:8.5.5.22@sha256:2a385c56f3e6781cc595d873473efd5ef7cb4f34e88c6cf8381121332fb49c9c",
-        "ibmcom/websphere-traditional:9.0.5.14@sha256:7e569af2f4050bb0f3ac0fcab113e2dee20d9d6bdc4061cef4b97b79c2ea4fdd"
+        "icr.io/appcafe/websphere-traditional:8.5.5.29@sha256:5d11ebb08f1f99e43fc1386149b6df6378a2d61c0511ce48318b5c4ae8228f89",
+        "icr.io/appcafe/websphere-traditional:9.0.5.27@sha256:f9c5c9f4fb45ddf989c56dec48d75dd85579fa60d86be831c4cbfada94bca0d4"
       ),
       listOf("openj9"),
       listOf("8"),

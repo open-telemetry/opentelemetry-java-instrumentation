@@ -9,7 +9,7 @@ plugins {
   checkstyle
   idea
 
-  id("otel.props-conventions")
+  id("otel.dsl-conventions")
   id("otel.errorprone-conventions")
   id("otel.spotless-conventions")
   id("org.sonatype.gradle.plugins.scan")
@@ -419,7 +419,7 @@ afterEvaluate {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "13.4.0"
+  toolVersion = "13.4.1"
   maxWarnings = 0
 }
 
@@ -428,8 +428,9 @@ tasks.withType<Checkstyle> {
 }
 
 ossIndexAudit {
-  username = System.getenv("SONATYPE_OSS_INDEX_USER") ?: ""
-  password = System.getenv("SONATYPE_OSS_INDEX_PASSWORD") ?: ""
+  // Guide PAT authentication ignores this, but the scan plugin requires it.
+  username = "unused"
+  password = System.getenv("SONATYPE_GUIDE_PAT") ?: ""
   outputFormat = org.sonatype.gradle.plugins.scan.ossindex.OutputFormat.JSON_CYCLONE_DX_1_4
 }
 

@@ -16,6 +16,9 @@ import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -56,6 +59,6 @@ class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
 
   @Override
   protected boolean testExperimental() {
-    return Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 }

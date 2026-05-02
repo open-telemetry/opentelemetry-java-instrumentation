@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -186,7 +187,7 @@ public abstract class AbstractDubboTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                    hasServicePeerName() && testLatestDeps()
                                         ? "test-peer-service"
                                         : null),
                                 satisfies(
@@ -370,7 +371,7 @@ public abstract class AbstractDubboTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                    hasServicePeerName() && testLatestDeps()
                                         ? "test-peer-service"
                                         : null),
                                 satisfies(
@@ -484,7 +485,7 @@ public abstract class AbstractDubboTest {
 
   static void assertLatestDeps(
       AbstractAssert<?, ?> assertion, Consumer<AbstractAssert<?, ?>> action) {
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       action.accept(assertion);
     } else {
       assertion.isNull();

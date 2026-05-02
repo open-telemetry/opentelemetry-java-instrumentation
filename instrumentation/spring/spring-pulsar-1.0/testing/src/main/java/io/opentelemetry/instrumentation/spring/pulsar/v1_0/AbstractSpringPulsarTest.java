@@ -65,8 +65,8 @@ public abstract class AbstractSpringPulsarTest {
   private static PulsarTemplate<String> pulsarTemplate;
   private static PulsarClient client;
   private static CountDownLatch latch;
-  protected static String brokerHost;
-  protected static int brokerPort;
+  private static String brokerHost;
+  private static int brokerPort;
 
   @BeforeAll
   @SuppressWarnings("unchecked")

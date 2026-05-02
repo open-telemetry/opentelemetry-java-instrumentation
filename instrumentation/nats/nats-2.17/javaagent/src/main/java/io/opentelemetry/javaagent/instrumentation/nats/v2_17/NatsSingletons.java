@@ -25,11 +25,11 @@ class NatsSingletons {
   private static final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter =
       createConsumerProcessInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
 
-  static Instrumenter<NatsRequest, NatsRequest> getProducerInstrumenter() {
+  static Instrumenter<NatsRequest, NatsRequest> producerInstrumenter() {
     return producerInstrumenter;
   }
 
-  static Instrumenter<NatsRequest, Void> getConsumerProcessInstrumenter() {
+  static Instrumenter<NatsRequest, Void> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
   }
 

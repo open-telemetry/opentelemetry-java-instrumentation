@@ -25,8 +25,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -183,7 +181,10 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                     span.hasName(getContextPath() + "/greeting.xhtml")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
-                span -> assertHandlerSpan(span, trace, 0, "#{greetingForm.submit()}", null)));
+                span ->
+                    span.hasName("#{greetingForm.submit()}")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -250,19 +251,10 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                         .hasStatus(StatusData.error())
                         .hasException(expectedException),
                 span ->
-                    assertHandlerSpan(
-                        span, trace, 0, "#{greetingForm.submit()}", expectedException)));
-  }
-
-  private static void assertHandlerSpan(
-      SpanDataAssert span,
-      TraceAssert trace,
-      int parentIndex,
-      String spanName,
-      Exception expectedException) {
-    span.hasName(spanName).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(parentIndex));
-    if (expectedException != null) {
-      span.hasStatus(StatusData.error()).hasException(expectedException);
-    }
+                    span.hasName("#{greetingForm.submit()}")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasException(expectedException)));
   }
 }

@@ -5,21 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.hystrix.v1_4;
 
-import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-
-import io.opentelemetry.api.common.AttributeKey;
-
 class ExperimentalTestHelper {
-  private static final boolean isEnabled =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.hystrix.experimental-span-attributes");
 
-  static final AttributeKey<String> HYSTRIX_COMMAND = stringKey("hystrix.command");
-  static final AttributeKey<String> HYSTRIX_GROUP = stringKey("hystrix.group");
-  static final AttributeKey<Boolean> HYSTRIX_CIRCUIT_OPEN = booleanKey("hystrix.circuit_open");
-
   static <T> T experimental(T value) {
-    if (isEnabled) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return value;
     }
     return null;

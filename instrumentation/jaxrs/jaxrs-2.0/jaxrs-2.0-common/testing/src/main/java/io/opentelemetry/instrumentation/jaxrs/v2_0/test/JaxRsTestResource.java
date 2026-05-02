@@ -39,6 +39,17 @@ import javax.ws.rs.core.UriInfo;
 @SuppressWarnings("IdentifierName")
 @Path("")
 public class JaxRsTestResource {
+  private static final CyclicBarrier barrier = new CyclicBarrier(2);
+
+  public static void resetBarrier() {
+    barrier.reset();
+  }
+
+  public static int awaitBarrier(int amount, TimeUnit timeUnit)
+      throws BrokenBarrierException, InterruptedException, TimeoutException {
+    return barrier.await(amount, timeUnit);
+  }
+
   @Path("/success")
   @GET
   public String success() {
@@ -110,17 +121,6 @@ public class JaxRsTestResource {
                   INDEXED_CHILD.collectSpanAttributes(parameters::getFirst);
                   response.resume(INDEXED_CHILD.getBody());
                 }));
-  }
-
-  private static final CyclicBarrier barrier = new CyclicBarrier(2);
-
-  public static void resetBarrier() {
-    barrier.reset();
-  }
-
-  public static int awaitBarrier(int amount, TimeUnit timeUnit)
-      throws BrokenBarrierException, InterruptedException, TimeoutException {
-    return barrier.await(amount, timeUnit);
   }
 
   @Path("async")

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0;
 
-import io.opentelemetry.javaagent.instrumentation.vertx.client.AbstractVertxHttpAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.AbstractVertxHttpAttributesGetter;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpVersion;

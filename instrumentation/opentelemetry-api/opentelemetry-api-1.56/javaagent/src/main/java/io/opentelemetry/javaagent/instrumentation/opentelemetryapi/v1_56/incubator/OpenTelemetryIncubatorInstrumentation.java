@@ -26,9 +26,10 @@ class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(none(), getClass().getName() + "$InitAdvice");
   }
 
-  @SuppressWarnings({"ReturnValueIgnored", "unused"})
+  @SuppressWarnings("unused")
   public static class InitAdvice {
     @Advice.OnMethodEnter(inline = false)
+    @SuppressWarnings("ReturnValueIgnored")
     public static void init() {
       // the sole purpose of this advice is to ensure that the class is
       // recognized as a helper class and injected into the class loader

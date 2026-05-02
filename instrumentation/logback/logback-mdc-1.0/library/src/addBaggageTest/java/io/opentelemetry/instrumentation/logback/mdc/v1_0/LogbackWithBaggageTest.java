@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class LogbackWithBaggageTest extends AbstractLogbackTest {
 
   @RegisterExtension
-  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension getInstrumentationExtension() {

@@ -11,23 +11,6 @@ import javax.annotation.Nullable;
 
 class ReflectiveMethodsFactory {
 
-  private ReflectiveMethodsFactory() {}
-
-  public static class ReflectObject {
-
-    private ReflectObject() {}
-
-    public void initMethod() {}
-
-    public void destroyMethod() {}
-
-    public ReturnT<String> echo(String param) {
-      ReturnT<String> result = new ReturnT<>();
-      result.setContent("echo: " + param);
-      return result;
-    }
-  }
-
   private static final Object singletonObject = new ReflectObject();
 
   static Object getTarget() {
@@ -58,6 +41,23 @@ class ReflectiveMethodsFactory {
       return ReflectObject.class.getMethod("destroyMethod");
     } catch (Throwable t) {
       return null;
+    }
+  }
+
+  private ReflectiveMethodsFactory() {}
+
+  public static class ReflectObject {
+
+    private ReflectObject() {}
+
+    public void initMethod() {}
+
+    public void destroyMethod() {}
+
+    public ReturnT<String> echo(String param) {
+      ReturnT<String> result = new ReturnT<>();
+      result.setContent("echo: " + param);
+      return result;
     }
   }
 }

@@ -166,7 +166,7 @@ class VertxReactivePropagationTest {
           () -> {
             try {
               latch.await();
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignored) {
               Thread.currentThread().interrupt();
             }
             testing.runWithSpan(

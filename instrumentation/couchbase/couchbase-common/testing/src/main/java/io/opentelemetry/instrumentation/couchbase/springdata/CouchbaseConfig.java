@@ -22,8 +22,13 @@ import org.springframework.data.couchbase.repository.config.EnableCouchbaseRepos
 class CouchbaseConfig extends AbstractCouchbaseConfiguration {
 
   // These need to be set before this class can be used by Spring
-  static CouchbaseEnvironment environment;
-  static BucketSettings bucketSettings;
+  private static CouchbaseEnvironment environment;
+  private static BucketSettings bucketSettings;
+
+  static void configure(CouchbaseEnvironment environment, BucketSettings bucketSettings) {
+    CouchbaseConfig.environment = environment;
+    CouchbaseConfig.bucketSettings = bucketSettings;
+  }
 
   @Override
   protected CouchbaseEnvironment getEnvironment() {
@@ -37,11 +42,11 @@ class CouchbaseConfig extends AbstractCouchbaseConfiguration {
 
   @Override
   protected String getBucketName() {
-    return bucketSettings.name();
+    return requireNonNull(bucketSettings).name();
   }
 
   @Override
   protected String getBucketPassword() {
-    return bucketSettings.password();
+    return requireNonNull(bucketSettings).password();
   }
 }

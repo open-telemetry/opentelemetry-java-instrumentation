@@ -84,7 +84,7 @@ public class JakartaServletServiceAdvice {
             .customize(
                 contextToUpdate,
                 (HttpServletResponse) response,
-                Servlet5HttpServerResponseMutator.INSTANCE);
+                new Servlet5HttpServerResponseMutator());
       }
     }
 

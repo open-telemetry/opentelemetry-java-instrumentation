@@ -18,7 +18,7 @@ class SpanFinisher implements BiConsumer<Message, Throwable> {
   private final Connection connection;
   private final NatsRequest request;
 
-  public SpanFinisher(
+  SpanFinisher(
       Instrumenter<NatsRequest, NatsRequest> instrumenter,
       Context context,
       Connection connection,

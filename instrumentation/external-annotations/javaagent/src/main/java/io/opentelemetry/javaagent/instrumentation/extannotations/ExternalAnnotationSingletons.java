@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameE
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
-public class ExternalAnnotationSingletons {
+class ExternalAnnotationSingletons {
 
   private static final Instrumenter<ClassAndMethod, Void> instrumenter;
 
@@ -29,7 +29,7 @@ public class ExternalAnnotationSingletons {
             .buildInstrumenter();
   }
 
-  public static Instrumenter<ClassAndMethod, Void> instrumenter() {
+  static Instrumenter<ClassAndMethod, Void> instrumenter() {
     return instrumenter;
   }
 

@@ -12,6 +12,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JettyServlet3Test extends BaseJettyServlet3Test {
   @RegisterExtension
-  protected static final InstrumentationExtension testing =
+  private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 }

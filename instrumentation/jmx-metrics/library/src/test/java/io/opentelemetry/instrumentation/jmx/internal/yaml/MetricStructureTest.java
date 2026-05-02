@@ -90,8 +90,6 @@ class MetricStructureTest {
   void invalidTargetSyntax(String target) {
     assertThatThrownBy(() -> MetricStructure.buildMetricAttribute("metric_attribute", target))
         .isInstanceOf(IllegalArgumentException.class)
-        .describedAs(
-            "exception should be thrown with original expression to help end-user understand the syntax error")
         .hasMessageContaining(target);
   }
 }

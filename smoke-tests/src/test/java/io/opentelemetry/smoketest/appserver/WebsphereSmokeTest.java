@@ -35,9 +35,9 @@ abstract class WebsphereSmokeTest extends AppServerTest {
     return false;
   }
 
-  @AppServer(version = "8.5.5.22", jdk = "8-openj9")
+  @AppServer(version = "8.5.5.29", jdk = "8-openj9")
   static class Websphere8Jdk8Openj9 extends WebsphereSmokeTest {}
 
-  @AppServer(version = "9.0.5.14", jdk = "8-openj9")
+  @AppServer(version = "9.0.5.27", jdk = "8-openj9")
   static class Websphere9Jdk8Openj9 extends WebsphereSmokeTest {}
 }

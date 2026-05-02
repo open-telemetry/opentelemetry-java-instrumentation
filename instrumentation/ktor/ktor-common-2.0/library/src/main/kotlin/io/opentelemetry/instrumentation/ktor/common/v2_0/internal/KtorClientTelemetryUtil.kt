@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
  * any time.
  */
 object KtorClientTelemetryUtil {
-  private val openTelemetryContextKey = AttributeKey<Context>("OpenTelemetry")
+  private val OPEN_TELEMETRY_CONTEXT_KEY = AttributeKey<Context>("OpenTelemetry")
 
   fun install(plugin: AbstractKtorClientTelemetry, scope: HttpClient) {
     installSpanCreation(plugin, scope)
@@ -49,7 +49,7 @@ object KtorClientTelemetryUtil {
 
       if (openTelemetryContext != null) {
         try {
-          requestBuilder.attributes.put(openTelemetryContextKey, openTelemetryContext)
+          requestBuilder.attributes.put(OPEN_TELEMETRY_CONTEXT_KEY, openTelemetryContext)
           plugin.populateRequestHeaders(requestBuilder, openTelemetryContext)
 
           withContext(openTelemetryContext.asContextElement()) { proceed() }
@@ -69,7 +69,7 @@ object KtorClientTelemetryUtil {
     scope.receivePipeline.insertPhaseBefore(HttpReceivePipeline.State, endSpanPhase)
 
     scope.receivePipeline.intercept(endSpanPhase) {
-      val openTelemetryContext = it.call.attributes.getOrNull(openTelemetryContextKey)
+      val openTelemetryContext = it.call.attributes.getOrNull(OPEN_TELEMETRY_CONTEXT_KEY)
       openTelemetryContext ?: return@intercept
 
       scope.launch {

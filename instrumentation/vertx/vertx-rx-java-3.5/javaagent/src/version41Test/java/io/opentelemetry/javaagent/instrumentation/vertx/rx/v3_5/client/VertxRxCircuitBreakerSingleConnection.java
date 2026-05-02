@@ -12,10 +12,10 @@ import io.vertx.reactivex.ext.web.client.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-public class VertxRxCircuitBreakerSingleConnection extends VertxRxSingleConnection {
+class VertxRxCircuitBreakerSingleConnection extends VertxRxSingleConnection {
   private final CircuitBreaker breaker;
 
-  public VertxRxCircuitBreakerSingleConnection(String host, int port, CircuitBreaker breaker) {
+  VertxRxCircuitBreakerSingleConnection(String host, int port, CircuitBreaker breaker) {
     super(host, port);
     this.breaker = breaker;
   }
