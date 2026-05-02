@@ -6,14 +6,12 @@
 package io.opentelemetry.instrumentation.viburdbcp;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Duration;
 import javax.sql.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -25,7 +23,6 @@ import org.vibur.dbcp.ViburDBCPDataSource;
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractViburInstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
-  private static final Duration EXPORTER_INTERVAL = Duration.ofMillis(100);
 
   @Mock private DataSource dataSourceMock;
   @Mock private Connection connectionMock;
@@ -49,8 +46,6 @@ public abstract class AbstractViburInstrumentationTest {
 
     // when
     Connection viburConnection = viburDataSource.getConnection();
-    await().pollDelay(EXPORTER_INTERVAL).until(() -> true);
-    viburConnection.close();
 
     // then
     DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "testPool")
@@ -64,15 +59,14 @@ public abstract class AbstractViburInstrumentationTest {
         .assertConnectionPoolEmitsMetrics();
 
     // when
+    viburConnection.close();
+
     // this one too shouldn't cause any problems when called more than once
     viburDataSource.close();
     viburDataSource.close();
     shutdown(viburDataSource);
 
-    // sleep exporter interval
-    await().pollDelay(EXPORTER_INTERVAL).until(() -> true);
     testing().clearData();
-    await().pollDelay(EXPORTER_INTERVAL).until(() -> true);
 
     // then
     String countMetricName =
