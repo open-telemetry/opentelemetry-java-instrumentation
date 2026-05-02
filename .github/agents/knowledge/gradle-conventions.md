@@ -199,7 +199,10 @@ usesService(gradle.sharedServices.registrations["testcontainersBuildService"].se
 ```
 
 Place the declaration in `withType<Test>().configureEach` when **all** test tasks in the
-module use Testcontainers. Otherwise place it on **only** the specific task(s) that do.
+module use Testcontainers **and** the module has multiple test tasks. When the module has
+only a single test task, put the declaration directly inside `tasks.test { ... }` — do not
+introduce a `withType<Test>().configureEach` block just for `usesService`. Otherwise place
+it on **only** the specific task(s) that use Testcontainers.
 
 **Do not over-apply.** Adding `usesService` to a task that does not use Testcontainers
 unnecessarily throttles it against the 2-slot concurrency limit. A module may have some
@@ -215,9 +218,10 @@ because the dependency may only be used by some suites in the module.
 
 ## Prefer `withType<Test>().configureEach` (ONLY when multiple test tasks exist)
 
-When a module has custom test tasks (e.g., `testStableSemconv`), system properties and JVM
-args that apply to **all** test tasks should be set once in a `withType<Test>().configureEach`
-block, not repeated on each individual task.
+When a module has custom test tasks (e.g., `testStableSemconv`), shared configuration
+(system properties, JVM args, `usesService` declarations, etc.) that applies to **all**
+test tasks should be set once in a `withType<Test>().configureEach` block, not repeated
+on each individual task.
 
 If a property or JVM arg is moved into `withType<Test>().configureEach`, remove any now-redundant
 copies from individual tasks unless a task intentionally overrides the shared value.

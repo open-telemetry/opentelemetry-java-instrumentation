@@ -97,7 +97,7 @@ public abstract class AbstractTomcatServlet3Test extends AbstractServlet3Test<To
     tomcatServer.setPort(port);
     tomcatServer.getConnector().setEnableLookups(true); // get localhost instead of 127.0.0.1
 
-    File applicationDir = new File(baseDir, "/webapps/ROOT");
+    File applicationDir = new File(baseDir, "webapps/ROOT");
     applicationDir.mkdirs();
 
     Context servletContext =

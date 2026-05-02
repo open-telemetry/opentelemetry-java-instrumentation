@@ -16,6 +16,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -354,7 +355,7 @@ class TracerTest {
                                   .isEqualTo(linkedSpanContext.getTraceFlags().asByte());
                               assertThat(link.getSpanContext().isRemote())
                                   .isEqualTo(linkedSpanContext.isRemote());
-                              assertThat(link.getAttributes().size()).isEqualTo(0);
+                              assertThat(link.getAttributes().asMap()).isEmpty();
                             })));
   }
 
@@ -401,12 +402,13 @@ class TracerTest {
                                   .isEqualTo(linkedSpanContext.getTraceFlags().asByte());
                               assertThat(link.getSpanContext().isRemote())
                                   .isEqualTo(linkedSpanContext.isRemote());
-                              assertThat(link.getTotalAttributeCount()).isEqualTo(4);
                               Attributes attrs = link.getAttributes();
-                              assertThat(attrs.get(stringKey("string"))).isEqualTo("1");
-                              assertThat(attrs.get(longKey("long"))).isEqualTo(2L);
-                              assertThat(attrs.get(doubleKey("double"))).isEqualTo(3.0);
-                              assertThat(attrs.get(booleanKey("boolean"))).isEqualTo(true);
+                              assertThat(attrs.asMap())
+                                  .containsOnly(
+                                      entry(stringKey("string"), "1"),
+                                      entry(longKey("long"), 2L),
+                                      entry(doubleKey("double"), 3.0),
+                                      entry(booleanKey("boolean"), true));
                             })));
   }
 }
