@@ -17,16 +17,11 @@ Secrets:
 - `GPG_PRIVATE_KEY` - stored in OpenTelemetry-Java 1Password
 - `GRADLE_PUBLISH_KEY` - owned by [@trask](https://github.com/trask)
 - `GRADLE_PUBLISH_SECRET` - owned by [@trask](https://github.com/trask)
+- `SONATYPE_GUIDE_PAT` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_KEY` - owned by [@trask](https://github.com/trask)
-- `SONATYPE_OSS_INDEX_PASSWORD` - owned by [@trask](https://github.com/trask)
-- `SONATYPE_OSS_INDEX_USER` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_USER` - owned by [@trask](https://github.com/trask)
 
 ## Secrets and variables > Actions
-
-### Repository secrets
-
-- `FLAKY_TEST_REPORTER_ACCESS_KEY` - owned by [@laurit](https://github.com/laurit)
 
 ### Organization secrets
 

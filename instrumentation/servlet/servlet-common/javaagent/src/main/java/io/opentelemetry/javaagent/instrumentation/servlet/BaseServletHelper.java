@@ -11,7 +11,6 @@ import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.EN
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -33,12 +32,9 @@ import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import java.util.List;
 import java.util.function.Function;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
-  private static final Logger logger = Logger.getLogger(BaseServletHelper.class.getName());
-
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
           .getScalarList("capture_request_parameters/development", String.class, emptyList());
@@ -66,24 +62,9 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private static boolean readTraceIdRequestAttributeEnabled() {
-    DeclarativeConfigProperties config =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet");
-    Boolean deprecatedTraceIdRequestAttributeEnabled =
-        config.getBoolean("add_trace_id_request_attribute/development");
-    if (deprecatedTraceIdRequestAttributeEnabled != null) {
-      logger.warning(
-          "The otel.instrumentation.servlet.experimental.add-trace-id-request-attribute"
-              + " setting is deprecated and will be removed in a future version."
-              + " Use otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled"
-              + " instead.");
-    }
-    return config
+    return DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
         .get("trace_id_request_attribute/development")
-        .getBoolean(
-            "enabled",
-            deprecatedTraceIdRequestAttributeEnabled != null
-                ? deprecatedTraceIdRequestAttributeEnabled
-                : true);
+        .getBoolean("enabled", !AgentCommonConfig.get().isV3Preview());
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {

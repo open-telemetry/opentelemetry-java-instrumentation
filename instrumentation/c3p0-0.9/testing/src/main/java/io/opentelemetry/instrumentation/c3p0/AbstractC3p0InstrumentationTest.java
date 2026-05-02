@@ -21,10 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 public abstract class AbstractC3p0InstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.c3p0-0.9";
 
@@ -47,10 +44,10 @@ public abstract class AbstractC3p0InstrumentationTest {
     c3p0DataSource.setJdbcUrl("jdbc:mock:testDatabase");
 
     // when
-    Connection connection = c3p0DataSource.getConnection();
-    configure(c3p0DataSource);
-    MILLISECONDS.sleep(100);
-    connection.close();
+    try (Connection connection = c3p0DataSource.getConnection()) {
+      configure(c3p0DataSource);
+      MILLISECONDS.sleep(100);
+    }
 
     // then
     assertDataSourceMetrics(c3p0DataSource);
@@ -83,9 +80,7 @@ public abstract class AbstractC3p0InstrumentationTest {
   private void assertDataSourceMetrics(PooledDataSource dataSource) {
     String dataSourceName = dataSource.getDataSourceName();
 
-    assertThat(dataSourceName)
-        .as("c3p0 generates a unique pool name if it's not explicitly provided")
-        .isNotEmpty();
+    assertThat(dataSourceName).isNotEmpty();
 
     DbConnectionPoolMetricsAssertions.create(
             testing(), INSTRUMENTATION_NAME, dataSource.getDataSourceName())

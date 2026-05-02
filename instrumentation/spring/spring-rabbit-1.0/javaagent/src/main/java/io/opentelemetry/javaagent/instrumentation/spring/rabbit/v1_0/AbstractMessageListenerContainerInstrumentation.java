@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.amqp.core.Message;
 
-public class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
+class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer");
@@ -45,20 +45,22 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
     public static class AdviceScope {
       private final Context context;
       private final Scope scope;
+      private final Message message;
 
-      public AdviceScope(Context context, Scope scope) {
+      public AdviceScope(Context context, Message message) {
         this.context = context;
-        this.scope = scope;
+        this.scope = context.makeCurrent();
+        this.message = message;
       }
 
-      public void exit(@Nullable Throwable throwable, Message message) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, message, null, throwable);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(1) Object data) {
       if (!(data instanceof Message)) {
         return null;
@@ -69,18 +71,17 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
         return null;
       }
       Context context = instrumenter().start(parentContext, message);
-      return new AdviceScope(context, context.makeCurrent());
+      return new AdviceScope(context, message);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Argument(1) Object data,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope == null || !(data instanceof Message)) {
+      if (adviceScope == null) {
         return;
       }
-      adviceScope.exit(throwable, (Message) data);
+      adviceScope.end(throwable);
     }
   }
 }

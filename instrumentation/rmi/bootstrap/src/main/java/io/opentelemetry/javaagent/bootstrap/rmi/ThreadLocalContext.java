@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
 public final class ThreadLocalContext {
-  public static final ThreadLocalContext THREAD_LOCAL_CONTEXT = new ThreadLocalContext();
+  public static final ThreadLocalContext INSTANCE = new ThreadLocalContext();
   private final ThreadLocal<Context> local;
 
   private ThreadLocalContext() {

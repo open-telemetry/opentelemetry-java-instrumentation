@@ -16,7 +16,7 @@ dependencies {
 }
 
 // restlet registers the first engine that is present on classpath, so we need to enforce the appropriate version
-if (findProperty("testLatestDeps") == "true") {
+if (otelProps.testLatestDeps) {
   configurations.configureEach {
     resolutionStrategy {
       eachDependency {
@@ -28,6 +28,6 @@ if (findProperty("testLatestDeps") == "true") {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+tasks.test {
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

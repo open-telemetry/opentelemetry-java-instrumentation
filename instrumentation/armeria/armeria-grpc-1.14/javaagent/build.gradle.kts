@@ -30,15 +30,14 @@ tasks.named<Checkstyle>("checkstyleTest") {
   exclude("**/example/**")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
 protobuf {
   protoc {
-    val protocVersion = if (latestDepTest) "3.25.5" else "3.19.2"
+    val protocVersion = if (otelProps.testLatestDeps) "3.25.5" else "3.19.2"
     artifact = "com.google.protobuf:protoc:$protocVersion"
   }
   plugins {
     id("grpc") {
-      val grpcVersion = if (latestDepTest) "1.68.1" else "1.43.2"
+      val grpcVersion = if (otelProps.testLatestDeps) "1.68.1" else "1.43.2"
       artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
     }
   }
@@ -62,7 +61,7 @@ afterEvaluate {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     // The armeria HTTP instrumentation creates an HTTP server span, and then the gRPC
     // interceptor creates a second server span from the same incoming context, which triggers the
     // context leak debugger.
@@ -88,7 +87,7 @@ tasks {
   }
 }
 
-if (findProperty("denyUnsafe") == "true") {
+if (otelProps.denyUnsafe) {
   tasks.withType<Test>().configureEach {
     enabled = false
   }

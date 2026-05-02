@@ -49,7 +49,7 @@ public class NettyChannelPipelineInstrumentation
   @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.
@@ -65,7 +65,7 @@ public class NettyChannelPipelineInstrumentation
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void addHandler(
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) String handlerName,
@@ -118,7 +118,7 @@ public class NettyChannelPipelineInstrumentation
           pipeline.addAfter(name, ourHandler.getClass().getName(), ourHandler);
           // associate our handle with original handler so they could be removed together
           CHANNEL_HANDLER.set(handler, ourHandler);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException ignored) {
           // Prevented adding duplicate handlers.
         }
       }

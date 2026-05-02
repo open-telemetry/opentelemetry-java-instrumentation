@@ -17,8 +17,6 @@ final class RequestContextAccess {
   @Nullable private static final MethodHandle remoteAddress = findAccessorOrNull("remoteAddress");
   @Nullable private static final MethodHandle localAddress = findAccessorOrNull("localAddress");
 
-  private RequestContextAccess() {}
-
   @Nullable
   public static InetSocketAddress remoteAddress(RequestContext requestContext) {
     return getAddress(remoteAddress, requestContext);
@@ -38,8 +36,8 @@ final class RequestContextAccess {
         if (address instanceof InetSocketAddress) {
           return (InetSocketAddress) address;
         }
-      } catch (Throwable throwable) {
-        throw new IllegalStateException("Failed to get address", throwable);
+      } catch (Throwable t) {
+        throw new IllegalStateException("Failed to get address", t);
       }
     }
     return null;
@@ -60,8 +58,10 @@ final class RequestContextAccess {
     try {
       return MethodHandles.publicLookup()
           .findVirtual(RequestContext.class, methodName, MethodType.methodType(returnType));
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
+
+  private RequestContextAccess() {}
 }

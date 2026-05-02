@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 
+import static io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.R2dbcSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -31,14 +32,14 @@ class R2dbcInstrumentation implements TypeInstrumentation {
         named("find")
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.r2dbc.spi.ConnectionFactoryOptions"))),
-        this.getClass().getName() + "$FactoryAdvice");
+        getClass().getName() + "$FactoryAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class FactoryAdvice {
 
     @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Nullable
     public static ConnectionFactory methodExit(
         @Advice.Return @Nullable ConnectionFactory factory,
@@ -48,7 +49,7 @@ class R2dbcInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      return R2dbcSingletons.telemetry().wrapConnectionFactory(factory, factoryOptions);
+      return telemetry().wrapConnectionFactory(factory, factoryOptions);
     }
   }
 }

@@ -36,6 +36,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 
 /** OpenTelemetry {@link DataSource} implementation. */
@@ -47,7 +48,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   private final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private final boolean captureQueryParameters;
   private final SqlCommenter sqlCommenter;
-  private volatile DbInfo cachedDbInfo;
+  @Nullable private volatile DbInfo cachedDbInfo;
 
   /**
    * Create a OpenTelemetry DataSource wrapping another DataSource.
@@ -87,7 +88,8 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   }
 
   @Override
-  public Connection getConnection(String username, String password) throws SQLException {
+  public Connection getConnection(@Nullable String username, @Nullable String password)
+      throws SQLException {
     Connection connection = wrapCall(() -> delegate.getConnection(username, password));
     DbInfo dbInfo = getDbInfo(connection);
     return OpenTelemetryConnection.create(
@@ -166,7 +168,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     }
   }
 
-  private DbInfo getDbInfo(Connection connection) {
+  private DbInfo getDbInfo(@Nullable Connection connection) {
     if (cachedDbInfo == null) {
       cachedDbInfo = computeDbInfo(connection);
     }

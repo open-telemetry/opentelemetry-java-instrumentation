@@ -9,15 +9,15 @@ public class TestDocument {
   private String id;
   private String message;
 
+  public static TestDocument create(String id, String message) {
+    return new TestDocument(id, message);
+  }
+
   public TestDocument() {}
 
   public TestDocument(String id, String message) {
     this.id = id;
     this.message = message;
-  }
-
-  public static TestDocument create(String id, String message) {
-    return new TestDocument(id, message);
   }
 
   public String getId() {

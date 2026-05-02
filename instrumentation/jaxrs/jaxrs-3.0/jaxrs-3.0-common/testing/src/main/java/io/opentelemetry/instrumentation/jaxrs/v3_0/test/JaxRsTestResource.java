@@ -29,14 +29,26 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @SuppressWarnings("IdentifierName")
 @Path("")
 public class JaxRsTestResource {
-  public static final CyclicBarrier BARRIER = new CyclicBarrier(2);
+  private static final CyclicBarrier barrier = new CyclicBarrier(2);
+
+  public static void resetBarrier() {
+    barrier.reset();
+  }
+
+  public static int awaitBarrier(int amount, TimeUnit timeUnit)
+      throws BrokenBarrierException, InterruptedException, TimeoutException {
+    return barrier.await(amount, timeUnit);
+  }
 
   @Path("/success")
   @GET
@@ -118,11 +130,11 @@ public class JaxRsTestResource {
         () -> {
           // await for the test method to verify that there are no spans yet
           try {
-            BARRIER.await(10, SECONDS);
+            barrier.await(10, SECONDS);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-          } catch (Exception exception) {
-            throw new IllegalStateException(exception);
+          } catch (BrokenBarrierException | TimeoutException e) {
+            throw new IllegalStateException(e);
           }
 
           switch (action) {
@@ -150,11 +162,11 @@ public class JaxRsTestResource {
         () -> {
           // await for the test method to verify that there are no spans yet
           try {
-            BARRIER.await(10, SECONDS);
+            barrier.await(10, SECONDS);
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-          } catch (Exception exception) {
-            throw new IllegalStateException(exception);
+          } catch (BrokenBarrierException | TimeoutException e) {
+            throw new IllegalStateException(e);
           }
 
           switch (action) {

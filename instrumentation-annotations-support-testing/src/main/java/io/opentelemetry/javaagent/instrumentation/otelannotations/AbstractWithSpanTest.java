@@ -39,7 +39,7 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
 
   protected abstract String canceledKey();
 
-  protected final InstrumentationExtension testing() {
+  protected InstrumentationExtension testing() {
     return testing;
   }
 

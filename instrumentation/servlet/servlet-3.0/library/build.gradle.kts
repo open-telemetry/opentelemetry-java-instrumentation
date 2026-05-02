@@ -22,13 +22,13 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  if (findProperty("testLatestDeps") == "true") {
+  if (otelProps.testLatestDeps) {
     compileTestJava {
       options.release.set(11)
     }

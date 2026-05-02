@@ -9,6 +9,7 @@ plugins {
 
   id("io.github.gradle-nexus.publish-plugin")
   id("otel.spotless-conventions")
+  id("otel.resolve-latest-dep-versions")
   /* workaround for
   What went wrong:
   Could not determine the dependencies of task ':smoke-tests-otel-starter:spring-boot-3.2:bootJar'.
@@ -26,6 +27,7 @@ plugins {
 buildscript {
   dependencies {
     classpath("com.squareup.okhttp3:okhttp:5.3.2")
+    classpath("org.apache.commons:commons-lang3:3.20.0")
   }
 }
 

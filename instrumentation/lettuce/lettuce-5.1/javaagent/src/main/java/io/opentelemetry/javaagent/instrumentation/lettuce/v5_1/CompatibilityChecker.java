@@ -7,17 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.tracing.Tracing;
 
-public final class CompatibilityChecker {
+public class CompatibilityChecker {
 
-  private CompatibilityChecker() {}
+  private static final boolean IS_COMPATIBLE = computeCompatibility();
 
-  private static final boolean isCompatible = isCompatible();
-
-  private static boolean isCompatible() {
+  private static boolean computeCompatibility() {
     try {
       Tracing.getContext();
       return true;
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return false;
     }
   }
@@ -25,7 +23,9 @@ public final class CompatibilityChecker {
   // related to https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10997
   // if users are using incompatible versions of reactor-core and lettuce
   // then just disable the instrumentation
-  public static boolean checkCompatible() {
-    return isCompatible;
+  public static boolean isCompatible() {
+    return IS_COMPATIBLE;
   }
+
+  private CompatibilityChecker() {}
 }

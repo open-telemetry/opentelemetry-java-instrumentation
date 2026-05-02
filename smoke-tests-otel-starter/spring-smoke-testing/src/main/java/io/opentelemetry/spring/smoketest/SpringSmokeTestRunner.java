@@ -23,7 +23,7 @@ import java.util.List;
  * An implementation of {@link InstrumentationTestRunner} that initializes OpenTelemetry SDK and
  * uses in-memory exporter to collect traces and metrics.
  */
-public final class SpringSmokeTestRunner extends InstrumentationTestRunner {
+public class SpringSmokeTestRunner extends InstrumentationTestRunner {
 
   static InMemorySpanExporter testSpanExporter;
   static InMemoryMetricExporter testMetricExporter;

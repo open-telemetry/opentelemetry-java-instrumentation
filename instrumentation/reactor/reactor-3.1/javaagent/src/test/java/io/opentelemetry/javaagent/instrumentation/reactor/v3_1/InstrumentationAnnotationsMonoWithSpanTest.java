@@ -19,7 +19,7 @@ class InstrumentationAnnotationsMonoWithSpanTest extends BaseMonoWithSpanTest {
 
   @Override
   TracedWithSpan newTracedWithSpan() {
-    return new ExtensionAnnotationsTracedWithSpan();
+    return new InstrumentationAnnotationsTracedWithSpan();
   }
 
   static class Traced extends AbstractTraced<Mono<String>, Mono<String>> {

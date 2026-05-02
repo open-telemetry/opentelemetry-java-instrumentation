@@ -31,16 +31,16 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), this.getClass().getName() + "$InitAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
         named("setJobExecutionListeners").and(takesArguments(1)).and(takesArgument(0, isArray())),
-        this.getClass().getName() + "$SetListenersAdvice");
+        getClass().getName() + "$SetListenersAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class InitAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This JobParserJobFactoryBean jobFactory) {
       // this will trigger the advice below, which will make sure that the tracing listener is
       // registered even if the application never calls setJobExecutionListeners() directly
@@ -53,7 +53,7 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
 
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.AssignReturned.AsScalar
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JobExecutionListener[] onEnter(
         @Advice.Argument(0) @Nullable JobExecutionListener[] listeners) {
       if (listeners == null) {

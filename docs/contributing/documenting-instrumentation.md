@@ -64,6 +64,7 @@ Every javaagent instrumentation module should have a README.md file in the javaa
 [Brief description of what the instrumentation does and what versions it applies to]
 
 ## Settings
+
 | System property | Type | Default | Description |
 |-----------------|------|---------|-------------|
 | `property.name` | Type | Default | Description |
@@ -94,8 +95,8 @@ disabled_by_default: true
 classification: library
 library_link: https://github.com/...
 configurations:
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    description: Enables query sanitization for database queries.
     type: boolean
     default: true
 override_telemetry: false
@@ -221,7 +222,7 @@ If an instrumentation module has configuration options, they should be documente
 
 Each configuration should include:
 
-* `name`: The full configuration property name, for example `otel.instrumentation.common.db-statement-sanitizer.enabled`.
+* `name`: The full configuration property name, for example `otel.instrumentation.common.db.query-sanitization.enabled`.
 * `description`: A brief description of what the configuration does.
 * `type`: The data type of the configuration value. Supported types are: `boolean`, `string`, `list`, and `map`.
 * `default`: The default value for the configuration.

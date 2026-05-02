@@ -32,13 +32,13 @@ public final class HostResource {
     AttributesBuilder attributes = Attributes.builder();
     try {
       attributes.put(HOST_NAME, InetAddress.getLocalHost().getHostName());
-    } catch (UnknownHostException e) {
+    } catch (UnknownHostException ignored) {
       // Ignore
     }
     String hostArch = null;
     try {
       hostArch = System.getProperty("os.arch");
-    } catch (SecurityException t) {
+    } catch (SecurityException ignored) {
       // Ignore
     }
     attributes.put(HOST_ARCH, hostArch);

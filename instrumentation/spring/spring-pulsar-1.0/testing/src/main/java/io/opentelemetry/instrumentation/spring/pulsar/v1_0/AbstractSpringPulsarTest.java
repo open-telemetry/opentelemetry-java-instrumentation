@@ -21,6 +21,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -33,7 +34,6 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -52,19 +52,21 @@ public abstract class AbstractSpringPulsarTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.pulsar.experimental-span-attributes");
   private static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse("apachepulsar/pulsar:4.0.2");
+  private static final String OTEL_SUBSCRIPTION = "otel-subscription";
+  protected static final String OTEL_TOPIC = "persistent://public/default/otel-topic";
   private static PulsarContainer pulsarContainer;
   private static ConfigurableApplicationContext applicationContext;
   private static PulsarTemplate<String> pulsarTemplate;
   private static PulsarClient client;
   private static CountDownLatch latch;
-  private static final String OTEL_SUBSCRIPTION = "otel-subscription";
-  protected static String brokerHost;
-  protected static int brokerPort;
-  protected static final String OTEL_TOPIC = "persistent://public/default/otel-topic";
+  private static String brokerHost;
+  private static int brokerPort;
 
   @BeforeAll
   @SuppressWarnings("unchecked")
@@ -74,6 +76,7 @@ public abstract class AbstractSpringPulsarTest {
         new PulsarContainer(DEFAULT_IMAGE_NAME)
             .withEnv("PULSAR_MEM", "-Xmx128m")
             .withStartupTimeout(Duration.ofMinutes(2));
+    cleanup.deferAfterAll(pulsarContainer::stop);
     pulsarContainer.start();
     brokerHost = pulsarContainer.getHost();
     brokerPort = pulsarContainer.getMappedPort(6650);
@@ -85,9 +88,11 @@ public abstract class AbstractSpringPulsarTest {
     props.put("spring.pulsar.consumer.subscription.initial-position", "earliest");
     app.setDefaultProperties(props);
     applicationContext = app.run();
+    cleanup.deferAfterAll(applicationContext);
     pulsarTemplate = applicationContext.getBean(PulsarTemplate.class);
 
     client = PulsarClient.builder().serviceUrl(pulsarContainer.getPulsarBrokerUrl()).build();
+    cleanup.deferAfterAll(client);
   }
 
   @Test
@@ -99,22 +104,6 @@ public abstract class AbstractSpringPulsarTest {
         });
     assertThat(latch.await(10, SECONDS)).isTrue();
     assertSpringPulsar();
-  }
-
-  @AfterAll
-  static void teardown() throws PulsarClientException {
-    if (applicationContext != null) {
-      applicationContext.close();
-    }
-    try {
-      if (client != null) {
-        client.close();
-      }
-    } finally {
-      if (pulsarContainer != null) {
-        pulsarContainer.stop();
-      }
-    }
   }
 
   protected abstract void assertSpringPulsar();

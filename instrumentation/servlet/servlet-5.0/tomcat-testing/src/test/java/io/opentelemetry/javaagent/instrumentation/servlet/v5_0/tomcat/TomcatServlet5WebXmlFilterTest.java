@@ -13,9 +13,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.file.Files;
@@ -44,12 +43,12 @@ import org.junit.jupiter.api.io.TempDir;
 class TomcatServlet5WebXmlFilterTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @TempDir static File tempDir;
+  @TempDir private static File tempDir;
 
-  static Tomcat tomcat;
-  static int port;
+  private static Tomcat tomcat;
+  private static int port;
 
   @BeforeAll
   static void setup() throws Exception {
@@ -60,7 +59,7 @@ class TomcatServlet5WebXmlFilterTest {
     // Create the package directory for filter and servlet classes
     String packagePath = WebXmlTestFilter.class.getPackage().getName().replace('.', '/');
     File packageDir = new File(new File(webInfDir, "classes"), packagePath);
-    packageDir.mkdirs();
+    Files.createDirectories(packageDir.toPath());
 
     // Copy compiled filter and servlet .class files to WEB-INF/classes so that
     // Tomcat's WebappClassLoader loads them (rather than the parent/system classloader)
@@ -96,9 +95,7 @@ class TomcatServlet5WebXmlFilterTest {
             + "    <url-pattern>/*</url-pattern>\n"
             + "  </filter-mapping>\n"
             + "</web-app>\n";
-    try (OutputStream os = new FileOutputStream(new File(webInfDir, "web.xml"))) {
-      os.write(webXml.getBytes(UTF_8));
-    }
+    Files.write(new File(webInfDir, "web.xml").toPath(), webXml.getBytes(UTF_8));
 
     // Start embedded Tomcat with the webapp deployed via addWebapp,
     // which creates a WebappClassLoader for the context
@@ -123,7 +120,7 @@ class TomcatServlet5WebXmlFilterTest {
     }
   }
 
-  private static String readFully(InputStream is) throws Exception {
+  private static String readFully(InputStream is) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     byte[] data = new byte[1024];
     int len;
@@ -133,18 +130,18 @@ class TomcatServlet5WebXmlFilterTest {
     return buffer.toString(UTF_8.name());
   }
 
-  private static void copyClassFile(Class<?> clazz, File targetDir) throws Exception {
+  private static void copyClassFile(Class<?> clazz, File targetDir) throws IOException {
     String classFileName = clazz.getSimpleName() + ".class";
     String classResourcePath = clazz.getName().replace('.', '/') + ".class";
     try (InputStream is = clazz.getClassLoader().getResourceAsStream(classResourcePath)) {
-      assertThat(is).as("Class file resource for " + clazz.getName()).isNotNull();
+      assertThat(is).isNotNull();
       Files.copy(
           is, new File(targetDir, classFileName).toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
   }
 
   @Test
-  void filterLoadedFromWebXmlDoesNotCauseClassCastException() throws Exception {
+  void filterLoadedFromWebXmlDoesNotCauseClassCastException() throws IOException {
     HttpURLConnection connection =
         (HttpURLConnection)
             URI.create("http://localhost:" + port + "/app/users/123").toURL().openConnection();

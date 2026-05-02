@@ -5,18 +5,18 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.mapMessageKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.List;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,14 +28,11 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
   private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
 
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @BeforeEach
   void setup() {
     generalBeforeEachSetup();
-  }
-
-  @AfterEach
-  void resetOpenTelemetry() {
-    OpenTelemetryAppender.install(null);
   }
 
   @Override
@@ -46,6 +43,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
   @Override
   void executeAfterLogsExecution() {
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
+    cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
   }
 
   private static boolean isAsyncLogger() {
@@ -63,6 +61,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
         "log message 2"); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
 
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
+    cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
 
     testing.waitAndAssertLogRecords(
         logRecord ->
@@ -91,6 +90,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     logger.info(message2); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
 
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
+    cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
 
     testing.waitAndAssertLogRecords(
         logRecord ->
@@ -102,8 +102,8 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                         "twoLogsStringMapMessage",
                         equalTo(THREAD_NAME, Thread.currentThread().getName()),
                         equalTo(THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                        equalTo(stringKey("log4j.map_message.key2"), "val2"))));
+                        equalTo(mapMessageKey("key1"), "val1"),
+                        equalTo(mapMessageKey("key2"), "val2"))));
   }
 
   @Test
@@ -124,6 +124,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     logger.info(message2); // Won't be instrumented because cache size is 1 (see log4j2.xml file)
 
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
+    cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
 
     testing.waitAndAssertLogRecords(
         logRecord ->
@@ -136,8 +137,8 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                         "twoLogsStructuredDataMessage",
                         equalTo(THREAD_NAME, Thread.currentThread().getName()),
                         equalTo(THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                        equalTo(stringKey("log4j.map_message.key2"), "val2"))));
+                        equalTo(mapMessageKey("key1"), "val1"),
+                        equalTo(mapMessageKey("key2"), "val2"))));
   }
 
   private static List<AttributeAssertion> addLocationAttributes(

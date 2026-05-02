@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.eclipse.jetty.client.transport.HttpRequest;
 
-public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
+class JettyHttpClient12Instrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -54,7 +54,7 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceLocals onEnterSend(@Advice.This HttpRequest request) {
       // start span
       Context parentContext = Context.current();
@@ -63,16 +63,16 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
       if (context == null) {
         return null;
       }
-      // set context for responseListeners
+      // store the parent context for request/response listener callbacks
       request.attribute(JETTY_CLIENT_CONTEXT_KEY, parentContext);
 
       return new AdviceLocals(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExitSend(
         @Advice.This HttpRequest request,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceLocals locals) {
 
       if (locals == null) {
@@ -91,7 +91,7 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
   public static class JettyHttpClient12NotifyAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnterNotify(@Advice.This HttpRequest request) {
       Context context = (Context) request.getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
       if (context == null) {
@@ -100,7 +100,7 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
       return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExitNotify(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

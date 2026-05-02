@@ -49,7 +49,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class EntityManagerTest extends AbstractHibernateTest {
-  static final EntityManagerFactory entityManagerFactory =
+  private static final EntityManagerFactory entityManagerFactory =
       Persistence.createEntityManagerFactory("test-pu");
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -72,7 +72,7 @@ class EntityManagerTest extends AbstractHibernateTest {
         () -> {
           try {
             parameter.sessionMethodTest.accept(entityManager, entity);
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this, we should see the error field set on the span.
           }
           entityTransaction.commit();

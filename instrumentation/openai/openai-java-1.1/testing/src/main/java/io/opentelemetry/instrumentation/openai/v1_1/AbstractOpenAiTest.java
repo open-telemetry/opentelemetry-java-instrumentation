@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
@@ -38,7 +40,7 @@ abstract class AbstractOpenAiTest {
   @RegisterExtension static final RecordingExtension recording = new RecordingExtension(API_URL);
 
   protected static final TestHelper testHelper =
-      Boolean.getBoolean("testLatestDeps") ? new OpenAi3TestHelper() : new OpenAi1TestHelper();
+      testLatestDeps() ? new OpenAi3TestHelper() : new OpenAi1TestHelper();
 
   protected abstract InstrumentationExtension getTesting();
 
@@ -49,7 +51,7 @@ abstract class AbstractOpenAiTest {
   private OpenAIClient rawClient;
   private OpenAIClientAsync rawClientAsync;
 
-  protected final OpenAIClient getRawClient() {
+  protected OpenAIClient getRawClient() {
     if (rawClient == null) {
       OpenAIOkHttpClient.Builder builder =
           OpenAIOkHttpClient.builder().baseUrl("http://localhost:" + recording.getPort());
@@ -63,7 +65,7 @@ abstract class AbstractOpenAiTest {
     return rawClient;
   }
 
-  protected final OpenAIClientAsync getRawClientAsync() {
+  protected OpenAIClientAsync getRawClientAsync() {
     if (rawClientAsync == null) {
       OpenAIOkHttpClientAsync.Builder builder =
           OpenAIOkHttpClientAsync.builder().baseUrl("http://localhost:" + recording.getPort());
@@ -77,11 +79,11 @@ abstract class AbstractOpenAiTest {
     return rawClientAsync;
   }
 
-  protected final OpenAIClient getClient() {
+  protected OpenAIClient getClient() {
     return wrap(getRawClient());
   }
 
-  protected final OpenAIClientAsync getClientAsync() {
+  protected OpenAIClientAsync getClientAsync() {
     return wrap(getRawClientAsync());
   }
 

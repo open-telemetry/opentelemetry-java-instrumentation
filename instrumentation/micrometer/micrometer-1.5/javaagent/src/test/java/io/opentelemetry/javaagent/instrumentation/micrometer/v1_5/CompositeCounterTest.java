@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
@@ -47,7 +48,7 @@ class CompositeCounterTest {
     // then
     // OpenTelemetryCounter returns NaN for count(), but NoopCounter returns 0
     // Here we verify that OpenTelemetryCounter is filtered out when count() is called and the
-    // result is produced form NoopCounter. If there were multiple meter registries, the result
+    // result is produced from NoopCounter. If there were multiple meter registries, the result
     // would be produced from an instrument that is not from our registry. We don't test with
     // multiple registries because the behavior of count() depends on the order of elements in a
     // map, so instead we test that our instrument is ignored and the result comes from a fallback
@@ -56,20 +57,19 @@ class CompositeCounterTest {
 
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "testCounter",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("This is a test counter")
-                        .hasUnit("items")
-                        .hasDoubleSumSatisfying(
-                            sum ->
-                                sum.isMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(1)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+        metric ->
+            metric
+                .hasName("testCounter")
+                .hasDescription("This is a test counter")
+                .hasUnit("items")
+                .hasDoubleSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
   }
 }

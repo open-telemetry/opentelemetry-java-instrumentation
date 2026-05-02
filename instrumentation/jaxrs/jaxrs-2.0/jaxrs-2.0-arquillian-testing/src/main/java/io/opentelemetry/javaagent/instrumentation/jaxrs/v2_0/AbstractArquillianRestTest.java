@@ -31,14 +31,14 @@ import test.RestApplication;
 @ExtendWith(ArquillianExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @RunAsClient
-public abstract class AbstractArquillianRestTest {
+abstract class AbstractArquillianRestTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public final WebClient client = WebClient.of();
+  private final WebClient client = WebClient.of();
 
-  @ArquillianResource public URI url;
+  @ArquillianResource URI url;
 
   @Deployment
   static WebArchive createDeployment() {
@@ -49,17 +49,13 @@ public abstract class AbstractArquillianRestTest {
         .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
   }
 
-  private String getContextRoot() {
-    return url.getPath();
-  }
-
   @Test
-  public void testHelloCdiRestResource() {
+  void testHelloCdiRestResource() {
     testHelloRequest("rest-app/cdiHello", "CdiRestResource");
   }
 
   @Test
-  public void testHelloEjbRestResource() {
+  void testHelloEjbRestResource() {
     testHelloRequest("rest-app/ejbHello", "EjbRestResource");
   }
 
@@ -79,5 +75,9 @@ public abstract class AbstractArquillianRestTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
                 span -> span.hasName(className + ".hello").hasParent(trace.getSpan(0))));
+  }
+
+  private String getContextRoot() {
+    return url.getPath();
   }
 }

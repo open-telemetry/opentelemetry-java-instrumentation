@@ -7,8 +7,8 @@ muzzle {
     group.set("org.apache.myfaces.core")
     module.set("myfaces-impl")
     versions.set("[3,)")
-    extraDependency("jakarta.el:jakarta.el-api:4.0.0")
     assertInverse.set(true)
+    extraDependency("jakarta.el:jakarta.el-api:4.0.0")
   }
 }
 
@@ -17,7 +17,7 @@ otelJava {
 }
 
 dependencies {
-  // can't use library for now because 6.1.0-M1 is latest and its POM referes to a missing parent POM
+  // can't use library for now because 6.1.0-M1 is latest and its POM refers to a missing parent POM
   // switch back to library when a new version is released
   // library("jakarta.el:jakarta.el-api:4.0.0")
   compileOnly("jakarta.el:jakarta.el-api:4.0.0")
@@ -25,8 +25,8 @@ dependencies {
   library("org.apache.myfaces.core:myfaces-api:3.0.2")
   testLibrary("org.apache.myfaces.core:myfaces-impl:3.0.2")
 
-  implementation(project(":instrumentation:jsf:jsf-jakarta-common:javaagent"))
-  testImplementation(project(":instrumentation:jsf:jsf-jakarta-common:testing"))
+  implementation(project(":instrumentation:jsf:jsf-common-jakarta:javaagent"))
+  testImplementation(project(":instrumentation:jsf:jsf-common-jakarta:testing"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:jsf:jsf-myfaces-1.2:javaagent"))
@@ -38,9 +38,9 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 }

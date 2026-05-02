@@ -104,8 +104,8 @@ public class ExtensionClassLoader extends URLClassLoader {
           }
         }
       }
-    } catch (IOException ex) {
-      System.err.println("Failed to open embedded extensions " + ex.getMessage());
+    } catch (IOException e) {
+      System.err.println("Failed to open embedded extensions " + e.getMessage());
     }
   }
 

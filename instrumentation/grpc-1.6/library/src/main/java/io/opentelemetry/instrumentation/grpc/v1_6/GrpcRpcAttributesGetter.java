@@ -73,7 +73,7 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
       return emptyList();
     }
 
-    if (key == null || key.isEmpty()) {
+    if (key.isEmpty()) {
       return emptyList();
     }
 

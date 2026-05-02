@@ -26,14 +26,13 @@ jobs:
           distribution: temurin
           java-version-file: .java-version
 
-      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
 
-      - run: ./gradlew :javaagent:ossIndexAudit
+      - run: ./gradlew :javaagent:ossIndexAudit --no-configuration-cache
         id: audit
         continue-on-error: true
         env:
-          SONATYPE_OSS_INDEX_USER: ${{ secrets.SONATYPE_OSS_INDEX_USER }}
-          SONATYPE_OSS_INDEX_PASSWORD: ${{ secrets.SONATYPE_OSS_INDEX_PASSWORD }}
+          SONATYPE_GUIDE_PAT: ${{ secrets.SONATYPE_GUIDE_PAT }}
 
       - name: Print vulnerability report
         if: steps.audit.outcome == 'failure'

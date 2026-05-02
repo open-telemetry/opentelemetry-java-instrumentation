@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 
 // only needed so that HttpServerAttributesExtractor can be added to the HTTP server instrumenter,
 // and http.route is properly set
-final class MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String, Void> {
+class MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String, Void> {
 
   @Override
   public String getHttpRequestMethod(String s) {

@@ -38,7 +38,7 @@ class ArmeriaHttp2Test {
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension
-  static ServerExtension server1 =
+  static final ServerExtension server1 =
       new ServerExtension() {
         @Override
         protected void configure(ServerBuilder sb) {
@@ -47,7 +47,7 @@ class ArmeriaHttp2Test {
       };
 
   @RegisterExtension
-  static ServerExtension server2 =
+  static final ServerExtension server2 =
       new ServerExtension() {
         @Override
         protected void configure(ServerBuilder sb) {
@@ -61,9 +61,9 @@ class ArmeriaHttp2Test {
 
   @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
-  void testHello() throws Exception {
+  void testHello() {
     // verify that spans are created and context is propagated
-    AggregatedHttpResponse result = createWebClient(server2).get("/").aggregate().get();
+    AggregatedHttpResponse result = createWebClient(server2).get("/").aggregate().join();
     assertThat(result.contentAscii()).isEqualTo("hello");
 
     testing.waitAndAssertTraces(

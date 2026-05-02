@@ -22,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.logmanager.ExtLogRecord;
 
-public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
+class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.jboss.logmanager.ExtLogRecord");
@@ -46,7 +46,7 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static String onExit(
         @Advice.This ExtLogRecord record,
         @Advice.Argument(0) String key,
@@ -84,7 +84,7 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
   public static class GetMdcCopyAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Map<String, String> onExit(
         @Advice.This ExtLogRecord record, @Advice.Return Map<String, String> value) {
 

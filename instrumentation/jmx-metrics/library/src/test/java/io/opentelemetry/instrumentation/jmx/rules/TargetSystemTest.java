@@ -260,7 +260,7 @@ class TargetSystemTest {
         .untilAsserted(
             () -> {
               List<ExportMetricsServiceRequest> receivedMetrics = otlpServer.getMetrics();
-              assertThat(receivedMetrics).describedAs("No metric received").isNotEmpty();
+              assertThat(receivedMetrics).isNotEmpty();
 
               List<Metric> metrics =
                   receivedMetrics.stream()
@@ -273,7 +273,7 @@ class TargetSystemTest {
                       .flatMap(sm -> sm.getMetricsList().stream())
                       .collect(toList());
 
-              assertThat(metrics).describedAs("Metrics received but not from JMX").isNotEmpty();
+              assertThat(metrics).isNotEmpty();
 
               metricsVerifier.verify(metrics);
             });

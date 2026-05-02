@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
-public class JavaInterfaces {
+class JavaInterfaces {
 
   interface Jax {
 

@@ -7,8 +7,6 @@ muzzle {
     group.set("log4j")
     module.set("log4j")
     versions.set("[1.2,)")
-    // version 1.2.15 has a bad dependency on javax.jms:jms:1.1 which was released as pom only
-    skip("1.2.15")
     assertInverse.set(true)
   }
 }
@@ -16,8 +14,6 @@ muzzle {
 dependencies {
   // 1.2 introduces MDC and there's no version earlier than 1.2.4 available
   library("log4j:log4j:1.2.4")
-
-  compileOnly(project(":javaagent-bootstrap"))
 
   testInstrumentation(project(":instrumentation:log4j:log4j-appender-2.17:javaagent"))
 }
@@ -35,7 +31,5 @@ tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-event-name=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

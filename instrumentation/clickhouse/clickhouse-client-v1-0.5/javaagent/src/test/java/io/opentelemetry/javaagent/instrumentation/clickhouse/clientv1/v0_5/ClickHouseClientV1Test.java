@@ -32,8 +32,8 @@ import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.client.ClickHouseResponseSummary;
 import com.clickhouse.data.ClickHouseFormat;
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -51,6 +51,8 @@ class ClickHouseClientV1Test {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final GenericContainer<?> clickhouseServer =
       new GenericContainer<>("clickhouse/clickhouse-server:24.4.2").withExposedPorts(8123);
@@ -95,6 +97,7 @@ class ClickHouseClientV1Test {
       throws ClickHouseException {
     ClickHouseNode server = ClickHouseNode.of("http://" + host + ":" + port + "?compress=0");
     ClickHouseClient client = ClickHouseClient.builder().build();
+    cleanup.deferCleanup(client);
 
     ClickHouseResponse response =
         client
@@ -162,7 +165,7 @@ class ClickHouseClientV1Test {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -222,7 +225,7 @@ class ClickHouseClientV1Test {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -287,7 +290,7 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testAsyncExecuteQuery() throws Exception {
+  void testAsyncExecuteQuery() {
     CompletableFuture<ClickHouseResponse> response =
         client
             .read(server)
@@ -295,7 +298,7 @@ class ClickHouseClientV1Test {
             .query("select * from " + tableName)
             .execute();
 
-    ClickHouseResponse result = response.get();
+    ClickHouseResponse result = response.join();
     assertThat(result).isNotNull();
     result.close();
 
@@ -323,20 +326,20 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testSendQuery() throws Exception {
+  void testSendQuery() {
     testing.runWithSpan(
         "parent",
         () -> {
           CompletableFuture<List<ClickHouseResponseSummary>> future =
               ClickHouseClient.send(server, "select * from " + tableName + " limit 1");
-          List<ClickHouseResponseSummary> results = future.get();
+          List<ClickHouseResponseSummary> results = future.join();
           assertThat(results).hasSize(1);
         });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -361,7 +364,7 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testSendMultipleQueries() throws Exception {
+  void testSendMultipleQueries() {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -370,14 +373,14 @@ class ClickHouseClientV1Test {
                   server,
                   "insert into " + tableName + " values('1')('2')('3')",
                   "select * from " + tableName + " limit 1");
-          List<ClickHouseResponseSummary> results = future.get();
+          List<ClickHouseResponseSummary> results = future.join();
           assertThat(results).hasSize(2);
         });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -454,7 +457,7 @@ class ClickHouseClientV1Test {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -505,7 +508,7 @@ class ClickHouseClientV1Test {
   // that this syntax error isn't detected when running with the agent as it is also ignored when
   // running without the agent.
   @Test
-  void testPlaceholderQueryInput() throws Exception {
+  void testPlaceholderQueryInput() {
     ClickHouseRequest<?> request =
         client.read(server).format(ClickHouseFormat.RowBinaryWithNamesAndTypes);
     testing.runWithSpan(
@@ -517,14 +520,14 @@ class ClickHouseClientV1Test {
                   .query("select * from " + tableName + " where s={s:String}")
                   .settings(ImmutableMap.of("param_s", "" + Instant.now().getEpochSecond()))
                   .execute()
-                  .get();
+                  .join();
           response.close();
         });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()

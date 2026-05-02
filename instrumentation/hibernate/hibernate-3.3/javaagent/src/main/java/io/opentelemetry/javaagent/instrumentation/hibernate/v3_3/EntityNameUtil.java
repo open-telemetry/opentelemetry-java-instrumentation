@@ -9,7 +9,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.hibernate.impl.AbstractSessionImpl;
 
-public final class EntityNameUtil {
+public class EntityNameUtil {
 
   private EntityNameUtil() {}
 

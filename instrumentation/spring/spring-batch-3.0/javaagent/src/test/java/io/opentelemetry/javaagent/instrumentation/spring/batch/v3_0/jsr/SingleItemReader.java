@@ -26,7 +26,7 @@ class SingleItemReader implements ItemReader {
     return null;
   }
 
-  public final AtomicReference<String> getItem() {
+  public AtomicReference<String> getItem() {
     return item;
   }
 

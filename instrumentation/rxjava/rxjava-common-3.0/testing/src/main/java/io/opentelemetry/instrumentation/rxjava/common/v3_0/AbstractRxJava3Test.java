@@ -182,7 +182,7 @@ public abstract class AbstractRxJava3Test {
     Iterable<Integer> result =
         createParentSpan(
             () -> Flowable.fromIterable(asList(5, 6)).map(this::addOne).toList().blockingGet());
-    assertThat(result).contains(6, 7);
+    assertThat(result).containsExactly(6, 7);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -208,7 +208,7 @@ public abstract class AbstractRxJava3Test {
                     .map(this::addOne)
                     .toList()
                     .blockingGet());
-    assertThat(result).contains(8, 9);
+    assertThat(result).containsExactly(8, 9);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -273,7 +273,7 @@ public abstract class AbstractRxJava3Test {
                     .map(this::addOne)
                     .toList()
                     .blockingGet());
-    assertThat(result).contains(8, 9);
+    assertThat(result).containsExactly(8, 9);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -301,7 +301,7 @@ public abstract class AbstractRxJava3Test {
                     .map(this::addOne)
                     .toList()
                     .blockingGet());
-    assertThat(result).contains(10, 11);
+    assertThat(result).containsExactly(10, 11);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -365,7 +365,7 @@ public abstract class AbstractRxJava3Test {
   void basicObservable() {
     List<Integer> result =
         createParentSpan(() -> Observable.just(0).map(this::addOne).toList().blockingGet());
-    assertThat(result).contains(1);
+    assertThat(result).containsExactly(1);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -387,7 +387,7 @@ public abstract class AbstractRxJava3Test {
                     .map(this::addOne)
                     .toList()
                     .blockingGet());
-    assertThat(result).contains(1);
+    assertThat(result).containsExactly(1);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -409,7 +409,7 @@ public abstract class AbstractRxJava3Test {
                     .map(this::addOne)
                     .toList()
                     .blockingGet());
-    assertThat(result).contains(1);
+    assertThat(result).containsExactly(1);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -729,7 +729,7 @@ public abstract class AbstractRxJava3Test {
                   .toList()
                   .blockingGet();
             });
-    assertThat(result).contains(4, 5);
+    assertThat(result).containsExactly(4, 5);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -798,7 +798,7 @@ public abstract class AbstractRxJava3Test {
                   .toList()
                   .blockingGet();
             });
-    assertThat(result).contains(4);
+    assertThat(result).containsExactly(4);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -873,18 +873,16 @@ public abstract class AbstractRxJava3Test {
                   span ->
                       span.hasName("outer")
                           .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(longKey("iteration"), (long) iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
                   span ->
                       span.hasName("middle")
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(longKey("iteration"), (long) iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
                   span ->
                       span.hasName("inner")
                           .hasParent(trace.getSpan(1))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(longKey("iteration"), (long) iteration)));
+                              equalTo(longKey("iteration"), iteration)));
     }
     testing()
         .waitAndAssertSortedTraces(

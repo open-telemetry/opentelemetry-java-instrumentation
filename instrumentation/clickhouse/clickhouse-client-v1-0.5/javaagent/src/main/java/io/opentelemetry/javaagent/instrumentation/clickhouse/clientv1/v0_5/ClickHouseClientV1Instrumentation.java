@@ -20,13 +20,14 @@ import com.clickhouse.client.config.ClickHouseDefaults;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseDbRequest;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseScope;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseScope;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
+class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("com.clickhouse.client.ClickHouseClient"));
@@ -42,14 +43,15 @@ public class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("executeAndWait", "execute")
             .and(takesArgument(0, named("com.clickhouse.client.ClickHouseRequest"))),
-        this.getClass().getName() + "$ExecuteAndWaitAdvice");
+        getClass().getName() + "$ExecuteAndWaitAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAndWaitAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static ClickHouseScope onEnter(
-        @Advice.Argument(0) ClickHouseRequest<?> clickHouseRequest) {
+        @Advice.Argument(0) @Nullable ClickHouseRequest<?> clickHouseRequest) {
 
       CallDepth callDepth = CallDepth.forClass(ClickHouseClient.class);
       if (callDepth.getAndIncrement() > 0 || clickHouseRequest == null) {
@@ -69,9 +71,10 @@ public class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
       return ClickHouseScope.start(instrumenter(), currentContext(), request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown Throwable throwable, @Advice.Enter ClickHouseScope scope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable ClickHouseScope scope) {
 
       CallDepth callDepth = CallDepth.forClass(ClickHouseClient.class);
       if (callDepth.decrementAndGet() > 0 || scope == null) {

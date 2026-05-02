@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CallableInstrumentation implements TypeInstrumentation {
+class CallableInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,18 +32,19 @@ public class CallableInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("call").and(takesArguments(0)).and(isPublic()),
-        CallableInstrumentation.class.getName() + "$CallableAdvice");
+        getClass().getName() + "$CallableAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CallableAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.This Callable<?> task) {
       return TaskAdviceHelper.makePropagatedContextCurrent(CALLABLE_PROPAGATED_CONTEXT, task);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

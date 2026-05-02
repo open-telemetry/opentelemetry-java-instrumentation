@@ -36,17 +36,17 @@ public abstract class AbstractQueryProtocolModelTest {
   private final MockWebServerExtension server = new MockWebServerExtension();
 
   @BeforeAll
-  public void setup() {
+  void setup() {
     server.start();
   }
 
   @AfterAll
-  public void end() {
+  void end() {
     server.stop();
   }
 
   @BeforeEach
-  public void setupEach() {
+  void setupEach() {
     server.beforeTestExecution(null);
   }
 

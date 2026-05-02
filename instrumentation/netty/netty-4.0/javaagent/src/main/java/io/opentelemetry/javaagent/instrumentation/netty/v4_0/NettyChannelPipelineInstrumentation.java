@@ -52,14 +52,14 @@ public class NettyChannelPipelineInstrumentation
   @SuppressWarnings("unused")
   public static class ChannelPipelineAddAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth trackCallDepth() {
       CallDepth callDepth = CallDepth.forClass(ChannelPipeline.class);
       callDepth.getAndIncrement();
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void addHandler(
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(2) ChannelHandler handler,
@@ -100,7 +100,7 @@ public class NettyChannelPipelineInstrumentation
           pipeline.addLast(ourHandler.getClass().getName(), ourHandler);
           // associate our handle with original handler so they could be removed together
           CHANNEL_HANDLER.set(handler, ourHandler);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException ignored) {
           // Prevented adding duplicate handlers.
         }
       }

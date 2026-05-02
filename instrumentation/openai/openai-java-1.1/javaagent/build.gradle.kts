@@ -22,11 +22,11 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+  test {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     // TODO run tests both with and without genai message capture
 
     systemProperty("otel.instrumentation.genai.capture-message-content", "true")
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }

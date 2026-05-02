@@ -20,7 +20,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
 abstract class AbstractWrapperTest extends KafkaClientBaseTest {
 
@@ -30,13 +30,15 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
   static final String greeting = "Hello Kafka!";
 
   @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void testWrappers(boolean testHeaders) throws InterruptedException {
+  @CsvSource({
+    "true, true",
+    "false, false",
+  })
+  void testWrappers(boolean testHeaders, boolean testExperimental) throws InterruptedException {
     KafkaTelemetryBuilder telemetryBuilder =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedHeaders(singletonList("Test-Message-Header"))
-            // TODO run tests both with and without experimental span attributes
-            .setCaptureExperimentalSpanAttributes(true);
+            .setCaptureExperimentalSpanAttributes(testExperimental);
     configure(telemetryBuilder);
     KafkaTelemetry telemetry = telemetryBuilder.build();
 
@@ -49,6 +51,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
               new ProducerRecord<>(SHARED_TOPIC, greeting);
           if (testHeaders) {
             producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
+            producerRecord.headers().add("Uncaptured-Header", "password".getBytes(UTF_8));
           }
           wrappedProducer.send(
               producerRecord,
@@ -71,10 +74,10 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
       testing.runWithSpan("process child", () -> {});
     }
 
-    assertTraces(testHeaders);
+    assertTraces(testHeaders, testExperimental);
   }
 
   abstract void configure(KafkaTelemetryBuilder builder);
 
-  abstract void assertTraces(boolean testHeaders);
+  abstract void assertTraces(boolean testHeaders, boolean testExperimental);
 }

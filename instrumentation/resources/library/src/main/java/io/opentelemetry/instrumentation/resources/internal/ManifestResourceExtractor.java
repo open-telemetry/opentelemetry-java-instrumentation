@@ -73,8 +73,8 @@ public final class ManifestResourceExtractor {
   private static Optional<Manifest> readManifest(Path jarPath) {
     try (JarFile jarFile = new JarFile(jarPath.toFile(), false)) {
       return Optional.ofNullable(jarFile.getManifest());
-    } catch (IOException exception) {
-      logger.log(FINE, "Error reading manifest", exception);
+    } catch (IOException e) {
+      logger.log(FINE, "Error reading manifest", e);
       return Optional.empty();
     }
   }

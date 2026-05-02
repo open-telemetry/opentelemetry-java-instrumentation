@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 
-public class MethodAndType {
+class MethodAndType {
   private final ClassAndMethod classAndMethod;
   private final SpanKind spanKind;
 
@@ -17,15 +17,15 @@ public class MethodAndType {
     this.spanKind = spanKind;
   }
 
-  public static MethodAndType create(ClassAndMethod classAndMethod, SpanKind spanKind) {
+  static MethodAndType create(ClassAndMethod classAndMethod, SpanKind spanKind) {
     return new MethodAndType(classAndMethod, spanKind);
   }
 
-  public ClassAndMethod getClassAndMethod() {
+  ClassAndMethod getClassAndMethod() {
     return classAndMethod;
   }
 
-  public SpanKind getSpanKind() {
+  SpanKind getSpanKind() {
     return spanKind;
   }
 }

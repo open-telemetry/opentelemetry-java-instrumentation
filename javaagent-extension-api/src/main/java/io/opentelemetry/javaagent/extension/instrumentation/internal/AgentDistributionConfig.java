@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Javaagent distribution-specific configuration.
@@ -80,12 +81,12 @@ public class AgentDistributionConfig {
 
   @JsonCreator
   AgentDistributionConfig(
-      @JsonProperty("indy/development") Boolean indyEnabled,
-      @JsonProperty("force_synchronous_agent_listeners/development")
+      @Nullable @JsonProperty("indy/development") Boolean indyEnabled,
+      @Nullable @JsonProperty("force_synchronous_agent_listeners/development")
           Boolean forceSynchronousAgentListeners,
-      @JsonProperty("exclude_classes") List<String> excludeClasses,
-      @JsonProperty("exclude_class_loaders") List<String> excludeClassLoaders,
-      @JsonProperty("instrumentation") InstrumentationConfig instrumentation) {
+      @Nullable @JsonProperty("exclude_classes") List<String> excludeClasses,
+      @Nullable @JsonProperty("exclude_class_loaders") List<String> excludeClassLoaders,
+      @Nullable @JsonProperty("instrumentation") InstrumentationConfig instrumentation) {
     this.indyEnabled = indyEnabled != null ? indyEnabled : false;
     this.forceSynchronousAgentListeners =
         forceSynchronousAgentListeners != null ? forceSynchronousAgentListeners : false;
@@ -185,9 +186,9 @@ public class AgentDistributionConfig {
 
     @JsonCreator
     InstrumentationConfig(
-        @JsonProperty("default_enabled") Boolean defaultEnabled,
-        @JsonProperty("disabled") List<String> disabled,
-        @JsonProperty("enabled") List<String> enabled) {
+        @Nullable @JsonProperty("default_enabled") Boolean defaultEnabled,
+        @Nullable @JsonProperty("disabled") List<String> disabled,
+        @Nullable @JsonProperty("enabled") List<String> enabled) {
       this.defaultEnabled = defaultEnabled != null ? defaultEnabled : true;
       this.disabled = disabled != null ? new HashSet<>(disabled) : new HashSet<>();
       this.enabled = enabled != null ? new HashSet<>(enabled) : new HashSet<>();

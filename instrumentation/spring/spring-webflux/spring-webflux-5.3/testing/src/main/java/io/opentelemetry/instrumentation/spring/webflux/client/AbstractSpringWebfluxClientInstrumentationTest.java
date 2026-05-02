@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -40,6 +41,40 @@ import reactor.core.publisher.Mono;
 public abstract class AbstractSpringWebfluxClientInstrumentationTest
     extends AbstractHttpClientTest<WebClient.RequestBodySpec> {
 
+  private static final MethodHandle GET_STATUS_CODE;
+  private static final MethodHandle STATUS_CODE_VALUE;
+
+  static {
+    MethodHandle getStatusCode;
+    MethodHandle statusCodeValue;
+    Class<?> httpStatusCodeClass;
+
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+
+    try {
+      httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatusCode");
+    } catch (ClassNotFoundException e) {
+      try {
+        httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatus");
+      } catch (ClassNotFoundException f) {
+        throw new LinkageError("Did not find neither HttpStatus nor HttpStatusCode class", f);
+      }
+    }
+
+    try {
+      getStatusCode =
+          lookup.findVirtual(
+              ClientResponse.class, "statusCode", MethodType.methodType(httpStatusCodeClass));
+      statusCodeValue =
+          lookup.findVirtual(httpStatusCodeClass, "value", MethodType.methodType(int.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      throw new LinkageError("Did not find statusCode() method", e);
+    }
+
+    GET_STATUS_CODE = getStatusCode;
+    STATUS_CODE_VALUE = statusCodeValue;
+  }
+
   @Override
   public WebClient.RequestBodySpec buildRequest(
       String method, URI uri, Map<String, String> headers) {
@@ -56,10 +91,12 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
 
   protected abstract WebClient.Builder instrument(WebClient.Builder builder);
 
+  protected abstract boolean hasServicePeerName();
+
   @Override
   public int sendRequest(
       WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers) {
-    if (Webflux7Util.isWebflux7) {
+    if (Webflux7Util.IS_WEBFLUX_7) {
       return Webflux7Util.doRequest(request);
     }
 
@@ -74,7 +111,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
       URI uri,
       Map<String, String> headers,
       HttpClientResult httpClientResult) {
-    if (Webflux7Util.isWebflux7) {
+    if (Webflux7Util.IS_WEBFLUX_7) {
       Webflux7Util.sendRequestWithCallback(
           request, httpClientResult::complete, httpClientResult::complete);
     } else {
@@ -123,46 +160,12 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         (host, port) -> new SpringWebfluxSingleConnection(host, port, this::instrument));
   }
 
-  private static final MethodHandle GET_STATUS_CODE;
-  private static final MethodHandle STATUS_CODE_VALUE;
-
-  static {
-    MethodHandle getStatusCode;
-    MethodHandle statusCodeValue;
-    Class<?> httpStatusCodeClass;
-
-    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-
-    try {
-      httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatusCode");
-    } catch (ClassNotFoundException e) {
-      try {
-        httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatus");
-      } catch (ClassNotFoundException e2) {
-        throw new LinkageError("Did not find neither HttpStatus nor HttpStatusCode class", e2);
-      }
-    }
-
-    try {
-      getStatusCode =
-          lookup.findVirtual(
-              ClientResponse.class, "statusCode", MethodType.methodType(httpStatusCodeClass));
-      statusCodeValue =
-          lookup.findVirtual(httpStatusCodeClass, "value", MethodType.methodType(int.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
-      throw new LinkageError("Did not find statusCode() method", e);
-    }
-
-    GET_STATUS_CODE = getStatusCode;
-    STATUS_CODE_VALUE = statusCodeValue;
-  }
-
   private static int getStatusCode(ClientResponse response) {
     try {
       Object statusCode = GET_STATUS_CODE.invoke(response);
       return (int) STATUS_CODE_VALUE.invoke(statusCode);
-    } catch (Throwable e) {
-      throw new AssertionError(e);
+    } catch (Throwable t) {
+      throw new AssertionError(t);
     }
   }
 
@@ -177,7 +180,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                     () -> {
                       WebClient.RequestBodySpec request = buildRequest("GET", uri, emptyMap());
                       Mono<ClientResponse> mono;
-                      if (Webflux7Util.isWebflux7) {
+                      if (Webflux7Util.IS_WEBFLUX_7) {
                         mono = Webflux7Util.exchangeToMono(request);
                       } else {
                         mono = request.exchange();
@@ -199,11 +202,14 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                     span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_FULL, uri.toString()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(
+                                maybeStablePeerService(),
+                                hasServicePeerName() ? "test-peer-service" : null),
                             equalTo(ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")

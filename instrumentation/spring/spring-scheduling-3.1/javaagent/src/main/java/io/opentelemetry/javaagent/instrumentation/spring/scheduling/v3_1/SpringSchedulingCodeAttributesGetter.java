@@ -22,7 +22,7 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
   private static Class<?> getOutcomeTrackingRunnableClass() {
     try {
       return Class.forName("org.springframework.scheduling.config.Task$OutcomeTrackingRunnable");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }
@@ -36,7 +36,7 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
       Field field = clazz.getDeclaredField("runnable");
       field.setAccessible(true);
       return field;
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       return null;
     }
   }
@@ -47,7 +47,7 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
         && OUTCOME_TRACKING_RUNNABLE_CLASS.isAssignableFrom(runnable.getClass())) {
       try {
         return unwrap((Runnable) OUTCOME_TRACKING_RUNNABLE_FIELD.get(runnable));
-      } catch (IllegalAccessException ignore) {
+      } catch (IllegalAccessException ignored) {
         // should not happen because setAccessible was called
       }
     }

@@ -14,15 +14,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 
-public final class ElasticJobSingletons {
+public class ElasticJobSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-elasticjob-3.0";
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "apache_elasticjob")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Instrumenter<ElasticJobProcessRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<ElasticJobProcessRequest, Void> instrumenter =
       createInstrumenter();
-  private static final ElasticJobHelper HELPER = ElasticJobHelper.create(INSTRUMENTER);
+  private static final ElasticJobHelper helper = ElasticJobHelper.create(instrumenter);
 
   private static Instrumenter<ElasticJobProcessRequest, Void> createInstrumenter() {
     ElasticJobCodeAttributesGetter codeAttributesGetter = new ElasticJobCodeAttributesGetter();
@@ -42,7 +42,7 @@ public final class ElasticJobSingletons {
   }
 
   public static ElasticJobHelper helper() {
-    return HELPER;
+    return helper;
   }
 
   private ElasticJobSingletons() {}

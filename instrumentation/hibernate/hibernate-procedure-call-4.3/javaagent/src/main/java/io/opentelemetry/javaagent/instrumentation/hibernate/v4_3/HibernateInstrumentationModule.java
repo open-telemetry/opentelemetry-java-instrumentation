@@ -24,6 +24,7 @@ public class HibernateInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 4.3.0.Final
     return hasClassesNamed("org.hibernate.procedure.ProcedureCall");
   }
 
@@ -35,10 +36,5 @@ public class HibernateInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new ProcedureCallInstrumentation(), new SessionInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

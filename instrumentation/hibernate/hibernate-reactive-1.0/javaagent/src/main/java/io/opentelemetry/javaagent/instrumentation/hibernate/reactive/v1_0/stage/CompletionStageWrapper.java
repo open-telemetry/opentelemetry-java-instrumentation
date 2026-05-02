@@ -10,9 +10,7 @@ import io.opentelemetry.context.Scope;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-public final class CompletionStageWrapper {
-
-  private CompletionStageWrapper() {}
+public class CompletionStageWrapper {
 
   public static <T> CompletionStage<T> wrap(CompletionStage<T> future) {
     Context context = Context.current();
@@ -37,4 +35,6 @@ public final class CompletionStageWrapper {
 
     return result;
   }
+
+  private CompletionStageWrapper() {}
 }

@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import scala.Function1;
 
-public final class Function1Wrapper {
+public class Function1Wrapper {
 
   public static <T1, R> Function1<T1, R> wrap(Function1<T1, R> function1) {
     Context context = Context.current();

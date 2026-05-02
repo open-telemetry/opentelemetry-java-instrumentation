@@ -140,7 +140,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @Override
-  protected final String getContextPath() {
+  protected String getContextPath() {
     return options.contextPath;
   }
 
@@ -417,17 +417,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
-        "http.server.request.duration",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("Duration of HTTP server requests.")
-                        .hasUnit("s")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point -> point.hasSumGreaterThan(0.0)))));
+        metric ->
+            metric
+                .hasName("http.server.request.duration")
+                .hasDescription("Duration of HTTP server requests.")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
   }
 
   /**
@@ -1136,7 +1133,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           assertThat(attrs).containsEntry(HTTP_REQUEST_METHOD, method);
 
-          assertThat(attrs).containsEntry(HTTP_RESPONSE_STATUS_CODE, statusCode);
+          if (statusCode > 0) {
+            assertThat(attrs).containsEntry(HTTP_RESPONSE_STATUS_CODE, statusCode);
+          } else {
+            assertThat(attrs).doesNotContainKey(HTTP_RESPONSE_STATUS_CODE);
+          }
           if (statusCode >= 500) {
             assertThat(attrs).containsEntry(ERROR_TYPE, String.valueOf(statusCode));
           }
@@ -1228,11 +1229,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         endpoint, method, route);
   }
 
-  public final boolean hasHttpRouteAttribute(ServerEndpoint endpoint) {
+  public boolean hasHttpRouteAttribute(ServerEndpoint endpoint) {
     return options.httpAttributes.apply(endpoint).contains(HTTP_ROUTE);
   }
 
-  public final boolean hasHandlerSpan(ServerEndpoint endpoint) {
+  public boolean hasHandlerSpan(ServerEndpoint endpoint) {
     return options.hasHandlerSpan.test(endpoint);
   }
 

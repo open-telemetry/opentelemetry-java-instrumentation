@@ -41,11 +41,13 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  }
 
+  test {
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
@@ -56,8 +58,6 @@ tasks {
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
-    jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty(
       "metadataConfig",
@@ -71,7 +71,7 @@ tasks {
     dependsOn(testStableSemconv)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

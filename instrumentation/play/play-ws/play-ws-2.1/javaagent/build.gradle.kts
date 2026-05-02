@@ -32,9 +32,9 @@ val scalaVersion = "2.12"
 dependencies {
   library("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:2.1.0")
 
-  implementation(project(":instrumentation:play:play-ws:play-ws-common:javaagent"))
+  implementation(project(":instrumentation:play:play-ws:play-ws-common-1.0:javaagent"))
 
-  testImplementation(project(":instrumentation:play:play-ws:play-ws-common:testing"))
+  testImplementation(project(":instrumentation:play:play-ws:play-ws-common-1.0:testing"))
 
   // These are to ensure cross compatibility
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
@@ -42,8 +42,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
 }
-
-val testLatestDeps = findProperty("testLatestDeps") == "true"
 
 testing {
   suites {
@@ -56,7 +54,7 @@ testing {
 }
 
 tasks {
-  if (testLatestDeps) {
+  if (otelProps.testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run
     named("test") {
       enabled = false
@@ -64,18 +62,18 @@ tasks {
   }
 
   named("latestDepTest") {
-    enabled = testLatestDeps
+    enabled = otelProps.testLatestDeps
   }
 
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   check {
     dependsOn(testing.suites)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

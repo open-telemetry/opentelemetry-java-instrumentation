@@ -14,8 +14,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace.ApplicationTracerProvider14;
 import java.lang.reflect.InvocationTargetException;
 
-public final class ApplicationOpenTelemetry110
-    implements application.io.opentelemetry.api.OpenTelemetry {
+public class ApplicationOpenTelemetry110 implements application.io.opentelemetry.api.OpenTelemetry {
 
   // Accessed with reflection
   @SuppressWarnings("unused")
@@ -63,7 +62,7 @@ public final class ApplicationOpenTelemetry110
         | NoSuchMethodException
         | InstantiationException
         | IllegalAccessException
-        | InvocationTargetException exception) {
+        | InvocationTargetException ignored) {
       return new ApplicationMeterFactory14();
     }
   }

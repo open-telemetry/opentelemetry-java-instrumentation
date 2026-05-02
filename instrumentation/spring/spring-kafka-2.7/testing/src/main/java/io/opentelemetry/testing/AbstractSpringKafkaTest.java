@@ -7,7 +7,6 @@ package io.opentelemetry.testing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -38,11 +37,9 @@ public abstract class AbstractSpringKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractSpringKafkaTest.class);
 
-  protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
-      AttributeKey.stringKey("messaging.client_id");
-  static KafkaContainer kafka;
+  protected static KafkaContainer kafka;
 
-  ConfigurableApplicationContext applicationContext;
+  private ConfigurableApplicationContext applicationContext;
   protected KafkaTemplate<String, String> kafkaTemplate;
 
   @BeforeAll
@@ -91,7 +88,7 @@ public abstract class AbstractSpringKafkaTest {
     }
   }
 
-  static final MethodHandle send;
+  private static final MethodHandle send;
 
   static {
     MethodHandle sendMethod = null;
@@ -106,7 +103,7 @@ public abstract class AbstractSpringKafkaTest {
                   "send",
                   MethodType.methodType(
                       listenableFutureClass, String.class, Object.class, Object.class));
-    } catch (ClassNotFoundException | NoSuchMethodException e) {
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       // spring-kafka 3.0 changed the return type
       try {
         sendMethod =
@@ -116,8 +113,8 @@ public abstract class AbstractSpringKafkaTest {
                     "send",
                     MethodType.methodType(
                         CompletableFuture.class, String.class, Object.class, Object.class));
-      } catch (NoSuchMethodException | IllegalAccessException ex) {
-        failure = ex;
+      } catch (NoSuchMethodException | IllegalAccessException f) {
+        failure = f;
       }
     } catch (IllegalAccessException e) {
       failure = e;
@@ -131,8 +128,8 @@ public abstract class AbstractSpringKafkaTest {
   protected void send(String topic, String key, String data) {
     try {
       send.invoke(kafkaTemplate, topic, key, data);
-    } catch (Throwable e) {
-      throw new AssertionError(e);
+    } catch (Throwable t) {
+      throw new AssertionError(t);
     }
   }
 
@@ -143,7 +140,7 @@ public abstract class AbstractSpringKafkaTest {
     // a batch.
     int maxAttempts = 5;
     for (int i = 1; i <= maxAttempts; i++) {
-      BatchRecordListener.reset();
+      BatchRecordListener.reset(keyToData.size());
 
       testing()
           .runWithSpan(
@@ -157,7 +154,7 @@ public abstract class AbstractSpringKafkaTest {
               });
 
       BatchRecordListener.waitForMessages();
-      if (BatchRecordListener.getLastBatchSize() == 2) {
+      if (BatchRecordListener.getLastBatchSize() == keyToData.size()) {
         break;
       } else if (i < maxAttempts) {
         testing().waitForTraces(2);
@@ -166,6 +163,7 @@ public abstract class AbstractSpringKafkaTest {
         logger.info("Messages weren't received as batch, retrying");
       }
     }
+    assertThat(BatchRecordListener.getLastBatchSize()).isEqualTo(keyToData.size());
   }
 
   protected static Consumer<List<? extends LinkData>> links(SpanContext... spanContexts) {

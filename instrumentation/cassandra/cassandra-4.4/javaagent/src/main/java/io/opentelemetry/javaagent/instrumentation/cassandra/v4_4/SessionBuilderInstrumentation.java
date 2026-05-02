@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SessionBuilderInstrumentation implements TypeInstrumentation {
+class SessionBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -39,13 +39,13 @@ public class SessionBuilderInstrumentation implements TypeInstrumentation {
     /**
      * Strategy: each time we build a connection to a Cassandra cluster, the
      * com.datastax.oss.driver.api.core.session.SessionBuilder.buildAsync() method is called. The
-     * opentracing contribution is a simple wrapper, so we just have to wrap the new session.
+     * OpenTelemetry instrumentation is a simple wrapper, so we just have to wrap the new session.
      *
      * @param stage The fresh CompletionStage to patch. This stage produces session which is
      *     replaced with new session
      */
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletionStage<?> injectTracingSession(@Advice.Return CompletionStage<?> stage) {
       return stage.thenApply(new CompletionStageFunction());
     }

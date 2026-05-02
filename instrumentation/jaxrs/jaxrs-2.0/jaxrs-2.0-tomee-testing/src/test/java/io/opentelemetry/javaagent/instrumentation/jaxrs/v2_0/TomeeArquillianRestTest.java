@@ -5,4 +5,4 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
-public class TomeeArquillianRestTest extends AbstractArquillianRestTest {}
+class TomeeArquillianRestTest extends AbstractArquillianRestTest {}

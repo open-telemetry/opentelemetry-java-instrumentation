@@ -23,39 +23,35 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"InterruptedExceptionSwallowed", "deprecation"}) // using deprecated semconv
 public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceClientTest {
 
-  protected static String expectedHostAttributeValue;
-
   protected static RedisReactiveCommands<String, String> reactiveCommands;
 
   @BeforeAll
   void setUp() throws UnknownHostException {
     redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
     ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
-    expectedHostAttributeValue = Objects.equals(host, "127.0.0.1") ? null : host;
-
     redisClient = createClient(embeddedDbUri);
+    cleanup.deferAfterAll(redisClient::shutdown);
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
 
     connection = redisClient.connect();
+    cleanup.deferAfterAll(connection);
     reactiveCommands = connection.reactive();
     RedisCommands<String, String> syncCommands = connection.sync();
 
@@ -64,13 +60,6 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
     // 1 set trace
     testing().waitForTraces(1);
     testing().clearData();
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    connection.close();
-    redisClient.shutdown();
-    redisServer.stop();
   }
 
   @Test
@@ -270,13 +259,13 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   }
 
   @Test
-  void testNonReactiveCommandShouldNotProduceSpan() throws Exception {
+  void testNonReactiveCommandShouldNotProduceSpan() throws ReflectiveOperationException {
     Class<?> commandsClass = RedisReactiveCommands.class;
     Method digestMethod;
     // The digest() signature changed between 5 -> 6
     try {
       digestMethod = commandsClass.getMethod("digest", String.class);
-    } catch (NoSuchMethodException unused) {
+    } catch (NoSuchMethodException ignored) {
       digestMethod = commandsClass.getMethod("digest", Object.class);
     }
     String res = (String) digestMethod.invoke(reactiveCommands, "test");
@@ -296,7 +285,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                    span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                     span ->
                         span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)
@@ -340,7 +329,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                    span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                     span ->
                         span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)

@@ -20,7 +20,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
+class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -42,7 +42,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth onEnter(@Advice.This ServerBuilder<?> serverBuilder) {
       CallDepth callDepth = CallDepth.forClass(ServerBuilder.class);
       if (callDepth.getAndIncrement() > 0) {
@@ -55,7 +55,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }

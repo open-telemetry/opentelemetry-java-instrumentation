@@ -58,13 +58,13 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
         patternString = patternString + "$";
       }
       return Pattern.compile(patternString);
-    } catch (PatternSyntaxException exception) {
+    } catch (PatternSyntaxException e) {
       logger.log(
           WARNING,
           "Invalid pattern in http client url template customization rule \""
               + patternString
               + "\".",
-          exception);
+          e);
       return null;
     }
   }

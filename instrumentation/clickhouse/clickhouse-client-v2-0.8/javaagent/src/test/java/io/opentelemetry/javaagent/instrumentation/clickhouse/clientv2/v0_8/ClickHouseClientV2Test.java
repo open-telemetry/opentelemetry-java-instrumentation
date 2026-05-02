@@ -31,8 +31,8 @@ import com.clickhouse.client.api.query.GenericRecord;
 import com.clickhouse.client.api.query.QueryResponse;
 import com.clickhouse.client.api.query.QuerySettings;
 import com.clickhouse.client.api.query.Records;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -40,8 +40,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -53,49 +51,45 @@ class ClickHouseClientV2Test {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static final GenericContainer<?> clickhouseServer =
       new GenericContainer<>("clickhouse/clickhouse-server:24.4.2").withExposedPorts(8123);
 
-  private static final String databaseName = "default";
-  private static final String tableName = "test_table";
+  private static final String DATABASE_NAME = "default";
+  private static final String TABLE_NAME = "test_table";
+  private static final String USERNAME = "default";
+  private static final String PASSWORD = "";
   private static int port;
   private static String host;
   private static Client client;
-  private static final String username = "default";
-  private static final String password = "";
 
   @BeforeAll
   static void setup() throws Exception {
     clickhouseServer.start();
+    cleanup.deferAfterAll(clickhouseServer::stop);
     port = clickhouseServer.getMappedPort(8123);
     host = clickhouseServer.getHost();
 
     client =
         new Client.Builder()
             .addEndpoint(Protocol.HTTP, host, port, false)
-            .setDefaultDatabase(databaseName)
-            .setUsername(username)
-            .setPassword(password)
+            .setDefaultDatabase(DATABASE_NAME)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
             .setOption("compress", "false")
             .build();
+    cleanup.deferAfterAll(client);
 
     QueryResponse response =
         client
-            .query("create table if not exists " + tableName + "(value String) engine=Memory")
-            .get();
+            .query("create table if not exists " + TABLE_NAME + "(value String) engine=Memory")
+            .join();
     response.close();
 
     // wait for CREATE operation and clear
     testing.waitForTraces(1);
     testing.clearData();
-  }
-
-  @AfterAll
-  static void cleanup() {
-    if (client != null) {
-      client.close();
-    }
-    clickhouseServer.stop();
   }
 
   @Test
@@ -104,11 +98,12 @@ class ClickHouseClientV2Test {
         new Client.Builder()
             .addEndpoint(Protocol.HTTP, host, port, false)
             .setOption("compress", "false")
-            .setUsername(username)
-            .setPassword(password)
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
             .build();
+    cleanup.deferCleanup(client);
 
-    QueryResponse response = client.query("select * from " + tableName).get();
+    QueryResponse response = client.query("select * from " + TABLE_NAME).join();
     response.close();
 
     testing.waitAndAssertTraces(
@@ -118,15 +113,15 @@ class ClickHouseClientV2Test {
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "SELECT test_table"
-                                : "SELECT " + databaseName)
+                                : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_STATEMENT), "select * from " + tableName),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT test_table" : null),
@@ -150,32 +145,32 @@ class ClickHouseClientV2Test {
         "parent",
         () -> {
           QueryResponse response =
-              client.query("insert into " + tableName + " values('1')('2')('3')").get();
+              client.query("insert into " + TABLE_NAME + " values('1')('2')('3')").join();
           response.close();
 
-          response = client.query("select * from " + tableName).get();
+          response = client.query("select * from " + TABLE_NAME).join();
           response.close();
         });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "INSERT test_table"
-                                : "INSERT " + databaseName)
+                                : "INSERT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "insert into " + tableName + " values(?)(?)(?)"),
+                                "insert into " + TABLE_NAME + " values(?)(?)(?)"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "INSERT test_table" : null),
@@ -186,15 +181,15 @@ class ClickHouseClientV2Test {
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "SELECT test_table"
-                                : "SELECT " + databaseName)
+                                : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_STATEMENT), "select * from " + tableName),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT test_table" : null),
@@ -211,27 +206,28 @@ class ClickHouseClientV2Test {
           QuerySettings querySettings = new QuerySettings();
           querySettings.setQueryId("test_query_id");
 
-          QueryResponse response = client.query("select * from " + tableName, querySettings).get();
+          QueryResponse response =
+              client.query("select * from " + TABLE_NAME, querySettings).join();
           response.close();
         });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "SELECT test_table"
-                                : "SELECT " + databaseName)
+                                : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_STATEMENT), "select * from " + tableName),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT test_table" : null),
@@ -258,13 +254,13 @@ class ClickHouseClientV2Test {
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "SELECT non_existent_table"
-                                : "SELECT " + databaseName)
+                                : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from non_existent_table"),
@@ -282,31 +278,30 @@ class ClickHouseClientV2Test {
     testing.runWithSpan(
         "parent",
         () -> {
-          CompletableFuture<CommandResponse> future =
-              client.execute("select * from " + tableName + " limit 1");
-          CommandResponse results = future.get();
+          CommandResponse results =
+              client.execute("select * from " + TABLE_NAME + " limit 1").join();
           assertThat(results.getReadRows()).isEqualTo(0);
         });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "SELECT test_table"
-                                : "SELECT " + databaseName)
+                                : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "select * from " + tableName + " limit ?"),
+                                "select * from " + TABLE_NAME + " limit ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT test_table" : null),
@@ -320,29 +315,29 @@ class ClickHouseClientV2Test {
     testing.runWithSpan(
         "parent",
         () -> {
-          List<GenericRecord> records = client.queryAll("select * from " + tableName + " limit 1");
-          assertThat(records.size()).isEqualTo(0);
+          List<GenericRecord> records = client.queryAll("select * from " + TABLE_NAME + " limit 1");
+          assertThat(records).isEmpty();
         });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "SELECT test_table"
-                                : "SELECT " + databaseName)
+                                : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "select * from " + tableName + " limit ?"),
+                                "select * from " + TABLE_NAME + " limit ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT test_table" : null),
@@ -357,10 +352,10 @@ class ClickHouseClientV2Test {
         "parent",
         () -> {
           Records records =
-              client.queryRecords("insert into " + tableName + " values('test_value')").get();
+              client.queryRecords("insert into " + TABLE_NAME + " values('test_value')").join();
           records.close();
 
-          records = client.queryRecords("select * from " + tableName + " limit 1").get();
+          records = client.queryRecords("select * from " + TABLE_NAME + " limit 1").join();
           records.close();
           assertThat(records.getReadRows()).isEqualTo(1);
         });
@@ -368,22 +363,22 @@ class ClickHouseClientV2Test {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "INSERT test_table"
-                                : "INSERT " + databaseName)
+                                : "INSERT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "insert into " + tableName + " values(?)"),
+                                "insert into " + TABLE_NAME + " values(?)"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "INSERT test_table" : null),
@@ -394,17 +389,17 @@ class ClickHouseClientV2Test {
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "SELECT test_table"
-                                : "SELECT " + databaseName)
+                                : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "select * from " + tableName + " limit ?"),
+                                "select * from " + TABLE_NAME + " limit ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT test_table" : null),
@@ -424,32 +419,32 @@ class ClickHouseClientV2Test {
           QueryResponse response =
               client
                   .query(
-                      "select * from " + tableName + " where value={param_s: String}",
+                      "select * from " + TABLE_NAME + " where value={param_s: String}",
                       queryParams,
                       null)
-                  .get();
+                  .join();
           response.close();
         });
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "SELECT test_table"
-                                : "SELECT " + databaseName)
+                                : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "select * from " + tableName + " where value={param_s: String}"),
+                                "select * from " + TABLE_NAME + " where value={param_s: String}"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT test_table" : null),

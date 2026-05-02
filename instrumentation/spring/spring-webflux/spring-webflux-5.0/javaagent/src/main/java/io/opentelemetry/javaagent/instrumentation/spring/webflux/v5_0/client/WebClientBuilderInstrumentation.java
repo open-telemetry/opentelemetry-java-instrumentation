@@ -17,7 +17,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.reactive.function.client.WebClient;
 
-public class WebClientBuilderInstrumentation implements TypeInstrumentation {
+class WebClientBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.springframework.web.reactive.function.client.WebClient");
@@ -38,7 +38,7 @@ public class WebClientBuilderInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onBuild(@Advice.This WebClient.Builder builder) {
       builder.filters(WebClientHelper::addFilter);
     }

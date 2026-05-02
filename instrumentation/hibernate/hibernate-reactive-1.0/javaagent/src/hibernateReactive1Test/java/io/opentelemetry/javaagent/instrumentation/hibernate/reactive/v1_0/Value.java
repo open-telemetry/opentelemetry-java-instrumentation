@@ -37,7 +37,7 @@ public class Value {
     return name;
   }
 
-  public void setName(String title) {
-    name = title;
+  public void setName(String name) {
+    this.name = name;
   }
 }

@@ -23,6 +23,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.vertx.core.Vertx;
@@ -31,7 +32,6 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.reactive.stage.Stage;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -53,6 +53,8 @@ public abstract class AbstractHibernateReactiveTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   protected final Vertx vertx = Vertx.vertx();
   private GenericContainer<?> container;
   private String host;
@@ -65,6 +67,7 @@ public abstract class AbstractHibernateReactiveTest {
 
   @BeforeAll
   void setUp() throws Exception {
+    cleanup.deferAfterAll(vertx::close);
     container =
         new GenericContainer<>("postgres:9.6.8")
             .withEnv("POSTGRES_USER", USER_DB)
@@ -73,6 +76,7 @@ public abstract class AbstractHibernateReactiveTest {
             .withExposedPorts(5432)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
+    cleanup.deferAfterAll(container::stop);
     container.start();
 
     host = container.getHost();
@@ -81,32 +85,20 @@ public abstract class AbstractHibernateReactiveTest {
     System.setProperty("db.port", String.valueOf(port));
 
     entityManagerFactory = createEntityManagerFactory();
+    cleanup.deferAfterAll(entityManagerFactory);
 
     Value value = new Value("name");
     value.setId(1L);
 
     mutinySessionFactory = entityManagerFactory.unwrap(Mutiny.SessionFactory.class);
     stageSessionFactory = entityManagerFactory.unwrap(Stage.SessionFactory.class);
+    cleanup.deferAfterAll(mutinySessionFactory);
+    cleanup.deferAfterAll(stageSessionFactory);
 
     mutinySessionFactory
         .withTransaction((session, tx) -> session.merge(value))
         .await()
         .atMost(Duration.ofSeconds(30));
-  }
-
-  @AfterAll
-  void cleanUp() {
-    if (entityManagerFactory != null) {
-      entityManagerFactory.close();
-    }
-    if (mutinySessionFactory != null) {
-      mutinySessionFactory.close();
-    }
-    if (stageSessionFactory != null) {
-      stageSessionFactory.close();
-    }
-    vertx.close();
-    container.stop();
   }
 
   @Test
@@ -234,7 +226,7 @@ public abstract class AbstractHibernateReactiveTest {
                 () ->
                     stageSessionFactory
                         .openSession()
-                        .thenApply(
+                        .thenCompose(
                             session -> {
                               if (!Span.current().getSpanContext().isValid()) {
                                 throw new IllegalStateException("missing parent span");
@@ -244,7 +236,7 @@ public abstract class AbstractHibernateReactiveTest {
                                   .find(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, SECONDS);
 
     assertTrace();
@@ -260,7 +252,7 @@ public abstract class AbstractHibernateReactiveTest {
                 () ->
                     stageSessionFactory
                         .openStatelessSession()
-                        .thenApply(
+                        .thenCompose(
                             session -> {
                               if (!Span.current().getSpanContext().isValid()) {
                                 throw new IllegalStateException("missing parent span");
@@ -270,7 +262,7 @@ public abstract class AbstractHibernateReactiveTest {
                                   .get(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, SECONDS);
 
     assertTrace();

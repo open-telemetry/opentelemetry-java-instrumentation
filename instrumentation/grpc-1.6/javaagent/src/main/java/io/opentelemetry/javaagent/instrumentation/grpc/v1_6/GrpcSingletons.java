@@ -19,9 +19,10 @@ import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 
 // Holds singleton references.
-public final class GrpcSingletons {
+public class GrpcSingletons {
 
   public static final VirtualField<ManagedChannelBuilder<?>, Boolean>
       MANAGED_CHANNEL_BUILDER_INSTRUMENTED =
@@ -30,11 +31,11 @@ public final class GrpcSingletons {
   public static final VirtualField<ServerBuilder<?>, Boolean> SERVER_BUILDER_INSTRUMENTED =
       VirtualField.find(ServerBuilder.class, Boolean.class);
 
-  public static final ClientInterceptor CLIENT_INTERCEPTOR;
+  private static final ClientInterceptor clientInterceptor;
 
-  private static final GrpcTelemetry GRPC_TELEMETRY;
+  private static final GrpcTelemetry grpcTelemetry;
 
-  private static final AtomicReference<Context.Storage> STORAGE_REFERENCE = new AtomicReference<>();
+  private static final AtomicReference<Context.Storage> storageReference = new AtomicReference<>();
 
   static {
     DeclarativeConfigProperties config =
@@ -55,7 +56,7 @@ public final class GrpcSingletons {
             .get("server")
             .getScalarList("request", String.class, emptyList());
 
-    GRPC_TELEMETRY =
+    grpcTelemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
             .setEmitMessageEvents(emitMessageEvents)
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
@@ -63,20 +64,25 @@ public final class GrpcSingletons {
             .setCapturedServerRequestMetadata(serverRequestMetadata)
             .build();
 
-    CLIENT_INTERCEPTOR = GRPC_TELEMETRY.createClientInterceptor();
+    clientInterceptor = grpcTelemetry.createClientInterceptor();
   }
 
-  public static Context.Storage getStorage() {
-    return STORAGE_REFERENCE.get();
+  public static ClientInterceptor clientInterceptor() {
+    return clientInterceptor;
+  }
+
+  @Nullable
+  public static Context.Storage storage() {
+    return storageReference.get();
   }
 
   public static Context.Storage setStorage(Context.Storage storage) {
-    STORAGE_REFERENCE.compareAndSet(null, new ContextStorageBridge(storage));
-    return getStorage();
+    storageReference.compareAndSet(null, new ContextStorageBridge(storage));
+    return storage();
   }
 
   public static void configureServerBuilder(ServerBuilder<?> serverBuilder) {
-    GRPC_TELEMETRY.configureServerBuilder(serverBuilder);
+    grpcTelemetry.configureServerBuilder(serverBuilder);
   }
 
   private GrpcSingletons() {}

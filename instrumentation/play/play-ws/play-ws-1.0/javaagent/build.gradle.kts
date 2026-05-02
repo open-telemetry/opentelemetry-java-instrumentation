@@ -27,9 +27,9 @@ val scalaVersion = "2.12"
 dependencies {
   library("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:1.0.2")
 
-  implementation(project(":instrumentation:play:play-ws:play-ws-common:javaagent"))
+  implementation(project(":instrumentation:play:play-ws:play-ws-common-1.0:javaagent"))
 
-  testImplementation(project(":instrumentation:play:play-ws:play-ws-common:testing"))
+  testImplementation(project(":instrumentation:play:play-ws:play-ws-common-1.0:testing"))
 
   // These are to ensure cross compatibility
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
@@ -41,11 +41,11 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+  test {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

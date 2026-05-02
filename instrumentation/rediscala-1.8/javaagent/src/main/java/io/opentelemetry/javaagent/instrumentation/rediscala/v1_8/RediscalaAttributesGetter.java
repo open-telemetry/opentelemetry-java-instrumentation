@@ -1,0 +1,38 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.util.Locale;
+import javax.annotation.Nullable;
+import redis.RedisCommand;
+
+final class RediscalaAttributesGetter
+    implements DbClientAttributesGetter<RedisCommand<?, ?>, Void> {
+
+  @Override
+  public String getDbSystemName(RedisCommand<?, ?> redisCommand) {
+    return DbSystemNameIncubatingValues.REDIS;
+  }
+
+  @Override
+  @Nullable
+  public String getDbNamespace(RedisCommand<?, ?> redisCommand) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getDbQueryText(RedisCommand<?, ?> redisCommand) {
+    return null;
+  }
+
+  @Override
+  public String getDbOperationName(RedisCommand<?, ?> redisCommand) {
+    return redisCommand.getClass().getSimpleName().toUpperCase(Locale.ROOT);
+  }
+}

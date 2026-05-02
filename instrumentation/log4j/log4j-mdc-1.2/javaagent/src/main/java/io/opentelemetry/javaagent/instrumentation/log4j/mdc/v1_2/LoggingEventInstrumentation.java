@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.log4j.spi.LoggingEvent;
 
-public class LoggingEventInstrumentation implements TypeInstrumentation {
+class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.log4j.spi.LoggingEvent");
@@ -41,7 +41,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
   public static class GetMdcAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Object onExit(
         @Advice.This LoggingEvent event,
         @Advice.Argument(0) String key,

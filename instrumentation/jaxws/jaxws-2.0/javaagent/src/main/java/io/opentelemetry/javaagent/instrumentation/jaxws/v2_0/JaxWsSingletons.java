@@ -9,13 +9,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsRequest;
 
-public final class JaxWsSingletons {
+class JaxWsSingletons {
 
-  private static final Instrumenter<JaxWsRequest, Void> INSTANCE =
+  private static final Instrumenter<JaxWsRequest, Void> instrumenter =
       JaxWsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxws-2.0");
 
-  public static Instrumenter<JaxWsRequest, Void> instrumenter() {
-    return INSTANCE;
+  static Instrumenter<JaxWsRequest, Void> instrumenter() {
+    return instrumenter;
   }
 
   private JaxWsSingletons() {}

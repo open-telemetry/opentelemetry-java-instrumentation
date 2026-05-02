@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.akkaactor
 
-import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
   InstrumentationExtension
@@ -42,7 +41,7 @@ class AkkaActorTest {
                 override def accept(span: SpanDataAssert): Unit = {
                   span
                     .hasName("parent")
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               },
               new Consumer[SpanDataAssert] {
@@ -50,7 +49,7 @@ class AkkaActorTest {
                   span
                     .hasName("Howdy, Akka")
                     .hasParent(trace.getSpan(0))
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               }
             )
@@ -78,7 +77,7 @@ class AkkaActorTest {
                 override def accept(span: SpanDataAssert): Unit = {
                   span
                     .hasName("parent")
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               },
               new Consumer[SpanDataAssert] {
@@ -86,7 +85,7 @@ class AkkaActorTest {
                   span
                     .hasName("Howdy, Akka")
                     .hasParent(trace.getSpan(0))
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               }
             )
@@ -114,7 +113,7 @@ class AkkaActorTest {
                 override def accept(span: SpanDataAssert): Unit = {
                   span
                     .hasName("parent")
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               },
               new Consumer[SpanDataAssert] {
@@ -122,7 +121,7 @@ class AkkaActorTest {
                   span
                     .hasName("Hello, Akka")
                     .hasParent(trace.getSpan(0))
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               }
             )

@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 
 /** Instrumentation for {@link ServerHttpSecurity}. */
-public class ServerHttpSecurityInstrumentation implements TypeInstrumentation {
+class ServerHttpSecurityInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,7 +36,7 @@ public class ServerHttpSecurityInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This ServerHttpSecurity serverHttpSecurity) {
       new EnduserAttributesServerHttpSecurityCustomizer(enduserAttributesCapturer())
           .customize(serverHttpSecurity);

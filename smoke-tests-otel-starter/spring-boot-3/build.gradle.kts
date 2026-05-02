@@ -1,10 +1,7 @@
 plugins {
   id("otel.java-conventions")
   alias(springBoot31.plugins.versions)
-}
-
-if (gradle.startParameter.taskNames.any { it.contains("nativeTest") }) {
-  apply(plugin = "org.graalvm.buildtools.native")
+  id("otel.spring-native-test-conventions")
 }
 
 description = "smoke-tests-otel-starter-spring-boot-3"
@@ -30,8 +27,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
 
-  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
-  if (testLatestDeps) {
+  if (otelProps.testLatestDeps) {
     // with spring boot 3.5.0 versions of org.mongodb:mongodb-driver-sync and org.mongodb:mongodb-driver-core
     // are not in sync
     testImplementation("org.mongodb:mongodb-driver-sync:latest.release")
@@ -44,46 +40,6 @@ springBoot {
 
 tasks {
   bootJar {
-    enabled = false
-  }
-}
-
-plugins.withId("org.graalvm.buildtools.native") {
-  tasks.named<JavaCompile>("compileAotJava").configure {
-    with(options) {
-      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
-      // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
-      // -deprecation,-unchecked and none are required (none is not enough)
-    }
-  }
-  tasks.named<JavaCompile>("compileAotTestJava").configure {
-    with(options) {
-      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
-      // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
-      // -deprecation,-unchecked and none are required (none is not enough)
-    }
-  }
-  tasks.named("checkstyleAot").configure {
-    enabled = false
-  }
-  tasks.named("checkstyleAotTest").configure {
-    enabled = false
-  }
-
-  // See https://github.com/graalvm/native-build-tools/issues/572
-  (extensions.getByName("graalvmNative") as ExtensionAware).extensions
-    .configure<org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension> {
-      enabled.set(false)
-    }
-
-  tasks.named<Test>("test").configure {
-    useJUnitPlatform()
-    setForkEvery(1)
-  }
-
-  // Disable collectReachabilityMetadata task to avoid configuration isolation issues
-  // See https://github.com/gradle/gradle/issues/17559
-  tasks.named("collectReachabilityMetadata").configure {
     enabled = false
   }
 }

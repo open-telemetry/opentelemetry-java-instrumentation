@@ -67,9 +67,10 @@ testing {
   suites {
     val tapirTest by registering(JvmTestSuite::class) {
       dependencies {
-        if (findProperty("testLatestDeps") == "true") {
-          implementation("com.typesafe.akka:akka-http_2.13:latest.release")
-          implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
+        if (otelProps.testLatestDeps) {
+          implementation("org.apache.pekko:pekko-http_2.13:latest.release")
+          implementation("org.apache.pekko:pekko-slf4j_2.13:latest.release")
+          implementation("org.apache.pekko:pekko-stream_2.13:latest.release")
           implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:latest.release")
         } else {
           implementation("org.apache.pekko:pekko-http_2.12:1.0.0")
@@ -87,22 +88,22 @@ tasks {
     jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   check {
     dependsOn(testing.suites)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (otelProps.testLatestDeps) {
   configurations {
     // pekko artifact name is different for regular and latest tests
     testImplementation {

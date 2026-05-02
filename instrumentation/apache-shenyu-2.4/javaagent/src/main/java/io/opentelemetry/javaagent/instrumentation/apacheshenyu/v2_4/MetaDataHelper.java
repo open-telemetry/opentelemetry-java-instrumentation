@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import org.apache.shenyu.common.dto.MetaData;
 
-public final class MetaDataHelper {
+public class MetaDataHelper {
 
   /** ID for apache shenyu metadata. */
   private static final AttributeKey<String> META_ID_ATTRIBUTE =

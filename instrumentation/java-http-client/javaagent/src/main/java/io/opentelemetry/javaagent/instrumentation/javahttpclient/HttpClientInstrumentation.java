@@ -33,7 +33,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpClientInstrumentation implements TypeInstrumentation {
+class HttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -96,14 +96,13 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.Argument(value = 0) HttpRequest httpRequest) {
       return AdviceScope.start(httpRequest);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Argument(0) HttpRequest httpRequest,
         @Advice.Return @Nullable HttpResponse<?> httpResponse,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope scope) {
@@ -118,16 +117,16 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class SendAsyncAdvice {
 
     public static class AsyncAdviceScope {
-      private final Context parentContext;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final Context parentContext;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
       private final CallDepth callDepth;
       private final HttpRequest request;
 
       private AsyncAdviceScope(
-          Context parentContext,
-          Context context,
-          Scope scope,
+          @Nullable Context parentContext,
+          @Nullable Context context,
+          @Nullable Scope scope,
           CallDepth callDepth,
           HttpRequest request) {
         this.parentContext = parentContext;
@@ -145,6 +144,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         }
         Context parentContext = currentContext();
         if (!instrumenter().shouldStart(parentContext, request)) {
+          callDepth.decrementAndGet();
           return null;
         }
         Context context = instrumenter().start(parentContext, request);
@@ -170,14 +170,14 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AsyncAdviceScope methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest) {
       return AsyncAdviceScope.start(httpRequest);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static CompletableFuture<HttpResponse<?>> methodExit(
         @Advice.Return CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown @Nullable Throwable throwable,

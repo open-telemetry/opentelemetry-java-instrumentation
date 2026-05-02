@@ -8,19 +8,17 @@ muzzle {
     group.set("org.springframework.boot")
     module.set("spring-boot-actuator-autoconfigure")
     versions.set("[2.0.0.RELEASE,)")
-    extraDependency("io.micrometer:micrometer-core:1.5.0")
     assertInverse.set(true)
+    extraDependency("io.micrometer:micrometer-core:1.5.0")
   }
 }
-
-val latestDepTest = findProperty("testLatestDeps") == "true"
 
 dependencies {
   library("org.springframework.boot:spring-boot-actuator-autoconfigure:2.0.0.RELEASE")
   library("io.micrometer:micrometer-core:1.5.0")
   testLibrary("io.micrometer:micrometer-registry-prometheus:1.0.1")
 
-  if (latestDepTest) {
+  if (otelProps.testLatestDeps) {
     // Micrometer moved into its own Spring Boot starter in version 4
     testLibrary("org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0")
   }
@@ -31,7 +29,7 @@ dependencies {
   latestDepTestLibrary("ch.qos.logback:logback-classic:latest.release")
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
@@ -40,14 +38,14 @@ tasks.withType<Test>().configureEach {
 }
 
 // spring 6 (spring boot 3) requires java 17
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
 
 // spring 6 (spring boot 3) uses slf4j 2.0
-if (!latestDepTest) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       // requires old logback (and therefore also old slf4j)

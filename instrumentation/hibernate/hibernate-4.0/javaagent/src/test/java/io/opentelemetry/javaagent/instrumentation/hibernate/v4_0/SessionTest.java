@@ -489,7 +489,7 @@ class SessionTest extends AbstractHibernateTest {
               return exception;
             });
 
-    assertThat(mappingException.getClass()).isEqualTo(MappingException.class);
+    assertThat(mappingException).isInstanceOf(MappingException.class);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -812,7 +812,7 @@ class SessionTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void testHibernateOverlappingSessions() {
-    assumeTrue(ExperimentalTestHelper.isEnabled); // needs experimental session id
+    assumeTrue(ExperimentalTestHelper.EXPERIMENTAL_ATTRIBUTES); // needs experimental session id
 
     testing.runWithSpan(
         "overlapping Sessions",
@@ -870,9 +870,7 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT),
-                                stringAssert -> stringAssert.startsWith("insert")),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "INSERT Value" : null),
@@ -915,9 +913,7 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT),
-                                stringAssert -> stringAssert.startsWith("insert")),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "INSERT Value" : null),
@@ -938,9 +934,7 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT),
-                                stringAssert -> stringAssert.startsWith("delete")),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("delete")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "DELETE Value" : null),

@@ -30,8 +30,44 @@ import org.springframework.util.LinkedMultiValueMap;
 
 final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
-  private static final ThreadLocal<Map<MessageChannel, ContextAndScope>> LOCAL_CONTEXT_AND_SCOPE =
+  private static final ThreadLocal<Map<MessageChannel, ContextAndScope>> localContextAndScope =
       ThreadLocal.withInitial(IdentityHashMap::new);
+
+  @Nullable
+  private static final Class<?> directWithAttributesChannelClass =
+      getDirectWithAttributesChannelClass();
+
+  @Nullable
+  private static final MethodHandle channelGetAttributeMh =
+      getChannelAttributeMh(directWithAttributesChannelClass);
+
+  @Nullable
+  private static Class<?> getDirectWithAttributesChannelClass() {
+    try {
+      return Class.forName(
+          "org.springframework.cloud.stream.messaging.DirectWithAttributesChannel");
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static MethodHandle getChannelAttributeMh(
+      @Nullable Class<?> directWithAttributesChannelClass) {
+    if (directWithAttributesChannelClass == null) {
+      return null;
+    }
+
+    try {
+      return MethodHandles.lookup()
+          .findVirtual(
+              directWithAttributesChannelClass,
+              "getAttribute",
+              MethodType.methodType(Object.class, String.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      return null;
+    }
+  }
 
   private final ContextPropagators propagators;
   private final Instrumenter<MessageWithChannel, Void> consumerInstrumenter;
@@ -52,7 +88,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public Message<?> preSend(Message<?> message, MessageChannel messageChannel) {
 
-    Map<MessageChannel, ContextAndScope> localMap = LOCAL_CONTEXT_AND_SCOPE.get();
+    Map<MessageChannel, ContextAndScope> localMap = localContextAndScope.get();
     if (localMap.get(messageChannel) != null) {
       // GlobalChannelInterceptorProcessor.afterSingletonsInstantiated() adds the global
       // interceptors for every bean name / channel pair, which means it's possible that this
@@ -118,7 +154,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public void afterSendCompletion(
       Message<?> message, MessageChannel messageChannel, boolean sent, Exception e) {
-    ContextAndScope contextAndScope = LOCAL_CONTEXT_AND_SCOPE.get().remove(messageChannel);
+    ContextAndScope contextAndScope = localContextAndScope.get().remove(messageChannel);
     if (contextAndScope != null) {
       contextAndScope.close();
       Context context = contextAndScope.getContext();
@@ -153,7 +189,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   public Message<?> beforeHandle(
       Message<?> message, MessageChannel channel, MessageHandler handler) {
 
-    Map<MessageChannel, ContextAndScope> localMap = LOCAL_CONTEXT_AND_SCOPE.get();
+    Map<MessageChannel, ContextAndScope> localMap = localContextAndScope.get();
     if (localMap.get(channel) != null) {
       // see comment explaining the same conditional in preSend()
       return message;
@@ -173,7 +209,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   @Override
   public void afterMessageHandled(
       Message<?> message, MessageChannel channel, MessageHandler handler, Exception ex) {
-    ContextAndScope contextAndScope = LOCAL_CONTEXT_AND_SCOPE.get().remove(channel);
+    ContextAndScope contextAndScope = localContextAndScope.get().remove(channel);
     if (contextAndScope != null) {
       contextAndScope.close();
     }
@@ -203,42 +239,6 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
         .build();
   }
 
-  @Nullable
-  private static final Class<?> directWithAttributesChannelClass =
-      getDirectWithAttributesChannelClass();
-
-  @Nullable
-  private static final MethodHandle channelGetAttributeMh =
-      getChannelAttributeMh(directWithAttributesChannelClass);
-
-  @Nullable
-  private static Class<?> getDirectWithAttributesChannelClass() {
-    try {
-      return Class.forName(
-          "org.springframework.cloud.stream.messaging.DirectWithAttributesChannel");
-    } catch (ClassNotFoundException ignore) {
-      return null;
-    }
-  }
-
-  @Nullable
-  private static MethodHandle getChannelAttributeMh(
-      @Nullable Class<?> directWithAttributesChannelClass) {
-    if (directWithAttributesChannelClass == null) {
-      return null;
-    }
-
-    try {
-      return MethodHandles.lookup()
-          .findVirtual(
-              directWithAttributesChannelClass,
-              "getAttribute",
-              MethodType.methodType(Object.class, String.class));
-    } catch (NoSuchMethodException | IllegalAccessException exception) {
-      return null;
-    }
-  }
-
   private boolean createProducerSpan(MessageChannel messageChannel) {
     if (!producerSpanEnabled || directWithAttributesChannelClass == null) {
       return false;
@@ -257,7 +257,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
     try {
       return "output".equals(channelGetAttributeMh.invoke(messageChannel, "type"));
-    } catch (Throwable throwable) {
+    } catch (Throwable ignored) {
       return false;
     }
   }
@@ -275,7 +275,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
       }
 
       return candidate;
-    } catch (Throwable ignore) {
+    } catch (Throwable ignored) {
       return candidate;
     }
   }

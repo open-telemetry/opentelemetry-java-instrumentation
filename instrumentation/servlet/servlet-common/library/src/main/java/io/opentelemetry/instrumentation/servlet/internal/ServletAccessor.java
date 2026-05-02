@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.servlet.internal;
 
 import java.security.Principal;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * This interface is used to access methods of ServletContext, HttpServletRequest and
@@ -28,8 +29,10 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   String getRequestUri(REQUEST request);
 
+  @Nullable
   String getRequestQueryString(REQUEST request);
 
+  @Nullable
   Object getRequestAttribute(REQUEST request, String name);
 
   void setRequestAttribute(REQUEST request, String name, Object value);
@@ -40,12 +43,16 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   String getRequestRemoteAddr(REQUEST request);
 
+  @Nullable
   Integer getRequestRemotePort(REQUEST request);
 
+  @Nullable
   String getRequestLocalAddr(REQUEST request);
 
+  @Nullable
   Integer getRequestLocalPort(REQUEST request);
 
+  @Nullable
   String getRequestHeader(REQUEST request, String name);
 
   List<String> getRequestHeaderValues(REQUEST request, String name);
@@ -56,12 +63,14 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   String getRequestServletPath(REQUEST request);
 
+  @Nullable
   String getRequestPathInfo(REQUEST request);
 
+  @Nullable
   Principal getRequestUserPrincipal(REQUEST request);
 
   void addRequestAsyncListener(
-      REQUEST request, ServletAsyncListener<RESPONSE> listener, Object response);
+      REQUEST request, ServletAsyncListener<RESPONSE> listener, @Nullable Object response);
 
   int getResponseStatus(RESPONSE response);
 

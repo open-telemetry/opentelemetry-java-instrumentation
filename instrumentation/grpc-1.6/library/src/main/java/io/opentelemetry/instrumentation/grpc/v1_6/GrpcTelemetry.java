@@ -16,6 +16,11 @@ import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
 
 /** Entrypoint for instrumenting gRPC servers or clients. */
 public final class GrpcTelemetry {
+  private final Instrumenter<GrpcRequest, Status> serverInstrumenter;
+  private final Instrumenter<GrpcRequest, Status> clientInstrumenter;
+  private final ContextPropagators propagators;
+  private final boolean captureExperimentalSpanAttributes;
+  private final boolean emitMessageEvents;
 
   static {
     Internal.setServerInterceptorFactory(GrpcTelemetry::buildServerInterceptor);
@@ -30,12 +35,6 @@ public final class GrpcTelemetry {
   public static GrpcTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new GrpcTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<GrpcRequest, Status> serverInstrumenter;
-  private final Instrumenter<GrpcRequest, Status> clientInstrumenter;
-  private final ContextPropagators propagators;
-  private final boolean captureExperimentalSpanAttributes;
-  private final boolean emitMessageEvents;
 
   GrpcTelemetry(
       Instrumenter<GrpcRequest, Status> serverInstrumenter,

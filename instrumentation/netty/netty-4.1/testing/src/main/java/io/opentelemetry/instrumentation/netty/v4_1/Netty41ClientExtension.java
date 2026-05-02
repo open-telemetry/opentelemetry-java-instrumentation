@@ -63,7 +63,7 @@ public class Netty41ClientExtension implements BeforeAllCallback, AfterAllCallba
   }
 
   public Bootstrap buildBootstrap(boolean https, boolean readTimeout) {
-    return buildBootstrap(eventLoopGroupSupplier.get(), https, readTimeout);
+    return buildBootstrap(eventLoopGroup, https, readTimeout);
   }
 
   private Bootstrap buildBootstrap(

@@ -1,0 +1,40 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqTelemetry;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import org.apache.rocketmq.client.hook.ConsumeMessageHook;
+import org.apache.rocketmq.client.hook.SendMessageHook;
+
+public class RocketMqSingletons {
+
+  @SuppressWarnings("deprecation") // call to deprecated method will be removed in the future
+  private static final RocketMqTelemetry telemetry =
+      RocketMqTelemetry.builder(GlobalOpenTelemetry.get())
+          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+          .setCaptureExperimentalSpanAttributes(
+              DeclarativeConfigUtil.getInstrumentationConfig(
+                      GlobalOpenTelemetry.get(), "rocketmq_client")
+                  .getBoolean("experimental_span_attributes/development", false))
+          .build();
+
+  private static final ConsumeMessageHook consumeMessageHook = telemetry.createConsumeMessageHook();
+
+  private static final SendMessageHook sendMessageHook = telemetry.createSendMessageHook();
+
+  public static ConsumeMessageHook consumeMessageHook() {
+    return consumeMessageHook;
+  }
+
+  public static SendMessageHook sendMessageHook() {
+    return sendMessageHook;
+  }
+
+  private RocketMqSingletons() {}
+}

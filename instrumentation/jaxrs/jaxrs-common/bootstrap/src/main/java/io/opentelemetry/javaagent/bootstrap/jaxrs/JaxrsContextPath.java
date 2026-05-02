@@ -20,8 +20,6 @@ public final class JaxrsContextPath {
   private static final ContextKey<String> CONTEXT_KEY =
       ContextKey.named("opentelemetry-jaxrs-context-path-key");
 
-  private JaxrsContextPath() {}
-
   @Nullable
   public static Context init(Context context, @Nullable String path) {
     if (path == null || path.isEmpty() || path.equals("/")) {
@@ -46,4 +44,6 @@ public final class JaxrsContextPath {
       return spanName;
     }
   }
+
+  private JaxrsContextPath() {}
 }

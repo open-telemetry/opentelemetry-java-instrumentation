@@ -12,12 +12,14 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
@@ -32,6 +34,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.ThreadContext;
@@ -60,7 +63,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   static final String PLUGIN_NAME = "OpenTelemetry";
 
   private final LogEventMapper<ReadOnlyStringMap> mapper;
-  private volatile OpenTelemetry openTelemetry;
+  @Nullable private volatile OpenTelemetry openTelemetry;
 
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
@@ -72,6 +75,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
    * the {@link LoggerContext}.
    */
   public static void install(OpenTelemetry openTelemetry) {
+    forEachAppender(appender -> appender.setOpenTelemetry(openTelemetry));
+  }
+
+  static void resetForTest() {
+    forEachAppender(OpenTelemetryAppender::resetAppenderForTest);
+  }
+
+  private static void forEachAppender(Consumer<OpenTelemetryAppender> consumer) {
     org.apache.logging.log4j.spi.LoggerContext loggerContextSpi = LogManager.getContext(false);
     if (!(loggerContextSpi instanceof LoggerContext)) {
       return;
@@ -84,7 +95,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         .forEach(
             appender -> {
               if (appender instanceof OpenTelemetryAppender) {
-                ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+                consumer.accept((OpenTelemetryAppender) appender);
               }
             });
   }
@@ -101,8 +112,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureCodeAttributes;
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
-    @PluginBuilderAttribute private String captureContextDataAttributes;
-    @PluginBuilderAttribute private boolean captureEventName;
+    @Nullable @PluginBuilderAttribute private String captureContextDataAttributes;
     @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
     @Nullable private OpenTelemetry openTelemetry;
@@ -132,18 +142,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return asBuilder();
     }
 
-    /**
-     * Sets whether the code attributes (file name, class name, method name and line number) should
-     * be set to logs.
-     *
-     * @deprecated Use {@link #setCaptureCodeAttributes(boolean)} instead.
-     */
-    @Deprecated
-    @CanIgnoreReturnValue
-    public B captureCodeAttributes(boolean captureCodeAttributes) {
-      return setCaptureCodeAttributes(captureCodeAttributes);
-    }
-
     /** Sets whether log4j {@link MapMessage} attributes should be copied to logs. */
     @CanIgnoreReturnValue
     public B setCaptureMapMessageAttributes(boolean captureMapMessageAttributes) {
@@ -170,28 +168,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     /**
-     * Sets whether the value of the {@code event.name} attribute is used as the log event name.
-     *
-     * <p>The {@code event.name} attribute is captured via any other mechanism supported by this
-     * appender, such as when {@code captureContextDataAttributes} includes {@code event.name}.
-     *
-     * <p>When {@code captureEventName} is true, then the value of the {@code event.name} attribute
-     * will be used as the log event name, and {@code event.name} attribute will be removed.
-     *
-     * @param captureEventName to enable or disable capturing the {@code event.name} attribute as
-     *     the log event name
-     */
-    @CanIgnoreReturnValue
-    public B setCaptureEventName(boolean captureEventName) {
-      this.captureEventName = captureEventName;
-      return asBuilder();
-    }
-
-    /**
-     * Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with
-     * an {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used
-     * to replay the logs that were emitted prior to setting the OpenTelemetry instance into the
-     * Logback appender.
+     * Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an
+     * {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used to
+     * replay the logs that were emitted prior to setting the OpenTelemetry instance into the
+     * OpenTelemetry Log4j appender.
      */
     @CanIgnoreReturnValue
     public B setNumLogsCapturedBeforeOtelInstall(int numLogsCapturedBeforeOtelInstall) {
@@ -208,10 +188,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Override
     public OpenTelemetryAppender build() {
-      if (captureEventName) {
-        LOGGER.warn(
-            "The captureEventName setting is deprecated and will be removed in a future version.");
-      }
       OpenTelemetry openTelemetry = this.openTelemetry;
       return new OpenTelemetryAppender(
           getName(),
@@ -224,7 +200,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureMapMessageAttributes,
           captureMarkerAttribute,
           captureContextDataAttributes,
-          captureEventName,
           numLogsCapturedBeforeOtelInstall,
           openTelemetry);
     }
@@ -240,12 +215,15 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
-      String captureContextDataAttributes,
-      boolean captureEventName,
+      @Nullable String captureContextDataAttributes,
       int numLogsCapturedBeforeOtelInstall,
-      OpenTelemetry openTelemetry) {
-
+      @Nullable OpenTelemetry openTelemetry) {
     super(name, filter, layout, ignoreExceptions, properties);
+
+    DeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
+
     this.mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
@@ -254,7 +232,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureMapMessageAttributes,
             captureMarkerAttribute,
             splitAndFilterBlanksAndNulls(captureContextDataAttributes),
-            captureEventName);
+            v3Preview);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
     if (numLogsCapturedBeforeOtelInstall != 0) {
@@ -264,7 +242,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
   }
 
-  private static List<String> splitAndFilterBlanksAndNulls(String value) {
+  private static List<String> splitAndFilterBlanksAndNulls(@Nullable String value) {
     if (value == null) {
       return emptyList();
     }
@@ -292,6 +270,18 @@ public class OpenTelemetryAppender extends AbstractAppender {
     // now emit
     for (LogEventToReplay eventToReplay : eventsToReplay) {
       emit(openTelemetry, eventToReplay);
+    }
+  }
+
+  private void resetAppenderForTest() {
+    Lock writeLock = lock.writeLock();
+    writeLock.lock();
+    try {
+      openTelemetry = null;
+      eventsToReplay.clear();
+      replayLimitWarningLogged.set(false);
+    } finally {
+      writeLock.unlock();
     }
   }
 
