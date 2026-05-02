@@ -50,3 +50,6 @@ otel:
             emit_experimental_telemetry/development: true
       runtime_telemetry:
         emit_experimental_metrics/development: true
+      spring_starter:
+        thread_details:
+          enabled: true
