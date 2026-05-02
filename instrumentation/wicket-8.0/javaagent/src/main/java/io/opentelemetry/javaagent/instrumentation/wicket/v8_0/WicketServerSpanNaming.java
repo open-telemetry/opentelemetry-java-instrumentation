@@ -22,7 +22,7 @@ public class WicketServerSpanNaming {
         return ServletContextPath.prepend(context, filterPath + "/" + pageName);
       };
 
-  public static HttpServerRouteGetter<IPageClassRequestHandler> getServerSpanName() {
+  public static HttpServerRouteGetter<IPageClassRequestHandler> serverSpanName() {
     return serverSpanName;
   }
 

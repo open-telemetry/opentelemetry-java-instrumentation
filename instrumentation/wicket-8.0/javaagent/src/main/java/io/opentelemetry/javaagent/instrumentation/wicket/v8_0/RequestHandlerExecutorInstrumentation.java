@@ -42,7 +42,7 @@ class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
         HttpServerRoute.update(
             Java8BytecodeBridge.currentContext(),
             CONTROLLER,
-            WicketServerSpanNaming.getServerSpanName(),
+            WicketServerSpanNaming.serverSpanName(),
             (IPageClassRequestHandler) handler);
       }
     }
