@@ -35,6 +35,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -59,6 +60,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
@@ -149,7 +151,7 @@ class VertxReactivePropagationTest {
 
   @SuppressWarnings("deprecation") // uses deprecated db semconv
   @Test
-  void highConcurrency() {
+  void highConcurrency() throws Exception {
     int count = 100;
     String baseUrl = "/listProducts";
     CountDownLatch latch = new CountDownLatch(1);
@@ -160,29 +162,35 @@ class VertxReactivePropagationTest {
     TextMapSetter<HttpRequestBuilder> setter =
         (carrier, name, value) -> carrier.header(name, value);
 
+    List<Future<?>> futures = new ArrayList<>();
     for (int i = 0; i < count; i++) {
       int index = i;
-      pool.submit(
-          () -> {
-            try {
-              latch.await();
-            } catch (InterruptedException e) {
-              Thread.currentThread().interrupt();
-            }
-            testing.runWithSpan(
-                "client " + index,
-                () -> {
-                  HttpRequestBuilder builder =
-                      HttpRequest.builder()
-                          .get(baseUrl + "?" + TEST_REQUEST_ID_PARAMETER + "=" + index);
-                  Span.current().setAttribute(TEST_REQUEST_ID_ATTRIBUTE, index);
-                  propagator.inject(Context.current(), builder, setter);
-                  client.execute(builder.build()).aggregate().join();
-                });
-          });
+      futures.add(
+          pool.submit(
+              () -> {
+                try {
+                  assertThat(latch.await(10, SECONDS)).isTrue();
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  throw new AssertionError(e);
+                }
+                                testing.runWithSpan(
+                                        "client " + index,
+                                        () -> {
+                                            HttpRequestBuilder builder =
+                                                    HttpRequest.builder()
+                                                            .get(baseUrl + "?" + TEST_REQUEST_ID_PARAMETER + "=" + index);
+                                            Span.current().setAttribute(TEST_REQUEST_ID_ATTRIBUTE, index);
+                                            propagator.inject(Context.current(), builder, setter);
+                                            client.execute(builder.build()).aggregate().join();
+                                        });
+              }));
     }
 
     latch.countDown();
+    for (Future<?> future : futures) {
+      future.get(30, SECONDS);
+    }
 
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
