@@ -57,7 +57,8 @@ class ElasticsearchRest7Test {
 
   @BeforeAll
   static void setUp() {
-    elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.10.2");
+    elasticsearch =
+        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.10.2");
     cleanup.deferAfterAll(elasticsearch::stop);
     // limit memory usage
     elasticsearch.withEnv(
