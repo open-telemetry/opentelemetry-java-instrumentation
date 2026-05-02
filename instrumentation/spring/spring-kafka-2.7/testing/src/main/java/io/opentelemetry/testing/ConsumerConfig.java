@@ -18,30 +18,30 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 
 @SpringBootConfiguration
 @EnableAutoConfiguration
-public class ConsumerConfig {
+class ConsumerConfig {
 
   @Bean
-  public NewTopic batchTopic() {
+  NewTopic batchTopic() {
     return TopicBuilder.name("testBatchTopic").partitions(1).replicas(1).build();
   }
 
   @Bean
-  public NewTopic singleTopic() {
+  NewTopic singleTopic() {
     return TopicBuilder.name("testSingleTopic").partitions(1).replicas(1).build();
   }
 
   @Bean
-  public BatchRecordListener batchRecordListener() {
+  BatchRecordListener batchRecordListener() {
     return new BatchRecordListener();
   }
 
   @Bean
-  public SingleRecordListener singleRecordListener() {
+  SingleRecordListener singleRecordListener() {
     return new SingleRecordListener();
   }
 
   @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, String> batchFactory(
+  ConcurrentKafkaListenerContainerFactory<String, String> batchFactory(
       ConsumerFactory<String, String> consumerFactory,
       ObjectProvider<
               ContainerCustomizer<
@@ -57,7 +57,7 @@ public class ConsumerConfig {
   }
 
   @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, String> singleFactory(
+  ConcurrentKafkaListenerContainerFactory<String, String> singleFactory(
       ConsumerFactory<String, String> consumerFactory,
       ObjectProvider<
               ContainerCustomizer<
@@ -72,7 +72,7 @@ public class ConsumerConfig {
       // available since spring 2.8
       Class.forName("org.springframework.kafka.listener.CommonErrorHandler");
       ConsumerConfigUtil.addErrorHandler(factory);
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       // ignore
     }
     customizerProvider.ifAvailable(factory::setContainerCustomizer);

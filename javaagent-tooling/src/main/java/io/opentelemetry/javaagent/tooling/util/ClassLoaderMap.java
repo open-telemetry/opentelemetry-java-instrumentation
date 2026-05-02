@@ -25,11 +25,15 @@ class ClassLoaderMap {
   private static final Map<Object, Object> bootLoaderData = new ConcurrentHashMap<>();
   private static final HelperInjector helperInjector =
       HelperInjector.forDynamicTypes(ClassLoaderMap.class.getSimpleName(), emptyList(), null);
-  static Injector defaultInjector =
+  private static final Injector defaultInjector =
       (classLoader, className, bytes) -> {
         helperInjector.injectHelperClasses(classLoader, singletonMap(className, () -> bytes));
         return Class.forName(className, false, classLoader);
       };
+
+  static Injector defaultInjector() {
+    return defaultInjector;
+  }
 
   public static Object get(ClassLoader classLoader, Injector classInjector, Object key) {
     return getClassLoaderData(classLoader, classInjector, false).get(key);
@@ -94,8 +98,8 @@ class ClassLoaderMap {
           field.set(null, map);
         }
       }
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
     return map;
   }

@@ -15,13 +15,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.client.Request;
 
 // starting from 8.9
-public class RestClientHttpClientInstrumentation implements TypeInstrumentation {
+class RestClientHttpClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -32,22 +33,22 @@ public class RestClientHttpClientInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf("performRequest", "performRequestAsync").and(takesArgument(0, String.class)),
-        this.getClass().getName() + "$PerformRequestAdvice");
+        getClass().getName() + "$PerformRequestAdvice");
     transformer.applyAdviceToMethod(
         named("createRestRequest").and(returns(named("org.elasticsearch.client.Request"))),
-        this.getClass().getName() + "$CreateRestRequestAdvice");
+        getClass().getName() + "$CreateRestRequestAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class PerformRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) String endpointId) {
       return EndpointId.storeInContext(Context.current(), endpointId).makeCurrent();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -57,7 +58,7 @@ public class RestClientHttpClientInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class CreateRestRequestAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Return Request request) {
       String endpointId = EndpointId.get(Context.current());
       if (endpointId == null) {

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
-import io.opentelemetry.javaagent.instrumentation.jms.DestinationAdapter;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Queue;
@@ -13,7 +13,7 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
 
-public final class JavaxDestinationAdapter implements DestinationAdapter {
+public class JavaxDestinationAdapter implements DestinationAdapter {
 
   public static DestinationAdapter create(Destination destination) {
     return new JavaxDestinationAdapter(destination);

@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.CAPTURE_SEARCH_QUERY;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -27,7 +28,12 @@ import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.transport.Endpoint;
 import org.opensearch.client.transport.OpenSearchTransport;
 
-public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
+class OpenSearchTransportInstrumentation implements TypeInstrumentation {
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.opensearch.client.transport.OpenSearchTransport");
+  }
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("org.opensearch.client.transport.OpenSearchTransport"));
@@ -36,20 +42,18 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("performRequest"))
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint"))),
-        this.getClass().getName() + "$PerformRequestAdvice");
+        getClass().getName() + "$PerformRequestAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("performRequestAsync"))
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint"))),
-        this.getClass().getName() + "$PerformRequestAsyncAdvice");
+        getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
   public static class AdviceScope {
@@ -70,7 +74,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
       String queryBody = null;
 
-      if (OpenSearchSingletons.CAPTURE_SEARCH_QUERY
+      if (CAPTURE_SEARCH_QUERY
           && (request instanceof SearchRequest || request instanceof MsearchRequest)) {
         queryBody = OpenSearchBodyExtractor.extractSanitized(jsonpMapper, request);
       }
@@ -107,7 +111,8 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PerformRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(
         @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
@@ -115,7 +120,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
@@ -128,26 +133,27 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PerformRequestAsyncAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object[] onEnter(
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(
         @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
-      AdviceScope adviceScope =
-          AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
-      return new Object[] {adviceScope};
+      return AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
+    @Nullable
     public static CompletableFuture<Object> stopSpan(
-        @Advice.Return CompletableFuture<Object> future,
+        @Advice.Return @Nullable CompletableFuture<Object> future,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter Object[] enterResult) {
-      AdviceScope adviceScope = (AdviceScope) enterResult[0];
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.endAsync(throwable);
-        return adviceScope.wrapFuture(future);
+        if (future != null) {
+          return adviceScope.wrapFuture(future);
+        }
       }
       return future;
     }

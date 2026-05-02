@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -21,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
@@ -40,6 +40,7 @@ import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -88,12 +89,12 @@ public abstract class AbstractR2dbcStatementTest {
               "MYSQL_PASSWORD", PW_DB,
               "MYSQL_DATABASE", DB);
 
-  private static final Map<String, DbSystemProps> SYSTEMS = new HashMap<>();
+  private static final Map<String, DbSystemProps> systems = new LinkedHashMap<>();
 
   static {
-    SYSTEMS.put(POSTGRESQL.system, POSTGRESQL);
-    SYSTEMS.put(MYSQL.system, MYSQL);
-    SYSTEMS.put(MARIADB.system, MARIADB);
+    systems.put(POSTGRESQL.system, POSTGRESQL);
+    systems.put(MYSQL.system, MYSQL);
+    systems.put(MARIADB.system, MARIADB);
   }
 
   private static Integer port;
@@ -134,11 +135,11 @@ public abstract class AbstractR2dbcStatementTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideParameters")
   void testQueries(Parameter parameter) {
-    DbSystemProps props = SYSTEMS.get(parameter.system);
+    DbSystemProps props = systems.get(parameter.system);
     startContainer(props);
     ConnectionFactory connectionFactory =
         createProxyConnectionFactory(
@@ -207,7 +208,7 @@ public abstract class AbstractR2dbcStatementTest {
   }
 
   private static Stream<Arguments> provideParameters() {
-    return SYSTEMS.values().stream()
+    return systems.values().stream()
         .flatMap(
             system ->
                 Stream.of(
@@ -260,9 +261,8 @@ public abstract class AbstractR2dbcStatementTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // uses deprecated semconv
   void testMetrics() {
-    DbSystemProps props = SYSTEMS.get(MARIADB.system);
+    DbSystemProps props = systems.get(MARIADB.system);
     startContainer(props);
     ConnectionFactory connectionFactory =
         createProxyConnectionFactory(
@@ -296,14 +296,14 @@ public abstract class AbstractR2dbcStatementTest {
 
   private static class Parameter {
 
-    final String system;
-    final String queryText;
-    final String expectedQueryText;
-    final String spanName;
-    final String table;
-    final String operation;
+    private final String system;
+    private final String queryText;
+    private final String expectedQueryText;
+    private final String spanName;
+    private final String table;
+    private final String operation;
 
-    Parameter(
+    private Parameter(
         String system,
         String queryText,
         String expectedQueryText,
@@ -318,7 +318,7 @@ public abstract class AbstractR2dbcStatementTest {
       this.operation = operation;
     }
 
-    String getQuerySummary() {
+    private String getQuerySummary() {
       if (!emitStableDatabaseSemconv()) {
         return null;
       }
@@ -328,19 +328,19 @@ public abstract class AbstractR2dbcStatementTest {
   }
 
   private static class DbSystemProps {
-    final String system;
-    final String image;
-    final int port;
-    final Map<String, String> envVariables = new HashMap<>();
+    private final String system;
+    private final String image;
+    private final int port;
+    private final Map<String, String> envVariables = new HashMap<>();
 
-    DbSystemProps(String system, String image, int port) {
+    private DbSystemProps(String system, String image, int port) {
       this.system = system;
       this.image = image;
       this.port = port;
     }
 
     @CanIgnoreReturnValue
-    DbSystemProps envVariables(String... keyValues) {
+    private DbSystemProps envVariables(String... keyValues) {
       for (int i = 0; i < keyValues.length / 2; i++) {
         envVariables.put(keyValues[2 * i], keyValues[2 * i + 1]);
       }

@@ -45,11 +45,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ProcedureCallTest {
-  protected static SessionFactory sessionFactory;
-  protected static List<Value> prepopulated;
+  private static SessionFactory sessionFactory;
+  private static List<Value> prepopulated;
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @BeforeAll
   static void setup() throws SQLException {
@@ -162,7 +162,7 @@ class ProcedureCallTest {
           call.setParameter(parameterRegistration, 420L);
           try {
             call.getOutputs();
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this.
           }
           session.getTransaction().commit();

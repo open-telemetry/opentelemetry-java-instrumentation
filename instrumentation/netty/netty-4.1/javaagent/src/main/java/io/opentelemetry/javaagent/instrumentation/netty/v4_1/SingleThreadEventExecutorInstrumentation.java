@@ -11,11 +11,12 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SingleThreadEventExecutorInstrumentation implements TypeInstrumentation {
+class SingleThreadEventExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.netty.util.concurrent.SingleThreadEventExecutor");
@@ -26,12 +27,13 @@ public class SingleThreadEventExecutorInstrumentation implements TypeInstrumenta
     // this method submits a task that runs for forever to an executor, propagating context there
     // would result in a context leak
     transformer.applyAdviceToMethod(
-        named("startThread"), this.getClass().getName() + "$DisablePropagationAdvice");
+        named("startThread"), getClass().getName() + "$DisablePropagationAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DisablePropagationAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope onEnter() {
       if (Java8BytecodeBridge.currentContext() != Java8BytecodeBridge.rootContext()) {
         // Prevent context from leaking by running this method under root context.
@@ -41,8 +43,8 @@ public class SingleThreadEventExecutorInstrumentation implements TypeInstrumenta
       return null;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

@@ -186,7 +186,7 @@ final class CassandraAttributesExtractor
       Field field = SniEndPoint.class.getDeclaredField("proxyAddress");
       field.setAccessible(true);
       return field;
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       return null;
     }
   }

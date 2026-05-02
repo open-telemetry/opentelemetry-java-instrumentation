@@ -11,7 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import java.util.Locale;
 import java.util.Objects;
-import javax.annotation.Nullable;
 
 @Entity
 public class JpaCustomer {
@@ -57,11 +56,11 @@ public class JpaCustomer {
   @Override
   public String toString() {
     return String.format(
-        Locale.ROOT, "Customer[id=%d, firstName='%s', lastName='%s']", id, firstName, lastName);
+        Locale.ROOT, "Customer[id=%s, firstName='%s', lastName='%s']", id, firstName, lastName);
   }
 
   @Override
-  public boolean equals(@Nullable Object obj) {
+  public boolean equals(Object obj) {
     if (obj == this) {
       return true;
     }

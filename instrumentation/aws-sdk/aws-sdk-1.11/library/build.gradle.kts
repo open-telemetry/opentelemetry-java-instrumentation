@@ -24,8 +24,7 @@ dependencies {
   latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583") // documented limitation
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
-if (!testLatestDeps) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {
@@ -44,7 +43,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
-        val version = if (testLatestDeps) "latest.release" else "1.12.80"
+        val version = baseVersion("1.12.80").orLatest()
         implementation("com.amazonaws:aws-java-sdk-secretsmanager:$version")
       }
     }

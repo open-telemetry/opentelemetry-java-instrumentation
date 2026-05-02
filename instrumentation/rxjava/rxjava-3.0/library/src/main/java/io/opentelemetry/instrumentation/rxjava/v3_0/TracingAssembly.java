@@ -103,6 +103,10 @@ public final class TracingAssembly {
   private static Function<? super Runnable, ? extends Runnable> oldScheduleHandler;
 
   @GuardedBy("TracingAssembly.class")
+  @Nullable
+  private static RxJava3AsyncOperationEndStrategy asyncOperationEndStrategy;
+
+  @GuardedBy("TracingAssembly.class")
   private static boolean enabled;
 
   public static TracingAssembly create() {
@@ -281,8 +285,7 @@ public final class TracingAssembly {
                     }));
   }
 
-  private static RxJava3AsyncOperationEndStrategy asyncOperationEndStrategy;
-
+  @GuardedBy("TracingAssembly.class")
   private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
     asyncOperationEndStrategy =
         RxJava3AsyncOperationEndStrategy.builder()
@@ -336,6 +339,7 @@ public final class TracingAssembly {
     oldOnMaybeSubscribe = null;
   }
 
+  @GuardedBy("TracingAssembly.class")
   private static void disableWithSpanStrategy() {
     if (asyncOperationEndStrategy != null) {
       AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
@@ -344,7 +348,7 @@ public final class TracingAssembly {
   }
 
   private static <T> Function<? super T, ? extends T> compose(
-      Function<? super T, ? extends T> before, Function<? super T, ? extends T> after) {
+      @Nullable Function<? super T, ? extends T> before, Function<? super T, ? extends T> after) {
     if (before == null) {
       return after;
     }
@@ -352,7 +356,7 @@ public final class TracingAssembly {
   }
 
   private static <T, U> BiFunction<? super T, ? super U, ? extends U> biCompose(
-      BiFunction<? super T, ? super U, ? extends U> before,
+      @Nullable BiFunction<? super T, ? super U, ? extends U> before,
       BiFunction<? super T, ? super U, ? extends U> after) {
     if (before == null) {
       return after;

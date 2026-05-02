@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public final class LettuceInstrumentationUtil {
+public class LettuceInstrumentationUtil {
 
   private static final Set<String> nonInstrumentingCommands =
       Collections.unmodifiableSet(new HashSet<>(asList("SHUTDOWN", "DEBUG", "OOM", "SEGFAULT")));

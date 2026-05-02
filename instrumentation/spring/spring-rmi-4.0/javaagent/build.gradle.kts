@@ -8,13 +8,11 @@ muzzle {
     group.set("org.springframework")
     module.set("spring-context")
     versions.set("[4.0.0.RELEASE,6)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
-
   bootstrap(project(":instrumentation:rmi:bootstrap"))
   testInstrumentation(project(":instrumentation:rmi:javaagent"))
 
@@ -34,9 +32,9 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_23)
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 
 configurations.testRuntimeClasspath {

@@ -17,7 +17,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-public final class ClasspathUtils {
+public class ClasspathUtils {
 
   public static byte[] convertToByteArray(InputStream resource) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -100,7 +100,7 @@ public final class ClasspathUtils {
       try {
         findLoadedClassMethod.setAccessible(true);
         Class<?> loadedClass = (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
-        return null != loadedClass && loadedClass.getClassLoader() == classLoader;
+        return loadedClass != null && loadedClass.getClassLoader() == classLoader;
       } catch (Exception e) {
         throw new IllegalStateException(e);
       } finally {

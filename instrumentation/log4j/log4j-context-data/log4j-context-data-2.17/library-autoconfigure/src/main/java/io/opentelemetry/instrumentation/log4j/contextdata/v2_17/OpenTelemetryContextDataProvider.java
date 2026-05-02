@@ -26,7 +26,7 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  * Implementation of Log4j 2's {@link ContextDataProvider} which is loaded via SPI. {@link
  * #supplyContextData()} is called when a log entry is created.
  */
-public class OpenTelemetryContextDataProvider implements ContextDataProvider {
+public final class OpenTelemetryContextDataProvider implements ContextDataProvider {
 
   private static final boolean configuredResourceAttributeAccessible =
       isConfiguredResourceAttributeAccessible();
@@ -51,7 +51,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
           "io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder");
       return true;
 
-    } catch (ClassNotFoundException ok) {
+    } catch (ClassNotFoundException ignored) {
       return false;
     }
   }
@@ -95,7 +95,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
 
   private static class Configuration {
     @SuppressWarnings("deprecation") // using deprecated config property
-    static final boolean baggageEnabled =
+    private static final boolean baggageEnabled =
         DeclarativeConfigUtil.getInstrumentationConfig(
                 GlobalOpenTelemetry.getOrNoop(), "log4j_context_data")
             .getBoolean(
@@ -103,7 +103,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
                 ConfigPropertiesUtil.getBoolean(
                     "otel.instrumentation.log4j-context-data.add-baggage", false));
 
-    static final ContextDataKeys contextDataKeys =
+    private static final ContextDataKeys contextDataKeys =
         ContextDataKeys.create(GlobalOpenTelemetry.getOrNoop());
   }
 }

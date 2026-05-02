@@ -6,6 +6,7 @@
 package io.opentelemetry.testing;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.stream.IntStream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 
-public class BatchRecordListener {
+class BatchRecordListener {
 
   private static final AtomicInteger lastBatchSize = new AtomicInteger();
   private static volatile CountDownLatch messageReceived = new CountDownLatch(2);
@@ -25,7 +26,7 @@ public class BatchRecordListener {
       id = "testBatchListener",
       topics = "testBatchTopic",
       containerFactory = "batchFactory")
-  public void listener(List<ConsumerRecord<String, String>> records) {
+  void listener(List<ConsumerRecord<String, String>> records) {
     lastBatchSize.set(records.size());
     IntStream.range(0, records.size()).forEach(it -> messageReceived.countDown());
 
@@ -39,16 +40,16 @@ public class BatchRecordListener {
         });
   }
 
-  public static void reset() {
-    messageReceived = new CountDownLatch(2);
+  static void reset(int expectedMessages) {
+    messageReceived = new CountDownLatch(expectedMessages);
     lastBatchSize.set(0);
   }
 
-  public static void waitForMessages() throws InterruptedException {
-    messageReceived.await(30, SECONDS);
+  static void waitForMessages() throws InterruptedException {
+    assertThat(messageReceived.await(30, SECONDS)).isTrue();
   }
 
-  public static int getLastBatchSize() {
+  static int getLastBatchSize() {
     return lastBatchSize.get();
   }
 }

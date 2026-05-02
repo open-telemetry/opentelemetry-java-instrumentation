@@ -151,8 +151,8 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
       Constructor<SQSEvent.SQSMessage> ctor = SQSEvent.SQSMessage.class.getDeclaredConstructor();
       ctor.setAccessible(true);
       return ctor.newInstance();
-    } catch (Throwable t) {
-      throw new AssertionError(t);
+    } catch (ReflectiveOperationException | SecurityException e) {
+      throw new AssertionError(e);
     }
   }
 }

@@ -5,15 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.javaagent.instrumentation.spring.data.AbstractSpringJpaTest;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import spring.jpa.JpaCustomer;
 import spring.jpa.JpaCustomerRepository;
 import spring.jpa.JpaPersistenceConfig;
 
 class SpringJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustomerRepository> {
+
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Override
   protected JpaCustomer newCustomer(String firstName, String lastName) {
@@ -39,6 +44,7 @@ class SpringJpaTest extends AbstractSpringJpaTest<JpaCustomer, JpaCustomerReposi
   protected JpaCustomerRepository repository() {
     AnnotationConfigApplicationContext context =
         new AnnotationConfigApplicationContext(JpaPersistenceConfig.class);
+    cleanup.deferCleanup(context);
     JpaCustomerRepository repo = context.getBean(JpaCustomerRepository.class);
 
     // when Spring JPA sets up, it issues metadata queries -- clear those traces

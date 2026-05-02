@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Metrics;
@@ -46,38 +46,36 @@ public abstract class AbstractDistributionSummaryTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testSummary",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test distribution summary")
-                            .hasUnit("things")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasSum(7)
-                                                .hasCount(3)
-                                                .hasAttributes(attributeEntry("tag", "value"))
-                                                .hasBucketBoundaries(NO_BUCKETS)))));
+            metric ->
+                metric
+                    .hasName("testSummary")
+                    .hasDescription("This is a test distribution summary")
+                    .hasUnit("things")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(7)
+                                        .hasCount(3)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value"))
+                                        .hasBucketBoundaries(NO_BUCKETS))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testSummary.max",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test distribution summary")
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(4)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+            metric ->
+                metric
+                    .hasName("testSummary.max")
+                    .hasDescription("This is a test distribution summary")
+                    .hasDoubleGaugeSatisfying(
+                        gauge ->
+                            gauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(4)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
 
     // micrometer gauge histogram is not emitted
     testing()
@@ -93,19 +91,18 @@ public abstract class AbstractDistributionSummaryTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testSummary",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasSum(7)
-                                                .hasCount(3)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+            metric ->
+                metric
+                    .hasName("testSummary")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(7)
+                                        .hasCount(3)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -130,22 +127,21 @@ public abstract class AbstractDistributionSummaryTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testSummaryWithCustomBuckets",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test distribution summary")
-                            .hasUnit("things")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        points ->
-                                            points
-                                                .hasSum(555.5)
-                                                .hasCount(4)
-                                                .hasAttributes(attributeEntry("tag", "value"))
-                                                .hasBucketBoundaries(1, 10, 100, 1000)
-                                                .hasBucketCounts(1, 1, 1, 1, 0)))));
+            metric ->
+                metric
+                    .hasName("testSummaryWithCustomBuckets")
+                    .hasDescription("This is a test distribution summary")
+                    .hasUnit("things")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                points ->
+                                    points
+                                        .hasSum(555.5)
+                                        .hasCount(4)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value"))
+                                        .hasBucketBoundaries(1, 10, 100, 1000)
+                                        .hasBucketCounts(1, 1, 1, 1, 0))));
   }
 }

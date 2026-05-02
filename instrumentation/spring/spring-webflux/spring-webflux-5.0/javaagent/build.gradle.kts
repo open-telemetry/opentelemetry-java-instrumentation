@@ -27,6 +27,7 @@ muzzle {
     group.set("io.projectreactor.netty")
     module.set("reactor-netty")
     versions.set("[0.8.0.RELEASE,)")
+    assertInverse.set(true)
     extraDependency("org.springframework:spring-webflux:5.1.0.RELEASE")
   }
 
@@ -66,8 +67,6 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 tasks {
   withType<Test>().configureEach {
     // required on jdk17
@@ -75,9 +74,9 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled")
-    systemProperty("testLatestDeps", latestDepTest)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -86,7 +85,7 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled," +
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
         "otel.semconv-stability.opt-in=service.peer"
     )
   }
@@ -96,7 +95,7 @@ tasks {
   }
 }
 
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   // spring 6 requires java 17
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)

@@ -9,25 +9,25 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASS
 
 import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public final class CassandraSingletons {
+class CassandraSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-3.0";
 
   // could use RESPONSE "ResultSet" here, but using RESPONSE "ExecutionInfo" in cassandra-4.0
   // instrumentation (see comment over there for why), so also using here for consistency
-  private static final Instrumenter<CassandraRequest, ExecutionInfo> INSTRUMENTER;
+  private static final Instrumenter<CassandraRequest, ExecutionInfo> instrumenter;
 
   static {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<CassandraRequest, ExecutionInfo>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -36,15 +36,15 @@ public final class CassandraSingletons {
                 SqlClientAttributesExtractor.builder(attributesGetter)
                     .setTableAttribute(DB_CASSANDRA_TABLE)
                     .setQuerySanitizationEnabled(
-                        AgentCommonConfig.get().isQuerySanitizationEnabled())
+                        DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "cassandra"))
                     .build())
             .addAttributesExtractor(new CassandraAttributesExtractor())
             .addOperationMetrics(DbClientMetrics.get())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<CassandraRequest, ExecutionInfo> instrumenter() {
-    return INSTRUMENTER;
+  static Instrumenter<CassandraRequest, ExecutionInfo> instrumenter() {
+    return instrumenter;
   }
 
   private CassandraSingletons() {}

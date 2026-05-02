@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
   // we compile against 3.4.0, so we could use reactor.util.context.ContextView
-  // instrumentation is expected it to work with 3.1.0.RELEASE
+  // instrumentation is expected to work with 3.1.0.RELEASE
   compileOnly("io.projectreactor:reactor-core:3.4.0")
   compileOnly(project(":muzzle")) // For @NoMuzzle
   implementation(project(":instrumentation-annotations-support"))
@@ -15,7 +15,7 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  test {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 }

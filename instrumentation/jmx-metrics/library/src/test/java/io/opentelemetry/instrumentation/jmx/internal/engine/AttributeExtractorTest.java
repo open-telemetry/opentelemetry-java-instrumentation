@@ -255,15 +255,12 @@ class AttributeExtractorTest {
         BeanAttributeExtractor.filterNegativeValues(rawExtractor);
     assertThat(rawExtractor.extractNumericalAttribute(theServer, objectName))
         .isNotNull()
-        .describedAs("when value is not negative original numerical value is returned")
         .isEqualTo(filteringExtractor.extractNumericalAttribute(theServer, objectName));
 
     test1.negativeValues = true;
     Number rawValue = rawExtractor.extractNumericalAttribute(theServer, objectName);
     assertThat(rawValue).isNotNull();
     assertThat(rawValue.doubleValue()).isNegative();
-    assertThat(filteringExtractor.extractNumericalAttribute(theServer, objectName))
-        .describedAs("negative value should be filtered")
-        .isNull();
+    assertThat(filteringExtractor.extractNumericalAttribute(theServer, objectName)).isNull();
   }
 }

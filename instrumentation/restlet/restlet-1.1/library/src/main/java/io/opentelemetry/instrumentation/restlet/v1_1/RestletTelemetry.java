@@ -13,6 +13,7 @@ import org.restlet.data.Response;
 
 /** Entrypoint for instrumenting Restlet servers. */
 public final class RestletTelemetry {
+  private final Instrumenter<Request, Response> serverInstrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static RestletTelemetry create(OpenTelemetry openTelemetry) {
@@ -23,8 +24,6 @@ public final class RestletTelemetry {
   public static RestletTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new RestletTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<Request, Response> serverInstrumenter;
 
   RestletTelemetry(Instrumenter<Request, Response> serverInstrumenter) {
     this.serverInstrumenter = serverInstrumenter;

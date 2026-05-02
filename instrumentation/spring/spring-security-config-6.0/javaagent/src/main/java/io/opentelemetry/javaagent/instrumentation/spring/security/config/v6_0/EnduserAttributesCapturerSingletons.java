@@ -13,13 +13,13 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public class EnduserAttributesCapturerSingletons {
 
-  private static final EnduserAttributesCapturer ENDUSER_ATTRIBUTES_CAPTURER =
+  private static final EnduserAttributesCapturer enduserAttributesCapturer =
       createEndUserAttributesCapturerFromConfig();
 
   private EnduserAttributesCapturerSingletons() {}
 
   public static EnduserAttributesCapturer enduserAttributesCapturer() {
-    return ENDUSER_ATTRIBUTES_CAPTURER;
+    return enduserAttributesCapturer;
   }
 
   private static EnduserAttributesCapturer createEndUserAttributesCapturerFromConfig() {

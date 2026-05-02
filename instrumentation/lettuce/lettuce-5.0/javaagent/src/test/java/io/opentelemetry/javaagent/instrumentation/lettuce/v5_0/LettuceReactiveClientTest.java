@@ -23,7 +23,6 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -255,16 +254,17 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     String res = reactiveCommands.digest(null);
 
     assertThat(res).isNotNull();
-    assertThat(testing.spans().size()).isEqualTo(0);
+    assertThat(testing.spans()).isEmpty();
   }
 
   @Test
   void testDebugSegfaultCommandReturnsMonoVoidWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
-      RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
-      commands.debugSegfault().subscribe();
-    }
+    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
+    cleanup.deferCleanup(statefulConnection);
+
+    RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
+    commands.debugSegfault().subscribe();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -281,10 +281,11 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    try (StatefulRedisConnection<String, String> statefulConnection = newContainerConnection()) {
-      RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
-      commands.shutdown(false).subscribe();
-    }
+    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
+    cleanup.deferCleanup(statefulConnection);
+
+    RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
+    commands.shutdown(false).subscribe();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -307,7 +308,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
@@ -335,7 +336,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
@@ -368,7 +369,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
+                span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.CONSUMER_PROCESS_INSTRUMENTER;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -23,7 +23,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MessageHandlerInstrumentation implements TypeInstrumentation {
+class MessageHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -37,7 +37,7 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
             .and(named("onMessage"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.nats.client.Message"))),
-        MessageHandlerInstrumentation.class.getName() + "$OnMessageAdvice");
+        getClass().getName() + "$OnMessageAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -48,7 +48,7 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(NatsRequest request, Context context, Scope scope) {
+      private AdviceScope(NatsRequest request, Context context, Scope scope) {
         this.request = request;
         this.context = context;
         this.scope = scope;
@@ -58,27 +58,29 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(Message message) {
         Context parentContext = Context.current();
         NatsRequest request = NatsRequest.create(message.getConnection(), message);
-        if (!CONSUMER_PROCESS_INSTRUMENTER.shouldStart(parentContext, request)) {
+        if (!consumerProcessInstrumenter().shouldStart(parentContext, request)) {
           return null;
         }
-        Context context = CONSUMER_PROCESS_INSTRUMENTER.start(parentContext, request);
+        Context context = consumerProcessInstrumenter().start(parentContext, request);
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        CONSUMER_PROCESS_INSTRUMENTER.end(context, request, null, throwable);
+        consumerProcessInstrumenter().end(context, request, null, throwable);
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(0) Message message) {
       return AdviceScope.start(message);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(throwable);
       }

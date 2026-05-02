@@ -18,17 +18,24 @@ import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ValveBase;
 
-// public, because it's loaded by reflection
 public class TestAccessLogValve extends ValveBase implements AccessLog {
-
-  public final List<Map.Entry<String, String>> getLoggedIds() {
-    return loggedIds;
-  }
 
   private final List<Map.Entry<String, String>> loggedIds = new ArrayList<>();
 
   public TestAccessLogValve() {
     super(true);
+  }
+
+  public List<Map.Entry<String, String>> getLoggedIds() {
+    synchronized (loggedIds) {
+      return new ArrayList<>(loggedIds);
+    }
+  }
+
+  public void clearLoggedIds() {
+    synchronized (loggedIds) {
+      loggedIds.clear();
+    }
   }
 
   @Override
@@ -56,12 +63,13 @@ public class TestAccessLogValve extends ValveBase implements AccessLog {
         try {
           loggedIds.wait(toWait);
         } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
           throw new IllegalStateException(e);
         }
         toWait = endTime - System.currentTimeMillis();
       }
 
-      if (toWait <= 0) {
+      if (loggedIds.size() < expected) {
         throw new IllegalStateException(
             "Timeout waiting for " + expected + " access log ids, got " + loggedIds.size());
       }

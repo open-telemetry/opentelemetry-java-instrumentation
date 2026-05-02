@@ -10,20 +10,13 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class DruidInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class DruidInstrumentationModule extends InstrumentationModule {
 
   public DruidInstrumentationModule() {
     super("alibaba-druid", "alibaba-druid-1.0");
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 
   @Override

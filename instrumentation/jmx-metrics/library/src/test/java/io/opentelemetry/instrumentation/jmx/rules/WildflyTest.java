@@ -32,7 +32,7 @@ class WildflyTest extends TargetSystemTest {
         // recent/latest to be maintained as newer versions are released
         "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
       })
-  public void testWildflyMetrics(String dockerImage) {
+  void testWildflyMetrics(String dockerImage) {
     List<String> yamlFiles = singletonList("wildfly.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);

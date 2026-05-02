@@ -14,13 +14,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -38,15 +37,19 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
 
   private final TransformSafeLogger instrumentationLogger;
   private final InstrumentationModule instrumentationModule;
+  private final UnaryOperator<ClassLoader> classLoaderTransformer;
   private final Level muzzleLogLevel;
   private final AtomicBoolean initialized = new AtomicBoolean(false);
   private final Cache<ClassLoader, Boolean> matchCache = Cache.weak();
   private volatile ReferenceMatcher referenceMatcher;
 
   MuzzleMatcher(
-      TransformSafeLogger instrumentationLogger, InstrumentationModule instrumentationModule) {
+      TransformSafeLogger instrumentationLogger,
+      InstrumentationModule instrumentationModule,
+      UnaryOperator<ClassLoader> classLoaderTransformer) {
     this.instrumentationLogger = instrumentationLogger;
     this.instrumentationModule = instrumentationModule;
+    this.classLoaderTransformer = classLoaderTransformer;
     this.muzzleLogLevel = EarlyInitAgentConfig.get().isDebug() ? WARNING : FINE;
   }
 
@@ -60,18 +63,7 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
     if (classLoader == BOOTSTRAP_LOADER) {
       classLoader = Utils.getBootstrapProxy();
     }
-    if (instrumentationModule.isIndyModule()) {
-      return matchCache.computeIfAbsent(
-          classLoader,
-          cl -> {
-            InstrumentationModuleClassLoader moduleCl =
-                IndyModuleRegistry.createInstrumentationClassLoaderWithoutRegistration(
-                    instrumentationModule, cl);
-            return doesMatch(moduleCl);
-          });
-    } else {
-      return matchCache.computeIfAbsent(classLoader, this::doesMatch);
-    }
+    return matchCache.computeIfAbsent(classLoaderTransformer.apply(classLoader), this::doesMatch);
   }
 
   private boolean doesMatch(ClassLoader classLoader) {

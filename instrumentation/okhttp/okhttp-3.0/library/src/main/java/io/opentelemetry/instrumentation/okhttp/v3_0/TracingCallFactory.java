@@ -33,7 +33,7 @@ class TracingCallFactory implements Call.Factory {
   static {
     try {
       timeoutMethod = Call.class.getMethod("timeout");
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       timeoutMethod = null;
     }
   }
@@ -63,6 +63,7 @@ class TracingCallFactory implements Call.Factory {
     return contextsByRequest.get(request);
   }
 
+  @Nullable
   @NoMuzzle
   private static Context getContextFromRequestTag(Request request) {
     return request.tag(Context.class);
@@ -147,7 +148,7 @@ class TracingCallFactory implements Call.Factory {
       }
       try {
         return (Timeout) timeoutMethod.invoke(delegate);
-      } catch (IllegalAccessException | InvocationTargetException e) {
+      } catch (IllegalAccessException | InvocationTargetException ignored) {
         // do nothing...we're before 3.12, or something else has gone wrong that we can't do
         // anything about.
         return Timeout.NONE;

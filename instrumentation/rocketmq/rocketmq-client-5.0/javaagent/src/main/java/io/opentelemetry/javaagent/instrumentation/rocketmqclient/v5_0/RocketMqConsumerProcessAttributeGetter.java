@@ -14,9 +14,8 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-enum RocketMqConsumerProcessAttributeGetter
+class RocketMqConsumerProcessAttributeGetter
     implements MessagingAttributesGetter<MessageView, ConsumeResult> {
-  INSTANCE;
 
   @Nullable
   @Override

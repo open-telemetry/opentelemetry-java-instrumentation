@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -413,7 +414,7 @@ public abstract class AbstractSpringWebfluxTest {
   }
 
   private static void resource404Exception(EventDataAssert event) {
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       event
           .hasName("exception")
           .hasAttributesSatisfyingExactly(
@@ -429,16 +430,10 @@ public abstract class AbstractSpringWebfluxTest {
               satisfies(
                   EXCEPTION_TYPE,
                   val ->
-                      val.satisfiesAnyOf(
-                          v ->
-                              assertThat(v)
-                                  .isEqualTo(
-                                      "org.springframework.web.server.ResponseStatusException"),
+                      val.isIn(
+                          "org.springframework.web.server.ResponseStatusException",
                           // Changed in spring 7+
-                          v ->
-                              assertThat(v)
-                                  .isEqualTo(
-                                      "org.springframework.web.reactive.resource.NoResourceFoundException"))),
+                          "org.springframework.web.reactive.resource.NoResourceFoundException")),
               satisfies(EXCEPTION_MESSAGE, val -> val.contains("404")),
               satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
     }
@@ -707,8 +702,8 @@ public abstract class AbstractSpringWebfluxTest {
             .build();
     try {
       client.get("/slow").aggregate().get();
-    } catch (ExecutionException ignore) {
-      // ignore
+    } catch (ExecutionException ignored) {
+      // this is expected when cancellation occurs
     }
 
     testing.waitAndAssertTraces(

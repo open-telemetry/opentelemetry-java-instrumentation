@@ -66,9 +66,7 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setContextPath("/context");
-    options.setTestPathParam(true);
     options.setTestErrorBody(false);
-    options.setTestPathParam(false);
     options.setHasHandlerSpan(endpoint -> !endpoint.equals(NOT_FOUND));
     options.setHasResponseSpan(
         endpoint ->

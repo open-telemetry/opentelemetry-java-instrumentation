@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -106,7 +105,7 @@ class TargetSystemTest {
     targetDependencies = emptyList();
   }
 
-  private static void stop(@Nullable GenericContainer<?> container) {
+  private static void stop(GenericContainer<?> container) {
     if (container != null && container.isRunning()) {
       container.stop();
     }
@@ -261,7 +260,7 @@ class TargetSystemTest {
         .untilAsserted(
             () -> {
               List<ExportMetricsServiceRequest> receivedMetrics = otlpServer.getMetrics();
-              assertThat(receivedMetrics).describedAs("No metric received").isNotEmpty();
+              assertThat(receivedMetrics).isNotEmpty();
 
               List<Metric> metrics =
                   receivedMetrics.stream()
@@ -274,7 +273,7 @@ class TargetSystemTest {
                       .flatMap(sm -> sm.getMetricsList().stream())
                       .collect(toList());
 
-              assertThat(metrics).describedAs("Metrics received but not from JMX").isNotEmpty();
+              assertThat(metrics).isNotEmpty();
 
               metricsVerifier.verify(metrics);
             });

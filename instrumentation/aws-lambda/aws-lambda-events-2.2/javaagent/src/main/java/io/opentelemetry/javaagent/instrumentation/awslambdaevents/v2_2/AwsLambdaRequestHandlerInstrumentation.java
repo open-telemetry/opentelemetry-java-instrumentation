@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.flushTimeout;
+import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.FLUSH_TIMEOUT;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.functionInstrumenter;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -31,7 +31,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
+class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -59,15 +59,15 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
       private final AwsLambdaRequest lambdaRequest;
       private final Scope functionScope;
       private final io.opentelemetry.context.Context functionContext;
-      private final Scope messageScope;
-      private final io.opentelemetry.context.Context messageContext;
+      @Nullable private final Scope messageScope;
+      @Nullable private final io.opentelemetry.context.Context messageContext;
 
       private AdviceScope(
           AwsLambdaRequest lambdaRequest,
           io.opentelemetry.context.Context functionContext,
           Scope functionScope,
-          io.opentelemetry.context.Context messageContext,
-          Scope messageScope) {
+          @Nullable io.opentelemetry.context.Context messageContext,
+          @Nullable Scope messageScope) {
         this.lambdaRequest = lambdaRequest;
         this.functionContext = functionContext;
         this.functionScope = functionScope;
@@ -114,23 +114,21 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
           AwsLambdaSingletons.messageInstrumenter()
               .end(messageContext, (SQSEvent) arg, null, throwable);
         }
-        if (functionScope != null) {
-          functionScope.close();
-          functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
-        }
-        OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), NANOSECONDS);
+        functionScope.close();
+        functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
+        OpenTelemetrySdkAccess.forceFlush(FLUSH_TIMEOUT.toNanos(), NANOSECONDS);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Argument(1) Context context) {
       return AdviceScope.start(arg, context);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Return @Nullable Object result,

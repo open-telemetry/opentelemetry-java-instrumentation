@@ -17,10 +17,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import javax.annotation.Nullable;
 
-public final class JFinalSingletons {
+public class JFinalSingletons {
 
-  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
+  private static final Instrumenter<ClassAndMethod, Void> instrumenter;
 
   static {
     // see
@@ -29,7 +30,7 @@ public final class JFinalSingletons {
 
     CodeAttributesGetter<ClassAndMethod> codedAttributesGetter =
         ClassAndMethod.codeAttributesGetter();
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jfinal-3.2",
@@ -40,10 +41,10 @@ public final class JFinalSingletons {
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
-  public static void updateRoute(Action action) {
+  public static void updateRoute(@Nullable Action action) {
     if (action == null) {
       return;
     }

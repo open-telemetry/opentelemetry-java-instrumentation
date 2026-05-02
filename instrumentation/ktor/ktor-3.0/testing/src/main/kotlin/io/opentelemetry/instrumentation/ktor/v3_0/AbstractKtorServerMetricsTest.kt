@@ -16,16 +16,13 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.sdk.metrics.data.MetricData
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
-import org.assertj.core.api.ThrowingConsumer
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -99,22 +96,22 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
 
     testing().waitAndAssertMetrics(
       instrumentationName(),
-      "http.server.active_requests"
+      "http.server.active_requests",
     ) { metrics ->
-      metrics!!.anySatisfy(ThrowingConsumer { metric: MetricData? ->
+      metrics.anySatisfy { metric ->
         assertThat(metric)
           .hasDescription("Number of active HTTP server requests.")
           .hasUnit("{requests}")
           .hasLongSumSatisfying { sum ->
             sum.hasPointsSatisfying({ point ->
               point.hasValue(0)
-                .hasAttributesSatisfying {
-                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET")
-                  equalTo(UrlAttributes.URL_PATH, endpoint.path)
-                }
+                .hasAttributesSatisfyingExactly(
+                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                  equalTo(UrlAttributes.URL_SCHEME, "http"),
+                )
             })
           }
-      })
+      }
     }
   }
 

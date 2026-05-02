@@ -33,7 +33,10 @@ public abstract class AbstractOracleUcpInstrumentationTest {
       LoggerFactory.getLogger(AbstractOracleUcpInstrumentationTest.class);
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.oracle-ucp-11.2";
-  private static OracleContainer oracle;
+  private static final OracleContainer oracle =
+      new OracleContainer("gvenzl/oracle-free:23-slim-faststart")
+          .withLogConsumer(new Slf4jLogConsumer(logger))
+          .withStartupTimeout(Duration.ofMinutes(2));
 
   protected abstract InstrumentationExtension testing();
 
@@ -43,18 +46,12 @@ public abstract class AbstractOracleUcpInstrumentationTest {
 
   @BeforeAll
   static void setUp() {
-    oracle =
-        new OracleContainer("gvenzl/oracle-free:23-slim-faststart")
-            .withLogConsumer(new Slf4jLogConsumer(logger))
-            .withStartupTimeout(Duration.ofMinutes(2));
     oracle.start();
   }
 
   @AfterAll
   static void cleanUp() {
-    if (oracle != null) {
-      oracle.stop();
-    }
+    oracle.stop();
   }
 
   @ParameterizedTest
@@ -72,10 +69,10 @@ public abstract class AbstractOracleUcpInstrumentationTest {
     }
 
     // when
-    Connection connection = connectionPool.getConnection();
-    configure(connectionPool);
-    MILLISECONDS.sleep(100);
-    connection.close();
+    try (Connection connection = connectionPool.getConnection()) {
+      configure(connectionPool);
+      MILLISECONDS.sleep(100);
+    }
 
     // then
     DbConnectionPoolMetricsAssertions.create(
@@ -89,9 +86,13 @@ public abstract class AbstractOracleUcpInstrumentationTest {
         .assertConnectionPoolEmitsMetrics();
 
     // when
-    // this one too shouldn't cause any problems when called more than once
-    connectionPool.getConnection().close();
-    connectionPool.getConnection().close();
+    // verify that borrowing connections after instrumentation doesn't throw
+    try (Connection connection = connectionPool.getConnection()) {
+      // doesn't throw
+    }
+    try (Connection connection = connectionPool.getConnection()) {
+      // doesn't throw
+    }
 
     shutdown(connectionPool);
     UniversalConnectionPoolManagerImpl.getUniversalConnectionPoolManager()

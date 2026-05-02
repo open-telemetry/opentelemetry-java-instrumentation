@@ -9,9 +9,7 @@ import static java.util.logging.Level.FINE;
 
 import java.util.logging.Logger;
 
-final class PluginImplUtil { // TODO: Copy & paste from v2
-  private PluginImplUtil() {}
-
+final class PluginImplUtil {
   private static final Logger logger = Logger.getLogger(PluginImplUtil.class.getName());
 
   /**
@@ -22,14 +20,14 @@ final class PluginImplUtil { // TODO: Copy & paste from v2
    * the Impl is available only when the corresponding InstrumentationModule was successfully
    * applied (muzzle passed).
    *
-   * <p>Note that an present-but-incompatible library can only be reliably detected by Muzzle. In
+   * <p>Note that a present-but-incompatible library can only be reliably detected by Muzzle. In
    * library-mode, users need to ensure they are using a compatible SDK (component) versions
    * themselves.
    *
-   * @param implSimpleClassName The simple name of the impl class, e.g. {@code "SqsImpl"}. *
+   * @param implSimpleClassName The simple name of the impl class, e.g. {@code "SqsImpl"}.
    */
   static boolean isImplPresent(String implSimpleClassName) {
-    // Computing the full name dynamically name here because library instrumentation classes are
+    // Compute the full name dynamically here because library instrumentation classes are
     // relocated when embedded in the agent.
     // We use getName().replace() instead of getPackage() because the latter is not guaranteed to
     // work in all cases (e.g., we might be loaded into a custom classloader that doesn't handle it)
@@ -56,4 +54,6 @@ final class PluginImplUtil { // TODO: Copy & paste from v2
       return false;
     }
   }
+
+  private PluginImplUtil() {}
 }

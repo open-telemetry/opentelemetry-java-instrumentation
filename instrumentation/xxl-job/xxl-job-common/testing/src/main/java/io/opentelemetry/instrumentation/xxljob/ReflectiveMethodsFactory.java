@@ -7,8 +7,42 @@ package io.opentelemetry.instrumentation.xxljob;
 
 import com.xxl.job.core.biz.model.ReturnT;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 
 class ReflectiveMethodsFactory {
+
+  private static final Object singletonObject = new ReflectObject();
+
+  static Object getTarget() {
+    return singletonObject;
+  }
+
+  @Nullable
+  static Method getMethod() {
+    try {
+      return ReflectObject.class.getMethod("echo", String.class);
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  static Method getInitMethod() {
+    try {
+      return ReflectObject.class.getMethod("initMethod");
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  static Method getDestroyMethod() {
+    try {
+      return ReflectObject.class.getMethod("destroyMethod");
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
 
   private ReflectiveMethodsFactory() {}
 
@@ -25,38 +59,5 @@ class ReflectiveMethodsFactory {
       result.setContent("echo: " + param);
       return result;
     }
-  }
-
-  private static final Object SINGLETON_OBJECT = new ReflectObject();
-
-  static Object getTarget() {
-    return SINGLETON_OBJECT;
-  }
-
-  static Method getMethod() {
-    try {
-      return SINGLETON_OBJECT.getClass().getMethod("echo", String.class);
-    } catch (Throwable t) {
-      // Ignore
-    }
-    return null;
-  }
-
-  static Method getInitMethod() {
-    try {
-      return SINGLETON_OBJECT.getClass().getMethod("initMethod");
-    } catch (Throwable t) {
-      // Ignore
-    }
-    return null;
-  }
-
-  static Method getDestroyMethod() {
-    try {
-      return SINGLETON_OBJECT.getClass().getMethod("destroyMethod");
-    } catch (Throwable t) {
-      // Ignore
-    }
-    return null;
   }
 }

@@ -52,6 +52,8 @@ class TracingHttpClient extends HttpClient {
           new TracingHttpClient(instrumenter, httpClientTransport, sslContextFactory);
     } else if (sslContextFactory != null) {
       tracingHttpClient = new TracingHttpClient(instrumenter, sslContextFactory);
+    } else if (httpClientTransport != null) {
+      tracingHttpClient = new TracingHttpClient(instrumenter, httpClientTransport);
     } else {
       tracingHttpClient = new TracingHttpClient(instrumenter);
     }

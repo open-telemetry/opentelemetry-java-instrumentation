@@ -19,7 +19,7 @@ public abstract class AbstractKafkaInstrumentationAutoConfigurationTest {
 
   protected abstract void factoryTestAssertion(AssertableApplicationContext context);
 
-  protected final ApplicationContextRunner contextRunner =
+  private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withConfiguration(autoConfigurations())
           .withBean("openTelemetry", OpenTelemetry.class, OpenTelemetry::noop);
@@ -29,11 +29,10 @@ public abstract class AbstractKafkaInstrumentationAutoConfigurationTest {
     contextRunner
         .withPropertyValues("otel.instrumentation.kafka.enabled=false")
         .run(
-            context -> {
-              assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isFalse();
-              assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
-                  .isFalse();
-            });
+            context ->
+                assertThat(context)
+                    .doesNotHaveBean("otelKafkaProducerFactoryCustomizer")
+                    .doesNotHaveBean("otelKafkaListenerContainerFactoryBeanPostProcessor"));
   }
 
   @Test
@@ -41,30 +40,28 @@ public abstract class AbstractKafkaInstrumentationAutoConfigurationTest {
     contextRunner
         .withPropertyValues("otel.instrumentation.kafka.autoconfigure-interceptor=false")
         .run(
-            context -> {
-              assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isTrue();
-              assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
-                  .isFalse();
-            });
+            context ->
+                assertThat(context)
+                    .hasBean("otelKafkaProducerFactoryCustomizer")
+                    .doesNotHaveBean("otelKafkaListenerContainerFactoryBeanPostProcessor"));
   }
 
   @Test
   void defaultConfiguration() {
     contextRunner.run(
-        context -> {
-          assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isTrue();
-          assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
-              .isTrue();
-        });
+        context ->
+            assertThat(context)
+                .hasBean("otelKafkaProducerFactoryCustomizer")
+                .hasBean("otelKafkaListenerContainerFactoryBeanPostProcessor"));
   }
 
   @Test
   void defaultConfigurationWithFactoryTesting() {
     contextRunner.run(
         context -> {
-          assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isTrue();
-          assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
-              .isTrue();
+          assertThat(context)
+              .hasBean("otelKafkaProducerFactoryCustomizer")
+              .hasBean("otelKafkaListenerContainerFactoryBeanPostProcessor");
 
           factoryTestAssertion(context);
         });

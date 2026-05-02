@@ -26,7 +26,7 @@ class DeclarativeConfigTest {
   @TestConfiguration
   static class CustomTracerConfiguration {
     @Bean
-    public OpenTelemetry customOpenTelemetry() {
+    OpenTelemetry customOpenTelemetry() {
       return OpenTelemetry.noop();
     }
   }

@@ -12,16 +12,14 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum NatsRequestMessagingAttributesGetter
+final class NatsRequestMessagingAttributesGetter
     implements MessagingAttributesGetter<NatsRequest, Object> {
-  INSTANCE;
 
   @Override
   public String getSystem(NatsRequest request) {
     return "nats";
   }
 
-  @Nullable
   @Override
   public String getDestination(NatsRequest request) {
     return request.getSubject();

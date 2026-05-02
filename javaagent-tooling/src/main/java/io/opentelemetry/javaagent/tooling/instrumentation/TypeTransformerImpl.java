@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceInliningPoolStrategy;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForceDynamicallyTypedAssignReturnedFactory;
 import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -33,6 +34,9 @@ final class TypeTransformerImpl implements TypeTransformer {
       ElementMatcher<? super MethodDescription> methodMatcher,
       Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
       String adviceClassName) {
+    // default strategy used by AgentBuilder.Transformer.ForAdvice
+    AgentBuilder.PoolStrategy poolStrategy = AgentBuilder.PoolStrategy.Default.FAST;
+
     agentBuilder =
         agentBuilder.transform(
             new AgentBuilder.Transformer.ForAdvice(mappingCustomizer.apply(adviceMapping))
@@ -40,6 +44,8 @@ final class TypeTransformerImpl implements TypeTransformer {
                     Utils.getBootstrapProxy(),
                     Utils.getAgentClassLoader(),
                     Utils.getExtensionsClassLoader())
+                // set the advice "inline" attribute to true
+                .with(new AdviceInliningPoolStrategy(poolStrategy, true))
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
                 .advice(methodMatcher, adviceClassName));
   }

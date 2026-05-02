@@ -14,11 +14,11 @@ public class JaxWsRequest {
     this.methodName = methodName;
   }
 
-  public Class<?> codeClass() {
+  Class<?> codeClass() {
     return codeClass;
   }
 
-  public String methodName() {
+  String methodName() {
     return methodName;
   }
 }

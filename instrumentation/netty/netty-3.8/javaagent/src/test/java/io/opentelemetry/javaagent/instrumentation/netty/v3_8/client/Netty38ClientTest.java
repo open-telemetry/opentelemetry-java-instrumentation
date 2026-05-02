@@ -50,7 +50,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
     try {
       setConnectTimeout =
           AsyncHttpClientConfig.Builder.class.getMethod("setConnectTimeout", int.class);
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       setConnectTimeout =
           AsyncHttpClientConfig.Builder.class.getMethod("setRequestTimeoutInMs", int.class);
     }
@@ -60,7 +60,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
     try {
       setFollowRedirect =
           AsyncHttpClientConfig.Builder.class.getMethod("setFollowRedirect", boolean.class);
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       setFollowRedirect =
           AsyncHttpClientConfig.Builder.class.getMethod("setFollowRedirects", boolean.class);
     }
@@ -69,7 +69,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
     Method setMaxRedirects;
     try {
       setMaxRedirects = AsyncHttpClientConfig.Builder.class.getMethod("setMaxRedirects", int.class);
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       setMaxRedirects =
           AsyncHttpClientConfig.Builder.class.getMethod("setMaximumNumberOfRedirects", int.class);
     }
@@ -80,7 +80,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
       setAllowPoolingConnections =
           AsyncHttpClientConfig.Builder.class.getMethod(
               "setAllowPoolingConnections", boolean.class);
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       setAllowPoolingConnections =
           AsyncHttpClientConfig.Builder.class.getMethod("setAllowPoolingConnection", boolean.class);
     }

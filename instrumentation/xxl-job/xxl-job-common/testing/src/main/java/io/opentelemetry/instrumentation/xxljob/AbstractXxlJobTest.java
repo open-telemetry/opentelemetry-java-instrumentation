@@ -24,6 +24,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ public abstract class AbstractXxlJobTest {
     trigger(jobThread, null);
   }
 
-  protected void trigger(JobThread jobThread, String executorParams) {
+  protected void trigger(JobThread jobThread, @Nullable String executorParams) {
     TriggerParam triggerParam = new TriggerParam();
     triggerParam.setExecutorTimeout(0);
     if (executorParams != null) {
@@ -95,11 +96,12 @@ public abstract class AbstractXxlJobTest {
   }
 
   @Test
-  public void testMethodJob() {
+  void testMethodJob() {
+    IJobHandler methodHandler = getMethodHandler();
     // method handle is null if test is not supported by tested version of the library
-    Assumptions.assumeTrue(getMethodHandler() != null);
+    Assumptions.assumeTrue(methodHandler != null);
 
-    JobThread jobThread = new JobThread(4, getMethodHandler());
+    JobThread jobThread = new JobThread(4, methodHandler);
     trigger(jobThread);
     checkXxlJob(
         "ReflectObject.echo",
@@ -131,6 +133,7 @@ public abstract class AbstractXxlJobTest {
 
   protected abstract IJobHandler getCustomizeFailedHandler();
 
+  @Nullable
   protected abstract IJobHandler getMethodHandler();
 
   protected abstract String getPackageName();

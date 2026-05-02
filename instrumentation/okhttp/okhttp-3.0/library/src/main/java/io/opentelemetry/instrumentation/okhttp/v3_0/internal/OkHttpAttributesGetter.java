@@ -19,9 +19,8 @@ import okhttp3.Response;
  * any time.
  */
 @SuppressWarnings("OtelDeprecatedApiUsage") // SPDY_3 is deprecated but still used in okhttp 3.x
-public enum OkHttpAttributesGetter
+public final class OkHttpAttributesGetter
     implements HttpClientAttributesGetter<Interceptor.Chain, Response> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(Interceptor.Chain chain) {

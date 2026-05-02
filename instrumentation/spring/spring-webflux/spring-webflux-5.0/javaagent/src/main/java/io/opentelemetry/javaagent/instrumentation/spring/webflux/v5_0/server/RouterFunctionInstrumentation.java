@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -25,7 +24,7 @@ import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import reactor.core.publisher.Mono;
 
-public class RouterFunctionInstrumentation implements TypeInstrumentation {
+class RouterFunctionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -45,14 +44,13 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("route"))
             .and(
                 takesArgument(
                     0, named("org.springframework.web.reactive.function.server.ServerRequest")))
             .and(takesArguments(1)),
-        this.getClass().getName() + "$RouteAdvice");
+        getClass().getName() + "$RouteAdvice");
   }
 
   /**
@@ -63,15 +61,10 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
   public static class RouteAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<HandlerFunction<?>> methodExit(
-        @Advice.This RouterFunction<?> thiz,
-        @Advice.Return Mono<HandlerFunction<?>> result,
-        @Advice.Thrown Throwable throwable) {
-      if (throwable == null) {
-        return result.doOnNext(new RouteOnSuccess(thiz));
-      }
-      return result;
+        @Advice.This RouterFunction<?> thiz, @Advice.Return Mono<HandlerFunction<?>> result) {
+      return result.doOnNext(new RouteOnSuccess(thiz));
     }
   }
 }

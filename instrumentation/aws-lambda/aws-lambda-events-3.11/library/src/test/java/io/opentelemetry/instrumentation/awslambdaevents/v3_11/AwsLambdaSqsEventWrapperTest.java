@@ -94,8 +94,7 @@ class AwsLambdaSqsEventWrapperTest {
                             equalTo(MESSAGING_OPERATION, "process"))));
   }
 
-  public static final class TestRequestHandler
-      implements RequestHandler<SQSEvent, SQSBatchResponse> {
+  public static class TestRequestHandler implements RequestHandler<SQSEvent, SQSBatchResponse> {
     @Override
     public SQSBatchResponse handleRequest(SQSEvent input, Context context) {
       return null;
@@ -107,8 +106,8 @@ class AwsLambdaSqsEventWrapperTest {
     try {
       Constructor<SQSEvent.SQSMessage> ctor = SQSEvent.SQSMessage.class.getDeclaredConstructor();
       return ctor.newInstance();
-    } catch (Throwable t) {
-      throw new AssertionError(t);
+    } catch (ReflectiveOperationException e) {
+      throw new LinkageError(e.getMessage(), e);
     }
   }
 }

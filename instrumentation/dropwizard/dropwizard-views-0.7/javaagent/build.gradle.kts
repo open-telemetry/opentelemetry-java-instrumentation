@@ -18,9 +18,9 @@ dependencies {
   testImplementation("io.dropwizard:dropwizard-views-mustache:0.7.0")
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
   systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true")
 }

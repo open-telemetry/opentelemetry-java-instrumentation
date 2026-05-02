@@ -23,16 +23,13 @@ sourceSets {
     java {
       destinationDirectory.set(layout.buildDirectory.dir("testapp/classes"))
     }
-    resources {
-      srcDirs("src/webapp")
-    }
     compileClasspath = compileClasspath.plus(sourceSets.main.get().compileClasspath)
   }
 }
 
 dependencies {
   // these are needed for compileGwt task
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (otelProps.testLatestDeps) {
     compileOnly("org.gwtproject:gwt-user:latest.release")
     compileOnly("org.gwtproject:gwt-dev:latest.release")
     compileOnly("org.gwtproject:gwt-servlet:latest.release")
@@ -90,7 +87,7 @@ tasks {
 
     argumentProviders.add(CompilerArgumentsProvider(layout.buildDirectory.get()))
 
-    if (findProperty("testLatestDeps") as Boolean) {
+    if (otelProps.testLatestDeps) {
       javaLauncher.set(project.javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(11)
       })
@@ -113,13 +110,10 @@ tasks {
     // add test app classes to classpath
     classpath = sourceSets.test.get().runtimeClasspath.plus(files(layout.buildDirectory.dir("testapp/classes")))
 
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
-}
-
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }

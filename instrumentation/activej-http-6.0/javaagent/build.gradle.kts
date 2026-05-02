@@ -21,7 +21,7 @@ otelJava {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  test {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }

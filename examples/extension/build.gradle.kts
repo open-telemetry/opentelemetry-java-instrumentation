@@ -12,11 +12,11 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id("com.gradleup.shadow") version "9.4.0"
-  id("com.diffplug.spotless") version "8.3.0"
+  id("com.gradleup.shadow") version "9.4.1"
+  id("com.diffplug.spotless") version "8.4.0"
 
-  id("io.opentelemetry.instrumentation.muzzle-generation") version "2.27.0-alpha-SNAPSHOT"
-  id("io.opentelemetry.instrumentation.muzzle-check") version "2.27.0-alpha-SNAPSHOT"
+  id("io.opentelemetry.instrumentation.muzzle-generation") version "2.28.0-alpha-SNAPSHOT"
+  id("io.opentelemetry.instrumentation.muzzle-check") version "2.28.0-alpha-SNAPSHOT"
 }
 
 group = "io.opentelemetry.example"
@@ -24,11 +24,11 @@ version = "1.0"
 
 val versions = mapOf(
   // this line is managed by .github/scripts/update-sdk-version.sh
-  "opentelemetrySdk" to "1.60.1",
+  "opentelemetrySdk" to "1.61.0",
 
   // these lines are managed by .github/scripts/update-version.sh
-  "opentelemetryJavaagent" to "2.27.0-SNAPSHOT",
-  "opentelemetryJavaagentAlpha" to "2.27.0-alpha-SNAPSHOT"
+  "opentelemetryJavaagent" to "2.28.0-SNAPSHOT",
+  "opentelemetryJavaagentAlpha" to "2.28.0-alpha-SNAPSHOT"
 )
 
 val deps = mapOf(
@@ -100,15 +100,15 @@ dependencies {
   implementation("org.apache.commons:commons-lang3:3.20.0")
 
   //All dependencies below are only for tests
-  testImplementation("org.testcontainers:testcontainers:2.0.3")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.1")
-  testImplementation("com.google.protobuf:protobuf-java-util:4.34.0")
+  testImplementation("org.testcontainers:testcontainers:2.0.5")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
+  testImplementation("com.google.protobuf:protobuf-java-util:4.34.1")
   testImplementation("com.squareup.okhttp3:okhttp:5.3.2")
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.10.0-alpha")
   testImplementation("org.assertj:assertj-core:3.27.7")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.3"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")

@@ -5,7 +5,8 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://github.com/influxdata/influxdb-java
 configurations:
-  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables or disables statement sanitization for database queries.
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
+    description: Enables or disables query sanitization for database queries.
     type: boolean
     default: true

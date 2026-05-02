@@ -30,15 +30,15 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
 
   protected void configureRoutes(HttpRouting.Builder routing) {}
 
-  static void sendResponse(ServerResponse res, int status, String response) {
+  private static void sendResponse(ServerResponse res, int status, String response) {
     sendResponse(res, status, emptyMap(), response);
   }
 
-  static void sendResponse(ServerResponse res, int status, Map<String, String> headers) {
+  private static void sendResponse(ServerResponse res, int status, Map<String, String> headers) {
     sendResponse(res, status, headers, "");
   }
 
-  static void sendResponse(
+  private static void sendResponse(
       ServerResponse res, int status, Map<String, String> headers, String response) {
     res.header("Content-Type", "text/plain");
     headers.forEach(res::header);
@@ -106,7 +106,7 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
                     }));
 
     routing.get(
-        "/captureHeaders",
+        CAPTURE_HEADERS.getPath(),
         (req, res) ->
             testing()
                 .runWithSpan(
@@ -147,6 +147,5 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
     // filter isn't called for non-standard method
     options.disableTestNonStandardHttpMethod();
     options.setTestException(false);
-    options.setTestHttpPipelining(true);
   }
 }

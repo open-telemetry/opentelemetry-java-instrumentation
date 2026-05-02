@@ -34,7 +34,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class PreparedStatementInstrumentation implements TypeInstrumentation {
+class PreparedStatementInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -53,10 +53,10 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
             .and(not(namedOneOf("executeBatch", "executeLargeBatch")))
             .and(takesArguments(0))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$PreparedStatementAdvice");
+        getClass().getName() + "$PreparedStatementAdvice");
     transformer.applyAdviceToMethod(
         named("addBatch").and(takesNoArguments()).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$AddBatchAdvice");
+        getClass().getName() + "$AddBatchAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf(
                 "setBoolean",
@@ -78,35 +78,35 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, int.class))
             .and(takesArguments(2))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetParameter2Advice");
+        getClass().getName() + "$SetParameter2Advice");
     transformer.applyAdviceToMethod(
         namedOneOf("setDate", "setTime", "setTimestamp")
             .and(takesArgument(0, int.class))
             .and(takesArgument(2, Calendar.class))
             .and(takesArguments(3))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetTimeParameter3Advice");
+        getClass().getName() + "$SetTimeParameter3Advice");
     transformer.applyAdviceToMethod(
         namedOneOf("setObject")
             .and(takesArgument(0, int.class))
             .and(takesArgument(2, int.class))
             .and(takesArguments(3))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetParameter3Advice");
+        getClass().getName() + "$SetParameter3Advice");
     transformer.applyAdviceToMethod(
         named("clearParameters").and(takesNoArguments()).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$ClearParametersAdvice");
+        getClass().getName() + "$ClearParametersAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class PreparedStatementAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JdbcAdviceScope onEnter(@Advice.This PreparedStatement statement) {
       // skip prepared statements without attached sql, probably a wrapper around the actual
       // prepared statement
-      if (JdbcData.preparedStatement.get(statement) == null) {
+      if (JdbcData.PREPARED_STATEMENT.get(statement) == null) {
         return null;
       }
       if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
@@ -116,7 +116,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       return JdbcAdviceScope.startPreparedStatement(CallDepth.forClass(Statement.class), statement);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable JdbcAdviceScope adviceScope) {
@@ -129,7 +129,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddBatchAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addBatch(@Advice.This PreparedStatement statement) {
       if (JdbcSingletons.isWrapper(statement, Statement.class)) {
         return;
@@ -141,7 +141,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SetParameter2Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This PreparedStatement statement,
         @Advice.Argument(0) int index,
@@ -175,7 +175,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SetParameter3Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This PreparedStatement statement,
         @Advice.Argument(0) int index,
@@ -210,7 +210,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SetTimeParameter3Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This PreparedStatement statement,
         @Advice.Argument(0) int index,
@@ -238,8 +238,8 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ClearParametersAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void clearBatch(@Advice.This PreparedStatement statement) {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void clearParameters(@Advice.This PreparedStatement statement) {
       JdbcData.clearParameters(statement);
     }
   }

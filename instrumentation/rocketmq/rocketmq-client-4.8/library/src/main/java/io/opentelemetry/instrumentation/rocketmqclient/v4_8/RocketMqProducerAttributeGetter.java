@@ -15,9 +15,8 @@ import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
 
-enum RocketMqProducerAttributeGetter
+final class RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<SendMessageContext, Void> {
-  INSTANCE;
 
   @Override
   public String getSystem(SendMessageContext request) {
@@ -86,7 +85,11 @@ enum RocketMqProducerAttributeGetter
 
   @Override
   public List<String> getMessageHeader(SendMessageContext request, String name) {
-    String value = request.getMessage().getProperties().get(name);
+    Message message = request.getMessage();
+    if (message == null) {
+      return emptyList();
+    }
+    String value = message.getProperties().get(name);
     if (value != null) {
       return singletonList(value);
     }

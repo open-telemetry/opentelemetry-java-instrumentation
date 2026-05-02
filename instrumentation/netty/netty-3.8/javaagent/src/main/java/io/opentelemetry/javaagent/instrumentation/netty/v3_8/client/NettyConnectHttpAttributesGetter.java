@@ -16,9 +16,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.jboss.netty.channel.Channel;
 
-enum NettyConnectHttpAttributesGetter
+final class NettyConnectHttpAttributesGetter
     implements HttpClientAttributesGetter<NettyConnectionRequest, Channel> {
-  INSTANCE;
 
   @Nullable
   @Override
@@ -51,6 +50,7 @@ enum NettyConnectHttpAttributesGetter
     return emptyList();
   }
 
+  @Nullable
   @Override
   public String getNetworkTransport(NettyConnectionRequest request, @Nullable Channel channel) {
     return ChannelUtil.getNetworkTransport(channel);

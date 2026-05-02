@@ -23,7 +23,7 @@ package io.opentelemetry.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
@@ -52,44 +52,28 @@ import javax.annotation.Nullable;
 /** JDBC driver for OpenTelemetry. */
 public final class OpenTelemetryDriver implements Driver {
 
+  private static final int MAJOR_VERSION;
+  private static final int MINOR_VERSION;
+
+  private static final String URL_PREFIX = "jdbc:otel:";
+  private static final AtomicBoolean registered = new AtomicBoolean();
+  private static final List<Driver> driverCandidates = new CopyOnWriteArrayList<>();
+
   // visible for testing
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
   private volatile OpenTelemetry openTelemetry = OpenTelemetry.noop();
 
-  private static final int MAJOR_VERSION;
-  private static final int MINOR_VERSION;
-
-  private static final String URL_PREFIX = "jdbc:otel:";
-  private static final AtomicBoolean REGISTERED = new AtomicBoolean();
-  private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
-
-  @SuppressWarnings("deprecation") // using deprecated config property
+  @SuppressWarnings("deprecation") // library flat config fallback remains supported until 3.0
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
-    Boolean enabled =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
-            .get("sqlcommenter/development")
-            .getBoolean("enabled");
-    if (enabled == null) {
-      enabled =
-          ConfigPropertiesUtil.getBoolean(
-              "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled");
-    }
-    if (enabled == null) {
-      enabled =
-          DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
-              .get("database")
-              .get("sqlcommenter/development")
-              .getBoolean("enabled");
-    }
-    if (enabled == null) {
-      enabled =
-          ConfigPropertiesUtil.getBoolean(
-              "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
-    }
-    if (enabled == null) {
-      enabled = false; // default value
-    }
+    boolean enabled =
+        DbConfig.isSqlCommenterEnabled(
+            openTelemetry,
+            "jdbc",
+            ConfigPropertiesUtil.getBoolean(
+                "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
+                ConfigPropertiesUtil.getBoolean(
+                    "otel.instrumentation.common.db.experimental.sqlcommenter.enabled", false)));
     return SqlCommenter.builder().setEnabled(enabled).build();
   }
 
@@ -114,7 +98,7 @@ public final class OpenTelemetryDriver implements Driver {
    * @throws SQLException if registering the driver fails
    */
   public static void register() throws SQLException {
-    if (!REGISTERED.compareAndSet(false, true)) {
+    if (!registered.compareAndSet(false, true)) {
       throw new IllegalStateException(
           "Driver is already registered. It can only be registered once.");
     }
@@ -130,7 +114,7 @@ public final class OpenTelemetryDriver implements Driver {
    * @throws SQLException if deregistering the driver fails
    */
   public static void deregister() throws SQLException {
-    if (!REGISTERED.compareAndSet(true, false)) {
+    if (!registered.compareAndSet(true, false)) {
       throw new IllegalStateException(
           "Driver is not registered (or it has not been registered using Driver.register() method)");
     }
@@ -139,7 +123,7 @@ public final class OpenTelemetryDriver implements Driver {
 
   /** Returns {@code true} if the driver is registered against {@link DriverManager}. */
   public static boolean isRegistered() {
-    return REGISTERED.get();
+    return registered.get();
   }
 
   /**
@@ -151,9 +135,9 @@ public final class OpenTelemetryDriver implements Driver {
    *
    * @param driver {@link Driver} that should be registered
    */
-  public static void addDriverCandidate(Driver driver) {
+  public static void addDriverCandidate(@Nullable Driver driver) {
     if (driver != null) {
-      DRIVER_CANDIDATES.add(driver);
+      driverCandidates.add(driver);
     }
   }
 
@@ -164,17 +148,17 @@ public final class OpenTelemetryDriver implements Driver {
    * @return true if the driver was unregistered
    */
   public static boolean removeDriverCandidate(Driver driver) {
-    return DRIVER_CANDIDATES.remove(driver);
+    return driverCandidates.remove(driver);
   }
 
   /**
-   * Find driver that accepts {@code realUrl}. Drivers registered against {@link #DRIVER_CANDIDATES}
+   * Find driver that accepts {@code realUrl}. Drivers registered against {@link #driverCandidates}
    * are preferred over {@link DriverManager} drivers.
    */
   static Driver findDriver(String realUrl) {
     Driver driver = null;
-    if (!DRIVER_CANDIDATES.isEmpty()) {
-      driver = findDriver(realUrl, DRIVER_CANDIDATES);
+    if (!driverCandidates.isEmpty()) {
+      driver = findDriver(realUrl, driverCandidates);
     }
     if (driver == null) {
       driver = findDriver(realUrl, Collections.list(DriverManager.getDrivers()));
@@ -256,7 +240,7 @@ public final class OpenTelemetryDriver implements Driver {
 
   @Nullable
   @Override
-  public Connection connect(String url, Properties info) throws SQLException {
+  public Connection connect(String url, @Nullable Properties info) throws SQLException {
     if (url == null || url.trim().isEmpty()) {
       throw new IllegalArgumentException("url is required");
     }
@@ -299,7 +283,8 @@ public final class OpenTelemetryDriver implements Driver {
   }
 
   @Override
-  public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
+  public DriverPropertyInfo[] getPropertyInfo(String url, @Nullable Properties info)
+      throws SQLException {
     if (url == null || url.trim().isEmpty()) {
       throw new IllegalArgumentException("url is required");
     }

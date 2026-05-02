@@ -5,6 +5,7 @@ semantic_conventions:
 library_link: https://nats.io/
 configurations:
   - name: otel.instrumentation.messaging.experimental.capture-headers
+    declarative_name: java.common.messaging.capture_headers/development
     description: >
       Enables capturing messaging headers as span attributes. Provide a comma-separated list of
       header names to capture.

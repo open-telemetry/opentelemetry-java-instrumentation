@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class PekkoScheduleInstrumentation implements TypeInstrumentation {
+class PekkoScheduleInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,20 +30,20 @@ public class PekkoScheduleInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("scala.concurrent.duration.FiniteDuration")))
             .and(takesArgument(2, named("java.lang.Runnable")))
             .and(takesArgument(3, named("scala.concurrent.ExecutionContext"))),
-        PekkoScheduleInstrumentation.class.getName() + "$ScheduleAdvice");
+        getClass().getName() + "$ScheduleAdvice");
     transformer.applyAdviceToMethod(
         named("scheduleOnce")
             .and(takesArgument(0, named("scala.concurrent.duration.FiniteDuration")))
             .and(takesArgument(1, named("java.lang.Runnable")))
             .and(takesArgument(2, named("scala.concurrent.ExecutionContext"))),
-        PekkoScheduleInstrumentation.class.getName() + "$ScheduleOnceAdvice");
+        getClass().getName() + "$ScheduleOnceAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
 
     @Advice.AssignReturned.ToArguments(@ToArgument(2))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Runnable enterSchedule(@Advice.Argument(value = 2) Runnable runnable) {
       return PekkoSchedulerTaskWrapper.wrap(runnable);
     }
@@ -53,7 +53,7 @@ public class PekkoScheduleInstrumentation implements TypeInstrumentation {
   public static class ScheduleOnceAdvice {
 
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Runnable enterScheduleOnce(@Advice.Argument(value = 1) Runnable runnable) {
       return PekkoSchedulerTaskWrapper.wrap(runnable);
     }

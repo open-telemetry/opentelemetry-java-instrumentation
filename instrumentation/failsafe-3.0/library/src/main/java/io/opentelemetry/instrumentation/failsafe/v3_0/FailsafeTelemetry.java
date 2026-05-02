@@ -25,16 +25,15 @@ import io.opentelemetry.instrumentation.failsafe.v3_0.internal.RetryPolicyEventL
 /** Entrypoint for instrumenting Failsafe components. */
 public final class FailsafeTelemetry {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.failsafe-3.0";
-
   private static final AttributeKey<String> CIRCUIT_BREAKER_NAME =
       AttributeKey.stringKey("failsafe.circuit_breaker.name");
+
+  private final OpenTelemetry openTelemetry;
 
   /** Returns a new {@link FailsafeTelemetry} configured with the given {@link OpenTelemetry}. */
   public static FailsafeTelemetry create(OpenTelemetry openTelemetry) {
     return new FailsafeTelemetry(openTelemetry);
   }
-
-  private final OpenTelemetry openTelemetry;
 
   private FailsafeTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

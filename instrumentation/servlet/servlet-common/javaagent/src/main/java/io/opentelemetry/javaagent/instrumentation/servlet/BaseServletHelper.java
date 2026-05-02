@@ -32,21 +32,21 @@ import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import java.util.List;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
           .getScalarList("capture_request_parameters/development", String.class, emptyList());
-  private static final boolean ADD_TRACE_ID_REQUEST_ATTRIBUTE =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
-          .getBoolean("add_trace_id_request_attribute/development", true);
+  private static final boolean TRACE_ID_REQUEST_ATTRIBUTE_ENABLED =
+      readTraceIdRequestAttributeEnabled();
 
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
   protected final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final ServletSpanNameProvider<REQUEST> spanNameProvider;
   private final Function<REQUEST, String> contextPathExtractor;
-  private final ServletRequestParametersExtractor<REQUEST, RESPONSE> parameterExtractor;
+  @Nullable private final ServletRequestParametersExtractor<REQUEST, RESPONSE> parameterExtractor;
 
   protected BaseServletHelper(
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
@@ -59,6 +59,12 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
         !CAPTURE_REQUEST_PARAMETERS.isEmpty()
             ? new ServletRequestParametersExtractor<>(accessor, CAPTURE_REQUEST_PARAMETERS)
             : null;
+  }
+
+  private static boolean readTraceIdRequestAttributeEnabled() {
+    return DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
+        .get("trace_id_request_attribute/development")
+        .getBoolean("enabled", !AgentCommonConfig.get().isV3Preview());
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
@@ -80,7 +86,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private void addRequestAttributes(REQUEST request, Context context) {
-    if (!ADD_TRACE_ID_REQUEST_ATTRIBUTE) {
+    if (!TRACE_ID_REQUEST_ATTRIBUTE_ENABLED) {
       return;
     }
 
@@ -97,6 +103,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     return ServletAsyncContext.init(context);
   }
 
+  @Nullable
   public Context getServerContext(REQUEST request) {
     Object context = accessor.getRequestAttribute(request, ServletHelper.CONTEXT_ATTRIBUTE);
     return context instanceof Context ? (Context) context : null;
@@ -126,7 +133,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture servlet specific span attributes when SERVER span is not create by servlet
+   * Capture servlet specific span attributes when SERVER span is not created by servlet
    * instrumentation.
    */
   public void captureServletAttributes(Context context, REQUEST request) {
@@ -143,8 +150,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture servlet request parameters as span attributes when SERVER span is not create by servlet
-   * instrumentation.
+   * Capture servlet request parameters as span attributes when SERVER span is not created by
+   * servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletRequestParametersExtractor} as an attribute extractor. When SERVER span is not created
@@ -160,7 +167,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   /**
    * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID} as span attributes when SERVER span is
-   * not create by servlet instrumentation.
+   * not created by servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
@@ -173,10 +180,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
     Principal principal = accessor.getRequestUserPrincipal(request);
     if (principal != null) {
-      String name = principal.getName();
-      if (name != null) {
-        serverSpan.setAttribute(ENDUSER_ID, name);
-      }
+      serverSpan.setAttribute(ENDUSER_ID, principal.getName());
     }
   }
 

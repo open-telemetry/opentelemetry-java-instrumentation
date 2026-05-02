@@ -17,13 +17,11 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 import org.apache.rocketmq.test.util.MQRandomUtils;
 import org.apache.rocketmq.test.util.RandomUtil;
 
-public final class BaseConf {
+public class BaseConf {
   public static final String nsAddr;
-  public static final String broker1Addr;
-  static final String broker1Name;
-  static final String clusterName;
-  static final NamesrvController namesrvController;
-  static final BrokerController brokerController;
+  private static final String clusterName;
+  private static final NamesrvController namesrvController;
+  private static final BrokerController brokerController;
 
   static {
     System.setProperty(
@@ -32,8 +30,6 @@ public final class BaseConf {
     nsAddr = "localhost:" + namesrvController.getNettyServerConfig().getListenPort();
     brokerController = IntegrationTestBase.createAndStartBroker(nsAddr);
     clusterName = brokerController.getBrokerConfig().getBrokerClusterName();
-    broker1Name = brokerController.getBrokerConfig().getBrokerName();
-    broker1Addr = "localhost:" + brokerController.getNettyServerConfig().getListenPort();
   }
 
   private BaseConf() {}

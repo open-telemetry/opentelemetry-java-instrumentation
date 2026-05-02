@@ -37,7 +37,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   test {
@@ -54,6 +54,10 @@ tasks {
       includeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
     }
     jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=false")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.opensearch.capture-search-query=false",
+    )
   }
 
   val testStableSemconv by registering(Test::class) {

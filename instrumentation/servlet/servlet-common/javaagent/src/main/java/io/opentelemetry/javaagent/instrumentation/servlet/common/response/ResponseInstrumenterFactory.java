@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMetho
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.semconv.SchemaUrls;
 
-public final class ResponseInstrumenterFactory {
+public class ResponseInstrumenterFactory {
 
   public static Instrumenter<ClassAndMethod, Void> createInstrumenter(String instrumentationName) {
     CodeAttributesGetter<ClassAndMethod> codeAttributesGetter =

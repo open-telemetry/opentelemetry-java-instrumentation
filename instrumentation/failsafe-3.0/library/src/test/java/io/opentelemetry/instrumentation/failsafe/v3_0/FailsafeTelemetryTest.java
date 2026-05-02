@@ -21,7 +21,7 @@ import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
+class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
