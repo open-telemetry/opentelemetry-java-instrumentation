@@ -1084,7 +1084,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         .satisfies(
             spanData ->
                 assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_37_0));
+                    .isEqualTo(SchemaUrls.V1_41_0));
     if (statusCode >= 500) {
       span.hasStatus(StatusData.error());
     }
