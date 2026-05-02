@@ -65,14 +65,15 @@ class WildflyTest extends TargetSystemTest {
     verifyMetrics(createMetricsVerifier());
   }
 
-  private static void exerciseTestApp(GenericContainer<?> target, String dockerImage) throws IOException {
+  private static void exerciseTestApp(GenericContainer<?> target, String dockerImage)
+      throws IOException {
     URL url =
         URI.create(
-            "http://"
-                + target.getHost()
-                + ":"
-                + target.getMappedPort(WILDFLY_SERVICE_PORT)
-                + testAppPath(dockerImage))
+                "http://"
+                    + target.getHost()
+                    + ":"
+                    + target.getMappedPort(WILDFLY_SERVICE_PORT)
+                    + testAppPath(dockerImage))
             .toURL();
 
     await()
