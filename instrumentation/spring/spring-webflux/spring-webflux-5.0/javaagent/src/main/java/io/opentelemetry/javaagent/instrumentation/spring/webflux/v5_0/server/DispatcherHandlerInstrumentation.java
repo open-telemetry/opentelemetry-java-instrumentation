@@ -44,11 +44,9 @@ class DispatcherHandlerInstrumentation implements TypeInstrumentation {
   public static class HandleAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<Void> methodExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Argument(0) ServerWebExchange exchange,
-        @Advice.Return Mono<Void> originalMono) {
+        @Advice.Argument(0) ServerWebExchange exchange, @Advice.Return Mono<Void> originalMono) {
       Mono<Void> mono = originalMono;
       if (mono != null) {
         // note: it seems like this code should go in @OnMethodExit of

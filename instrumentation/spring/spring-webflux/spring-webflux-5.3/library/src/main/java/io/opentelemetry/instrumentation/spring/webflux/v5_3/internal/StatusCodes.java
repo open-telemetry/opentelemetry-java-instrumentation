@@ -60,7 +60,7 @@ final class StatusCodes {
       value =
           MethodHandles.publicLookup()
               .findVirtual(httpStatusCodeClass, "value", MethodType.methodType(int.class));
-    } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException e) {
+    } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException ignored) {
       return null;
     }
 
@@ -84,7 +84,7 @@ final class StatusCodes {
       rawStatusCode =
           MethodHandles.publicLookup()
               .findVirtual(ClientResponse.class, "rawStatusCode", MethodType.methodType(int.class));
-    } catch (IllegalAccessException | NoSuchMethodException e) {
+    } catch (IllegalAccessException | NoSuchMethodException ignored) {
       return null;
     }
 
@@ -112,7 +112,7 @@ final class StatusCodes {
       value =
           MethodHandles.publicLookup()
               .findVirtual(HttpStatus.class, "value", MethodType.methodType(int.class));
-    } catch (IllegalAccessException | NoSuchMethodException e) {
+    } catch (IllegalAccessException | NoSuchMethodException ignored) {
       return null;
     }
 

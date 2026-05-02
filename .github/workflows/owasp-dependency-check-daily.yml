@@ -32,8 +32,7 @@ jobs:
         id: audit
         continue-on-error: true
         env:
-          SONATYPE_OSS_INDEX_USER: ${{ secrets.SONATYPE_OSS_INDEX_USER }}
-          SONATYPE_OSS_INDEX_PASSWORD: ${{ secrets.SONATYPE_OSS_INDEX_PASSWORD }}
+          SONATYPE_GUIDE_PAT: ${{ secrets.SONATYPE_GUIDE_PAT }}
 
       - name: Print vulnerability report
         if: steps.audit.outcome == 'failure'

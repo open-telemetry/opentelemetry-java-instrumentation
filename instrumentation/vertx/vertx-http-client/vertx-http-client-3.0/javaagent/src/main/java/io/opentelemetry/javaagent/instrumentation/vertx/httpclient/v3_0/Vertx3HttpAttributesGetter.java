@@ -5,15 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
+import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0.VertxClientSingletons.REQUEST_INFO;
+
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.AbstractVertxHttpAttributesGetter;
 import io.vertx.core.http.HttpClientRequest;
 import javax.annotation.Nullable;
 
 final class Vertx3HttpAttributesGetter extends AbstractVertxHttpAttributesGetter {
-
-  private static final VirtualField<HttpClientRequest, VertxRequestInfo> requestInfoField =
-      VirtualField.find(HttpClientRequest.class, VertxRequestInfo.class);
 
   @Override
   public String getUrlFull(HttpClientRequest request) {
@@ -21,7 +19,7 @@ final class Vertx3HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
     // Uri should be relative, but it is possible to misuse vert.x api and pass an absolute uri
     // where relative is expected.
     if (!isAbsolute(uri)) {
-      VertxRequestInfo requestInfo = requestInfoField.get(request);
+      VertxRequestInfo requestInfo = REQUEST_INFO.get(request);
       if (requestInfo != null) {
         uri = absoluteUri(requestInfo, uri);
       }
@@ -32,7 +30,7 @@ final class Vertx3HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(HttpClientRequest request) {
-    VertxRequestInfo requestInfo = requestInfoField.get(request);
+    VertxRequestInfo requestInfo = REQUEST_INFO.get(request);
     if (requestInfo == null) {
       return null;
     }
@@ -42,7 +40,7 @@ final class Vertx3HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(HttpClientRequest request) {
-    VertxRequestInfo requestInfo = requestInfoField.get(request);
+    VertxRequestInfo requestInfo = REQUEST_INFO.get(request);
     if (requestInfo == null) {
       return null;
     }

@@ -420,7 +420,7 @@ targets:
       target: ':instrumentation:cassandra:cassandra-4.4:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:clickhouse:clickhouse-client-common:javaagent'
+      target: ':instrumentation:clickhouse:clickhouse-client-common-0.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:clickhouse:clickhouse-client-v1-0.5:javaagent'
@@ -1131,7 +1131,7 @@ targets:
       target: ':instrumentation:play:play-ws:play-ws-2.1:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:play:play-ws:play-ws-common:javaagent'
+      target: ':instrumentation:play:play-ws:play-ws-common-1.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:reactor:reactor-netty:reactor-netty-0.9:javaagent'
