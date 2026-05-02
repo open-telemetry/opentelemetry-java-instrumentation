@@ -13,3 +13,4 @@ io.opentelemetry.instrumentation.jmx.rules.WildflyTest.testWildflyMetrics(String
 io.opentelemetry.instrumentation.jmx.rules.HadoopTest.testMetrics_Hadoop2x()
 io.opentelemetry.javaagent.instrumentation.vertx.rx.v3_5.server.VertxReactivePropagationTest.highConcurrency()
 io.opentelemetry.instrumentation.jmx.rules.WildflyTest.testWildflyMetrics(String)[2]
+io.opentelemetry.instrumentation.jmx.rules.WildflyTest.testWildflyMetrics(String)[2]
