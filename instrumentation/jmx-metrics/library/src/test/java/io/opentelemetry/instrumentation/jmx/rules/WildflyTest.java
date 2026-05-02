@@ -23,6 +23,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 class WildflyTest extends TargetSystemTest {
 
   private static final int WILDFLY_SERVICE_PORT = 8080;
+  private static final String LEGACY_WILDFLY_IMAGE = "jboss/wildfly:10.1.0.Final";
 
   @ParameterizedTest
   @ValueSource(
@@ -46,7 +47,10 @@ class WildflyTest extends TargetSystemTest {
             .withStartupTimeout(Duration.ofMinutes(2))
             .withExposedPorts(WILDFLY_SERVICE_PORT)
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
-            .waitingFor(Wait.forListeningPorts(WILDFLY_SERVICE_PORT));
+            .waitingFor(
+                Wait.forHttp(testAppPath(dockerImage))
+                    .forPort(WILDFLY_SERVICE_PORT)
+                    .withStartupTimeout(Duration.ofMinutes(2)));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
@@ -206,5 +210,9 @@ class WildflyTest extends TargetSystemTest {
                     .hasDescription("The total number of transactions committed")
                     .hasUnit("{transaction}")
                     .hasDataPointsWithoutAttributes());
+  }
+
+  private static String testAppPath(String dockerImage) {
+    return dockerImage.equals(LEGACY_WILDFLY_IMAGE) ? "/testapp/javax/" : "/testapp/jakarta/";
   }
 }
