@@ -174,16 +174,16 @@ class VertxReactivePropagationTest {
                   Thread.currentThread().interrupt();
                   throw new AssertionError(e);
                 }
-                                testing.runWithSpan(
-                                        "client " + index,
-                                        () -> {
-                                            HttpRequestBuilder builder =
-                                                    HttpRequest.builder()
-                                                            .get(baseUrl + "?" + TEST_REQUEST_ID_PARAMETER + "=" + index);
-                                            Span.current().setAttribute(TEST_REQUEST_ID_ATTRIBUTE, index);
-                                            propagator.inject(Context.current(), builder, setter);
-                                            client.execute(builder.build()).aggregate().join();
-                                        });
+                testing.runWithSpan(
+                    "client " + index,
+                    () -> {
+                      HttpRequestBuilder builder =
+                          HttpRequest.builder()
+                              .get(baseUrl + "?" + TEST_REQUEST_ID_PARAMETER + "=" + index);
+                      Span.current().setAttribute(TEST_REQUEST_ID_ATTRIBUTE, index);
+                      propagator.inject(Context.current(), builder, setter);
+                      client.execute(builder.build()).aggregate().join();
+                    });
               }));
     }
 
