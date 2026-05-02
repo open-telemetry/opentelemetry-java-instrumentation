@@ -44,7 +44,7 @@ public class NettyClientSingletons {
             .addAttributesExtractor(
                 HttpClientServicePeerAttributesExtractor.create(
                     new NettyConnectHttpAttributesGetter(), GlobalOpenTelemetry.get()))
-            .setSchemaUrl(SchemaUrls.V1_37_0)
+            .setSchemaUrl(SchemaUrls.V1_41_0)
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
