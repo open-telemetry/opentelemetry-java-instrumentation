@@ -21,8 +21,6 @@ muzzle {
 dependencies {
   bootstrap(project(":instrumentation:internal:internal-application-logger:bootstrap"))
 
-  compileOnly(project(":javaagent-bootstrap"))
-
   compileOnly("org.slf4j:slf4j-api") {
     version {
       // 1.4.0 introduced the TRACE logging level

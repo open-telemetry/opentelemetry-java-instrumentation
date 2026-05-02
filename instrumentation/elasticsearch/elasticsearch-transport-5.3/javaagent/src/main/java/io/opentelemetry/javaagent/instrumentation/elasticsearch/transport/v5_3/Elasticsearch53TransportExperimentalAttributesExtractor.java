@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.Elasti
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportExperimentalAttributesExtractor;
 import org.elasticsearch.action.DocWriteRequest;
 
-public class Elasticsearch53TransportExperimentalAttributesExtractor
+class Elasticsearch53TransportExperimentalAttributesExtractor
     extends ElasticsearchTransportExperimentalAttributesExtractor {
 
   @Override

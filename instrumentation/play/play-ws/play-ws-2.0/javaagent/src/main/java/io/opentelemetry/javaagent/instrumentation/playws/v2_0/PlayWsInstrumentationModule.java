@@ -13,9 +13,9 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.playws.AbstractBootstrapInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.playws.HandlerPublisherInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.AbstractBootstrapInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.AsyncHttpClientInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.HandlerPublisherInstrumentation;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -53,6 +53,10 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
       if (!instrumenter().shouldStart(parentContext, request)) {
         return new Object[] {null, asyncHandler};
       }
+      if (asyncHandler instanceof WebSocketUpgradeHandler) {
+        // websocket upgrade handlers aren't supported
+        return new Object[] {null, asyncHandler};
+      }
 
       Context context = instrumenter().start(parentContext, request);
 
@@ -60,8 +64,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         asyncHandler =
             new StreamedAsyncHandlerWrapper<>(
                 (StreamedAsyncHandler<?>) asyncHandler, request, context, parentContext);
-      } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
-        // websocket upgrade handlers aren't supported
+      } else {
         asyncHandler = new AsyncHandlerWrapper<>(asyncHandler, request, context, parentContext);
       }
       return new Object[] {context, asyncHandler};

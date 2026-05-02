@@ -18,6 +18,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
@@ -132,6 +133,7 @@ class RestClientWrapper {
   }
 
   @SuppressWarnings("unchecked") // casting reflection result
+  @Nullable
   private static Instrumenter<ElasticsearchRestRequest, Response> getInstrumenter(Object proxy)
       throws IllegalAccessException {
     Supplier<Instrumenter<ElasticsearchRestRequest, Response>> supplier =

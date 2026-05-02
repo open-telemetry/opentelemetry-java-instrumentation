@@ -43,10 +43,13 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   String getRequestRemoteAddr(REQUEST request);
 
+  @Nullable
   Integer getRequestRemotePort(REQUEST request);
 
+  @Nullable
   String getRequestLocalAddr(REQUEST request);
 
+  @Nullable
   Integer getRequestLocalPort(REQUEST request);
 
   @Nullable

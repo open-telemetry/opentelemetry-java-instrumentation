@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1;
 
-import static io.opentelemetry.semconv.incubating.OtelIncubatingAttributes.OTEL_EVENT_NAME;
+import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
@@ -32,11 +32,11 @@ public class LoggingEventMapper {
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
-  private final List<AttributeKey<String>> captureMdcAttributeKeys;
-
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jboss_logmanager")
           .getBoolean("experimental_log_attributes/development", false);
+
+  private final List<AttributeKey<String>> captureMdcAttributeKeys;
 
   // cached as an optimization
   private final boolean captureAllMdcAttributes;

@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -40,7 +41,7 @@ class FilterChainContextInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -59,14 +60,15 @@ class FilterChainContextInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This FilterChainContext filterChainContext, @Advice.Enter CallDepth callDepth) {
+        @Advice.This FilterChainContext filterChainContext,
+        @Advice.Enter @Nullable CallDepth callDepth) {
       // When exiting the outermost call to write clear context & request from filter chain context.
       // Write makes a copy of the current filter chain context and passes it on. In older versions
       // new and old filter chain context share the attributes, but in newer versions the attributes
       // are also copied. We need to remove the attributes here to ensure that the next request
       // starts with clean state, failing to do so causes http pipelining test to fail with the
       // latest deps.
-      if (callDepth.decrementAndGet() == 0) {
+      if (callDepth != null && callDepth.decrementAndGet() == 0) {
         GrizzlyStateStorage.removeContext(filterChainContext);
         GrizzlyStateStorage.removeRequest(filterChainContext);
       }

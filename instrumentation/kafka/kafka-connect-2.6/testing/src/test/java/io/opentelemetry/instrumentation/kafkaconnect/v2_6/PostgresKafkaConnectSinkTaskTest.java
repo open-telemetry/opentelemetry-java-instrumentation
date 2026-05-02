@@ -99,7 +99,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Override
-  protected void clearDatabaseData() throws Exception {
+  protected void clearDatabaseData() throws SQLException {
     clearPostgresTable();
   }
 
@@ -115,13 +115,13 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  void testSingleMessage() throws Exception {
+  void testSingleMessage() throws IOException {
     String testTopicName = TOPIC_NAME;
     setupPostgresSinkConnector(testTopicName);
     awaitForTopicCreation(testTopicName);
 
     Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBootstrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
@@ -206,7 +206,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  void testMultiTopic() throws Exception {
+  void testMultiTopic() throws IOException {
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";
@@ -217,7 +217,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     awaitForTopicCreation(topicName3);
 
     Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBootstrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.BATCH_SIZE_CONFIG, 10); // to send messages in one batch

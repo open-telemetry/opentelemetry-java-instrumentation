@@ -3,8 +3,6 @@ plugins {
 }
 
 dependencies {
-  testInstrumentation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
-
   testImplementation("io.opentelemetry:opentelemetry-api-incubator")
 }
 

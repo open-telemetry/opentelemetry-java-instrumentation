@@ -11,6 +11,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,6 +34,7 @@ class AsyncWorkManagerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class DisablePropagationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope onEnter() {
       if (Java8BytecodeBridge.currentContext() != Java8BytecodeBridge.rootContext()) {
         // Prevent context from leaking by running this method under root context.
@@ -43,7 +45,7 @@ class AsyncWorkManagerInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

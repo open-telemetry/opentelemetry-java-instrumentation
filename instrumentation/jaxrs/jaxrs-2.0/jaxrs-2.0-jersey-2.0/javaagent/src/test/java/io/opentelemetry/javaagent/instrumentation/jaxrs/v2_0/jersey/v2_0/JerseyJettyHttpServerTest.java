@@ -12,6 +12,9 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JerseyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -35,6 +38,6 @@ class JerseyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
 
   @Override
   protected boolean testExperimental() {
-    return Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 }

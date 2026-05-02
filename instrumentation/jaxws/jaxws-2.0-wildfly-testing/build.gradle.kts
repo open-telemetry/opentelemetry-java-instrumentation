@@ -12,7 +12,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))
 
   // wildfly version used to run tests
@@ -54,6 +54,10 @@ tasks {
 
     // needed for java 11 to avoid org.jboss.modules.ModuleNotFoundException: java.se
     jvmArgs("--add-modules=java.se")
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     // add offset to default port values
     jvmArgs("-Djboss.socket.binding.port-offset=200")
 
@@ -62,11 +66,4 @@ tasks {
       !it.absolutePath.contains("logback-classic")
     }.plus(files(layout.buildDirectory.file("tmp/logback-classic-modified.jar")))
   }
-}
-
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

@@ -37,7 +37,7 @@ class PathMatcherInstrumentation implements TypeInstrumentation {
   public static class ApplyAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onEnter(
+    public static void onExit(
         @Advice.Argument(0) Uri.Path prefix, @Advice.Return PathMatcher<?> result) {
       // store the path being matched inside a VirtualField on the given matcher, so it can be used
       // for constructing the route

@@ -37,7 +37,7 @@ public class Log4jHelper {
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender");
-    DeclarativeConfigProperties comonConfig =
+    DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
 
     captureExperimentalAttributes =
@@ -49,7 +49,7 @@ public class Log4jHelper {
         config.getBoolean("capture_marker_attribute/development", false);
     List<String> captureContextDataAttributes =
         config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    boolean v3Preview = comonConfig.getBoolean("v3_preview", false);
+    boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     mapper =
         new LogEventMapper<>(
@@ -67,9 +67,9 @@ public class Log4jHelper {
       String loggerClassName,
       @Nullable StackTraceElement location,
       Level level,
-      Marker marker,
+      @Nullable Marker marker,
       Message message,
-      Throwable throwable) {
+      @Nullable Throwable throwable) {
     String instrumentationName = logger.getName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";

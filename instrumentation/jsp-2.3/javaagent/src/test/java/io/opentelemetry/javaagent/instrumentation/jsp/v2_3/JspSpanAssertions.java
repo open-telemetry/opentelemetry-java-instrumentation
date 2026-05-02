@@ -31,7 +31,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 
 class JspSpanAssertions {
-  static final boolean EXPERIMENTAL_ENABLED =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.jsp.experimental-span-attributes");
 
   private final String baseUrl;
@@ -43,7 +43,7 @@ class JspSpanAssertions {
   }
 
   static String experimental(String value) {
-    if (EXPERIMENTAL_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return value;
     }
     return null;
@@ -153,7 +153,7 @@ class JspSpanAssertions {
 
     span.hasName("Render " + spanData.getRoute()).hasParent(spanData.getParent());
 
-    if (EXPERIMENTAL_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       span.hasAttributesSatisfyingExactly(
           equalTo(stringKey("jsp.requestURL"), baseUrl + requestUrl),
           satisfies(
@@ -162,6 +162,8 @@ class JspSpanAssertions {
                   val.satisfiesAnyOf(
                       v -> assertThat(spanData.getForwardOrigin()).isNull(),
                       v -> assertThat(v).isEqualTo(spanData.getForwardOrigin()))));
+    } else {
+      span.hasTotalAttributeCount(0);
     }
   }
 }

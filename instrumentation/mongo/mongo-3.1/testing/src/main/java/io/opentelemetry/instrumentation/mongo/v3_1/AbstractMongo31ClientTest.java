@@ -56,8 +56,9 @@ public abstract class AbstractMongo31ClientTest
   protected void createCollectionNoDescription(String dbName, String collectionName) {
     MongoClientOptions.Builder options = MongoClientOptions.builder();
     configureMongoClientOptions(options);
-    MongoDatabase db =
-        new MongoClient(new ServerAddress(host, port), options.build()).getDatabase(dbName);
+    MongoClient mongoClient = new MongoClient(new ServerAddress(host, port), options.build());
+    cleanup.deferCleanup(mongoClient);
+    MongoDatabase db = mongoClient.getDatabase(dbName);
     db.createCollection(collectionName);
   }
 
@@ -66,8 +67,9 @@ public abstract class AbstractMongo31ClientTest
       String dbName, String collectionName) {
     MongoClientOptions clientOptions = client.getMongoClientOptions();
     MongoClientOptions newClientOptions = MongoClientOptions.builder(clientOptions).build();
-    MongoDatabase db =
-        new MongoClient(new ServerAddress(host, port), newClientOptions).getDatabase(dbName);
+    MongoClient mongoClient = new MongoClient(new ServerAddress(host, port), newClientOptions);
+    cleanup.deferCleanup(mongoClient);
+    MongoDatabase db = mongoClient.getDatabase(dbName);
     db.createCollection(collectionName);
   }
 
@@ -77,8 +79,9 @@ public abstract class AbstractMongo31ClientTest
         MongoClientOptions.builder().description("some-description");
     configureMongoClientOptions(options);
     options.build();
-    MongoDatabase db =
-        new MongoClient(new ServerAddress(host, port), options.build()).getDatabase(dbName);
+    MongoClient mongoClient = new MongoClient(new ServerAddress(host, port), options.build());
+    cleanup.deferCleanup(mongoClient);
+    MongoDatabase db = mongoClient.getDatabase(dbName);
     db.createCollection(collectionName);
   }
 

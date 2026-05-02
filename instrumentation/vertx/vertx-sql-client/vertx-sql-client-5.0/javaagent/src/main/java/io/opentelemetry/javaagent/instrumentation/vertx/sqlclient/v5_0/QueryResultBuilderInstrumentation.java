@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
-import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.endQuerySpan;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.endQuerySpan;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -35,7 +35,8 @@ class QueryResultBuilderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(
-        @Advice.Argument(1) Throwable throwable, @Advice.FieldValue("handler") Promise<?> promise) {
+        @Advice.Argument(1) @Nullable Throwable throwable,
+        @Advice.FieldValue("handler") Promise<?> promise) {
       return endQuerySpan(instrumenter(), promise, throwable);
     }
 

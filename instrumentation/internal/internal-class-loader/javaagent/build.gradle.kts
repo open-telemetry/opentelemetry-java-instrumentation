@@ -5,7 +5,6 @@ plugins {
 }
 
 dependencies {
-  compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":javaagent-tooling"))
   compileOnly(project(":instrumentation:internal:internal-class-loader:compile-stub"))
 

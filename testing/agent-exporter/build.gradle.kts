@@ -9,7 +9,7 @@ tasks.jar {
 
 dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
-  compileOnly("com.google.auto.service:auto-service")
+  compileOnly("com.google.auto.service:auto-service-annotations")
 
   compileOnly(project(":instrumentation-api"))
   compileOnly(project(":instrumentation-api-incubator"))

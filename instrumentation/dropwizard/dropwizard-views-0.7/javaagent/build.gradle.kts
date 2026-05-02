@@ -18,7 +18,7 @@ dependencies {
   testImplementation("io.dropwizard:dropwizard-views-mustache:0.7.0")
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
   systemProperty("collectMetadata", otelProps.collectMetadata)

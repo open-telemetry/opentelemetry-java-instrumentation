@@ -79,7 +79,7 @@ public class Servlet3Advice {
       if (context != null) {
         // Only trigger response customizer once, so only if server span was created here
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(contextToUpdate, response, new Servlet3HttpServerResponseMutator());
+            .customize(contextToUpdate, response, Servlet3HttpServerResponseMutator.INSTANCE);
       }
     }
 
