@@ -186,8 +186,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   protected AggregatedHttpRequest request(ServerEndpoint uri, String method) {
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            HttpMethod.valueOf(method), resolveAddress(uri, getProtocolPrefix()));
+    if (!options.closeClientConnectionAfterRequest) {
+      return request;
+    }
     return AggregatedHttpRequest.of(
-        HttpMethod.valueOf(method), resolveAddress(uri, getProtocolPrefix()));
+        request.headers().toBuilder().set(HttpHeaderNames.CONNECTION, "close").build());
   }
 
   private String getProtocolPrefix() {

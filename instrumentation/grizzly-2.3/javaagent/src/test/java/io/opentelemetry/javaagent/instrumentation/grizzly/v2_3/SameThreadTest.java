@@ -5,10 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly.v2_3;
 
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import org.glassfish.grizzly.IOStrategy;
 import org.glassfish.grizzly.strategies.SameThreadIOStrategy;
 
 class SameThreadTest extends GrizzlyIoStrategyTest {
+
+  @Override
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
+    options.setCloseClientConnectionAfterRequest(true);
+  }
 
   @Override
   IOStrategy strategy() {
