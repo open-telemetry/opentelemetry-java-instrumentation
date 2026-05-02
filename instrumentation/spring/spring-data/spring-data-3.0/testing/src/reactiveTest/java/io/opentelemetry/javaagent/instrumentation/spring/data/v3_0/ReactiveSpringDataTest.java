@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class ReactiveSpringDataTest {
 
   @RegisterExtension
@@ -54,7 +55,6 @@ class ReactiveSpringDataTest {
     applicationContext.close();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testFindAll() {
     long count =
