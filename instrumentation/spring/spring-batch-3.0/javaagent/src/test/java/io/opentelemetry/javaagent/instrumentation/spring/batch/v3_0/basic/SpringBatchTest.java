@@ -25,16 +25,17 @@ import org.springframework.batch.core.JobParameter;
 
 abstract class SpringBatchTest {
 
-  private final JobRunner runner;
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.spring-batch.experimental-span-attributes");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  private final JobRunner runner;
+
   @Nullable
   static String experimental() {
-    return Boolean.getBoolean("otel.instrumentation.spring-batch.experimental-span-attributes")
-        ? "spring_batch"
-        : null;
+    return EXPERIMENTAL_ATTRIBUTES ? "spring_batch" : null;
   }
 
   SpringBatchTest(JobRunner runner) {

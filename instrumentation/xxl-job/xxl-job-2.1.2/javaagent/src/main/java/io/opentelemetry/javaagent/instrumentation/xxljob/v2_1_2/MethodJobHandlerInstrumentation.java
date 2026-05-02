@@ -35,6 +35,7 @@ class MethodJobHandlerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static XxlJobHelper.XxlJobScope onSchedule(
         @Advice.FieldValue("target") Object target, @Advice.FieldValue("method") Method method) {

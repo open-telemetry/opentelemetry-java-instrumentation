@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -58,27 +59,27 @@ import org.slf4j.LoggerFactory;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractRocketMqClientTest {
 
-  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.rocketmq-client.experimental-span-attributes");
 
+  private static final Logger logger = LoggerFactory.getLogger(AbstractRocketMqClientTest.class);
+
   @Nullable
-  static <T> T experimental(T value) {
-    return EXPERIMENTAL_ATTRIBUTES_ENABLED ? value : null;
+  private static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
   private static void experimentalString(AbstractStringAssert<?> val) {
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       val.isInstanceOf(String.class);
     }
   }
 
   private static void experimentalLong(AbstractLongAssert<?> val) {
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       val.isInstanceOf(Long.class);
     }
   }
-
-  private static final Logger logger = LoggerFactory.getLogger(AbstractRocketMqClientTest.class);
 
   private DefaultMQProducer producer;
 
@@ -114,7 +115,7 @@ abstract class AbstractRocketMqClientTest {
     configureMqPushConsumer(consumer);
 
     // for RocketMQ 5.x wait a bit to ensure that consumer is properly started up
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       Thread.sleep(30_000);
     }
   }
@@ -276,7 +277,7 @@ abstract class AbstractRocketMqClientTest {
   @Test
   void testRocketmqProduceAndBatchConsume() throws Exception {
     // context propagation doesn't work for batch messages in 5.3.4
-    Assumptions.assumeFalse(Boolean.getBoolean("testLatestDeps"));
+    Assumptions.assumeFalse(testLatestDeps());
 
     consumer.setConsumeMessageBatchMaxSize(2);
     // This test assumes that messages are sent and received as a batch. Occasionally it happens
@@ -292,7 +293,7 @@ abstract class AbstractRocketMqClientTest {
       tracingMessageListener.waitForMessages();
       if (tracingMessageListener.getLastBatchSize() == 2) {
         break;
-      } else if (i < maxAttempts) {
+      } else if (i < maxAttempts - 1) {
         // if messages weren't received as a batch we get 1 trace instead of 2
         testing().waitForTraces(1);
         Thread.sleep(2_000);
@@ -357,25 +358,13 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
                                 satisfies(
                                     stringKey("messaging.rocketmq.broker_address"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotEmpty();
-                                      }
-                                    }),
+                                    val -> experimentalString(val)),
                                 satisfies(
                                     longKey("messaging.rocketmq.queue_id"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotNull();
-                                      }
-                                    }),
+                                    val -> experimentalLong(val)),
                                 satisfies(
                                     longKey("messaging.rocketmq.queue_offset"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotNull();
-                                      }
-                                    })),
+                                    val -> experimentalLong(val))),
                     span ->
                         span.hasName(sharedTopic + " process")
                             .hasKind(SpanKind.CONSUMER)
@@ -393,25 +382,13 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagB")),
                                 satisfies(
                                     stringKey("messaging.rocketmq.broker_address"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotEmpty();
-                                      }
-                                    }),
+                                    val -> experimentalString(val)),
                                 satisfies(
                                     longKey("messaging.rocketmq.queue_id"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotNull();
-                                      }
-                                    }),
+                                    val -> experimentalLong(val)),
                                 satisfies(
                                     longKey("messaging.rocketmq.queue_offset"),
-                                    val -> {
-                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                        val.isNotNull();
-                                      }
-                                    })),
+                                    val -> experimentalLong(val))),
                     span ->
                         span.hasName("messageListener")
                             .hasParent(trace.getSpan(0))
@@ -429,6 +406,7 @@ abstract class AbstractRocketMqClientTest {
                   new Message(
                       sharedTopic, "TagA", "Hello RocketMQ".getBytes(Charset.defaultCharset()));
               msg.putUserProperty("Test-Message-Header", "test");
+              msg.putUserProperty("Uncaptured-Header", "password");
               SendResult sendResult = producer.send(msg);
               assertThat(sendResult.getSendStatus()).isEqualTo(SendStatus.SEND_OK);
             });

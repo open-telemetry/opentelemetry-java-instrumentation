@@ -56,7 +56,7 @@ class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
     private final Scope scope;
     private final HttpRequest request;
 
-    public AdviceScope(Context context, Scope scope, HttpRequest request) {
+    private AdviceScope(Context context, Scope scope, HttpRequest request) {
       this.context = context;
       this.scope = scope;
       this.request = request;
@@ -73,12 +73,12 @@ class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       return new AdviceScope(context, context.makeCurrent(), request);
     }
 
-    public void end(HttpResponse response, Throwable throwable) {
+    public void end(@Nullable HttpResponse response, @Nullable Throwable throwable) {
       scope.close();
       instrumenter().end(context, request, response, throwable);
     }
 
-    public void endWhenThrown(HttpRequest request, Throwable throwable) {
+    public void endWhenThrown(HttpRequest request, @Nullable Throwable throwable) {
       scope.close();
       if (throwable != null) {
         instrumenter().end(context, request, null, throwable);
@@ -119,8 +119,8 @@ class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Return HttpResponse response,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable HttpResponse response,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope scope) {
 
       if (scope != null) {
@@ -146,7 +146,7 @@ class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This HttpRequest request,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope scope) {
 
       if (scope != null) {

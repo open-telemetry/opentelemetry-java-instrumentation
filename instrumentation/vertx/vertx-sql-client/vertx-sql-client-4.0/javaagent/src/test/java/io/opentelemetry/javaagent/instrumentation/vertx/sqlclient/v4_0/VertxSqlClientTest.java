@@ -48,7 +48,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -88,7 +87,9 @@ class VertxSqlClientTest {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
     container.start();
+    cleanup.deferAfterAll(container::stop);
     vertx = Vertx.vertx();
+    cleanup.deferAfterAll(vertx::close);
     host = container.getHost();
     port = container.getMappedPort(5432);
     PgConnectOptions options =
@@ -99,6 +100,7 @@ class VertxSqlClientTest {
             .setUser(USER_DB)
             .setPassword(PW_DB);
     pool = Pool.pool(vertx, options, new PoolOptions().setMaxSize(4));
+    cleanup.deferAfterAll(pool::close);
     pool.query("create table test(id int primary key, name varchar(255))")
         .execute()
         .compose(
@@ -108,13 +110,6 @@ class VertxSqlClientTest {
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    pool.close();
-    vertx.close();
-    container.stop();
   }
 
   @Test

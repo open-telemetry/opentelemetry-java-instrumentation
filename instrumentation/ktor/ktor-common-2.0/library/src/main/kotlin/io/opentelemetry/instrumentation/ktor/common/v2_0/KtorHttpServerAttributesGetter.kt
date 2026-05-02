@@ -17,7 +17,7 @@ import java.lang.invoke.MethodType
 
 internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
 
-  private val getRemoteAddressMethodHandle: MethodHandle? = getRemoteAddressMethodHandle()
+  private val GET_REMOTE_ADDRESS_METHOD_HANDLE: MethodHandle? = getRemoteAddressMethodHandle()
 
   private fun getRemoteAddressMethodHandle(): MethodHandle? = try {
     MethodHandles.lookup().findVirtual(RequestConnectionPoint::class.java, "getRemoteAddress", MethodType.methodType(String::class.java))
@@ -44,12 +44,12 @@ internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<Appl
   override fun getNetworkProtocolVersion(request: ApplicationRequest, response: ApplicationResponse?): String? = if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
 
   override fun getNetworkPeerAddress(request: ApplicationRequest, response: ApplicationResponse?): String? {
-    if (getRemoteAddressMethodHandle == null) {
+    if (GET_REMOTE_ADDRESS_METHOD_HANDLE == null) {
       return null
     }
 
     val remote = try {
-      getRemoteAddressMethodHandle.invoke(request.local) as String
+      GET_REMOTE_ADDRESS_METHOD_HANDLE.invoke(request.local) as String
     } catch (ignored: Throwable) {
       "unknown"
     }

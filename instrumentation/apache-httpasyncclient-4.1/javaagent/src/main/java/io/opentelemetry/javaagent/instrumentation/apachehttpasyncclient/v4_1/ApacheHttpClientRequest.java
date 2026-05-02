@@ -21,7 +21,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
 
-public class ApacheHttpClientRequest {
+class ApacheHttpClientRequest {
 
   private static final Logger logger = Logger.getLogger(ApacheHttpClientRequest.class.getName());
 
@@ -30,7 +30,7 @@ public class ApacheHttpClientRequest {
   private final HttpRequest delegate;
   @Nullable private final HttpHost target;
 
-  public ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
+  ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
     if (calculatedUri != null && httpHost != null) {
       uri = getCalculatedUri(httpHost, calculatedUri);
@@ -41,7 +41,7 @@ public class ApacheHttpClientRequest {
     target = httpHost;
   }
 
-  public List<String> getHeader(String name) {
+  List<String> getHeader(String name) {
     return headersToList(delegate.getHeaders(name));
   }
 
@@ -57,16 +57,16 @@ public class ApacheHttpClientRequest {
     return headersList;
   }
 
-  public void setHeader(String name, String value) {
+  void setHeader(String name, String value) {
     delegate.setHeader(name, value);
   }
 
-  public String getMethod() {
+  String getMethod() {
     return delegate.getRequestLine().getMethod();
   }
 
   @Nullable
-  public String getUrl() {
+  String getUrl() {
     return uri != null ? uri.toString() : null;
   }
 
@@ -80,7 +80,7 @@ public class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public String getServerAddress() {
+  String getServerAddress() {
     if (uri != null) {
       return uri.getHost();
     }
@@ -91,7 +91,7 @@ public class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public Integer getServerPort() {
+  Integer getServerPort() {
     if (uri != null) {
       return uri.getPort();
     }
@@ -102,7 +102,7 @@ public class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public String getScheme() {
+  String getScheme() {
     if (uri != null) {
       return uri.getScheme();
     }
@@ -149,7 +149,7 @@ public class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public InetSocketAddress getNetworkPeerAddress() {
+  InetSocketAddress getNetworkPeerAddress() {
     if (target == null) {
       return null;
     }

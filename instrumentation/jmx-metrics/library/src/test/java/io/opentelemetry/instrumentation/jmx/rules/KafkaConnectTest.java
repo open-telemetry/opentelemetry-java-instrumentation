@@ -744,9 +744,7 @@ class KafkaConnectTest extends TargetSystemTest {
 
   private static Metric getMetric(JmxRule rule, String metricKey) {
     Metric metric = rule.getMapping().get(metricKey);
-    assertThat(metric)
-        .describedAs("Missing metric " + metricKey + " in rule " + rule.getBeans())
-        .isNotNull();
+    assertThat(metric).isNotNull();
     return metric;
   }
 

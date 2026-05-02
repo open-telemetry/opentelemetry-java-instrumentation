@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -54,7 +55,6 @@ import org.elasticsearch.search.aggregations.bucket.nested.InternalNested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.transport.BindTransportException;
 import org.elasticsearch.transport.Netty3Plugin;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -146,19 +146,15 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
     testing.waitForTraces(1);
     testing.clearData();
 
+    autoCleanup.deferAfterAll(testNode);
     template = new ElasticsearchTemplate(client);
-  }
-
-  @AfterAll
-  static void cleanUp() throws Exception {
-    testNode.close();
   }
 
   @BeforeEach
   void prepareTest() {
     // when running on jdk 21 this test occasionally fails with timeout
     Assumptions.assumeTrue(
-        Boolean.getBoolean("testLatestDeps")
+        testLatestDeps()
             || Double.parseDouble(System.getProperty("java.specification.version")) < 21
             || Boolean.getBoolean("collectMetadata"));
   }

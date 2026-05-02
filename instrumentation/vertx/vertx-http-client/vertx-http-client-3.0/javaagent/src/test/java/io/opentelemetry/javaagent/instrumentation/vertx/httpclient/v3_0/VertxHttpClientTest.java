@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -103,7 +104,7 @@ class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
   private static SingleConnection createSingleConnection(String host, int port) {
     // This test fails on Vert.x 3.0 and only works starting from 3.1
     // Most probably due to https://github.com/eclipse-vertx/vert.x/pull/1126
-    boolean shouldRun = Boolean.getBoolean("testLatestDeps");
+    boolean shouldRun = testLatestDeps();
     return shouldRun ? new VertxSingleConnection(host, port) : null;
   }
 }

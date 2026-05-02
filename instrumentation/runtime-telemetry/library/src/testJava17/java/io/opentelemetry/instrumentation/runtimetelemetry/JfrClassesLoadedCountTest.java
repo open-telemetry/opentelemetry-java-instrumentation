@@ -22,7 +22,7 @@ class JfrClassesLoadedCountTest {
           });
 
   @Test
-  void shouldHaveJfrLoadedClassesCountEvents() throws Exception {
+  void shouldHaveJfrLoadedClassesCountEvents() throws InterruptedException {
     Thread.sleep(2000);
 
     jfrExtension.waitAndAssertMetrics(

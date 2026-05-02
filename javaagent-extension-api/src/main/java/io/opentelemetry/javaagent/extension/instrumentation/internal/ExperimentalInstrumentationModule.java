@@ -76,4 +76,34 @@ public interface ExperimentalInstrumentationModule {
   default List<String> exposedClassNames() {
     return emptyList();
   }
+
+  /**
+   * Allows instrumentation modules to choose whether the helper classes should be injected into the
+   * same class loader as the instrumented library, or into an isolated class loader.
+   */
+  default HelperClassStrategy helperClassStrategy() {
+    return HelperClassStrategy.DEFAULT;
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  enum HelperClassStrategy {
+    /**
+     * Depending on whether the instrumentation uses inline advice or not, helper classes are either
+     * loaded in the same classloader as the instrumented library, or into an isolated classloader.
+     */
+    DEFAULT,
+    /**
+     * Helper classes are loaded in the same classloader as the instrumented library, and are
+     * visible to the application.
+     */
+    INJECTED,
+    /**
+     * Helper classes are loaded into an isolated classloader, and aren't visible to the
+     * application.
+     */
+    ISOLATED
+  }
 }

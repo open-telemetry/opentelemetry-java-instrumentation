@@ -51,6 +51,10 @@ testing {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+            systemProperty(
+              "metadataConfig",
+              "otel.instrumentation.pulsar.experimental-span-attributes=true",
+            )
           }
         }
       }
@@ -67,6 +71,10 @@ tasks {
   test {
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {

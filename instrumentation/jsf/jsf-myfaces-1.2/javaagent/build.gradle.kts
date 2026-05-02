@@ -7,8 +7,8 @@ muzzle {
     group.set("org.apache.myfaces.core")
     module.set("myfaces-impl")
     versions.set("[1.2,3)")
-    extraDependency("jakarta.el:jakarta.el-api:3.0.3")
     assertInverse.set(true)
+    extraDependency("jakarta.el:jakarta.el-api:3.0.3")
   }
 }
 

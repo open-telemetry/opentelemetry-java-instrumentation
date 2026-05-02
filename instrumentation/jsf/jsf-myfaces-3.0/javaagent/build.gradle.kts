@@ -7,8 +7,8 @@ muzzle {
     group.set("org.apache.myfaces.core")
     module.set("myfaces-impl")
     versions.set("[3,)")
-    extraDependency("jakarta.el:jakarta.el-api:4.0.0")
     assertInverse.set(true)
+    extraDependency("jakarta.el:jakarta.el-api:4.0.0")
   }
 }
 
@@ -38,7 +38,7 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")

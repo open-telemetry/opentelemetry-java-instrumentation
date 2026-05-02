@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
-import static io.opentelemetry.semconv.incubating.OtelIncubatingAttributes.OTEL_EVENT_NAME;
+import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
@@ -146,7 +146,7 @@ public class LogEventMapper {
       if (!lineNumber.equals("?")) {
         try {
           codeLineNo = Integer.parseInt(lineNumber);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException ignored) {
           // ignore
         }
       }

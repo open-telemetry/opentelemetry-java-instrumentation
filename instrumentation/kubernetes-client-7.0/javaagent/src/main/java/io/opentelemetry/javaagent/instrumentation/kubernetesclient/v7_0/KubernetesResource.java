@@ -11,13 +11,21 @@ import javax.annotation.Nullable;
 
 class KubernetesResource {
 
-  public static final Pattern CORE_RESOURCE_URL_PATH_PATTERN =
+  private static final Pattern CORE_RESOURCE_URL_PATH_PATTERN =
       Pattern.compile(
           "^/api/v1(/namespaces/(?<namespace>[\\w-]+))?/(?<resource>[\\w-]+)(/(?<name>[\\w-]+))?(/(?<subresource>[\\w-]+))?(/.*)?");
 
-  public static final Pattern REGULAR_RESOURCE_URL_PATH_PATTERN =
+  private static final Pattern REGULAR_RESOURCE_URL_PATH_PATTERN =
       Pattern.compile(
           "^/apis/(?<group>\\S+?)/(?<version>\\S+?)(/namespaces/(?<namespace>[\\w-]+))?/(?<resource>[\\w-]+)(/(?<name>[\\w-]+))?(/(?<subresource>[\\w-]+))?");
+
+  private final String apiGroup;
+  private final String apiVersion;
+  private final String resource;
+  @Nullable private final String subResource;
+
+  @Nullable private final String namespace;
+  @Nullable private final String name;
 
   public static KubernetesResource parseCoreResource(String urlPath)
       throws ParseKubernetesResourceException {
@@ -63,14 +71,6 @@ class KubernetesResource {
     this.namespace = namespace;
     this.name = name;
   }
-
-  private final String apiGroup;
-  private final String apiVersion;
-  private final String resource;
-  @Nullable private final String subResource;
-
-  @Nullable private final String namespace;
-  @Nullable private final String name;
 
   public String getApiGroup() {
     return apiGroup;

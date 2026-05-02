@@ -56,9 +56,9 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
           ERROR.getStatus(),
           ERROR.getBody(),
           false);
-  private TestAccessLogValve accessLogValve;
-
   @TempDir private static File tempDir;
+
+  private TestAccessLogValve accessLogValve;
 
   @Override
   protected void configure(HttpServerTestOptions options) {
@@ -97,7 +97,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
     tomcatServer.setPort(port);
     tomcatServer.getConnector().setEnableLookups(true); // get localhost instead of 127.0.0.1
 
-    File applicationDir = new File(baseDir, "/webapps/ROOT");
+    File applicationDir = new File(baseDir, "webapps/ROOT");
     applicationDir.mkdirs();
 
     Context servletContext =
@@ -122,7 +122,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
 
   @BeforeEach
   void setUp() {
-    accessLogValve.getLoggedIds().clear();
+    accessLogValve.clearLoggedIds();
     testing().clearAllExportedData();
   }
 

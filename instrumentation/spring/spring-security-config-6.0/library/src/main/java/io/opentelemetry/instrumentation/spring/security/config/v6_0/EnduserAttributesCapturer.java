@@ -83,6 +83,9 @@ public final class EnduserAttributesCapturer {
       if (enduserRoleEnabled || enduserScopeEnabled) {
         for (GrantedAuthority authority : authentication.getAuthorities()) {
           String authorityString = authority.getAuthority();
+          if (authorityString == null) {
+            continue;
+          }
           if (enduserRoleEnabled && authorityString.startsWith(roleGrantedAuthorityPrefix)) {
             roleBuilder = appendSuffix(roleGrantedAuthorityPrefix, authorityString, roleBuilder);
           } else if (enduserScopeEnabled

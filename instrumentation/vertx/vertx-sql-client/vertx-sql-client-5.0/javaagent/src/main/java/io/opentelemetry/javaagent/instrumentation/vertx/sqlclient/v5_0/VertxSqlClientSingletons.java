@@ -10,8 +10,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientRequest;
-import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -24,10 +24,6 @@ public class VertxSqlClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-sql-client-5.0";
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
-
-  public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
-    return instrumenter;
-  }
 
   private static final VirtualField<Pool, String> poolDbSystem =
       VirtualField.find(Pool.class, String.class);
@@ -42,6 +38,10 @@ public class VertxSqlClientSingletons {
   @SuppressWarnings("rawtypes")
   private static final VirtualField<CommandBase, Context> commandContextField =
       VirtualField.find(CommandBase.class, Context.class);
+
+  public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
+    return instrumenter;
+  }
 
   // CommandBase is a generic type used as VirtualField key
   @SuppressWarnings("rawtypes")

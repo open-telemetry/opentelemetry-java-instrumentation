@@ -24,8 +24,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
   }
 
   @Override
-  @SuppressWarnings("deprecation")
-  // testing instrumentation of deprecated class
+  @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
   void configureMqProducer(DefaultMQProducer producer) {
     producer
         .getDefaultMQProducerImpl()
@@ -38,8 +37,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
   }
 
   @Override
-  @SuppressWarnings("deprecation")
-  // testing instrumentation of deprecated class
+  @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
   void configureMqPushConsumer(DefaultMQPushConsumer consumer) {
     consumer
         .getDefaultMQPushConsumerImpl()

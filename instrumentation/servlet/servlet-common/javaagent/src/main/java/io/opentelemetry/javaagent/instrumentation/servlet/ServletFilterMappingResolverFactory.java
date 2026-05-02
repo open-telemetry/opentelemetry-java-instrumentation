@@ -59,7 +59,7 @@ public abstract class ServletFilterMappingResolverFactory<FILTERREGISTRATION>
 
     List<String> mappingsList = new ArrayList<>(mappings);
     // sort the longest mapping first
-    mappingsList.sort((s1, s2) -> s2.length() - s1.length());
+    mappingsList.sort((s1, s2) -> Integer.compare(s2.length(), s1.length()));
 
     return new Mappings(mappingsList);
   }

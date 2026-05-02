@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.spring.webmvc.SpringWebMvcInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.spring.webmvc.common.SpringWebMvcInstrumenterFactory;
 import org.springframework.web.servlet.ModelAndView;
 
-public class SpringWebMvcSingletons {
+class SpringWebMvcSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-6.0";
 
   private static final Instrumenter<Object, Void> handlerInstrumenter;
@@ -23,11 +23,11 @@ public class SpringWebMvcSingletons {
     modelAndViewInstrumenter = factory.createModelAndViewInstrumenter();
   }
 
-  public static Instrumenter<Object, Void> handlerInstrumenter() {
+  static Instrumenter<Object, Void> handlerInstrumenter() {
     return handlerInstrumenter;
   }
 
-  public static Instrumenter<ModelAndView, Void> modelAndViewInstrumenter() {
+  static Instrumenter<ModelAndView, Void> modelAndViewInstrumenter() {
     return modelAndViewInstrumenter;
   }
 

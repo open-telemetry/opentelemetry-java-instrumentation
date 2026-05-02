@@ -56,11 +56,13 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
       }
 
       public void end(
-          @Nullable Throwable throwable, RedisURI redisUri, ConnectionFuture<?> connectionFuture) {
+          @Nullable Throwable throwable,
+          RedisURI redisUri,
+          @Nullable ConnectionFuture<?> connectionFuture) {
 
         scope.close();
 
-        if (throwable != null) {
+        if (throwable != null || connectionFuture == null) {
           connectInstrumenter().end(context, redisUri, null, throwable);
           return;
         }
@@ -69,6 +71,7 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(1) RedisURI redisUri) {
       Context parentContext = currentContext();
       if (!connectInstrumenter().shouldStart(parentContext, redisUri)) {

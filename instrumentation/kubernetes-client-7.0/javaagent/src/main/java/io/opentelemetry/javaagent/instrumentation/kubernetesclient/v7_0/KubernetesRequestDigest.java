@@ -11,8 +11,14 @@ import okhttp3.Request;
 
 class KubernetesRequestDigest {
 
-  public static final Pattern RESOURCE_URL_PATH_PATTERN =
+  private static final Pattern RESOURCE_URL_PATH_PATTERN =
       Pattern.compile("^/(api|apis)(/\\S+)?/v\\d\\w*/\\S+");
+
+  private final String urlPath;
+  private final boolean isNonResourceRequest;
+
+  @Nullable private final KubernetesResource resourceMeta;
+  @Nullable private final KubernetesVerb verb;
 
   KubernetesRequestDigest(
       String urlPath,
@@ -44,7 +50,7 @@ class KubernetesRequestDigest {
           resourceMeta,
           KubernetesVerb.of(
               request.method(), hasNamePathParameter(resourceMeta), hasWatchParameter(request)));
-    } catch (IllegalArgumentException | ParseKubernetesResourceException e) {
+    } catch (IllegalArgumentException | ParseKubernetesResourceException ignored) {
       return nonResource(urlPath);
     }
   }
@@ -64,12 +70,6 @@ class KubernetesRequestDigest {
   private static boolean hasNamePathParameter(KubernetesResource resource) {
     return !isNullOrEmpty(resource.getName());
   }
-
-  private final String urlPath;
-  private final boolean isNonResourceRequest;
-
-  @Nullable private final KubernetesResource resourceMeta;
-  @Nullable private final KubernetesVerb verb;
 
   public String getUrlPath() {
     return urlPath;

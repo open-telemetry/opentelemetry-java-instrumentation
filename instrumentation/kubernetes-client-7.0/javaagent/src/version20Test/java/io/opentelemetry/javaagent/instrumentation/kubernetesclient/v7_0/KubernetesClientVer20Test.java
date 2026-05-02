@@ -172,7 +172,7 @@ class KubernetesClientVer20Test {
   }
 
   @Test
-  void asynchronousCall() throws ApiException, InterruptedException {
+  void asynchronousCall() throws Exception {
     mockWebServer.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, "42"));
 
     AtomicReference<String> responseBodyReference = new AtomicReference<>();
@@ -231,7 +231,7 @@ class KubernetesClientVer20Test {
   }
 
   @Test
-  void handleErrorsInAsynchronousCall() throws ApiException, InterruptedException {
+  void handleErrorsInAsynchronousCall() throws Exception {
 
     mockWebServer.enqueue(
         HttpResponse.of(HttpStatus.valueOf(451), MediaType.PLAIN_TEXT_UTF_8, "42"));

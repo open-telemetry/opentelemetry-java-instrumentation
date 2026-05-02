@@ -45,59 +45,59 @@ public final class JdbcConnectionUrlParser {
 
   private static final Logger logger = Logger.getLogger(JdbcConnectionUrlParser.class.getName());
 
-  private static final Map<String, JdbcUrlParser> TYPE_PARSERS = new HashMap<>();
+  private static final Map<String, JdbcUrlParser> typeParsers = new HashMap<>();
 
   static {
     // PostgreSQL
-    TYPE_PARSERS.put("postgresql", PostgresqlUrlParser.INSTANCE);
+    typeParsers.put("postgresql", PostgresqlUrlParser.INSTANCE);
 
     // MySQL and MariaDB
-    TYPE_PARSERS.put("mysql", MysqlUrlParser.INSTANCE);
-    TYPE_PARSERS.put("mariadb", MysqlUrlParser.INSTANCE);
+    typeParsers.put("mysql", MysqlUrlParser.INSTANCE);
+    typeParsers.put("mariadb", MysqlUrlParser.INSTANCE);
 
     // Microsoft SQL Server
-    TYPE_PARSERS.put("jtds", JtdsUrlParser.INSTANCE);
-    TYPE_PARSERS.put("microsoft", MssqlUrlParser.INSTANCE);
-    TYPE_PARSERS.put("sqlserver", MssqlUrlParser.INSTANCE);
+    typeParsers.put("jtds", JtdsUrlParser.INSTANCE);
+    typeParsers.put("microsoft", MssqlUrlParser.INSTANCE);
+    typeParsers.put("sqlserver", MssqlUrlParser.INSTANCE);
 
     // Oracle
-    TYPE_PARSERS.put("oracle", OracleUrlParser.INSTANCE);
+    typeParsers.put("oracle", OracleUrlParser.INSTANCE);
 
     // DB2 and AS400
-    TYPE_PARSERS.put("db2", Db2UrlParser.INSTANCE);
-    TYPE_PARSERS.put("as400", Db2UrlParser.INSTANCE);
+    typeParsers.put("db2", Db2UrlParser.INSTANCE);
+    typeParsers.put("as400", Db2UrlParser.INSTANCE);
 
     // H2
-    TYPE_PARSERS.put("h2", H2UrlParser.INSTANCE);
+    typeParsers.put("h2", H2UrlParser.INSTANCE);
 
     // HyperSQL (HSQLDB)
-    TYPE_PARSERS.put("hsqldb", HsqlUrlParser.INSTANCE);
+    typeParsers.put("hsqldb", HsqlUrlParser.INSTANCE);
 
     // Apache Derby
-    TYPE_PARSERS.put("derby", DerbyUrlParser.INSTANCE);
+    typeParsers.put("derby", DerbyUrlParser.INSTANCE);
 
     // SAP HANA
-    TYPE_PARSERS.put("sap", SapUrlParser.INSTANCE);
+    typeParsers.put("sap", SapUrlParser.INSTANCE);
 
     // DataDirect and TIBCO
-    TYPE_PARSERS.put("datadirect", DataDirectUrlParser.INSTANCE);
-    TYPE_PARSERS.put("tibcosoftware", DataDirectUrlParser.INSTANCE);
+    typeParsers.put("datadirect", DataDirectUrlParser.INSTANCE);
+    typeParsers.put("tibcosoftware", DataDirectUrlParser.INSTANCE);
 
     // Informix
-    TYPE_PARSERS.put("informix-sqli", InformixSqliUrlParser.INSTANCE);
-    TYPE_PARSERS.put("informix-direct", InformixDirectUrlParser.INSTANCE);
+    typeParsers.put("informix-sqli", InformixSqliUrlParser.INSTANCE);
+    typeParsers.put("informix-direct", InformixDirectUrlParser.INSTANCE);
 
     // ClickHouse
-    TYPE_PARSERS.put("clickhouse", ClickhouseUrlParser.INSTANCE);
+    typeParsers.put("clickhouse", ClickhouseUrlParser.INSTANCE);
 
     // OceanBase
-    TYPE_PARSERS.put("oceanbase", OceanbaseUrlParser.INSTANCE);
+    typeParsers.put("oceanbase", OceanbaseUrlParser.INSTANCE);
 
     // Lindorm
-    TYPE_PARSERS.put("lindorm", LindormUrlParser.INSTANCE);
+    typeParsers.put("lindorm", LindormUrlParser.INSTANCE);
 
     // PolarDB
-    TYPE_PARSERS.put("polardb", PolardbUrlParser.INSTANCE);
+    typeParsers.put("polardb", PolardbUrlParser.INSTANCE);
   }
 
   private JdbcConnectionUrlParser() {}
@@ -130,7 +130,7 @@ public final class JdbcConnectionUrlParser {
     }
 
     String type = jdbcUrl.substring(0, typeLoc);
-    JdbcUrlParser parser = TYPE_PARSERS.get(type);
+    JdbcUrlParser parser = typeParsers.get(type);
     ParseContext ctx = ParseContext.of(type, props);
 
     try {

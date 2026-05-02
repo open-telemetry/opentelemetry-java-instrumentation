@@ -33,7 +33,10 @@ public abstract class AbstractOracleUcpInstrumentationTest {
       LoggerFactory.getLogger(AbstractOracleUcpInstrumentationTest.class);
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.oracle-ucp-11.2";
-  private static OracleContainer oracle;
+  private static final OracleContainer oracle =
+      new OracleContainer("gvenzl/oracle-free:23-slim-faststart")
+          .withLogConsumer(new Slf4jLogConsumer(logger))
+          .withStartupTimeout(Duration.ofMinutes(2));
 
   protected abstract InstrumentationExtension testing();
 
@@ -43,18 +46,12 @@ public abstract class AbstractOracleUcpInstrumentationTest {
 
   @BeforeAll
   static void setUp() {
-    oracle =
-        new OracleContainer("gvenzl/oracle-free:23-slim-faststart")
-            .withLogConsumer(new Slf4jLogConsumer(logger))
-            .withStartupTimeout(Duration.ofMinutes(2));
     oracle.start();
   }
 
   @AfterAll
   static void cleanUp() {
-    if (oracle != null) {
-      oracle.stop();
-    }
+    oracle.stop();
   }
 
   @ParameterizedTest

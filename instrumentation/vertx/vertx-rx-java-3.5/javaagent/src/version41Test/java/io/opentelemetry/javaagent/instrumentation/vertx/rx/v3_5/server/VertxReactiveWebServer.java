@@ -69,6 +69,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
             RuntimeException exception =
                 new RuntimeException("Cannot deploy server Verticle", res.cause());
             future.completeExceptionally(exception);
+            return;
           }
           future.complete(null);
         });
@@ -95,7 +96,15 @@ public class VertxReactiveWebServer extends AbstractVerticle {
           vertx
               .createHttpServer()
               .requestHandler(router)
-              .listen(port, h -> startPromise.complete());
+              .listen(
+                  port,
+                  httpServerAsyncResult -> {
+                    if (httpServerAsyncResult.failed()) {
+                      startPromise.fail(httpServerAsyncResult.cause());
+                      return;
+                    }
+                    startPromise.complete();
+                  });
         },
         throwable -> startPromise.fail(throwable));
   }

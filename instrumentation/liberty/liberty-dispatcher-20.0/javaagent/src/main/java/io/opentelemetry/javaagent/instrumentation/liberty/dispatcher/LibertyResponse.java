@@ -16,16 +16,16 @@ final class LibertyResponse {
   private final HttpDispatcherLink httpDispatcherLink;
   private final StatusCodes code;
 
-  public LibertyResponse(HttpDispatcherLink httpDispatcherLink, StatusCodes code) {
+  LibertyResponse(HttpDispatcherLink httpDispatcherLink, StatusCodes code) {
     this.httpDispatcherLink = httpDispatcherLink;
     this.code = code;
   }
 
-  public int getStatus() {
+  int getStatus() {
     return code.getIntCode();
   }
 
-  public List<String> getHeaderValues(String name) {
+  List<String> getHeaderValues(String name) {
     HttpResponse response = httpDispatcherLink.getResponse();
     // response is set to null on destroy(), so it shouldn't really ever be null in the middle of
     // request processing, but just to be safe let's check it

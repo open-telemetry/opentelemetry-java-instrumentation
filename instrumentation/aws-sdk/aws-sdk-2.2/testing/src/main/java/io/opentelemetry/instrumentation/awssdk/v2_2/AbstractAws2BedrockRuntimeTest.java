@@ -39,7 +39,6 @@ import io.opentelemetry.instrumentation.testing.recording.RecordingExtension;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -669,7 +668,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
-  void testConverseToolCallStream() throws InterruptedException, ExecutionException {
+  void testConverseToolCallStream() {
     BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
@@ -730,7 +729,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 .toolConfig(currentWeatherToolConfig())
                 .build(),
             responseHandler)
-        .get();
+        .join();
 
     if (currentToolArgs.length() > 0 && !responseChunksTools.isEmpty()) {
       JsonNode node = JsonNode.parser().parse(currentToolArgs.toString());
@@ -922,7 +921,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 .toolConfig(currentWeatherToolConfig())
                 .build(),
             responseHandler1)
-        .get();
+        .join();
 
     assertThat(String.join("", responseChunks))
         .contains(
@@ -1103,7 +1102,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
-  void testConverseStream() throws InterruptedException, ExecutionException {
+  void testConverseStream() {
     BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
@@ -1135,7 +1134,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         .build())
                 .build(),
             responseHandler)
-        .get();
+        .join();
 
     assertThat(String.join("", responseChunks)).isEqualTo("\"Test, test\"");
 
@@ -1222,7 +1221,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
-  void testConverseStreamOptions() throws InterruptedException, ExecutionException {
+  void testConverseStreamOptions() {
     BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
@@ -1261,7 +1260,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         .build())
                 .build(),
             responseHandler)
-        .get();
+        .join();
 
     assertThat(String.join("", responseChunks)).isEqualTo("This model");
 
@@ -1439,8 +1438,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
-  void testInvokeModelWithResponseStreamAmazonTitan()
-      throws InterruptedException, ExecutionException {
+  void testInvokeModelWithResponseStreamAmazonTitan() {
     BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
@@ -1488,7 +1486,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .build())
             .build();
 
-    client.invokeModelWithResponseStream(request, responseHandler).get();
+    client.invokeModelWithResponseStream(request, responseHandler).join();
 
     assertThat(text.toString()).contains("Here is the list of every country in the world");
 
@@ -1736,8 +1734,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
-  void testInvokeModelWithResponseStreamAmazonNova()
-      throws InterruptedException, ExecutionException {
+  void testInvokeModelWithResponseStreamAmazonNova() {
     BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
@@ -1804,7 +1801,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .build())
             .build();
 
-    client.invokeModelWithResponseStream(request, responseHandler).get();
+    client.invokeModelWithResponseStream(request, responseHandler).join();
 
     assertThat(text.toString())
         .contains("Listing every country in the world is a comprehensive task");
@@ -2278,8 +2275,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
-  void testInvokeModelWithResponseStreamAnthropicClaude()
-      throws InterruptedException, ExecutionException {
+  void testInvokeModelWithResponseStreamAnthropicClaude() {
     BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
@@ -2340,7 +2336,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .build())
             .build();
 
-    client.invokeModelWithResponseStream(request, responseHandler).get();
+    client.invokeModelWithResponseStream(request, responseHandler).join();
 
     assertThat(text.toString()).contains("Unfortunately I do not have a complete list of every");
 
@@ -2860,8 +2856,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
-  void testInvokeModelWithResponseStreamToolCallAmazonNova()
-      throws InterruptedException, ExecutionException {
+  void testInvokeModelWithResponseStreamToolCallAmazonNova() {
     BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
@@ -2999,7 +2994,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .build())
             .build();
 
-    client.invokeModelWithResponseStream(request0, responseHandler0).get();
+    client.invokeModelWithResponseStream(request0, responseHandler0).join();
 
     String seattleToolUseId0 = "";
     String sanFranciscoToolUseId0 = "";
@@ -3233,7 +3228,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .build())
             .build();
 
-    client.invokeModelWithResponseStream(request1, responseHandler1).get();
+    client.invokeModelWithResponseStream(request1, responseHandler1).join();
 
     assertThat(text.toString())
         .contains(
@@ -3770,8 +3765,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
-  void testInvokeModelWithResponseStreamToolCallAnthropicClaude()
-      throws InterruptedException, ExecutionException {
+  void testInvokeModelWithResponseStreamToolCallAnthropicClaude() {
     BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
@@ -3912,7 +3906,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .build())
             .build();
 
-    client.invokeModelWithResponseStream(request0, responseHandler0).get();
+    client.invokeModelWithResponseStream(request0, responseHandler0).join();
 
     String seattleToolUseId0 = "";
     String sanFranciscoToolUseId0 = "";
@@ -4120,7 +4114,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .build())
             .build();
 
-    client.invokeModelWithResponseStream(request1, responseHandler1).get();
+    client.invokeModelWithResponseStream(request1, responseHandler1).join();
 
     assertThat(text.toString())
         .contains(

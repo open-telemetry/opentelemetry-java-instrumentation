@@ -21,7 +21,7 @@ class LibertyDispatcherSingletons {
             new LibertyDispatcherRequestGetter());
   }
 
-  public static Instrumenter<LibertyRequest, LibertyResponse> instrumenter() {
+  static Instrumenter<LibertyRequest, LibertyResponse> instrumenter() {
     return instrumenter;
   }
 

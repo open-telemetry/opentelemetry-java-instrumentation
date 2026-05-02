@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getEntityName;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.OperationNameUtil.getEntityName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.OperationNameUtil.getSessionMethodOperationName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.COMMON_QUERY_CONTRACT_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.SHARED_SESSION_CONTRACT_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.TRANSACTION_SESSION_INFO;
@@ -23,9 +23,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
-import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperationScope;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperation;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperationScope;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.SessionInfo;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -82,8 +83,7 @@ class SessionInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$GetTransactionAdvice");
 
     transformer.applyAdviceToMethod(
-        returns(implementsInterface(named("org.hibernate.query.CommonQueryContract")))
-            .or(named("org.hibernate.query.spi.QueryImplementor")),
+        returns(implementsInterface(named("org.hibernate.query.CommonQueryContract"))),
         getClass().getName() + "$GetQueryAdvice");
   }
 
@@ -91,6 +91,7 @@ class SessionInstrumentation implements TypeInstrumentation {
   public static class SessionMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static HibernateOperationScope startMethod(
         @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
@@ -115,7 +116,8 @@ class SessionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope scope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable HibernateOperationScope scope) {
 
       HibernateOperationScope.end(scope, throwable);
     }
@@ -126,7 +128,7 @@ class SessionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getQuery(
-        @Advice.This SharedSessionContract session, @Advice.Return Object queryObject) {
+        @Advice.This SharedSessionContract session, @Advice.Return @Nullable Object queryObject) {
       if (!(queryObject instanceof CommonQueryContract)) {
         return;
       }

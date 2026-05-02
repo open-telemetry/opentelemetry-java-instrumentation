@@ -18,7 +18,7 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
 
   KafkaBatchProcessSpanLinksExtractor(TextMapPropagator propagator) {
     this.singleRecordLinkExtractor =
-        new PropagatorBasedSpanLinksExtractor<>(propagator, KafkaConsumerRecordGetter.INSTANCE);
+        new PropagatorBasedSpanLinksExtractor<>(propagator, new KafkaConsumerRecordGetter());
   }
 
   @Override

@@ -45,8 +45,8 @@ import org.reactivestreams.Subscription;
 class RxJava2AsyncOperationEndStrategyTest {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("rxjava.canceled");
-  @Mock Instrumenter<String, String> instrumenter;
-  @Mock Span span;
+  @Mock private Instrumenter<String, String> instrumenter;
+  @Mock private Span span;
   private final AsyncOperationEndStrategy underTest = RxJava2AsyncOperationEndStrategy.create();
   private final RxJava2AsyncOperationEndStrategy underTestWithExperimentalAttributes =
       RxJava2AsyncOperationEndStrategy.builder().setCaptureExperimentalSpanAttributes(true).build();

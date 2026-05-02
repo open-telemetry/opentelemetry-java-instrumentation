@@ -24,7 +24,6 @@ final class LibertyDispatcherHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public Integer getHttpResponseStatusCode(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse, @Nullable Throwable error) {
     return libertyResponse.getStatus();

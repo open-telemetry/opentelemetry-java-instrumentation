@@ -12,12 +12,12 @@ import io.vertx.ext.web.Router;
 public class Vertx41WebServer extends AbstractVertxWebServer {
 
   @Override
-  public void end(HttpServerResponse response) {
+  void end(HttpServerResponse response) {
     response.end();
   }
 
   @Override
-  public void end(HttpServerResponse response, String message) {
+  void end(HttpServerResponse response, String message) {
     response.end(message);
   }
 
@@ -25,6 +25,8 @@ public class Vertx41WebServer extends AbstractVertxWebServer {
   public void start(Promise<Void> startPromise) {
     int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
     Router router = buildRouter();
+    router.route("/child/*").subRouter(buildRouter());
+
     Router mainRouter = Router.router(vertx);
     mainRouter.route("/vertx-app/*").subRouter(router);
 
