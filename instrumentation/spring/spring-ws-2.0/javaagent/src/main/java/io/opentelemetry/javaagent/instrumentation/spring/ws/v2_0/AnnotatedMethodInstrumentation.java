@@ -25,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 
 class AnnotatedMethodInstrumentation implements TypeInstrumentation {
-  private static final String[] annotationClasses =
+  private static final String[] ANNOTATION_CLASSES =
       new String[] {
         "org.springframework.ws.server.endpoint.annotation.PayloadRoot",
         "org.springframework.ws.soap.server.endpoint.annotation.SoapAction",
@@ -39,13 +39,13 @@ class AnnotatedMethodInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return declaresMethod(isAnnotatedWith(namedOneOf(annotationClasses)));
+    return declaresMethod(isAnnotatedWith(namedOneOf(ANNOTATION_CLASSES)));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isAnnotatedWith(namedOneOf(annotationClasses))),
+        isMethod().and(isAnnotatedWith(namedOneOf(ANNOTATION_CLASSES))),
         getClass().getName() + "$AnnotatedMethodAdvice");
   }
 
