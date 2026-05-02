@@ -15,6 +15,7 @@ public class Servlet3HttpServerResponseMutator
       new Servlet3HttpServerResponseMutator();
 
   private Servlet3HttpServerResponseMutator() {}
+
   @Override
   public void appendHeader(HttpServletResponse response, String name, String value) {
     response.addHeader(name, value);
