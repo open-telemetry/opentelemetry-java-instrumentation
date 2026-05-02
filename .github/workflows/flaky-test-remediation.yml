@@ -189,7 +189,11 @@ jobs:
         if: steps.changes.outputs.committed == 'true'
         working-directory: progress
         run: |
-          echo "$TEST_CLASS" >> attempted.txt
-          git add attempted.txt
-          git commit -m "Record attempt: $TEST_CLASS"
-          git push origin HEAD:otelbot/flaky-test-remediation-progress
+          if grep -Fxq "$TEST_CLASS" attempted.txt; then
+            echo "$TEST_CLASS already recorded"
+          else
+            echo "$TEST_CLASS" >> attempted.txt
+            git add attempted.txt
+            git commit -m "Record attempt: $TEST_CLASS"
+            git push origin HEAD:otelbot/flaky-test-remediation-progress
+          fi

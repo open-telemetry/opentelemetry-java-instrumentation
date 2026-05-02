@@ -197,6 +197,7 @@ def per_day_flake_breakdown(history):
 
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    SELECTED.unlink(missing_ok=True)
 
     base = os.environ.get("DEVELOCITY_URL", DEFAULT_DEVELOCITY_URL).rstrip("/")
 

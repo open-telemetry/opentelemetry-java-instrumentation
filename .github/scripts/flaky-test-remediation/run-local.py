@@ -11,6 +11,7 @@ import datetime as dt
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -45,6 +46,19 @@ def stash_toolkit(start_branch, dest):
             ["git", "show",
              f"{start_branch}:.github/scripts/flaky-test-remediation/{fname}"])
         (Path(dest) / fname).write_bytes(blob)
+
+
+def remove_progress_checkout(progress_dir):
+    if not progress_dir.exists():
+        return
+    subprocess.run(
+        ["git", "worktree", "remove", "--force", str(progress_dir)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if progress_dir.exists():
+        shutil.rmtree(progress_dir)
 
 
 def main():
@@ -133,19 +147,29 @@ def main():
     # ---- step 4: record attempt on upstream progress branch ----------------
     print(f"==> Recording {test_class} on {UPSTREAM_REMOTE}/{PROGRESS_BRANCH}")
     git("fetch", UPSTREAM_REMOTE, PROGRESS_BRANCH, "--quiet")
+    remove_progress_checkout(progress_dir)
     # `-B` force-resets the local branch to match upstream, avoiding
     # non-fast-forward errors from a stale local copy.
     git("worktree", "add", "--quiet", "-B", PROGRESS_BRANCH,
         str(progress_dir), f"{UPSTREAM_REMOTE}/{PROGRESS_BRANCH}")
     try:
-        with (progress_dir / "attempted.txt").open(
-                "a", encoding="utf-8", newline="\n") as f:
-            f.write(f"{test_class}\n")
-        git("add", "attempted.txt", cwd=progress_dir)
-        git("commit", "-q", "-m",
-            f"Mark {test_class} as attempted", cwd=progress_dir)
-        git("push", "-q", UPSTREAM_REMOTE,
-            f"HEAD:{PROGRESS_BRANCH}", cwd=progress_dir)
+        attempted = {
+            line.strip()
+            for line in (progress_dir / "attempted.txt").read_text(
+                encoding="utf-8").splitlines()
+            if line.strip()
+        }
+        if test_class in attempted:
+            print(f"{test_class} already recorded; skipping progress commit.")
+        else:
+            with (progress_dir / "attempted.txt").open(
+                    "a", encoding="utf-8", newline="\n") as f:
+                f.write(f"{test_class}\n")
+            git("add", "attempted.txt", cwd=progress_dir)
+            git("commit", "-q", "-m",
+                f"Mark {test_class} as attempted", cwd=progress_dir)
+            git("push", "-q", UPSTREAM_REMOTE,
+                f"HEAD:{PROGRESS_BRANCH}", cwd=progress_dir)
     finally:
         git("worktree", "remove", "--force", str(progress_dir))
 
