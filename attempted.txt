@@ -12,3 +12,4 @@ io.opentelemetry.instrumentation.servlet.v5_0.tomcat.TomcatDispatchTest
 io.opentelemetry.instrumentation.jmx.rules.WildflyTest
 io.opentelemetry.instrumentation.jmx.rules.HadoopTest
 io.opentelemetry.javaagent.instrumentation.vertx.rx.v3_5.server.VertxReactivePropagationTest
+io.opentelemetry.javaagent.instrumentation.grizzly.v2_3.SameThreadTest
