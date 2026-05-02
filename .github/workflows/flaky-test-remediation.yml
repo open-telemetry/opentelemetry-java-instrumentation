@@ -189,7 +189,7 @@ jobs:
         if: steps.changes.outputs.committed == 'true'
         working-directory: progress
         run: |
-          echo "${TEST_CLASS}.${TEST_METHOD}" >> attempted.txt
+          echo "$TEST_CLASS" >> attempted.txt
           git add attempted.txt
-          git commit -m "Record attempt: ${TEST_CLASS}.${TEST_METHOD}"
+          git commit -m "Record attempt: $TEST_CLASS"
           git push origin HEAD:otelbot/flaky-test-remediation-progress

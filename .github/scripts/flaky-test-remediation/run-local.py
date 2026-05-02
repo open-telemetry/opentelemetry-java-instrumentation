@@ -84,6 +84,7 @@ def main():
 
     selection = json.loads(SELECTED.read_text(encoding="utf-8"))
     fq = selection["fully_qualified"]
+    test_class = selection["class"]
     print(f"Selected: {fq}")
     print(f"Source:   {selection['source_file']}")
 
@@ -130,7 +131,7 @@ def main():
             ["python", str(Path(toolkit) / "3-open-pr.py")], check=True)
 
     # ---- step 4: record attempt on upstream progress branch ----------------
-    print(f"==> Recording {fq} on {UPSTREAM_REMOTE}/{PROGRESS_BRANCH}")
+    print(f"==> Recording {test_class} on {UPSTREAM_REMOTE}/{PROGRESS_BRANCH}")
     git("fetch", UPSTREAM_REMOTE, PROGRESS_BRANCH, "--quiet")
     # `-B` force-resets the local branch to match upstream, avoiding
     # non-fast-forward errors from a stale local copy.
@@ -139,10 +140,10 @@ def main():
     try:
         with (progress_dir / "attempted.txt").open(
                 "a", encoding="utf-8", newline="\n") as f:
-            f.write(f"{fq}\n")
+            f.write(f"{test_class}\n")
         git("add", "attempted.txt", cwd=progress_dir)
         git("commit", "-q", "-m",
-            f"Mark {fq} as attempted", cwd=progress_dir)
+            f"Mark {test_class} as attempted", cwd=progress_dir)
         git("push", "-q", UPSTREAM_REMOTE,
             f"HEAD:{PROGRESS_BRANCH}", cwd=progress_dir)
     finally:

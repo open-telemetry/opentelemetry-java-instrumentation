@@ -7,8 +7,8 @@ since the public ``/api/builds`` endpoint requires an access key with the
 ``DEVELOCITY_ACCESS_KEY`` does not have. The dashboard endpoints are
 unauthenticated and return JSON.
 
-Reads the skip list from ``build/flaky-test-remediation/skip.txt`` (one fully-qualified
-test name per line) and writes ``build/flaky-test-remediation/selected.json``.
+Reads the skip list from ``build/flaky-test-remediation/skip.txt`` (one Develocity
+test container/class name per line) and writes ``build/flaky-test-remediation/selected.json``.
 """
 
 import json

@@ -41,9 +41,10 @@ centralized in [`_paths.py`](_paths.py).
 ## Skip list / progress tracking
 
 The orphan branch `otelbot/flaky-test-remediation-progress` carries a single
-`attempted.txt` file (one fully-qualified test name per line). Both the CI
+`attempted.txt` file (one Develocity test container/class name per line). Both the CI
 workflow and `run-local.py` read it as a skip list so we don't keep retrying
-the same test, and append to it after each successful attempt.
+related flaky methods in the same class, and append the selected class after each
+successful attempt.
 
 ## Local usage
 
