@@ -1,6 +1,6 @@
 # the benefit of this over renovate is that this also analyzes transitive dependencies
 # while renovate (at least currently) only analyzes top-level dependencies
-name: OSS Index dependency audit (daily)
+name: Sonatype Guide dependency audit (daily)
 
 on:
   schedule:
@@ -37,7 +37,7 @@ jobs:
       - name: Print vulnerability report
         if: steps.audit.outcome == 'failure'
         run: |
-          echo "=== OSS Index Vulnerability Report ==="
+          echo "=== Sonatype Guide Vulnerability Report ==="
           cat oss-index-cyclonedx-bom.json
           exit 1
 
