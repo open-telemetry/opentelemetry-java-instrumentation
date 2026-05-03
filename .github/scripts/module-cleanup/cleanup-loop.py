@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Walk instrumentation modules sequentially, applying Copilot review fixes.
+"""Walk instrumentation modules sequentially, applying Copilot cleanup fixes.
 
-Invoked by the `code-review-sweep` workflow's `Run Copilot review loop` step.
+Invoked by the `module-cleanup` workflow's `Run Copilot cleanup loop` step.
 Reads the dispatch list from MODULES_JSON, invokes the `copilot` CLI per
 module, squashes each module's edits into a single commit on the current
 branch, and stops once the total number of files modified versus `origin/main`
@@ -88,7 +88,7 @@ def run_copilot(prompt: str, model: str, output_path: Path) -> int:
             [
                 "copilot",
                 "-p", prompt,
-                "--agent", "code-review-and-fix",
+                "--agent", "module-cleanup",
                 "--model", model,
                 "--output-format", "json",
                 "--silent",
@@ -231,8 +231,8 @@ def process_module(
         if staged_changes_present():
             run_git(
                 "commit",
-                "-m", f"Review fixes for {short_name}",
-                "-m", f"Automated code review of {module_dir}.",
+                "-m", f"Cleanup for {short_name}",
+                "-m", f"Automated module cleanup of {module_dir}.",
             )
         else:
             print(f"No edits from {short_name}; not committing.")
@@ -288,7 +288,7 @@ def main() -> None:
     processed_count = sum(1 for line in processed_lines if line.strip())
     commits_on_branch = count_commits_since_main()
     print(f"Processed modules: {processed_count}")
-    print(f"Commits on review branch: {commits_on_branch}")
+    print(f"Commits on cleanup branch: {commits_on_branch}")
     write_github_output("processed_count", str(processed_count))
     write_github_output("commits_on_branch", str(commits_on_branch))
 

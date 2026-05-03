@@ -1,4 +1,4 @@
-name: Code Review Sweep
+name: Module Cleanup
 
 on:
   schedule:
@@ -9,14 +9,14 @@ on:
 permissions:
   contents: read
 
-# Prevent overlapping sweeps
+# Prevent overlapping cleanup runs
 concurrency:
-  group: code-review-sweep
+  group: module-cleanup
   cancel-in-progress: false
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Job 1: Determine which modules to review
+  # Job 1: Determine which modules to clean up
   # ---------------------------------------------------------------------------
   dispatch:
     # Only run on official repo, not forks
@@ -32,31 +32,31 @@ jobs:
           fetch-depth: 1
 
       - name: Fetch progress branch
-        run: git fetch origin otelbot/code-review-progress || true
+        run: git fetch origin otelbot/module-cleanup-progress || true
 
       - name: Resolve Copilot model
         id: model
         run: |
-          model=$(git show origin/otelbot/code-review-progress:model.txt | xargs)
+          model=$(git show origin/otelbot/module-cleanup-progress:model.txt | xargs)
           echo "model=$model" >> "$GITHUB_OUTPUT"
 
-      - name: Build review matrix
+      - name: Build cleanup matrix
         id: build-matrix
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Read progress from the dedicated orphan branch (if it exists)
-          progress=$(git show origin/otelbot/code-review-progress:reviewed.txt 2>/dev/null || true)
+          progress=$(git show origin/otelbot/module-cleanup-progress:reviewed.txt 2>/dev/null || true)
           if [[ -n "$progress" ]]; then
             export REVIEW_PROGRESS="$progress"
           fi
-          python .github/scripts/code-review/build-review-matrix.py
+          python .github/scripts/module-cleanup/build-cleanup-matrix.py
 
   # ---------------------------------------------------------------------------
   # Job 2: Walk modules sequentially on a single branch, stopping once the
   # accumulated change set reaches FILE_THRESHOLD modified files. One PR per run.
   # ---------------------------------------------------------------------------
-  review:
+  cleanup:
     needs: dispatch
     if: needs.dispatch.outputs.has_work == 'true'
     runs-on: ubuntu-latest
@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Fetch progress branch
-        run: git fetch origin otelbot/code-review-progress || true
+        run: git fetch origin otelbot/module-cleanup-progress || true
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -101,15 +101,15 @@ jobs:
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - name: Check out review branch
+      - name: Check out cleanup branch
         id: branch
         run: |
-          branch="otelbot/code-review-sweep-${GITHUB_RUN_ID}"
+          branch="otelbot/module-cleanup-${GITHUB_RUN_ID}"
           git checkout -B "$branch" origin/main
           echo "name=$branch" >> "$GITHUB_OUTPUT"
 
-      - name: Run Copilot review loop
-        id: review-loop
+      - name: Run Copilot cleanup loop
+        id: cleanup-loop
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           COPILOT_REVIEW_PROMPT_TEMPLATE: >-
@@ -122,27 +122,27 @@ jobs:
             including annotations, class names, method names, field names, file names, Gradle tasks, commands, flags, and config keys.
             If no safe fixes were applied, still return valid JSON with an empty changes array and a brief summary.
             Do not write markdown and do not wrap the JSON in code fences.
-        run: python .github/scripts/code-review/sweep-loop.py
+        run: python .github/scripts/module-cleanup/cleanup-loop.py
 
-      - name: Upload review diagnostics artifact
+      - name: Upload cleanup diagnostics artifact
         if: always()
-        id: upload-review-diagnostics
+        id: upload-cleanup-diagnostics
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: code-review-diagnostics-${{ github.run_id }}
+          name: module-cleanup-diagnostics-${{ github.run_id }}
           path: |
             /tmp/copilot/**
             /tmp/processed-modules.txt
           if-no-files-found: ignore
 
       - name: Assemble PR body
-        if: steps.review-loop.outputs.commits_on_branch != '0'
+        if: steps.cleanup-loop.outputs.commits_on_branch != '0'
         env:
-          ARTIFACT_URL: ${{ steps.upload-review-diagnostics.outputs.artifact-url }}
+          ARTIFACT_URL: ${{ steps.upload-cleanup-diagnostics.outputs.artifact-url }}
         run: |
           set -euo pipefail
           {
-            echo "Automated code review sweep walked the following modules in order"
+            echo "Automated module cleanup walked the following modules in order"
             echo "and stopped after accumulating at least ${FILE_THRESHOLD} modified files:"
             echo
             while IFS= read -r m; do
@@ -158,12 +158,12 @@ jobs:
             done
             echo "---"
             echo
-            echo "[Download code review diagnostics]($ARTIFACT_URL)"
+            echo "[Download module cleanup diagnostics]($ARTIFACT_URL)"
             echo
           } > "$PR_BODY"
 
       - name: Commit summary
-        if: steps.review-loop.outputs.commits_on_branch != '0'
+        if: steps.cleanup-loop.outputs.commits_on_branch != '0'
         id: commit
         run: |
           branch="${{ steps.branch.outputs.name }}"
@@ -183,33 +183,33 @@ jobs:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           branch="${{ steps.branch.outputs.name }}"
-          title="Code review sweep (run ${GITHUB_RUN_ID})"
+          title="Module cleanup (run ${GITHUB_RUN_ID})"
           gh pr create \
             --title "$title" \
             --body-file "$PR_BODY" \
             --base main \
             --head "$branch" \
-            --label "automated code review"
+            --label "module cleanup"
 
       - name: Ensure progress branch exists
-        if: steps.review-loop.outputs.processed_count != '0'
+        if: steps.cleanup-loop.outputs.processed_count != '0'
         run: |
-          if ! git rev-parse --verify origin/otelbot/code-review-progress >/dev/null 2>&1; then
-            git checkout --orphan otelbot/code-review-progress
+          if ! git rev-parse --verify origin/otelbot/module-cleanup-progress >/dev/null 2>&1; then
+            git checkout --orphan otelbot/module-cleanup-progress
             git reset --hard
             git commit --allow-empty -m "Initialize progress tracking"
-            git push origin HEAD:otelbot/code-review-progress || true
+            git push origin HEAD:otelbot/module-cleanup-progress || true
           fi
 
       - name: Check out progress branch
-        if: steps.review-loop.outputs.processed_count != '0'
+        if: steps.cleanup-loop.outputs.processed_count != '0'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          ref: otelbot/code-review-progress
+          ref: otelbot/module-cleanup-progress
           path: progress
 
       - name: Mark processed modules as reviewed
-        if: steps.review-loop.outputs.processed_count != '0'
+        if: steps.cleanup-loop.outputs.processed_count != '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -223,4 +223,4 @@ jobs:
 
           git add reviewed.txt
           git commit -m "Mark $(wc -l < "$PROCESSED_MODULES" | tr -d ' ') module(s) as reviewed"
-          git push origin HEAD:otelbot/code-review-progress
+          git push origin HEAD:otelbot/module-cleanup-progress
