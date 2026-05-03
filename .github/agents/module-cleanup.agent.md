@@ -113,9 +113,9 @@ Auto-fix boundaries:
     whose directory name contains `-common`, or whose Gradle path ends with `:testing`,
     `:library`, or `:bootstrap`, **first search all sibling modules** under the same
     instrumentation parent for callers of the type or member before applying the fix.
-  - normalization of existing `@SuppressWarnings` syntax or placement, but preserve any
-    accurate explanatory comment attached to the suppression instead of deleting it as
-    style noise
+  - normalization of existing `@SuppressWarnings` syntax or placement, but only when it preserves
+    or narrows the suppression to the minimal required scope; preserve any accurate explanatory
+    comment attached to the suppression instead of deleting it as style noise
   - obvious assertion API migrations (e.g., AssertJ preference) and idiomatic
     simplifications listed in `testing-general-patterns.md` § AssertJ Idiomatic
     Simplifications (e.g., `assertThat(list.size()).isEqualTo(N)` →
