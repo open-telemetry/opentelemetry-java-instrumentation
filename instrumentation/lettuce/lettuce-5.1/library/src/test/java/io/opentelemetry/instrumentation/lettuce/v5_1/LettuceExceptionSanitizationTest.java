@@ -15,6 +15,7 @@ import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.tracing.Tracer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -22,6 +23,16 @@ class LettuceExceptionSanitizationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  // Tracer.Span.start() takes no args in lettuce 5.x, but requires RedisCommand in 6.x+.
+  private static void startSpan(Tracer.Span span) {
+    try {
+      Method startMethod = span.getClass().getMethod("start");
+      startMethod.invoke(span);
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   private static final String SENSITIVE_PASSWORD = "mysecretpassword";
 
@@ -34,7 +45,7 @@ class LettuceExceptionSanitizationTest {
 
     Tracer.Span span = telemetry.createTracing().getTracerProvider().getTracer().nextSpan();
     span.name("AUTH");
-    span.start();
+    startSpan(span);
     span.error(
         new RedisCommandExecutionException(
             "WRONGPASS invalid username-password pair: " + SENSITIVE_PASSWORD));
@@ -69,7 +80,7 @@ class LettuceExceptionSanitizationTest {
 
     Tracer.Span span = telemetry.createTracing().getTracerProvider().getTracer().nextSpan();
     span.name("AUTH");
-    span.start();
+    startSpan(span);
     span.error(new RedisCommandExecutionException(sensitiveMsg));
     span.finish();
 
@@ -102,7 +113,7 @@ class LettuceExceptionSanitizationTest {
 
     Tracer.Span span = telemetry.createTracing().getTracerProvider().getTracer().nextSpan();
     span.name("GET");
-    span.start();
+    startSpan(span);
     span.error(new RuntimeException("boom"));
     span.finish();
 
