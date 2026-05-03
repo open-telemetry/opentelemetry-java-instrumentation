@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.alibabadruid;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -13,7 +14,6 @@ import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetrics
 import io.opentelemetry.instrumentation.testing.junit.db.MockDriver;
 import java.sql.SQLException;
 import javax.management.ObjectName;
-import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -62,38 +62,16 @@ public abstract class AbstractDruidInstrumentationTest {
     testing().clearData();
 
     // then
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv()
-                ? "db.client.connection.count"
-                : "db.client.connections.usage",
-            AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv()
-                ? "db.client.connection.idle.min"
-                : "db.client.connections.idle.min",
-            AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv()
-                ? "db.client.connection.idle.max"
-                : "db.client.connections.idle.max",
-            AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max",
-            AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv()
-                ? "db.client.connection.pending_requests"
-                : "db.client.connections.pending_requests",
-            AbstractIterableAssert::isEmpty);
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing().metrics())
+                    .filteredOn(
+                        metricData ->
+                            metricData
+                                .getInstrumentationScopeInfo()
+                                .getName()
+                                .equals(INSTRUMENTATION_NAME))
+                    .isEmpty());
   }
 }

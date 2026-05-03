@@ -107,9 +107,12 @@
   valid until this method returns; for example, if the assertion expects a `used` connection point,
   keep the borrowed connection open until after the assertion.
 - After removing a metric-producing source or unregistering an observable callback, call
-  `testing().clearData()` and then use `waitAndAssertMetrics(..., AbstractIterableAssert::isEmpty)`
-  for absence checks. Do not add an exporter-interval sleep before or after `clearData()` solely to
-  wait for metrics; the test runners force-flush metrics when reading them.
+  `testing().clearData()` and then use Awaitility around the simplest assertion that captures the
+  intent. For example, when the test expects no metrics from an instrumentation scope, prefer
+  `await().untilAsserted(() -> assertThat(testing().metrics()).filteredOn(...).isEmpty())` over
+  expanding the check into one `waitAndAssertMetrics(..., AbstractIterableAssert::isEmpty)` call per
+  possible metric name. Do not add an exporter-interval sleep before or after `clearData()` solely
+  to wait for metrics; the test runners force-flush metrics when reading them.
 
 ## Attribute Assertion `satisfies()` Lambda Parameters
 
