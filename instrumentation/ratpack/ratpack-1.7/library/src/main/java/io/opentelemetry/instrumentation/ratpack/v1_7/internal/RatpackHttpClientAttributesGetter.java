@@ -20,13 +20,11 @@ import ratpack.http.client.RequestSpec;
 final class RatpackHttpClientAttributesGetter
     implements HttpClientAttributesGetter<RequestSpec, HttpResponse> {
 
-  @Nullable
   @Override
   public String getUrlFull(RequestSpec requestSpec) {
     return requestSpec.getUri().toString();
   }
 
-  @Nullable
   @Override
   public String getHttpRequestMethod(RequestSpec requestSpec) {
     return requestSpec.getMethod().getName();

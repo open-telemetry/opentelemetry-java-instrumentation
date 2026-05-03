@@ -67,9 +67,9 @@ public class Log4jHelper {
       String loggerClassName,
       @Nullable StackTraceElement location,
       Level level,
-      Marker marker,
+      @Nullable Marker marker,
       Message message,
-      Throwable throwable) {
+      @Nullable Throwable throwable) {
     String instrumentationName = logger.getName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";

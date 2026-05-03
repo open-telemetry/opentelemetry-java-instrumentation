@@ -23,7 +23,7 @@ public abstract class AbstractRestClientInstrumentationAutoConfigurationTest {
 
   protected abstract ClientHttpRequestInterceptor getInterceptor(OpenTelemetry openTelemetry);
 
-  protected final ApplicationContextRunner contextRunner =
+  private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withBean(RestClient.class, RestClient::create)

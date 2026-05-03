@@ -56,8 +56,9 @@ class SpringTemplateTest extends AbstractJmsTest {
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private static HornetQServer server;
   private static final String MESSAGE_TEXT = "a message";
+
+  private static HornetQServer server;
   private static JmsTemplate template;
   private static Session session;
   private static Connection connection;

@@ -48,8 +48,8 @@ import ratpack.server.RatpackServerSpec;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractRatpackRoutesTest {
 
-  private static RatpackServer app;
-  private static WebClient client;
+  private RatpackServer app;
+  private WebClient client;
 
   protected abstract InstrumentationExtension testing();
 

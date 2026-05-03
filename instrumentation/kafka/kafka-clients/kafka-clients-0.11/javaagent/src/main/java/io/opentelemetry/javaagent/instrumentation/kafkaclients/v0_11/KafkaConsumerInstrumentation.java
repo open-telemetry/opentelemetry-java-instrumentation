@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTra
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -58,8 +59,8 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?, ?> consumer,
-        @Advice.Return ConsumerRecords<?, ?> records,
-        @Advice.Thrown Throwable error) {
+        @Advice.Return @Nullable ConsumerRecords<?, ?> records,
+        @Advice.Thrown @Nullable Throwable error) {
 
       // don't create spans when no records were received
       if (records == null || records.isEmpty()) {

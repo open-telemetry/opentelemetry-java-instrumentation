@@ -18,7 +18,7 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
 
   protected abstract AutoConfigurations autoConfigurations();
 
-  protected final ApplicationContextRunner contextRunner =
+  private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withBean(RestTemplate.class, RestTemplate::new)

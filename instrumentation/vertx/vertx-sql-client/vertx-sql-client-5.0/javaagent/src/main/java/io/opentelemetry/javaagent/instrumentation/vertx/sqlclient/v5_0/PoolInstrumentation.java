@@ -27,6 +27,7 @@ import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -76,17 +77,19 @@ class PoolInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Return Pool pool,
+        @Advice.Return @Nullable Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
         @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
-      setPoolConnectOptions(pool, sqlConnectOptions);
-      resolveAndStoreDbSystem(pool, sqlConnectOptions);
+      if (pool != null) {
+        setPoolConnectOptions(pool, sqlConnectOptions);
+        resolveAndStoreDbSystem(pool, sqlConnectOptions);
+      }
       setSqlConnectOptions(null);
     }
   }

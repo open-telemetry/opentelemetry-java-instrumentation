@@ -31,8 +31,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import org.apache.pekko.http.scaladsl.Http;
 import org.assertj.core.api.AbstractStringAssert;
 import org.elasticmq.rest.sqs.SQSRestServer;
@@ -71,7 +69,7 @@ class AwsSqsTest {
   }
 
   @Test
-  void sqsListener() throws InterruptedException, ExecutionException, TimeoutException {
+  void sqsListener() throws Exception {
     String messageContent = "hello";
     CompletableFuture<String> messageFuture = new CompletableFuture<>();
     AwsSqsTestApplication.messageHandler =

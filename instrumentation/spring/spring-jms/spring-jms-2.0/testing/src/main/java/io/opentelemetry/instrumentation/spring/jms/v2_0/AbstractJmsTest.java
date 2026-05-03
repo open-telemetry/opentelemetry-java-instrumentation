@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJmsTest {
 
   protected void assertProducerSpan(
@@ -38,7 +39,6 @@ public abstract class AbstractJmsTest {
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected List<AttributeAssertion> producerAttributeAssertions(
       String destinationName, boolean testHeaders) {
     List<AttributeAssertion> attributeAssertions =
@@ -82,7 +82,6 @@ public abstract class AbstractJmsTest {
         consumerAttributeAssertions(destinationName, testHeaders, operation, msgId));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected List<AttributeAssertion> consumerAttributeAssertions(
       String destinationName, boolean testHeaders, String operation, @Nullable String msgId) {
     List<AttributeAssertion> attributeAssertions =

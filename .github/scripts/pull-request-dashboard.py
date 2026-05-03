@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -98,14 +99,16 @@ Where:
 # ---------------------------------------------------------------- gh helpers
 
 
-def gh_api(path: str, paginate: bool = False) -> Any:
+def gh_api(path: str, paginate: bool = False, token: str | None = None) -> Any:
     cmd = ["gh", "api", "-H", "Accept: application/vnd.github+json"]
     if paginate:
         cmd += ["--paginate", "--slurp"]
     cmd.append(path)
+    env = {**os.environ, "GH_TOKEN": token} if token else None
     proc = subprocess.run(
         cmd, capture_output=True, text=True, check=False,
         encoding="utf-8", errors="replace",
+        env=env,
     )
     if proc.returncode != 0:
         raise RuntimeError(f"gh api {path} failed: {proc.stderr.strip()}")
@@ -219,14 +222,22 @@ def detect_repo() -> str:
 
 
 def load_reviewer_set(org: str) -> set[str]:
+    # Reading org team membership requires a token with org:read scope.
+    # The default Actions GITHUB_TOKEN can't do this, so use OTELBOT_TOKEN
+    # (a GitHub App installation token) when present; fall back to the
+    # default GH_TOKEN otherwise (useful for local runs with a user token).
+    token = os.environ.get("OTELBOT_TOKEN") or None
     reviewers: set[str] = set()
     for slug in APPROVER_TEAM_SLUGS:
-        members = gh_api(f"/orgs/{org}/teams/{slug}/members?per_page=100", paginate=True)
+        members = gh_api(
+            f"/orgs/{org}/teams/{slug}/members?per_page=100",
+            paginate=True, token=token,
+        )
         reviewers.update(m["login"] for m in members)
     if not reviewers:
         raise RuntimeError(
             f"no reviewers found in teams {APPROVER_TEAM_SLUGS}; "
-            f"the GH_TOKEN must have org:read permission"
+            f"the token must have org:read permission"
         )
     return {r.lower() for r in reviewers}
 
@@ -418,12 +429,14 @@ def fetch_pr_context(
 
     # Last substantive event = last event whose body is non-empty OR whose
     # kind is not "review:COMMENTED" (state changes always count). Merge
-    # commits (≥2 parents — e.g. "Update branch" merging base into the PR)
-    # don't count as substantive: they don't move the conversation forward.
+    # commits (≥2 parents) by someone *other* than the author — e.g. an
+    # approver clicking "Update branch" — don't count as substantive: they
+    # don't move the conversation forward and shouldn't be confused with
+    # the author addressing feedback.
     def is_substantive(e: dict[str, Any]) -> bool:
         if e["kind"].startswith("review:") and e["kind"] != "review:COMMENTED":
             return True
-        if e.get("is_merge"):
+        if e.get("is_merge") and (e.get("login") or "").lower() != author.lower():
             return False
         return bool((e.get("body") or "").strip())
 
@@ -432,16 +445,34 @@ def fetch_pr_context(
 
     # Commit summaries (subject only) for the brief table in the rendered
     # context. Full commit messages and diffs travel via timeline events.
+    # Merge commits authored by someone other than the PR author (e.g. an
+    # approver clicking "Update branch") are flagged so the model doesn't
+    # treat them as the author addressing feedback.
     commit_rows = []
     for c in recent_commits:
-        sha = (c.get("sha") or "")[:7]
+        sha_full = c.get("sha") or ""
+        sha = sha_full[:7]
         msg = (c.get("commit") or {}).get("message", "").splitlines()[0] if c.get("commit") else ""
         a = c.get("author") or {}
         commit_login = a.get("login") or ((c.get("commit") or {}).get("author") or {}).get("name") or "?"
         commit_date = ((c.get("commit") or {}).get("author") or {}).get("date") or ""
-        commit_rows.append({"sha": sha, "msg": msg, "author": commit_login, "date": commit_date})
+        is_non_author_merge = (
+            sha_full in merge_shas
+            and (commit_login or "").lower() != author.lower()
+        )
+        commit_rows.append({
+            "sha": sha,
+            "msg": msg,
+            "author": commit_login,
+            "date": commit_date,
+            "is_non_author_merge": is_non_author_merge,
+        })
 
-    last_commit_date = parse_ts(commit_rows[-1]["date"]) if commit_rows else None
+    # "Last commit pushed" is meant to surface real author activity, so
+    # skip non-author merge commits (e.g. approvers clicking "Update
+    # branch") when picking the timestamp.
+    real_rows = [r for r in commit_rows if not r["is_non_author_merge"]]
+    last_commit_date = parse_ts(real_rows[-1]["date"]) if real_rows else None
 
     # Checks summary.
     failing = [c for c in checks if (c.get("state") or "").upper() in ("FAILURE", "ERROR")]
@@ -543,7 +574,8 @@ def render_context(ctx: dict[str, Any]) -> str:
     # Commits
     lines.append(f"Last {len(ctx['commits'])} commits (oldest first):")
     for c in ctx["commits"]:
-        lines.append(f"  {c['sha']} {c['date'][:10]} @{c['author']}: {truncate(c['msg'], 120)}")
+        suffix = " [merge from base by non-author — not substantive activity]" if c.get("is_non_author_merge") else ""
+        lines.append(f"  {c['sha']} {c['date'][:10]} @{c['author']}: {truncate(c['msg'], 120)}{suffix}")
     lines.append("")
 
     # Last substantive event highlight
@@ -771,6 +803,12 @@ def render_markdown_compact(
         res = results.get(pr["number"]) or {}
         decision = res.get("decision") or {}
         side = _infer_side(decision) if decision else "unknown"
+        # PRs authored by app/otelbot are never "waiting on authors" — the
+        # bot doesn't respond to review feedback, so the ball is always in
+        # an approver's court (review, close, or take over).
+        pr_author_login = ((pr.get("author") or {}).get("login") or "").lower()
+        if side == "author" and pr_author_login == "app/otelbot":
+            side = "approver"
         # Promote approved PRs that are waiting on approvers into the
         # "maintainer" bucket (deterministic): GitHub already says they have
         # the required approvals, so a maintainer can merge them.
