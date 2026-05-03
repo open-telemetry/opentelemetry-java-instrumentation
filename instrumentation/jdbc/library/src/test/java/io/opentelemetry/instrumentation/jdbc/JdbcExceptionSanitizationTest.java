@@ -191,7 +191,7 @@ class JdbcExceptionSanitizationTest {
                             event
                                 .hasName("exception")
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(EXCEPTION_TYPE, "java.lang.RuntimeException"),
+                                    equalTo(EXCEPTION_TYPE, RuntimeException.class.getName()),
                                     satisfies(
                                         EXCEPTION_STACKTRACE,
                                         stack -> stack.isInstanceOf(String.class)),

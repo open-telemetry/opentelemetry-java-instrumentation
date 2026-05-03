@@ -23,8 +23,6 @@ final class JdbcSanitizingSpanExceptionHandler implements SpanExceptionHandler {
   static final JdbcSanitizingSpanExceptionHandler INSTANCE =
       new JdbcSanitizingSpanExceptionHandler();
 
-  private JdbcSanitizingSpanExceptionHandler() {}
-
   @Override
   public void handle(Span span, Throwable throwable) {
     if (!(throwable instanceof SQLException)) {
@@ -49,4 +47,6 @@ final class JdbcSanitizingSpanExceptionHandler implements SpanExceptionHandler {
             EXCEPTION_MESSAGE, sanitizedMsg,
             EXCEPTION_STACKTRACE, stackTrace.toString()));
   }
+
+  private JdbcSanitizingSpanExceptionHandler() {}
 }

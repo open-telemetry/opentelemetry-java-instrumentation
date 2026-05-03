@@ -19,8 +19,6 @@ final class LettuceSanitizingSpanExceptionHandler implements SpanExceptionHandle
   static final LettuceSanitizingSpanExceptionHandler INSTANCE =
       new LettuceSanitizingSpanExceptionHandler();
 
-  private LettuceSanitizingSpanExceptionHandler() {}
-
   @Override
   public void handle(Span span, Throwable throwable) {
     if (!(throwable instanceof RedisCommandExecutionException)) {
@@ -42,4 +40,6 @@ final class LettuceSanitizingSpanExceptionHandler implements SpanExceptionHandle
             EXCEPTION_MESSAGE, sanitizedMsg,
             EXCEPTION_STACKTRACE, stackTrace.toString()));
   }
+
+  private LettuceSanitizingSpanExceptionHandler() {}
 }

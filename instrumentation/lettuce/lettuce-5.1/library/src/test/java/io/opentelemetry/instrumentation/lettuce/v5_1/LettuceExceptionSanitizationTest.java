@@ -51,7 +51,7 @@ class LettuceExceptionSanitizationTest {
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(
                                         EXCEPTION_TYPE,
-                                        "io.lettuce.core.RedisCommandExecutionException"),
+                                        RedisCommandExecutionException.class.getName()),
                                     satisfies(
                                         EXCEPTION_STACKTRACE,
                                         stack -> stack.doesNotContain(SENSITIVE_PASSWORD)),
@@ -84,7 +84,7 @@ class LettuceExceptionSanitizationTest {
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(
                                         EXCEPTION_TYPE,
-                                        "io.lettuce.core.RedisCommandExecutionException"),
+                                        RedisCommandExecutionException.class.getName()),
                                     satisfies(
                                         EXCEPTION_STACKTRACE,
                                         stack -> stack.isInstanceOf(String.class)),
@@ -115,7 +115,7 @@ class LettuceExceptionSanitizationTest {
                             event
                                 .hasName("exception")
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(EXCEPTION_TYPE, "java.lang.RuntimeException"),
+                                    equalTo(EXCEPTION_TYPE, RuntimeException.class.getName()),
                                     satisfies(
                                         EXCEPTION_STACKTRACE,
                                         stack -> stack.isInstanceOf(String.class)),
