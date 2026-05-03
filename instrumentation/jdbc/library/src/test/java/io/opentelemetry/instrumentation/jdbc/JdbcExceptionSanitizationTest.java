@@ -66,7 +66,7 @@ class JdbcExceptionSanitizationTest {
                             event
                                 .hasName("exception")
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(EXCEPTION_TYPE, "java.sql.SQLException"),
+                                    equalTo(EXCEPTION_TYPE, SQLException.class.getName()),
                                     satisfies(
                                         EXCEPTION_STACKTRACE,
                                         stack -> stack.doesNotContain("mysecret")),
@@ -109,7 +109,7 @@ class JdbcExceptionSanitizationTest {
                             event
                                 .hasName("exception")
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(EXCEPTION_TYPE, "java.sql.SQLException"),
+                                    equalTo(EXCEPTION_TYPE, SQLException.class.getName()),
                                     satisfies(
                                         EXCEPTION_STACKTRACE,
                                         stack -> stack.isInstanceOf(String.class)),
@@ -154,7 +154,7 @@ class JdbcExceptionSanitizationTest {
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(
                                         EXCEPTION_TYPE,
-                                        "java.sql.SQLIntegrityConstraintViolationException"),
+                                        SQLIntegrityConstraintViolationException.class.getName()),
                                     satisfies(
                                         EXCEPTION_STACKTRACE,
                                         stack -> stack.doesNotContain("mysecret")),
