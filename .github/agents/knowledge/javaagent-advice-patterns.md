@@ -42,7 +42,9 @@ the IDE's perspective, and per-method placement is inconsistent with the rest of
 ## Advice Methods Must Be Static
 
 All `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` methods **must be `static`**. ByteBuddy
-inlines advice code directly into the instrumented method — there is no advice object instance.
+inlines advice code directly into the instrumented method by default — there is no advice object
+instance. Do not add or remove `inline = false` as cleanup; it is a semantic signal used by
+muzzle/indy tooling.
 
 ```java
 // ✅ Correct
