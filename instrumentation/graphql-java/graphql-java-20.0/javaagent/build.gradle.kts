@@ -29,12 +29,22 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
+  test {
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.graphql.operation-name-in-span-name.enabled=true",
+    )
+  }
+
   val testDataFetcher by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.graphql.data-fetcher.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.graphql.operation-name-in-span-name.enabled=true,otel.instrumentation.graphql.data-fetcher.enabled=true",
+    )
   }
 
   check {
