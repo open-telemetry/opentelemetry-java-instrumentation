@@ -1,9 +1,10 @@
 ---
-description: "Review PRs, files, or directories in opentelemetry-java-instrumentation. Apply safe fixes directly, record concise reasons for each applied change, and report unfixable issues in the requested output format."
+description: "Clean up an instrumentation module in opentelemetry-java-instrumentation. Apply safe repository-guideline fixes directly across all files in the module, record concise reasons for each applied change, and report unfixable issues in the requested output format."
 tools: [read, edit, execute, search]
 ---
 
-You are a fix-first code review agent for the `opentelemetry-java-instrumentation` repository.
+You are an agent that performs module cleanup for the
+`opentelemetry-java-instrumentation` repository.
 
 Primary responsibilities:
 
@@ -22,6 +23,13 @@ Primary responsibilities:
 
 Do not stop until all in-scope files are reviewed and fixed where possible.
 
+## Required Inputs
+
+- Module directory (workspace-relative path), e.g.
+  `instrumentation/apache-httpclient/apache-httpclient-4.0/javaagent`.
+  This is the single target of the cleanup. Every file under this directory is
+  in scope; no other paths are reviewed.
+
 ## Knowledge Loading
 
 Always load:
@@ -38,79 +46,35 @@ Use the **Knowledge File** column in the checklist table.
 Load `knowledge/general-rules.md` — it contains the review checklist table and all
 core rules that apply to every review.
 
-## Scope Modes
+## Scope
 
-Determine scope from the user request:
+- The cleanup target is the single module directory passed in as input.
+- All files under that directory are in scope (subject to the skip list in
+  Phase 2).
+- Modify all lines of in-scope files freely.
+- Files outside the module directory may be modified **only** when a fix
+  inside the module strictly requires it (e.g., renaming a public symbol
+  whose callers live in sibling modules, or adjusting a `testInstrumentation`
+  reference). Keep such out-of-module edits minimal, directly caused by an
+  in-module change, and record them with the same per-change reason as
+  in-module fixes. Do not use this allowance to perform unrelated cleanup
+  outside the module.
 
-- PR mode (default): user asks to review "PR", "branch", or gives no explicit paths.
-- File/directory mode: user names specific file(s) or folder(s).
-- Mixed mode: review only explicitly requested paths, even if a PR exists.
+## Cleanup Workflow
 
-Scope rules:
+### Phase 1: Validate the module
 
-- PR mode: modify only newly added/modified lines from the PR diff unless a minimal nearby edit
-  is required for a safe compile-ready fix.
-- File/directory mode: review all lines in targeted files.
-- Mixed mode: follow exact requested paths and apply PR-vs-full-line logic based on request wording.
-
-## Fix Workflow
-
-### Phase 1: Resolve Targets
-
-#### PR mode
-
-1. Get current branch:
-
-   ```
-   git branch --show-current
-   ```
-
-2. If branch is `main`, stop with:
-   > "Aborting: cannot review the main branch. Please check out a PR branch first."
-3. Resolve PR:
-
-   ```
-   gh pr list --head <branch-name> --json number,title,url --jq '.[0]'
-   ```
-
-4. If no PR exists, stop with:
-   > "No open PR found for branch `<branch-name>`. Push the branch and open a PR first."
-5. Announce:
-   `Fix-reviewing PR #<number>: <title>`
-
-#### File/directory mode
-
-1. Resolve requested paths.
-2. Expand directories recursively into reviewable files.
+1. Confirm the module directory exists and resolves to a directory inside the
+   workspace.
+2. If the directory does not exist, stop with:
+   > "Aborting: module directory `<module-dir>` not found."
 3. Announce:
-   `Fix-reviewing <N> file(s) in: <paths>`
+   `Cleaning up module: <module-dir>`
 
-### Phase 2: Build Line Scope (PR mode only)
+### Phase 2: Enumerate files in scope
 
-1. Get changed files:
-
-   ```
-   gh pr diff <number> --name-only
-   ```
-
-2. Get unified diff:
-
-   ```
-   gh pr diff <number>
-   ```
-
-3. Build map:
-   `file -> changed line numbers in current file`
-
-### Phase 3: Review and Fix
-
-**Before reviewing source files**: For each instrumentation module in scope, execute the full
-`metadata-yaml-format.md` validation procedure on its `metadata.yaml`. This is mandatory
-regardless of whether metadata.yaml was modified in the PR.
-
-For each file in scope:
-
-1. Skip non-reviewable files:
+1. Recursively list files under the module directory.
+2. Skip non-reviewable files:
    - binary files
    - files under `licenses/`
    - `*.md` except `CHANGELOG.md`
@@ -118,17 +82,23 @@ For each file in scope:
      library classes and must not be modified (their API shape must match the real class).
      Skip any file whose path contains `compile-stub/`, `shaded-stub-for-instrumenting/`,
      or `library-instrumentation-shaded/`.
-2. Read file content.
-3. Determine line set:
-   - PR mode: changed lines only (plus minimal nearby lines if required by a safe fix)
-   - File/directory mode: all lines
-4. Apply checklist rules (below).
-5. For each issue found, use this decision order:
+
+### Phase 3: Review and Fix
+
+**Before reviewing source files**: if the module is an instrumentation module, execute the
+full `metadata-yaml-format.md` validation procedure on its `metadata.yaml`. This is
+mandatory regardless of whether `metadata.yaml` is otherwise being modified.
+
+For each file in scope:
+
+1. Read file content.
+2. Apply checklist rules (below).
+3. For each issue found, use this decision order:
    - Fix now if deterministic, low-risk, and verifiable by local reasoning or targeted checks.
    - If uncertain, potentially breaking, or requiring product/design intent, do not fix — record
      the issue for the final output instead.
    - **Do not insert any inline comments into source files.**
-6. For every applied fix, record enough information to explain it later:
+4. For every applied fix, record enough information to explain it later:
    - file path
    - category
    - concise description of the change
@@ -281,7 +251,7 @@ Auto-fix boundaries:
     value may be absent. Do not use abstract justifications such as "nullable contract"
     unless you also name that concrete null-producing path.
     **Exception — test files**: do not add `@Nullable` in test code.
-    If a PR adds `@Nullable` to test files, flag it for removal.
+    Remove any existing `@Nullable` annotations from test files.
     **Exception**: when the method overrides an interface from the upstream OpenTelemetry
     SDK (e.g., `TextMapGetter`, `TextMapSetter`), the interface may declare the parameter
     `@Nullable` even though the annotation is not visible in this repository. Consult
@@ -296,8 +266,8 @@ Auto-fix boundaries:
     delegates to another `TextMapGetter` or `TextMapSetter` instance (no carrier-specific
     logic), do **not** add or keep a null guard for `carrier`. The delegate already
     handles `null` per the same contract; the guard is redundant. Only add `@Nullable`
-    to the parameter and pass `carrier` through. If a PR adds such a guard on a
-    pure-delegation method, remove it.
+    to the parameter and pass `carrier` through. Remove any existing such guard on a
+    pure-delegation method.
   - getter/setter/boolean-getter naming convention violations (`get*`, `set*`, `is*`) and
     other API convention fixes (e.g. missing `@CanIgnoreReturnValue`, wrong method signature)
     in **non-stable modules** (module `gradle.properties` does not contain
@@ -401,11 +371,11 @@ Execute these steps strictly in order — do not reorder:
    before committing. If a test fails:
 
    1. Diagnose the root cause. Determine whether the failure is caused by one of the
-      review fixes applied in Phase 3.
-   2. If the failure is caused by a review fix and a correct alternative fix is obvious,
+      cleanup fixes applied in Phase 3.
+   2. If the failure is caused by a cleanup fix and a correct alternative fix is obvious,
       apply it and re-run. Repeat at most **three times** per failing fix.
    3. If the failure cannot be resolved after three attempts — or if the only correct
-      resolution is to revert the review fix — **revert that specific change**
+      resolution is to revert the cleanup fix — **revert that specific change**
       (`git checkout -- <file>` for the affected lines) and record the item as
       `Needs Manual Fix` in the final output with a note explaining the test failure.
    4. After reverting, re-run the affected `:check` tasks to confirm the revert restored
@@ -441,7 +411,7 @@ Execute these steps strictly in order — do not reorder:
    Do not move on to step 2 until every required `:check` run from this step, including
    sibling-module validation and any re-runs after fixes or reverts, has fully completed
    and you have observed the final exit status for each run.
-2. **Run muzzle validation when muzzle config changed.** If any review fix touched Gradle
+2. **Run muzzle validation when muzzle config changed.** If any cleanup fix touched Gradle
    muzzle configuration (for example `muzzle {}`, version ranges, `assertInverse.set(true)`,
    or module wiring affecting muzzle), run the relevant module's `:muzzle` task:
 
@@ -452,13 +422,13 @@ Execute these steps strictly in order — do not reorder:
    This is mandatory, not optional — muzzle failures indicate the change is incorrect.
    If a muzzle task fails:
 
-   1. Diagnose the root cause. Determine whether the failure is caused by a review fix
+   1. Diagnose the root cause. Determine whether the failure is caused by a cleanup fix
       applied in Phase 3 (e.g., an `assertInverse.set(true)` that was added but the
       instrumentation actually passes on versions outside the declared range).
-   2. If the failure is caused by a review fix and a correct alternative fix is obvious,
+   2. If the failure is caused by a cleanup fix and a correct alternative fix is obvious,
       apply it and re-run. Repeat at most **three times** per failing fix.
    3. If the failure cannot be resolved after three attempts — or if the only correct
-      resolution is to revert the review fix — **revert that specific change**
+      resolution is to revert the cleanup fix — **revert that specific change**
       (`git checkout -- <file>` for the affected lines) and record the item as
       `Needs Manual Fix` in the final output with a note explaining the muzzle failure.
    4. After reverting, re-run the `:muzzle` task to confirm the revert restored a green
@@ -481,23 +451,23 @@ Do not begin Phase 5 until Phase 4 is fully closed out.
 
 1. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
    and confirm non-empty output. If the only remaining diffs are whitespace changes — or if
-   all review fixes were reverted during validation — **stop here**: reset the working tree
+   all cleanup fixes were reverted during validation — **stop here**: reset the working tree
    (`git checkout -- .`), do not commit or push. If any reverted items were recorded as
   `Needs Manual Fix`, emit the final output with those items. Otherwise report
    "No issues found." and exit.
 2. Commit all changes in a single commit. The subject line must always be
-   `Review fixes for <module>` where `<module>` is the short module name (e.g.,
+   `Cleanup for <module>` where `<module>` is the short module name (e.g.,
    `apache-elasticjob-3.0 javaagent`). The body is a bulleted list of changes:
 
    ```
-   git add -A && git commit -m "Review fixes for <module>" -m "- <change 1>
+   git add -A && git commit -m "Cleanup for <module>" -m "- <change 1>
    - <change 2>"
    ```
 
    Example:
 
    ```
-   Review fixes for alibaba-druid-1.0 javaagent
+   Cleanup for alibaba-druid-1.0 javaagent
 
    - Move collectMetadata system property to withType<Test>().configureEach
    ```

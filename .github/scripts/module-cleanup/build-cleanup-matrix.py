@@ -2,7 +2,7 @@
 """Build the ordered list of instrumentation modules for this review run.
 
 Reads module list from settings.gradle.kts, filters out already-reviewed
-modules (read from the otelbot/code-review-progress branch by the workflow
+modules (read from the otelbot/module-cleanup-progress branch by the workflow
 and passed via REVIEW_PROGRESS), respects the open-PR cap, and writes a
 `modules` JSON array + `has_work` flag to $GITHUB_OUTPUT.
 
@@ -57,9 +57,9 @@ def load_reviewed() -> set[str]:
 
 
 def count_open_prs() -> int:
-    """Count open PRs with the automated code review label."""
+    """Count open PRs with the module cleanup label."""
     result = subprocess.run(
-        ["gh", "pr", "list", "--label", "automated code review",
+        ["gh", "pr", "list", "--label", "module cleanup",
          "--state", "open", "--json", "number", "--jq", "length"],
         capture_output=True, text=True, check=True,
     )
