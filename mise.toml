@@ -2,7 +2,7 @@
 
 # Linters
 "github:grafana/flint" = "0.21.0"
-lychee = "0.23.0"
+lychee = "0.24.2"
 rumdl = "0.1.80"
 
 [env]
