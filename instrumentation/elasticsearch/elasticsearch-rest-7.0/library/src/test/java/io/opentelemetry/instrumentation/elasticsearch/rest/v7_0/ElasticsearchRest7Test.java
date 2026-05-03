@@ -14,8 +14,8 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.apache.http.HttpHost;
@@ -99,7 +100,7 @@ class ElasticsearchRest7Test {
   }
 
   @Test
-  void elasticsearchStatusAsync() throws Exception {
+  void elasticsearchStatusAsync() throws IOException {
     AsyncRequest asyncRequest = new AsyncRequest();
     CountDownLatch countDownLatch = new CountDownLatch(1);
     ResponseListener responseListener =
@@ -129,7 +130,9 @@ class ElasticsearchRest7Test {
     runWithSpan(
         "parent",
         () -> client.performRequestAsync(new Request("GET", "_cluster/health"), responseListener));
-    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
+    await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(() -> assertThat(countDownLatch.getCount()).isZero());
 
     assertThat(asyncRequest.getException()).isNull();
 
