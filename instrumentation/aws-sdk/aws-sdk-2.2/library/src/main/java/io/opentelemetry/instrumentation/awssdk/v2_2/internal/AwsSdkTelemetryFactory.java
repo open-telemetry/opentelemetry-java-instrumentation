@@ -63,12 +63,12 @@ public final class AwsSdkTelemetryFactory {
                         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled")))
         .setUseConfiguredPropagatorForMessaging(
             awsSdk.getBoolean(
-                "use_propagator_for_messaging/development",
+                "experimental_use_propagator_for_messaging/development",
                 factory.legacyBooleanValue(
                     "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging")))
         .setRecordIndividualHttpError(
             awsSdk.getBoolean(
-                "record_individual_http_error/development",
+                "experimental_record_individual_http_error/development",
                 factory.legacyBooleanValue(
                     "otel.instrumentation.aws-sdk.experimental-record-individual-http-error")))
         .setGenaiCaptureMessageContent(
