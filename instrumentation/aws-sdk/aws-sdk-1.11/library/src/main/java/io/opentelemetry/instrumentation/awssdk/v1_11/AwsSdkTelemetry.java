@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
  * ensure you do not register any problematic {@link RequestHandler2}s on your clients or you will
  * witness broken traces.
  */
-public class AwsSdkTelemetry {
+public final class AwsSdkTelemetry {
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
