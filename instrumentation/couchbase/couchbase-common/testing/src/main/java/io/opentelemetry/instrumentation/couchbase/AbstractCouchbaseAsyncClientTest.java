@@ -49,7 +49,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
 
-  private static final int TIMEOUT_SECONDS = 10;
+  private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -73,15 +73,16 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
     clusterCouchbase =
         CouchbaseAsyncCluster.create(environmentCouchbase, singletonList("127.0.0.1"));
     cleanup.deferAfterAll(environmentCouchbase::shutdown);
-    cleanup.deferAfterAll(
-        () ->
-            clusterCouchbase.disconnect().timeout(TIMEOUT_SECONDS, SECONDS).toBlocking().single());
+    cleanup.deferAfterAll(() -> disconnect(clusterCouchbase));
 
     environmentMemcache = envBuilder(bucketMemcache).build();
     clusterMemcache = CouchbaseAsyncCluster.create(environmentMemcache, singletonList("127.0.0.1"));
     cleanup.deferAfterAll(environmentMemcache::shutdown);
-    cleanup.deferAfterAll(
-        () -> clusterMemcache.disconnect().timeout(TIMEOUT_SECONDS, SECONDS).toBlocking().single());
+    cleanup.deferAfterAll(() -> disconnect(clusterMemcache));
+  }
+
+  private static void disconnect(CouchbaseAsyncCluster cluster) {
+    cluster.disconnect().timeout(TIMEOUT.getSeconds(), SECONDS).toBlocking().single();
   }
 
   private CouchbaseAsyncCluster getCluster(BucketSettings bucketSettings) {
@@ -108,7 +109,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
         .subscribe(
             bucket -> manager.hasBucket(bucketSettings.name()).subscribe(hasBucket::complete));
 
-    assertThat(hasBucket).succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS)).isEqualTo(true);
+    assertThat(hasBucket).succeedsWithin(TIMEOUT).isEqualTo(true);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -154,7 +155,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
         });
 
     assertThat(inserted)
-        .succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS))
+        .succeedsWithin(TIMEOUT)
         .extracting(result -> result.content().getString("hello"))
         .isEqualTo("world");
 
@@ -210,9 +211,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                               }));
         });
 
-    assertThat(inserted).succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS));
+    assertThat(inserted).succeedsWithin(TIMEOUT);
     assertThat(found)
-        .succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS))
+        .succeedsWithin(TIMEOUT)
         .isEqualTo(inserted.join())
         .extracting(result -> result.content().getString("hello"))
         .isEqualTo("world");
@@ -283,7 +284,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
         });
 
     assertThat(queryResult)
-        .succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS))
+        .succeedsWithin(TIMEOUT)
         .extracting(result -> result.get("row"))
         .isEqualTo("value");
 
