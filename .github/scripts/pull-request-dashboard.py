@@ -80,7 +80,17 @@ approver/maintainer should act next unless the approval body or inline \
 review comments explicitly ask the author to address something before \
 merge. (Note: a *commit* by an approver does not count here — that's \
 an approver pushing a fix, not asking the author for something.)
-  3. APPROVER — Otherwise, an APPROVER should act next. This includes: \
+  3. AUTHOR (status-only response) — If an approver previously asked for \
+concrete code changes (compilation fixes, tests, additional work, \
+addressing review comments) and the author's latest activity is only a \
+status update ("still working on this", "WIP", "will address soon", \
+"ping", asking another clarifying question without delivering the \
+requested changes, etc.) without any commits that actually deliver the \
+requested work, the AUTHOR should still act next. The ball returns to \
+the approver only when the author posts commits, a review reply with \
+substantive content addressing the request, or otherwise indicates the \
+requested changes are ready for re-review.
+  4. APPROVER — Otherwise, an APPROVER should act next. This includes: \
 fresh PRs with no reviews yet; PRs where the author has posted the \
 latest substantive event (comment, review, or commit) addressing \
 prior approver feedback; and PRs where an approver pushed the \
