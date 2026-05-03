@@ -26,7 +26,8 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 1.0.0
     return hasClassesNamed("com.amazonaws.services.lambda.runtime.RequestHandler")
-        // added in 2.2.0 (in which case aws-lambda-events-2.2 is used)
+        // artifact presence gate (in which case aws-lambda-events-2.2 is used)
+        // added in com.amazonaws:aws-lambda-java-events 2.2.0
         .and(not(hasClassesNamed("com.amazonaws.services.lambda.runtime.events.SQSEvent")));
   }
 
