@@ -252,7 +252,19 @@ def read_copilot_commit_message(path: Path, summary: Summary) -> list[str] | Non
     return [subject, *paragraphs[1:]]
 
 
-def copilot_prompt(plan_path: Path, commit_message_path: Path) -> str:
+def read_prompt_improvement(path: Path, summary: Summary) -> None:
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8").strip()
+    if not text or text.lower() in {"none", "no suggestions", "no changes"}:
+        return
+    summary.notes.append("Copilot suggested a reusable prompt improvement:")
+    for line in text.splitlines()[:12]:
+        if line.strip():
+            summary.notes.append(line)
+
+
+def copilot_prompt(plan_path: Path, commit_message_path: Path, prompt_improvement_path: Path) -> str:
     return f"""You are fixing failing CI in opentelemetry-java-instrumentation.
 
 The PR branch is already checked out. Read this CI bundle first:
@@ -262,6 +274,15 @@ The PR branch is already checked out. Read this CI bundle first:
 After fixing the issue, write a commit message to this exact file path:
 
 {commit_message_path}
+
+Before finishing, consider whether the CI-fix prompt or bundle should be improved
+for future runs based on anything that slowed you down, was missing, ambiguous,
+or required avoidable exploration. If there is a generally reusable improvement,
+write a short note to this exact file path:
+
+{prompt_improvement_path}
+
+If no reusable prompt improvement is needed, do not create that file.
 
 Commit message rules:
 - First line: concise subject, 72 characters or fewer.
@@ -301,8 +322,10 @@ def main() -> int:
         deterministic_fix = maybe_apply_deterministic_fix(bundle_dir, plan_path, summary)
         if deterministic_fix is None and not args.skip_copilot:
             commit_message_path = bundle_dir / "commit-message.txt"
-            response = invoke_copilot(copilot_prompt(plan_path, commit_message_path), summary)
+            prompt_improvement_path = bundle_dir / "prompt-improvement.md"
+            response = invoke_copilot(copilot_prompt(plan_path, commit_message_path, prompt_improvement_path), summary)
             (bundle_dir / "copilot-response.txt").write_text(response + "\n", encoding="utf-8")
+            read_prompt_improvement(prompt_improvement_path, summary)
         elif args.skip_copilot:
             summary.outcome = "downloaded CI logs; skipped Copilot handoff"
             return 0
