@@ -31,7 +31,7 @@ class TestDataflowJob implements DataflowJob<String> {
     // Simulate processing
     try {
       Thread.sleep(100);
-    } catch (InterruptedException e) {
+    } catch (InterruptedException ignored) {
       Thread.currentThread().interrupt();
     }
   }
