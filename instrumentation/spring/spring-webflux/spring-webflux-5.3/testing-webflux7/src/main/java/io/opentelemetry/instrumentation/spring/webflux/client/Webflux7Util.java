@@ -18,7 +18,7 @@ public class Webflux7Util {
     try {
       WebClient.RequestBodySpec.class.getMethod("exchange");
       return false;
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return true;
     }
   }

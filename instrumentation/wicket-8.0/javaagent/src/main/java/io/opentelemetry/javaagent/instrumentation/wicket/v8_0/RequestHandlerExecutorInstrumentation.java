@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.wicket.v8_0;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
+import static io.opentelemetry.javaagent.instrumentation.wicket.v8_0.WicketServerSpanNaming.serverSpanName;
+import static io.opentelemetry.javaagent.instrumentation.wicket.v8_0.WicketServerSpanNaming.serverSpanNameResource;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -18,6 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.wicket.core.request.handler.IPageClassRequestHandler;
 import org.apache.wicket.request.IRequestHandler;
+import org.apache.wicket.request.handler.resource.ResourceReferenceRequestHandler;
 
 class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
 
@@ -42,8 +45,15 @@ class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
         HttpServerRoute.update(
             Java8BytecodeBridge.currentContext(),
             CONTROLLER,
-            WicketServerSpanNaming.getServerSpanName(),
+            serverSpanName(),
             (IPageClassRequestHandler) handler);
+      }
+      if (handler instanceof ResourceReferenceRequestHandler) {
+        HttpServerRoute.update(
+            Java8BytecodeBridge.currentContext(),
+            CONTROLLER,
+            serverSpanNameResource(),
+            (ResourceReferenceRequestHandler) handler);
       }
     }
   }

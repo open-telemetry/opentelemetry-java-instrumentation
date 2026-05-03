@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0;
 
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.DEFAULT_GLUE_UPDATE_TIME;
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.GLUE_JOB_GROOVY_SOURCE;
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.GLUE_JOB_SHELL_SCRIPT;
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.METHOD_JOB_HANDLER_DESTROY_METHOD;
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.METHOD_JOB_HANDLER_INIT_METHOD;
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.METHOD_JOB_HANDLER_METHOD;
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.METHOD_JOB_HANDLER_OBJECT;
+import static io.opentelemetry.instrumentation.xxljob.common.v1_9_2.XxlJobTestingConstants.DEFAULT_GLUE_UPDATE_TIME;
+import static io.opentelemetry.instrumentation.xxljob.common.v1_9_2.XxlJobTestingConstants.GLUE_JOB_GROOVY_SOURCE;
+import static io.opentelemetry.instrumentation.xxljob.common.v1_9_2.XxlJobTestingConstants.GLUE_JOB_SHELL_SCRIPT;
+import static io.opentelemetry.instrumentation.xxljob.common.v1_9_2.XxlJobTestingConstants.METHOD_JOB_HANDLER_DESTROY_METHOD;
+import static io.opentelemetry.instrumentation.xxljob.common.v1_9_2.XxlJobTestingConstants.METHOD_JOB_HANDLER_INIT_METHOD;
+import static io.opentelemetry.instrumentation.xxljob.common.v1_9_2.XxlJobTestingConstants.METHOD_JOB_HANDLER_METHOD;
+import static io.opentelemetry.instrumentation.xxljob.common.v1_9_2.XxlJobTestingConstants.METHOD_JOB_HANDLER_OBJECT;
 
 import com.xxl.job.core.glue.GlueFactory;
 import com.xxl.job.core.glue.GlueTypeEnum;
@@ -19,7 +19,7 @@ import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.handler.impl.GlueJobHandler;
 import com.xxl.job.core.handler.impl.MethodJobHandler;
 import com.xxl.job.core.handler.impl.ScriptJobHandler;
-import io.opentelemetry.instrumentation.xxljob.AbstractXxlJobTest;
+import io.opentelemetry.instrumentation.xxljob.common.v1_9_2.AbstractXxlJobTest;
 
 class XxlJobTest extends AbstractXxlJobTest {
 

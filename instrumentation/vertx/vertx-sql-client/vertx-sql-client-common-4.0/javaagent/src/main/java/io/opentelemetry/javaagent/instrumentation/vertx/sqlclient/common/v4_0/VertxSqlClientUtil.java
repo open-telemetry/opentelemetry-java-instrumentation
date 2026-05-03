@@ -99,9 +99,9 @@ public class VertxSqlClientUtil {
   }
 
   private static class RequestData {
-    final VertxSqlClientRequest request;
-    final Context context;
-    final Context parentContext;
+    private final VertxSqlClientRequest request;
+    private final Context context;
+    private final Context parentContext;
 
     RequestData(VertxSqlClientRequest request, Context context, Context parentContext) {
       this.request = request;

@@ -13,7 +13,7 @@ muzzle {
 
 dependencies {
   library("javax.jws:javax.jws-api:1.1")
-  implementation(project(":instrumentation:jaxws:jaxws-common:javaagent"))
+  implementation(project(":instrumentation:jaxws:jaxws-common-2.0:javaagent"))
 }
 
 tasks.test {

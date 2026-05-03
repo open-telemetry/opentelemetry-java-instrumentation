@@ -24,7 +24,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsRequest;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.v2_0.JaxWsRequest;
 import javax.annotation.Nullable;
 import javax.jws.WebService;
 import net.bytebuddy.asm.Advice;

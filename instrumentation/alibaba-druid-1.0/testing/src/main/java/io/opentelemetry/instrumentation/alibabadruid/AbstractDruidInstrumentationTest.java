@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.alibabadruid;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -58,16 +59,19 @@ public abstract class AbstractDruidInstrumentationTest {
     dataSource.close();
     shutdown(dataSource);
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing().clearData();
-    Thread.sleep(100);
 
     // then
-    assertThat(testing().metrics())
-        .filteredOn(
-            metricData ->
-                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .isEmpty();
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing().metrics())
+                    .filteredOn(
+                        metricData ->
+                            metricData
+                                .getInstrumentationScopeInfo()
+                                .getName()
+                                .equals(INSTRUMENTATION_NAME))
+                    .isEmpty());
   }
 }

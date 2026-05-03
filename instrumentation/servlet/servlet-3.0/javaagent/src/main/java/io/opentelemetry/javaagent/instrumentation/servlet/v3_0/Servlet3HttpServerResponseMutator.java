@@ -10,6 +10,9 @@ import javax.servlet.http.HttpServletResponse;
 
 public class Servlet3HttpServerResponseMutator
     implements HttpServerResponseMutator<HttpServletResponse> {
+  public static final Servlet3HttpServerResponseMutator INSTANCE =
+      new Servlet3HttpServerResponseMutator();
+
   @Override
   public void appendHeader(HttpServletResponse response, String name, String value) {
     response.addHeader(name, value);

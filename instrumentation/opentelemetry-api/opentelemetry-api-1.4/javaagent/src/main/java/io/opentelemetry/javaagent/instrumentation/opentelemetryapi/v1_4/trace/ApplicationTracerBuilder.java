@@ -14,7 +14,7 @@ class ApplicationTracerBuilder implements application.io.opentelemetry.api.trace
   private final ApplicationTracerFactory tracerFactory;
   private final TracerBuilder agentTracerBuilder;
 
-  public ApplicationTracerBuilder(
+  ApplicationTracerBuilder(
       ApplicationTracerFactory tracerFactory, TracerBuilder agentTracerBuilder) {
     this.tracerFactory = tracerFactory;
     this.agentTracerBuilder = agentTracerBuilder;
