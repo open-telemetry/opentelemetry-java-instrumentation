@@ -211,11 +211,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
         });
 
     assertThat(inserted).succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS));
-    assertThat(found).succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS));
-    JsonDocument insertedResult = inserted.join();
-    JsonDocument foundResult = found.join();
-    assertThat(foundResult).isEqualTo(insertedResult);
-    assertThat(foundResult.content().getString("hello")).isEqualTo("world");
+    assertThat(found)
+        .succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS))
+        .isEqualTo(inserted.join())
+        .extracting(result -> result.content().getString("hello"))
+        .isEqualTo("world");
 
     testing.waitAndAssertTraces(
         trace ->
