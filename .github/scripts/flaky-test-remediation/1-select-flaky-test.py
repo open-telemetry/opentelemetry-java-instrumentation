@@ -30,7 +30,6 @@ SOURCE_EXTS = (".java", ".groovy", ".kt")
 
 WINDOW_DAYS = 7
 MIN_FLAKY = 5
-TOP_N = 20
 RECENT_MODIFY_DAYS = 7
 
 
@@ -219,7 +218,7 @@ def main():
     all_files = _all_source_files()
 
     selected = None
-    for container in top[:TOP_N]:
+    for container in top:
         cname = container.get("name") or ""
         if not cname:
             continue
