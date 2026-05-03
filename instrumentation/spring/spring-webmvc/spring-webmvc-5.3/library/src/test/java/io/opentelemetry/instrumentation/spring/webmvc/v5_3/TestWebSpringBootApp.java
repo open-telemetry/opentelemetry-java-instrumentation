@@ -138,7 +138,7 @@ class TestWebSpringBootApp {
             // controller method has completed.
             try {
               Thread.sleep(100);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignored) {
               Thread.currentThread().interrupt();
             }
             try (Scope ignored = context.makeCurrent()) {

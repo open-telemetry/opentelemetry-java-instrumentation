@@ -46,7 +46,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -66,6 +65,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   @BeforeAll
   void setUp() throws UnknownHostException {
     redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
     host = redisServer.getHost();
     ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
@@ -75,9 +75,11 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     dbUriNonExistent = "redis://" + host + ":" + incorrectPort + "/" + DB_INDEX;
 
     redisClient = createClient(embeddedDbUri);
+    cleanup.deferAfterAll(redisClient::shutdown);
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
 
     connection = redisClient.connect();
+    cleanup.deferAfterAll(connection);
     asyncCommands = connection.async();
     RedisCommands<String, String> syncCommands = connection.sync();
 
@@ -86,13 +88,6 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     // 1 set trace
     testing().waitForTraces(1);
     testing().clearData();
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    connection.close();
-    redisClient.shutdown();
-    redisServer.stop();
   }
 
   boolean testCallback() {

@@ -24,9 +24,8 @@ public class ViburDbcpInstrumentationModule extends InstrumentationModule {
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // in 11.0, the ViburDBCPDataSource#getPool() method signature was changed - this is detected by
     // muzzle
-    return hasClassesNamed(
-        // added in 10.0
-        "org.vibur.dbcp.ViburConfig");
+    // added in 10.0
+    return hasClassesNamed("org.vibur.dbcp.ViburConfig");
   }
 
   @Override

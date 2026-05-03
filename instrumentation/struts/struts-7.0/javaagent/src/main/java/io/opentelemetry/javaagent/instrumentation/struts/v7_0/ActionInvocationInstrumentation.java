@@ -49,7 +49,7 @@ class ActionInvocationInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope) {
         this.context = context;
         this.scope = scope;
       }

@@ -76,4 +76,21 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
                         .hasStatus(StatusData.error())
                         .hasException(new Exception("test exception"))));
   }
+
+  @Test
+  void testResource() {
+    AggregatedHttpResponse response =
+        client.get(address.resolve("wicket-test/resource").toString()).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.contentUtf8()).isEqualTo("hello resource");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + getContextPath() + "/wicket-test/hello.HelloResource")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()));
+  }
 }

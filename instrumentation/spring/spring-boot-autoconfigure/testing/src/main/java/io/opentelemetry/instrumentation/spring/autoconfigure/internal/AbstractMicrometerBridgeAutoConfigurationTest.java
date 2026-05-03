@@ -23,7 +23,7 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
 
   protected abstract Class<?> getMeterRegistryClass();
 
-  protected final ApplicationContextRunner contextRunner =
+  private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withConfiguration(autoConfigurations());

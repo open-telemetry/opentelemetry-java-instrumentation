@@ -28,7 +28,7 @@ class JbossLogmanagerMdcTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static class LogHandler extends Handler {
+  private static class LogHandler extends Handler {
     private final List<ExtLogRecord> logRecords;
 
     LogHandler(List<ExtLogRecord> logRecords) {

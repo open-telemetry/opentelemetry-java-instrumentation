@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.JedisRequestContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -49,6 +49,7 @@ class JedisInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class JedisMethodAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JedisRequestContext<JedisRequest> onEnter() {
       return JedisRequestContext.attach();

@@ -65,17 +65,31 @@ public final class ContextPropagationOperator {
   @Nullable
   private static final MethodHandle SCHEDULERS_RESET_HOOK_METHOD = getSchedulersResetHookMethod();
 
+  private static final Object TRACE_CONTEXT_KEY =
+      new Object() {
+        @Override
+        public String toString() {
+          return "otel-trace-context";
+        }
+      };
+
+  private static final Object lock = new Object();
+
+  private static volatile boolean enabled = false;
+
+  private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
+
   @Nullable
   private static MethodHandle getContextWriteMethod(Class<?> type) {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
       return lookup.findVirtual(type, "contextWrite", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     try {
       return lookup.findVirtual(type, "subscriberContext", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     return null;
@@ -87,7 +101,7 @@ public final class ContextPropagationOperator {
     try {
       return lookup.findStatic(
           Schedulers.class, "onScheduleHook", methodType(void.class, String.class, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     return null;
@@ -99,7 +113,7 @@ public final class ContextPropagationOperator {
     try {
       return lookup.findStatic(
           Schedulers.class, "resetOnScheduleHook", methodType(void.class, String.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     return null;
@@ -112,20 +126,6 @@ public final class ContextPropagationOperator {
   public static ContextPropagationOperatorBuilder builder() {
     return new ContextPropagationOperatorBuilder();
   }
-
-  private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
-
-  private static final Object TRACE_CONTEXT_KEY =
-      new Object() {
-        @Override
-        public String toString() {
-          return "otel-trace-context";
-        }
-      };
-
-  private static final Object lock = new Object();
-
-  private static volatile boolean enabled = false;
 
   /**
    * Stores Trace {@link io.opentelemetry.context.Context} in Reactor {@link

@@ -30,6 +30,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.rxjava.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.rxjava.experimental-span-attributes=true")
   }
 
   check {
