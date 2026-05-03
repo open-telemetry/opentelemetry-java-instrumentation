@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.FLUSH_TIMEOUT;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.functionInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.messageInstrumenter;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -97,10 +98,8 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
         io.opentelemetry.context.Context messageContext = null;
         Scope messageScope = null;
         if (arg instanceof SQSEvent) {
-          if (AwsLambdaSingletons.messageInstrumenter()
-              .shouldStart(functionContext, (SQSEvent) arg)) {
-            messageContext =
-                AwsLambdaSingletons.messageInstrumenter().start(functionContext, (SQSEvent) arg);
+          if (messageInstrumenter().shouldStart(functionContext, (SQSEvent) arg)) {
+            messageContext = messageInstrumenter().start(functionContext, (SQSEvent) arg);
             messageScope = messageContext.makeCurrent();
           }
         }
@@ -111,8 +110,7 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
       public void end(Object arg, @Nullable Object result, @Nullable Throwable throwable) {
         if (messageScope != null) {
           messageScope.close();
-          AwsLambdaSingletons.messageInstrumenter()
-              .end(messageContext, (SQSEvent) arg, null, throwable);
+          messageInstrumenter().end(messageContext, (SQSEvent) arg, null, throwable);
         }
         functionScope.close();
         functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
