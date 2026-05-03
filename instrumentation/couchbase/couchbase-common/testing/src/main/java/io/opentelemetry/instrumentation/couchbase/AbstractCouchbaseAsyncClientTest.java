@@ -36,9 +36,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -96,8 +95,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
 
   @ParameterizedTest
   @MethodSource("bucketSettings")
-  void hasBucket(BucketSettings bucketSettings)
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void hasBucket(BucketSettings bucketSettings) {
     CouchbaseAsyncCluster cluster = getCluster(bucketSettings);
     AsyncClusterManager manager = cluster.clusterManager(USERNAME, PASSWORD).toBlocking().single();
 
@@ -110,7 +108,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
         .subscribe(
             bucket -> manager.hasBucket(bucketSettings.name()).subscribe(hasBucket::complete));
 
-    assertThat(hasBucket.get(TIMEOUT_SECONDS, SECONDS)).isTrue();
+    assertThat(hasBucket).succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS)).isEqualTo(true);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -138,8 +136,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
 
   @ParameterizedTest
   @MethodSource("bucketSettings")
-  void upsert(BucketSettings bucketSettings)
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void upsert(BucketSettings bucketSettings) {
     CouchbaseAsyncCluster cluster = getCluster(bucketSettings);
 
     JsonObject content = JsonObject.create().put("hello", "world");
@@ -156,7 +153,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                           .subscribe(inserted::complete));
         });
 
-    assertThat(inserted.get(TIMEOUT_SECONDS, SECONDS).content().getString("hello"))
+    assertThat(inserted)
+        .succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS))
+        .extracting(result -> result.content().getString("hello"))
         .isEqualTo("world");
 
     testing.waitAndAssertTraces(
@@ -189,8 +188,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
 
   @ParameterizedTest
   @MethodSource("bucketSettings")
-  void upsertAndGet(BucketSettings bucketSettings)
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void upsertAndGet(BucketSettings bucketSettings) {
     CouchbaseAsyncCluster cluster = getCluster(bucketSettings);
 
     JsonObject content = JsonObject.create().put("hello", "world");
@@ -212,8 +210,10 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                               }));
         });
 
-    JsonDocument insertedResult = inserted.get(TIMEOUT_SECONDS, SECONDS);
-    JsonDocument foundResult = found.get(TIMEOUT_SECONDS, SECONDS);
+    assertThat(inserted).succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS));
+    assertThat(found).succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS));
+    JsonDocument insertedResult = inserted.join();
+    JsonDocument foundResult = found.join();
     assertThat(foundResult).isEqualTo(insertedResult);
     assertThat(foundResult.content().getString("hello")).isEqualTo("world");
 
@@ -261,7 +261,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
   }
 
   @Test
-  void query() throws ExecutionException, InterruptedException, TimeoutException {
+  void query() {
     // Only couchbase buckets support queries.
     CouchbaseAsyncCluster cluster = getCluster(bucketCouchbase);
 
@@ -282,7 +282,10 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                           .subscribe(row -> queryResult.complete(row.value())));
         });
 
-    assertThat(queryResult.get(TIMEOUT_SECONDS, SECONDS).get("row")).isEqualTo("value");
+    assertThat(queryResult)
+        .succeedsWithin(Duration.ofSeconds(TIMEOUT_SECONDS))
+        .extracting(result -> result.get("row"))
+        .isEqualTo("value");
 
     testing.waitAndAssertTraces(
         trace ->
