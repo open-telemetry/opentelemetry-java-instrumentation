@@ -66,7 +66,6 @@ public class HttpServerTestOptions {
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
   boolean useHttp2 = false;
-  boolean closeClientConnectionAfterRequest = false;
 
   HttpServerTestOptions() {}
 
@@ -231,13 +230,6 @@ public class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setUseHttp2(boolean useHttp2) {
     this.useHttp2 = useHttp2;
-    return this;
-  }
-
-  @CanIgnoreReturnValue
-  public HttpServerTestOptions setCloseClientConnectionAfterRequest(
-      boolean closeClientConnectionAfterRequest) {
-    this.closeClientConnectionAfterRequest = closeClientConnectionAfterRequest;
     return this;
   }
 
