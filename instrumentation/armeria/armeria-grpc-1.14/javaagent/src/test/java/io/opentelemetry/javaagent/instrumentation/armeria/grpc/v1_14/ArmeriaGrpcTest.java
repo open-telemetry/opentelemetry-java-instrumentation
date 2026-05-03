@@ -33,6 +33,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class ArmeriaGrpcTest {
 
   @RegisterExtension
@@ -62,7 +63,6 @@ class ArmeriaGrpcTest {
         }
       };
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void grpcInstrumentation() {
     GreeterGrpc.GreeterBlockingStub client =
