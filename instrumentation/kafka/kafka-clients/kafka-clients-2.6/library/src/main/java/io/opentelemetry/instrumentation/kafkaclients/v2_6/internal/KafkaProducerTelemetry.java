@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaPropagation;
 import java.util.concurrent.Future;
 import java.util.function.BiFunction;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -44,10 +45,10 @@ public class KafkaProducerTelemetry {
    * @param record the producer record to inject span info.
    */
   public <K, V> ProducerRecord<K, V> buildAndInjectSpan(
-      ProducerRecord<K, V> record, String clientId) {
+      ProducerRecord<K, V> record, @Nullable String clientId, @Nullable String bootstrapServers) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId);
+    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId, bootstrapServers);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return record;
     }
@@ -73,11 +74,12 @@ public class KafkaProducerTelemetry {
   public <K, V> Future<RecordMetadata> buildAndInjectSpan(
       ProducerRecord<K, V> record,
       Producer<K, V> producer,
-      Callback callback,
-      BiFunction<ProducerRecord<K, V>, Callback, Future<RecordMetadata>> sendFn) {
+      @Nullable Callback callback,
+      BiFunction<ProducerRecord<K, V>, Callback, Future<RecordMetadata>> sendFn,
+      String bootstrapServers) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, producer);
+    KafkaProducerRequest request = KafkaProducerRequest.create(record, producer, bootstrapServers);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return sendFn.apply(record, callback);
     }
@@ -96,13 +98,16 @@ public class KafkaProducerTelemetry {
   }
 
   private class ProducerCallback implements Callback {
-    private final Callback callback;
+    @Nullable private final Callback callback;
     private final Context parentContext;
     private final Context context;
     private final KafkaProducerRequest request;
 
     ProducerCallback(
-        Callback callback, Context parentContext, Context context, KafkaProducerRequest request) {
+        @Nullable Callback callback,
+        Context parentContext,
+        Context context,
+        KafkaProducerRequest request) {
       this.callback = callback;
       this.parentContext = parentContext;
       this.context = context;

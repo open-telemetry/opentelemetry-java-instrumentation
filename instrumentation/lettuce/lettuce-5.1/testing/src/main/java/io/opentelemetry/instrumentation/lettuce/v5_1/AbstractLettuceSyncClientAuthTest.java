@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -23,12 +24,12 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +40,10 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
   void setUp() throws UnknownHostException {
     redisServer = redisServer.withCommand("redis-server", "--requirepass password");
     redisServer.start();
+    // Set back so other tests don't fail due to NOAUTH error.
+    cleanup.deferAfterAll(
+        () -> redisServer = redisServer.withCommand("redis-server", "--requirepass \"\""));
+    cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
     ip = InetAddress.getByName(host).getHostAddress();
@@ -46,20 +51,12 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
     redisClient = createClient(embeddedDbUri);
+    cleanup.deferAfterAll(redisClient::shutdown);
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
   }
 
-  @AfterAll
-  static void cleanUp() {
-    redisClient.shutdown();
-    redisServer.stop();
-
-    // Set back so other tests don't fail due to NOAUTH error
-    redisServer = redisServer.withCommand("redis-server", "--requirepass \"\"");
-  }
-
   @Test
-  void testAuthCommand() throws Exception {
+  void testAuthCommand() throws ReflectiveOperationException {
     Class<?> commandsClass = RedisCommands.class;
     Method authMethod;
     // the auth() argument type changed between 5.x -> 6.x
@@ -69,11 +66,13 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
       authMethod = commandsClass.getMethod("auth", CharSequence.class);
     }
 
-    String result = (String) authMethod.invoke(redisClient.connect().sync(), "password");
+    StatefulRedisConnection<String, String> testConnection = redisClient.connect();
+    cleanup.deferCleanup(testConnection);
+    String result = (String) authMethod.invoke(testConnection.sync(), "password");
 
     assertThat(result).isEqualTo("OK");
 
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       testing()
           .waitAndAssertTraces(
               trace ->

@@ -112,7 +112,7 @@ public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
                     if (Type.getInternalName(IndyBootstrapDispatcher.class)
                         .equals(bootstrapMethodHandle.getOwner())) {
 
-                      String adviceClassName = (String) bootstrapMethodArguments[3];
+                      String adviceClassName = (String) bootstrapMethodArguments[2];
                       String forwardClassDotName =
                           classLoader == null
                               ? bootForwardClassPackage + ".Forward$$" + counter.incrementAndGet()

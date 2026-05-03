@@ -7,7 +7,6 @@ muzzle {
     group.set("redis.clients")
     module.set("jedis")
     versions.set("[4.0.0-beta1,)")
-    skip("jedis-3.6.2")
     assertInverse.set(true)
   }
 }
@@ -18,7 +17,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+  implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
   testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))

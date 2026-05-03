@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -39,6 +40,7 @@ class PekkoDispatcherInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class DispatchEnvelopeAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterDispatch(@Advice.Argument(1) Envelope envelope) {
       Context context = Java8BytecodeBridge.currentContext();
@@ -52,8 +54,8 @@ class PekkoDispatcherInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exitDispatch(
         @Advice.Argument(1) Envelope envelope,
-        @Advice.Enter PropagatedContext propagatedContext,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Enter @Nullable PropagatedContext propagatedContext,
+        @Advice.Thrown @Nullable Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
           propagatedContext, throwable, ENVELOPE_PROPAGATED_CONTEXT, envelope);
     }

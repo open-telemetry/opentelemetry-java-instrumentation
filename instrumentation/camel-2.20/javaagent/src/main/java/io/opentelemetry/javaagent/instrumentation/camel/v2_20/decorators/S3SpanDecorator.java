@@ -1,0 +1,21 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators;
+
+import io.opentelemetry.api.trace.SpanKind;
+
+class S3SpanDecorator extends BaseSpanDecorator {
+
+  @Override
+  public SpanKind getInitiatorSpanKind() {
+    return SpanKind.INTERNAL;
+  }
+
+  @Override
+  public SpanKind getReceiverSpanKind() {
+    return SpanKind.INTERNAL;
+  }
+}

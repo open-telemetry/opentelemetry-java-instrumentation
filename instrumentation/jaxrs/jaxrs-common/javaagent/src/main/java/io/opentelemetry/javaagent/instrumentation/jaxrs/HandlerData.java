@@ -22,11 +22,11 @@ public abstract class HandlerData {
     this.method = method;
   }
 
-  public Class<?> codeClass() {
+  Class<?> codeClass() {
     return target;
   }
 
-  public String methodName() {
+  String methodName() {
     return method.getName();
   }
 
@@ -120,7 +120,7 @@ public abstract class HandlerData {
     return null;
   }
 
-  private static String buildSpanName(String classPath, String methodPath) {
+  private static String buildSpanName(@Nullable String classPath, @Nullable String methodPath) {
     StringBuilder spanNameBuilder = new StringBuilder();
     boolean skipSlash = false;
     if (classPath != null) {

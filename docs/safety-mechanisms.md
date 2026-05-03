@@ -22,9 +22,15 @@ Instrumentation tests are generally run against the lowest version of a library 
 to ensure a baseline against users with old dependency versions. Due to the nature of the agent
 and locations where we instrument private APIs, the agent may fail on a newly released version
 of the library. We run instrumentation tests additionally against the latest version of the
-library, as fetched from Maven, as part of a nightly build. If a new version of a library will
-not work with the agent, we find out through this build and can address it by the next release
-of the agent.
+library as part of pull request builds. If a new version of a library will not work with the
+agent, we find out through this build and can address it by the next release of the agent.
+
+### Version pinning
+
+Latest dep test versions are pinned in `.github/config/latest-dep-versions.json` so that
+builds are reproducible — the same commit always resolves the same dependency versions.
+A daily CI workflow updates this file by resolving the actual latest versions from Maven Central.
+This prevents flaky CI failures caused by a new library version being released mid-build.
 
 ## Muzzle compile time checks
 
@@ -40,6 +46,11 @@ app such as `NoSuchMethodError`. We cannot check every single version of every l
 would be too slow and wasteful of contributed resources. But by selecting random versions every
 build, over time we can be confident that we know the agent can be used on all versions of a library
 without causing linkage errors due to missing references.
+
+Muzzle version ranges with open upper bounds (e.g. `[4.1,)`) are capped using the same pinned
+versions from `.github/config/latest-dep-versions.json` described in the
+[latest dep tests](#latest-dep-tests) section. This prevents muzzle failures caused by a newly
+released library version that the instrumentation has not been updated for yet.
 
 ## Muzzle runtime checks
 

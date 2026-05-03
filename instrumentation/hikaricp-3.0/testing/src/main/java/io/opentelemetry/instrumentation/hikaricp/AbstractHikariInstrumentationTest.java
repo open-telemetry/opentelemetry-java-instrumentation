@@ -34,11 +34,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractHikariInstrumentationTest {
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hikaricp-3.0";
 
-  @Mock DataSource dataSourceMock;
-  @Mock Connection connectionMock;
-  @Mock IMetricsTracker userMetricsMock;
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  @Mock private DataSource dataSourceMock;
+  @Mock private Connection connectionMock;
+  @Mock private IMetricsTracker userMetricsMock;
 
   protected abstract InstrumentationExtension testing();
 
@@ -54,15 +57,13 @@ public abstract class AbstractHikariInstrumentationTest {
     hikariDataSource.setDataSource(dataSourceMock);
     configure(hikariDataSource, null);
 
-    cleanup.deferCleanup(hikariDataSource);
-
     // when
     Connection hikariConnection = hikariDataSource.getConnection();
     MILLISECONDS.sleep(100);
     hikariConnection.close();
 
     // then
-    DbConnectionPoolMetricsAssertions.create(testing(), "io.opentelemetry.hikaricp-3.0", "testPool")
+    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "testPool")
         .disableMaxIdleConnections()
         // no timeouts happen during this test
         .disableConnectionTimeouts()
@@ -79,24 +80,22 @@ public abstract class AbstractHikariInstrumentationTest {
     // then
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.hikaricp-3.0",
+            INSTRUMENTATION_NAME,
             emitStableDatabaseSemconv()
                 ? "db.client.connection.count"
                 : "db.client.connections.usage",
             AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.hikaricp-3.0",
+            INSTRUMENTATION_NAME,
             "db.client.connections.idle.min",
             AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.hikaricp-3.0",
-            "db.client.connections.max",
-            AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME, "db.client.connections.max", AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.hikaricp-3.0",
+            INSTRUMENTATION_NAME,
             "db.client.connections.pending_requests",
             AbstractIterableAssert::isEmpty);
   }
@@ -120,8 +119,7 @@ public abstract class AbstractHikariInstrumentationTest {
     hikariConnection.close();
 
     // then
-    DbConnectionPoolMetricsAssertions.create(
-            testing(), "io.opentelemetry.hikaricp-3.0", "anotherTestPool")
+    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "anotherTestPool")
         .disableMaxIdleConnections()
         // no timeouts happen during this test
         .disableConnectionTimeouts()
@@ -156,10 +154,9 @@ public abstract class AbstractHikariInstrumentationTest {
     Exception thrown = catchException(hikariDataSource::getConnection);
 
     // then
-    assertThat(thrown).isNotNull();
+    assertThat(thrown).isInstanceOf(SQLException.class);
 
-    DbConnectionPoolMetricsAssertions.create(
-            testing(), "io.opentelemetry.hikaricp-3.0", "timingOutPool")
+    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "timingOutPool")
         .disableMaxIdleConnections()
         // the connection is not even acquired
         .disableUseTime()

@@ -54,6 +54,7 @@ public final class R2dbcSqlCommenterUtil {
   }
 
   @SuppressWarnings("unchecked") // casting to same type as used in storeQuery
+  @Nullable
   private static Map<String, String> getOriginalQueryMap(ValueStore valueStore) {
     return valueStore.get(KEY_ORIGINAL_QUERY_MAP, Map.class);
   }

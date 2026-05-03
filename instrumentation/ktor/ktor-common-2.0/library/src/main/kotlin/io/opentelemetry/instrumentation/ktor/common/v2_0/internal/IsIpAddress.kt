@@ -9,7 +9,7 @@ import java.util.regex.Pattern
 
 // Source: Regular Expressions Cookbook 2nd edition - 8.17.
 // Matching IPv6 Addresses
-private val ipv6 = Pattern.compile(
+private val IPV6 = Pattern.compile(
   // Non Compressed
   "^(?:(?:(?:[A-F0-9]{1,4}:){6}" +
     // Compressed with at most 6 colons
@@ -37,9 +37,9 @@ private val ipv6 = Pattern.compile(
 
 // Source: Regular Expressions Cookbook 2nd edition - 8.16.
 // Matching IPv4 Addresses
-private val ipv4 = Pattern.compile(
+private val IPV4 = Pattern.compile(
   "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}" +
     "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\$",
 )
 
-fun isIpAddress(address: String): Boolean = ipv4.matcher(address).matches() || ipv6.matcher(address).matches()
+fun isIpAddress(address: String): Boolean = IPV4.matcher(address).matches() || IPV6.matcher(address).matches()

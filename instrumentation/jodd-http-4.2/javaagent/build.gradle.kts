@@ -15,7 +15,6 @@ dependencies {
   // 4.1.1 is the first version with HttpBase#headerOverwrite used by header injection
   library("org.jodd:jodd-http:4.1.1")
 
-  testImplementation(project(":instrumentation:jodd-http-4.2:javaagent"))
   testImplementation(project(":instrumentation-api-incubator"))
 }
 

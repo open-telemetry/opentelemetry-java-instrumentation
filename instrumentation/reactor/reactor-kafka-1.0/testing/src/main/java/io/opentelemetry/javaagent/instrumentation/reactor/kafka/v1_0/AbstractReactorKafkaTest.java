@@ -65,16 +65,19 @@ public abstract class AbstractReactorKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractReactorKafkaTest.class);
 
-  private static final boolean receiveTelemetryEnabled =
+  private static final boolean RECEIVE_TELEMETRY_ENABLED =
       Boolean.getBoolean("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
+  private static final boolean HAS_CONSUMER_GROUP = Boolean.getBoolean("hasConsumerGroup");
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static KafkaContainer kafka;
-  protected static KafkaSender<String, String> sender;
+  private static KafkaContainer kafka;
+  private static KafkaSender<String, String> sender;
   protected static KafkaReceiver<String, String> receiver;
 
   @BeforeAll
@@ -149,7 +152,7 @@ public abstract class AbstractReactorKafkaTest {
     Flux<?> producer = sender.send(Flux.just(record));
     testing.runWithSpan("producer", () -> producer.blockLast(Duration.ofSeconds(30)));
 
-    if (receiveTelemetryEnabled) {
+    if (RECEIVE_TELEMETRY_ENABLED) {
       assertWithReceiveTelemetry(record);
     } else {
       assertWithoutReceiveTelemetry(record);
@@ -207,7 +210,7 @@ public abstract class AbstractReactorKafkaTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
+  private static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -217,6 +220,10 @@ public abstract class AbstractReactorKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+      assertions.add(
+          equalTo(stringKey("messaging.kafka.bootstrap.servers"), kafka.getBootstrapServers()));
+    }
     String messageKey = record.key();
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
@@ -225,7 +232,7 @@ public abstract class AbstractReactorKafkaTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static List<AttributeAssertion> receiveAttributes(String topic) {
+  private static List<AttributeAssertion> receiveAttributes(String topic) {
     ArrayList<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -234,15 +241,14 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_OPERATION, "receive"),
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
-    if (Boolean.getBoolean("hasConsumerGroup")) {
+    if (HAS_CONSUMER_GROUP) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
     return assertions;
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static List<AttributeAssertion> processAttributes(
-      ProducerRecord<String, String> record) {
+  private static List<AttributeAssertion> processAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -252,10 +258,10 @@ public abstract class AbstractReactorKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
-    if (Boolean.getBoolean("hasConsumerGroup")) {
+    if (HAS_CONSUMER_GROUP) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
-    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }

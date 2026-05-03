@@ -95,7 +95,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
 
       - name: Build and publish artifacts
         env:
@@ -124,7 +124,7 @@ jobs:
           cp javaagent/build/spdx/*.spdx.json sboms
           zip opentelemetry-java-instrumentation-SBOM.zip sboms/*
 
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         name: Upload SBOMs
         with:
           name: opentelemetry-java-instrumentation-SBOM
@@ -134,23 +134,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sdk_version=$(grep -Po "val otelSdkVersion = \"\K[0-9]+.[0-9]+.[0-9]+" dependencyManagement/build.gradle.kts)
-
-          # conditional blocks not indented because of the heredoc
-          if [[ $VERSION == *.0 ]]; then
-          cat > /tmp/release-notes.txt << EOF
-          This release targets the OpenTelemetry SDK $sdk_version.
-
-          Note that many artifacts have the \`-alpha\` suffix attached to their version number, reflecting that they are still alpha quality and will continue to have breaking changes. Please see the [VERSIONING.md](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/VERSIONING.md#opentelemetry-java-instrumentation-versioning) for more details.
-
-          EOF
-          else
-          cat > /tmp/release-notes.txt << EOF
-          This is a patch release on the previous $PRIOR_VERSION release, fixing the issue(s) below.
-
-          EOF
-          fi
-
           # CHANGELOG_SECTION.md is also used at the end of the release workflow
           # for copying the change log updates to main
           sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
@@ -159,7 +142,7 @@ jobs:
           # the complex perl regex is needed because markdown docs render newlines as soft wraps
           # while release notes render them as line breaks
           perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g' /tmp/CHANGELOG_SECTION.md \
-            >> /tmp/release-notes.txt
+            > /tmp/release-notes.txt
 
           # conditional block not indented because of the heredoc
           if [[ $VERSION == *.0 ]]; then
@@ -259,7 +242,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@39e147cb9de83bb9910b8ef8bd7fff0ee20fcd6f # v6.0.1
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
 
       - name: Update apidiff baseline
         env:
@@ -267,12 +250,14 @@ jobs:
           PRIOR_VERSION: ${{ needs.release.outputs.prior-version }}
         run: |
           ./gradlew japicmp -PapiBaseVersion=$PRIOR_VERSION -PapiNewVersion=$VERSION
+          # Pin the apidiff baseline to the just-released version.
+          sed -i "s/^val apidiffBaselineVersion = .*/val apidiffBaselineVersion = \"$VERSION\"/" version.gradle.kts
           ./gradlew --refresh-dependencies japicmp
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}
@@ -291,6 +276,7 @@ jobs:
           git checkout -b $branch
           git add CHANGELOG.md
           git add docs/apidiffs
+          git add version.gradle.kts
           git commit -m "$message"
           git push --set-upstream origin $branch
           gh pr create --title "$message" \

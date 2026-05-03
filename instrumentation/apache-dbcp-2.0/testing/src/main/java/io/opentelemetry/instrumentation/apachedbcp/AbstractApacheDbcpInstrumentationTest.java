@@ -24,8 +24,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public abstract class AbstractApacheDbcpInstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-dbcp-2.0";
 
-  @Mock Driver driverMock;
-  @Mock Connection connectionMock;
+  @Mock private Driver driverMock;
+  @Mock private Connection connectionMock;
 
   protected abstract InstrumentationExtension testing();
 

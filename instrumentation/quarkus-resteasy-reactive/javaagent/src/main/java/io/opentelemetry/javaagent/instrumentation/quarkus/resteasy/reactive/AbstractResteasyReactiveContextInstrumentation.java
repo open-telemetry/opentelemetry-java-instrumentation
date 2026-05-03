@@ -24,9 +24,7 @@ class AbstractResteasyReactiveContextInstrumentation implements TypeInstrumentat
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("run"),
-        AbstractResteasyReactiveContextInstrumentation.class.getName() + "$RunAdvice");
+    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$RunAdvice");
   }
 
   @SuppressWarnings("unused")

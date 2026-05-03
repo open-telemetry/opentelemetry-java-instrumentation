@@ -30,7 +30,7 @@ public abstract class ServerTestController {
       // Try Spring 6+ signature first (HttpStatusCode interface)
       Class<?> httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatusCode");
       method = ServerHttpResponse.class.getMethod("setStatusCode", httpStatusCodeClass);
-    } catch (ClassNotFoundException | NoSuchMethodException e) {
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       // Fall back to Spring 5.x signature (HttpStatus enum)
       try {
         method = ServerHttpResponse.class.getMethod("setStatusCode", HttpStatus.class);

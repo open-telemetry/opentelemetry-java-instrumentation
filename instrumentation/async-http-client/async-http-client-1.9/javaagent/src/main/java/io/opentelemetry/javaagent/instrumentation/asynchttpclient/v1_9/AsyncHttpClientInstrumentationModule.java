@@ -11,7 +11,7 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.ResponseInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.v1_8.ResponseInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -23,9 +23,8 @@ public class AsyncHttpClientInstrumentationModule extends InstrumentationModule 
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed(
-        // added in 1.9.0
-        "com.ning.http.client.uri.Uri");
+    // added in 1.9.0
+    return hasClassesNamed("com.ning.http.client.uri.Uri");
   }
 
   @Override

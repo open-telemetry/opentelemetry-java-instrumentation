@@ -28,6 +28,8 @@ public abstract class JedisRequest {
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jedis"));
 
+  @Nullable private SocketAddress remoteSocketAddress;
+
   public static JedisRequest create(ProtocolCommand command, List<byte[]> args) {
     return new AutoValue_JedisRequest(command, args);
   }
@@ -64,8 +66,6 @@ public abstract class JedisRequest {
   public String getQueryText() {
     return sanitizer.sanitize(getOperationName(), getArgs());
   }
-
-  @Nullable private SocketAddress remoteSocketAddress;
 
   public void setSocket(@Nullable Socket socket) {
     if (socket != null) {

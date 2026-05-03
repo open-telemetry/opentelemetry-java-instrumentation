@@ -1,0 +1,65 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.finatra.v2_9;
+
+import com.twitter.finagle.http.Response;
+import com.twitter.finatra.http.contexts.RouteInfo;
+import com.twitter.finatra.http.internal.routing.Route;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ClassNames;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import javax.annotation.Nullable;
+
+public class FinatraSingletons {
+
+  public static final VirtualField<Response, Throwable> THROWABLE =
+      VirtualField.find(Response.class, Throwable.class);
+
+  private static final VirtualField<Route, Class<?>> callbackClassField =
+      VirtualField.find(Route.class, Class.class);
+
+  private static final Instrumenter<FinatraRequest, Void> instrumenter;
+
+  static {
+    FinatraCodeAttributesGetter codeAttributesGetter = new FinatraCodeAttributesGetter();
+    instrumenter =
+        Instrumenter.<FinatraRequest, Void>builder(
+                GlobalOpenTelemetry.get(),
+                "io.opentelemetry.finatra-2.9",
+                request ->
+                    request.controllerClass() != null
+                        ? ClassNames.simpleName(request.controllerClass())
+                        : "<unknown>")
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .buildInstrumenter();
+  }
+
+  public static Instrumenter<FinatraRequest, Void> instrumenter() {
+    return instrumenter;
+  }
+
+  public static void updateServerSpanName(Context context, RouteInfo routeInfo) {
+    HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, routeInfo.path());
+  }
+
+  public static void setCallbackClass(Route route, Class<?> clazz) {
+    callbackClassField.set(route, clazz);
+  }
+
+  @Nullable
+  public static Class<?> getCallbackClass(Route route) {
+    return callbackClassField.get(route);
+  }
+
+  private FinatraSingletons() {}
+}

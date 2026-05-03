@@ -1,8 +1,10 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
+    "github>grafana/flint#v0.21.0",
     'config:best-practices',
     'helpers:pinGitHubActionDigestsToSemver',
+    ':semanticCommits',
   ],
   ignorePaths: [
     'instrumentation/**',
@@ -196,6 +198,13 @@
         'com.fasterxml.jackson.core:**',
       ],
     },
+    {
+      groupName: 'graalvm buildtools packages',
+      matchPackageNames: [
+        'org.graalvm.buildtools:**',
+        'org.graalvm.buildtools.native',
+      ],
+    },
 
     // ── Disabled updates (Java version compatibility) ──────────────────
 
@@ -377,31 +386,22 @@
     },
   ],
   customManagers: [
-    {
-      // keep SHA-pinned raw.githubusercontent.com URLs in mise.toml up to date
-      customType: 'regex',
-      datasourceTemplate: 'github-tags',
-      managerFilePatterns: [
-        '/^mise\\.toml$/',
-      ],
-      matchStrings: [
-        'https://raw\\.githubusercontent\\.com/(?<depName>[^/]+/[^/]+)/(?<currentDigest>[a-f0-9]{40})/.*#\\s*(?<currentValue>v\\S+)',
-      ],
-    },
-    {
-      customType: 'regex',
-      datasourceTemplate: 'docker',
-      managerFilePatterns: [
-        '.github/workflows/**',
-        '**/*.gradle.kts',
-      ],
-      matchStrings: [
-        '(?<currentValue>\\d+) # renovate\\(java-version\\)',
-        '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
-      ],
+// commented out to see whether weekly update passes without this block
+//    {
+//      customType: 'regex',
+//      datasourceTemplate: 'docker',
+//      managerFilePatterns: [
+//        '.github/workflows/**',
+//        '**/*.gradle.kts',
+//      ],
+//      matchStrings: [
+//        '(?<currentValue>\\d+) # renovate\\(java-version\\)',
+//        '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
+//      ],
       // using zulu because new releases get published quickly
-      depNameTemplate: 'azul/zulu-openjdk',
-    },
+//      depNameTemplate: 'azul/zulu-openjdk',
+//      extractVersionTemplate: '^(?<version>\\d+)',
+//    },
     {
       customType: 'regex',
       datasourceTemplate: 'docker',

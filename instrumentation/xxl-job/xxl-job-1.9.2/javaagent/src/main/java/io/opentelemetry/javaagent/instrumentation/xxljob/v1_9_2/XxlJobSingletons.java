@@ -20,7 +20,7 @@ public class XxlJobSingletons {
       XxlJobHelper.create(
           instrumenter,
           object -> {
-            if (object != null && (object instanceof ReturnT)) {
+            if (object instanceof ReturnT) {
               ReturnT<?> result = (ReturnT<?>) object;
               return result.getCode() == ReturnT.FAIL_CODE;
             }
@@ -31,7 +31,7 @@ public class XxlJobSingletons {
     return helper;
   }
 
-  @SuppressWarnings({"Unused", "ReturnValueIgnored"})
+  @SuppressWarnings({"unused", "ReturnValueIgnored"})
   private static void limitSupportedVersions() {
     // GLUE_POWERSHELL was added in 1.9.2. Using this constant here ensures that muzzle will disable
     // this instrumentation on earlier versions where this constant does not exist.

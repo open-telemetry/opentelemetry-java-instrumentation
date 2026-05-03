@@ -21,15 +21,17 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation` | `javaagent-module-patterns.md` |
-| Javaagent | Singletons patterns | `*Singletons` holder classes, singleton accessors, callers of singleton accessors/fields | `javaagent-singletons-patterns.md` |
+| Javaagent | Singletons patterns | `*Singletons`, `*SpanNaming`, and similar holder classes; singleton accessors; callers of singleton accessors/fields | `javaagent-singletons-patterns.md` |
 | Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
-| Testing | General test patterns | Test files in scope — assertion style, resource cleanup, attribute assertions | `testing-general-patterns.md` |
+| Testing | General test patterns | Test files in scope — assertion style, test method signatures and throws clauses, resource cleanup, attribute assertions | `testing-general-patterns.md` |
 | Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties | `testing-experimental-flags.md` |
+| Testing | Flag-gated / mode-dependent assertion shape (experimental, `testLatestDeps`, semconv) — shared accessor (`testLatestDeps()`, `emitStable*Semconv()`) or `EXPERIMENTAL_ATTRIBUTES` constant, inline ternary with `null` for "absent" | Test classes branching on `EXPERIMENTAL_ATTRIBUTES`, `testLatestDeps()`, or `emitOld*`/`emitStable*` | `testing-general-patterns.md` |
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
+| Config | metadata.yaml format and declarative_name conversion — Mandatory for every instrumentation module | Any instrumentation module in scope (javaagent, library, or testing) | `metadata-yaml-format.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
@@ -66,8 +68,6 @@ application, do not silently swallow it unless the failure is an expected option
   established pattern and preserves module / class logger identity.
 - Silent suppression is acceptable for expected optional-probe paths, such as classpath or
   version-detection lookups where failure is routine and logging would be noisy.
-- Keep the message action-oriented and specific (for example, "Failed to customize Netty 4.1
-  HTTP server response").
 
 ## [Style] Style Guide
 
@@ -76,6 +76,11 @@ Read and apply `docs/contributing/style-guide.md`.
 Do not flag the following patterns (common false positives):
 
 - FQCN is acceptable when class-name collision makes import impossible.
+- Do not claim that a Java non-capturing lambda or method reference allocates per
+  call. On HotSpot / OpenJDK 8+, these are cached at the `invokedynamic` call site.
+  Do not suggest hoisting such a lambda into a `private static final` field for
+  allocation/performance reasons — it is pure noise. If a PR makes that hoist,
+  flag it and recommend reverting to the in-line lambda.
 
 ## [Style] Visibility modifiers
 
@@ -85,15 +90,23 @@ still allows the code to function correctly.
 **Exception — Single public class**: If a module has only one public class then don't change it to
 package-private. Javadoc task fails when module has no public classes.**
 
-**Exception — Used from advice**: All classes and methods used from methods annotated with
-`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must be public. These methods are inlined into
-transformed classes and must be accessible from those classes, which may be in different packages.
+**Exception — Directly referenced from advice**: Classes and methods that are _directly_
+referenced from methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit` must be
+public, since the advice may be applied to classes in other packages.
+
+This applies only to **direct** references in the advice methods, not transitive ones. Helpers
+reached only from inside another helper called by the advice (for example, a same-package
+`*Singletons` accessor invoked from inside `AdviceScope.start()`) can keep package-private
+visibility. A source-level `inline = false` on the advice annotation is not a reason to widen
+visibility — the agent forcibly overrides the `inline` attribute at runtime based on the
+configured indy mode, so the source value does not determine how the advice is dispatched.
+Reason about visibility from "what does the advice method directly reference?".
 
 ## [Style] `@SuppressWarnings` Usage
 
-- Method-level `@SuppressWarnings` is preferred over class-level for tighter scope, but
-  if more than one method in the class needs the same suppression, class-level is fine.
-  Do not flag class-level `@SuppressWarnings` when multiple methods use the suppressed API.
+- Place `@SuppressWarnings` on the single member that needs it, or on the class when two
+  or more members in the class need the same suppression. Do not move an existing
+  suppression from a member to the class unless multiple members need it.
 - **Do not add `@SuppressWarnings("deprecation")` unless the build fails without it.**
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
@@ -363,13 +376,16 @@ ambiguous and the cast would otherwise be required). Do not flag those cases.
 
 ## [Semconv] Constants by Module Type
 
-- `library/src/main/`: incubating semconv constants (from
-  `io.opentelemetry.semconv.incubating`) must be copied locally as `private static final`
-  fields with a `// copied from <ClassName>` comment. Stable semconv constants (from
-  `io.opentelemetry.semconv`) may be imported directly.
+- `library/src/main/`: constants from `io.opentelemetry.semconv.incubating.*` must be
+  copied locally as `private static final` fields with a `// copied from <ClassName>`
+  comment. Constants from `io.opentelemetry.semconv.*` (stable) must be imported
+  directly via `import static` and must not be copied locally.
 - `javaagent/src/main/`: all semconv artifact constants (stable and incubating) may be used
   directly.
 - tests: all semconv artifact constants are allowed.
+
+The trigger for copying is the import package, not the constant name. Only convert an
+import to a local copy when it comes from `io.opentelemetry.semconv.incubating.*`.
 
 ## [NewModule] New Instrumentation Checklist
 
@@ -397,6 +413,13 @@ code. Flat `ConfigProperties` is only used directly in `AgentDistributionConfig`
 instrumentation enable/disable bootstrapping (`otel.instrumentation.<name>.enabled`,
 `otel.instrumentation.common.default-enabled`). All other config reads go through the
 declarative API. Do not flag `DeclarativeConfigUtil` usage as incorrect.
+
+## [Config] Mandatory metadata.yaml Review
+
+**For every instrumentation module in scope, you MUST review and update its `metadata.yaml` file.**
+
+This is mandatory regardless of whether metadata.yaml was modified in the PR. Load
+`metadata-yaml-format.md` and execute its full validation procedure for each module.
 
 ## [Testing] General Test Patterns
 

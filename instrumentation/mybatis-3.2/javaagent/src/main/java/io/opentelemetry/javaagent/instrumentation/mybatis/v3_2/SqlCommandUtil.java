@@ -12,19 +12,16 @@ import javax.annotation.Nullable;
 import org.apache.ibatis.binding.MapperMethod.SqlCommand;
 
 public class SqlCommandUtil {
-  private static final VirtualField<SqlCommand, ClassAndMethod> field =
+  private static final VirtualField<SqlCommand, ClassAndMethod> FIELD =
       VirtualField.find(SqlCommand.class, ClassAndMethod.class);
 
   public static void setClassAndMethod(SqlCommand command, Class<?> clazz, Method method) {
-    if (clazz == null || method == null) {
-      return;
-    }
-    field.set(command, ClassAndMethod.create(clazz, method.getName()));
+    FIELD.set(command, ClassAndMethod.create(clazz, method.getName()));
   }
 
   @Nullable
   public static ClassAndMethod getClassAndMethod(SqlCommand command) {
-    return field.get(command);
+    return FIELD.get(command);
   }
 
   private SqlCommandUtil() {}

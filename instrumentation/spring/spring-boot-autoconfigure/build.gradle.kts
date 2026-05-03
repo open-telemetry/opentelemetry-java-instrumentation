@@ -140,6 +140,7 @@ dependencies {
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-jdbc:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-jdbc:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-restclient:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-webclient:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-data-mongodb:4.0.0")
   add(
     "javaSpring4CompileOnly",
@@ -156,6 +157,7 @@ dependencies {
     "javaSpring4CompileOnly",
     project(":instrumentation:spring:spring-web:spring-web-3.1:library")
   )
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library"))
 }
 
 // spring 6 (spring boot 3) requires java 17
@@ -221,6 +223,7 @@ testing {
         implementation("org.springframework.boot:spring-boot-starter-test:$version")
         implementation("org.springframework.boot:spring-boot-starter-actuator:$version")
         implementation("org.springframework.boot:spring-boot-starter-web:$version")
+        implementation("org.springframework.boot:spring-boot-starter-webflux:$version")
         implementation("org.springframework.boot:spring-boot-starter-jdbc:$version")
         implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:$version")
         val springKafkaVersion = if (otelProps.testLatestDeps) "3.+" else "2.9.0"
@@ -249,9 +252,10 @@ testing {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-        val version = if (otelProps.testLatestDeps) "latest.release" else "4.0.0"
+        val version = baseVersion("4.0.0").orLatest()
         implementation("org.springframework.boot:spring-boot-starter-jdbc:$version")
         implementation("org.springframework.boot:spring-boot-restclient:$version")
+        implementation("org.springframework.boot:spring-boot-webclient:$version")
         implementation("org.springframework.boot:spring-boot-starter-kafka:$version")
         implementation("org.springframework.boot:spring-boot-starter-actuator:$version")
         implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:$version")

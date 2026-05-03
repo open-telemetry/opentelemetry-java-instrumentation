@@ -44,6 +44,7 @@ tasks {
     }
     include("**/ReactorNettyConnectionSpanTest.*")
     jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.netty.connection-telemetry.enabled=true")
   }
 
   test {

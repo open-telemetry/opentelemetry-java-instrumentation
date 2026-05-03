@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
-public class AsyncRunnableWrapper<REQUEST> implements Runnable {
+class AsyncRunnableWrapper<REQUEST> implements Runnable {
   private final ServletHelper<REQUEST, ?> helper;
   private final Runnable runnable;
   private final Context context;
@@ -19,7 +19,7 @@ public class AsyncRunnableWrapper<REQUEST> implements Runnable {
     this.context = Context.current();
   }
 
-  public static <REQUEST> Runnable wrap(ServletHelper<REQUEST, ?> helper, Runnable runnable) {
+  static <REQUEST> Runnable wrap(ServletHelper<REQUEST, ?> helper, Runnable runnable) {
     if (runnable == null || runnable instanceof AsyncRunnableWrapper) {
       return runnable;
     }

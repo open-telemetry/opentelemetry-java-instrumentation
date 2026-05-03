@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
@@ -26,6 +27,8 @@ class S3PresignerTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
@@ -34,17 +37,21 @@ class S3PresignerTest {
 
   @BeforeAll
   static void setUp() {
-    // trigger adding tracing interceptor
+    // Build a regular client once so the tracing interceptor is installed before creating
+    // the presigner. This ensures the test verifies that presigner calls leave no current
+    // span when the tracing interceptor is present.
     S3Client.builder()
         .region(Region.AP_NORTHEAST_1)
         .credentialsProvider(CREDENTIALS_PROVIDER)
-        .build();
+        .build()
+        .close();
 
     s3Presigner =
         S3Presigner.builder()
             .region(Region.AP_NORTHEAST_1)
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
+    cleanup.deferAfterAll(s3Presigner);
   }
 
   @Test

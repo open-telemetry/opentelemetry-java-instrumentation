@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -22,7 +23,7 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbNamespace(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.bucket();
+    return couchbaseRequest.getBucket();
   }
 
   @Override
@@ -49,7 +50,7 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbOperationName(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.operation();
+    return couchbaseRequest.getOperation();
   }
 
   @Override

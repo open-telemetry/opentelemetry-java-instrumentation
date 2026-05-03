@@ -12,8 +12,6 @@ muzzle {
     versions.set("[3.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("ktor-server")
-    // missing dependencies
-    skip("1.1.0", "1.1.1", "1.1.5")
   }
   pass {
     group.set("io.ktor")
@@ -21,8 +19,6 @@ muzzle {
     versions.set("[3.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("ktor-client")
-    // missing dependencies
-    skip("1.1.0", "1.1.1")
   }
 }
 
@@ -63,6 +59,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+    systemProperty("metadataConfig", "otel.instrumentation.http.server.emit-experimental-telemetry=true")
   }
 
   val testStableSemconv by registering(Test::class) {

@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jsf.javax.JsfRequest;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.JsfRequest;
 import javax.annotation.Nullable;
 import javax.faces.event.ActionEvent;
 import net.bytebuddy.asm.Advice;
@@ -58,7 +58,7 @@ class ActionListenerImplInstrumentation implements TypeInstrumentation {
         return new AdviceScope(request, context, scope);
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, request, null, throwable);
       }

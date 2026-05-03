@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -66,7 +65,7 @@ class OpenTelemetryConsumerInterceptorTest {
   }
 
   @Test
-  void serializableConfig() throws IOException, ClassNotFoundException {
+  void serializableConfig() throws Exception {
     SerializationTestUtil.testSerialize(
         consumerConfig(),
         OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER);

@@ -12,7 +12,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
-@SuppressWarnings("unused")
 @AutoService(InstrumentationModule.class)
 public class JexInstrumentationModule extends InstrumentationModule {
 

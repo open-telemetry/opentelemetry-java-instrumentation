@@ -41,8 +41,8 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   private static final Logger logger =
       Logger.getLogger(OpenTelemetryHandlerMappingFilter.class.getName());
 
-  private static final MethodHandle usesPathPatternsMh = getUsesPathPatternsMh();
-  private static final MethodHandle parseAndCacheMh = parseAndCacheMh();
+  @Nullable private static final MethodHandle usesPathPatternsMh = getUsesPathPatternsMh();
+  @Nullable private static final MethodHandle parseAndCacheMh = parseAndCacheMh();
 
   private final HttpServerRouteGetter<HttpServletRequest> serverSpanName =
       (context, request) -> {
@@ -160,6 +160,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     return Ordered.HIGHEST_PRECEDENCE + 1;
   }
 
+  @Nullable
   private static MethodHandle getUsesPathPatternsMh() {
     // Method added in spring 5.3
     try {
@@ -182,6 +183,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     }
   }
 
+  @Nullable
   private static MethodHandle parseAndCacheMh() {
     // ServletRequestPathUtils added in spring 5.3
     try {

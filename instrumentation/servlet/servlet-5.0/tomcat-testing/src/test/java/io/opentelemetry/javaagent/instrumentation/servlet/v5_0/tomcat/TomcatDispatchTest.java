@@ -11,6 +11,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TomcatDispatchTest extends BaseTomcatDispatchTest {
   @RegisterExtension
-  protected static final InstrumentationExtension testing =
+  private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 }

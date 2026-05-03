@@ -30,7 +30,6 @@ import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -68,13 +67,13 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             + "    emit(meta.id, null);"
                             + " }"
                             + "}"))));
-    CouchbaseConfig.environment = environment;
-    CouchbaseConfig.bucketSettings = bucketCouchbase;
+    CouchbaseConfig.configure(environment, bucketCouchbase);
 
     // Close all buckets and disconnect
     couchbaseCluster.disconnect();
 
     applicationContext = new AnnotationConfigApplicationContext(CouchbaseConfig.class);
+    cleanup.deferAfterAll(applicationContext);
     repository = applicationContext.getBean(TestRepository.class);
   }
 
@@ -82,11 +81,6 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
     testing.clearData();
     repository.deleteAll();
     testing.waitForTraces(2);
-  }
-
-  @AfterAll
-  void cleanUp() {
-    applicationContext.close();
   }
 
   protected abstract TestDocument findById(TestRepository repository, String id);

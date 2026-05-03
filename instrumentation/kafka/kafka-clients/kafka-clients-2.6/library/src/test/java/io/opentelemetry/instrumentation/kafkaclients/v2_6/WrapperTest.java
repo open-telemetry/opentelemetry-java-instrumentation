@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ class WrapperTest extends AbstractWrapperTest {
   }
 
   @Override
-  void assertTraces(boolean testHeaders) {
+  void assertTraces(boolean testHeaders, boolean testExperimental) {
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace -> {
@@ -50,7 +51,8 @@ class WrapperTest extends AbstractWrapperTest {
                   span.hasName(SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(sendAttributes(testHeaders)),
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(testHeaders, testExperimental)),
               span ->
                   span.hasName("producer callback")
                       .hasKind(SpanKind.INTERNAL)
@@ -76,7 +78,8 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpanContext.get()))
-                        .hasAttributesSatisfyingExactly(processAttributes(greeting, testHeaders)),
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(greeting, testHeaders, testExperimental)),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
@@ -84,7 +87,8 @@ class WrapperTest extends AbstractWrapperTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
+  protected static List<AttributeAssertion> sendAttributes(
+      boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -96,13 +100,21 @@ class WrapperTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+          equalTo(
+              MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
+    }
+    if (testExperimental) {
+      assertions.add(
+          satisfies(
+              stringKey("messaging.kafka.bootstrap.servers"),
+              val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
     }
     return assertions;
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
+  private static List<AttributeAssertion> processAttributes(
+      String greeting, boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -112,12 +124,16 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(UTF_8).length),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
-                satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))));
     if (testHeaders) {
       assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+          equalTo(
+              MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
+    }
+    if (testExperimental) {
+      assertions.add(
+          satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }
     return assertions;
   }
@@ -135,7 +151,8 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (testHeaders) {
       assertions.add(
-          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
+          equalTo(
+              MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
   }

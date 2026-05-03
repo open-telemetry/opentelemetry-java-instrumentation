@@ -28,6 +28,7 @@ Always load:
 
 - `docs/contributing/style-guide.md`
 - `knowledge/general-rules.md` — review checklist and core rules
+- `knowledge/metadata-yaml-format.md` — **MANDATORY** for any instrumentation module
 
 Load other knowledge files only when their scope trigger applies.
 Use the **Knowledge File** column in the checklist table.
@@ -103,6 +104,10 @@ Scope rules:
 
 ### Phase 3: Review and Fix
 
+**Before reviewing source files**: For each instrumentation module in scope, execute the full
+`metadata-yaml-format.md` validation procedure on its `metadata.yaml`. This is mandatory
+regardless of whether metadata.yaml was modified in the PR.
+
 For each file in scope:
 
 1. Skip non-reviewable files:
@@ -134,6 +139,10 @@ Auto-fix boundaries:
 
 - Safe to fix:
   - import cleanup or direct style-guide conformance
+    **Extra step for shared/common modules**: when the modified file resides in a module
+    whose directory name contains `-common`, or whose Gradle path ends with `:testing`,
+    `:library`, or `:bootstrap`, **first search all sibling modules** under the same
+    instrumentation parent for callers of the type or member before applying the fix.
   - normalization of existing `@SuppressWarnings` syntax or placement, but preserve any
     accurate explanatory comment attached to the suppression instead of deleting it as
     style noise
@@ -147,6 +156,8 @@ Auto-fix boundaries:
     already valid AssertJ assertions; do not wrap them in `assertThat(...).isTrue()`
   - AssertJ `.as(...)` descriptions and `.withFailMessage(...)` in tests — remove them
     and prefer direct assertions whose failure output already exposes the unexpected values
+  - `@Test` method `throws` clauses — limit them to a single exception type and keep that type as
+    specific as possible.
   - deterministic semconv constant handling aligned with repository rules
   - missing test-task wiring patterns with clear canonical form
   - missing `testInstrumentation` cross-version references — when a javaagent module belongs
@@ -167,27 +178,27 @@ Auto-fix boundaries:
     but absent from the current module's check (or vice versa) reveal a version boundary —
     the class was likely added or removed between versions.
     Then determine the comment form for each class:
-   **Positive floor class** (proves "at least version X"): look up when the class was
-   **introduced** → comment `// added in X.Y`.
-   **Positive ceiling class** (proves "not yet version Y"): look up when the class was
-   **removed** → comment `// removed in Y.Z` (meaning: its presence here ensures we
-   don't match version Y.Z+ where a different module takes over).
-   **Negated exclusion class** in `not(hasClassesNamed(...))`: look up when the class was
-   **introduced** → comment `// added in Y.Z`, because that first appearance begins the
-   excluded version range.
-   **Single positive class that provides both bounds**: include both facts in one comment,
-   e.g. `// added in X.Y, removed in Y.Z`.
-    A ceiling class might have been *introduced* much earlier than the module's target version.
-   Do not use `// added in` for a positive ceiling class — that is misleading. The relevant
-   fact is when it was **removed**. But for a negated exclusion class, `// added in` is the
-   correct form because the class's introduction is exactly what starts excluding newer versions.
-    Validate the version in the comment before adding or requesting it. Do not guess the
-    version from the module name alone; confirm it with repository or upstream evidence.
-    Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,
-    module directory names, existing code comments, Javadoc/release notes.
-    Do NOT add a `classLoaderMatcher()` override where one does not already exist —
-    this method is only for version-boundary detection when muzzle is insufficient,
-    not for optimization (use `TypeInstrumentation.classLoaderOptimization()` instead)
+  **Positive floor class** (proves "at least version X"): look up when the class was
+  **introduced** → comment `// added in X.Y`.
+  **Positive ceiling class** (proves "not yet version Y"): look up when the class was
+  **removed** → comment `// removed in Y.Z` (meaning: its presence here ensures we
+  don't match version Y.Z+ where a different module takes over).
+  **Negated exclusion class** in `not(hasClassesNamed(...))`: look up when the class was
+  **introduced** → comment `// added in Y.Z`, because that first appearance begins the
+  excluded version range.
+  **Single positive class that provides both bounds**: include both facts in one comment,
+  e.g. `// added in X.Y, removed in Y.Z`.
+  A ceiling class might have been *introduced* much earlier than the module's target version.
+  Do not use `// added in` for a positive ceiling class — that is misleading. The relevant
+  fact is when it was **removed**. But for a negated exclusion class, `// added in` is the
+  correct form because the class's introduction is exactly what starts excluding newer versions.
+  Validate the version in the comment before adding or requesting it. Do not guess the
+  version from the module name alone; confirm it with repository or upstream evidence.
+  Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,
+  module directory names, existing code comments, Javadoc/release notes.
+  Do NOT add a `classLoaderMatcher()` override where one does not already exist —
+  this method is only for version-boundary detection when muzzle is insufficient,
+  not for optimization (use `TypeInstrumentation.classLoaderOptimization()` instead)
   - redundant `isMethod()` in method matchers inside `transform()` when the matcher already
     names a specific, non-empty method (e.g., `isMethod().and(named("execute"))` →
     `named("execute")`). Do not remove `isMethod()` when the name could be empty —
@@ -222,6 +233,10 @@ Auto-fix boundaries:
     readers/writers/streams/response bodies).
     Do not apply this conversion in non-JUnit helper methods, `@BeforeAll`, or shared
     setup code.
+  - class-scoped resources created in `@BeforeAll` or other shared setup — prefer
+    `AutoCleanupExtension` with `deferAfterAll(...)` over nested `@AfterAll` cleanup
+    chains. Do not introduce or keep `AutoCleanupExtension` solely for a single
+    `deferAfterAll(...)` call — use a plain `@AfterAll` instead.
   - `hasAttributesSatisfying(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
     variant silently ignores unexpected attributes)
@@ -290,6 +305,12 @@ Auto-fix boundaries:
     add the correctly named/shaped method with the implementation, deprecate the old method
     to delegate to the new one, and add a `@deprecated` Javadoc tag naming the replacement.
     For stable modules, annotate instead: the fix requires a broader compatibility decision.
+    **Exception — javaagent modules**: javaagent modules (Gradle path ends with `:javaagent`,
+    including shared `-common` javaagent modules) are bundled into the agent jar and are not
+    a public API. Do **not** apply a deprecation cycle; rename or change the API directly
+    and update all in-repo callers in the same commit. A deprecation cycle is only required
+    for non-stable modules whose artifacts are published for external consumption (e.g.,
+    `:library`, `:testing`, `instrumentation-api*`).
 - Do not auto-fix (report in the final output instead):
   - missing `testExperimental` task — when experimental flags are set unconditionally
     on all test tasks instead of being isolated in a dedicated task
@@ -299,9 +320,9 @@ Auto-fix boundaries:
 - Never change:
   - literal type suffixes (e.g., `200` → `200L` or vice-versa) — Java widens
     automatically; both forms compile identically and the change is noise
-  - non-capturing lambdas or method references as unnecessary allocations; do not flag or
-    fix these, because on modern JDKs these are typically cached at the call site rather
-    than allocated on every invocation
+  - non-capturing lambdas or method references as allocation issues; do not flag,
+    fix, or justify changes to these as per-call allocations. On HotSpot /
+    OpenJDK 8+, these are cached at the call site.
 
 Output content rules:
 
@@ -392,22 +413,30 @@ Execute these steps strictly in order — do not reorder:
       pre-existing failure — note it in the final output but do not block the commit.
    5. Never commit code that fails tests you can reproduce locally.
 
-   **Testing-module dependent validation**: when any modified module is a `testing` module
-   (its Gradle path ends with `:testing`), you must **also** run `:check` (both normal and
-   `-PtestLatestDeps=true`) for every sibling `library` and `javaagent` module under the
-   same instrumentation parent. `testing` modules contain shared abstract test base classes
-   consumed by those siblings — changes to visibility, method signatures, or class structure
-   in the `testing` module can break compilation or tests in dependent modules.
+   **Shared-module dependent validation**: when any modified module is a shared module
+   consumed by sibling instrumentation modules, you must **also** run `:check` (both normal
+   and `-PtestLatestDeps=true`) for every sibling `library` and `javaagent` module under the
+   same instrumentation parent. A module is shared if its Gradle path ends with `:testing`,
+   or its directory name contains `-common` (e.g., `couchbase-2-common`, `netty-common`),
+   or it is named `library`, `bootstrap`, or `testing-common`. Changes to visibility,
+   method signatures, or class structure in a shared module can break compilation or tests
+   in dependent sibling modules — including failures that compile cleanly but throw
+   `IllegalAccessError` at runtime inside ByteBuddy advice.
 
-   To find siblings, list the parent directory of the `testing` module and look for
+   To find siblings, list the parent directory of the shared module and look for
    `library/`, `javaagent/`, and any version-variant directories that contain `library/`
-   or `javaagent/` submodules. Run `:check` for each.
+   or `javaagent/` submodules. Also check `settings.gradle.kts` for every module under
+   the same instrumentation group. Run `:check` for each sibling that transitively
+   depends on the modified shared module.
 
    Example: if you modify files in
    `:instrumentation:foo:foo-1.0:testing`, also run `:check` for
    `:instrumentation:foo:foo-1.0:library`,
    `:instrumentation:foo:foo-1.0:javaagent`, and any version-variant siblings such as
    `:instrumentation:foo:foo-2.0:library` if it depends on the `foo-1.0:testing` module.
+   Likewise, if you modify files in `:instrumentation:couchbase:couchbase-2-common:javaagent`,
+   also run `:check` for `:instrumentation:couchbase:couchbase-2.0:javaagent` and
+   `:instrumentation:couchbase:couchbase-2.6:javaagent`.
 
    Do not move on to step 2 until every required `:check` run from this step, including
    sibling-module validation and any re-runs after fixes or reverts, has fully completed

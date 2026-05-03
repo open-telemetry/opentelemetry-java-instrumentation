@@ -14,6 +14,7 @@ import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,7 +34,7 @@ class JbossLogmanagerInstrumentation implements TypeInstrumentation {
             .and(named("logRaw"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.jboss.logmanager.ExtLogRecord"))),
-        JbossLogmanagerInstrumentation.class.getName() + "$CallLogRawAdvice");
+        getClass().getName() + "$CallLogRawAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -45,14 +46,21 @@ class JbossLogmanagerInstrumentation implements TypeInstrumentation {
       // logging framework delegates to another
       CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        LoggingEventMapper.INSTANCE.capture(logger, record);
+        try {
+          LoggingEventMapper.INSTANCE.capture(logger, record);
+        } catch (Throwable t) {
+          callDepth.decrementAndGet();
+          throw t;
+        }
       }
       return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter CallDepth callDepth) {
-      callDepth.decrementAndGet();
+    public static void methodExit(@Advice.Enter @Nullable CallDepth callDepth) {
+      if (callDepth != null) {
+        callDepth.decrementAndGet();
+      }
     }
   }
 }

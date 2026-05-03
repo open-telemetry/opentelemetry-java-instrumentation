@@ -73,7 +73,7 @@ class AzureHttpClientInstrumentation implements TypeInstrumentation {
       return disallowNestedClientSpanSync(azContext);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void syncSendExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

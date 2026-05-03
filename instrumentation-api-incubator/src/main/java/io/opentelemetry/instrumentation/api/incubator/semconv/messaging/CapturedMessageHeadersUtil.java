@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -20,8 +21,10 @@ final class CapturedMessageHeadersUtil {
   }
 
   private static AttributeKey<List<String>> createKey(String headerName) {
-    String key = "messaging.header." + headerName.replace('-', '_');
-    return AttributeKey.stringArrayKey(key);
+    if (!SemconvStability.v3Preview()) {
+      headerName = headerName.replace('-', '_');
+    }
+    return AttributeKey.stringArrayKey("messaging.header." + headerName);
   }
 
   private CapturedMessageHeadersUtil() {}

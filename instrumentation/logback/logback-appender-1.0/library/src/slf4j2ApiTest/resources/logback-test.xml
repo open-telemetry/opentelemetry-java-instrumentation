@@ -19,7 +19,6 @@
     <captureLogstashMarkerAttributes>true</captureLogstashMarkerAttributes>
     <captureLogstashStructuredArguments>true</captureLogstashStructuredArguments>
     <captureMdcAttributes>*</captureMdcAttributes>
-    <captureEventName>true</captureEventName>
   </appender>
 
   <root level="INFO">

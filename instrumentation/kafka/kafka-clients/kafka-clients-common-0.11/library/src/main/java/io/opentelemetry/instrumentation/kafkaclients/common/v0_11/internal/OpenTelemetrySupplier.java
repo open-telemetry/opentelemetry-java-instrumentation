@@ -23,8 +23,7 @@ public final class OpenTelemetrySupplier implements Supplier<OpenTelemetry>, Ser
   private final transient OpenTelemetry openTelemetry;
 
   public OpenTelemetrySupplier(OpenTelemetry openTelemetry) {
-    requireNonNull(openTelemetry);
-    this.openTelemetry = openTelemetry;
+    this.openTelemetry = requireNonNull(openTelemetry);
   }
 
   @Override

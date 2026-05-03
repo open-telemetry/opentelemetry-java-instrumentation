@@ -11,10 +11,9 @@ import com.amazonaws.Response;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import javax.annotation.Nullable;
 
 final class SqsAccess {
-  private SqsAccess() {}
-
   private static final boolean enabled = PluginImplUtil.isImplPresent("SqsImpl");
 
   @NoMuzzle
@@ -34,12 +33,16 @@ final class SqsAccess {
   }
 
   @NoMuzzle
+  @Nullable
   static String getMessageAttribute(Request<?> request, String name) {
     return enabled ? SqsImpl.getMessageAttribute(request, name) : null;
   }
 
   @NoMuzzle
-  static String getMessageId(Response<?> response) {
+  @Nullable
+  static String getMessageId(@Nullable Response<?> response) {
     return enabled ? SqsImpl.getMessageId(response) : null;
   }
+
+  private SqsAccess() {}
 }

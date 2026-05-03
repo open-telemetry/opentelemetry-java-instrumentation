@@ -18,6 +18,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.Ap
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.trace.ApplicationTracerFactory127;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace.ApplicationTracerProvider14;
 import java.lang.reflect.InvocationTargetException;
+import javax.annotation.Nullable;
 
 public class ApplicationOpenTelemetry127 implements application.io.opentelemetry.api.OpenTelemetry {
 
@@ -112,21 +113,16 @@ public class ApplicationOpenTelemetry127 implements application.io.opentelemetry
     return meterFactory;
   }
 
+  @Nullable
   private static ApplicationMeterFactory getMeterFactory(String className) {
     return getFactory(className, ApplicationMeterFactory.class);
   }
 
   private static ApplicationLoggerFactory getLoggerFactory() {
-    // this class is defined in opentelemetry-api-1.52
+    // this class is defined in opentelemetry-api-1.50
     ApplicationLoggerFactory loggerFactory =
         getLoggerFactory(
-            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_52.incubator.logs.ApplicationLoggerFactory150Incubator");
-    // this class is defined in opentelemetry-api-1.50
-    if (loggerFactory == null) {
-      loggerFactory =
-          getLoggerFactory(
-              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs.ApplicationLoggerFactory150Incubator");
-    }
+            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs.ApplicationLoggerFactory150Incubator");
     if (loggerFactory == null) {
       // this class is defined in opentelemetry-api-1.50
       loggerFactory =
@@ -164,6 +160,7 @@ public class ApplicationOpenTelemetry127 implements application.io.opentelemetry
     return loggerFactory;
   }
 
+  @Nullable
   private static ApplicationLoggerFactory getLoggerFactory(String className) {
     return getFactory(className, ApplicationLoggerFactory.class);
   }
@@ -186,10 +183,12 @@ public class ApplicationOpenTelemetry127 implements application.io.opentelemetry
     return tracerFactory;
   }
 
+  @Nullable
   private static ApplicationTracerFactory getTracerFactory(String className) {
     return getFactory(className, ApplicationTracerFactory.class);
   }
 
+  @Nullable
   private static <T> T getFactory(String className, Class<T> factoryClass) {
     try {
       Class<?> clazz = Class.forName(className);

@@ -43,7 +43,7 @@ final class OpenTelemetryFallbackErrorHandler implements ClientErrorHandler, Ser
   private static final Logger logger =
       Logger.getLogger(OpenTelemetryFallbackErrorHandler.class.getName());
 
-  OpenTelemetryFallbackErrorHandler() {}
+  private OpenTelemetryFallbackErrorHandler() {}
 
   @Override
   public void error(Context context, int statusCode) {

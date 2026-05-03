@@ -115,7 +115,7 @@ public class PekkoHttpServerTracer
                             .addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest)
                             .addAttribute(PekkoRouteHolder.ATTRIBUTE_KEY, routeHolder);
               }
-              // event if span wasn't started we need to push TracingRequest to match response
+              // even if span wasn't started we need to push TracingRequest to match response
               // with request
               requests.add(tracingRequest);
 

@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   library("org.hibernate:hibernate-core:6.0.0.Final")
 
-  implementation(project(":instrumentation:hibernate:hibernate-common:javaagent"))
+  implementation(project(":instrumentation:hibernate:hibernate-common-3.3:javaagent"))
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   // Added to ensure cross compatibility:
@@ -42,6 +42,7 @@ testing {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
         }
       }
       dependencies {
@@ -60,6 +61,7 @@ testing {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
         }
       }
       dependencies {
@@ -106,6 +108,7 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
       }
     }
 

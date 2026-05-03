@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -49,7 +50,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
   private static DocRepository repository() {
     // when running on jdk 21 this test occasionally fails with timeout
     Assumptions.assumeTrue(
-        Boolean.getBoolean("testLatestDeps")
+        testLatestDeps()
             || Double.parseDouble(System.getProperty("java.specification.version")) < 21
             || Boolean.getBoolean("collectMetadata"));
 
@@ -75,7 +76,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
   void emptyRepository() {
     Iterable<Doc> result = repository().findAll();
 
-    assertThat(result.iterator().hasNext()).isFalse();
+    assertThat(result).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -186,7 +187,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
     testing.clearData();
 
     repository.deleteById("1");
-    assertThat(repository.findAll().iterator().hasNext()).isFalse();
+    assertThat(repository.findAll()).isEmpty();
 
     testing.waitAndAssertTraces(
         trace ->
