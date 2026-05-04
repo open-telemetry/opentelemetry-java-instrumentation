@@ -11,11 +11,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
-import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoFallbackRouteHolder;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
 import java.util.ArrayDeque;
 import java.util.List;
-import java.util.Optional;
 import java.util.Queue;
 import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
@@ -103,12 +101,8 @@ public class PekkoHttpServerTracer
               Context parentContext = Context.current();
               if (instrumenter().shouldStart(parentContext, request)) {
                 PekkoRouteHolder routeHolder = PekkoRouteHolder.create();
-                Context context =
-                    instrumenter()
-                        .start(parentContext, request)
-                        .with(routeHolder)
-                        .with(new PekkoFallbackRouteHolder());
-                tracingRequest = new PekkoTracingRequest(context, request);
+                Context context = instrumenter().start(parentContext, request).with(routeHolder);
+                tracingRequest = new PekkoTracingRequest(context, request, routeHolder);
                 request =
                     (HttpRequest)
                         request
@@ -152,20 +146,13 @@ public class PekkoHttpServerTracer
                 if (!headers.isEmpty()) {
                   response = (HttpResponse) response.addHeaders(headers);
                 }
-                String route =
+
+                PekkoRouteHolder routeHolder =
                     response
                         .getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY)
-                        .flatMap(routeHolder -> Optional.ofNullable(routeHolder.route()))
-                        .orElse(null);
-                if (route == null) {
-                  PekkoFallbackRouteHolder fallback =
-                      PekkoFallbackRouteHolder.get(tracingRequest.context);
-                  if (fallback != null) {
-                    route = fallback.route();
-                  }
-                }
+                        .orElse(tracingRequest.initialRouteHolder);
                 HttpServerRoute.update(
-                    tracingRequest.context, HttpServerRouteSource.CONTROLLER, route);
+                    tracingRequest.context, HttpServerRouteSource.CONTROLLER, routeHolder.route());
                 instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);
               }
               push(responseOut, response);

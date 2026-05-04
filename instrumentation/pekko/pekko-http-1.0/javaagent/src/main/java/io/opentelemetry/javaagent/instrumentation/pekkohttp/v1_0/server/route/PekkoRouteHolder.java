@@ -10,7 +10,6 @@ import static io.opentelemetry.context.ContextKey.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -29,6 +28,7 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
   private boolean lastWasMatched = false;
   @Nullable private final PekkoRouteHolder parent;
   @Nullable private volatile PekkoRouteHolder override;
+  @Nullable private volatile PekkoRouteHolder fallback;
 
   public static PekkoRouteHolder create() {
     return new PekkoRouteHolder(null);
@@ -61,11 +61,11 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
       // If the path is fully matched by multiple PekkoRouteHolders, the latest one wins,
       // which is usually correct but not guaranteed to be.
       if (afterMatch.isEmpty()) {
-        PekkoFallbackRouteHolder fallback =
-            PekkoFallbackRouteHolder.get(Java8BytecodeBridge.currentContext());
-        if (fallback != null) {
-          fallback.setFallback(this);
+        PekkoRouteHolder initialRouteHolder = this;
+        while (initialRouteHolder.parent != null) {
+          initialRouteHolder = initialRouteHolder.parent;
         }
+        initialRouteHolder.fallback = this;
       }
     }
     lastWasMatched = true;
@@ -77,8 +77,11 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
 
   @Nullable
   public String route() {
-    if (override != null) {
+    if (override != null && override != this) {
       return override.route();
+    }
+    if (fallback != null && fallback != this) {
+      return fallback.route();
     }
     if (!lastWasMatched) {
       return null;
