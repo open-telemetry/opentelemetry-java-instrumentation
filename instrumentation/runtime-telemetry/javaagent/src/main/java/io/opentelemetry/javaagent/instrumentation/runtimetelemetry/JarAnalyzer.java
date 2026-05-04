@@ -143,7 +143,7 @@ final class JarAnalyzer implements ClassFileTransformer {
     // To avoid this here we recreate the URL when it points to a file.
     if ("file".equals(archiveUrl.getProtocol())) {
       try {
-        File archiveFile = new File(archiveUrl.toURI().getSchemeSpecificPart());
+        File archiveFile = UrlPaths.toFile(archiveUrl);
         if (archiveFile.exists() && archiveFile.isFile()) {
           archiveUrl = archiveFile.toURI().toURL();
         }
