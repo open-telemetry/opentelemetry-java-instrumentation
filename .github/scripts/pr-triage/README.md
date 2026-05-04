@@ -12,16 +12,9 @@ holds a privileged token AND executes PR-controlled code.
 | Job              | Entry point          | Tokens visible                                | PR-controlled code allowed |
 | ---------------- | -------------------- | --------------------------------------------- | -------------------------- |
 | authorize-command| `authorize.py`       | `GITHUB_TOKEN`                                | none (default-branch checkout only) |
-| pr-snapshot      | inline               | `GITHUB_TOKEN`                                | none — `gh pr checkout` + `git bundle`; PR tree never executed |
 | gradle-worker    | `worker_gradle.py`   | `GITHUB_TOKEN`                                | yes — runs `./gradlew` on PR tree |
 | copilot-worker   | `worker_copilot.py`  | `GITHUB_TOKEN`, `COPILOT_GITHUB_TOKEN`        | only Copilot CLI editing files; never `./gradlew` or other build tools |
 | poster           | `poster.py`          | otelbot installation token                    | none — `git`/`gh` on the worker artifact only |
-
-The PR working tree is checked out exactly once, in `pr-snapshot`, which
-holds no privileged secrets. It is exported as a git bundle and consumed
-by the worker jobs via `git fetch <bundle-file>`. This keeps `gh pr
-checkout` (which CodeQL flags as untrusted) out of any job that holds
-the Copilot token.
 
 Invariants (see the comments at the top of each entry-point file):
 
