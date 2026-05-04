@@ -20,7 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
 import static java.util.Collections.singletonList;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -82,7 +82,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
   }
 
   private static void disconnect(CouchbaseAsyncCluster cluster) {
-    cluster.disconnect().timeout(TIMEOUT.getSeconds(), SECONDS).toBlocking().single();
+    cluster.disconnect().timeout(TIMEOUT.toMillis(), MILLISECONDS).toBlocking().single();
   }
 
   private CouchbaseAsyncCluster getCluster(BucketSettings bucketSettings) {
