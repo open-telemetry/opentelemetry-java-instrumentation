@@ -52,7 +52,7 @@ final class KafkaMetricRegistry {
     for (Map.Entry<String, String> entry : classNameToType.entrySet()) {
       try {
         measurableToInstrumentType.put(Class.forName(entry.getKey()), entry.getValue());
-      } catch (ClassNotFoundException e) {
+      } catch (ClassNotFoundException ignored) {
         // Class doesn't exist in this version of kafka client - skip
       }
     }
@@ -92,7 +92,7 @@ final class KafkaMetricRegistry {
   private static Class<? extends Measurable> getMeasurable(KafkaMetric kafkaMetric) {
     try {
       return kafkaMetric.measurable().getClass();
-    } catch (IllegalStateException e) {
+    } catch (IllegalStateException ignored) {
       return null;
     }
   }
