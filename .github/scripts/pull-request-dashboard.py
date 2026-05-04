@@ -466,13 +466,12 @@ def compute_conflicts(pr: dict[str, Any]) -> str:
     return "no"
 
 
-def compute_facts(raw: dict[str, Any], events: list[dict[str, Any]], author: str) -> dict[str, Any]:
+def compute_facts(raw: dict[str, Any], author: str) -> dict[str, Any]:
     pr = raw["pr"]
     checks = raw["checks"]
     failing = [c for c in checks if (c.get("state") or "").upper() in ("FAILURE", "ERROR")]
     pending = [c for c in checks if (c.get("state") or "").upper() in ("PENDING", "QUEUED", "IN_PROGRESS")]
-    substantive = [e for e in events if is_substantive_activity(e)]
-    last_activity_ts = parse_ts((substantive[-1] or {}).get("timestamp")) if substantive else None
+    last_activity_ts = parse_ts(pr["updatedAt"])
     api_author = actor_login(pr.get("author") or {})
     return {
         "author": author,
@@ -974,7 +973,7 @@ def build_pr_result(
         raw = fetch_pr_raw(repo, owner, repo_name, pr_summary)
         author, delegator = effective_author(raw)
         events = normalize_events(raw, author, reviewers)
-        facts = compute_facts(raw, events, author)
+        facts = compute_facts(raw, author)
         threads = group_discussion_threads(raw, events, author, reviewers, facts)
         classifications = classify_threads(repo, number, raw["pr"], facts, threads, model)
         side = route_pr(facts, classifications)
