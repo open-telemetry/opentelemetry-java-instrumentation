@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsAnnotationsSingletons.ASYNC_RESPONSE_DATA;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsAnnotationsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -26,7 +27,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.AsyncResponseData;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.CompletionStageFinishCallback;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nullable;
@@ -112,10 +112,7 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         handlerData = new Jaxrs2HandlerData(target.getClass(), method);
 
         HttpServerRoute.update(
-            parentContext,
-            HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.serverSpanName(),
-            handlerData);
+            parentContext, HttpServerRouteSource.CONTROLLER, serverSpanName(), handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
           context = null;
