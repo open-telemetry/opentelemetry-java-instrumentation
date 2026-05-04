@@ -7,15 +7,15 @@ muzzle {
     group.set("org.glassfish.jersey.core")
     module.set("jersey-server")
     versions.set("[2.0,3.0.0)")
-    extraDependency("javax.servlet:javax.servlet-api:3.1.0")
     assertInverse.set(true)
+    extraDependency("javax.servlet:javax.servlet-api:3.1.0")
   }
   pass {
     group.set("org.glassfish.jersey.containers")
     module.set("jersey-container-servlet")
     versions.set("[2.0,3.0.0)")
-    extraDependency("javax.servlet:javax.servlet-api:3.1.0")
     assertInverse.set(true)
+    extraDependency("javax.servlet:javax.servlet-api:3.1.0")
   }
 }
 
