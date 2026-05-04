@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.extension.kotlin.getOpenTelemetryContext
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -27,5 +28,13 @@ class ContextExtensionInstrumentationTest {
     // instrumentation does not preserve context identity due to conversion between application and
     // agent context
     assertThat(context1).isNotSameAs(context2)
+  }
+
+  @Test
+  fun `no context`() {
+    runBlocking {
+      assertThat(coroutineContext.getOpenTelemetryContext()).isEqualTo(Context.root())
+      assertThat(coroutineContext.getOpenTelemetryContext().get(animalKey)).isNull()
+    }
   }
 }
