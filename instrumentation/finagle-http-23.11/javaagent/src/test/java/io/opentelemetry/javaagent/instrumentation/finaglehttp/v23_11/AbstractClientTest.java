@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11.Utils.createClient;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptySet;
@@ -20,13 +19,10 @@ import com.twitter.finagle.http.Response;
 import com.twitter.util.Await;
 import com.twitter.util.Duration;
 import com.twitter.util.Future;
-import com.twitter.util.FuturePool;
-import com.twitter.util.Time;
 import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -40,9 +36,6 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import org.assertj.core.api.AbstractThrowableAssert;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
@@ -56,50 +49,23 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  */
 // todo implement http/2-specific tests;
 //  otel test framework doesn't support an http/2 server out of the box
-class ClientTest extends AbstractHttpClientTest<Request> {
+abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  private final Map<ClientType, Service<Request, Response>> clients = new ConcurrentHashMap<>();
-
-  // finagle Services are closeable, but are bound to a host + port;
-  // as these are only known during the invocation of the test, each test must create and then
-  // tear down their respective Services.
-  //
-  // however, the underlying netty bits are reused between Services by default, so "close"
-  // works out to a more "virtual" operation than with other client libraries.
-  @AfterEach
-  void tearDown() throws Exception {
-    for (Service<Request, Response> client : clients.values()) {
-      Await.ready(client.close(Time.fromSeconds(10)));
-    }
-    clients.clear();
-  }
+  /** Concrete subclasses provide their per-class client extension. */
+  protected abstract FinagleClientExtension clientExtension();
 
   private Service<Request, Response> getClient(URI uri) {
-    return getClient(uri, uri.getScheme().equals("https") ? ClientType.TLS : ClientType.DEFAULT);
+    return clientExtension().getService(uri);
   }
 
   private Service<Request, Response> getClient(URI uri, ClientType clientType) {
-    return clients.computeIfAbsent(
-        clientType,
-        (type) -> createClient(type).newService(uri.getHost() + ":" + Utils.safePort(uri)));
+    return clientExtension().getService(uri, clientType);
   }
 
   private Future<Response> doSendRequest(Request request, URI uri) {
-    // push this onto a FuturePool for 2 reasons:
-    //  1) forces the request handling onto a different thread, ensuring test accuracy
-    //  2) using the default thread can mess with high concurrency scenarios
-    Context context = Context.current();
-    return FuturePool.unboundedPool()
-        .apply(
-            () -> {
-              try (Scope ignored = context.makeCurrent()) {
-                return Await.result(getClient(uri).apply(request));
-              } catch (Exception e) {
-                throw new RuntimeException(e);
-              }
-            });
+    return getClient(uri).apply(request);
   }
 
   @Override
@@ -119,18 +85,26 @@ class ClientTest extends AbstractHttpClientTest<Request> {
           };
         });
 
-    optionsBuilder.setHttpAttributes(ClientTest::getHttpAttributes);
-    optionsBuilder.setExpectedClientSpanNameMapper(ClientTest::getExpectedClientSpanName);
+    optionsBuilder.setHttpAttributes(AbstractClientTest::getHttpAttributes);
+    optionsBuilder.setExpectedClientSpanNameMapper(AbstractClientTest::getExpectedClientSpanName);
     optionsBuilder.disableTestRedirects();
     optionsBuilder.spanEndsAfterBody();
     optionsBuilder.setClientSpanErrorMapper(
         (uri, error) -> {
-          // all errors should be wrapped in RuntimeExceptions due to how we run things in
-          // doSendRequest()
-          AbstractThrowableAssert<?, ?> clientWrapAssert =
-              assertThat(error).isInstanceOf(RuntimeException.class);
-          if ("http://localhost:61/".equals(uri.toString())
-              || "https://192.0.2.1/".equals(uri.toString())) {
+          if (("http://localhost:" + PortUtils.UNUSABLE_PORT + "/").equals(uri.toString())) {
+            assertThat(error)
+                .isInstanceOf(Failure.class)
+                .cause()
+                .isInstanceOf(ConnectionFailedException.class)
+                .cause()
+                // this is a private class
+                // .isInstanceOf(io.netty.channel.AbstractChannel.AnnotatedConnectException.class)
+                .cause()
+                // On Linux: ConnectException, On Windows: ClosedChannelException
+                .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
+            error = error.getCause().getCause();
+          } else if ("https://192.0.2.1/".equals(uri.toString())
+              || "http://192.0.2.1/".equals(uri.toString())) {
             // finagle handles all these in com.twitter.finagle.netty4.ConnectionBuilder.build();
             // all errors emitted by the netty Bootstrap.connect() call are mapped to
             // twitter/finagle exceptions and handled accordingly;
@@ -138,18 +112,17 @@ class ClientTest extends AbstractHttpClientTest<Request> {
             // ConnectionFailedException
             // and then with a twitter Failure.rejected() call, resulting in the multiple nestings
             // of the root exception
-            clientWrapAssert
-                .cause()
+            assertThat(error)
                 .isInstanceOf(Failure.class)
                 .cause()
                 .isInstanceOf(ConnectionFailedException.class)
                 .cause()
                 // On Linux: ConnectException, On Windows: ClosedChannelException
                 .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
-            error = error.getCause().getCause().getCause();
+            error = error.getCause().getCause();
           } else if (uri.getPath().endsWith("/read-timeout")) {
             // not a connect() exception like the above, so is not wrapped as above;
-            clientWrapAssert.cause().isInstanceOf(ReadTimedOutException.class);
+            assertThat(error).isInstanceOf(ReadTimedOutException.class);
             // however, this specific case results in a mapping from netty's ReadTimeoutException
             // to finagle's ReadTimedOutException in the finagle client code, losing all trace of
             // the original exception; so we must construct it manually here
@@ -176,8 +149,9 @@ class ClientTest extends AbstractHttpClientTest<Request> {
       String method,
       URI uri,
       Map<String, String> headers,
-      HttpClientResult httpClientResult) {
-    doSendRequest(request, uri)
+      HttpClientResult httpClientResult)
+      throws Exception {
+    Await.ready(doSendRequest(request, uri), Duration.fromSeconds(30))
         .onSuccess(
             r -> {
               httpClientResult.complete(r.statusCode());

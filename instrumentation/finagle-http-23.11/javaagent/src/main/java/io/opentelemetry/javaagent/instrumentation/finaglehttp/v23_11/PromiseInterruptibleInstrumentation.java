@@ -8,18 +8,25 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.netty.channel.Channel;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import scala.PartialFunction;
+import scala.runtime.BoxedUnit;
 
-/** Amends the tail of the Netty pipeline to bridge the netty request to its finagle request. */
-class ChannelTransportInstrumentation implements TypeInstrumentation {
+/**
+ * Inspired by Kamon's approach, instruments the interruptible such that it has access to the
+ * Context active on the Promise.
+ */
+class PromiseInterruptibleInstrumentation implements TypeInstrumentation {
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.twitter.finagle.netty4.transport.ChannelTransport");
+    return named("com.twitter.util.Promise$Interruptible");
   }
 
   @Override
@@ -31,8 +38,13 @@ class ChannelTransportInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Argument(0) Channel ch) {
-      Helpers.mutateHandlerPipeline(ch);
+    @Advice.AssignReturned.ToArguments(@ToArgument(1))
+    public static PartialFunction<Throwable, BoxedUnit> onExit(
+        @Advice.Argument(1) PartialFunction<Throwable, BoxedUnit> handler) {
+      if (handler instanceof TwitterUtilCoreHelpers.InterruptibleWithContext) {
+        return handler;
+      }
+      return new TwitterUtilCoreHelpers.InterruptibleWithContext(Context.current(), handler);
     }
   }
 }

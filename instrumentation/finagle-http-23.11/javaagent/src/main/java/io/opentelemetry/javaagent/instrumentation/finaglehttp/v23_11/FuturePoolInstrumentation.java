@@ -5,43 +5,41 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import scala.Function1;
+import scala.Function0;
 
-class PromiseMonitoredInstrumentation implements TypeInstrumentation {
+/**
+ * Instruments {@link com.twitter.util.ExecutorServiceFuturePool#apply} to wrap the submitted {@link
+ * Function0} so it executes under the caller's otel {@link Context}.
+ */
+class FuturePoolInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.twitter.util.Promise$Monitored");
+    return named("com.twitter.util.ExecutorServiceFuturePool");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(1, named("scala.Function1"))),
-        getClass().getName() + "$WrapFunctionAdvice");
+        isMethod().and(named("apply")), getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class WrapFunctionAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Advice.AssignReturned.ToArguments(@ToArgument(1))
-    public static Function1<?, ?> wrap(@Advice.Argument(1) Function1<?, ?> function1) {
-      if (function1 == null) {
-        return null;
-      }
-
-      return Function1Wrapper.wrap(function1);
+  public static class ApplyAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Function0<?> onApplyEnter(@Advice.Argument(0) Function0<?> f) {
+      return TwitterUtilCoreHelpers.wrap(Context.current(), f);
     }
   }
 }
