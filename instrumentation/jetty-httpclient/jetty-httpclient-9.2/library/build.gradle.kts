@@ -25,7 +25,8 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing"))
-        val jettyVersion = if (otelProps.testLatestDeps) "9.4.43.v20210629" else "9.4.24.v20191120"
+        // Test the first and last Jetty versions affected by the DemandedContentListener bug.
+        val jettyVersion = baseVersion("9.4.24.v20191120").orLatest("9.4.43.v20210629")
         implementation("org.eclipse.jetty:jetty-client:$jettyVersion")
       }
     }

@@ -41,11 +41,9 @@ testing {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
+        implementation("io.projectreactor.kafka:reactor-kafka:${baseVersion("1.3.3").orLatest()}")
         if (otelProps.testLatestDeps) {
-          implementation("io.projectreactor.kafka:reactor-kafka:latest.release")
           implementation("io.projectreactor:reactor-core:3.4.+")
-        } else {
-          implementation("io.projectreactor.kafka:reactor-kafka:1.3.3")
         }
       }
 
@@ -62,11 +60,9 @@ testing {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
+        implementation("io.projectreactor.kafka:reactor-kafka:${baseVersion("1.3.21").orLatest()}")
         if (otelProps.testLatestDeps) {
-          implementation("io.projectreactor.kafka:reactor-kafka:latest.release")
           implementation("io.projectreactor:reactor-core:3.4.+")
-        } else {
-          implementation("io.projectreactor.kafka:reactor-kafka:1.3.21")
         }
       }
 
