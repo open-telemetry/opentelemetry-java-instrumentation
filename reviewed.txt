@@ -254,3 +254,11 @@ kafka-clients-common-0.11:library
 kafka-connect-2.6:javaagent
 kafka-connect-2.6:testing
 kafka-streams-0.11:javaagent
+kotlinx-coroutines-1.0:javaagent
+kotlinx-coroutines-flow-1.3:javaagent
+kotlinx-coroutines-flow-1.3:javaagent-kotlin
+ktor-1.0:library
+ktor-2.0:javaagent
+ktor-2.0:library
+ktor-2.0:testing
+ktor-3.0:javaagent
