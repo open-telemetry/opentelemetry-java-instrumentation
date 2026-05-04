@@ -33,9 +33,7 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.api.internal.ExceptionEventExtractorProvider;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
-import io.opentelemetry.instrumentation.api.internal.InternalExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -151,39 +149,6 @@ class InstrumenterTest {
     }
   }
 
-  static class AttributesExtractorWithExceptionEventExtractor
-      implements AttributesExtractor<Map<String, String>, Map<String, String>>,
-          ExceptionEventExtractorProvider {
-
-    private final InternalExceptionEventExtractor<Object> exceptionEventExtractor;
-
-    AttributesExtractorWithExceptionEventExtractor(String eventName, Severity severity) {
-      exceptionEventExtractor =
-          (logRecordBuilder, context, request) -> {
-            logRecordBuilder.setEventName(eventName);
-            logRecordBuilder.setSeverity(severity);
-          };
-    }
-
-    @Override
-    public void onStart(
-        AttributesBuilder attributes, Context parentContext, Map<String, String> request) {}
-
-    @Override
-    public void onEnd(
-        AttributesBuilder attributes,
-        Context context,
-        Map<String, String> request,
-        @Nullable Map<String, String> response,
-        @Nullable Throwable error) {}
-
-    @Nullable
-    @Override
-    public InternalExceptionEventExtractor<?> internalGetExceptionEventExtractor() {
-      return exceptionEventExtractor;
-    }
-  }
-
   static class LinksExtractor implements SpanLinksExtractor<Map<String, String>> {
 
     @Override
@@ -263,15 +228,19 @@ class InstrumenterTest {
 
   @Test
   void server_error() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractor(new AttributesExtractor1())
-            .addAttributesExtractor(new AttributesExtractor2())
-            .addAttributesExtractor(
-                new AttributesExtractorWithExceptionEventExtractor(
-                    "http.server.request.exception", Severity.ERROR))
-            .buildServerInstrumenter(new MapGetter());
+            .addAttributesExtractor(new AttributesExtractor2());
+    Experimental.setExceptionEventExtractor(
+        builder,
+        (logRecordBuilder, context, request) -> {
+          logRecordBuilder.setEventName("http.server.request.exception");
+          logRecordBuilder.setSeverity(Severity.ERROR);
+        });
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        builder.buildServerInstrumenter(new MapGetter());
 
     Context context = instrumenter.start(Context.root(), REQUEST);
     assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
@@ -387,15 +356,19 @@ class InstrumenterTest {
 
   @Test
   void client_error() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractor(new AttributesExtractor1())
-            .addAttributesExtractor(new AttributesExtractor2())
-            .addAttributesExtractor(
-                new AttributesExtractorWithExceptionEventExtractor(
-                    "http.client.request.exception", Severity.WARN))
-            .buildClientInstrumenter(Map::put);
+            .addAttributesExtractor(new AttributesExtractor2());
+    Experimental.setExceptionEventExtractor(
+        builder,
+        (logRecordBuilder, context, request) -> {
+          logRecordBuilder.setEventName("http.client.request.exception");
+          logRecordBuilder.setSeverity(Severity.WARN);
+        });
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        builder.buildClientInstrumenter(Map::put);
 
     Map<String, String> request = new HashMap<>(REQUEST);
     Context context = instrumenter.start(Context.root(), request);

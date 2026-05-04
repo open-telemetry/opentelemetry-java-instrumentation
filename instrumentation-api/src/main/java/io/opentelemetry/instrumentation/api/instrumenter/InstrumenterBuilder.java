@@ -26,7 +26,6 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.api.internal.ExceptionEventExtractorProvider;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
@@ -84,6 +83,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             builder.operationListenerAttributesExtractors.add(
                 requireNonNull(
                     operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
+    Experimental.internalSetExceptionEventExtractor(
+      (builder, exceptionEventExtractor) ->
+        builder.exceptionEventExtractor =
+          requireNonNull(exceptionEventExtractor, "exceptionEventExtractor"));
   }
 
   InstrumenterBuilder(
@@ -302,27 +305,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     applyCustomizers(this);
 
     this.spanKindExtractor = spanKindExtractor;
-    exceptionEventExtractor = getExceptionEventExtractorFromAttributesExtractors();
     return constructor.create(this);
-  }
-
-  @Nullable
-  @SuppressWarnings("unchecked") // Exception event extractors from providers don't use REQUEST
-  private InternalExceptionEventExtractor<? super REQUEST>
-      getExceptionEventExtractorFromAttributesExtractors() {
-    for (AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor :
-        attributesExtractors) {
-      if (attributesExtractor instanceof ExceptionEventExtractorProvider) {
-        ExceptionEventExtractorProvider provider =
-            (ExceptionEventExtractorProvider) attributesExtractor;
-        InternalExceptionEventExtractor<?> extractor =
-            provider.internalGetExceptionEventExtractor();
-        if (extractor != null) {
-          return (InternalExceptionEventExtractor<? super REQUEST>) extractor;
-        }
-      }
-    }
-    return null;
   }
 
   Tracer buildTracer() {
