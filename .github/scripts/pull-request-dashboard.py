@@ -909,14 +909,17 @@ def render_diagnostics_section(results: dict[int, dict[str, Any]]) -> list[str]:
 def render_markdown_compact(
     prs: list[dict[str, Any]],
     results: dict[int, dict[str, Any]],
+    repo: str,
     workflow_issues: list[dict[str, Any]] | None = None,
 ) -> str:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    source_url = f"https://github.com/{repo}/blob/main/.github/scripts/pull-request-dashboard.py"
+    refresh_url = f"https://github.com/{repo}/actions/workflows/pr-review-dashboard.yml"
     out: list[str] = [
         "> [!NOTE]",
-        "> Open PRs are grouped by deterministic routing over per-thread LLM classifications. "
-        "CI, conflicts, and activity age are computed deterministically and are shown as facts, "
-        "not used as standalone routing reasons.",
+        "> Open non-draft PRs grouped by who is expected to act next. The grouping is "
+        f"partly performed by an LLM ([source]({source_url})) and could contain mistakes. "
+        f"Refreshed about every hour. Last refresh: {now}.",
         "",
     ]
 
@@ -953,7 +956,7 @@ def render_markdown_compact(
 
     out.extend(render_workflow_failure_section(workflow_issues or []))
     out.extend(render_diagnostics_section(results))
-    out.append(f"_Generated {now}_")
+    out.append(f"_Approvers may [force a refresh]({refresh_url})._")
     out.append("")
     return "\n".join(out) + "\n"
 
@@ -1042,7 +1045,7 @@ def main() -> int:
             )
 
     workflow_issues = fetch_workflow_failure_issues(repo)
-    md = render_markdown_compact(prs, results, workflow_issues)
+    md = render_markdown_compact(prs, results, repo, workflow_issues)
     Path(args.output).write_text(md, encoding="utf-8")
     print(f"wrote {args.output}", file=sys.stderr)
     return 0
