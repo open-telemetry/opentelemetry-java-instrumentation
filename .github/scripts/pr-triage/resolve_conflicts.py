@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge upstream/main into a PR branch, using Copilot only for conflicts."""
+"""Merge the PR base branch into a PR branch, using Copilot only for conflicts."""
 
 from __future__ import annotations
 
@@ -9,10 +9,11 @@ from pathlib import Path
 
 from common import (
     Summary,
-    checkout_pr,
     current_branch,
+    detect_repo,
     diff_check,
     git,
+    gh_json,
     invoke_copilot,
     make_temp_dir,
     print_failure,
@@ -21,6 +22,7 @@ from common import (
     require_clean_worktree,
     restore_original_branch,
     unmerged_paths,
+    verify_pr_checkout,
     write_json,
 )
 
@@ -28,12 +30,29 @@ from common import (
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pr", type=int, help="pull request number")
-    parser.add_argument("--upstream", default="upstream", help="upstream remote name")
     parser.add_argument("--json", action="store_true", help="print JSON summary")
     parser.add_argument("--no-push", action="store_true", help="commit but do not push")
     parser.add_argument("--keep-temp", action="store_true", help="reuse and retain the temp bundle directory")
     parser.add_argument("--skip-copilot", action="store_true", help="stop after collecting conflict context")
     return parser.parse_args()
+
+
+def fetch_pr_base(pr: int, summary: Summary) -> str:
+    data = gh_json(["api", f"repos/{detect_repo(summary)}/pulls/{pr}"], summary)
+    base = data.get("base") or {}
+    base_ref = base.get("ref")
+    base_repo = base.get("repo") or {}
+    clone_url = base_repo.get("clone_url") if isinstance(base_repo, dict) else None
+    if not isinstance(base_ref, str) or not base_ref:
+        raise RuntimeError("could not determine PR base branch")
+    if not isinstance(clone_url, str) or not clone_url:
+        raise RuntimeError("could not determine PR base repository URL")
+
+    local_ref = f"refs/remotes/pr-triage-base/{base_ref}"
+    progress(f"Fetching PR base {clone_url} {base_ref}")
+    git(["fetch", clone_url, f"+refs/heads/{base_ref}:{local_ref}"], summary)
+    git(["rev-parse", "--verify", local_ref], summary)
+    return local_ref
 
 
 def write_conflict_bundle(directory: Path, summary: Summary) -> Path:
@@ -83,13 +102,11 @@ def main() -> int:
     try:
         require_clean_worktree(summary)
         summary.original_branch = current_branch(summary)
-        checkout_pr(args.pr, summary)
+        verify_pr_checkout(args.pr, summary)
 
-        progress(f"Fetching {args.upstream}")
-        git(["fetch", args.upstream], summary)
-        git(["rev-parse", "--verify", f"{args.upstream}/main"], summary)
-        progress(f"Merging {args.upstream}/main")
-        merge = git(["merge", "--no-edit", f"{args.upstream}/main"], summary, check=False)
+        base_ref = fetch_pr_base(args.pr, summary)
+        progress(f"Merging {base_ref}")
+        merge = git(["merge", "--no-edit", base_ref], summary, check=False)
         if merge.returncode == 0:
             if "Already up to date" in merge.stdout:
                 summary.outcome = "branch was already up to date"
@@ -99,7 +116,7 @@ def main() -> int:
             else:
                 push(summary)
             summary.commits.append(git(["rev-parse", "--short", "HEAD"], summary).stdout.strip())
-            summary.outcome = "merged upstream/main cleanly"
+            summary.outcome = "merged PR base cleanly"
             return 0
 
         conflicts = unmerged_paths(summary)
@@ -127,7 +144,7 @@ def main() -> int:
             summary.push_result = "not pushed (--no-push)"
         else:
             push(summary)
-        summary.outcome = "resolved conflicts and merged upstream/main"
+        summary.outcome = "resolved conflicts and merged PR base"
         return 0
     except Exception as e:
         summary.outcome = "failed"

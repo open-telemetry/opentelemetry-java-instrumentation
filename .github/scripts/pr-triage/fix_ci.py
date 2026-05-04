@@ -12,7 +12,6 @@ from typing import Any
 from common import (
     Summary,
     changed_files,
-    checkout_pr,
     commit_all_tracked,
     current_branch,
     detect_repo,
@@ -31,6 +30,7 @@ from common import (
     run,
     status_porcelain,
     untracked_files,
+    verify_pr_checkout,
     write_json,
 )
 
@@ -340,7 +340,7 @@ def main() -> int:
     try:
         require_clean_worktree(summary)
         summary.original_branch = current_branch(summary)
-        checkout_pr(args.pr, summary)
+        verify_pr_checkout(args.pr, summary)
 
         checks = failed_checks(args.pr, summary)
         if not checks:

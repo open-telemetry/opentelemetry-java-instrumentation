@@ -238,10 +238,9 @@ def ensure_pr_push_allowed(pr: int, summary: Summary) -> dict[str, Any]:
     return metadata
 
 
-def checkout_pr(pr: int, summary: Summary) -> dict[str, Any]:
-    progress(f"Checking out PR #{pr}")
-    gh(["pr", "checkout", str(pr)], summary)
+def verify_pr_checkout(pr: int, summary: Summary) -> dict[str, Any]:
     summary.pr_branch = current_branch(summary)
+    progress(f"Using checked out PR branch: {summary.pr_branch}")
     return ensure_pr_push_allowed(pr, summary)
 
 

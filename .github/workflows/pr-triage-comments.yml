@@ -1,0 +1,82 @@
+name: PR triage comments
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-triage-comments-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  authorize-command:
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation' && github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      allowed: ${{ steps.authorize.outputs.allowed }}
+    env:
+      PR_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Authorize command
+        id: authorize
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          allowed=$(python3 .github/scripts/pr-triage/comment_command.py authorize)
+          echo "allowed=$allowed" >> "$GITHUB_OUTPUT"
+
+  run-command:
+    needs: authorize-command
+    if: needs.authorize-command.outputs.allowed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PR_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+
+      - name: Check out PR
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        run: |
+          gh pr checkout "$PR_NUMBER"
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          cache-read-only: true
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot@1.0.40
+
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - name: Run PR triage command
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: python3 .github/scripts/pr-triage/comment_command.py execute

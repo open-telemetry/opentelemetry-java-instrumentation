@@ -47,12 +47,6 @@ def pr_metadata(pr: int, summary: Summary) -> dict[str, Any]:
     return gh_json(["pr", "view", str(pr), "--json", fields], summary)
 
 
-def checkout_pr_for_review(pr: int, summary: Summary) -> None:
-    progress(f"Checking out PR #{pr} for review")
-    gh(["pr", "checkout", str(pr)], summary)
-    summary.pr_branch = current_branch(summary)
-
-
 def parse_diff(diff: str) -> dict[str, dict[str, Any]]:
     files: dict[str, dict[str, Any]] = {}
     current_file: str | None = None
@@ -283,7 +277,8 @@ def main() -> int:
     try:
         require_clean_worktree(summary)
         summary.original_branch = current_branch(summary)
-        checkout_pr_for_review(args.pr, summary)
+        summary.pr_branch = summary.original_branch
+        progress(f"Using checked out PR branch for review: {summary.pr_branch}")
 
         metadata = pr_metadata(args.pr, summary)
         progress("Collecting PR diff")
