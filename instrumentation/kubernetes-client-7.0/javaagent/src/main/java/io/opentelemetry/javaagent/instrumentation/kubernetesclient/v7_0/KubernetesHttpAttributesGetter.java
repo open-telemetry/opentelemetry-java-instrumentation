@@ -32,15 +32,18 @@ class KubernetesHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getHttpResponseStatusCode(
-      Request request, ApiResponse<?> apiResponse, @Nullable Throwable error) {
-    return apiResponse.getStatusCode();
+      Request request, @Nullable ApiResponse<?> apiResponse, @Nullable Throwable error) {
+    return apiResponse == null ? null : apiResponse.getStatusCode();
   }
 
   @Override
   public List<String> getHttpResponseHeader(
-      Request request, ApiResponse<?> apiResponse, String name) {
-    return apiResponse.getHeaders().getOrDefault(name, emptyList());
+      Request request, @Nullable ApiResponse<?> apiResponse, String name) {
+    return apiResponse == null
+        ? emptyList()
+        : apiResponse.getHeaders().getOrDefault(name, emptyList());
   }
 
   @Override
