@@ -30,7 +30,6 @@ import org.apache.kafka.common.TopicPartition;
  * at any time.
  */
 public class KafkaConsumerTelemetry {
-
   private final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
 

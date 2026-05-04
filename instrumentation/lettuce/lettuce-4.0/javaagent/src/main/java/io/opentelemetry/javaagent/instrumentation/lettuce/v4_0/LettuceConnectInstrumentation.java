@@ -44,7 +44,7 @@ class LettuceConnectInstrumentation implements TypeInstrumentation {
         this.scope = scope;
       }
 
-      public void end(Throwable throwable, RedisURI redisUri) {
+      public void end(@Nullable Throwable throwable, RedisURI redisUri) {
         scope.close();
         connectInstrumenter().end(context, redisUri, null, throwable);
       }

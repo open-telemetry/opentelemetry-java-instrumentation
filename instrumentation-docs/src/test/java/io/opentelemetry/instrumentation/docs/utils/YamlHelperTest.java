@@ -84,34 +84,32 @@ class YamlHelperTest {
 
     String expectedYaml =
         """
-            libraries:
-              spring:
-              - name: spring-web-6.0
-                display_name: Spring Web
-                description: Spring Web 6.0 instrumentation
-                semantic_conventions:
-                - DATABASE_CLIENT_METRICS
-                - DATABASE_CLIENT_SPANS
-                disabled_by_default: true
-                source_path: instrumentation/spring/spring-web/spring-web-6.0
-                minimum_java_version: 11
-                scope:
-                  name: io.opentelemetry.spring-web-6.0
-                  schema_url: http:://www.schema.org
-                  attributes:
-                    instrumentation.type: library
-                    version.major: 6
-                javaagent_target_versions:
-                - org.springframework:spring-web:[6.0.0,)
-              struts:
-              - name: struts-2.3
-                source_path: instrumentation/struts/struts-2.3
-                scope:
-                  name: io.opentelemetry.struts-2.3
-                has_standalone_library: true
-                javaagent_target_versions:
-                - org.apache.struts:struts2-core:2.1.0
-            """;
+        libraries:
+        - name: spring-web-6.0
+          display_name: Spring Web
+          description: Spring Web 6.0 instrumentation
+          semantic_conventions:
+          - DATABASE_CLIENT_METRICS
+          - DATABASE_CLIENT_SPANS
+          disabled_by_default: true
+          source_path: instrumentation/spring/spring-web/spring-web-6.0
+          minimum_java_version: 11
+          scope:
+            name: io.opentelemetry.spring-web-6.0
+            schema_url: http:://www.schema.org
+            attributes:
+              instrumentation.type: library
+              version.major: 6
+          javaagent_target_versions:
+          - org.springframework:spring-web:[6.0.0,)
+        - name: struts-2.3
+          source_path: instrumentation/struts/struts-2.3
+          scope:
+            name: io.opentelemetry.struts-2.3
+          has_standalone_library: true
+          javaagent_target_versions:
+          - org.apache.struts:struts2-core:2.1.0
+        """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
   }
@@ -154,6 +152,7 @@ class YamlHelperTest {
             .classification(InstrumentationClassification.INTERNAL.name())
             .build();
 
+    // we don't include internal
     modules.add(
         new InstrumentationModule.Builder()
             .srcPath("instrumentation/internal/internal-application-logger")
@@ -185,31 +184,25 @@ class YamlHelperTest {
     String expectedYaml =
         """
             libraries:
-              spring:
-              - name: spring-web-6.0
-                description: Spring Web 6.0 instrumentation
-                semantic_conventions:
-                - DATABASE_CLIENT_METRICS
-                - DATABASE_CLIENT_SPANS
-                features:
-                - HTTP_ROUTE
-                - CONTEXT_PROPAGATION
-                source_path: instrumentation/spring/spring-web/spring-web-6.0
-                minimum_java_version: 11
-                scope:
-                  name: io.opentelemetry.spring-web-6.0
-                javaagent_target_versions:
-                - org.springframework:spring-web:[6.0.0,)
-                configurations:
-                - name: otel.instrumentation.spring-web-6.0.enabled
-                  description: Enables or disables Spring Web 6.0 instrumentation.
-                  type: boolean
-                  default: true
-            internal:
-            - name: internal-application-logger
-              source_path: instrumentation/internal/internal-application-logger
+            - name: spring-web-6.0
+              description: Spring Web 6.0 instrumentation
+              semantic_conventions:
+              - DATABASE_CLIENT_METRICS
+              - DATABASE_CLIENT_SPANS
+              features:
+              - HTTP_ROUTE
+              - CONTEXT_PROPAGATION
+              source_path: instrumentation/spring/spring-web/spring-web-6.0
+              minimum_java_version: 11
               scope:
-                name: io.opentelemetry.internal-application-logger
+                name: io.opentelemetry.spring-web-6.0
+              javaagent_target_versions:
+              - org.springframework:spring-web:[6.0.0,)
+              configurations:
+              - name: otel.instrumentation.spring-web-6.0.enabled
+                description: Enables or disables Spring Web 6.0 instrumentation.
+                type: boolean
+                default: true
             custom:
             - name: opentelemetry-external-annotations
               source_path: instrumentation/opentelemetry-external-annotations-1.0
@@ -218,6 +211,56 @@ class YamlHelperTest {
               javaagent_target_versions:
               - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
             """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  void testTargetVersionsAreOrdered() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+
+    modules.add(
+        new InstrumentationModule.Builder("test-instrumentation")
+            .srcPath("instrumentation/test-instrumentation")
+            .targetVersions(
+                Set.of(
+                    "org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)",
+                    "org.springframework:spring-aop:[1.2,)"))
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder("test-instrumentation2")
+            .srcPath("instrumentation/test-instrumentation2")
+            .targetVersions(
+                Set.of(
+                    "org.springframework:spring-aop:[1.2,)",
+                    "org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)"))
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+        libraries:
+        - name: test-instrumentation
+          source_path: instrumentation/test-instrumentation
+          scope:
+            name: io.opentelemetry.test-instrumentation
+          javaagent_target_versions:
+          - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)
+          - org.springframework:spring-aop:[1.2,)
+        - name: test-instrumentation2
+          source_path: instrumentation/test-instrumentation2
+          scope:
+            name: io.opentelemetry.test-instrumentation2
+          javaagent_target_versions:
+          - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)
+          - org.springframework:spring-aop:[1.2,)
+        """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
   }
@@ -374,32 +417,31 @@ class YamlHelperTest {
     String expectedYaml =
         """
         libraries:
-          mylib:
-          - name: mylib-2.3
-            source_path: instrumentation/mylib/mylib-core-2.3
-            scope:
-              name: io.opentelemetry.mylib-2.3
-            javaagent_target_versions:
-            - org.apache.mylib:mylib-core:2.3.0
-            telemetry:
-            - when: default
-              metrics:
-              - name: db.client.operation.duration
-                description: Duration of database client operations.
-                instrument: histogram
-                data_type: HISTOGRAM
-                unit: s
-                attributes:
-                - name: db.namespace
-                  type: STRING
-                - name: db.operation.name
-                  type: STRING
-                - name: db.system.name
-                  type: STRING
-                - name: server.address
-                  type: STRING
-                - name: server.port
-                  type: LONG
+        - name: mylib-2.3
+          source_path: instrumentation/mylib/mylib-core-2.3
+          scope:
+            name: io.opentelemetry.mylib-2.3
+          javaagent_target_versions:
+          - org.apache.mylib:mylib-core:2.3.0
+          telemetry:
+          - when: default
+            metrics:
+            - name: db.client.operation.duration
+              description: Duration of database client operations.
+              instrument: histogram
+              data_type: HISTOGRAM
+              unit: s
+              attributes:
+              - name: db.namespace
+                type: STRING
+              - name: db.operation.name
+                type: STRING
+              - name: db.system.name
+                type: STRING
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
         """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
@@ -435,38 +477,37 @@ class YamlHelperTest {
     String expectedYaml =
         """
         libraries:
-          test:
-          - name: test-1.0
-            source_path: instrumentation/test/test-1.0
-            scope:
-              name: io.opentelemetry.test-1.0
-            telemetry:
-            - when: default
-              metrics:
-              - name: test.counter
-                description: desc
-                instrument: counter
-                data_type: LONG_SUM
-                unit: '1'
-                attributes: []
-              - name: test.gauge
-                description: desc
-                instrument: gauge
-                data_type: DOUBLE_GAUGE
-                unit: '{test}'
-                attributes: []
-              - name: test.histogram
-                description: desc
-                instrument: histogram
-                data_type: HISTOGRAM
-                unit: s
-                attributes: []
-              - name: test.updowncounter
-                description: desc
-                instrument: updowncounter
-                data_type: LONG_SUM
-                unit: '1'
-                attributes: []
+        - name: test-1.0
+          source_path: instrumentation/test/test-1.0
+          scope:
+            name: io.opentelemetry.test-1.0
+          telemetry:
+          - when: default
+            metrics:
+            - name: test.counter
+              description: desc
+              instrument: counter
+              data_type: LONG_SUM
+              unit: '1'
+              attributes: []
+            - name: test.gauge
+              description: desc
+              instrument: gauge
+              data_type: DOUBLE_GAUGE
+              unit: '{test}'
+              attributes: []
+            - name: test.histogram
+              description: desc
+              instrument: histogram
+              data_type: HISTOGRAM
+              unit: s
+              attributes: []
+            - name: test.updowncounter
+              description: desc
+              instrument: updowncounter
+              data_type: LONG_SUM
+              unit: '1'
+              attributes: []
         """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
@@ -505,27 +546,26 @@ class YamlHelperTest {
     String expectedYaml =
         """
         libraries:
-          mylib:
-          - name: mylib-2.3
-            source_path: instrumentation/mylib/mylib-core-2.3
-            scope:
-              name: io.opentelemetry.mylib-2.3
-            has_standalone_library: true
-            telemetry:
-            - when: default
-              spans:
-              - span_kind: CLIENT
-                attributes:
-                - name: db.namespace
-                  type: STRING
-                - name: db.operation.name
-                  type: STRING
-                - name: db.system.name
-                  type: STRING
-                - name: server.address
-                  type: STRING
-                - name: server.port
-                  type: LONG
+        - name: mylib-2.3
+          source_path: instrumentation/mylib/mylib-core-2.3
+          scope:
+            name: io.opentelemetry.mylib-2.3
+          has_standalone_library: true
+          telemetry:
+          - when: default
+            spans:
+            - span_kind: CLIENT
+              attributes:
+              - name: db.namespace
+                type: STRING
+              - name: db.operation.name
+                type: STRING
+              - name: db.system.name
+                type: STRING
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
         """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
@@ -644,24 +684,68 @@ class YamlHelperTest {
     String expectedYaml =
         """
             libraries:
-              other-lib:
-              - name: other-lib-1.0
-                description: Test library instrumentation without link
-                source_path: instrumentation/other-lib/other-lib-1.0
-                scope:
-                  name: io.opentelemetry.other-lib-1.0
-                javaagent_target_versions:
-                - com.example:test-library:[1.0.0,)
-              test-lib:
-              - name: test-lib-1.0
-                description: Test library instrumentation with link
-                library_link: https://example.com/test-library-docs
-                source_path: instrumentation/test-lib/test-lib-1.0
-                scope:
-                  name: io.opentelemetry.test-lib-1.0
-                javaagent_target_versions:
-                - com.example:test-library:[1.0.0,)
+            - name: other-lib-1.0
+              description: Test library instrumentation without link
+              source_path: instrumentation/other-lib/other-lib-1.0
+              scope:
+                name: io.opentelemetry.other-lib-1.0
+              javaagent_target_versions:
+              - com.example:test-library:[1.0.0,)
+            - name: test-lib-1.0
+              description: Test library instrumentation with link
+              library_link: https://example.com/test-library-docs
+              source_path: instrumentation/test-lib/test-lib-1.0
+              scope:
+                name: io.opentelemetry.test-lib-1.0
+              javaagent_target_versions:
+              - com.example:test-library:[1.0.0,)
             """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  void testHasJavaAgentFlag() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/runtime-telemetry/runtime-telemetry-java8")
+            .instrumentationName("runtime-telemetry-java8")
+            .namespace("runtime-telemetry")
+            .group("runtime-telemetry")
+            .hasJavaAgent(true)
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/library-only/library-only-1.0")
+            .instrumentationName("library-only-1.0")
+            .namespace("library-only")
+            .group("library-only")
+            .hasStandaloneLibrary(true)
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+        libraries:
+        - name: library-only-1.0
+          source_path: instrumentation/library-only/library-only-1.0
+          scope:
+            name: io.opentelemetry.library-only-1.0
+          has_standalone_library: true
+        - name: runtime-telemetry-java8
+          source_path: instrumentation/runtime-telemetry/runtime-telemetry-java8
+          scope:
+            name: io.opentelemetry.runtime-telemetry-java8
+          has_javaagent: true
+        """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
   }
@@ -718,27 +802,26 @@ class YamlHelperTest {
     String expectedYaml =
         """
             libraries:
-              opentelemetry-api:
-              - name: opentelemetry-api-1.9
-                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.9
-                scope:
-                  name: io.opentelemetry.opentelemetry-api-1.9
-              - name: opentelemetry-api-1.10
-                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.10
-                scope:
-                  name: io.opentelemetry.opentelemetry-api-1.10
-              - name: opentelemetry-api-1.56
-                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.56
-                scope:
-                  name: io.opentelemetry.opentelemetry-api-1.56
-              - name: opentelemetry-api-1.57
-                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.57
-                scope:
-                  name: io.opentelemetry.opentelemetry-api-1.57
-              - name: opentelemetry-api-2.0
-                source_path: instrumentation/opentelemetry-api/opentelemetry-api-2.0
-                scope:
-                  name: io.opentelemetry.opentelemetry-api-2.0
+            - name: opentelemetry-api-1.9
+              source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.9
+              scope:
+                name: io.opentelemetry.opentelemetry-api-1.9
+            - name: opentelemetry-api-1.10
+              source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.10
+              scope:
+                name: io.opentelemetry.opentelemetry-api-1.10
+            - name: opentelemetry-api-1.56
+              source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.56
+              scope:
+                name: io.opentelemetry.opentelemetry-api-1.56
+            - name: opentelemetry-api-1.57
+              source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.57
+              scope:
+                name: io.opentelemetry.opentelemetry-api-1.57
+            - name: opentelemetry-api-2.0
+              source_path: instrumentation/opentelemetry-api/opentelemetry-api-2.0
+              scope:
+                name: io.opentelemetry.opentelemetry-api-2.0
             """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());

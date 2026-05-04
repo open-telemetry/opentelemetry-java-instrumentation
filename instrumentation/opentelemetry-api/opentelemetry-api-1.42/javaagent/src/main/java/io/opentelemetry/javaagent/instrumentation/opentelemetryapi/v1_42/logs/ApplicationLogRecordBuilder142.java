@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.Ap
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
     implements application.io.opentelemetry.api.logs.LogRecordBuilder {
@@ -27,12 +28,14 @@ public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
   @Override
   @CanIgnoreReturnValue
   public application.io.opentelemetry.api.logs.LogRecordBuilder setBody(
-      application.io.opentelemetry.api.common.Value<?> body) {
+      @Nullable application.io.opentelemetry.api.common.Value<?> body) {
     agentLogRecordBuilder.setBody(convertValue(body));
     return this;
   }
 
-  protected static Value<?> convertValue(application.io.opentelemetry.api.common.Value<?> value) {
+  @Nullable
+  protected static Value<?> convertValue(
+      @Nullable application.io.opentelemetry.api.common.Value<?> value) {
     if (value == null) {
       return null;
     }

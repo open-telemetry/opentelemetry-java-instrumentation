@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.apachedbcp;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -24,8 +25,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public abstract class AbstractApacheDbcpInstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-dbcp-2.0";
 
-  @Mock Driver driverMock;
-  @Mock Connection connectionMock;
+  @Mock private Driver driverMock;
+  @Mock private Connection connectionMock;
 
   protected abstract InstrumentationExtension testing();
 
@@ -63,16 +64,19 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
     dataSource.close();
     shutdown(dataSource);
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing().clearData();
-    Thread.sleep(100);
 
     // then
-    assertThat(testing().metrics())
-        .filteredOn(
-            metricData ->
-                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .isEmpty();
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing().metrics())
+                    .filteredOn(
+                        metricData ->
+                            metricData
+                                .getInstrumentationScopeInfo()
+                                .getName()
+                                .equals(INSTRUMENTATION_NAME))
+                    .isEmpty());
   }
 }

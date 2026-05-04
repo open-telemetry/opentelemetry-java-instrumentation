@@ -11,9 +11,6 @@ muzzle {
     module.set("play_$scalaVersion")
     versions.set("[$playVersion,)")
     assertInverse.set(true)
-    // versions 2.3.9 and 2.3.10 depends on com.typesafe.netty:netty-http-pipelining:1.1.2
-    // which does not exist
-    skip("2.3.9", "2.3.10")
   }
   pass {
     group.set("com.typesafe.play")
@@ -82,5 +79,9 @@ configurations.configureEach {
 }
 tasks.withType<Test>().configureEach {
   systemProperty("collectMetadata", otelProps.collectMetadata)
+  systemProperty(
+    "metadataConfig",
+    "otel.instrumentation.common.experimental.controller-telemetry.enabled=true"
+  )
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

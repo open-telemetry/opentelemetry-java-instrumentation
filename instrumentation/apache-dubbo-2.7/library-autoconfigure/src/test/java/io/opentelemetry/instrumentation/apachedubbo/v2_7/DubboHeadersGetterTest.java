@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -26,13 +27,13 @@ class DubboHeadersGetterTest {
   @Mock RpcInvocation rpcInvocation;
 
   @Test
-  void testKeys() throws Exception {
+  void testKeys() throws ReflectiveOperationException {
     when(context.getUrl()).thenReturn(new URL("http", "localhost", 1));
     when(context.getRemoteAddress()).thenReturn(new InetSocketAddress(1));
     when(context.getLocalAddress()).thenReturn(new InetSocketAddress(1));
 
     // for latest dep tests call getObjectAttachments, otherwise call getAttachments
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       when(getObjectAttachments()).thenReturn(singletonMap("key", "value"));
     } else {
       when(rpcInvocation.getAttachments()).thenReturn(singletonMap("key", "value"));
@@ -43,7 +44,7 @@ class DubboHeadersGetterTest {
   }
 
   @SuppressWarnings("unchecked")
-  private Map<Object, Object> getObjectAttachments() throws Exception {
+  private Map<Object, Object> getObjectAttachments() throws ReflectiveOperationException {
     return (Map<Object, Object>)
         RpcInvocation.class.getMethod("getObjectAttachments").invoke(rpcInvocation);
   }

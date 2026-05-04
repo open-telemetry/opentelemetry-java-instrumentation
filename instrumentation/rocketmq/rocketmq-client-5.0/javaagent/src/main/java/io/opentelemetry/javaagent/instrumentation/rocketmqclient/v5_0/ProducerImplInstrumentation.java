@@ -64,7 +64,7 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SendAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) SettableFuture<List<SendReceiptImpl>> future0,
         @Advice.Argument(4) List<PublishingMessageImpl> messages) {
@@ -101,10 +101,10 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SendAsyncAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<SendReceipt> onExit(
-        @Advice.Return CompletableFuture<SendReceipt> future, @Advice.Thrown Throwable throwable) {
-      return throwable == null ? CompletableFutureWrapper.wrap(future) : future;
+        @Advice.Return CompletableFuture<SendReceipt> future) {
+      return CompletableFutureWrapper.wrap(future);
     }
   }
 }

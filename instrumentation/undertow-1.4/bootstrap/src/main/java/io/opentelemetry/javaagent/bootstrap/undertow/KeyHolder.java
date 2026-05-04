@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.bootstrap.undertow;
 import java.util.IdentityHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 /**
  * Undertow's {@code io.undertow.server.HttpServerExchange} uses {@code
@@ -30,7 +32,16 @@ import java.util.concurrent.ConcurrentMap;
  * the same instance of the key.
  */
 public final class KeyHolder {
-  public static final ConcurrentMap<Class<?>, Object> contextKeys = new ConcurrentHashMap<>();
+  private static final ConcurrentMap<Class<?>, Object> contextKeys = new ConcurrentHashMap<>();
+
+  @Nullable
+  public static Object get(Class<?> keyType) {
+    return contextKeys.get(keyType);
+  }
+
+  public static Object computeIfAbsent(Class<?> keyType, Supplier<Object> supplier) {
+    return contextKeys.computeIfAbsent(keyType, unused -> supplier.get());
+  }
 
   private KeyHolder() {}
 }

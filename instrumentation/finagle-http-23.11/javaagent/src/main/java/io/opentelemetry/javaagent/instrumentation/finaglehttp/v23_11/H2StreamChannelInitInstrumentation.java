@@ -16,6 +16,11 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * Bridges the instrumented netty instrumentation to finagle's http/2 netty integrations. Without
+ * this the link is broken as the netty ServerContexts don't pass through to the last handler in the
+ * pipeline where it's needed.
+ */
 class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,7 +41,7 @@ class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitServerAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static ChannelInitializer<Channel> handleExit(
         @Advice.Return ChannelInitializer<Channel> initializer) {
@@ -47,7 +52,7 @@ class H2StreamChannelInitInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InitClientAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static ChannelInitializer<Channel> handleExit(
         @Advice.Return ChannelInitializer<Channel> initializer) {

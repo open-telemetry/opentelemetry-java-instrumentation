@@ -103,7 +103,7 @@ public final class MessageAttributesAccessor {
     }
     try {
       return (Map<String, Object>) GET_ATTRIBUTES.invoke(message);
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -119,7 +119,7 @@ public final class MessageAttributesAccessor {
     }
     try {
       return (Series<?>) NEW_SERIES.invoke(HEADER_CLASS);
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       return null;
     }
   }

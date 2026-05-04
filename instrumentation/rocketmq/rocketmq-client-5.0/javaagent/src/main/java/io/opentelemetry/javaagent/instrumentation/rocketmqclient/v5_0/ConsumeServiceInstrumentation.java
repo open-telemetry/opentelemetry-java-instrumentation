@@ -40,7 +40,7 @@ final class ConsumeServiceInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static MessageListener onEnter(@Advice.Argument(1) MessageListener messageListener) {
       // Replace messageListener by wrapper.
       return MessageListenerWrapper.wrapIfNeeded(messageListener);

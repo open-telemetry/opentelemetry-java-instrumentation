@@ -18,7 +18,8 @@ public class ErrorHandlerValve extends ErrorReportValve {
       return;
     }
     try {
-      response.getWriter().print(t != null ? t.getCause().getMessage() : response.getMessage());
+      Throwable cause = t != null ? t.getCause() : null;
+      response.getWriter().print(cause != null ? cause.getMessage() : response.getMessage());
     } catch (IOException ignored) {
       // Ignore exception when writing exception message to response fails on IO - same as is done
       // by the superclass itself and by other built-in ErrorReportValve implementations.

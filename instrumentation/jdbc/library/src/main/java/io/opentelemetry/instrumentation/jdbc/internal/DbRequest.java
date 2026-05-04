@@ -32,7 +32,7 @@ public abstract class DbRequest {
       PreparedStatement statement, Map<String, String> preparedStatementParameters) {
     return create(
         statement,
-        JdbcData.preparedStatement.get(statement),
+        JdbcData.PREPARED_STATEMENT.get(statement),
         null,
         preparedStatementParameters,
         true);

@@ -22,6 +22,8 @@ import javax.annotation.Nullable;
  */
 public class AwsLambdaFunctionInstrumenter {
 
+  private static final MapGetter mapGetter = new MapGetter();
+
   private final OpenTelemetry openTelemetry;
   final Instrumenter<AwsLambdaRequest, Object> instrumenter;
 
@@ -62,7 +64,7 @@ public class AwsLambdaFunctionInstrumenter {
     return openTelemetry
         .getPropagators()
         .getTextMapPropagator()
-        .extract(Context.root(), headers, new MapGetter());
+        .extract(Context.root(), headers, mapGetter);
   }
 
   private static class MapGetter implements TextMapGetter<Map<String, String>> {
@@ -73,6 +75,7 @@ public class AwsLambdaFunctionInstrumenter {
     }
 
     @Override
+    @Nullable
     public String get(@Nullable Map<String, String> map, String s) {
       if (map == null) {
         return null;

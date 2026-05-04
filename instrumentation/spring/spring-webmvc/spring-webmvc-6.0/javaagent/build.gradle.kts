@@ -8,11 +8,6 @@ muzzle {
     group.set("org.springframework")
     module.set("spring-webmvc")
     versions.set("[6.0.0,)")
-    // these versions depend on org.springframework:spring-web which has a bad dependency on
-    // javax.faces:jsf-api:1.1 which was released as pom only
-    skip("1.2.1", "1.2.2", "1.2.3", "1.2.4")
-    // 3.2.1.RELEASE has transitive dependencies like spring-web as "provided" instead of "compile"
-    skip("3.2.1.RELEASE")
     extraDependency("jakarta.servlet:jakarta.servlet-api:5.0.0")
     assertInverse.set(true)
   }
@@ -53,6 +48,11 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
+        "otel.instrumentation.common.experimental.view-telemetry.enabled=true"
+    )
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
@@ -60,7 +60,12 @@ tasks {
   val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
+        "otel.instrumentation.common.experimental.view-telemetry.enabled=true," +
+        "otel.instrumentation.spring-webmvc.experimental-span-attributes=true"
+    )
     jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
   }
 

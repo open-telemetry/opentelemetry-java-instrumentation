@@ -7,8 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.flushTimeout;
+import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.FLUSH_TIMEOUT;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.functionInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.messageInstrumenter;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -59,15 +60,15 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
       private final AwsLambdaRequest lambdaRequest;
       private final Scope functionScope;
       private final io.opentelemetry.context.Context functionContext;
-      private final Scope messageScope;
-      private final io.opentelemetry.context.Context messageContext;
+      @Nullable private final Scope messageScope;
+      @Nullable private final io.opentelemetry.context.Context messageContext;
 
       private AdviceScope(
           AwsLambdaRequest lambdaRequest,
           io.opentelemetry.context.Context functionContext,
           Scope functionScope,
-          io.opentelemetry.context.Context messageContext,
-          Scope messageScope) {
+          @Nullable io.opentelemetry.context.Context messageContext,
+          @Nullable Scope messageScope) {
         this.lambdaRequest = lambdaRequest;
         this.functionContext = functionContext;
         this.functionScope = functionScope;
@@ -97,10 +98,8 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
         io.opentelemetry.context.Context messageContext = null;
         Scope messageScope = null;
         if (arg instanceof SQSEvent) {
-          if (AwsLambdaSingletons.messageInstrumenter()
-              .shouldStart(functionContext, (SQSEvent) arg)) {
-            messageContext =
-                AwsLambdaSingletons.messageInstrumenter().start(functionContext, (SQSEvent) arg);
+          if (messageInstrumenter().shouldStart(functionContext, (SQSEvent) arg)) {
+            messageContext = messageInstrumenter().start(functionContext, (SQSEvent) arg);
             messageScope = messageContext.makeCurrent();
           }
         }
@@ -111,14 +110,11 @@ class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
       public void end(Object arg, @Nullable Object result, @Nullable Throwable throwable) {
         if (messageScope != null) {
           messageScope.close();
-          AwsLambdaSingletons.messageInstrumenter()
-              .end(messageContext, (SQSEvent) arg, null, throwable);
+          messageInstrumenter().end(messageContext, (SQSEvent) arg, null, throwable);
         }
-        if (functionScope != null) {
-          functionScope.close();
-          functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
-        }
-        OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), NANOSECONDS);
+        functionScope.close();
+        functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
+        OpenTelemetrySdkAccess.forceFlush(FLUSH_TIMEOUT.toNanos(), NANOSECONDS);
       }
     }
 

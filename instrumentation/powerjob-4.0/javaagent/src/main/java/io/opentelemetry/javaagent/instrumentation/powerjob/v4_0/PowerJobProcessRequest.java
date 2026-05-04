@@ -40,21 +40,6 @@ public class PowerJobProcessRequest {
   @Nullable private final String jobParams;
   @Nullable private final String instanceParams;
 
-  private PowerJobProcessRequest(
-      @Nullable Long jobId,
-      String methodName,
-      Class<?> declaringClass,
-      @Nullable String jobParams,
-      @Nullable String instanceParams,
-      String jobType) {
-    this.jobId = jobId;
-    this.methodName = methodName;
-    this.jobType = jobType;
-    this.declaringClass = declaringClass;
-    this.jobParams = jobParams;
-    this.instanceParams = instanceParams;
-  }
-
   public static PowerJobProcessRequest createRequest(
       @Nullable Long jobId,
       BasicProcessor handler,
@@ -70,6 +55,21 @@ public class PowerJobProcessRequest {
     }
     return new PowerJobProcessRequest(
         jobId, methodName, handler.getClass(), jobParams, instanceParams, jobType);
+  }
+
+  private PowerJobProcessRequest(
+      @Nullable Long jobId,
+      String methodName,
+      Class<?> declaringClass,
+      @Nullable String jobParams,
+      @Nullable String instanceParams,
+      String jobType) {
+    this.jobId = jobId;
+    this.methodName = methodName;
+    this.jobType = jobType;
+    this.declaringClass = declaringClass;
+    this.jobParams = jobParams;
+    this.instanceParams = instanceParams;
   }
 
   public String getMethodName() {

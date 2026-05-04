@@ -27,7 +27,7 @@ import net.bytebuddy.asm.Advice;
  * <p>This default instrumentation uses the class name of the filter to create the span. More
  * specific instrumentations may override this value.
  */
-public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   @Override
   protected String abortAdviceName() {
     return getClass().getName() + "$ContainerRequestContextAdvice";
@@ -56,7 +56,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         HttpServerRoute.update(
             parentContext,
             HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.SERVER_SPAN_NAME,
+            JaxrsServerSpanNaming.serverSpanName(),
             handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {

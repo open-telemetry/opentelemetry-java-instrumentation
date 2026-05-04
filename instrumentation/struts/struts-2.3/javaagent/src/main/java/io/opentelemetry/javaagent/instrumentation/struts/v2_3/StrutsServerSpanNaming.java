@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 
 class StrutsServerSpanNaming {
 
-  static final HttpServerRouteGetter<ActionProxy> serverSpanName =
+  private static final HttpServerRouteGetter<ActionProxy> serverSpanName =
       (context, actionProxy) -> {
         // We take name from the config, because it contains the path pattern from the
         // configuration.
@@ -32,6 +32,10 @@ class StrutsServerSpanNaming {
 
         return ServletContextPath.prepend(context, result);
       };
+
+  static HttpServerRouteGetter<ActionProxy> serverSpanName() {
+    return serverSpanName;
+  }
 
   private StrutsServerSpanNaming() {}
 }

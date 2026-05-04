@@ -49,7 +49,7 @@ class ActionInvocationInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope) {
         this.context = context;
         this.scope = scope;
       }
@@ -60,7 +60,7 @@ class ActionInvocationInstrumentation implements TypeInstrumentation {
         HttpServerRoute.update(
             parentContext,
             CONTROLLER,
-            StrutsServerSpanNaming.serverSpanName,
+            StrutsServerSpanNaming.serverSpanName(),
             actionInvocation.getProxy());
 
         if (!instrumenter().shouldStart(parentContext, actionInvocation)) {
@@ -77,6 +77,7 @@ class ActionInvocationInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.This ActionInvocation actionInvocation) {
       return AdviceScope.start(actionInvocation);
     }

@@ -2,11 +2,13 @@
 
 ## Quick Reference
 
-- Use when: reviewing `*Singletons` holder classes and their callers
+- Use when: reviewing `*Singletons`, `*SpanNaming`, and similar holder classes and their callers
 - Review focus: field/accessor naming, eager initialization, singleton accessor call sites
 
 Javaagent modules keep shared `Instrumenter` instances and related collaborators in a dedicated
-`Singletons` holder class such as `MyLibrarySingletons`.
+`Singletons` holder class such as `MyLibrarySingletons`. Some modules also use focused helper
+holders such as `*ServerSpanNaming` for shared span-name or route-name collaborators; apply the
+same accessor and call-site rules when these classes expose stored singleton fields.
 
 ## Rules
 
@@ -17,7 +19,11 @@ Javaagent modules keep shared `Instrumenter` instances and related collaborators
   `"io.opentelemetry.<module-name>"`.
 - For exported collaborators, keep the field `private`, use a lower camel case field name, and
   give the accessor method the exact same name as the field. Do not prefix these accessors with
-  `get`.
+  `get`. This rule applies only to zero-arg methods that directly return a stored singleton
+  field. It applies regardless of whether the holder class is named `*Singletons`,
+  `*ServerSpanNaming`, or another focused holder name. Methods that take arguments or compute a
+  value are not singleton accessors and keep their normal names (including `get*` when
+  appropriate).
   - `instrumenter` -> `instrumenter()`
   - `helper` -> `helper()`
   - `setter` -> `setter()`
@@ -30,10 +36,15 @@ Javaagent modules keep shared `Instrumenter` instances and related collaborators
   - `RESPONSE_STATUS` stays `RESPONSE_STATUS`
 - Callers should static import only exported singleton accessors and uppercase constant-like
   fields, and use those members unqualified: accessors for lower camel collaborators, fields for
-  uppercase constant-like members.
+  uppercase constant-like members. This includes route/span naming accessors such as
+  `serverSpanName()` when they simply return a stored `HttpServerRouteGetter` or similar
+  collaborator.
 - Keep verb-named helper methods as verbs when they perform work instead of returning a stored
   field. These methods are not singleton accessors and should not be static imported under this
   rule.
+- Methods on a `*Singletons` class that take arguments (for example `addressAndPort(client)` or
+  `getAddressAndPort(client)`) are not singleton accessors. Do not apply the field-style
+  accessor naming rule to them, and do not flag their `get*` prefix on that basis.
 
 ## Preferred Pattern
 
@@ -103,7 +114,8 @@ class MyInstrumentation implements TypeInstrumentation {
   final` field would be clearer and matches the naming guidance, including semantic keys/handles
   and immutable value constants.
 - Accessor methods named `getInstrumenter()`, `getHelper()`, `getSetter()`, and similar when they
-  simply return a backing field.
+  simply return a backing field. Do not flag `get*`-prefixed methods that take arguments or
+  compute a value rather than returning a stored singleton field.
 - Call sites that qualify singleton accessor or uppercase constant-like field usage with the holder
   class instead of static importing the accessor or field.
 - Static imports of non-accessor helper methods on a `*Singletons` class when the method performs

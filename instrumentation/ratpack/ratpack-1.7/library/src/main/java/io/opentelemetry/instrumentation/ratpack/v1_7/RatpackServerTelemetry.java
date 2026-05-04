@@ -35,6 +35,7 @@ import ratpack.registry.RegistrySpec;
  * }</pre>
  */
 public final class RatpackServerTelemetry {
+  private final Instrumenter<Request, Response> instrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static RatpackServerTelemetry create(OpenTelemetry openTelemetry) {
@@ -45,8 +46,6 @@ public final class RatpackServerTelemetry {
   public static RatpackServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new RatpackServerTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<Request, Response> instrumenter;
 
   RatpackServerTelemetry(Instrumenter<Request, Response> instrumenter) {
     this.instrumenter = instrumenter;

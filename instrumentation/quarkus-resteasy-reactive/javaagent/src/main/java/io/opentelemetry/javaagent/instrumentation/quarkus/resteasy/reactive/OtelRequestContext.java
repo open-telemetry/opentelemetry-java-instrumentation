@@ -14,7 +14,7 @@ public class OtelRequestContext {
   public static OtelRequestContext start(ResteasyReactiveRequestContext requestContext) {
     OtelRequestContext context = new OtelRequestContext();
     contextThreadLocal.set(context);
-    ResteasyReactiveSpanName.INSTANCE.updateServerSpanName(requestContext);
+    ResteasyReactiveSpanName.updateServerSpanName(requestContext);
     return context;
   }
 
@@ -29,7 +29,7 @@ public class OtelRequestContext {
       context.firstInvoke = false;
       return;
     }
-    ResteasyReactiveSpanName.INSTANCE.updateServerSpanName(requestContext);
+    ResteasyReactiveSpanName.updateServerSpanName(requestContext);
   }
 
   public void close() {

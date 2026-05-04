@@ -18,14 +18,14 @@ import java.time.Duration;
 
 public class AwsLambdaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-lambda-events-2.2";
-  private static final AwsLambdaFunctionInstrumenter FUNCTION_INSTRUMENTER =
+  private static final AwsLambdaFunctionInstrumenter functionInstrumenter =
       AwsLambdaEventsInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           INSTRUMENTATION_NAME,
           AgentCommonConfig.get().getKnownHttpRequestMethods());
-  private static final Instrumenter<SQSEvent, Void> MESSAGE_TRACER =
+  private static final Instrumenter<SQSEvent, Void> messageInstrumenter =
       AwsLambdaSqsInstrumenterFactory.forEvent(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME);
-  private static final Duration FLUSH_TIMEOUT =
+  public static final Duration FLUSH_TIMEOUT =
       Duration.ofMillis(
           DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_lambda")
               .getLong(
@@ -33,15 +33,11 @@ public class AwsLambdaSingletons {
                   WrapperConfiguration.OTEL_LAMBDA_FLUSH_TIMEOUT_DEFAULT.toMillis()));
 
   public static AwsLambdaFunctionInstrumenter functionInstrumenter() {
-    return FUNCTION_INSTRUMENTER;
+    return functionInstrumenter;
   }
 
   public static Instrumenter<SQSEvent, Void> messageInstrumenter() {
-    return MESSAGE_TRACER;
-  }
-
-  public static Duration flushTimeout() {
-    return FLUSH_TIMEOUT;
+    return messageInstrumenter;
   }
 
   private AwsLambdaSingletons() {}

@@ -21,7 +21,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.spring.webmvc.IsGrailsHandler;
+import io.opentelemetry.javaagent.instrumentation.spring.webmvc.common.IsGrailsHandler;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
@@ -47,7 +47,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
             .and(nameStartsWith("handle"))
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArguments(3)),
-        HandlerAdapterInstrumentation.class.getName() + "$ControllerAdvice");
+        getClass().getName() + "$ControllerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -79,7 +79,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
         // Name the parent span based on the matching pattern
         HttpServerRoute.update(
-            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME, request);
+            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.serverSpanName(), request);
 
         if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
           return null;

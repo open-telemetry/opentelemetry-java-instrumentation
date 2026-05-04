@@ -18,6 +18,7 @@ import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -50,10 +51,10 @@ class AwsHttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(value = 0) Request<?> request,
-        @Advice.Return Response<?> response,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Return @Nullable Response<?> response,
+        @Advice.Thrown @Nullable Throwable throwable) {
       if (throwable instanceof Exception) {
-        TracingRequestHandler.tracingHandler.afterError(request, response, (Exception) throwable);
+        TracingRequestHandler.tracingHandler().afterError(request, response, (Exception) throwable);
       }
       Scope scope = request.getHandlerContext(TracingRequestHandler.SCOPE);
       if (scope != null) {

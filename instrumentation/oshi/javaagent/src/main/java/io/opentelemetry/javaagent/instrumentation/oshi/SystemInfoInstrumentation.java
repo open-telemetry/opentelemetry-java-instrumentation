@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.oshi;
 
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -24,16 +23,18 @@ class SystemInfoInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    // Instrument the no-arg constructor: prior versions exposed static
+    // getCurrentPlatformEnum()/getCurrentPlatform() entry points, but oshi 7.0.0 removed both, so
+    // we trigger registration on instantiation instead (works across all supported versions).
     transformer.applyAdviceToMethod(
-        isPublic().and(isStatic()).and(namedOneOf("getCurrentPlatformEnum", "getCurrentPlatform")),
-        getClass().getName() + "$GetCurrentPlatformEnumAdvice");
+        isConstructor().and(takesArguments(0)), getClass().getName() + "$ConstructAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class GetCurrentPlatformEnumAdvice {
+  public static class ConstructAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit() {
       MetricsRegistration.register();
     }
   }

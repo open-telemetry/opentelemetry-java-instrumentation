@@ -30,9 +30,9 @@ public final class JdbcUtils {
   public static Connection connectionFromStatement(Statement statement) {
     try {
       return unwrapConnection(statement.getConnection());
-    } catch (Throwable e) {
+    } catch (Throwable t) {
       // Had some problem getting the connection.
-      logger.log(FINE, "Could not get connection from a statement", e);
+      logger.log(FINE, "Could not get connection from a statement", t);
       return null;
     }
   }
@@ -53,7 +53,7 @@ public final class JdbcUtils {
         if (connection.isWrapperFor(Connection.class)) {
           connection = connection.unwrap(Connection.class);
         }
-      } catch (Exception | AbstractMethodError e) {
+      } catch (Exception | AbstractMethodError ignored) {
         if (connection != null) {
           // Attempt to work around c3po delegating to an connection that doesn't support
           // unwrapping.
@@ -71,9 +71,9 @@ public final class JdbcUtils {
         // or: jdts.jdbc which always throws `AbstractMethodError` (at least up to version 1.3)
         // Stick with original connection.
       }
-    } catch (Throwable e) {
+    } catch (Throwable t) {
       // Had some problem getting the connection.
-      logger.log(FINE, "Could not unwrap connection", e);
+      logger.log(FINE, "Could not unwrap connection", t);
       return null;
     }
     return connection;
@@ -84,10 +84,10 @@ public final class JdbcUtils {
     // lock, and computeDbInfo() calls back to the application code via Connection.getMetaData()
     // which could then result in a deadlock
     // (e.g. https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4188)
-    DbInfo dbInfo = JdbcData.connectionInfo.get(connection);
+    DbInfo dbInfo = JdbcData.CONNECTION_INFO.get(connection);
     if (dbInfo == null) {
       dbInfo = computeDbInfo(connection);
-      JdbcData.connectionInfo.set(connection, JdbcData.intern(dbInfo));
+      JdbcData.CONNECTION_INFO.set(connection, JdbcData.intern(dbInfo));
     }
     return dbInfo;
   }
@@ -116,7 +116,7 @@ public final class JdbcUtils {
       } else {
         return DbInfo.DEFAULT;
       }
-    } catch (SQLException se) {
+    } catch (SQLException ignored) {
       return DbInfo.DEFAULT;
     }
   }

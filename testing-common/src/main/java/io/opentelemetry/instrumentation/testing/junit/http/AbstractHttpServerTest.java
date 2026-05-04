@@ -417,17 +417,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
-        "http.server.request.duration",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("Duration of HTTP server requests.")
-                        .hasUnit("s")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point -> point.hasSumGreaterThan(0.0)))));
+        metric ->
+            metric
+                .hasName("http.server.request.duration")
+                .hasDescription("Duration of HTTP server requests.")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
   }
 
   /**

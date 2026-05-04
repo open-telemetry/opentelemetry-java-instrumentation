@@ -11,7 +11,7 @@ public abstract class OpenTelemetryChannelInitializerDelegate<T extends Channel>
 
   private final ChannelInitializer<T> initializer;
 
-  public OpenTelemetryChannelInitializerDelegate(ChannelInitializer<T> initializer) {
+  protected OpenTelemetryChannelInitializerDelegate(ChannelInitializer<T> initializer) {
     this.initializer = initializer;
   }
 

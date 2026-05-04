@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 
 import com.clickhouse.client.ClickHouseException;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseDbRequest;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
 
 public class ClickHouseClientV1Singletons {
 

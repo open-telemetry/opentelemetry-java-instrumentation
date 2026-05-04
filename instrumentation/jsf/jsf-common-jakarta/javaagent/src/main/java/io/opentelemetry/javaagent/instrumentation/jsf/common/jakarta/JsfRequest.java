@@ -1,0 +1,48 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta;
+
+import static java.util.Objects.requireNonNull;
+
+import jakarta.faces.component.ActionSource2;
+import jakarta.faces.event.ActionEvent;
+import javax.annotation.Nullable;
+
+public class JsfRequest {
+  @Nullable private final String spanName;
+
+  public JsfRequest(ActionEvent event) {
+    this.spanName = extractSpanName(event);
+  }
+
+  public String getSpanName() {
+    return requireNonNull(spanName);
+  }
+
+  public boolean shouldStartSpan() {
+    return spanName != null;
+  }
+
+  @Nullable
+  private static String extractSpanName(ActionEvent event) {
+    // https://jakarta.ee/specifications/faces/3.0/apidocs/jakarta/faces/component/actionsource2
+    // ActionSource2 was added in JSF 1.2 and is implemented by components that have an action
+    // attribute such as a button or a link
+    if (event.getComponent() instanceof ActionSource2) {
+      ActionSource2 actionSource = (ActionSource2) event.getComponent();
+      if (actionSource.getActionExpression() != null) {
+        // either an el expression in the form #{bean.method()} or navigation case name
+        String expressionString = actionSource.getActionExpression().getExpressionString();
+        // start span only if expression string is really an expression
+        if (expressionString.startsWith("#{") || expressionString.startsWith("${")) {
+          return expressionString;
+        }
+      }
+    }
+
+    return null;
+  }
+}

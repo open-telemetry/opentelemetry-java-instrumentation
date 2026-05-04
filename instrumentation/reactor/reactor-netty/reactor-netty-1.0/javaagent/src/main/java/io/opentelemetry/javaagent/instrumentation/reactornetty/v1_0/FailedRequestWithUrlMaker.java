@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import javax.annotation.Nullable;
 import reactor.netty.http.client.HttpClientConfig;
 import reactor.netty.http.client.HttpClientRequest;
 
@@ -35,7 +36,7 @@ final class FailedRequestWithUrlMaker {
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, @Nullable Object[] args) throws Throwable {
       if ("resourceUrl".equals(method.getName())) {
         return computeUrlFromConfig();
       }

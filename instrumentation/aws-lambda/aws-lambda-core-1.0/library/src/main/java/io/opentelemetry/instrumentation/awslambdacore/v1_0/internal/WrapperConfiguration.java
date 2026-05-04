@@ -13,8 +13,6 @@ import java.time.Duration;
  */
 public final class WrapperConfiguration {
 
-  private WrapperConfiguration() {}
-
   public static final String OTEL_LAMBDA_FLUSH_TIMEOUT_ENV_KEY =
       "OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT";
   public static final Duration OTEL_LAMBDA_FLUSH_TIMEOUT_DEFAULT = Duration.ofSeconds(10);
@@ -24,10 +22,12 @@ public final class WrapperConfiguration {
     if (lambdaFlushTimeout != null && !lambdaFlushTimeout.isEmpty()) {
       try {
         return Duration.ofMillis(Long.parseLong(lambdaFlushTimeout));
-      } catch (NumberFormatException nfe) {
+      } catch (NumberFormatException ignored) {
         // ignored - default used
       }
     }
     return OTEL_LAMBDA_FLUSH_TIMEOUT_DEFAULT;
   }
+
+  private WrapperConfiguration() {}
 }

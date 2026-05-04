@@ -17,7 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
@@ -109,7 +109,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       Destination destination;
       try {
         destination = producer.getDestination();
-      } catch (JMSException e) {
+      } catch (JMSException ignored) {
         destination = null;
       }
       CallDepth callDepth = CallDepth.forClass(MessageProducer.class);

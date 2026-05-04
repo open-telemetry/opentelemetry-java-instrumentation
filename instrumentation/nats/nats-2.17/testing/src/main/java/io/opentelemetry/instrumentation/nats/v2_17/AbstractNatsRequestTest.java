@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,11 +39,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
   void beforeEach() {
     clientId = connection.getServerInfo().getClientId();
     subscription = connection.subscribe("sub");
-  }
-
-  @AfterEach
-  void afterEach() throws InterruptedException {
-    subscription.drain(Duration.ofSeconds(10));
+    cleanup.deferCleanup(() -> subscription.drain(Duration.ofSeconds(10)));
   }
 
   @Test
@@ -78,14 +73,13 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         connection
             .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
             .subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
 
     // when
     Message message =
         testing()
             .runWithSpan(
                 "parent", () -> connection.request("sub", new byte[] {0}, Duration.ofSeconds(10)));
-    connection.closeDispatcher(dispatcher);
-
     // then
     assertThat(message).isNotNull();
     assertPublishReceiveSpansSameTrace();
@@ -99,6 +93,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         connection
             .createDispatcher(m -> connection.publish(m.getReplyTo(), new Headers(), m.getData()))
             .subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
 
     // when
     Message message =
@@ -108,8 +103,6 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                 () ->
                     connection.request(
                         "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(10)));
-    connection.closeDispatcher(dispatcher);
-
     // then
     assertThat(message).isNotNull();
     assertPublishReceiveSpansSameTrace();
@@ -123,13 +116,12 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         connection
             .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
             .subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when
     Message response =
         testing().runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(10)));
-    connection.closeDispatcher(dispatcher);
-
     // then
     assertThat(response).isNotNull();
     assertPublishReceiveSpansSameTrace();
@@ -143,14 +135,13 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         connection
             .createDispatcher(m -> connection.publish(m.getReplyTo(), new Headers(), m.getData()))
             .subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
     NatsMessage message =
         NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
     Message response =
         testing().runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(10)));
-    connection.closeDispatcher(dispatcher);
-
     // then
     assertThat(response).isNotNull();
     assertPublishReceiveSpansSameTrace();
@@ -164,12 +155,11 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         connection
             .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
             .subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
 
     // when
     CompletableFuture<Message> message =
-        testing()
-            .runWithSpan("parent", () -> connection.request("sub", new byte[] {0}))
-            .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
+        testing().runWithSpan("parent", () -> connection.request("sub", new byte[] {0}));
 
     // then
     assertPublishReceiveSpansSameTrace();
@@ -184,12 +174,12 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         connection
             .createDispatcher(m -> connection.publish(m.getReplyTo(), new Headers(), m.getData()))
             .subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
 
     // when
     CompletableFuture<Message> message =
         testing()
-            .runWithSpan("parent", () -> connection.request("sub", new Headers(), new byte[] {0}))
-            .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
+            .runWithSpan("parent", () -> connection.request("sub", new Headers(), new byte[] {0}));
 
     // then
     assertPublishReceiveSpansSameTrace();
@@ -204,13 +194,12 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         connection
             .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
             .subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when
     CompletableFuture<Message> response =
-        testing()
-            .runWithSpan("parent", () -> connection.request(message))
-            .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
+        testing().runWithSpan("parent", () -> connection.request(message));
 
     // then
     assertPublishReceiveSpansSameTrace();
@@ -225,14 +214,13 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         connection
             .createDispatcher(m -> connection.publish(m.getReplyTo(), new Headers(), m.getData()))
             .subscribe("sub");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
     NatsMessage message =
         NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
     CompletableFuture<Message> response =
-        testing()
-            .runWithSpan("parent", () -> connection.request(message))
-            .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
+        testing().runWithSpan("parent", () -> connection.request(message));
 
     // then
     assertPublishReceiveSpansSameTrace();

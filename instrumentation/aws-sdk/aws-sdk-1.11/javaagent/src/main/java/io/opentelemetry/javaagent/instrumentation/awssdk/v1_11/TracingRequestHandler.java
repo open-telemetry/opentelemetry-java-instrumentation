@@ -16,6 +16,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import javax.annotation.Nullable;
 
 /**
  * A {@link RequestHandler2} for use in the agent. Unlike library instrumentation, the agent will
@@ -33,7 +34,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   public static final HandlerContextKey<Scope> SCOPE =
       new HandlerContextKey<>(Scope.class.getName());
 
-  public static final RequestHandler2 tracingHandler =
+  private static final RequestHandler2 tracingHandler =
       AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
@@ -43,6 +44,10 @@ public class TracingRequestHandler extends RequestHandler2 {
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .build()
           .createRequestHandler();
+
+  public static RequestHandler2 tracingHandler() {
+    return tracingHandler;
+  }
 
   @Override
   public void beforeRequest(Request<?> request) {
@@ -66,7 +71,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   }
 
   @Override
-  public void afterError(Request<?> request, Response<?> response, Exception e) {
+  public void afterError(Request<?> request, @Nullable Response<?> response, Exception e) {
     tracingHandler.afterError(request, response, e);
     finish(request);
   }

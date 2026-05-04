@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
+import org.apache.rocketmq.client.apis.ClientException;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.consumer.FilterExpression;
@@ -34,7 +35,6 @@ import org.apache.rocketmq.client.apis.consumer.FilterExpressionType;
 import org.apache.rocketmq.client.apis.message.Message;
 import org.apache.rocketmq.client.apis.producer.Producer;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -50,15 +50,11 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
   @BeforeAll
   static void setUp() {
     CONTAINER.start();
-  }
-
-  @AfterAll
-  static void tearDown() {
-    CONTAINER.close();
+    cleanup.deferAfterAll(CONTAINER::close);
   }
 
   @Test
-  void testSendAndConsumeMessage() throws Throwable {
+  void testSendAndConsumeMessage() throws ClientException {
     ClientConfiguration clientConfiguration =
         ClientConfiguration.newBuilder()
             .setEndpoints(CONTAINER.endpoints)
@@ -104,7 +100,8 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
     SendReceipt sendReceipt =
         testing()
             .runWithSpan(
-                "parent", (ThrowingSupplier<SendReceipt, Throwable>) () -> producer.send(message));
+                "parent",
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     testing()
         .waitAndAssertTraces(
             trace ->

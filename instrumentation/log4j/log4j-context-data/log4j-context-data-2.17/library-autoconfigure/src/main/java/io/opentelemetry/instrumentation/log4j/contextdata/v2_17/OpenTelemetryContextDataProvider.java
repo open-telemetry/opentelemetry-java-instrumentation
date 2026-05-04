@@ -51,7 +51,7 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
           "io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder");
       return true;
 
-    } catch (ClassNotFoundException ok) {
+    } catch (ClassNotFoundException ignored) {
       return false;
     }
   }
@@ -95,7 +95,7 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
 
   private static class Configuration {
     @SuppressWarnings("deprecation") // using deprecated config property
-    static final boolean baggageEnabled =
+    private static final boolean baggageEnabled =
         DeclarativeConfigUtil.getInstrumentationConfig(
                 GlobalOpenTelemetry.getOrNoop(), "log4j_context_data")
             .getBoolean(
@@ -103,7 +103,7 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
                 ConfigPropertiesUtil.getBoolean(
                     "otel.instrumentation.log4j-context-data.add-baggage", false));
 
-    static final ContextDataKeys contextDataKeys =
+    private static final ContextDataKeys contextDataKeys =
         ContextDataKeys.create(GlobalOpenTelemetry.getOrNoop());
   }
 }

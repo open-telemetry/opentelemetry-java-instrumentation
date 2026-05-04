@@ -30,7 +30,9 @@ public final class PropagatorBasedSpanLinksExtractor<REQUEST>
 
   @Override
   public void extract(SpanLinksBuilder spanLinks, Context parentContext, REQUEST request) {
-    Context extracted = propagator.extract(parentContext, request, getter);
+    // extract from the carrier against a root context so that, when the carrier contains no
+    // propagation data, no link is added (rather than linking to the ambient parent span)
+    Context extracted = propagator.extract(Context.root(), request, getter);
     spanLinks.addLink(Span.fromContext(extracted).getSpanContext());
   }
 }

@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ContainerResourceTest {
 
-  public static final String TEST_CONTAINER_ID = "abcdef123123deadbeef";
+  private static final String TEST_CONTAINER_ID = "abcdef123123deadbeef";
   @Mock CgroupV1ContainerIdExtractor v1;
   @Mock CgroupV2ContainerIdExtractor v2;
 
@@ -56,7 +57,7 @@ class ContainerResourceTest {
   }
 
   @Test
-  void testAlternateEncoding() throws Exception {
+  void testAlternateEncoding() throws IOException {
     String containerId = "ac679f8a8319c8cf7d38e1adf263bc08d231f2ff81abda3915f6e8ba4d64156a";
     String line = "13:name=systemd:/podruntime/docker/kubepods/" + containerId + ".aaaa";
     Charset ibmCharset = Charset.forName("Cp1047");

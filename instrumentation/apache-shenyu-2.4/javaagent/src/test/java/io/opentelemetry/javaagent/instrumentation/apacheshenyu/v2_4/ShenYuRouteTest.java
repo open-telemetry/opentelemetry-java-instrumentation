@@ -46,11 +46,11 @@ import reactor.netty.http.client.HttpClient;
     classes = {ShenYuBootstrapApplication.class})
 class ShenYuRouteTest {
 
-  @Value("${local.server.port}")
-  private int port;
-
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Value("${local.server.port}")
+  private int port;
 
   @BeforeAll
   static void beforeAll()

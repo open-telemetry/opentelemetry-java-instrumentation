@@ -4,3 +4,12 @@ description: >
   and spring-webflux to instrument Spring Boot applications. It does not produce telemetry on its
   own. This instrumentation is mostly used as part of the Spring Boot starter.
 library_link: https://spring.io/projects/spring-boot
+configurations:
+  - name: otel.instrumentation.kafka.autoconfigure-interceptor
+    declarative_name: java.kafka.autoconfigure_interceptor
+    description: >
+      Enable automatic configuration of tracing interceptors on
+      `ConcurrentKafkaListenerContainerFactory` using a `BeanPostProcessor`. You may disable this if
+      you wish to manually configure these interceptors.
+    type: boolean
+    default: true

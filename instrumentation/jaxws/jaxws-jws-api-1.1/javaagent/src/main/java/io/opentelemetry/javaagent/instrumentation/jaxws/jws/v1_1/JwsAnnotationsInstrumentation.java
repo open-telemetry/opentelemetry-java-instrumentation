@@ -24,7 +24,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsRequest;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.v2_0.JaxWsRequest;
 import javax.annotation.Nullable;
 import javax.jws.WebService;
 import net.bytebuddy.asm.Advice;
@@ -33,7 +33,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class JwsAnnotationsInstrumentation implements TypeInstrumentation {
 
-  public static final String JWS_WEB_SERVICE_ANNOTATION = "javax.jws.WebService";
+  private static final String JWS_WEB_SERVICE_ANNOTATION = "javax.jws.WebService";
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -93,7 +93,7 @@ class JwsAnnotationsInstrumentation implements TypeInstrumentation {
         return new AdviceScope(callDepth, request, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0 || scope == null) {
           return;
         }
