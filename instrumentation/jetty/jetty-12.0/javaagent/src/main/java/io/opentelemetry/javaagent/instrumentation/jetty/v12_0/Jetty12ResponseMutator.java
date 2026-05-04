@@ -8,11 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import org.eclipse.jetty.server.Response;
 
-class Jetty12ResponseMutator implements HttpServerResponseMutator<Response> {
-
-  public static final Jetty12ResponseMutator INSTANCE = new Jetty12ResponseMutator();
-
-  private Jetty12ResponseMutator() {}
+enum Jetty12ResponseMutator implements HttpServerResponseMutator<Response> {
+  INSTANCE;
 
   @Override
   public void appendHeader(Response response, String name, String value) {
