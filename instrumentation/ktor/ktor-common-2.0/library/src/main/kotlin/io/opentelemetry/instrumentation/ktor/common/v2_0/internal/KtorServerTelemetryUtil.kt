@@ -105,11 +105,10 @@ object KtorServerTelemetryUtil {
   private class EmptyInterceptor(val dispatcher: CoroutineDispatcher) : ContinuationInterceptor {
     override val key: CoroutineContext.Key<*> = ContinuationInterceptor
 
-override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> =
-  dispatcher.interceptContinuation(continuation)
+    override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = dispatcher.interceptContinuation(continuation)
 
-override fun releaseInterceptedContinuation(continuation: Continuation<*>) {
-  dispatcher.releaseInterceptedContinuation(continuation)
-}
+    override fun releaseInterceptedContinuation(continuation: Continuation<*>) {
+      dispatcher.releaseInterceptedContinuation(continuation)
+    }
   }
 }
