@@ -8,12 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory;
 
-public final class AwsSdkSingletons {
+public class AwsSdkSingletons {
 
-  private static final AwsSdkTelemetry TELEMETRY = AwsSdkTelemetryFactory.telemetry();
+  private static final AwsSdkTelemetry telemetry = AwsSdkTelemetryFactory.telemetry();
 
   public static AwsSdkTelemetry telemetry() {
-    return TELEMETRY;
+    return telemetry;
   }
 
   private AwsSdkSingletons() {}

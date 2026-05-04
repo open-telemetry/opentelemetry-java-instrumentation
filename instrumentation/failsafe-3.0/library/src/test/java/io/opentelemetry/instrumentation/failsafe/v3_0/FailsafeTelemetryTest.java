@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-final class FailsafeTelemetryTest {
+class FailsafeTelemetryTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
@@ -46,7 +46,7 @@ final class FailsafeTelemetryTest {
       try {
         int temp = i;
         Failsafe.with(instrumentedCircuitBreaker).get(() -> temp < 2 ? null : new Object());
-      } catch (CircuitBreakerOpenException e) {
+      } catch (CircuitBreakerOpenException ignored) {
         assertThat(i).isEqualTo(2);
       }
     }

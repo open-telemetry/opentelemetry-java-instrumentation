@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.bootstrap.Bootstrap;
@@ -46,11 +45,8 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLHandshakeException;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -98,12 +94,8 @@ class Netty41ClientSslTest {
     server = new HttpClientTestServer(testing.getOpenTelemetry());
     server.start();
     eventLoopGroup = new NioEventLoopGroup();
-  }
-
-  @AfterAll
-  static void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
-    server.stop().get(10, SECONDS);
-    eventLoopGroup.shutdownGracefully();
+    cleanup.deferAfterAll(eventLoopGroup::shutdownGracefully);
+    cleanup.deferAfterAll(server::stop);
   }
 
   @Test
@@ -168,18 +160,8 @@ class Netty41ClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             equalTo(NETWORK_TYPE, "ipv4"),
-                            satisfies(
-                                SERVER_ADDRESS,
-                                v ->
-                                    v.satisfiesAnyOf(
-                                        k -> assertThat(k).isNull(),
-                                        k -> assertThat(k).isEqualTo(uri.getHost()))),
-                            satisfies(
-                                SERVER_PORT,
-                                v ->
-                                    v.satisfiesAnyOf(
-                                        k -> assertThat(k).isNull(),
-                                        k -> assertThat(k).isEqualTo(uri.getPort()))),
+                            satisfies(SERVER_ADDRESS, val -> val.isIn(uri.getHost(), null)),
+                            satisfies(SERVER_PORT, val -> val.isIn(uri.getPort(), null)),
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"))));
   }

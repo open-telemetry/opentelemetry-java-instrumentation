@@ -31,7 +31,7 @@ public abstract class AbstractSpringWebFluxServerTest
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
-  public ConfigurableApplicationContext setupServer() {
+  protected ConfigurableApplicationContext setupServer() {
     SpringApplication app = new SpringApplication(getApplicationClass());
     Map<String, Object> properties = new HashMap<>();
     properties.put("server.port", port);
@@ -43,7 +43,7 @@ public abstract class AbstractSpringWebFluxServerTest
   }
 
   @Override
-  public void stopServer(ConfigurableApplicationContext configurableApplicationContext) {
+  protected void stopServer(ConfigurableApplicationContext configurableApplicationContext) {
     configurableApplicationContext.close();
   }
 

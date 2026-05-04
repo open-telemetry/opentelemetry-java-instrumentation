@@ -4,7 +4,7 @@ plugins {
 
 muzzle {
   pass {
-    coreJdk()
+    coreJdk.set(true)
   }
 }
 
@@ -32,8 +32,8 @@ tasks {
   withType<JavaCompile>().configureEach {
     options.release.set(null as Int?)
   }
-  withType<Test>().configureEach {
+  test {
     jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }

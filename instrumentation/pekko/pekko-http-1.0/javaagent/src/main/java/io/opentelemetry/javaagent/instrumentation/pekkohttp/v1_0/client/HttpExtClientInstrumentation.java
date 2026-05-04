@@ -24,7 +24,7 @@ import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import scala.concurrent.Future;
 
-public class HttpExtClientInstrumentation implements TypeInstrumentation {
+class HttpExtClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pekko.http.scaladsl.HttpExt");
@@ -42,7 +42,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
   public static class SingleRequestAdvice {
     @Advice.AssignReturned.ToArguments(
         @ToArgument(value = 0, index = 0, typing = Assigner.Typing.DYNAMIC))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(@Advice.Argument(value = 0) HttpRequest request) {
       Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
@@ -65,7 +65,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Future<HttpResponse> methodExit(
         @Advice.Argument(0) HttpRequest request,
         @Advice.This HttpExt thiz,

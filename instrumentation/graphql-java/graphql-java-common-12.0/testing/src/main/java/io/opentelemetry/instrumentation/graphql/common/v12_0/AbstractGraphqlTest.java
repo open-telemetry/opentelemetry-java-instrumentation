@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GR
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -28,7 +29,6 @@ import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -81,7 +81,8 @@ public abstract class AbstractGraphqlTest {
 
     try (Reader reader =
         new InputStreamReader(
-            this.getClass().getClassLoader().getResourceAsStream("schema.graphqls"), UTF_8)) {
+            requireNonNull(getClass().getClassLoader().getResourceAsStream("schema.graphqls")),
+            UTF_8)) {
       graphqlSchema = buildSchema(reader);
       GraphQL.Builder graphqlBuilder = GraphQL.newGraphQL(graphqlSchema);
       configure(graphqlBuilder);
@@ -251,8 +252,9 @@ public abstract class AbstractGraphqlTest {
   void parseError() {
     ExecutionResult result = graphql.execute("query foo bar");
 
-    assertThat(result.getErrors()).hasSize(1);
-    assertThat(result.getErrors().get(0).getErrorType().toString()).isEqualTo("InvalidSyntax");
+    assertThat(result.getErrors())
+        .singleElement()
+        .satisfies(error -> assertThat(error.getErrorType().toString()).isEqualTo("InvalidSyntax"));
 
     getTesting()
         .waitAndAssertTraces(
@@ -262,7 +264,7 @@ public abstract class AbstractGraphqlTest {
                         span.hasName("GraphQL Operation")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributes(Attributes.empty())
+                            .hasTotalAttributeCount(0)
                             .hasStatus(StatusData.error())
                             .hasEventsSatisfyingExactly(
                                 event ->
@@ -272,8 +274,8 @@ public abstract class AbstractGraphqlTest {
                                             equalTo(EXCEPTION_TYPE, "InvalidSyntax"),
                                             satisfies(
                                                 EXCEPTION_MESSAGE,
-                                                message ->
-                                                    message.startsWithIgnoringCase(
+                                                val ->
+                                                    val.startsWithIgnoringCase(
                                                         "Invalid Syntax"))))));
   }
 
@@ -291,8 +293,10 @@ public abstract class AbstractGraphqlTest {
                 + "  }");
     // spotless:on
 
-    assertThat(result.getErrors()).hasSize(1);
-    assertThat(result.getErrors().get(0).getErrorType().toString()).isEqualTo("ValidationError");
+    assertThat(result.getErrors())
+        .singleElement()
+        .satisfies(
+            error -> assertThat(error.getErrorType().toString()).isEqualTo("ValidationError"));
 
     getTesting()
         .waitAndAssertTraces(
@@ -302,7 +306,7 @@ public abstract class AbstractGraphqlTest {
                         span.hasName("GraphQL Operation")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributes(Attributes.empty())
+                            .hasTotalAttributeCount(0)
                             .hasStatus(StatusData.error())
                             .hasEventsSatisfyingExactly(
                                 event ->
@@ -312,8 +316,7 @@ public abstract class AbstractGraphqlTest {
                                             equalTo(EXCEPTION_TYPE, "ValidationError"),
                                             satisfies(
                                                 EXCEPTION_MESSAGE,
-                                                message ->
-                                                    message.startsWith("Validation error"))))));
+                                                val -> val.startsWith("Validation error"))))));
   }
 
   @Test
@@ -349,10 +352,10 @@ public abstract class AbstractGraphqlTest {
       AttributeKey<String> key, String value) {
     return satisfies(
         key,
-        stringAssert ->
-            stringAssert.satisfies(
-                querySource -> {
-                  String normalized = normalizeQuery(querySource);
+        val ->
+            val.satisfies(
+                v -> {
+                  String normalized = normalizeQuery(v);
                   String valueNormalized = normalizeQuery(value);
                   assertThat(normalized).isEqualTo(valueNormalized);
                 }));

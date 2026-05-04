@@ -16,19 +16,20 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule.HelperClassStrategy;
 import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
+import io.opentelemetry.javaagent.tooling.InjectionMode;
 import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForwardIndyAdviceTransformer;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
+import io.opentelemetry.javaagent.tooling.muzzle.AdviceInspector;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
@@ -39,15 +40,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
 
 public final class InstrumentationModuleInstaller {
 
-  static final TransformSafeLogger logger =
+  private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(InstrumentationModule.class);
 
   // Added here instead of AgentInstaller's ignores because it's relatively
@@ -58,6 +61,11 @@ public final class InstrumentationModuleInstaller {
   private final Instrumentation instrumentation;
   private final VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
       VirtualFieldImplementationInstallerFactory.getInstance();
+  private final AdviceInspector adviceInspector =
+      new AdviceInspector(
+          new ClassFileLocator.Compound(
+              ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader()),
+              ClassFileLocator.ForClassLoader.of(Utils.getExtensionsClassLoader())));
 
   public InstrumentationModuleInstaller(Instrumentation instrumentation) {
     this.instrumentation = instrumentation;
@@ -78,11 +86,50 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    if (instrumentationModule.isIndyModule()) {
+    boolean useIndy = useIndy(instrumentationModule);
+    logger.log(
+        FINE,
+        "Instrumentation {0} [class {1}] {2} helper classes",
+        new Object[] {
+          instrumentationModule.instrumentationName(),
+          instrumentationModule.getClass().getName(),
+          useIndy ? "isolates" : "injects"
+        });
+    if (useIndy) {
       return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
       return installInjectingModule(instrumentationModule, parentAgentBuilder);
     }
+  }
+
+  private boolean useIndy(InstrumentationModule instrumentationModule) {
+    // currently needs to be enabled with a flag
+    if (!AgentDistributionConfig.get().isIndyEnabled()) {
+      return false;
+    }
+    // first check whether user has specified how the helper classes should be handled
+    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
+      HelperClassStrategy helperClassStrategy =
+          ((ExperimentalInstrumentationModule) instrumentationModule).helperClassStrategy();
+      switch (helperClassStrategy) {
+        case INJECTED:
+          return false;
+        case ISOLATED:
+          return true;
+        case DEFAULT:
+          // fallthrough to the next check
+      }
+    }
+    // check whether muzzle has collected information about the advice classes
+    if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
+      Boolean useIsolated =
+          ((InstrumentationModuleMuzzle) instrumentationModule).getMuzzleUseIsolatedHelperClasses();
+      if (useIsolated != null) {
+        return useIsolated;
+      }
+    }
+    // inspect the advice classes used and decide based on that
+    return adviceInspector.useIsolatedAdvice(instrumentationModule);
   }
 
   private AgentBuilder installIndyModule(
@@ -112,18 +159,21 @@ public final class InstrumentationModuleInstaller {
       injectedHelperClassNames = emptyList();
     }
 
-    ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);
-    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
-      ((ExperimentalInstrumentationModule) instrumentationModule)
-          .injectClasses(injectedClassesCollector);
-    }
-
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
+    MuzzleMatcher muzzleMatcher =
+        new MuzzleMatcher(
+            logger,
+            instrumentationModule,
+            cl ->
+                // In indy modules muzzle searches for types in both application class loader and in
+                // the agent class loader. Since we allow using agent class in indy instrumentation
+                // these classes are treated as regular non-helper classes for which muzzle performs
+                // reference checks.
+                IndyModuleRegistry.createInstrumentationClassLoaderForMuzzle(
+                    instrumentationModule, cl));
 
     Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
         cl -> {
-          List<HelperClassDefinition> helpers =
-              new ArrayList<>(injectedClassesCollector.getClassesToInject(cl));
+          List<HelperClassDefinition> helpers = new ArrayList<>();
           for (String helperName : injectedHelperClassNames) {
             helpers.add(
                 HelperClassDefinition.create(
@@ -187,7 +237,8 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
+    MuzzleMatcher muzzleMatcher =
+        new MuzzleMatcher(logger, instrumentationModule, UnaryOperator.identity());
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),

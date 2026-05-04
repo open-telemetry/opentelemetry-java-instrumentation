@@ -63,7 +63,7 @@ class LogbackAppenderTest {
   static class TestingOpenTelemetryConfiguration {
 
     @Bean
-    public OpenTelemetry openTelemetry() {
+    OpenTelemetry openTelemetry() {
       return testing.getOpenTelemetry();
     }
   }

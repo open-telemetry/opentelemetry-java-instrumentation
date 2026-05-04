@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-  add("signature", "com.toasttab.android:gummy-bears-api-21:0.12.0:coreLib@signature")
+  add("signature", "com.toasttab.android:gummy-bears-api-23:0.14.0:coreLib2@signature")
 }
 
 animalsniffer {

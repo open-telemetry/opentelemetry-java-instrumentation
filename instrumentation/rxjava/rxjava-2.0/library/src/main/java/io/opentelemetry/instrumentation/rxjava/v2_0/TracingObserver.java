@@ -85,8 +85,8 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
   private QueueDisposable<T> getQueueDisposable() {
     try {
       return (QueueDisposable<T>) queueDisposableField.get(this);
-    } catch (Throwable throwable) {
-      throw new IllegalStateException(throwable);
+    } catch (Throwable t) {
+      throw new IllegalStateException(t);
     }
   }
 
@@ -111,7 +111,7 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
     return queueDisposableField;
   }
 
-  public static boolean canEnable() {
+  static boolean canEnable() {
     return queueDisposableField != null;
   }
 }

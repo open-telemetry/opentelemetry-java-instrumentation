@@ -7,11 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getEntityName;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.OperationNameUtil.getEntityName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.OperationNameUtil.getSessionMethodOperationName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.CRITERIA_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.QUERY_SESSION_INFO;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.SESSION_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.SHARED_SESSION_CONTRACT_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.TRANSACTION_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_0.Hibernate4Singletons.instrumenter;
@@ -25,9 +24,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
-import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperationScope;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperation;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperationScope;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.SessionInfo;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,7 +36,7 @@ import org.hibernate.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 
-public class SessionInstrumentation implements TypeInstrumentation {
+class SessionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -94,7 +94,8 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SessionMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static HibernateOperationScope startMethod(
         @Advice.This SharedSessionContract session,
         @Advice.Origin("#m") String name,
@@ -117,9 +118,10 @@ public class SessionInstrumentation implements TypeInstrumentation {
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope scope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable HibernateOperationScope scope) {
 
       HibernateOperationScope.end(scope, throwable);
     }
@@ -128,7 +130,7 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetQueryAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getQuery(
         @Advice.This SharedSessionContract session, @Advice.Return Query query) {
 
@@ -139,22 +141,22 @@ public class SessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetTransactionAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getTransaction(
         @Advice.This SharedSessionContract session, @Advice.Return Transaction transaction) {
 
-      TRANSACTION_SESSION_INFO.set(transaction, SESSION_SESSION_INFO.get(session));
+      TRANSACTION_SESSION_INFO.set(transaction, SHARED_SESSION_CONTRACT_SESSION_INFO.get(session));
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetCriteriaAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void getCriteria(
         @Advice.This SharedSessionContract session, @Advice.Return Criteria criteria) {
 
-      CRITERIA_SESSION_INFO.set(criteria, SESSION_SESSION_INFO.get(session));
+      CRITERIA_SESSION_INFO.set(criteria, SHARED_SESSION_CONTRACT_SESSION_INFO.get(session));
     }
   }
 }

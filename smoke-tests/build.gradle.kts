@@ -17,7 +17,7 @@ dependencies {
 
   api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  implementation(platform("io.grpc:grpc-bom:1.80.0"))
+  implementation(platform("io.grpc:grpc-bom:1.81.0"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
@@ -54,6 +54,7 @@ tasks {
     )
 
     val smokeTestSuite: String? by project
+    val skipOpenJ9SmokeTests = (findProperty("skipOpenJ9SmokeTests") as String?) == "true"
     if (smokeTestSuite != null) {
       val suite = suites[smokeTestSuite]
       if (suite != null) {
@@ -69,6 +70,10 @@ tasks {
       } else {
         throw GradleException("Unknown smoke test suite: $smokeTestSuite")
       }
+    }
+
+    if (skipOpenJ9SmokeTests) {
+      exclude("**/*Openj9*.*")
     }
 
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")

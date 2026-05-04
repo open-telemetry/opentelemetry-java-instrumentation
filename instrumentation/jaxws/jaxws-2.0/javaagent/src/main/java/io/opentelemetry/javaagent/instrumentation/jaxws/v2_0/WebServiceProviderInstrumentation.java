@@ -18,14 +18,14 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsRequest;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.v2_0.JaxWsRequest;
 import javax.annotation.Nullable;
 import javax.xml.ws.Provider;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class WebServiceProviderInstrumentation implements TypeInstrumentation {
+class WebServiceProviderInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -49,11 +49,15 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final JaxWsRequest request;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final JaxWsRequest request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
-      private AdviceScope(CallDepth callDepth, JaxWsRequest request, Context context, Scope scope) {
+      private AdviceScope(
+          CallDepth callDepth,
+          @Nullable JaxWsRequest request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
@@ -73,7 +77,7 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
         return new AdviceScope(callDepth, request, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0 || scope == null) {
           return;
         }
@@ -82,14 +86,14 @@ public class WebServiceProviderInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope startSpan(
         @Advice.This Object target, @Advice.Origin("#m") String methodName) {
       CallDepth callDepth = CallDepth.forClass(Provider.class);
       return AdviceScope.start(callDepth, target, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end(throwable);

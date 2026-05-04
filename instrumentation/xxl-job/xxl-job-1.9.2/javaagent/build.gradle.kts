@@ -20,7 +20,7 @@ dependencies {
   library("com.xuxueli:xxl-job-core:1.9.2") {
     exclude("org.codehaus.groovy", "groovy")
   }
-  implementation(project(":instrumentation:xxl-job:xxl-job-common:javaagent"))
+  implementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:javaagent"))
 
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.1.2:javaagent"))
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))
@@ -28,7 +28,7 @@ dependencies {
   testImplementation("org.apache.groovy:groovy")
   // It needs the javax.annotation-api in xxl-job-core 1.9.2.
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
-  testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
+  testImplementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
   latestDepTestLibrary("com.xuxueli:xxl-job-core:2.1.1") { // see xxl-job-2.1.2 module
     exclude("org.codehaus.groovy", "groovy")
   }
@@ -39,7 +39,7 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {

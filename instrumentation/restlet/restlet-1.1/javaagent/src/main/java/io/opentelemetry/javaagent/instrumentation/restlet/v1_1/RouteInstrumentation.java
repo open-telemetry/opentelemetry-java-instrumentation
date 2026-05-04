@@ -18,9 +18,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.restlet.Route;
-import org.restlet.data.Request;
 
-public class RouteInstrumentation implements TypeInstrumentation {
+class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.restlet.Route");
@@ -38,8 +37,8 @@ public class RouteInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RouteBeforeHandleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void getRouteInfo(@Advice.This Route route, @Advice.Argument(0) Request request) {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void getRouteInfo(@Advice.This Route route) {
       String pattern = route.getTemplate().getPattern();
 
       HttpServerRoute.update(currentContext(), CONTROLLER, serverSpanName(), pattern);

@@ -20,17 +20,17 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Duration;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public class NatsTestHelper {
+class NatsTestHelper {
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_CLIENT_ID = stringKey("messaging.client_id");
 
-  public static AttributeAssertion[] messagingAttributes(
+  static AttributeAssertion[] messagingAttributes(
       String operation, String subject, int clientId, AttributeAssertion other) {
     return messagingAttributes(operation, subject, clientId, new AttributeAssertion[] {other});
   }
 
-  public static AttributeAssertion[] messagingAttributes(
+  static AttributeAssertion[] messagingAttributes(
       String operation, String subject, int clientId, AttributeAssertion[] other) {
     AttributeAssertion[] standard = messagingAttributes(operation, subject, clientId);
     AttributeAssertion[] result = new AttributeAssertion[standard.length + other.length];
@@ -39,8 +39,7 @@ public class NatsTestHelper {
     return result;
   }
 
-  public static AttributeAssertion[] messagingAttributes(
-      String operation, String subject, int clientId) {
+  static AttributeAssertion[] messagingAttributes(String operation, String subject, int clientId) {
     return new AttributeAssertion[] {
       equalTo(MESSAGING_OPERATION, operation),
       equalTo(MESSAGING_SYSTEM, "nats"),
@@ -50,8 +49,7 @@ public class NatsTestHelper {
     };
   }
 
-  public static void assertTraceparentHeader(Subscription subscription)
-      throws InterruptedException {
+  static void assertTraceparentHeader(Subscription subscription) throws InterruptedException {
     Message published = subscription.nextMessage(Duration.ofSeconds(10));
     assertThat(published).isNotNull();
     assertThat(published.getHeaders().get("traceparent")).isNotEmpty();

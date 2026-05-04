@@ -14,7 +14,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.ref.WeakReference;
 
-public final class FutureListenerWrappers {
+public class FutureListenerWrappers {
   // note: it's ok if the value is collected prior to the key, since this cache is only used to
   // remove the wrapped listener from the netty future, and if the value is collected prior to the
   // key, that means it's no longer used (referenced) by the netty future anyways.
@@ -29,7 +29,7 @@ public final class FutureListenerWrappers {
   private static final VirtualField<
           GenericFutureListener<? extends Future<?>>,
           WeakReference<GenericFutureListener<? extends Future<?>>>>
-      wrapperVirtualField = VirtualField.find(GenericFutureListener.class, WeakReference.class);
+      WRAPPER_VIRTUAL_FIELD = VirtualField.find(GenericFutureListener.class, WeakReference.class);
 
   private static final ClassValue<Boolean> shouldWrap =
       new ClassValue<Boolean>() {
@@ -54,7 +54,7 @@ public final class FutureListenerWrappers {
     // collected before we have a chance to make (and return) a strong reference to the wrapper
 
     WeakReference<GenericFutureListener<? extends Future<?>>> resultReference =
-        wrapperVirtualField.get(delegate);
+        WRAPPER_VIRTUAL_FIELD.get(delegate);
 
     if (resultReference != null) {
       GenericFutureListener<? extends Future<?>> wrapper = resultReference.get();
@@ -75,14 +75,14 @@ public final class FutureListenerWrappers {
     } else {
       wrapper = new WrappedFutureListener(context, (GenericFutureListener<Future<?>>) delegate);
     }
-    wrapperVirtualField.set(delegate, new WeakReference<>(wrapper));
+    WRAPPER_VIRTUAL_FIELD.set(delegate, new WeakReference<>(wrapper));
     return wrapper;
   }
 
   public static GenericFutureListener<? extends Future<?>> getWrapper(
       GenericFutureListener<? extends Future<?>> delegate) {
     WeakReference<GenericFutureListener<? extends Future<?>>> wrapperReference =
-        wrapperVirtualField.get(delegate);
+        WRAPPER_VIRTUAL_FIELD.get(delegate);
     if (wrapperReference == null) {
       return delegate;
     }

@@ -21,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Message;
 
-public class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstrumentation {
+class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named(
@@ -48,14 +48,14 @@ public class DefaultPulsarMessageListenerContainerInstrumentation implements Typ
         this.scope = scope;
       }
 
-      public void exit(@Nullable Throwable throwable, Message<?> message) {
+      public void end(@Nullable Throwable throwable, Message<?> message) {
         scope.close();
         instrumenter().end(context, message, null, throwable);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) Message<?> message) {
       Context parentContext = VirtualFieldStore.extract(message);
       if (!instrumenter().shouldStart(parentContext, message)) {
@@ -65,13 +65,13 @@ public class DefaultPulsarMessageListenerContainerInstrumentation implements Typ
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Message<?> message,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(throwable, message);
+        adviceScope.end(throwable, message);
       }
     }
   }

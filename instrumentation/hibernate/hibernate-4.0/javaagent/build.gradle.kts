@@ -14,11 +14,12 @@ muzzle {
 dependencies {
   compileOnly("org.hibernate:hibernate-core:4.0.0.Final")
 
-  implementation(project(":instrumentation:hibernate:hibernate-common:javaagent"))
+  implementation(project(":instrumentation:hibernate:hibernate-common-3.3:javaagent"))
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   // Added to ensure cross compatibility:
   testInstrumentation(project(":instrumentation:hibernate:hibernate-3.3:javaagent"))
+  testInstrumentation(project(":instrumentation:hibernate:hibernate-6.0:javaagent"))
   testInstrumentation(project(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent"))
 
   testImplementation("com.h2database:h2:1.4.197")
@@ -37,13 +38,13 @@ dependencies {
   testImplementation("org.javassist:javassist:3.28.0-GA")
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
 testing {
   suites {
     val version5Test by registering(JvmTestSuite::class) {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
         }
       }
       dependencies {
@@ -64,7 +65,7 @@ testing {
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
 
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("org.hibernate:hibernate-core:5.0.0.Final")
           implementation("org.hibernate:hibernate-entitymanager:5.0.0.Final")
           implementation("org.springframework.data:spring-data-jpa:2.3.0.RELEASE")
@@ -85,7 +86,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {
@@ -103,6 +104,7 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
       }
     }
 

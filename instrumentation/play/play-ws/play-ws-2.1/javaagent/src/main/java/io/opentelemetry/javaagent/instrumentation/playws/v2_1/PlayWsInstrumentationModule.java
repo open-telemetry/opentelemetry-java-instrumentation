@@ -13,10 +13,9 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.instrumentation.playws.AbstractBootstrapInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.playws.HandlerPublisherInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.AbstractBootstrapInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.AsyncHttpClientInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.HandlerPublisherInstrumentation;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -28,8 +27,7 @@ import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 
 @AutoService(InstrumentationModule.class)
-public class PlayWsInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class PlayWsInstrumentationModule extends InstrumentationModule {
   public PlayWsInstrumentationModule() {
     super("play-ws", "play-ws-2.1");
   }
@@ -42,20 +40,20 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
         new AbstractBootstrapInstrumentation());
   }
 
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
-
   @SuppressWarnings("unused")
   public static class ClientAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) AsyncHandler<?> originalAsyncHandler) {
       AsyncHandler<?> asyncHandler = originalAsyncHandler;
+      if (asyncHandler instanceof WebSocketUpgradeHandler) {
+        // websocket upgrade handlers aren't supported
+        return new Object[] {null, asyncHandler};
+      }
+
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return new Object[] {null, asyncHandler};
@@ -67,18 +65,20 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
         asyncHandler =
             new StreamedAsyncHandlerWrapper<>(
                 (StreamedAsyncHandler<?>) asyncHandler, request, context, parentContext);
-      } else if (!(asyncHandler instanceof WebSocketUpgradeHandler)) {
-        // websocket upgrade handlers aren't supported
+      } else {
         asyncHandler = new AsyncHandlerWrapper<>(asyncHandler, request, context, parentContext);
       }
       return new Object[] {context, asyncHandler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Argument(0) Request request,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter Object[] enterResult) {
+        @Advice.Enter @Nullable Object[] enterResult) {
+      if (enterResult == null) {
+        return;
+      }
       Context context = (Context) enterResult[0];
       if (context != null && throwable != null) {
         instrumenter().end(context, request, null, throwable);

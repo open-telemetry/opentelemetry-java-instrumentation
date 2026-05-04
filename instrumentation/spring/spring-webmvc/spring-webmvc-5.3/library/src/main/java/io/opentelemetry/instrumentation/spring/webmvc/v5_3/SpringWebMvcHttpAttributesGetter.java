@@ -126,7 +126,7 @@ class SpringWebMvcHttpAttributesGetter
 
   @Override
   public Integer getNetworkLocalPort(
-      HttpServletRequest request, @Nullable HttpServletResponse respo) {
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getLocalPort();
   }
 }

@@ -20,13 +20,13 @@ dependencies {
   library("com.xuxueli:xxl-job-core:2.1.2") {
     exclude("org.codehaus.groovy", "groovy")
   }
-  implementation(project(":instrumentation:xxl-job:xxl-job-common:javaagent"))
+  implementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:javaagent"))
 
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-1.9.2:javaagent"))
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))
 
   testImplementation("org.apache.groovy:groovy")
-  testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
+  testImplementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
   latestDepTestLibrary("com.xuxueli:xxl-job-core:2.2.+") { // see xxl-job-2.3.0 module
     exclude("org.codehaus.groovy", "groovy")
   }
@@ -37,7 +37,7 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {

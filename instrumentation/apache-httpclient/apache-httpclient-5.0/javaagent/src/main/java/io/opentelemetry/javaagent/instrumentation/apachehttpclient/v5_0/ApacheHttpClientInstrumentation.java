@@ -161,12 +161,12 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.Argument(0) ClassicHttpRequest request) {
       return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -182,7 +182,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestWithHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) ClassicHttpRequest request,
         @Advice.Argument(1) HttpClientResponseHandler<?> originalHandler) {
@@ -200,9 +200,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       return new Object[] {scope, handler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Argument(0) ClassicHttpRequest request,
         @Advice.Return @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
@@ -218,7 +217,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestWithContextAndHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) ClassicHttpRequest request,
         @Advice.Argument(2) HttpClientResponseHandler<?> originalHandler) {
@@ -236,9 +235,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       return new Object[] {scope, handler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Argument(0) ClassicHttpRequest request,
         @Advice.Return @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
@@ -254,14 +252,15 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestWithHostAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(
-        @Advice.Argument(0) HttpHost host, @Advice.Argument(1) ClassicHttpRequest request) {
+        @Advice.Argument(0) @Nullable HttpHost host,
+        @Advice.Argument(1) ClassicHttpRequest request) {
 
       return AdviceScope.start(new RequestWithHost(host, request));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -277,9 +276,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestWithHostAndHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
-        @Advice.Argument(0) HttpHost host,
+        @Advice.Argument(0) @Nullable HttpHost host,
         @Advice.Argument(1) ClassicHttpRequest request,
         @Advice.Argument(2) HttpClientResponseHandler<?> originalHandler) {
 
@@ -297,7 +296,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       return new Object[] {scope, handler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -314,9 +313,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestWithHostAndContextAndHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(value = 3, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
-        @Advice.Argument(0) HttpHost host,
+        @Advice.Argument(0) @Nullable HttpHost host,
         @Advice.Argument(1) ClassicHttpRequest request,
         @Advice.Argument(3) HttpClientResponseHandler<?> originalHandler) {
 
@@ -334,7 +333,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       return new Object[] {scope, handler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Return @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,

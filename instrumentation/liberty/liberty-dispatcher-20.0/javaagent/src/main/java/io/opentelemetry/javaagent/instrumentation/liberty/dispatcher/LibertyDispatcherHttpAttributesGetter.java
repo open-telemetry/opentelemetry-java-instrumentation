@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGet
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class LibertyDispatcherHttpAttributesGetter
+final class LibertyDispatcherHttpAttributesGetter
     implements HttpServerAttributesGetter<LibertyRequest, LibertyResponse> {
 
   @Override
@@ -24,7 +24,6 @@ public class LibertyDispatcherHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public Integer getHttpResponseStatusCode(
       LibertyRequest libertyRequest, LibertyResponse libertyResponse, @Nullable Throwable error) {
     return libertyResponse.getStatus();

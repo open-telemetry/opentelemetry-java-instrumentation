@@ -30,13 +30,11 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-web-3.0:javaagent"))
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
-
 testing {
   suites {
     val version35Test by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (testLatestDeps) "3.+" else "3.5.0"
+        val version = if (otelProps.testLatestDeps) "3.+" else "3.5.0"
         implementation("org.hsqldb:hsqldb:2.3.4")
         compileOnly("io.vertx:vertx-codegen:$version")
         implementation("io.vertx:vertx-web:$version")
@@ -49,7 +47,7 @@ testing {
 
     val version41Test by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (testLatestDeps) "4.+" else "4.1.0"
+        val version = if (otelProps.testLatestDeps) "4.+" else "4.1.0"
         implementation("org.hsqldb:hsqldb:2.3.4")
         compileOnly("io.vertx:vertx-codegen:$version")
         implementation("io.vertx:vertx-web:$version")
@@ -62,7 +60,7 @@ testing {
 
     val version5Test by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (testLatestDeps) "latest.release" else "5.0.0"
+        val version = baseVersion("5.0.0").orLatest()
         implementation("org.hsqldb:hsqldb:2.3.4")
         compileOnly("io.vertx:vertx-codegen:$version")
         implementation("io.vertx:vertx-web:$version")
@@ -89,9 +87,7 @@ tasks {
     }
   }
 
-  val testJavaVersion =
-    gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
-      ?: JavaVersion.current()
+  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
     named("version5Test", Test::class).configure {
       enabled = false

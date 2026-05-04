@@ -25,7 +25,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LettuceClientInstrumentation implements TypeInstrumentation {
+class LettuceClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -56,11 +56,13 @@ public class LettuceClientInstrumentation implements TypeInstrumentation {
       }
 
       public void end(
-          @Nullable Throwable throwable, RedisURI redisUri, ConnectionFuture<?> connectionFuture) {
+          @Nullable Throwable throwable,
+          RedisURI redisUri,
+          @Nullable ConnectionFuture<?> connectionFuture) {
 
         scope.close();
 
-        if (throwable != null) {
+        if (throwable != null || connectionFuture == null) {
           connectInstrumenter().end(context, redisUri, null, throwable);
           return;
         }
@@ -68,7 +70,8 @@ public class LettuceClientInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(1) RedisURI redisUri) {
       Context parentContext = currentContext();
       if (!connectInstrumenter().shouldStart(parentContext, redisUri)) {
@@ -79,7 +82,7 @@ public class LettuceClientInstrumentation implements TypeInstrumentation {
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(1) RedisURI redisUri,
         @Advice.Thrown @Nullable Throwable throwable,

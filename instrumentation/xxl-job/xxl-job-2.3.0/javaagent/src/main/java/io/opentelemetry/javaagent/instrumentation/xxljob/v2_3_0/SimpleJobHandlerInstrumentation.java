@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.XXL_GLUE_JOB_HANDLER;
-import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.XXL_METHOD_JOB_HANDLER;
-import static io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobConstants.XXL_SCRIPT_JOB_HANDLER;
+import static io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobConstants.XXL_GLUE_JOB_HANDLER;
+import static io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobConstants.XXL_METHOD_JOB_HANDLER;
+import static io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobConstants.XXL_SCRIPT_JOB_HANDLER;
 import static io.opentelemetry.javaagent.instrumentation.xxljob.v2_3_0.XxlJobSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,15 +19,15 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 import com.xxl.job.core.handler.IJobHandler;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobHelper;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobHelper;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobProcessRequest;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
+class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -46,12 +46,12 @@ public class SimpleJobHandlerInstrumentation implements TypeInstrumentation {
   public static class ScheduleAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static XxlJobHelper.XxlJobScope onSchedule(@Advice.This IJobHandler handler) {
       return helper().startSpan(XxlJobProcessRequest.createSimpleJobRequest(handler));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,

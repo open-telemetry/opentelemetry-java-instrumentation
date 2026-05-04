@@ -23,7 +23,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ServerInstrumentation implements TypeInstrumentation {
+class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.ktor.server.engine.ApplicationEngineEnvironmentReloading");
@@ -37,7 +37,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.FieldValue("_applicationInstance") Application application) {
       ApplicationPluginKt.install(
           application, KtorServerTelemetryBuilderKt.getKtorServerTelemetry(), new SetupFunction());

@@ -8,14 +8,14 @@ muzzle {
   pass {
     group.set("org.springframework.data")
     module.set("spring-data-commons")
-    versions.set("[1.8.0.RELEASE,]")
+    versions.set("[1.8.0.RELEASE,)")
     extraDependency("org.springframework:spring-aop:1.2")
     assertInverse.set(true)
   }
   pass {
     group.set("org.springframework")
     module.set("spring-aop")
-    versions.set("[1.2,]")
+    versions.set("[1.2,)")
     extraDependency("org.springframework.data:spring-data-commons:1.8.0.RELEASE")
     assertInverse.set(true)
   }
@@ -52,7 +52,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

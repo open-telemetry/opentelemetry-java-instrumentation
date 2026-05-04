@@ -32,8 +32,6 @@ import java.util.concurrent.CountDownLatch;
 
 public class TestServlet5 {
 
-  private TestServlet5() {}
-
   @WebServlet
   public static class Sync extends HttpServlet {
     @Override
@@ -179,18 +177,18 @@ public class TestServlet5 {
                     }
                     return null;
                   });
-            } catch (Exception exception) {
-              if (exception instanceof RuntimeException) {
-                throw (RuntimeException) exception;
+            } catch (Exception e) {
+              if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
               }
-              throw new IllegalStateException(exception);
+              throw new IllegalStateException(e);
             } finally {
               latch.countDown();
             }
           });
       try {
         latch.await();
-      } catch (InterruptedException exception) {
+      } catch (InterruptedException ignored) {
         Thread.currentThread().interrupt();
       }
     }
@@ -238,7 +236,14 @@ public class TestServlet5 {
                 resp.sendError(endpoint.getStatus(), endpoint.getBody());
               } else if (EXCEPTION.equals(endpoint)) {
                 resp.setStatus(endpoint.getStatus());
-                resp.getWriter().print(endpoint.getBody());
+                PrintWriter writer = resp.getWriter();
+                writer.print(endpoint.getBody());
+                if (req.getClass().getName().contains("catalina")) {
+                  // on tomcat close the writer to ensure response is sent immediately,
+                  // otherwise there is a chance that tomcat resets the connection before the
+                  // response is sent
+                  writer.close();
+                }
                 throw new IllegalStateException(endpoint.getBody());
               } else if (HTML_PRINT_WRITER.equals(endpoint)) {
                 // intentionally testing setting status before contentType here to cover that case
@@ -294,6 +299,7 @@ public class TestServlet5 {
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
       if (req.getServletPath().equals("/recursive")) {
         resp.getWriter().print("Hello Recursive");
+        return;
       }
 
       int depth = Integer.parseInt(req.getParameter("depth"));
@@ -304,4 +310,6 @@ public class TestServlet5 {
       }
     }
   }
+
+  private TestServlet5() {}
 }

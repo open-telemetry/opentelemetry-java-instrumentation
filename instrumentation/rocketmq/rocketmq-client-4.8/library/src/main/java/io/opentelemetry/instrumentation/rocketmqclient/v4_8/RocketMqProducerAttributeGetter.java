@@ -85,7 +85,11 @@ final class RocketMqProducerAttributeGetter
 
   @Override
   public List<String> getMessageHeader(SendMessageContext request, String name) {
-    String value = request.getMessage().getProperties().get(name);
+    Message message = request.getMessage();
+    if (message == null) {
+      return emptyList();
+    }
+    String value = message.getProperties().get(name);
     if (value != null) {
       return singletonList(value);
     }

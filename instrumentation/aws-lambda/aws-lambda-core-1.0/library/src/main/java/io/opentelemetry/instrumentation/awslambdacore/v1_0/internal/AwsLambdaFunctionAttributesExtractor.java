@@ -77,7 +77,7 @@ public final class AwsLambdaFunctionAttributesExtractor
     }
     try {
       return (String) GET_FUNCTION_ARN.invoke(awsContext);
-    } catch (Throwable throwable) {
+    } catch (Throwable ignored) {
       return null;
     }
   }

@@ -17,6 +17,7 @@ muzzle {
     group.set("com.datastax.cassandra")
     module.set("cassandra-driver-core")
     versions.set("[3.0,4.0)")
+    assertInverse.set(true)
     // While com.datastax.cassandra uses old versions of Guava, users may depends themselves on newer versions of Guava
     extraDependency("com.google.guava:guava:27.0-jre")
   }
@@ -43,7 +44,7 @@ configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.g
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -58,7 +59,7 @@ tasks {
     dependsOn(testStableSemconv)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

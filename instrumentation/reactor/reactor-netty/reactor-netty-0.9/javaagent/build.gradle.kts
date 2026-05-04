@@ -33,7 +33,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testConnectionSpan by registering(Test::class) {
@@ -44,6 +44,7 @@ tasks {
     }
     include("**/ReactorNettyConnectionSpanTest.*")
     jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.netty.connection-telemetry.enabled=true")
   }
 
   test {

@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
+class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")
@@ -146,13 +146,13 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.This HttpURLConnection connection) {
       CallDepth callDepth = CallDepth.forClass(HttpURLConnection.class);
       return AdviceScope.start(callDepth, connection);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("responseCode") int responseCode,
@@ -166,7 +166,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetResponseCodeAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This HttpURLConnection connection, @Advice.Return int returnValue) {
 

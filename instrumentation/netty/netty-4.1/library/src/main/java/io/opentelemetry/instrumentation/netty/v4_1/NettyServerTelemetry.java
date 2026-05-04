@@ -20,16 +20,8 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTra
 
 /** Entrypoint for instrumenting Netty HTTP servers. */
 public final class NettyServerTelemetry {
-
   private final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
   private final ProtocolEventHandler protocolEventHandler;
-
-  NettyServerTelemetry(
-      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
-      ProtocolEventHandler protocolEventHandler) {
-    this.instrumenter = instrumenter;
-    this.protocolEventHandler = protocolEventHandler;
-  }
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static NettyServerTelemetry create(OpenTelemetry openTelemetry) {
@@ -39,6 +31,13 @@ public final class NettyServerTelemetry {
   /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static NettyServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new NettyServerTelemetryBuilder(openTelemetry);
+  }
+
+  NettyServerTelemetry(
+      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
+      ProtocolEventHandler protocolEventHandler) {
+    this.instrumenter = instrumenter;
+    this.protocolEventHandler = protocolEventHandler;
   }
 
   /**

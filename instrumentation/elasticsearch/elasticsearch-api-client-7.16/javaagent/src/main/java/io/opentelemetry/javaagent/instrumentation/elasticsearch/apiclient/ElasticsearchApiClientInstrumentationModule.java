@@ -25,14 +25,10 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Since Elasticsearch client version 8.10, the ES client comes with a native OTel
-    // instrumentation
-    // that introduced the class `co.elastic.clients.transport.instrumentation.Instrumentation`.
-    // Disabling agent instrumentation for those cases.
-    return hasClassesNamed(
-            // present since 7.16 (base version of this instrumentation)
-            "co.elastic.clients.elasticsearch.ElasticsearchClient")
-        // added in 8.10 (native OTel instrumentation)
+    // added in 7.16
+    return hasClassesNamed("co.elastic.clients.elasticsearch.ElasticsearchClient")
+        // artifact presence gate (provides native OTel support)
+        // added in co.elastic.clients:elasticsearch-java 8.10
         .and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
   }
 
@@ -45,10 +41,5 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new RestClientTransportInstrumentation(), new RestClientHttpClientInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

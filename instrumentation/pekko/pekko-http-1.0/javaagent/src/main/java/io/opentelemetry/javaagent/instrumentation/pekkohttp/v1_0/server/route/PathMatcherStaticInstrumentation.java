@@ -21,7 +21,7 @@ import org.apache.pekko.http.scaladsl.model.Uri;
 import org.apache.pekko.http.scaladsl.server.PathMatcher;
 import org.apache.pekko.http.scaladsl.server.PathMatchers;
 
-public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
+class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("org.apache.pekko.http.scaladsl.server.PathMatcher"));
@@ -38,7 +38,7 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This PathMatcher<?> pathMatcher,
         @Advice.Argument(0) Uri.Path path,

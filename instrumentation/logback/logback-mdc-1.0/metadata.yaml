@@ -5,26 +5,31 @@ display_name: Logback
 library_link: https://logback.qos.ch/
 configurations:
   - name: otel.instrumentation.logback-mdc.add-baggage
+    declarative_name: java.logback_mdc.add_baggage
     description: >
       Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
     type: boolean
     default: false
   - name: otel.instrumentation.common.logging.trace-id
+    declarative_name: java.common.logging.trace_id
     description: >
       Specifies the key name used to store the trace ID in the logging context.
     type: string
     default: trace_id
   - name: otel.instrumentation.common.logging.span-id
+    declarative_name: java.common.logging.span_id
     description: >
       Specifies the key name used to store the span ID in the logging context.
     type: string
     default: span_id
   - name: otel.instrumentation.common.logging.trace-flags
+    declarative_name: java.common.logging.trace_flags
     description: >
       Specifies the key name used to store the trace flags in the logging context.
     type: string
     default: trace_flags
   - name: otel.instrumentation.common.mdc.resource-attributes
+    declarative_name: java.common.mdc.resource_attributes
     description: >
       Specifies which resource attributes to add to the logging context as a comma-separated list
       of attribute keys.

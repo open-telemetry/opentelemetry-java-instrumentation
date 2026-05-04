@@ -36,7 +36,7 @@ import java.util.function.Function;
  *       callback is collected too, and the weak reference goes null.
  * </ol>
  */
-public final class CallbackAnchor {
+public class CallbackAnchor {
 
   // Anchors callbacks to this class's lifecycle. Since this class is injected as a helper into each
   // application class loader, callbacks are naturally tied to their class loader's lifecycle.
@@ -48,19 +48,29 @@ public final class CallbackAnchor {
   public static <T, R extends AutoCloseable> R anchor(
       Function<Consumer<T>, R> buildFn, Consumer<T> callback) {
     callbacks.merge(new IdentityKey(callback), 1, Integer::sum);
-    WeakRefConsumer<T> weak = new WeakRefConsumer<>(new WeakReference<>(callback));
-    R instrument = buildFn.apply(weak);
-    weak.closeWhenCollected(instrument);
-    return instrument;
+    try {
+      WeakRefConsumer<T> weak = new WeakRefConsumer<>(new WeakReference<>(callback));
+      R instrument = buildFn.apply(weak);
+      weak.closeWhenCollected(instrument);
+      return instrument;
+    } catch (Throwable t) {
+      release(callback);
+      throw t;
+    }
   }
 
   public static <R extends AutoCloseable> R anchorBatch(
       Function<Runnable, R> buildFn, Runnable callback) {
     callbacks.merge(new IdentityKey(callback), 1, Integer::sum);
-    WeakRefRunnable weak = new WeakRefRunnable(new WeakReference<>(callback));
-    R instrument = buildFn.apply(weak);
-    weak.closeWhenCollected(instrument);
-    return instrument;
+    try {
+      WeakRefRunnable weak = new WeakRefRunnable(new WeakReference<>(callback));
+      R instrument = buildFn.apply(weak);
+      weak.closeWhenCollected(instrument);
+      return instrument;
+    } catch (Throwable t) {
+      release(callback);
+      throw t;
+    }
   }
 
   // Some instrument wrappers may end up calling close() more than once. Guard the deferred

@@ -51,7 +51,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class CreateMonoAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       return supplier.get();
@@ -60,7 +60,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     // throwables wouldn't matter here, because no spans have been started due to redis command not
     // being run until the user subscribes to the Mono publisher
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V, T> Mono<T> monitorSpan(
         @Advice.Return Mono<T> originalPublisher, @Advice.Enter RedisCommand<K, V, T> command) {
       Mono<T> publisher = originalPublisher;
@@ -79,7 +79,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class CreateFluxAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       return supplier.get();
@@ -87,7 +87,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
 
     // if there is an exception thrown, then don't make spans
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V, T> Flux<T> monitorSpan(
         @Advice.Return Flux<T> originalPublisher, @Advice.Enter RedisCommand<K, V, T> command) {
       Flux<T> publisher = originalPublisher;

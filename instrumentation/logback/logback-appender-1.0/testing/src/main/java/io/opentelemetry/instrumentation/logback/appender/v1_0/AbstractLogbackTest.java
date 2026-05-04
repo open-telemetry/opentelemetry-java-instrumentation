@@ -49,10 +49,6 @@ public abstract class AbstractLogbackTest {
     return true;
   }
 
-  protected boolean expectEventName() {
-    return true;
-  }
-
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
         Arguments.of(false, false),
@@ -178,7 +174,7 @@ public abstract class AbstractLogbackTest {
                           equalTo(EXCEPTION_MESSAGE, "hello"),
                           satisfies(
                               EXCEPTION_STACKTRACE,
-                              v -> v.contains(AbstractLogbackTest.class.getName()))));
+                              val -> val.contains(AbstractLogbackTest.class.getName()))));
                 }
                 logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
               });
@@ -219,17 +215,10 @@ public abstract class AbstractLogbackTest {
                     .hasAttributesSatisfyingExactly(assertions));
   }
 
-  private static Stream<Arguments> eventNameProperties() {
-    return Stream.of(Arguments.of("event.name"), Arguments.of("otel.event.name"));
-  }
-
-  @ParameterizedTest
-  @MethodSource("eventNameProperties")
-  void testEventNameMdc(String eventNameProperty) {
-    boolean expectEventName = "otel.event.name".equals(eventNameProperty) || expectEventName();
-
+  @Test
+  void testEventNameMdc() {
     MDC.put("key1", "val1");
-    MDC.put(eventNameProperty, "MyEventName");
+    MDC.put("otel.event.name", "MyEventName");
     try {
       abcLogger.info("xyz: {}", 123);
     } finally {
@@ -244,23 +233,17 @@ public abstract class AbstractLogbackTest {
         codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
     assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testEventNameMdc"));
     assertions.add(equalTo(stringKey("key1"), "val1"));
-    if (!expectEventName) {
-      assertions.add(equalTo(stringKey(eventNameProperty), "MyEventName"));
-    }
 
     testing()
         .waitAndAssertLogRecords(
-            logRecord -> {
-              logRecord
-                  .hasBody("xyz: 123")
-                  .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                  .hasSeverity(Severity.INFO)
-                  .hasSeverityText("INFO")
-                  .hasAttributesSatisfyingExactly(assertions);
-              if (expectEventName) {
-                logRecord.hasEventName("MyEventName");
-              }
-            });
+            logRecord ->
+                logRecord
+                    .hasBody("xyz: 123")
+                    .hasEventName("MyEventName")
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -303,12 +286,12 @@ public abstract class AbstractLogbackTest {
   }
 
   @FunctionalInterface
-  public interface OneArgLoggerMethod {
+  private interface OneArgLoggerMethod {
     void call(Logger logger, String msg, Object arg);
   }
 
   @FunctionalInterface
-  public interface TwoArgLoggerMethod {
+  private interface TwoArgLoggerMethod {
     void call(Logger logger, String msg, Object arg1, Object arg2);
   }
 }

@@ -5,23 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
-import io.opentelemetry.javaagent.instrumentation.jms.DestinationAdapter;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.Queue;
 import jakarta.jms.TemporaryQueue;
 import jakarta.jms.TemporaryTopic;
 import jakarta.jms.Topic;
+import javax.annotation.Nullable;
 
-public final class JakartaDestinationAdapter implements DestinationAdapter {
+public class JakartaDestinationAdapter implements DestinationAdapter {
 
-  public static DestinationAdapter create(Destination destination) {
+  public static DestinationAdapter create(@Nullable Destination destination) {
     return new JakartaDestinationAdapter(destination);
   }
 
-  private final Destination destination;
+  @Nullable private final Destination destination;
 
-  private JakartaDestinationAdapter(Destination destination) {
+  private JakartaDestinationAdapter(@Nullable Destination destination) {
     this.destination = destination;
   }
 

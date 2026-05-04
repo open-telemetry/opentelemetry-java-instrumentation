@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.PRODUCER_INSTRUMENTER;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -28,7 +28,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ConnectionPublishInstrumentation implements TypeInstrumentation {
+class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -79,7 +79,10 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PublishBodyAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     public static boolean onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -92,7 +95,10 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PublishHeadersBodyAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     public static boolean onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -106,7 +112,10 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PublishReplyToBodyAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     public static boolean onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -135,21 +144,21 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(NatsRequest natsRequest) {
         Context parentContext = Context.current();
-        if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
+        if (!producerInstrumenter().shouldStart(parentContext, natsRequest)) {
           return null;
         }
-        Context context = PRODUCER_INSTRUMENTER.start(parentContext, natsRequest);
+        Context context = producerInstrumenter().start(parentContext, natsRequest);
         return new AdviceScope(natsRequest, context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        PRODUCER_INSTRUMENTER.end(context, request, null, throwable);
+        producerInstrumenter().end(context, request, null, throwable);
       }
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
@@ -162,7 +171,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
       return new Object[] {adviceScope, headers};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
@@ -174,7 +183,10 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PublishMessageAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
     public static boolean onEnter(
         @Advice.This Connection connection, @Advice.Argument(0) Message message) {
       if (message == null) {

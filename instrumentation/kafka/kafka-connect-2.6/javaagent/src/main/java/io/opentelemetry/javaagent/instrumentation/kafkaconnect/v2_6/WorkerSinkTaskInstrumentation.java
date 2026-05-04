@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * {@link SinkTaskInstrumentation}) and low-level kafka-clients spans would be created for the same
  * consumer operation. This ensures only the meaningful Kafka Connect spans are generated.
  */
-public class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
+class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -37,14 +37,14 @@ public class WorkerSinkTaskInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
-      return KafkaClientsConsumerProcessTracing.setEnabled(false);
+      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
-      KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
+      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
     }
   }
 }

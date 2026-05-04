@@ -28,17 +28,16 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -55,17 +54,18 @@ class CassandraClientTest {
 
   private static final Logger logger = LoggerFactory.getLogger(CassandraClientTest.class);
 
-  private static final Executor executor = Executors.newCachedThreadPool();
+  private static final ExecutorService executor = Executors.newCachedThreadPool();
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @SuppressWarnings("rawtypes")
-  private static GenericContainer cassandra;
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  protected static String cassandraHost;
+  private static GenericContainer<?> cassandra;
 
-  protected static String cassandraIp;
+  private static String cassandraHost;
+
+  private static String cassandraIp;
   private static int cassandraPort;
   private static Cluster cluster;
 
@@ -77,6 +77,7 @@ class CassandraClientTest {
             .withExposedPorts(9042)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
+    cleanup.deferAfterAll(cassandra::stop);
     cassandra.start();
 
     cassandraHost = cassandra.getHost();
@@ -86,18 +87,15 @@ class CassandraClientTest {
         Cluster.builder()
             .addContactPointsWithPorts(new InetSocketAddress(cassandra.getHost(), cassandraPort))
             .build();
-  }
-
-  @AfterAll
-  static void afterAll() {
-    cluster.close();
-    cassandra.stop();
+    cleanup.deferAfterAll(cluster);
+    cleanup.deferAfterAll(() -> executor.shutdownNow());
   }
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideSyncParameters")
   void syncTest(Parameter parameter) {
     Session session = cluster.connect(parameter.keyspace);
+    cleanup.deferCleanup(session);
 
     session.execute(parameter.queryText);
 
@@ -175,24 +173,19 @@ class CassandraClientTest {
                                   maybeStable(DB_CASSANDRA_TABLE),
                                   emitStableDatabaseSemconv() ? null : parameter.table))));
     }
-
-    session.close();
   }
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAsyncParameters")
   void asyncTest(Parameter parameter) {
-    @SuppressWarnings("WriteOnlyObject")
-    AtomicBoolean callbackExecuted = new AtomicBoolean();
     Session session = cluster.connect(parameter.keyspace);
+    cleanup.deferCleanup(session);
 
     testing.runWithSpan(
         "parent",
         () -> {
           ResultSetFuture future = session.executeAsync(parameter.queryText);
-          future.addListener(
-              () -> testing.runWithSpan("callbackListener", () -> callbackExecuted.set(true)),
-              executor);
+          future.addListener(() -> testing.runWithSpan("callbackListener", () -> {}), executor);
         });
 
     if (parameter.keyspace != null) {
@@ -279,13 +272,12 @@ class CassandraClientTest {
                           .hasKind(SpanKind.INTERNAL)
                           .hasParent(trace.getSpan(0))));
     }
-
-    session.close();
   }
 
   @Test
   void testMetrics() {
     Session session = cluster.connect();
+    cleanup.deferCleanup(session);
 
     session.execute("DROP KEYSPACE IF EXISTS non_existent");
 
@@ -298,8 +290,6 @@ class CassandraClientTest {
         NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
-
-    session.close();
   }
 
   private static Stream<Arguments> provideSyncParameters() {

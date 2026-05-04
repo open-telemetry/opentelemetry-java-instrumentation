@@ -9,12 +9,12 @@ dependencies {
   testImplementation(project(":instrumentation:graphql-java:graphql-java-common-12.0:testing"))
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
 }

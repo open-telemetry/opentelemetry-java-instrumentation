@@ -18,7 +18,11 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
+/**
+ * Instruments the local scheduler submissions. Other Scheduler types are handled indirectly by Java
+ * Executor instrumentation.
+ */
+class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,13 +39,14 @@ public class LocalSchedulerActivationInstrumentation implements TypeInstrumentat
   @SuppressWarnings("unused")
   public static class WrapRunnableAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Runnable wrap(@Advice.Argument(0) Runnable task) {
       if (task == null) {
         return null;
       }
 
+      // always set it: you never know what might be polluting the thread local context at the time
       Context context = Java8BytecodeBridge.currentContext();
       return ContextPropagatingRunnable.propagateContext(task, context);
     }

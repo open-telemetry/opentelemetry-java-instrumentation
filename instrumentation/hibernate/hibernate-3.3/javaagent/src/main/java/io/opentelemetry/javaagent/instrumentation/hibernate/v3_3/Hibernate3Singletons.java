@@ -7,16 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperation;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.SessionInfo;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Transaction;
 
 public class Hibernate3Singletons {
 
-  private static final Instrumenter<HibernateOperation, Void> INSTANCE =
+  private static final Instrumenter<HibernateOperation, Void> instrumenter =
       HibernateInstrumenterFactory.createInstrumenter("io.opentelemetry.hibernate-3.3");
 
   public static final VirtualField<Criteria, SessionInfo> CRITERIA_SESSION_INFO =
@@ -27,7 +27,7 @@ public class Hibernate3Singletons {
       VirtualField.find(Transaction.class, SessionInfo.class);
 
   public static Instrumenter<HibernateOperation, Void> instrumenter() {
-    return INSTANCE;
+    return instrumenter;
   }
 
   private Hibernate3Singletons() {}

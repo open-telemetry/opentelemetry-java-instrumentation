@@ -13,23 +13,23 @@ muzzle {
 dependencies {
   library("org.redisson:redisson:3.0.0")
 
-  implementation(project(":instrumentation:redisson:redisson-common:javaagent"))
+  implementation(project(":instrumentation:redisson:redisson-common-3.0:javaagent"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   testInstrumentation(project(":instrumentation:redisson:redisson-3.17:javaagent"))
 
-  testImplementation(project(":instrumentation:redisson:redisson-common:testing"))
+  testImplementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
 
   latestDepTestLibrary("org.redisson:redisson:3.16.+") // see redisson-3.17 module
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

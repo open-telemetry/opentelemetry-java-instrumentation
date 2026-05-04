@@ -30,6 +30,8 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<HttpServer> {
@@ -150,7 +152,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     contexts.add(context);
     context =
         server.createContext(
-            "/captureHeaders",
+            CAPTURE_HEADERS.getPath(),
             ctx ->
                 testing()
                     .runWithSpan(
@@ -189,7 +191,11 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
 
   @Override
   protected void stopServer(HttpServer server) {
+    Executor executor = server.getExecutor();
     server.stop(0);
+    if (executor instanceof ExecutorService) {
+      ((ExecutorService) executor).shutdown();
+    }
   }
 
   @Override

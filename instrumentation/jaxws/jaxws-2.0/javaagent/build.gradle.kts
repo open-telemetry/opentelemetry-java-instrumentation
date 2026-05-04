@@ -13,11 +13,11 @@ muzzle {
 
 dependencies {
   library("javax.xml.ws:jaxws-api:2.0")
-  implementation(project(":instrumentation:jaxws:jaxws-common:javaagent"))
+  implementation(project(":instrumentation:jaxws:jaxws-common-2.0:javaagent"))
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("collectMetadata", otelProps.collectMetadata)
   systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

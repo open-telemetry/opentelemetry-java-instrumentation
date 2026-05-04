@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LoggerFactoryInstrumentation implements TypeInstrumentation {
+class LoggerFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,7 +33,7 @@ public class LoggerFactoryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetLoggerFactoryAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit() {
       if (ApplicationLoggerFlags.bridgeLoggerFactory()) {
         Slf4jApplicationLoggerBridge.install();

@@ -39,8 +39,8 @@ class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddress> {
     protected void doResolve(String inetHost, Promise<InetAddress> promise) {
       try {
         promise.setSuccess(InetAddress.getByName(inetHost));
-      } catch (UnknownHostException exception) {
-        promise.setFailure(exception);
+      } catch (UnknownHostException e) {
+        promise.setFailure(e);
       }
     }
 
@@ -50,8 +50,8 @@ class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddress> {
       try {
         // default implementation calls InetAddress.getAllByName
         promise.setSuccess(singletonList(InetAddress.getByName(inetHost)));
-      } catch (UnknownHostException exception) {
-        promise.setFailure(exception);
+      } catch (UnknownHostException e) {
+        promise.setFailure(e);
       }
     }
   }

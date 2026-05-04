@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Flux;
 
 // handles versions 1.0.0 - 1.2.+
-public class DefaultKafkaReceiverInstrumentation implements TypeInstrumentation {
+class DefaultKafkaReceiverInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -35,7 +35,7 @@ public class DefaultKafkaReceiverInstrumentation implements TypeInstrumentation 
   public static class CreateConsumerFluxAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Flux<?> onExit(@Advice.Return Flux<?> flux) {
       if (flux instanceof TracingDisablingKafkaFlux) {
         return flux;

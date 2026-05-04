@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumentation {
+class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.mongodb.internal.connection.DefaultConnectionPool$Task");
@@ -46,7 +46,7 @@ public class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumenta
   public static class TaskArg2Advice {
 
     @AssignReturned.ToArguments(@ToArgument(2))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Consumer<Object> wrapCallback(@Advice.Argument(2) Consumer<Object> action) {
       return new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
     }
@@ -56,7 +56,7 @@ public class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumenta
   public static class TaskArg3Advice {
 
     @AssignReturned.ToArguments(@ToArgument(3))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Consumer<Object> wrapCallback(@Advice.Argument(3) Consumer<Object> action) {
       return new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
     }
@@ -66,7 +66,7 @@ public class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumenta
   public static class TaskArg4Advice {
 
     @AssignReturned.ToArguments(@ToArgument(4))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Consumer<Object> wrapCallback(@Advice.Argument(4) Consumer<Object> action) {
       return new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
     }

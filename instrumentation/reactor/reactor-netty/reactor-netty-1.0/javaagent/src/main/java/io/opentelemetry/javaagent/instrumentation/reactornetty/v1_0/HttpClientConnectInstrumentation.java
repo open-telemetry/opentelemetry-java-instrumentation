@@ -20,7 +20,7 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientConfig;
 import reactor.netty.http.client.HttpClientConfigBuddy;
 
-public class HttpClientConnectInstrumentation implements TypeInstrumentation {
+class HttpClientConnectInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("reactor.netty.http.client.HttpClientConnect");
@@ -37,7 +37,7 @@ public class HttpClientConnectInstrumentation implements TypeInstrumentation {
   public static class ConnectAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<? extends Connection> onExit(
         @Advice.Return Mono<? extends Connection> connection, @Advice.This HttpClient httpClient) {
 

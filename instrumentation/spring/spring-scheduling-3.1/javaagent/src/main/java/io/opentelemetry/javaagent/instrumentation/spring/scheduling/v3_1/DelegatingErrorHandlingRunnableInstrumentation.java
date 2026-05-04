@@ -15,6 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -22,7 +23,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.util.ErrorHandler;
 
-public class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstrumentation {
+class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.scheduling.support.DelegatingErrorHandlingRunnable");
@@ -42,7 +43,7 @@ public class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstr
   public static class WrapErrorHandlerAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ErrorHandler onEnter(@Advice.Argument(1) ErrorHandler originalErrorHandler) {
       ErrorHandler errorHandler = originalErrorHandler;
       if (errorHandler != null) {
@@ -55,14 +56,14 @@ public class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstr
   @SuppressWarnings("unused")
   public static class RunAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter() {
       Context parentContext = Java8BytecodeBridge.currentContext();
       return TaskContextHolder.init(parentContext).makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

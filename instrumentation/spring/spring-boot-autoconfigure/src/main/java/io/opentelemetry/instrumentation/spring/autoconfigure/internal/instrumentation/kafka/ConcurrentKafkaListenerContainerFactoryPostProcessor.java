@@ -54,7 +54,7 @@ class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostPr
       Field field = AbstractKafkaListenerContainerFactory.class.getDeclaredField(filedName);
       field.setAccessible(true);
       return fieldType.cast(field.get(container));
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       return null;
     }
   }

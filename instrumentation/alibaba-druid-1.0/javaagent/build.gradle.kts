@@ -7,7 +7,7 @@ muzzle {
     group.set("com.alibaba")
     module.set("druid")
     versions.set("(,)")
-    skip("1.0.30")
+    skip("1.0.30") // 1.0.30 pom references a non-existent parent
   }
 }
 
@@ -19,11 +19,9 @@ dependencies {
   testImplementation(project(":instrumentation:alibaba-druid-1.0:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

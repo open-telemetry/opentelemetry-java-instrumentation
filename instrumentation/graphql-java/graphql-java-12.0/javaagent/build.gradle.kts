@@ -25,8 +25,8 @@ dependencies {
   latestDepTestLibrary("com.graphql-java:graphql-java:19.+") // see graphql-java-20.0 module
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true")
 
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

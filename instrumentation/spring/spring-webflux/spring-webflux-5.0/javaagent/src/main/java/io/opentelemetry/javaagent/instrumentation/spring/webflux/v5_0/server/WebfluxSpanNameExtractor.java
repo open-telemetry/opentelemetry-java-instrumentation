@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 import org.springframework.web.method.HandlerMethod;
 
-public class WebfluxSpanNameExtractor implements SpanNameExtractor<Object> {
+class WebfluxSpanNameExtractor implements SpanNameExtractor<Object> {
 
   private final SpanNameExtractor<Object> handlerSpanNameExtractor =
       CodeSpanNameExtractor.create(new HandlerCodeAttributesGetter());

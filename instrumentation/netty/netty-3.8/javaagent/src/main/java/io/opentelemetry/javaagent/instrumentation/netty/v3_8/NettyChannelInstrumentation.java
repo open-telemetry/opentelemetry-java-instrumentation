@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.VirtualFieldHelper.CONNECTION_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.NettyClientSingletons.connectionInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -24,13 +23,14 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.ConnectionListener;
 import java.net.SocketAddress;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 
-public class NettyChannelInstrumentation implements TypeInstrumentation {
+class NettyChannelInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -45,17 +45,17 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("connect"))
+        named("connect")
             .and(takesArgument(0, SocketAddress.class))
             .and(returns(named("org.jboss.netty.channel.ChannelFuture"))),
-        NettyChannelInstrumentation.class.getName() + "$ChannelConnectAdvice");
+        getClass().getName() + "$ChannelConnectAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ChannelConnectAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static NettyScope onEnter(
         @Advice.This Channel channel, @Advice.Argument(0) SocketAddress remoteAddress) {
 
@@ -76,11 +76,11 @@ public class NettyChannelInstrumentation implements TypeInstrumentation {
       return new NettyScope(parentContext, request, timer);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return ChannelFuture channelFuture,
-        @Advice.Thrown Throwable error,
-        @Advice.Enter NettyScope nettyScope) {
+        @Advice.Thrown @Nullable Throwable error,
+        @Advice.Enter @Nullable NettyScope nettyScope) {
 
       if (nettyScope == null) {
         return;

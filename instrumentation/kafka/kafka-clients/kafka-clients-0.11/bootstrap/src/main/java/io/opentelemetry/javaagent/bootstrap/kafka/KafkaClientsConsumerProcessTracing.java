@@ -14,18 +14,18 @@ import java.util.function.BooleanSupplier;
 public final class KafkaClientsConsumerProcessTracing {
   private static final ThreadLocal<Boolean> wrappingEnabled = ThreadLocal.withInitial(() -> true);
 
-  public static boolean setEnabled(boolean enabled) {
+  public static boolean setWrappingEnabled(boolean enabled) {
     boolean previous = wrappingEnabled.get();
     wrappingEnabled.set(enabled);
     return previous;
   }
 
-  public static boolean wrappingEnabled() {
+  public static boolean isWrappingEnabled() {
     return wrappingEnabled.get();
   }
 
   public static BooleanSupplier wrappingEnabledSupplier() {
-    return KafkaClientsConsumerProcessTracing::wrappingEnabled;
+    return KafkaClientsConsumerProcessTracing::isWrappingEnabled;
   }
 
   private KafkaClientsConsumerProcessTracing() {}

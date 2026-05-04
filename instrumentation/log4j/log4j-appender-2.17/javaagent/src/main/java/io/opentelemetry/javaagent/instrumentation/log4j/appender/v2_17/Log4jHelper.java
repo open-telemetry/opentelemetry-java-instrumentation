@@ -28,18 +28,17 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.message.Message;
 
-public final class Log4jHelper {
-
-  private static final java.util.logging.Logger logger =
-      java.util.logging.Logger.getLogger(Log4jHelper.class.getName());
+public class Log4jHelper {
 
   private static final LogEventMapper<Map<String, String>> mapper;
   private static final boolean captureExperimentalAttributes;
-  private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
+  @Nullable private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
 
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender");
+    DeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
 
     captureExperimentalAttributes =
         config.getBoolean("experimental_log_attributes/development", false);
@@ -50,12 +49,7 @@ public final class Log4jHelper {
         config.getBoolean("capture_marker_attribute/development", false);
     List<String> captureContextDataAttributes =
         config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    boolean captureEventName = config.getBoolean("capture_event_name/development", false);
-    if (captureEventName) {
-      logger.warning(
-          "The otel.instrumentation.log4j-appender.experimental.capture-event-name setting is"
-              + " deprecated and will be removed in a future version.");
-    }
+    boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     mapper =
         new LogEventMapper<>(
@@ -65,7 +59,7 @@ public final class Log4jHelper {
             captureMapMessageAttributes,
             captureMarkerAttribute,
             captureContextDataAttributes,
-            captureEventName);
+            v3Preview);
   }
 
   public static void capture(
@@ -73,9 +67,9 @@ public final class Log4jHelper {
       String loggerClassName,
       @Nullable StackTraceElement location,
       Level level,
-      Marker marker,
+      @Nullable Marker marker,
       Message message,
-      Throwable throwable) {
+      @Nullable Throwable throwable) {
     String instrumentationName = logger.getName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
@@ -110,6 +104,7 @@ public final class Log4jHelper {
     builder.emit();
   }
 
+  @Nullable
   private static StackTraceElement getLocation(String loggerClassName) {
     if (stackTraceMethodHandle == null) {
       return null;
@@ -117,24 +112,25 @@ public final class Log4jHelper {
 
     try {
       return (StackTraceElement) stackTraceMethodHandle.invoke(loggerClassName);
-    } catch (Throwable exception) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
 
+  @Nullable
   private static MethodHandle getStackTraceMethodHandle() {
     Class<?> stackTraceClass = null;
     try {
       // since 2.9.0
       stackTraceClass = Class.forName("org.apache.logging.log4j.util.StackLocatorUtil");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       // ignore
     }
     if (stackTraceClass == null) {
       try {
         // before 2.9.0
         stackTraceClass = Class.forName("org.apache.logging.log4j.core.impl.Log4jLogEvent");
-      } catch (ClassNotFoundException exception) {
+      } catch (ClassNotFoundException ignored) {
         // ignore
       }
     }
@@ -147,7 +143,7 @@ public final class Log4jHelper {
               stackTraceClass,
               "calcLocation",
               MethodType.methodType(StackTraceElement.class, String.class));
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       return null;
     }
   }

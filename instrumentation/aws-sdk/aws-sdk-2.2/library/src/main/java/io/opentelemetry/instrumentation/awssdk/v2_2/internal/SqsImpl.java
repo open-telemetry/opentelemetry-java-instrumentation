@@ -342,8 +342,8 @@ public final class SqsImpl {
                       });
 
                   return resultFuture;
-                } catch (InvocationTargetException exception) {
-                  throw exception.getCause();
+                } catch (InvocationTargetException e) {
+                  throw e.getCause();
                 }
               } else {
                 return invokeProxyMethod(method, sqsClient, args);
@@ -355,8 +355,8 @@ public final class SqsImpl {
       throws Throwable {
     try {
       return method.invoke(target, args);
-    } catch (InvocationTargetException exception) {
-      throw exception.getCause();
+    } catch (InvocationTargetException e) {
+      throw e.getCause();
     }
   }
 }

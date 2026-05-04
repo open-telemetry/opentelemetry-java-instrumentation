@@ -9,21 +9,21 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import org.apache.commons.httpclient.HttpMethod;
 
-public final class ApacheHttpClientSingletons {
+class ApacheHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-2.0";
 
-  private static final Instrumenter<HttpMethod, HttpMethod> INSTRUMENTER;
+  private static final Instrumenter<HttpMethod, HttpMethod> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new ApacheHttpClientHttpAttributesGetter(),
             new HttpHeaderSetter());
   }
 
-  public static Instrumenter<HttpMethod, HttpMethod> instrumenter() {
-    return INSTRUMENTER;
+  static Instrumenter<HttpMethod, HttpMethod> instrumenter() {
+    return instrumenter;
   }
 
   private ApacheHttpClientSingletons() {}

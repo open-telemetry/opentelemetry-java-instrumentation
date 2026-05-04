@@ -17,14 +17,11 @@ import java.net.URI;
 import java.util.Locale;
 import java.util.Map;
 
-final class Utils {
-
-  private Utils() {}
+class Utils {
 
   static Http.Client createClient(ClientType clientType) {
     Http.Client client =
         Http.client()
-            .withNoHttp2()
             .withTransport()
             .readTimeout(Duration.fromMilliseconds(READ_TIMEOUT.toMillis()))
             .withTransport()
@@ -70,4 +67,6 @@ final class Utils {
     headers.forEach((key, value) -> request.headerMap().put(key, value));
     return request;
   }
+
+  private Utils() {}
 }

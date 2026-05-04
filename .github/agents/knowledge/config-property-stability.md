@@ -52,7 +52,7 @@ Defined in [VERSIONING.md](../../../VERSIONING.md):
 Examples (flat ↔ YAML):
 
 - `otel.instrumentation.http.client.capture-request-headers` ↔ `request_captured_headers` — **stable**
-- `otel.instrumentation.common.experimental.db-sqlcommenter.enabled` ↔ `sqlcommenter/development: { enabled: true }` — **experimental**
+- `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` ↔ `sqlcommenter/development: { enabled: true }` — **experimental**
 - `otel.instrumentation.http.client.emit-experimental-telemetry` ↔ `emit_experimental_telemetry/development: true` — **experimental**
 
 ## Deprecation Communication
@@ -67,10 +67,10 @@ must be communicated through:
    (`otel.instrumentation.…`) since that is what most users configure today:
 
    ```java
-   boolean captureEventName = config.getBoolean("capture_event_name/development", false);
-   if (captureEventName) {
+   boolean oldSetting = config.getBoolean("old_setting/development", false);
+   if (oldSetting) {
      logger.warning(
-         "The otel.instrumentation.logback-appender.experimental.capture-event-name setting is"
+         "The otel.instrumentation.<module>.experimental.old-setting setting is"
              + " deprecated and will be removed in a future version.");
    }
    ```

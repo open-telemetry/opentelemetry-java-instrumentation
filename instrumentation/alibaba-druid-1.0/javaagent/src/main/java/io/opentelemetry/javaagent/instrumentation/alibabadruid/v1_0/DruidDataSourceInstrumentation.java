@@ -18,7 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DruidDataSourceInstrumentation implements TypeInstrumentation {
+class DruidDataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.alibaba.druid.stat.DruidDataSourceStatManager");
@@ -38,7 +38,7 @@ public class DruidDataSourceInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddDataSourceAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Object dataSource, @Advice.Return ObjectName objectName) {
       DruidDataSourceMBean druidDataSource = (DruidDataSourceMBean) dataSource;
@@ -51,7 +51,7 @@ public class DruidDataSourceInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RemoveDataSourceAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Argument(0) Object dataSource) {
       DruidDataSourceMBean druidDataSource = (DruidDataSourceMBean) dataSource;
       telemetry().unregisterMetrics(druidDataSource);

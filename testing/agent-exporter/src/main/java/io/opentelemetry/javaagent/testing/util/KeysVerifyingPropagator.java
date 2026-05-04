@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
  *
  * <p>Note: This is a copy of the class in testing-common to avoid dependency conflicts
  */
-public final class KeysVerifyingPropagator implements TextMapPropagator {
+public class KeysVerifyingPropagator implements TextMapPropagator {
   private static final KeysVerifyingPropagator INSTANCE = new KeysVerifyingPropagator();
 
   public static KeysVerifyingPropagator getInstance() {

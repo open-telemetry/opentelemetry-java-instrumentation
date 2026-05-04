@@ -38,7 +38,7 @@ enum WebfluxServerHttpAttributesGetter
       getRawStatusCode =
           lookup.findVirtual(
               ServerHttpResponse.class, "getRawStatusCode", MethodType.methodType(Integer.class));
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       // ignore
     }
 
@@ -52,7 +52,7 @@ enum WebfluxServerHttpAttributesGetter
               MethodType.methodType(httpStatusCodeClass));
       statusCodeValue =
           lookup.findVirtual(httpStatusCodeClass, "value", MethodType.methodType(int.class));
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       // ignore
     }
 
@@ -66,7 +66,7 @@ enum WebfluxServerHttpAttributesGetter
     if (GET_RAW_STATUS_CODE != null) {
       try {
         return (Integer) GET_RAW_STATUS_CODE.invoke(response);
-      } catch (Throwable e) {
+      } catch (Throwable ignored) {
         // ignore
       }
     }
@@ -74,7 +74,7 @@ enum WebfluxServerHttpAttributesGetter
       try {
         Object statusCode = GET_STATUS_CODE.invoke(response);
         return (Integer) STATUS_CODE_VALUE.invoke(statusCode);
-      } catch (Throwable e) {
+      } catch (Throwable ignored) {
         // ignore
       }
     }

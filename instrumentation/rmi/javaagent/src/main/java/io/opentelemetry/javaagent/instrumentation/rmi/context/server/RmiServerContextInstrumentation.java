@@ -38,7 +38,7 @@ public class RmiServerContextInstrumentation implements TypeInstrumentation {
   public static class ObjectTableAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Target methodExit(@Advice.Argument(0) Object oe, @Advice.Return Target result) {
       // comparing toString() output allows us to avoid using reflection to be able to compare
       // ObjID and ObjectEndpoint objects

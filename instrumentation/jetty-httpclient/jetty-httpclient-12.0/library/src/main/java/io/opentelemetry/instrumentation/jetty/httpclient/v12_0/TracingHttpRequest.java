@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyCli
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientWrapUtil;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import javax.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
@@ -21,9 +22,9 @@ import org.eclipse.jetty.client.transport.HttpRequest;
 class TracingHttpRequest extends HttpRequest {
 
   private final Instrumenter<Request, Response> instrumenter;
-  private Context parentContext;
+  @Nullable private Context parentContext;
 
-  public TracingHttpRequest(
+  TracingHttpRequest(
       HttpClient client,
       HttpConversation conversation,
       URI uri,
@@ -40,6 +41,7 @@ class TracingHttpRequest extends HttpRequest {
     super.send(JettyClientWrapUtil.wrapTheListener(listener, parentContext));
   }
 
+  @Nullable
   private Scope openScope() {
     return parentContext != null ? parentContext.makeCurrent() : null;
   }

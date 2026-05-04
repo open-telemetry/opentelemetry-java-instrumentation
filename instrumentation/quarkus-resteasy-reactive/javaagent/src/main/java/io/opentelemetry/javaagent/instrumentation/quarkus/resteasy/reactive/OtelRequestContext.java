@@ -7,14 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.quarkus.resteasy.reactive;
 
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 
-public final class OtelRequestContext {
+public class OtelRequestContext {
   private static final ThreadLocal<OtelRequestContext> contextThreadLocal = new ThreadLocal<>();
   private boolean firstInvoke = true;
 
   public static OtelRequestContext start(ResteasyReactiveRequestContext requestContext) {
     OtelRequestContext context = new OtelRequestContext();
     contextThreadLocal.set(context);
-    ResteasyReactiveSpanName.INSTANCE.updateServerSpanName(requestContext);
+    ResteasyReactiveSpanName.updateServerSpanName(requestContext);
     return context;
   }
 
@@ -29,7 +29,7 @@ public final class OtelRequestContext {
       context.firstInvoke = false;
       return;
     }
-    ResteasyReactiveSpanName.INSTANCE.updateServerSpanName(requestContext);
+    ResteasyReactiveSpanName.updateServerSpanName(requestContext);
   }
 
   public void close() {

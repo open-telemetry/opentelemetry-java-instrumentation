@@ -15,6 +15,7 @@ import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Wrapped;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -43,7 +44,8 @@ public final class R2dbcSqlCommenterUtil {
   }
 
   @SuppressWarnings("unchecked") // casting to unwrap connection
-  private static Connection unwrapConnection(Connection connection) {
+  @Nullable
+  private static Connection unwrapConnection(@Nullable Connection connection) {
     if (connection instanceof Wrapped) {
       Wrapped<Connection> wrapped = (Wrapped<Connection>) connection;
       return wrapped.unwrap();
@@ -52,6 +54,7 @@ public final class R2dbcSqlCommenterUtil {
   }
 
   @SuppressWarnings("unchecked") // casting to same type as used in storeQuery
+  @Nullable
   private static Map<String, String> getOriginalQueryMap(ValueStore valueStore) {
     return valueStore.get(KEY_ORIGINAL_QUERY_MAP, Map.class);
   }

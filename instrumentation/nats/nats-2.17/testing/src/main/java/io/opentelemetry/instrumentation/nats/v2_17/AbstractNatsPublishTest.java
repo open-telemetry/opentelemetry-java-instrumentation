@@ -13,11 +13,9 @@ import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
 import io.opentelemetry.api.trace.SpanKind;
 import java.time.Duration;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
 
   private int clientId;
@@ -27,11 +25,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
   void beforeEach() {
     clientId = connection.getServerInfo().getClientId();
     subscription = connection.subscribe("sub");
-  }
-
-  @AfterEach
-  void afterEach() throws InterruptedException {
-    subscription.drain(Duration.ofSeconds(10));
+    cleanup.deferCleanup(() -> subscription.drain(Duration.ofSeconds(10)));
   }
 
   @Test

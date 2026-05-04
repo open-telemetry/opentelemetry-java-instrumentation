@@ -9,14 +9,23 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import com.twitter.finagle.http.Request;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation {
+/**
+ * Part 3/3 of bridging the otel Context from netty to finagle. Instruments the dispatch call to
+ * extract the Context from the finagle Request context and assert it as current for the duration of
+ * the dispatch. This allows the other instrumentations to take over and carry the Context to its
+ * next span/s.
+ */
+class GenStreamingServerDispatcherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return hasSuperType(named("com.twitter.finagle.http.GenStreamingSerialServerDispatcher"));
@@ -29,28 +38,30 @@ public class GenStreamingServerDispatcherInstrumentation implements TypeInstrume
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("loop"), getClass().getName() + "$LoopAdvice");
+    transformer.applyAdviceToMethod(named("dispatch"), getClass().getName() + "$DispatchAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class LoopAdvice {
+  public static class DispatchAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter() {
-      // this works bc at this point in the server evaluation, the netty
-      // instrumentation has already gone to work and assigned the context to the
-      // local thread;
-      //
-      // this works specifically in finagle's netty stack bc at this point the loop()
-      // method is running on a netty thread with the necessary access to the
-      // java-native ThreadLocal where the Context is stored
-      Helpers.CONTEXT_LOCAL.update(Context.current());
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Scope methodEnter(@Advice.Argument(0) Object req) {
+      if (req instanceof Request) {
+        // practically this will always be a Request, from HttpServerDispatcher
+        Request request = (Request) req;
+        // if this is null, there's a bug in the instrumentation
+        Context context = request.ctx().apply(Helpers.OTEL_CONTEXT_KEY);
+        return context != null ? context.makeCurrent() : null;
+      }
+      return null;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void methodExit() {
-      // always clear this
-      Helpers.CONTEXT_LOCAL.clear();
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+    public static void methodExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }

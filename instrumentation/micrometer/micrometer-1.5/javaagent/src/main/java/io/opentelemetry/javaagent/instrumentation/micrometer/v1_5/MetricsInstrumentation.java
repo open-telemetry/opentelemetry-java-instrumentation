@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.MicrometerSingletons.meterRegistry;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -15,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MetricsInstrumentation implements TypeInstrumentation {
+class MetricsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,9 +31,9 @@ public class MetricsInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StaticInitializerAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit() {
-      Metrics.addRegistry(MicrometerSingletons.meterRegistry());
+      Metrics.addRegistry(meterRegistry());
     }
   }
 }

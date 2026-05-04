@@ -11,7 +11,7 @@ import com.openai.models.chat.completions.ChatCompletionTool;
 import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.openai.TestHelper.MessageToolCallBuilder.FunctionBuilder;
 
-public class OpenAi1TestHelper implements TestHelper {
+class OpenAi1TestHelper implements TestHelper {
   @Override
   public String id(ChatCompletionMessageToolCall toolCall) {
     return toolCall.id();
@@ -30,7 +30,8 @@ public class OpenAi1TestHelper implements TestHelper {
   @Override
   public MessageToolCallBuilder messageToolCallBuilder() {
     return new MessageToolCallBuilder() {
-      final ChatCompletionMessageToolCall.Builder builder = ChatCompletionMessageToolCall.builder();
+      private final ChatCompletionMessageToolCall.Builder builder =
+          ChatCompletionMessageToolCall.builder();
 
       @Override
       public MessageToolCallBuilder id(String id) {
@@ -57,7 +58,7 @@ public class OpenAi1TestHelper implements TestHelper {
   }
 
   private static class FunctionBuilderImpl implements FunctionBuilder {
-    final ChatCompletionMessageToolCall.Function.Builder builder =
+    private final ChatCompletionMessageToolCall.Function.Builder builder =
         ChatCompletionMessageToolCall.Function.builder();
 
     @Override

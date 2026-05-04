@@ -12,30 +12,23 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ElasticsearchRest5InstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ElasticsearchRest5InstrumentationModule extends InstrumentationModule {
   public ElasticsearchRest5InstrumentationModule() {
     super("elasticsearch-rest", "elasticsearch-rest-5.0", "elasticsearch");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // org.elasticsearch.client.Request was added in 6.4.0
+    // added in 6.4.0
     return not(hasClassesNamed("org.elasticsearch.client.Request"));
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RestClientInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

@@ -21,6 +21,7 @@ class Jetty12TextMapGetter implements TextMapGetter<Request> {
   }
 
   @Override
+  @Nullable
   public String get(@Nullable Request carrier, String key) {
     if (carrier == null) {
       return null;

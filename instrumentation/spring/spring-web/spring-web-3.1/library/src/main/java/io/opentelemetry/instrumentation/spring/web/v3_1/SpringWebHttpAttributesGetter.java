@@ -31,10 +31,10 @@ class SpringWebHttpAttributesGetter
 
     try {
       httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatusCode");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       try {
         httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatus");
-      } catch (ClassNotFoundException ignored) {
+      } catch (ClassNotFoundException ignore) {
         // ignored
       }
     }
@@ -63,7 +63,6 @@ class SpringWebHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getUrlFull(HttpRequest httpRequest) {
     return httpRequest.getURI().toString();
   }
@@ -85,7 +84,7 @@ class SpringWebHttpAttributesGetter
     try {
       Object statusCode = GET_STATUS_CODE.invoke(clientHttpResponse);
       return (int) STATUS_CODE_VALUE.invoke(statusCode);
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       return null;
     }
   }

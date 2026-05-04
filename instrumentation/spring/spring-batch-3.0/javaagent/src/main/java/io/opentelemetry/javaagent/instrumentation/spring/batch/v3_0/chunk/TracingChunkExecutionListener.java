@@ -18,7 +18,7 @@ import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.core.Ordered;
 
-public final class TracingChunkExecutionListener implements ChunkListener, Ordered {
+public class TracingChunkExecutionListener implements ChunkListener, Ordered {
   private static final VirtualField<ChunkContext, ContextAndScope> CONTEXT_AND_SCOPE =
       VirtualField.find(ChunkContext.class, ContextAndScope.class);
   private final Class<?> builderClass;
@@ -37,7 +37,7 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
     }
 
     Context context = chunkInstrumenter().start(parentContext, chunkContextAndBuilder);
-    // beforeJob & afterJob always execute on the same thread
+    // beforeChunk & afterChunk always execute on the same thread
     Scope scope = context.makeCurrent();
     CONTEXT_AND_SCOPE.set(chunkContext, new ContextAndScope(context, scope));
   }
@@ -73,7 +73,7 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
   }
 
   // equals() and hashCode() methods guarantee that only one instance of
-  // TracingJobExecutionListener will be present in an ordered set of listeners
+  // TracingChunkExecutionListener will be present in an ordered set of listeners
 
   @Override
   public boolean equals(@Nullable Object o) {

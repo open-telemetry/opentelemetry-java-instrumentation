@@ -15,6 +15,7 @@ import com.amazonaws.Response;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -23,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * Due to a change in the AmazonHttpClient class, this instrumentation is needed to support newer
  * versions. The {@link AwsHttpClientInstrumentation} class should cover older versions.
  */
-public class RequestExecutorInstrumentation implements TypeInstrumentation {
+class RequestExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -40,13 +41,13 @@ public class RequestExecutorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestExecutorAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.FieldValue("request") Request<?> request,
-        @Advice.Return Response<?> response,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Return @Nullable Response<?> response,
+        @Advice.Thrown @Nullable Throwable throwable) {
       if (throwable instanceof Exception) {
-        TracingRequestHandler.tracingHandler.afterError(request, response, (Exception) throwable);
+        TracingRequestHandler.tracingHandler().afterError(request, response, (Exception) throwable);
       }
       Scope scope = request.getHandlerContext(TracingRequestHandler.SCOPE);
       if (scope != null) {

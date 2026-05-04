@@ -28,7 +28,15 @@ public class TestAccessLogValve extends ValveBase implements AccessLog {
   }
 
   public List<Map.Entry<String, String>> getLoggedIds() {
-    return loggedIds;
+    synchronized (loggedIds) {
+      return new ArrayList<>(loggedIds);
+    }
+  }
+
+  public void clearLoggedIds() {
+    synchronized (loggedIds) {
+      loggedIds.clear();
+    }
   }
 
   @Override
@@ -62,7 +70,7 @@ public class TestAccessLogValve extends ValveBase implements AccessLog {
         toWait = endTime - System.currentTimeMillis();
       }
 
-      if (toWait <= 0) {
+      if (loggedIds.size() < expected) {
         throw new IllegalStateException(
             "Timeout waiting for " + expected + " access log ids, got " + loggedIds.size());
       }

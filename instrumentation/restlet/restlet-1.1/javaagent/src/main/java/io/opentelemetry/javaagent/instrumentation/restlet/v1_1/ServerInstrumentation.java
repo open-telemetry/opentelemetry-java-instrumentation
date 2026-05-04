@@ -25,7 +25,7 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.data.Status;
 
-public class ServerInstrumentation implements TypeInstrumentation {
+class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.restlet.Server");
@@ -64,7 +64,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent());
       }
 
-      public void end(Throwable exception, Request request, Response response) {
+      public void end(@Nullable Throwable exception, Request request, Response response) {
         scope.close();
 
         if (Status.CLIENT_ERROR_NOT_FOUND.equals(response.getStatus())) {
@@ -87,12 +87,12 @@ public class ServerInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope beginRequest(@Advice.Argument(0) Request request) {
       return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void finishRequest(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) Response response,

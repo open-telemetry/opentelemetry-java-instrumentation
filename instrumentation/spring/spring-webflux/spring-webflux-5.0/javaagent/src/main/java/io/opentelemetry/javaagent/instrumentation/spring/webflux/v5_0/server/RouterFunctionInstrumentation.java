@@ -24,7 +24,7 @@ import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import reactor.core.publisher.Mono;
 
-public class RouterFunctionInstrumentation implements TypeInstrumentation {
+class RouterFunctionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -61,15 +61,10 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
   public static class RouteAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<HandlerFunction<?>> methodExit(
-        @Advice.This RouterFunction<?> thiz,
-        @Advice.Return Mono<HandlerFunction<?>> result,
-        @Advice.Thrown Throwable throwable) {
-      if (throwable == null) {
-        return result.doOnNext(new RouteOnSuccess(thiz));
-      }
-      return result;
+        @Advice.This RouterFunction<?> thiz, @Advice.Return Mono<HandlerFunction<?>> result) {
+      return result.doOnNext(new RouteOnSuccess(thiz));
     }
   }
 }

@@ -11,13 +11,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jsf.jakarta.JsfServerSpanNaming;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta.JsfServerSpanNaming;
 import jakarta.faces.context.FacesContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RestoreViewExecutorInstrumentation implements TypeInstrumentation {
+class RestoreViewExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -34,7 +34,7 @@ public class RestoreViewExecutorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Argument(0) FacesContext facesContext) {
       JsfServerSpanNaming.updateViewName(currentContext(), facesContext);
     }

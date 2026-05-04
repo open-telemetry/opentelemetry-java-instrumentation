@@ -12,9 +12,9 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 class ServletRequestGetter<REQUEST> implements TextMapGetter<ServletRequestContext<REQUEST>> {
-  protected final ServletAccessor<REQUEST, ?> accessor;
+  private final ServletAccessor<REQUEST, ?> accessor;
 
-  public ServletRequestGetter(ServletAccessor<REQUEST, ?> accessor) {
+  ServletRequestGetter(ServletAccessor<REQUEST, ?> accessor) {
     this.accessor = accessor;
   }
 

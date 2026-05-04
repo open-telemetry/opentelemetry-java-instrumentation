@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 
-public final class ApplicationObservableDoubleGauge
+public class ApplicationObservableDoubleGauge
     implements application.io.opentelemetry.api.metrics.ObservableDoubleGauge {
 
   private final ObservableDoubleGauge agentGauge;
@@ -21,7 +21,10 @@ public final class ApplicationObservableDoubleGauge
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
-    agentGauge.close();
-    onClose.run();
+    try {
+      agentGauge.close();
+    } finally {
+      onClose.run();
+    }
   }
 }

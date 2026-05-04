@@ -14,7 +14,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import zio.Supervisor;
 
-public class ZioRuntimeInstrumentation implements TypeInstrumentation {
+class ZioRuntimeInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,9 +28,9 @@ public class ZioRuntimeInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static final class DefaultSupervisorAdvice {
+  public static class DefaultSupervisorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static Object onExit(@Advice.Return Supervisor<?> supervisor) {
       return supervisor.$plus$plus(TracingSupervisor.INSTANCE);

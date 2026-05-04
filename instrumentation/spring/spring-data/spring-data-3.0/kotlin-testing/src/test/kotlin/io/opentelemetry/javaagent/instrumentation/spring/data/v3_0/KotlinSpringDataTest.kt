@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.CustomerRepository
 import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.PersistenceConfig
 import kotlinx.coroutines.runBlocking
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -24,7 +24,7 @@ class KotlinSpringDataTest {
   companion object {
     @JvmStatic
     @RegisterExtension
-    val testing = AgentInstrumentationExtension.create()
+    private val testing = AgentInstrumentationExtension.create()
   }
 
   private lateinit var applicationContext: ConfigurableApplicationContext
@@ -45,7 +45,7 @@ class KotlinSpringDataTest {
   fun `trace findById`() {
     runBlocking {
       val customer = customerRepository.findById(1)
-      Assertions.assertThat(customer?.name).isEqualTo("Name")
+      assertThat(customer?.name).isEqualTo("Name")
     }
 
     testing.waitAndAssertTraces({ trace ->

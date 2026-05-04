@@ -32,11 +32,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.36:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
-
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 }
 
@@ -46,7 +44,7 @@ testing {
     // extracted to the output directory are not available during tests
     val testAzure by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
+        if (otelProps.testLatestDeps) {
           implementation("com.azure:azure-core:latest.release")
           implementation("com.azure:azure-core-test:latest.release")
         } else {

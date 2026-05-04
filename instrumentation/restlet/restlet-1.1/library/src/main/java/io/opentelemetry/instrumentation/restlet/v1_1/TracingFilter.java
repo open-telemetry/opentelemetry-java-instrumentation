@@ -42,7 +42,9 @@ final class TracingFilter extends Filter {
       error = t;
       throw t;
     } finally {
-      if (response.getStatus() != null && response.getStatus().isError()) {
+      // Restlet StatusFilter can swallow downstream exceptions and attach them to the response
+      // status, so only use the status throwable when no exception escaped directly.
+      if (error == null && response.getStatus() != null && response.getStatus().isError()) {
         error = response.getStatus().getThrowable();
       }
       instrumenter.end(context, request, response, error);

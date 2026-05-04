@@ -46,7 +46,7 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
   public static class ExecuteAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(1) ChunkContext chunkContext) {
       if (!shouldTraceItems()) {
         return null;
@@ -55,7 +55,7 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
       return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();

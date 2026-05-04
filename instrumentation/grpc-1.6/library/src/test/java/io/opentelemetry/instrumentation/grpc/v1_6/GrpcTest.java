@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,14 +21,12 @@ import io.grpc.ServerBuilder;
 import io.grpc.Status;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -35,9 +34,6 @@ class GrpcTest extends AbstractGrpcTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
-
-  private static final AttributeKey<String> CUSTOM_KEY = AttributeKey.stringKey("customKey");
-  private static final AttributeKey<String> CUSTOM_KEY2 = AttributeKey.stringKey("customKey2");
 
   private static final Metadata.Key<String> CUSTOM_METADATA_KEY =
       Metadata.Key.of("customMetadataKey", Metadata.ASCII_STRING_MARSHALLER);
@@ -134,14 +130,14 @@ class GrpcTest extends AbstractGrpcTest {
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttribute(CUSTOM_KEY2, "clientSideValue")
-                            .hasAttribute(CUSTOM_KEY, "customValue"),
+                            .hasAttribute(stringKey("customKey2"), "clientSideValue")
+                            .hasAttribute(stringKey("customKey"), "customValue"),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttribute(CUSTOM_KEY2, "serverSideValue")
-                            .hasAttribute(CUSTOM_KEY, "customValue")));
+                            .hasAttribute(stringKey("customKey2"), "serverSideValue")
+                            .hasAttribute(stringKey("customKey"), "customValue")));
   }
 
   private static class CustomAttributesExtractor
@@ -156,13 +152,12 @@ class GrpcTest extends AbstractGrpcTest {
         AttributesBuilder attributes,
         Context context,
         GrpcRequest grpcRequest,
-        @Nullable Status status,
-        @Nullable Throwable error) {
+        Status status,
+        Throwable error) {
 
       Metadata metadata = grpcRequest.getMetadata();
-      if (metadata != null && metadata.containsKey(CUSTOM_METADATA_KEY)) {
-        String value = metadata.get(CUSTOM_METADATA_KEY);
-        attributes.put(CUSTOM_KEY, value);
+      if (metadata != null) {
+        attributes.put(stringKey("customKey"), metadata.get(CUSTOM_METADATA_KEY));
       }
     }
   }
@@ -180,7 +175,7 @@ class GrpcTest extends AbstractGrpcTest {
     public void onStart(
         AttributesBuilder attributes, Context parentContext, GrpcRequest grpcRequest) {
 
-      attributes.put(CUSTOM_KEY2, valueOfKey2);
+      attributes.put(stringKey("customKey2"), valueOfKey2);
     }
 
     @Override
@@ -188,7 +183,7 @@ class GrpcTest extends AbstractGrpcTest {
         AttributesBuilder attributes,
         Context context,
         GrpcRequest grpcRequest,
-        @Nullable Status status,
-        @Nullable Throwable error) {}
+        Status status,
+        Throwable error) {}
   }
 }

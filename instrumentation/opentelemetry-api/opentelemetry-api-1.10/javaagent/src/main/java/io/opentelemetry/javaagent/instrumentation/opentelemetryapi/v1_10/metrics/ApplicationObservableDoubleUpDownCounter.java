@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import io.opentelemetry.api.metrics.ObservableDoubleUpDownCounter;
 
-public final class ApplicationObservableDoubleUpDownCounter
+public class ApplicationObservableDoubleUpDownCounter
     implements application.io.opentelemetry.api.metrics.ObservableDoubleUpDownCounter {
 
   private final ObservableDoubleUpDownCounter agentUpDownCounter;
@@ -22,7 +22,10 @@ public final class ApplicationObservableDoubleUpDownCounter
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
-    agentUpDownCounter.close();
-    onClose.run();
+    try {
+      agentUpDownCounter.close();
+    } finally {
+      onClose.run();
+    }
   }
 }

@@ -21,7 +21,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent"))
+  implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common-3.0:javaagent"))
 
   // We need both version as different versions of Vert.x use different versions of Netty
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
@@ -38,8 +38,8 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

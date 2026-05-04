@@ -17,7 +17,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+  implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
   testImplementation(project(":instrumentation:jedis:jedis-1.4:testing"))
 
@@ -41,7 +41,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

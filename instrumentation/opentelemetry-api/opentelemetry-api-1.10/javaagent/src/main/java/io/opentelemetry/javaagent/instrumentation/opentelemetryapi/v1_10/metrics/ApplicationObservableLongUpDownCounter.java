@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 
-public final class ApplicationObservableLongUpDownCounter
+public class ApplicationObservableLongUpDownCounter
     implements application.io.opentelemetry.api.metrics.ObservableLongUpDownCounter {
 
   private final ObservableLongUpDownCounter agentUpDownCounter;
@@ -22,7 +22,10 @@ public final class ApplicationObservableLongUpDownCounter
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
-    agentUpDownCounter.close();
-    onClose.run();
+    try {
+      agentUpDownCounter.close();
+    } finally {
+      onClose.run();
+    }
   }
 }

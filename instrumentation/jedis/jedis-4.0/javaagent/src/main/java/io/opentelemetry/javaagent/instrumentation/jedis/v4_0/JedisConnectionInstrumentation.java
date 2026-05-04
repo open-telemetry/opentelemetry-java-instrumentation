@@ -17,7 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.JedisRequestContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
 import java.net.Socket;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.CommandArguments;
 import redis.clients.jedis.commands.ProtocolCommand;
 
-public class JedisConnectionInstrumentation implements TypeInstrumentation {
+class JedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("redis.clients.jedis.Connection");
@@ -69,7 +69,7 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
       return new AdviceScope(context, context.makeCurrent(), request);
     }
 
-    public void end(Socket socket, @Nullable Throwable throwable) {
+    public void end(@Nullable Socket socket, @Nullable Throwable throwable) {
       request.setSocket(socket);
       scope.close();
       JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
@@ -80,13 +80,13 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
   public static class SendCommandAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(0) ProtocolCommand command, @Advice.Argument(1) byte[][] args) {
       return AdviceScope.start(JedisRequest.create(command, asList(args)));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.FieldValue("socket") Socket socket,
         @Advice.Thrown @Nullable Throwable throwable,
@@ -101,12 +101,12 @@ public class JedisConnectionInstrumentation implements TypeInstrumentation {
   public static class SendCommand2Advice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) CommandArguments command) {
       return AdviceScope.start(JedisRequest.create(command));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.FieldValue("socket") Socket socket,
         @Advice.Thrown @Nullable Throwable throwable,

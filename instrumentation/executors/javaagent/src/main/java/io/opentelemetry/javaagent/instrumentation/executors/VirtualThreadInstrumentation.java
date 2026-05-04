@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class VirtualThreadInstrumentation implements TypeInstrumentation {
+class VirtualThreadInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -40,7 +40,7 @@ public class VirtualThreadInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SwitchToCarrierAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void exit() {
       ExecutorAdviceHelper.disablePropagation();
     }
@@ -49,7 +49,7 @@ public class VirtualThreadInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SwitchToVirtualAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void enter() {
       ExecutorAdviceHelper.enablePropagation();
     }

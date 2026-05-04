@@ -8,13 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.oracleucp.v11_2;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.oracleucp.v11_2.OracleUcpTelemetry;
 
-public final class OracleUcpSingletons {
+public class OracleUcpSingletons {
 
-  private static final OracleUcpTelemetry oracleUcpTelemetry =
+  private static final OracleUcpTelemetry telemetry =
       OracleUcpTelemetry.create(GlobalOpenTelemetry.get());
 
   public static OracleUcpTelemetry telemetry() {
-    return oracleUcpTelemetry;
+    return telemetry;
   }
 
   private OracleUcpSingletons() {}

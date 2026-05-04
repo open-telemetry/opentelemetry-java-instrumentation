@@ -9,12 +9,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -25,14 +25,16 @@ import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.Result;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
 
-  protected HttpClient client;
-  protected HttpClient httpsClient;
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  private HttpClient client;
+  private HttpClient httpsClient;
 
   protected abstract HttpClient createStandardClient();
 
@@ -43,32 +45,28 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     client = createStandardClient();
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
     client.start();
+    cleanup.deferCleanup(client::stop);
 
     SslContextFactory.Client tlsCtx = new SslContextFactory.Client();
     httpsClient = createHttpsClient(tlsCtx);
     httpsClient.setFollowRedirects(false);
     httpsClient.start();
-  }
-
-  @AfterEach
-  void after() throws Exception {
-    client.stop();
-    httpsClient.stop();
+    cleanup.deferCleanup(httpsClient::stop);
   }
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     // disable redirect tests
     optionsBuilder.disableTestRedirects();
-    // jetty 12 does not support to reuse request
-    // use request.send() twice will block the program infinitely
+    // Jetty 12 does not support reusing requests.
+    // Calling request.send() twice blocks indefinitely.
     optionsBuilder.disableTestReusedRequest();
     optionsBuilder.spanEndsAfterBody();
   }
 
   @Override
   public Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    HttpClient theClient = Objects.equals(uri.getScheme(), "https") ? httpsClient : client;
+    HttpClient theClient = "https".equalsIgnoreCase(uri.getScheme()) ? httpsClient : client;
 
     Request request = theClient.newRequest(uri);
     request.agent("Jetty");
@@ -116,7 +114,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   }
 
   @Test
-  void callbacksCalled() throws InterruptedException, ExecutionException {
+  void callbacksCalled() {
     URI uri = resolveAddress("/success");
     Request request = client.newRequest(uri).method("GET");
 
@@ -124,7 +122,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     TracingResponseListener responseListener = new TracingResponseListener(responseFuture);
 
     testing.runWithSpan("parent", () -> request.send(responseListener));
-    Response response = responseFuture.get();
+    Response response = responseFuture.join();
 
     assertThat(response.getStatus()).isEqualTo(200);
     testing.waitAndAssertTraces(

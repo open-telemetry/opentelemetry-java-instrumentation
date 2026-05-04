@@ -40,7 +40,7 @@ class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class LogAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallDepth methodEnter(
         @Advice.This application.java.util.logging.Logger logger,
         @Advice.Argument(0) LogRecord logRecord) {
@@ -53,7 +53,7 @@ class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }

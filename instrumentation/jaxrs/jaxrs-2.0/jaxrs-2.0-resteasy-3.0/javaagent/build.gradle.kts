@@ -22,8 +22,6 @@ muzzle {
     group.set("org.jboss.resteasy")
     module.set("resteasy-jaxrs")
     versions.set("(2.1.0.GA,3.0.0.Final)")
-    // missing dependencies
-    skip("2.3.10.Final")
   }
 
   fail {
@@ -40,7 +38,7 @@ dependencies {
   library("org.jboss.resteasy:resteasy-jaxrs:3.0.0.Final")
 
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
-  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common:javaagent"))
+  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common-3.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
 
@@ -61,20 +59,20 @@ dependencies {
   testImplementation("io.undertow:undertow-servlet:1.4.28.Final")
   testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.0.4.Final")
 
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.0.+") // see jaxrs-3.0-resteasy-3.1 module
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-jaxrs:3.0.+") // see jaxrs-3.0-resteasy-3.1 module
-  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:3.0.+") { // see jaxrs-3.0-resteasy-3.1 module
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-servlet-initializer:3.0.+") // see jaxrs-2.0-resteasy-3.1 module
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-jaxrs:3.0.+") // see jaxrs-2.0-resteasy-3.1 module
+  latestDepTestLibrary("org.jboss.resteasy:resteasy-undertow:3.0.+") { // see jaxrs-2.0-resteasy-3.1 module
     exclude("org.jboss.resteasy", "resteasy-client")
   }
-  latestDepTestLibrary("io.undertow:undertow-servlet:2.2.24.Final") // see jaxrs-3.0-resteasy-3.1 module
+  latestDepTestLibrary("io.undertow:undertow-servlet:2.2.24.Final") // see jaxrs-2.0-resteasy-3.1 module
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {

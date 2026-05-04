@@ -313,7 +313,15 @@ public class AgentInstaller {
               Context serverContext, T response, HttpServerResponseMutator<T> responseMutator) {
 
             for (HttpServerResponseCustomizer modifier : customizers) {
-              modifier.customize(serverContext, response, responseMutator);
+              try {
+                modifier.customize(serverContext, response, responseMutator);
+              } catch (Throwable t) {
+                logger.log(
+                    FINE,
+                    "Failed to customize HTTP server response with "
+                        + modifier.getClass().getName(),
+                    t);
+              }
             }
           }
         });

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.getBootstrapLoader;
+import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.bootstrapLoader;
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -32,11 +32,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class MethodInstrumentation implements TypeInstrumentation {
-  private final String className;
+class MethodInstrumentation implements TypeInstrumentation {
+  @Nullable private final String className;
   private final Map<SpanKind, Collection<String>> methodNames;
 
-  public MethodInstrumentation(String className, Map<SpanKind, Collection<String>> methodNames) {
+  MethodInstrumentation(@Nullable String className, Map<SpanKind, Collection<String>> methodNames) {
     this.className = className;
     this.methodNames = methodNames;
   }
@@ -51,7 +51,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
       // hasClassesNamed does not support null class loader, so we provide a custom loader that
       // can be used to look up resources in bootstrap loader
       if (target == null) {
-        target = getBootstrapLoader();
+        target = bootstrapLoader();
       }
       return delegate.matches(target);
     };
@@ -128,7 +128,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @MethodSpanKind SpanKind spanKind,
         @Advice.Origin("#t") Class<?> declaringClass,
@@ -137,7 +137,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @MethodReturnType Class<?> methodReturnType,
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,

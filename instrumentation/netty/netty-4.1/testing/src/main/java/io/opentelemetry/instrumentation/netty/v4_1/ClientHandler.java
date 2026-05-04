@@ -31,7 +31,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
   }
 
   @Override
-  public void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
+  protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
     if (msg instanceof FullHttpResponse) {
       ctx.pipeline().remove(this);
       FullHttpResponse response = (FullHttpResponse) msg;

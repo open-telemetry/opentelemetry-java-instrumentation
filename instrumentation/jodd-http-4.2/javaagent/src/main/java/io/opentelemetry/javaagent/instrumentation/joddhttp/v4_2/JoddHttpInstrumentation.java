@@ -55,19 +55,20 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent());
       }
 
-      public void end(HttpRequest request, HttpResponse response, Throwable throwable) {
+      public void end(
+          HttpRequest request, @Nullable HttpResponse response, @Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, request, response, throwable);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.This HttpRequest request) {
       return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This HttpRequest request,
         @Advice.Return @Nullable HttpResponse response,

@@ -1,6 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
+  id("otel.dsl-conventions")
   id("net.ltgt.errorprone")
 }
 
@@ -10,7 +12,7 @@ dependencies {
 }
 
 val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
-val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+val otelProps = the<OtelPropsExtension>()
 
 tasks {
   withType<JavaCompile>().configureEach {
@@ -133,7 +135,7 @@ tasks {
         disable("AddNullMarkedToClass")
         disable("AddNullMarkedToPackageInfo")
 
-        if (testLatestDeps) {
+        if (otelProps.testLatestDeps) {
           // Some latest dep tests are compiled for java 17 although the base version uses an older
           // version. Disable rules that suggest using new language features.
           disable("StatementSwitchToExpressionSwitch")

@@ -38,4 +38,10 @@ public class ApplicationDoubleGauge138
         Bridging.toAgent(attributes),
         AgentContextStorage.getAgentContext(applicationContext));
   }
+
+  // added in 1.40.0 to incubator api
+  // added in 1.61.0 to stable api
+  public boolean isEnabled() {
+    return agentDoubleGauge.isEnabled();
+  }
 }

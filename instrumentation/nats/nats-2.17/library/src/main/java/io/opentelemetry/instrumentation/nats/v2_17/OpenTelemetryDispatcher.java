@@ -21,13 +21,13 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
   private final Dispatcher delegate;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
-  public OpenTelemetryDispatcher(
+  private OpenTelemetryDispatcher(
       Dispatcher delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.delegate = delegate;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
-  public static Dispatcher wrap(
+  static Dispatcher wrap(
       Dispatcher delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     return (Dispatcher)
         Proxy.newProxyInstance(
@@ -48,8 +48,8 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
   private static Object invokeMethod(Method method, Object target, Object[] args) throws Throwable {
     try {
       return method.invoke(target, args);
-    } catch (InvocationTargetException exception) {
-      throw exception.getCause();
+    } catch (InvocationTargetException e) {
+      throw e.getCause();
     }
   }
 

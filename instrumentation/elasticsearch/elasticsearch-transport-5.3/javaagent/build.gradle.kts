@@ -7,10 +7,6 @@ muzzle {
     group.set("org.elasticsearch.client")
     module.set("transport")
     versions.set("[5.3.0,6.0.0)")
-    // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
-    // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    // version 7.17.8 has broken module metadata
-    skip("7.11.0", "7.17.8")
     // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
     excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
@@ -19,16 +15,13 @@ muzzle {
     group.set("org.elasticsearch")
     module.set("elasticsearch")
     versions.set("[5.3.0,6.0.0)")
-    // version 7.11.0 depends on org.elasticsearch:elasticsearch-plugin-classloader:7.11.0
-    // which does not exist
-    skip("7.11.0")
     // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
     excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
   }
 }
 
-if (findProperty("testLatestDeps") == "true") {
+if (otelProps.testLatestDeps) {
   // when running on jdk 21 Elasticsearch53SpringRepositoryTest occasionally fails with timeout
   otelJava {
     maxJavaVersionForTests.set(JavaVersion.VERSION_17)
@@ -68,13 +61,13 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps"))
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -97,7 +90,7 @@ tasks {
     dependsOn(testStableSemconv, testExperimental)
   }
 
-  if (findProperty("denyUnsafe") == "true") {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

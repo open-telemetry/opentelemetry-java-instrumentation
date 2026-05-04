@@ -23,7 +23,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ActionInvocationInstrumentation implements TypeInstrumentation {
+class ActionInvocationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -49,7 +49,7 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope) {
         this.context = context;
         this.scope = scope;
       }
@@ -60,7 +60,7 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
         HttpServerRoute.update(
             parentContext,
             CONTROLLER,
-            StrutsServerSpanNaming.SERVER_SPAN_NAME,
+            StrutsServerSpanNaming.serverSpanName(),
             actionInvocation.getProxy());
 
         if (!instrumenter().shouldStart(parentContext, actionInvocation)) {
@@ -76,13 +76,13 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static AdviceScope onEnter(@Advice.This ActionInvocation actionInvocation) {
       return AdviceScope.start(actionInvocation);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.This ActionInvocation actionInvocation,

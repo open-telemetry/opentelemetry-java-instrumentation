@@ -12,22 +12,20 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class CouchbaseInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public CouchbaseInstrumentationModule() {
     super("couchbase", "couchbase-3.2");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // introduced in java-client 3.2.0 (core-io 2.2.0)
+    // added in 3.2.0 (via com.couchbase.client:core-io 2.2.0)
     return hasClassesNamed("com.couchbase.client.core.cnc.RequestSpan$StatusCode")
-        // introduced in java-client 3.4.0 (core-io 2.4.0)
+        // added in 3.4.0 (via com.couchbase.client:core-io 2.4.0)
         .and(
             not(
                 hasClassesNamed(
@@ -37,10 +35,5 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new CouchbaseEnvironmentInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

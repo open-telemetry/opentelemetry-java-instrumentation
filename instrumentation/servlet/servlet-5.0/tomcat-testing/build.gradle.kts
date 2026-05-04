@@ -12,9 +12,7 @@ dependencies {
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:10.0.0")
 }
 
-val testLatestDeps = findProperty("testLatestDeps") == "true"
-
-if (testLatestDeps) {
+if (otelProps.testLatestDeps) {
   otelJava {
     // Tomcat 10.1 requires Java 11
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
@@ -22,7 +20,7 @@ if (testLatestDeps) {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
   }
 }

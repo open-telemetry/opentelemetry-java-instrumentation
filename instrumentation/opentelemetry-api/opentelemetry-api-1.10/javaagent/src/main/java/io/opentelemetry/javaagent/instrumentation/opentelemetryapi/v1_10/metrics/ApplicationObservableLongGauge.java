@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import io.opentelemetry.api.metrics.ObservableLongGauge;
 
-public final class ApplicationObservableLongGauge
+public class ApplicationObservableLongGauge
     implements application.io.opentelemetry.api.metrics.ObservableLongGauge {
 
   private final ObservableLongGauge agentGauge;
@@ -21,7 +21,10 @@ public final class ApplicationObservableLongGauge
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
-    agentGauge.close();
-    onClose.run();
+    try {
+      agentGauge.close();
+    } finally {
+      onClose.run();
+    }
   }
 }

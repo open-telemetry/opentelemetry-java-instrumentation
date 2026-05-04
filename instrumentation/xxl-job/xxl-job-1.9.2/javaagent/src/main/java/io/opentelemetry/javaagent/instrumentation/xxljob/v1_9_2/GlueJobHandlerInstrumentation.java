@@ -13,15 +13,15 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.xxl.job.core.handler.IJobHandler;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobHelper;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobHelper;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobProcessRequest;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class GlueJobHandlerInstrumentation implements TypeInstrumentation {
+class GlueJobHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -39,13 +39,13 @@ public class GlueJobHandlerInstrumentation implements TypeInstrumentation {
   public static class ScheduleAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static XxlJobHelper.XxlJobScope onSchedule(
         @Advice.FieldValue("jobHandler") IJobHandler handler) {
       return helper().startSpan(XxlJobProcessRequest.createGlueJobRequest(handler));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable,

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
+class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -51,13 +52,14 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
       public void end(
           @Nullable Throwable throwable,
           RedisCommand<?, ?, ?> command,
-          AsyncCommand<?, ?, ?> asyncCommand) {
+          @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
         scope.close();
         InstrumentationPoints.afterCommand(command, context, throwable, asyncCommand);
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
 
       Context parentContext = currentContext();
@@ -67,11 +69,11 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
 
       Context context = instrumenter().start(parentContext, command);
       // remember the context that called dispatch, it is used in LettuceAsyncCommandInstrumentation
-      context = context.with(LettuceSingletons.COMMAND_CONTEXT_KEY, parentContext);
+      context = context.with(COMMAND_CONTEXT_KEY, parentContext);
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) RedisCommand<?, ?, ?> command,
         @Advice.Thrown @Nullable Throwable throwable,

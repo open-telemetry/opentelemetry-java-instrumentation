@@ -32,30 +32,28 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") == "true"
-
 // spring 6 (spring boot 3) requires java 17
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.apache-shenyu.experimental-span-attributes=true")
 
   systemProperty("metadataConfig", "otel.instrumentation.apache-shenyu.experimental-span-attributes=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata"))
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-  systemProperty("testLatestDeps", latestDepTest)
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
 // spring 6 (spring boot 3) uses slf4j 2.0
-if (!latestDepTest) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       // requires old logback (and therefore also old slf4j)

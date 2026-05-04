@@ -21,7 +21,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation {
+class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -42,7 +42,7 @@ public class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation 
   public static class ConstructorMapAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Map<String, Object> onEnter(
         @Advice.Argument(0) Map<String, Object> originalConfig) {
 
@@ -56,7 +56,7 @@ public class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation 
       // To prevent such issues, a copy of the `config` should be created here before
       //  any modifications are made. This ensures that each thread operates on its
       //  own independent copy of the configuration, thereby eliminating the risk of
-      //  configurations corruption.
+      //  configuration corruption.
       //
       // More detailed information:
       //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12538
@@ -71,7 +71,7 @@ public class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class ConstructorPropertiesAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) Properties config) {
       enhanceConfig(config);
     }

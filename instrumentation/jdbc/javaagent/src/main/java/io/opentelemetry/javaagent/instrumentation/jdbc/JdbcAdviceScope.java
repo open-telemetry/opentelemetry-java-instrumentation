@@ -21,11 +21,15 @@ import javax.annotation.Nullable;
 
 public class JdbcAdviceScope {
   private final CallDepth callDepth;
-  private final DbRequest request;
-  private final Context context;
-  private final Scope scope;
+  @Nullable private final DbRequest request;
+  @Nullable private final Context context;
+  @Nullable private final Scope scope;
 
-  private JdbcAdviceScope(CallDepth callDepth, DbRequest request, Context context, Scope scope) {
+  private JdbcAdviceScope(
+      CallDepth callDepth,
+      @Nullable DbRequest request,
+      @Nullable Context context,
+      @Nullable Scope scope) {
     this.callDepth = callDepth;
     this.request = request;
     this.context = context;
@@ -70,9 +74,10 @@ public class JdbcAdviceScope {
     return new JdbcAdviceScope(callDepth, request, context, context.makeCurrent());
   }
 
+  @Nullable
   private static DbRequest createBatchRequest(Statement statement) {
     if (statement instanceof PreparedStatement) {
-      String sql = JdbcData.preparedStatement.get((PreparedStatement) statement);
+      String sql = JdbcData.PREPARED_STATEMENT.get((PreparedStatement) statement);
       if (sql == null) {
         return null;
       }

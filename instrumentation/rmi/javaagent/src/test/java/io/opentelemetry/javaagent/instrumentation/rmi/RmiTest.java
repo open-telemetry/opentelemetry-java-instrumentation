@@ -20,10 +20,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -37,21 +37,17 @@ class RmiTest {
   private static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
+
   private static Registry serverRegistry;
   private static Registry clientRegistry;
-
-  @RegisterExtension static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
 
   @BeforeAll
   static void setUp() throws Exception {
     int registryPort = PortUtils.findOpenPort();
     serverRegistry = LocateRegistry.createRegistry(registryPort);
     clientRegistry = LocateRegistry.getRegistry("localhost", registryPort);
-  }
-
-  @AfterAll
-  static void cleanUp() throws Exception {
-    UnicastRemoteObject.unexportObject(serverRegistry, true);
+    autoCleanup.deferAfterAll(() -> UnicastRemoteObject.unexportObject(serverRegistry, true));
   }
 
   @Test
@@ -93,7 +89,7 @@ class RmiTest {
 
   @Test
   @SuppressWarnings("ReturnValueIgnored")
-  void serverBuiltinMethods() throws Exception {
+  void serverBuiltinMethods() throws RemoteException {
     Server server = new Server();
     serverRegistry.rebind(Server.RMI_ID, server);
     autoCleanup.deferCleanup(() -> serverRegistry.unbind(Server.RMI_ID));
@@ -108,12 +104,12 @@ class RmiTest {
   }
 
   @Test
-  void serviceThrownException() throws Exception {
+  void serviceThrownException() throws RemoteException {
     Server server = new Server();
     serverRegistry.rebind(Server.RMI_ID, server);
     autoCleanup.deferCleanup(() -> serverRegistry.unbind(Server.RMI_ID));
 
-    Throwable thrown =
+    IllegalStateException thrown =
         catchThrowableOfType(
             IllegalStateException.class,
             () ->
@@ -123,6 +119,8 @@ class RmiTest {
                       Greeter client = (Greeter) clientRegistry.lookup(Server.RMI_ID);
                       client.exceptional();
                     }));
+
+    assertThat(thrown).isNotNull();
 
     testing.waitAndAssertTraces(
         trace ->

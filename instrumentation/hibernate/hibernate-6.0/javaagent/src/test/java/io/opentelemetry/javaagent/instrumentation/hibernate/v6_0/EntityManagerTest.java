@@ -43,14 +43,20 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class EntityManagerTest extends AbstractHibernateTest {
-  static final EntityManagerFactory entityManagerFactory =
+  private static final EntityManagerFactory entityManagerFactory =
       Persistence.createEntityManagerFactory("test-pu");
+
+  @AfterAll
+  static void closeEntityManagerFactory() {
+    entityManagerFactory.close();
+  }
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideHibernateActionParameters")
@@ -72,7 +78,7 @@ class EntityManagerTest extends AbstractHibernateTest {
         () -> {
           try {
             parameter.sessionMethodTest.accept(entityManager, entity);
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this, we should see the error field set on the span.
           }
           entityTransaction.commit();

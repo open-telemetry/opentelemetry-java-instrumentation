@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class SystemMetricsTest extends AbstractSystemMetricsTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   private static List<AutoCloseable> observables;
 
@@ -45,6 +45,6 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
 
   @Test
   void verifyObservablesAreNotEmpty() {
-    assertThat(observables).as("List of observables").isNotEmpty();
+    assertThat(observables).isNotEmpty();
   }
 }

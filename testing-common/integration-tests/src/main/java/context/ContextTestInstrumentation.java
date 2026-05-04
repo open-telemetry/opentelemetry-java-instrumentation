@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ContextTestInstrumentation implements TypeInstrumentation {
+class ContextTestInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("library.");
@@ -44,7 +44,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MarkInstrumentedAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static boolean methodExit() {
       return true;
     }
@@ -53,7 +53,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StoreAndIncrementApiUsageAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static int methodExit(@Advice.This KeyClass thiz) {
       Context context = CONTEXT.get(thiz);
       if (context == null) {
@@ -68,14 +68,14 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetApiUsageAdvice {
 
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, inline = false)
     public static boolean methodEnter() {
       // always skip original method body
       return true;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static int methodExit(@Advice.This KeyClass thiz) {
       Context context = CONTEXT.get(thiz);
       return context == null ? 0 : context.count;
@@ -84,7 +84,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PutApiUsageAdvice {
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static void methodExit(@Advice.This KeyClass thiz, @Advice.Argument(0) int value) {
       Context context = new Context();
       context.count = value;
@@ -94,7 +94,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class RemoveApiUsageAdvice {
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static void methodExit(@Advice.This KeyClass thiz) {
       CONTEXT.set(thiz, null);
     }
@@ -102,7 +102,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class UseMultipleFieldsAdvice {
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static void methodExit(@Advice.This KeyClass thiz) {
       Context context = CONTEXT.get(thiz);
       int count = context == null ? 0 : context.count;

@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -26,10 +27,14 @@ class SpringListenerTest extends AbstractJmsTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @ParameterizedTest
   @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
-  void receivingMessageInSpringListenerGeneratesSpans(Class<AbstractConfig> config) {
+  void receivingMessageInSpringListenerGeneratesSpans(Class<? extends AbstractConfig> config) {
     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(config);
+    cleanup.deferCleanup(context);
     ConnectionFactory factory = context.getBean(ConnectionFactory.class);
     JmsTemplate template = new JmsTemplate(factory);
 
@@ -63,6 +68,5 @@ class SpringListenerTest extends AbstractJmsTest {
                         "process",
                         false,
                         null)));
-    context.close();
   }
 }

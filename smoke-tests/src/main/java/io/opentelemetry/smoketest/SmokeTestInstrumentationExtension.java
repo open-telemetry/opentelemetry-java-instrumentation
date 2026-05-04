@@ -30,12 +30,12 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * </pre>
  */
 public class SmokeTestInstrumentationExtension extends InstrumentationExtension {
-  private SmokeTestInstrumentationExtension() {
-    super(SmokeTestRunner.instance());
-  }
-
   public static SmokeTestInstrumentationExtension create() {
     return new SmokeTestInstrumentationExtension();
+  }
+
+  private SmokeTestInstrumentationExtension() {
+    super(SmokeTestRunner.instance());
   }
 
   @Override

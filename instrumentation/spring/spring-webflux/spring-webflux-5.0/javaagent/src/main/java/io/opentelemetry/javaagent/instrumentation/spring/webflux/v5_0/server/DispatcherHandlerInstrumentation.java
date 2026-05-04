@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
+class DispatcherHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -44,11 +44,9 @@ public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
   public static class HandleAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<Void> methodExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Argument(0) ServerWebExchange exchange,
-        @Advice.Return Mono<Void> originalMono) {
+        @Advice.Argument(0) ServerWebExchange exchange, @Advice.Return Mono<Void> originalMono) {
       Mono<Void> mono = originalMono;
       if (mono != null) {
         // note: it seems like this code should go in @OnMethodExit of
@@ -64,7 +62,7 @@ public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
   public static class HandleResultAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Mono<Void> methodExit(
         @Advice.Argument(0) ServerWebExchange exchange, @Advice.Return Mono<Void> mono) {
       return AdviceUtils.wrapMono(mono, exchange.getAttribute(AdviceUtils.CONTEXT));
