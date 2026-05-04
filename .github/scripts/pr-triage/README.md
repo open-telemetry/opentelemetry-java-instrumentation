@@ -23,10 +23,10 @@ Invariants (see the comments at the top of each entry-point file):
   from a malicious PR build script.
 * `copilot-worker` must never invoke `./gradlew` or any other PR-controlled
   build tooling. PR build files would otherwise see `COPILOT_GITHUB_TOKEN`.
-* `poster` runs only trusted code snapshotted from the default branch
-  (`$RUNNER_TEMP/pr-triage-trusted`). It never executes anything from the
-  PR working tree, so `gh pr checkout` is safe even though the otelbot
-  token is in scope.
+* `poster` runs only trusted code from the default-branch checkout in
+  `$GITHUB_WORKSPACE`. It never executes anything from the PR working
+  tree, so it is safe to handle the otelbot token even though it
+  applies a bundle produced by a worker job.
 * `/fix` hands off between the two workers via a CI bundle written to
   `out_dir/ci-bundle/` plus a `needs-copilot.txt` marker. The
   copilot-worker downloads that artifact and runs Copilot on the bundle;

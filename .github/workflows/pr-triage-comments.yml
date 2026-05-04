@@ -58,11 +58,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Snapshot trusted PR triage scripts
-        run: |
-          mkdir -p "$RUNNER_TEMP/pr-triage-trusted"
-          cp -r .github/scripts/pr-triage/. "$RUNNER_TEMP/pr-triage-trusted/"
-
       - name: Check out PR into a separate directory
         env:
           GH_TOKEN: ${{ github.token }}
@@ -105,7 +100,7 @@ jobs:
           # always succeed even when the worker fails before writing any
           # outputs of its own.
           touch "$RUNNER_TEMP/work/.placeholder"
-          python3 "$RUNNER_TEMP/pr-triage-trusted/worker_gradle.py" --out-dir "$RUNNER_TEMP/work"
+          python3 .github/scripts/pr-triage/worker_gradle.py --out-dir "$RUNNER_TEMP/work"
 
       - name: Upload gradle work bundle
         if: always()
@@ -136,11 +131,6 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-
-      - name: Snapshot trusted PR triage scripts
-        run: |
-          mkdir -p "$RUNNER_TEMP/pr-triage-trusted"
-          cp -r .github/scripts/pr-triage/. "$RUNNER_TEMP/pr-triage-trusted/"
 
       - name: Check out PR into a separate directory
         env:
@@ -182,7 +172,7 @@ jobs:
           # The script operates on the PR tree at $PR_TRIAGE_REPO_ROOT.
           mkdir -p "$RUNNER_TEMP/work"
           touch "$RUNNER_TEMP/work/.placeholder"
-          python3 "$RUNNER_TEMP/pr-triage-trusted/worker_copilot.py" --out-dir "$RUNNER_TEMP/work"
+          python3 .github/scripts/pr-triage/worker_copilot.py --out-dir "$RUNNER_TEMP/work"
 
       - name: Run copilot-phase worker (fix)
         if: needs.authorize-command.outputs.command == 'fix'
@@ -195,7 +185,7 @@ jobs:
           # The script operates on the PR tree at $PR_TRIAGE_REPO_ROOT.
           mkdir -p "$RUNNER_TEMP/work"
           touch "$RUNNER_TEMP/work/.placeholder"
-          python3 "$RUNNER_TEMP/pr-triage-trusted/worker_copilot.py" \
+          python3 .github/scripts/pr-triage/worker_copilot.py \
             --out-dir "$RUNNER_TEMP/work" \
             --in-dir "$RUNNER_TEMP/gradle-in"
 
@@ -228,11 +218,6 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Snapshot trusted PR triage scripts
-        run: |
-          mkdir -p "$RUNNER_TEMP/pr-triage-trusted"
-          cp -r .github/scripts/pr-triage/. "$RUNNER_TEMP/pr-triage-trusted/"
-
       - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: otelbot-token
         with:
@@ -262,4 +247,4 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
           PR_TRIAGE_REPO_ROOT: ${{ github.workspace }}
-        run: python3 "$RUNNER_TEMP/pr-triage-trusted/poster.py" --in-dir "$RUNNER_TEMP/work"
+        run: python3 .github/scripts/pr-triage/poster.py --in-dir "$RUNNER_TEMP/work"
