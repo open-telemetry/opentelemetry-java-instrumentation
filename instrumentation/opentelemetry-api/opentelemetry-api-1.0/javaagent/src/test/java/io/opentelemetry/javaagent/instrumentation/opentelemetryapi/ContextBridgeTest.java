@@ -21,6 +21,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -38,14 +39,15 @@ class ContextBridgeTest {
 
   @Test
   @DisplayName("agent propagates application's context")
-  void agentPropagatesApplicationsContext() throws Exception {
+  void agentPropagatesApplicationsContext() {
     // When
     Context context = Context.current().with(ANIMAL, "cat");
     AtomicReference<String> captured = new AtomicReference<>();
     try (Scope ignored = context.makeCurrent()) {
       ExecutorService executor = Executors.newSingleThreadExecutor();
       try {
-        executor.submit(() -> captured.set(Context.current().get(ANIMAL))).get();
+        CompletableFuture.runAsync(() -> captured.set(Context.current().get(ANIMAL)), executor)
+            .join();
       } finally {
         executor.shutdownNow();
       }
@@ -94,7 +96,7 @@ class ContextBridgeTest {
 
   @Test
   @DisplayName("agent propagates application's span")
-  void agentPropagatesApplicationsSpan() throws Exception {
+  void agentPropagatesApplicationsSpan() {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
@@ -102,7 +104,8 @@ class ContextBridgeTest {
     try (Scope ignored = testSpan.makeCurrent()) {
       ExecutorService executor = Executors.newSingleThreadExecutor();
       try {
-        executor.submit(() -> Span.current().setAttribute("cat", "yes")).get();
+        CompletableFuture.runAsync(() -> Span.current().setAttribute("cat", "yes"), executor)
+            .join();
       } finally {
         executor.shutdownNow();
       }
@@ -157,14 +160,14 @@ class ContextBridgeTest {
 
   @Test
   @DisplayName("agent propagates application's baggage")
-  void agentPropagatesApplicationsBaggage() throws Exception {
+  void agentPropagatesApplicationsBaggage() {
     // When
     Baggage testBaggage = Baggage.builder().put("cat", "yes").build();
     AtomicReference<Baggage> ref = new AtomicReference<>();
     try (Scope ignored = testBaggage.makeCurrent()) {
       ExecutorService executor = Executors.newSingleThreadExecutor();
       try {
-        executor.submit(() -> ref.set(Baggage.current())).get();
+        CompletableFuture.runAsync(() -> ref.set(Baggage.current()), executor).join();
       } finally {
         executor.shutdownNow();
       }
