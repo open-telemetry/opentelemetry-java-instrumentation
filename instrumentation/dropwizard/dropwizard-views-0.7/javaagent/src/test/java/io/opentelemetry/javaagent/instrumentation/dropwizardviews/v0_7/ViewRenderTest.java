@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.dropwizardviews.v0_7;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import io.dropwizard.views.View;
 import io.dropwizard.views.ViewRenderer;
@@ -20,7 +19,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.time.Duration;
 import java.util.Locale;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -61,12 +59,11 @@ class ViewRenderTest {
   }
 
   @Test
-  void testDoesNotCreateSpanWithoutParent() throws IOException {
+  void testDoesNotCreateSpanWithoutParent() throws Exception {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     View view = new View("/views/ftl/utf8.ftl", UTF_8) {};
     new FreemarkerViewRenderer().render(view, Locale.ENGLISH, outputStream);
-    await()
-        .during(Duration.ofMillis(500))
-        .untilAsserted(() -> assertThat(testing.spans()).isEmpty());
+    Thread.sleep(500);
+    assertThat(testing.spans()).isEmpty();
   }
 }
