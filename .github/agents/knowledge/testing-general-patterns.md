@@ -33,6 +33,18 @@
   for constructing cases so each row stays readable. The goal is the structure: named scenario,
   explicit inputs, and explicit expected result, rather than a wide `Arguments.of(...)` tuple.
 
+Example shape:
+
+```java
+record TestCase(String name, Input input, Output expected) {}
+
+@ParameterizedTest(name = "{0}")
+@MethodSource("testCases")
+void test(String name, TestCase testCase) {
+  assertThat(run(testCase.input())).isEqualTo(testCase.expected());
+}
+```
+
 ## Test Method Throws Clauses
 
 - On methods annotated with `@Test`, keep the `throws` clause to a single exception type.
