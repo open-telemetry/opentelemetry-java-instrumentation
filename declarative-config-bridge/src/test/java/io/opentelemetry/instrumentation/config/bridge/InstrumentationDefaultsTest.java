@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.config.bridge;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -48,6 +50,21 @@ class InstrumentationDefaultsTest {
     Map<String, String> props = defaults.toConfigProperties();
 
     assertThat(props).containsEntry(expectedPropertyKey, value).hasSize(1);
+  }
+
+  @ParameterizedTest
+  @MethodSource("configPropertyDefaults")
+  void toConfigPropertiesRoundTripsThroughBridge(
+      String instrumentation, String key, String value, String expectedPropertyKey) {
+    InstrumentationDefaults defaults = new InstrumentationDefaults();
+    defaults.get(instrumentation).setDefault(key, value);
+
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(defaults.toConfigProperties()));
+
+    assertThat(config.getStructured("java").getStructured(instrumentation).getString(key))
+        .isEqualTo(value);
   }
 
   @Test
