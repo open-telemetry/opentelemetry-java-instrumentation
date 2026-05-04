@@ -302,3 +302,13 @@ mongo-3.7:javaagent
 mongo-4.0:javaagent
 mongo-async-3.3:javaagent
 mongo-common:testing
+mybatis-3.2:javaagent
+nats-2.17:javaagent
+nats-2.17:library
+nats-2.17:testing
+netty-3.8:javaagent
+netty-4.0:javaagent
+netty-4.1:javaagent
+netty-4.1:library
+netty-4.1:testing
+netty-common-4.0:javaagent
