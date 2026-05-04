@@ -13,6 +13,12 @@ phase consumes the CI bundle prepared by the `gradle-worker` job and
 runs Copilot only.
 """
 
+# Tokens visible to this script: GITHUB_TOKEN (read-only, used by
+# Copilot CLI's gh subprocesses) and COPILOT_GITHUB_TOKEN (used by
+# Copilot CLI itself; scrubbed from its child processes by Copilot).
+# NOT visible: OTELBOT_*. Do not invoke ./gradlew or any other
+# PR-controlled build tooling here.
+
 from __future__ import annotations
 
 import argparse

@@ -7,6 +7,9 @@ posts the help reply for `/help` directly, and emits the resolved
 command name as a job output so the downstream worker job can gate on it.
 """
 
+# Tokens visible to this script: GITHUB_TOKEN (read + pull-requests:write).
+# NOT visible: COPILOT_GITHUB_TOKEN, OTELBOT_*.
+
 from __future__ import annotations
 
 import json

@@ -14,6 +14,11 @@ bundles. Otherwise it writes a CI bundle for handoff to the
 `copilot-worker` job and signals `needs-copilot=true`.
 """
 
+# Tokens visible to this script: GITHUB_TOKEN (read-only, also visible to
+# any PR-controlled Gradle plugins that this job runs).
+# NOT visible: COPILOT_GITHUB_TOKEN, OTELBOT_*. Do not add them to this
+# job: any malicious build script could exfiltrate them.
+
 from __future__ import annotations
 
 import argparse

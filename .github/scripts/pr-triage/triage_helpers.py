@@ -51,7 +51,14 @@ def parsed_command() -> tuple[str, str]:
     comment = payload.get("comment") or {}
     body = str(comment.get("body") or "").strip()
     first_line = body.splitlines()[0].strip() if body else ""
-    requested = first_line.split(maxsplit=1)[0].lower() if first_line else ""
+    # Hard cap on length to avoid echoing pathological input back into a
+    # PR comment if a later step formats `requested` into Markdown.
+    raw = first_line.split(maxsplit=1)[0] if first_line else ""
+    if len(raw) > 32 or not raw.startswith("/"):
+        return "", ""
+    requested = raw.lower()
+    if requested != "/help" and requested not in COMMANDS:
+        return requested, ""
     command = COMMANDS.get(requested, "")
     return requested, command
 

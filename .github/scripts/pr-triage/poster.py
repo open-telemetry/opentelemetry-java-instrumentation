@@ -9,6 +9,11 @@ from the PR tree). Doing so would let a malicious PR exfiltrate the
 otelbot token.
 """
 
+# Tokens visible to this script: otelbot installation token (write
+# access to this repo via the GitHub App).
+# NOT visible: COPILOT_GITHUB_TOKEN. Do not execute anything from the
+# PR working tree here; this script must remain trusted-code-only.
+
 from __future__ import annotations
 
 import argparse

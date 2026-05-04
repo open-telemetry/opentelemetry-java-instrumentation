@@ -142,7 +142,23 @@ jobs:
           name: pr-triage-work-gradle
           path: ${{ runner.temp }}/gradle-in
 
-      - name: Run copilot-phase worker
+      - name: Run copilot-phase worker (review)
+        if: needs.authorize-command.outputs.command == 'review'
+        env:
+          # GITHUB_TOKEN is also set so Copilot CLI's `gh` subprocesses use the
+          # read-only job token rather than falling back to the privileged
+          # COPILOT_GITHUB_TOKEN. Copilot CLI scrubs both names from the
+          # environment of the children it spawns.
+          GH_TOKEN: ${{ github.token }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          PR_TRIAGE_REPO_ROOT: ${{ github.workspace }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/work"
+          touch "$RUNNER_TEMP/work/.placeholder"
+          python3 "$RUNNER_TEMP/pr-triage-trusted/worker_copilot.py" --out-dir "$RUNNER_TEMP/work"
+
+      - name: Run copilot-phase worker (fix)
+        if: needs.authorize-command.outputs.command == 'fix'
         env:
           GH_TOKEN: ${{ github.token }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -150,12 +166,9 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/work"
           touch "$RUNNER_TEMP/work/.placeholder"
-          IN_DIR_ARG=""
-          if [[ "${{ needs.authorize-command.outputs.command }}" == "fix" ]]; then
-            IN_DIR_ARG="--in-dir $RUNNER_TEMP/gradle-in"
-          fi
-          # shellcheck disable=SC2086
-          python3 "$RUNNER_TEMP/pr-triage-trusted/worker_copilot.py" --out-dir "$RUNNER_TEMP/work" $IN_DIR_ARG
+          python3 "$RUNNER_TEMP/pr-triage-trusted/worker_copilot.py" \
+            --out-dir "$RUNNER_TEMP/work" \
+            --in-dir "$RUNNER_TEMP/gradle-in"
 
       - name: Upload copilot work bundle
         if: always()
@@ -180,6 +193,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      actions: write
     env:
       PR_NUMBER: ${{ github.event.issue.number }}
     steps:
@@ -220,4 +234,3 @@ jobs:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
           PR_TRIAGE_REPO_ROOT: ${{ github.workspace }}
         run: python3 "$RUNNER_TEMP/pr-triage-trusted/poster.py" --in-dir "$RUNNER_TEMP/work"
-
