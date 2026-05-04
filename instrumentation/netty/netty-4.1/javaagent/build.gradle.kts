@@ -58,6 +58,7 @@ tasks {
     include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.netty.connection-telemetry.enabled=true,otel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
   test {
