@@ -280,6 +280,21 @@ def days_since(ts: datetime | None) -> int | None:
     return max(0, (datetime.now(timezone.utc) - ts).days)
 
 
+def activity_age(ts: datetime | None) -> str:
+    if ts is None:
+        return "?"
+    seconds = max(0, int((datetime.now(timezone.utc) - ts).total_seconds()))
+    minutes = seconds // 60
+    if minutes < 1:
+        return "<1m"
+    if minutes < 60:
+        return f"{minutes}m"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours}h"
+    return f"{hours // 24}d"
+
+
 def truncate(s: str, n: int = MAX_BODY_CHARS) -> str:
     s = (s or "").strip()
     if len(s) <= n:
@@ -482,6 +497,7 @@ def compute_facts(raw: dict[str, Any], author: str) -> dict[str, Any]:
         "ci_pending_count": len(pending),
         "conflicts": compute_conflicts(pr),
         "days_since_last_activity": days_since(last_activity_ts),
+        "last_activity_age": activity_age(last_activity_ts),
     }
 
 
@@ -942,8 +958,7 @@ def render_markdown_compact(
             res = results.get(number) or {}
             facts = res.get("facts") or {}
             author = facts.get("author") or actor_login(pr.get("author") or {})
-            activity = facts.get("days_since_last_activity")
-            activity_cell = "?" if activity is None else f"{activity}d"
+            activity_cell = facts.get("last_activity_age") or "?"
             out.append(
                 f"| [{title}]({url}) | {author} | {ci_cell(facts)} | "
                 f"{conflicts_cell(facts)} | {activity_cell} |"
