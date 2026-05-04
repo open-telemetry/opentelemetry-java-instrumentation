@@ -43,13 +43,9 @@ testing {
   suites {
     val elasticsearch6Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (otelProps.testLatestDeps) {
-          implementation("org.elasticsearch.client:transport:6.4.+")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:6.4.+")
-        } else {
-          implementation("org.elasticsearch.client:transport:6.0.0")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:6.0.0")
-        }
+        val version = baseVersion("6.0.0").orLatest("6.4.+")
+        implementation("org.elasticsearch.client:transport:$version")
+        implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
       }
@@ -57,13 +53,9 @@ testing {
 
     val elasticsearch65Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (otelProps.testLatestDeps) {
-          implementation("org.elasticsearch.client:transport:6.+")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:6.+")
-        } else {
-          implementation("org.elasticsearch.client:transport:6.5.0")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:6.5.0")
-        }
+        val version = baseVersion("6.5.0").orLatest("6.+")
+        implementation("org.elasticsearch.client:transport:$version")
+        implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
       }
@@ -71,13 +63,9 @@ testing {
 
     val elasticsearch7Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (otelProps.testLatestDeps) {
-          implementation("org.elasticsearch.client:transport:latest.release")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:latest.release")
-        } else {
-          implementation("org.elasticsearch.client:transport:7.0.0")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:7.0.0")
-        }
+        val version = baseVersion("7.0.0").orLatest()
+        implementation("org.elasticsearch.client:transport:$version")
+        implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
       }

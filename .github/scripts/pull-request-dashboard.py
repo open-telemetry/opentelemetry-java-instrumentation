@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-"""Generate a PR review dashboard with LLM-suggested next steps.
+"""Generate a deterministic PR review dashboard with thread-level LLM triage.
 
-For each open non-draft PR we:
-  1. Deterministically fetch a compact "PR context" via `gh` (PR metadata,
-     last comments, last reviews, last commits, checks summary).
-  2. Pre-compute signals (last-activity actor, role, age in days, etc.).
-  3. Send the assembled context to `copilot -p` (no tool access) and ask
-     for a JSON verdict with the next step.
+The script keeps repository facts deterministic and asks the LLM only one
+narrow question per unresolved discussion thread: who has the next action for
+that thread?
 
 Output: pull-request-dashboard.md (one section per PR, grouped by category).
 
@@ -33,74 +30,79 @@ from typing import Any
 DEFAULT_OUTPUT = "pull-request-dashboard.md"
 DEFAULT_JOBS = 4
 DEFAULT_MODEL = "gpt-5.4-mini"
-PER_PR_TIMEOUT = 180
-MAX_COMMENTS = 20
-MAX_COMMITS = 5
-# Per-commit caps when injecting commits into the timeline.
-MAX_COMMIT_MESSAGE_CHARS = 1500
-MAX_COMMIT_DIFF_CHARS = 1000
+PER_THREAD_TIMEOUT = 180
+PR_COMMENT_WINDOW = 20
 MAX_BODY_CHARS = 1200
-MAX_PROMPT_CHARS = 24_000
+MAX_PROMPT_CHARS = 18_000
 
 APPROVER_TEAM_SLUGS = [
     "java-instrumentation-approvers",
 ]
 
-PROMPT_TEMPLATE = """You are triaging pull request #{number} in {repo} for \
-the pull request dashboard.
+THREAD_PROMPT_TEMPLATE = """You are triaging one discussion thread from pull request #{number} in {repo}.
 
-Decide who needs to act next on this PR using ONLY the context below. \
-Merge-conflict status is shown in a separate deterministic column of the \
-dashboard — do not infer it. CI is summarized as a single boolean \
-(failing yes/no); pending checks are treated as not-failing. CI failure \
-on its own is NOT a reason to assign the PR to the author: \
-PRs can still be reviewed and approved while CI is failing. Treat CI \
-status only as weak supporting evidence and focus on the conversation \
-(comments, reviews, commits).
+Classify ONLY this one thread. You are not deciding the final dashboard section.
+The final routing is computed later from deterministic facts and all thread
+classifications.
 
-The single most important signal is the latest substantive event in the \
-timeline. Apply these rules in order (first match wins):
+Question: who has the next action for this discussion thread?
 
-  1. EXTERNAL — Use "external" when the conversation explicitly indicates \
-the PR is blocked on something outside this repo (e.g., links to an \
-upstream PR/issue, "reported at <other-repo>", a spec change, or a \
-release in another project). Look especially at the latest comments. \
-A new PR with no reviews yet is NOT external. CI failing alone is \
-NOT external unless an upstream cause is named. External-looking text \
-can become stale: do NOT use "external" when a later author response, \
-commit, or approval appears to resolve or supersede the external blocker.
-  2. AUTHOR — If the latest substantive event is an approver review or \
-review-comment with content (a question, suggestion, change \
-request, clarification ask, or CHANGES_REQUESTED state) \
-and the AUTHOR has not posted any comment, review, or commit AFTER \
-it, the AUTHOR should act next. This holds even when the comment \
-is just a question or a soft suggestion — the ball is in the \
-author's court until they respond. An APPROVED review means an \
-approver/maintainer should act next unless the approval body or inline \
-review comments explicitly ask the author to address something before \
-merge. (Note: a *commit* by an approver does not count here — that's \
-an approver pushing a fix, not asking the author for something.)
-  3. APPROVER — Otherwise, an APPROVER should act next. This includes: \
-fresh PRs with no reviews yet; PRs where the author has posted the \
-latest substantive event (comment, review, or commit) addressing \
-prior approver feedback; and PRs where an approver pushed the \
-latest commit (waiting for someone to review/merge).
+Use these labels:
+  - author: the PR author needs to respond, implement, rebase, or otherwise act
+  - reviewer: a reviewer/approver/maintainer needs to review, answer, approve, or merge
+  - external: the thread is blocked on something outside this repository
+  - none: no follow-up is needed for this thread
+  - unclear: the thread does not contain enough information to decide
 
-Respond with a single JSON object and nothing else (no prose, no fences):
-{{"side": "approver" | "author" | "external"}}
+Guidance:
+  - A reviewer saying "this works", "sounds good", or answering the author's
+    question may still leave the next implementation step with the author.
+  - An author saying "fixed", pushing a commit after feedback, or answering a
+    reviewer question usually puts the thread back in the reviewer court.
+  - If the author's latest comment asks the reviewer a question or requests
+    reviewer input, classify the thread as reviewer.
+    - If thread_facts.same_actor_approved_after_thread is true, use that only as
+        supporting evidence that an optional suggestion or informational comment is
+        non-blocking. Do not classify required follow-up as none just because the
+        same actor later approved.
+    - A reviewer sharing a reference, example, optional suggestion, or "for ideas"
+        link without an explicit requested change is informational; classify it as
+        none.
+  - If the thread is merely informational and does not require action, classify
+    it as none.
+  - If the thread is purely social, for example "thanks", "LGTM", or "nice work",
+    with no follow-up requested or implied, classify it as none.
 
-Where:
-  - "approver" = an approver should act (review, approve, request changes, decide to close)
-  - "author" = the PR author should act (respond, rebase, fix CI)
-  - "external" = waiting on something outside this repo (upstream PR, etc.)
+Respond with a single JSON object and nothing else:
+{{"thread_action": "author" | "reviewer" | "external" | "none" | "unclear", "reason": "short explanation grounded in this thread"}}
 
----BEGIN CONTEXT---
-{context}
----END CONTEXT---
+---BEGIN PR FACTS---
+{facts}
+---END PR FACTS---
+
+---BEGIN THREAD---
+{thread}
+---END THREAD---
 """
 
 
 # ---------------------------------------------------------------- gh helpers
+
+
+def run_gh_json(cmd: list[str], token: str | None = None) -> Any:
+    env = {**os.environ, "GH_TOKEN": token} if token else None
+    proc = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=False,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"{' '.join(cmd)} failed: {proc.stderr.strip()}")
+    return json.loads(proc.stdout or "null")
 
 
 def gh_api(path: str, paginate: bool = False, token: str | None = None) -> Any:
@@ -108,15 +110,7 @@ def gh_api(path: str, paginate: bool = False, token: str | None = None) -> Any:
     if paginate:
         cmd += ["--paginate", "--slurp"]
     cmd.append(path)
-    env = {**os.environ, "GH_TOKEN": token} if token else None
-    proc = subprocess.run(
-        cmd, capture_output=True, text=True, check=False,
-        encoding="utf-8", errors="replace",
-        env=env,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError(f"gh api {path} failed: {proc.stderr.strip()}")
-    data = json.loads(proc.stdout or "null")
+    data = run_gh_json(cmd, token=token)
     if paginate and isinstance(data, list):
         flat: list[Any] = []
         for page in data:
@@ -128,6 +122,15 @@ def gh_api(path: str, paginate: bool = False, token: str | None = None) -> Any:
     return data
 
 
+def gh_graphql(query: str, fields: dict[str, Any], token: str | None = None) -> dict[str, Any]:
+    cmd = ["gh", "api", "graphql", "-f", f"query={query}"]
+    for name, value in fields.items():
+        if value is None:
+            continue
+        cmd.extend(["-F", f"{name}={value}"])
+    return run_gh_json(cmd, token=token)
+
+
 def gh_pr_view(repo: str, number: int) -> dict[str, Any]:
     fields = ",".join([
         "number", "title", "url", "author", "state", "isDraft",
@@ -136,15 +139,15 @@ def gh_pr_view(repo: str, number: int) -> dict[str, Any]:
         "additions", "deletions", "changedFiles", "baseRefName",
         "headRefOid", "body",
     ])
-    # GitHub computes mergeability lazily: the first request often returns
-    # UNKNOWN while it kicks off the computation. Retry a few times with a
-    # short sleep until we get a real answer or give up.
     last: dict[str, Any] = {}
     for attempt in range(4):
         proc = subprocess.run(
             ["gh", "pr", "view", str(number), "--repo", repo, "--json", fields],
-            capture_output=True, text=True, check=False,
-            encoding="utf-8", errors="replace",
+            capture_output=True,
+            text=True,
+            check=False,
+            encoding="utf-8",
+            errors="replace",
         )
         if proc.returncode != 0:
             raise RuntimeError(f"gh pr view {number} failed: {proc.stderr.strip()}")
@@ -156,49 +159,19 @@ def gh_pr_view(repo: str, number: int) -> dict[str, Any]:
     return last
 
 
-def gh_commit_detail(owner: str, repo_name: str, sha: str) -> dict[str, Any]:
-    try:
-        return gh_api(f"/repos/{owner}/{repo_name}/commits/{sha}")
-    except Exception:
-        return {}
-
-
-def format_commit_patch(detail: dict[str, Any], cap: int) -> str:
-    """Render a commit's per-file patches, truncated to `cap` total chars."""
-    files = detail.get("files") or []
-    if not files:
-        return ""
-    parts: list[str] = []
-    used = 0
-    for f in files:
-        filename = f.get("filename", "")
-        status = f.get("status", "")
-        adds = f.get("additions", 0)
-        dels = f.get("deletions", 0)
-        header = f"--- {filename} ({status}, +{adds}/-{dels})"
-        patch = f.get("patch") or ""
-        if not patch:
-            parts.append(header + " [no patch \u2014 binary or too large]")
-            continue
-        remaining = cap - used
-        if remaining <= 0:
-            parts.append("\u2026[remaining files truncated]")
-            break
-        if len(patch) > remaining:
-            patch = patch[:remaining] + "\n\u2026[file patch truncated]"
-        parts.append(header + "\n" + patch)
-        used += len(patch)
-    return "\n".join(parts)
-
-
 def gh_pr_checks(repo: str, number: int) -> list[dict[str, Any]]:
     proc = subprocess.run(
-        ["gh", "pr", "checks", str(number), "--repo", repo, "--json",
-         "name,state,bucket,workflow,description,link"],
-        capture_output=True, text=True, check=False,
-        encoding="utf-8", errors="replace",
+        [
+            "gh", "pr", "checks", str(number), "--repo", repo, "--json",
+            "name,state,bucket,workflow,description,link",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        encoding="utf-8",
+        errors="replace",
     )
-    if proc.returncode not in (0, 8):  # 8 = checks failing, but still printed
+    if proc.returncode not in (0, 8):
         return []
     try:
         return json.loads(proc.stdout or "[]")
@@ -207,35 +180,32 @@ def gh_pr_checks(repo: str, number: int) -> list[dict[str, Any]]:
 
 
 def list_open_prs(repo: str) -> list[dict[str, Any]]:
-    proc = subprocess.run(
-        ["gh", "pr", "list", "--repo", repo, "--state", "open", "--limit", "500",
-         "--json", "number,title,author,isDraft,updatedAt,url"],
-        capture_output=True, text=True, check=True,
-        encoding="utf-8", errors="replace",
-    )
-    return json.loads(proc.stdout or "[]")
+    return run_gh_json([
+        "gh", "pr", "list", "--repo", repo, "--state", "open", "--limit", "500",
+        "--json", "number,title,author,isDraft,updatedAt,url",
+    ])
 
 
 def detect_repo() -> str:
     proc = subprocess.run(
         ["gh", "repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"],
-        capture_output=True, text=True, check=True,
-        encoding="utf-8", errors="replace",
+        capture_output=True,
+        text=True,
+        check=True,
+        encoding="utf-8",
+        errors="replace",
     )
     return proc.stdout.strip()
 
 
 def load_reviewer_set(org: str) -> set[str]:
-    # Reading org team membership requires a token with org:read scope.
-    # The default Actions GITHUB_TOKEN can't do this, so use OTELBOT_TOKEN
-    # (a GitHub App installation token) when present; fall back to the
-    # default GH_TOKEN otherwise (useful for local runs with a user token).
     token = os.environ.get("OTELBOT_TOKEN") or None
     reviewers: set[str] = set()
     for slug in APPROVER_TEAM_SLUGS:
         members = gh_api(
             f"/orgs/{org}/teams/{slug}/members?per_page=100",
-            paginate=True, token=token,
+            paginate=True,
+            token=token,
         )
         reviewers.update(m["login"] for m in members)
     if not reviewers:
@@ -246,7 +216,56 @@ def load_reviewer_set(org: str) -> set[str]:
     return {r.lower() for r in reviewers}
 
 
-# ---------------------------------------------------------------- context build
+REVIEW_THREADS_QUERY = """
+query($owner: String!, $name: String!, $number: Int!, $after: String) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      reviewThreads(first: 100, after: $after) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          isResolved
+          isOutdated
+          path
+          line
+          comments(first: 100) {
+            nodes {
+              id
+              body
+              createdAt
+              author {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+def fetch_review_threads(owner: str, repo_name: str, number: int) -> list[dict[str, Any]]:
+    threads: list[dict[str, Any]] = []
+    after: str | None = None
+    while True:
+        data = gh_graphql(
+            REVIEW_THREADS_QUERY,
+            {"owner": owner, "name": repo_name, "number": number, "after": after},
+        )
+        page = (((data.get("data") or {}).get("repository") or {}).get("pullRequest") or {}).get("reviewThreads") or {}
+        threads.extend(page.get("nodes") or [])
+        page_info = page.get("pageInfo") or {}
+        if not page_info.get("hasNextPage"):
+            return threads
+        after = page_info.get("endCursor") or ""
+
+
+# ---------------------------------------------------------------- model helpers
 
 
 def parse_ts(s: str | None) -> datetime | None:
@@ -265,37 +284,31 @@ def truncate(s: str, n: int = MAX_BODY_CHARS) -> str:
     s = (s or "").strip()
     if len(s) <= n:
         return s
-    return s[:n] + " …[truncated]"
+    return s[:n] + " ...[truncated]"
+
+
+def actor_login(obj: dict[str, Any] | None) -> str:
+    return ((obj or {}).get("login") or "").strip()
 
 
 def role_for(login: str, author: str, reviewers: set[str]) -> str:
     if not login:
-        return "?"
+        return "outsider"
     low = login.lower()
     if low == author.lower():
         return "author"
     if low in reviewers:
         return "approver"
-    if login.startswith("app/") or login.endswith("[bot]"):
+    if low.startswith("app/") or low.endswith("[bot]"):
         return "bot"
     return "outsider"
 
 
-# Bot committer logins that should not be treated as the human delegator.
-# `Copilot` is the SWE-agent bot itself. Other bot logins (`app/...`,
-# `...[bot]`) are caught by the generic patterns in `_is_bot_login`. Real
-# human committers (including the delegator and anyone who later pushes a
-# fix-up) pass through and are eligible to be picked as the delegator.
 _BOT_COMMITTER_LOGINS = {"copilot"}
-
-# PR author logins that delegate work to a human (the Copilot SWE-agent
-# opens the PR but a human triggered it). Only for these authors do we look
-# up a human delegator from the first commit's committer. For other bots
-# (renovate, dependabot, etc.) we keep the bot as the author.
 _DELEGATING_BOT_AUTHORS = {"app/copilot-swe-agent", "copilot"}
 
 
-def _is_bot_login(login: str) -> bool:
+def is_bot_login(login: str) -> bool:
     if not login:
         return True
     low = login.lower()
@@ -305,24 +318,20 @@ def _is_bot_login(login: str) -> bool:
 
 
 def detect_human_delegator(commits: list[dict[str, Any]]) -> str:
-    """For Copilot SWE-agent PRs, return the human who triggered the agent.
-
-    GitHub records the delegating user as the committer of the first commit
-    (the agent's initial scaffold). Returns "" if the first commit's
-    committer isn't a real user.
-    """
     if not commits:
         return ""
-    login = ((commits[0].get("committer") or {}).get("login") or "").strip()
-    return "" if _is_bot_login(login) else login
+    login = actor_login(commits[0].get("committer") or {})
+    return "" if is_bot_login(login) else login
 
 
-def fetch_pr_context(
-    repo: str, owner: str, repo_name: str, pr_summary: dict[str, Any],
-    reviewers: set[str],
+def fetch_pr_raw(
+    repo: str,
+    owner: str,
+    repo_name: str,
+    pr_summary: dict[str, Any],
 ) -> dict[str, Any]:
     number = pr_summary["number"]
-    with ThreadPoolExecutor(max_workers=6) as pool:
+    with ThreadPoolExecutor(max_workers=7) as pool:
         f_pr = pool.submit(gh_pr_view, repo, number)
         f_issue = pool.submit(
             gh_api,
@@ -345,300 +354,274 @@ def fetch_pr_context(
             True,
         )
         f_checks = pool.submit(gh_pr_checks, repo, number)
-        pr = f_pr.result()
-        issue_comments = f_issue.result() or []
-        review_comments = f_revcom.result() or []
-        reviews = f_reviews.result() or []
-        commits = f_commits.result() or []
-        checks = f_checks.result() or []
+        f_threads = pool.submit(fetch_review_threads, owner, repo_name, number)
+        return {
+            "summary": pr_summary,
+            "pr": f_pr.result(),
+            "issue_comments": f_issue.result() or [],
+            "review_comments": f_revcom.result() or [],
+            "reviews": f_reviews.result() or [],
+            "commits": f_commits.result() or [],
+            "checks": f_checks.result() or [],
+            "review_threads": f_threads.result() or [],
+        }
 
-    author = (pr.get("author") or {}).get("login", "") or pr_summary.get("author", {}).get("login", "")
 
-    # For Copilot SWE-agent PRs the API author is the bot; surface the human
-    # who delegated the task so reviews/comments by that person are classified
-    # as "author" activity instead of "approver". Other bot authors
-    # (renovate, dependabot, ...) have no human delegator, so we keep the bot.
+def effective_author(raw: dict[str, Any]) -> tuple[str, str]:
+    pr = raw["pr"]
+    summary = raw["summary"]
+    author = actor_login(pr.get("author") or {}) or actor_login(summary.get("author") or {})
     delegator = ""
     if author.lower() in _DELEGATING_BOT_AUTHORS:
-        delegator = detect_human_delegator(commits)
+        delegator = detect_human_delegator(raw["commits"])
         if delegator:
             author = delegator
+    return author, delegator
 
-    # Fetch per-commit diffs for the most recent commits, in parallel.
-    recent_commits = commits[-MAX_COMMITS:]
-    patches: dict[str, str] = {}
-    merge_shas: set[str] = set()
-    if recent_commits:
-        with ThreadPoolExecutor(max_workers=4) as pool:
-            futs = {
-                pool.submit(gh_commit_detail, owner, repo_name, c.get("sha") or ""): c.get("sha") or ""
-                for c in recent_commits if c.get("sha")
-            }
-            for fut in as_completed(futs):
-                sha = futs[fut]
-                try:
-                    detail = fut.result()
-                except Exception:
-                    detail = {}
-                patches[sha] = format_commit_patch(detail, MAX_COMMIT_DIFF_CHARS)
-                if len(detail.get("parents") or []) >= 2:
-                    merge_shas.add(sha)
 
-    # Build unified activity timeline.
+def is_merge_commit(commit: dict[str, Any]) -> bool:
+    return len(commit.get("parents") or []) >= 2
+
+
+def normalize_events(raw: dict[str, Any], author: str, reviewers: set[str]) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
-    for c in recent_commits:
-        sha_full = c.get("sha") or ""
-        a = c.get("author") or {}
+    for c in raw["commits"]:
         commit_obj = c.get("commit") or {}
         commit_author = commit_obj.get("author") or {}
-        login = a.get("login") or commit_author.get("name") or ""
-        msg = commit_obj.get("message", "")
-        date = commit_author.get("date") or ""
-        diff = patches.get(sha_full, "")
-        body = truncate(msg.rstrip(), MAX_COMMIT_MESSAGE_CHARS)
-        if diff:
-            body = (body + "\n\n[diff]\n" + diff) if body else ("[diff]\n" + diff)
+        login = actor_login(c.get("author") or {}) or commit_author.get("name") or ""
+        sha = c.get("sha") or ""
         events.append({
             "kind": "commit",
-            "ts": date,
-            "login": login,
-            "body": body,
-            "sha": sha_full[:7],
-            "is_merge": sha_full in merge_shas,
+            "timestamp": commit_author.get("date") or "",
+            "actor": login,
+            "actor_role": role_for(login, author, reviewers),
+            "body": commit_obj.get("message") or "",
+            "state": None,
+            "path": None,
+            "sha": sha[:7],
+            "is_merge_from_base_by_non_author": is_merge_commit(c) and login.lower() != author.lower(),
         })
-    for c in issue_comments:
+    for c in raw["issue_comments"]:
+        login = actor_login(c.get("user") or {})
         events.append({
-            "kind": "comment",
-            "ts": c.get("created_at"),
-            "login": (c.get("user") or {}).get("login", ""),
+            "kind": "issue-comment",
+            "timestamp": c.get("created_at") or "",
+            "actor": login,
+            "actor_role": role_for(login, author, reviewers),
             "body": c.get("body") or "",
+            "state": None,
+            "path": None,
+            "sha": None,
+            "is_merge_from_base_by_non_author": False,
         })
-    for c in review_comments:
+    for c in raw["review_comments"]:
+        login = actor_login(c.get("user") or {})
         events.append({
             "kind": "review-comment",
-            "ts": c.get("created_at"),
-            "login": (c.get("user") or {}).get("login", ""),
+            "timestamp": c.get("created_at") or "",
+            "actor": login,
+            "actor_role": role_for(login, author, reviewers),
             "body": c.get("body") or "",
+            "state": None,
             "path": c.get("path"),
+            "sha": None,
+            "is_merge_from_base_by_non_author": False,
         })
-    for r in reviews:
+    for r in raw["reviews"]:
+        login = actor_login(r.get("user") or {})
+        state = r.get("state") or ""
         events.append({
-            "kind": f"review:{r.get('state')}",
-            "ts": r.get("submitted_at"),
-            "login": (r.get("user") or {}).get("login", ""),
+            "kind": "review-state",
+            "timestamp": r.get("submitted_at") or "",
+            "actor": login,
+            "actor_role": role_for(login, author, reviewers),
             "body": r.get("body") or "",
+            "state": state,
+            "path": None,
+            "sha": None,
+            "is_merge_from_base_by_non_author": False,
         })
-    events = [e for e in events if e["ts"]]
-    events.sort(key=lambda e: e["ts"])
+    events = [e for e in events if e["timestamp"]]
+    events.sort(key=lambda e: e["timestamp"])
+    return events
 
-    # Last substantive event = last event whose body is non-empty OR whose
-    # kind is not "review:COMMENTED" (state changes always count). Merge
-    # commits (≥2 parents) by someone *other* than the author — e.g. an
-    # approver clicking "Update branch" — don't count as substantive: they
-    # don't move the conversation forward and shouldn't be confused with
-    # the author addressing feedback.
-    def is_substantive(e: dict[str, Any]) -> bool:
-        if e["kind"].startswith("review:") and e["kind"] != "review:COMMENTED":
-            return True
-        if e.get("is_merge") and (e.get("login") or "").lower() != author.lower():
-            return False
-        return bool((e.get("body") or "").strip())
 
-    substantive = [e for e in events if is_substantive(e)]
-    last_sub = substantive[-1] if substantive else None
+def is_substantive_activity(event: dict[str, Any]) -> bool:
+    if event.get("is_merge_from_base_by_non_author"):
+        return False
+    if event.get("actor_role") == "bot":
+        return False
+    if event["kind"] == "review-state" and event.get("state") != "COMMENTED":
+        return True
+    return bool((event.get("body") or "").strip())
 
-    # Commit summaries (subject only) for the brief table in the rendered
-    # context. Full commit messages and diffs travel via timeline events.
-    # Merge commits authored by someone other than the PR author (e.g. an
-    # approver clicking "Update branch") are flagged so the model doesn't
-    # treat them as the author addressing feedback.
-    commit_rows = []
-    for c in recent_commits:
-        sha_full = c.get("sha") or ""
-        sha = sha_full[:7]
-        msg = (c.get("commit") or {}).get("message", "").splitlines()[0] if c.get("commit") else ""
-        a = c.get("author") or {}
-        commit_login = a.get("login") or ((c.get("commit") or {}).get("author") or {}).get("name") or "?"
-        commit_date = ((c.get("commit") or {}).get("author") or {}).get("date") or ""
-        is_non_author_merge = (
-            sha_full in merge_shas
-            and (commit_login or "").lower() != author.lower()
-        )
-        commit_rows.append({
-            "sha": sha,
-            "msg": msg,
-            "author": commit_login,
-            "date": commit_date,
-            "is_non_author_merge": is_non_author_merge,
-        })
 
-    # "Last commit pushed" is meant to surface real author activity, so
-    # skip non-author merge commits (e.g. approvers clicking "Update
-    # branch") when picking the timestamp.
-    real_rows = [r for r in commit_rows if not r["is_non_author_merge"]]
-    last_commit_date = parse_ts(real_rows[-1]["date"]) if real_rows else None
+def compute_conflicts(pr: dict[str, Any]) -> str:
+    merge_state = pr.get("mergeStateStatus")
+    mergeable = pr.get("mergeable")
+    if mergeable == "CONFLICTING" or merge_state == "DIRTY":
+        return "yes"
+    if mergeable in (None, "", "UNKNOWN"):
+        return "unknown"
+    return "no"
 
-    # Checks summary.
+
+def compute_facts(raw: dict[str, Any], events: list[dict[str, Any]], author: str) -> dict[str, Any]:
+    pr = raw["pr"]
+    checks = raw["checks"]
     failing = [c for c in checks if (c.get("state") or "").upper() in ("FAILURE", "ERROR")]
     pending = [c for c in checks if (c.get("state") or "").upper() in ("PENDING", "QUEUED", "IN_PROGRESS")]
-    successful = [c for c in checks if (c.get("state") or "").upper() == "SUCCESS"]
-    skipped = [c for c in checks if (c.get("state") or "").upper() == "SKIPPED"]
-
-    # Last review per user (for approval/changes signal).
-    latest_per_user: dict[str, dict[str, Any]] = {}
-    for r in reviews:
-        state = r.get("state", "")
-        if state in ("COMMENTED", "DISMISSED", "PENDING"):
-            continue
-        u = (r.get("user") or {}).get("login")
-        if not u:
-            continue
-        prev = latest_per_user.get(u)
-        if prev is None or (r.get("submitted_at") or "") > (prev.get("submitted_at") or ""):
-            latest_per_user[u] = r
-    approvers = sorted(u for u, r in latest_per_user.items() if r.get("state") == "APPROVED")
-    changes_requested = sorted(u for u, r in latest_per_user.items() if r.get("state") == "CHANGES_REQUESTED")
-
+    substantive = [e for e in events if is_substantive_activity(e)]
+    last_activity_ts = parse_ts((substantive[-1] or {}).get("timestamp")) if substantive else None
+    api_author = actor_login(pr.get("author") or {})
     return {
-        "pr": pr,
-        "number": number,
-        "title": pr.get("title", "") or pr_summary.get("title", ""),
-        "url": pr.get("url", "") or pr_summary.get("url", ""),
         "author": author,
-        "delegator": delegator,
-        "events": events,
-        "substantive": substantive,
-        "last_substantive": last_sub,
-        "commits": commit_rows,
-        "last_commit_date": last_commit_date,
-        "checks_failing": failing,
-        "checks_pending": pending,
-        "checks_successful": successful,
-        "checks_skipped": skipped,
-        "approvers": approvers,
-        "changes_requested": changes_requested,
-        "reviewers": reviewers,
+        "is_otelbot_author": api_author.lower() == "app/otelbot",
+        "is_draft": bool(pr.get("isDraft")),
+        "approved": pr.get("reviewDecision") == "APPROVED",
+        "ci_failing_count": len(failing),
+        "ci_pending_count": len(pending),
+        "conflicts": compute_conflicts(pr),
+        "days_since_last_activity": days_since(last_activity_ts),
     }
 
 
-def render_context(ctx: dict[str, Any]) -> str:
-    pr = ctx["pr"]
-    author = ctx["author"]
-    reviewers = ctx["reviewers"]
+def thread_comment(timestamp: str, actor: str, author: str, reviewers: set[str], body: str) -> dict[str, Any]:
+    return {
+        "timestamp": timestamp,
+        "actor": actor,
+        "actor_role": role_for(actor, author, reviewers),
+        "body": truncate(body),
+    }
 
-    labels = ", ".join(l.get("name", "") for l in (pr.get("labels") or []))
-    review_requests = []
-    for rr in pr.get("reviewRequests") or []:
-        if isinstance(rr, dict):
-            review_requests.append(rr.get("login") or rr.get("name") or "")
-        else:
-            review_requests.append(str(rr))
-    review_requests_s = ", ".join(filter(None, review_requests)) or "(none)"
 
-    last_sub = ctx["last_substantive"]
-    last_actor = (last_sub or {}).get("login", "")
-    last_role = role_for(last_actor, author, reviewers) if last_actor else "?"
-    last_age = days_since(parse_ts((last_sub or {}).get("ts")))
-    last_commit_age = days_since(ctx["last_commit_date"])
-    pr_age = days_since(parse_ts(pr.get("createdAt")))
-    updated_age = days_since(parse_ts(pr.get("updatedAt")))
+def approver_approved_after_thread(raw: dict[str, Any], comments: list[dict[str, Any]]) -> bool:
+    last_comment_ts = comments[-1]["timestamp"]
+    thread_approvers = {
+        c["actor"].lower()
+        for c in comments
+        if c["actor_role"] == "approver" and c.get("actor")
+    }
+    if not thread_approvers:
+        return False
+    for review in raw["reviews"]:
+        reviewer = actor_login(review.get("user") or {}).lower()
+        if reviewer not in thread_approvers:
+            continue
+        if review.get("state") != "APPROVED":
+            continue
+        if (review.get("submitted_at") or "") > last_comment_ts:
+            return True
+    return False
 
-    lines: list[str] = []
-    lines.append(f"PR #{ctx['number']}: {ctx['title']}")
-    lines.append(f"URL: {ctx['url']}")
-    lines.append(f"Author: @{author}")
-    bot_author = ((pr.get("author") or {}).get("login") or "")
-    if ctx.get("delegator") and bot_author and bot_author.lower() != author.lower():
-        lines.append(
-            f"  (PR opened by Copilot SWE-agent @{bot_author} on behalf of @{author}; "
-            f"@{author} is treated as the effective author for triage.)"
-        )
-    lines.append(
-        f"State: open | draft={pr.get('isDraft')} "
-        f"| reviewDecision={pr.get('reviewDecision')}"
-    )
-    ci_failing = bool(ctx["checks_failing"])
-    lines.append(f"CI failing: {'yes' if ci_failing else 'no'}")
-    lines.append(f"Created: {pr.get('createdAt')} ({pr_age}d ago)")
-    lines.append(f"Updated: {pr.get('updatedAt')} ({updated_age}d ago)")
-    lines.append(f"Size: +{pr.get('additions', 0)}/-{pr.get('deletions', 0)} across {pr.get('changedFiles', 0)} files")
-    if labels:
-        lines.append(f"Labels: {labels}")
-    lines.append(f"Review requests: {review_requests_s}")
-    if ctx["approvers"]:
-        lines.append(f"Approved by: {', '.join('@' + a for a in ctx['approvers'])}")
-    if ctx["changes_requested"]:
-        lines.append(f"Changes requested by: {', '.join('@' + a for a in ctx['changes_requested'])}")
 
-    lines.append("")
-    lines.append("PR description:")
-    lines.append(truncate(pr.get("body") or "", 800))
-    lines.append("")
+def add_thread_facts(
+    raw: dict[str, Any],
+    thread: dict[str, Any],
+    comments: list[dict[str, Any]],
+    facts: dict[str, Any],
+) -> dict[str, Any]:
+    thread["thread_facts"] = {
+        "latest_comment_role": comments[-1].get("actor_role"),
+        "same_actor_approved_after_thread": approver_approved_after_thread(raw, comments),
+        "current_conflicts": facts.get("conflicts"),
+    }
+    return thread
 
-    # Commits
-    lines.append(f"Last {len(ctx['commits'])} commits (oldest first):")
-    for c in ctx["commits"]:
-        suffix = " [merge from base by non-author — not substantive activity]" if c.get("is_non_author_merge") else ""
-        lines.append(f"  {c['sha']} {c['date'][:10]} @{c['author']}: {truncate(c['msg'], 120)}{suffix}")
-    lines.append("")
 
-    # Last substantive event highlight
-    if last_sub:
-        lines.append(
-            f"Last substantive activity: {last_sub['kind']} by @{last_actor} "
-            f"({last_role}) {last_age}d ago"
-        )
-        if last_sub.get("kind") == "commit":
-            body = last_sub.get("body") or ""
-        else:
-            body = truncate(last_sub.get("body") or "", 600)
-        if body:
-            lines.append("  > " + body.replace("\n", "\n  > "))
+def group_review_threads(
+    raw: dict[str, Any],
+    author: str,
+    reviewers: set[str],
+    facts: dict[str, Any],
+) -> list[dict[str, Any]]:
+    threads: list[dict[str, Any]] = []
+    for thread in raw["review_threads"]:
+        if thread.get("isResolved") or thread.get("isOutdated"):
+            continue
+        comments = []
+        for c in ((thread.get("comments") or {}).get("nodes") or []):
+            actor = actor_login(c.get("author") or {})
+            comments.append(thread_comment(c.get("createdAt") or "", actor, author, reviewers, c.get("body") or ""))
+        comments = [c for c in comments if c["timestamp"]]
+        comments.sort(key=lambda c: c["timestamp"])
+        if not comments:
+            continue
+        threads.append(add_thread_facts(raw, {
+            "thread_id": thread.get("id") or f"review-thread-{len(threads) + 1}",
+            "thread_kind": "review-comment-thread",
+            "path": thread.get("path"),
+            "line": thread.get("line"),
+            "resolved": False,
+            "comments": comments,
+        }, comments, facts))
+    threads.sort(key=lambda t: t["comments"][-1]["timestamp"])
+    return threads
+
+
+def latest_approver_review_event(events: list[dict[str, Any]]) -> str | None:
+    timestamps = [
+        e["timestamp"]
+        for e in events
+        if e.get("actor_role") == "approver"
+        and e["kind"] in ("review-comment", "review-state")
+        and is_substantive_activity(e)
+    ]
+    return max(timestamps) if timestamps else None
+
+
+def group_pr_conversation(
+    raw: dict[str, Any],
+    events: list[dict[str, Any]],
+    review_threads: list[dict[str, Any]],
+    author: str,
+    reviewers: set[str],
+    facts: dict[str, Any],
+) -> list[dict[str, Any]]:
+    comments = []
+    for c in raw["issue_comments"]:
+        actor = actor_login(c.get("user") or {})
+        comment = thread_comment(c.get("created_at") or "", actor, author, reviewers, c.get("body") or "")
+        if comment["timestamp"] and comment["actor_role"] != "bot" and comment["body"]:
+            comments.append(comment)
+    comments.sort(key=lambda c: c["timestamp"])
+    if not comments:
+        return []
+
+    latest_review_ts = latest_approver_review_event(events)
+    if latest_review_ts:
+        selected = [c for c in comments if c["timestamp"] > latest_review_ts]
+        if not selected and review_threads:
+            return []
+    elif review_threads:
+        selected = []
     else:
-        lines.append("Last substantive activity: (none — only metadata events)")
-    if last_commit_age is not None:
-        lines.append(f"Last commit pushed: {last_commit_age}d ago")
-    lines.append("")
+        selected = comments
 
-    # Recent comments timeline (last N substantive events).
-    recent = ctx["substantive"][-MAX_COMMENTS:]
-    lines.append(f"Recent substantive events ({len(recent)}, oldest first):")
-    for e in recent:
-        login = e.get("login", "")
-        role = role_for(login, author, reviewers)
-        ts = e.get("ts", "")
-        kind = e["kind"]
-        path = f" on {e.get('path')}" if e.get("path") else ""
-        if kind == "commit":
-            sha = e.get("sha") or ""
-            label = f"commit {sha}" if sha else "commit"
-            body = e.get("body") or ""
-        else:
-            label = kind
-            body = truncate(e.get("body") or "", 500)
-        lines.append(f"- [{ts}] {label}{path} by @{login} ({role}):")
-        if body:
-            lines.append("    " + body.replace("\n", "\n    "))
-    lines.append("")
+    if facts.get("conflicts") == "no":
+        selected = [c for c in selected if not is_conflict_resolution_comment(c.get("body") or "")]
+    selected = selected[-PR_COMMENT_WINDOW:]
+    if not selected:
+        return []
+    return [add_thread_facts(raw, {
+        "thread_id": "pr-conversation",
+        "thread_kind": "pr-conversation",
+        "path": None,
+        "line": None,
+        "resolved": False,
+        "comments": selected,
+    }, selected, facts)]
 
-    # Pre-computed signals to anchor the model.
-    signals: list[str] = []
-    if pr.get("isDraft"):
-        signals.append("PR is a draft")
-    if last_role == "author" and ctx["approvers"]:
-        signals.append("latest substantive activity is from author after approvals")
-    if last_sub and last_sub.get("kind") == "review:APPROVED":
-        signals.append(
-            "latest substantive activity is an APPROVED review; treat as approver/maintainer "
-            "action unless the approval body or inline review comments ask the author for follow-up"
-        )
-    if last_role == "approver" and last_sub:
-        signals.append("latest substantive activity is from an approver")
-    lines.append("Pre-computed signals:")
-    for s in signals or ["(none)"]:
-        lines.append(f"  - {s}")
 
-    return "\n".join(lines)
+def group_discussion_threads(
+    raw: dict[str, Any],
+    events: list[dict[str, Any]],
+    author: str,
+    reviewers: set[str],
+    facts: dict[str, Any],
+) -> list[dict[str, Any]]:
+    review_threads = group_review_threads(raw, author, reviewers, facts)
+    return review_threads + group_pr_conversation(raw, events, review_threads, author, reviewers, facts)
 
 
 # ---------------------------------------------------------------- LLM call
@@ -660,9 +643,9 @@ def parse_copilot_jsonl(s: str) -> tuple[str, dict[str, Any]]:
             if isinstance(content, str):
                 parts.append(content)
         elif evt.get("type") == "result":
-            u = evt.get("usage") or {}
-            if isinstance(u.get("premiumRequests"), int):
-                usage["premium_requests"] = u["premiumRequests"]
+            usage_obj = evt.get("usage") or {}
+            if isinstance(usage_obj.get("premiumRequests"), int):
+                usage["premium_requests"] = usage_obj["premiumRequests"]
     return "\n".join(parts), usage
 
 
@@ -685,46 +668,117 @@ def extract_json_object(s: str) -> dict[str, Any] | None:
         if isinstance(obj, dict):
             objects.append(obj)
         i = end
-    for obj in reversed(objects):
-        if "next_step" in obj or "side" in obj:
-            return obj
     return objects[-1] if objects else None
 
 
-def run_llm(repo: str, number: int, context_text: str, model: str) -> dict[str, Any]:
-    prompt = PROMPT_TEMPLATE.format(repo=repo, number=number, context=context_text)
-    if len(prompt) > MAX_PROMPT_CHARS:
-        # Trim context (preserve head/tail).
-        budget = MAX_PROMPT_CHARS - (len(prompt) - len(context_text)) - 200
-        if budget > 0:
-            half = budget // 2
-            context_text = context_text[:half] + "\n…[context truncated]…\n" + context_text[-half:]
-            prompt = PROMPT_TEMPLATE.format(repo=repo, number=number, context=context_text)
-    argv = [
-        "copilot",
-        "-p", prompt,
-        "--output-format", "json",
-        "--model", model,
-    ]
+def valid_thread_action(action: str) -> str:
+    action = (action or "").lower().strip()
+    if action in ("author", "reviewer", "external", "none", "unclear"):
+        return action
+    if action == "approver":
+        return "reviewer"
+    return "unclear"
+
+
+def parse_thread_decision(response_text: str) -> dict[str, str]:
+    obj = extract_json_object(response_text) if response_text else None
+    if not obj:
+        return {"thread_action": "unclear", "reason": "LLM did not return valid JSON"}
+    action = valid_thread_action(str(obj.get("thread_action") or obj.get("side") or ""))
+    reason = truncate(str(obj.get("reason") or ""), 300)
+    if not reason:
+        reason = "No reason provided"
+    return {"thread_action": action, "reason": reason}
+
+
+def is_conflict_resolution_comment(body: str) -> bool:
+    text = (body or "").lower()
+    return "conflict" in text and any(word in text for word in ("resolve", "resolved", "merge"))
+
+
+def thread_prompt(repo: str, number: int, pr: dict[str, Any], facts: dict[str, Any], thread: dict[str, Any]) -> str:
+    pr_facts = {
+        "number": number,
+        "title": pr.get("title") or "",
+        "description": truncate(pr.get("body") or "", 800),
+        **facts,
+    }
+    facts_text = json.dumps(pr_facts, indent=2, sort_keys=True)
+    thread_text = json.dumps(thread, indent=2, sort_keys=True)
+    prompt = THREAD_PROMPT_TEMPLATE.format(repo=repo, number=number, facts=facts_text, thread=thread_text)
+    if len(prompt) <= MAX_PROMPT_CHARS:
+        return prompt
+    trimmed = dict(thread)
+    comments = [dict(c) for c in thread.get("comments") or []]
+    for c in comments:
+        c["body"] = truncate(c.get("body") or "", 500)
+    trimmed["comments"] = comments[-PR_COMMENT_WINDOW:]
+    thread_text = json.dumps(trimmed, indent=2, sort_keys=True)
+    return THREAD_PROMPT_TEMPLATE.format(repo=repo, number=number, facts=facts_text, thread=thread_text)
+
+
+def run_llm_for_thread(
+    repo: str,
+    number: int,
+    pr: dict[str, Any],
+    facts: dict[str, Any],
+    thread: dict[str, Any],
+    model: str,
+) -> dict[str, Any]:
+    prompt = thread_prompt(repo, number, pr, facts, thread)
     proc = subprocess.run(
-        argv,
-        capture_output=True, text=True,
-        encoding="utf-8", errors="replace",
-        timeout=PER_PR_TIMEOUT,
+        ["copilot", "-p", prompt, "--output-format", "json", "--model", model],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=PER_THREAD_TIMEOUT,
     )
     response_text, usage = parse_copilot_jsonl(proc.stdout)
-    decision = extract_json_object(response_text) if response_text else None
+    decision = parse_thread_decision(response_text)
     return {
+        "thread_id": thread["thread_id"],
+        "thread_kind": thread["thread_kind"],
         "returncode": proc.returncode,
         "decision": decision,
         "usage": usage,
-        "raw_stdout": proc.stdout,
         "raw_stderr": proc.stderr[-2000:] if proc.stderr else "",
         "response_text": response_text,
     }
 
 
-# ---------------------------------------------------------------- rendering
+def classify_threads(
+    repo: str,
+    number: int,
+    pr: dict[str, Any],
+    facts: dict[str, Any],
+    threads: list[dict[str, Any]],
+    model: str,
+) -> list[dict[str, Any]]:
+    classifications: list[dict[str, Any]] = []
+    for thread in threads:
+        try:
+            classifications.append(run_llm_for_thread(repo, number, pr, facts, thread, model))
+        except subprocess.TimeoutExpired:
+            classifications.append({
+                "thread_id": thread["thread_id"],
+                "thread_kind": thread["thread_kind"],
+                "returncode": -1,
+                "decision": {"thread_action": "unclear", "reason": "LLM timeout"},
+                "raw_stderr": "timeout",
+            })
+        except Exception as e:
+            classifications.append({
+                "thread_id": thread["thread_id"],
+                "thread_kind": thread["thread_kind"],
+                "returncode": -1,
+                "decision": {"thread_action": "unclear", "reason": f"LLM failed: {e!r}"},
+                "raw_stderr": repr(e),
+            })
+    return classifications
+
+
+# ---------------------------------------------------------------- routing and rendering
 
 
 SIDE_LABELS = {
@@ -732,26 +786,41 @@ SIDE_LABELS = {
     "approver": "Waiting on approvers",
     "author": "Waiting on authors",
     "external": "Waiting on external",
+    "unknown": "Unknown",
 }
 SIDE_ORDER = ["maintainer", "approver", "author", "external", "unknown"]
+
+
+def action_counts(classifications: list[dict[str, Any]]) -> dict[str, int]:
+    counts = {"author": 0, "reviewer": 0, "external": 0, "none": 0, "unclear": 0}
+    for c in classifications:
+        action = valid_thread_action((c.get("decision") or {}).get("thread_action") or "")
+        counts[action] += 1
+    return counts
+
+
+def route_pr(facts: dict[str, Any], classifications: list[dict[str, Any]]) -> str:
+    if facts.get("is_draft"):
+        return "draft"
+    counts = action_counts(classifications)
+    if facts.get("is_otelbot_author"):
+        return "external" if counts["external"] else "approver"
+    if counts["author"]:
+        return "author"
+    if counts["external"]:
+        return "external"
+    if counts["reviewer"]:
+        return "maintainer" if facts.get("approved") else "approver"
+    if facts.get("approved"):
+        return "maintainer"
+    return "approver"
 
 
 def _md_escape(s: str) -> str:
     return (s or "").replace("|", "\\|").replace("\n", " ").strip()
 
 
-def _infer_side(decision: dict[str, Any]) -> str:
-    side = (decision.get("side") or "").lower().strip()
-    if side in ("approver", "author", "external"):
-        return side
-    return "unknown"
-
-
 def fetch_workflow_failure_issues(repo: str) -> list[dict[str, Any]]:
-    """Fetch open issues created by reusable-workflow-notification.yml.
-
-    Those issues have titles starting with 'Workflow failed: '.
-    """
     proc = subprocess.run(
         [
             "gh", "issue", "list", "--repo", repo,
@@ -760,7 +829,10 @@ def fetch_workflow_failure_issues(repo: str) -> list[dict[str, Any]]:
             "--json", "number,title,url,updatedAt,comments,author",
             "--limit", "100",
         ],
-        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
     )
     if proc.returncode != 0:
         print(f"  warning: failed to fetch workflow failure issues: {proc.stderr}", file=sys.stderr)
@@ -769,7 +841,6 @@ def fetch_workflow_failure_issues(repo: str) -> list[dict[str, Any]]:
         issues = json.loads(proc.stdout or "[]")
     except json.JSONDecodeError:
         return []
-    # Filter strictly to titles that start with the marker (search matches loosely).
     return [i for i in issues if (i.get("title") or "").startswith("Workflow failed:")]
 
 
@@ -790,90 +861,143 @@ def render_workflow_failure_section(issues: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def ci_cell(facts: dict[str, Any]) -> str:
+    if facts.get("ci_failing_count", 0) > 0:
+        return "❌"
+    if facts.get("ci_pending_count", 0) > 0:
+        return "⏳"
+    return "✅"
+
+
+def conflicts_cell(facts: dict[str, Any]) -> str:
+    conflicts = facts.get("conflicts")
+    if conflicts == "yes":
+        return "❌"
+    if conflicts == "no":
+        return "✅"
+    return "?"
+
+
+def _html_escape(s: str) -> str:
+    return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def render_diagnostics_section(results: dict[int, dict[str, Any]]) -> list[str]:
+    lines = ["<details>", "<summary>Diagnostics</summary>", "", "```text"]
+    for number in sorted(results, reverse=True):
+        result = results[number]
+        facts = result.get("facts") or {}
+        counts = action_counts(result.get("classifications") or [])
+        lines.append(f"PR #{number}")
+        lines.append(
+            f"facts: approved={facts.get('approved')} conflicts={facts.get('conflicts')} "
+            f"days_since_last_activity={facts.get('days_since_last_activity')}"
+        )
+        lines.append("threads: " + " ".join(f"{k}={v}" for k, v in counts.items()))
+        for c in result.get("classifications") or []:
+            decision = c.get("decision") or {}
+            reason = (decision.get("reason") or "").replace("\n", " ")
+            lines.append(f"llm: {c.get('thread_id')} -> {decision.get('thread_action')} ({reason})")
+        if result.get("raw_stderr"):
+            lines.append(f"error: {result.get('raw_stderr')}")
+        lines.append(f"route: {result.get('side', 'unknown')}")
+        lines.append("")
+    lines.extend(["```", "", "</details>", ""])
+    return [_html_escape(line) if line not in ("<details>", "<summary>Diagnostics</summary>", "</details>") else line for line in lines]
+
+
 def render_markdown_compact(
-    prs: list[dict[str, Any]], results: dict[int, dict[str, Any]],
+    prs: list[dict[str, Any]],
+    results: dict[int, dict[str, Any]],
     workflow_issues: list[dict[str, Any]] | None = None,
 ) -> str:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     out: list[str] = [
         "> [!NOTE]",
-        "> Open PRs are grouped by who is expected to act next. The grouping "
-        "is produced by an LLM (GitHub Copilot CLI) from each PR's metadata, "
-        "comments, reviews, and CI status, so it can be wrong — treat it as a "
-        "triage hint, not ground truth. The CI and Conflicts columns are "
-        "computed deterministically from `gh`.",
+        "> Open PRs are grouped by deterministic routing over per-thread LLM classifications. "
+        "CI, conflicts, and activity age are computed deterministically and are shown as facts, "
+        "not used as standalone routing reasons.",
         "",
     ]
 
-    by_side: dict[str, list[tuple[dict[str, Any], dict[str, Any]]]] = {}
+    by_side: dict[str, list[dict[str, Any]]] = {}
     for pr in prs:
         if pr.get("isDraft"):
             continue
-        res = results.get(pr["number"]) or {}
-        decision = res.get("decision") or {}
-        side = _infer_side(decision) if decision else "unknown"
-        # PRs authored by app/otelbot are never "waiting on authors" — the
-        # bot doesn't respond to review feedback, so the ball is always in
-        # an approver's court (review, close, or take over).
-        pr_author_login = ((pr.get("author") or {}).get("login") or "").lower()
-        if side == "author" and pr_author_login == "app/otelbot":
-            side = "approver"
-        # Promote approved PRs that are waiting on approvers into the
-        # "maintainer" bucket (deterministic): GitHub already says they have
-        # the required approvals, so a maintainer can merge them.
-        if side == "approver" and (res.get("facts") or {}).get("approved"):
-            side = "maintainer"
-        by_side.setdefault(side, []).append((pr, decision))
+        res = results.get(pr["number"]) or {"side": "unknown"}
+        by_side.setdefault(res.get("side") or "unknown", []).append(pr)
 
     for side in SIDE_ORDER:
         rows = by_side.get(side) or []
         if not rows:
             continue
-        rows.sort(key=lambda rd: -rd[0]["number"])
-        label = SIDE_LABELS.get(side, side)
-        out.append(f"## {label}")
+        rows.sort(key=lambda p: -p["number"])
+        out.append(f"## {SIDE_LABELS.get(side, side)}")
         out.append("")
-        out.append("| PR | Author | CI | Conflicts |")
-        out.append("|---|---|---|---|")
-        for pr, decision in rows:
+        out.append("| PR | Author | CI | Conflicts | Activity |")
+        out.append("|---|---|---|---|---|")
+        for pr in rows:
             number = pr["number"]
             title = _md_escape(pr.get("title", ""))
             url = pr.get("url", "")
             res = results.get(number) or {}
             facts = res.get("facts") or {}
-            author = facts.get("effective_author") or (pr.get("author") or {}).get("login", "")
-            if facts:
-                if facts.get("ci_failing", 0) > 0:
-                    ci_cell = "❌"
-                elif facts.get("ci_pending", 0) > 0:
-                    ci_cell = "⏳"
-                else:
-                    ci_cell = "✅"
-                conflicts = facts.get("conflicts")
-                if conflicts == "yes":
-                    conflicts_cell = "❌"
-                elif conflicts == "no":
-                    conflicts_cell = "✅"
-                else:
-                    conflicts_cell = "?"
-            else:
-                ci_cell = "?"
-                conflicts_cell = "?"
-            author_cell = author or ""
+            author = facts.get("author") or actor_login(pr.get("author") or {})
+            activity = facts.get("days_since_last_activity")
+            activity_cell = "?" if activity is None else f"{activity}d"
             out.append(
-                f"| [{title}]({url}) | {author_cell} | {ci_cell} | {conflicts_cell} |"
+                f"| [{title}]({url}) | {author} | {ci_cell(facts)} | "
+                f"{conflicts_cell(facts)} | {activity_cell} |"
             )
         out.append("")
 
     out.extend(render_workflow_failure_section(workflow_issues or []))
-
+    out.extend(render_diagnostics_section(results))
     out.append(f"_Generated {now}_")
     out.append("")
-
     return "\n".join(out) + "\n"
 
 
 # ---------------------------------------------------------------- main
+
+
+def build_pr_result(
+    repo: str,
+    owner: str,
+    repo_name: str,
+    pr_summary: dict[str, Any],
+    reviewers: set[str],
+    model: str,
+) -> dict[str, Any]:
+    number = pr_summary["number"]
+    try:
+        raw = fetch_pr_raw(repo, owner, repo_name, pr_summary)
+        author, delegator = effective_author(raw)
+        events = normalize_events(raw, author, reviewers)
+        facts = compute_facts(raw, events, author)
+        threads = group_discussion_threads(raw, events, author, reviewers, facts)
+        classifications = classify_threads(repo, number, raw["pr"], facts, threads, model)
+        side = route_pr(facts, classifications)
+        return {
+            "pr": number,
+            "returncode": 0,
+            "facts": facts,
+            "delegator": delegator,
+            "events": events,
+            "threads": threads,
+            "classifications": classifications,
+            "side": side,
+        }
+    except Exception as e:
+        return {
+            "pr": number,
+            "returncode": -1,
+            "facts": {},
+            "threads": [],
+            "classifications": [],
+            "side": "unknown",
+            "raw_stderr": repr(e),
+        }
 
 
 def main() -> int:
@@ -895,53 +1019,27 @@ def main() -> int:
     if drafts:
         print(f"skipping {len(drafts)} draft PR(s)", file=sys.stderr)
 
-    print(f"processing {len(non_drafts)} PR(s) in {repo} (model={args.model}, jobs={args.jobs})",
-          file=sys.stderr)
-
-    def process_one(pr: dict[str, Any]) -> dict[str, Any]:
-        number = pr["number"]
-        try:
-            ctx = fetch_pr_context(repo, owner, repo_name, pr, reviewers)
-        except Exception as e:
-            return {"pr": number, "returncode": -1, "decision": None, "raw_stderr": f"fetch failed: {e!r}"}
-        context_text = render_context(ctx)
-        pr_obj = ctx.get("pr") or {}
-        merge_state = pr_obj.get("mergeStateStatus")
-        mergeable = pr_obj.get("mergeable")
-        if mergeable == "CONFLICTING" or merge_state == "DIRTY":
-            conflicts = "yes"
-        elif mergeable in (None, "", "UNKNOWN"):
-            conflicts = "unknown"
-        else:
-            conflicts = "no"
-        facts = {
-            "ci_failing": len(ctx["checks_failing"]),
-            "ci_pending": len(ctx["checks_pending"]),
-            "ci_successful": len(ctx["checks_successful"]),
-            "conflicts": conflicts,
-            "approved": pr_obj.get("reviewDecision") == "APPROVED",
-            "effective_author": ctx.get("author") or "",
-        }
-        try:
-            r = run_llm(repo, number, context_text, args.model)
-        except subprocess.TimeoutExpired:
-            return {"pr": number, "returncode": -1, "decision": None, "raw_stderr": "timeout", "facts": facts}
-        r["pr"] = number
-        r["facts"] = facts
-        return r
+    print(f"processing {len(non_drafts)} PR(s) in {repo} (model={args.model}, jobs={args.jobs})", file=sys.stderr)
 
     results: dict[int, dict[str, Any]] = {}
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        futures = {pool.submit(process_one, p): p for p in non_drafts}
+        futures = {
+            pool.submit(build_pr_result, repo, owner, repo_name, pr, reviewers, args.model): pr
+            for pr in non_drafts
+        }
         for i, fut in enumerate(as_completed(futures), 1):
             pr = futures[fut]
             try:
                 res = fut.result()
             except Exception as e:
-                res = {"pr": pr["number"], "returncode": -1, "decision": None, "raw_stderr": repr(e)}
+                res = {"pr": pr["number"], "returncode": -1, "side": "unknown", "raw_stderr": repr(e)}
             results[pr["number"]] = res
-            side = (res.get("decision") or {}).get("side", "?")
-            print(f"  [{i}/{len(non_drafts)}] #{pr['number']} -> {side}", file=sys.stderr)
+            counts = action_counts(res.get("classifications") or [])
+            print(
+                f"  [{i}/{len(non_drafts)}] #{pr['number']} -> {res.get('side', 'unknown')} "
+                f"({', '.join(f'{k}={v}' for k, v in counts.items())})",
+                file=sys.stderr,
+            )
 
     workflow_issues = fetch_workflow_failure_issues(repo)
     md = render_markdown_compact(prs, results, workflow_issues)

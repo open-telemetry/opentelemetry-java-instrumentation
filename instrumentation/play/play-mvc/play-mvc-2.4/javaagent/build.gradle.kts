@@ -52,9 +52,10 @@ testing {
   suites {
     val play24Test by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("com.typesafe.play:play-java_2.11:2.4.0")
-        implementation("com.typesafe.play:play-java-ws_2.11:2.4.0")
-        implementation("com.typesafe.play:play-test_2.11:2.4.0")
+        val version = baseVersion("2.4.0").orLatest("2.4.+")
+        implementation("com.typesafe.play:play-java_2.11:$version")
+        implementation("com.typesafe.play:play-java-ws_2.11:$version")
+        implementation("com.typesafe.play:play-test_2.11:$version")
       }
     }
   }

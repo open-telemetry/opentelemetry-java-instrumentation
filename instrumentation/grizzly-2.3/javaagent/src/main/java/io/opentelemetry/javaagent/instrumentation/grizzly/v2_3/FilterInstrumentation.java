@@ -21,7 +21,6 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 
 class FilterInstrumentation implements TypeInstrumentation {
@@ -52,8 +51,7 @@ class FilterInstrumentation implements TypeInstrumentation {
   public static class HandleReadAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(
-        @Advice.This BaseFilter it, @Advice.Argument(0) FilterChainContext ctx) {
+    public static Scope onEnter(@Advice.Argument(0) FilterChainContext ctx) {
       if (Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
         return null;
       }
@@ -62,7 +60,7 @@ class FilterInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This BaseFilter it, @Advice.Enter @Nullable Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
@@ -28,6 +29,8 @@ public class ClickHouseInstrumenterFactory {
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(dbAttributesGetter)
                 .setTableAttribute(null)
+                .setQuerySanitizationEnabled(
+                    DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "clickhouse"))
                 .build())
         .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());

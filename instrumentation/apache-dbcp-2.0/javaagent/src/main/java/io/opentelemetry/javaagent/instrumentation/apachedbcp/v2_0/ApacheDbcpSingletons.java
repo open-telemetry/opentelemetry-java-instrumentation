@@ -10,11 +10,11 @@ import io.opentelemetry.instrumentation.apachedbcp.v2_0.ApacheDbcpTelemetry;
 
 public class ApacheDbcpSingletons {
 
-  private static final ApacheDbcpTelemetry apacheDbcpTelemetry =
+  private static final ApacheDbcpTelemetry telemetry =
       ApacheDbcpTelemetry.create(GlobalOpenTelemetry.get());
 
   public static ApacheDbcpTelemetry telemetry() {
-    return apacheDbcpTelemetry;
+    return telemetry;
   }
 
   private ApacheDbcpSingletons() {}

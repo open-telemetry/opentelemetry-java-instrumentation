@@ -110,8 +110,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(target, request);
 
       if (instrumenter().shouldStart(parentContext, otelRequest)) {
-        wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
         wrappedFutureCallback.otelRequest = otelRequest;
+        wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
       }
 
       return request;
