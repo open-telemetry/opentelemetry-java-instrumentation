@@ -29,6 +29,8 @@ import javax.annotation.Nullable;
  */
 public abstract class MetricStructure {
 
+  private static final String STATE_MAPPING_DEFAULT = "*";
+
   // Used by the YAML parser
   //
   //    type: TYPE
@@ -49,7 +51,6 @@ public abstract class MetricStructure {
 
   private Map<String, Object> metricAttribute;
   private StateMapping stateMapping = StateMapping.empty();
-  private static final String STATE_MAPPING_DEFAULT = "*";
 
   @Nullable private String sourceUnit;
   @Nullable private String unit;
