@@ -9,8 +9,19 @@ muzzle {
   pass {
     group.set("org.jboss.resteasy")
     module.set("resteasy-jaxrs")
-    versions.set("[3.0.0.Final,3.1.0.Final),[3.5.0.Final,4)")
-    assertInverse.set(true)
+    versions.set("[3.0.0.Final,3.1.0.Final)")
+  }
+
+  pass {
+    group.set("org.jboss.resteasy")
+    module.set("resteasy-jaxrs")
+    versions.set("[3.5.0.Final,4)")
+  }
+
+  fail {
+    group.set("org.jboss.resteasy")
+    module.set("resteasy-jaxrs")
+    versions.set("(2.1.0.GA,3.0.0.Final)")
   }
 
   fail {
