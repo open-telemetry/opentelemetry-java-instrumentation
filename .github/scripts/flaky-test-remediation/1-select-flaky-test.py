@@ -31,6 +31,9 @@ SOURCE_EXTS = (".java", ".groovy", ".kt")
 WINDOW_DAYS = 7
 MIN_FLAKY = 5
 RECENT_MODIFY_DAYS = 7
+FLAKY_OUTCOMES = ("flaky", "failed")
+MAX_HISTORY_SPLIT_DEPTH = 12
+MIN_HISTORY_WINDOW_MS = 60 * 1000
 
 
 def http_get_json(url, *, timeout=60):
@@ -99,6 +102,16 @@ def flaky_day_buckets(history):
     return buckets
 
 
+def flaky_result_count(history):
+    points = ((history.get("outcomeTrend") or {}).get("dataPoints")) or []
+    total = 0
+    for p in points:
+        dist = p.get("outcomeDistribution") or {}
+        total += sum(int(dist.get(outcome) or 0)
+                     for outcome in FLAKY_OUTCOMES)
+    return total
+
+
 def _all_source_files():
     """Tracked .java/.groovy/.kt files, posix-relative to WORKSPACE_ROOT."""
     out = subprocess.check_output(
@@ -148,31 +161,80 @@ def best_failure_sample(history):
     return "", ""
 
 
-def collect_flaky_scans(history, *, base, limit):
+def result_scan(result, *, base):
+    bid = result.get("buildId") or ""
+    msg = result.get("firstFailureMessage") or ""
+    return {
+        "build_id": bid,
+        "scan_url": f"{base}/s/{bid}",
+        "outcome": result.get("outcome") or "",
+        "timestamp_ms": result.get("startTimestamp") or 0,
+        "tags": result.get("tags") or [],
+        "work_unit": result.get("workUnitName") or "",
+        "failure_excerpt": (msg[:600] + (" \u2026" if len(msg) > 600 else ""))
+                            if msg else "",
+    }
+
+
+def collect_flaky_scans(history, *, base, limit, seen=None):
     """Up to ``limit`` recent scans where the test failed or flaked."""
     out = []
-    seen = set()
+    if seen is None:
+        seen = set()
     for r in (history.get("testResults") or []):
-        if r.get("outcome") not in ("flaky", "failed"):
+        if r.get("outcome") not in FLAKY_OUTCOMES:
             continue
         bid = r.get("buildId") or ""
         if not bid or bid in seen:
             continue
         seen.add(bid)
-        msg = r.get("firstFailureMessage") or ""
-        out.append({
-            "build_id": bid,
-            "scan_url": f"{base}/s/{bid}",
-            "outcome": r.get("outcome") or "",
-            "timestamp_ms": r.get("startTimestamp") or 0,
-            "tags": r.get("tags") or [],
-            "work_unit": r.get("workUnitName") or "",
-            "failure_excerpt": (msg[:600] + (" \u2026" if len(msg) > 600 else ""))
-                                if msg else "",
-        })
+        out.append(result_scan(r, base=base))
         if len(out) >= limit:
             break
     return out
+
+
+def collect_flaky_scans_by_time(fetch_history, *, base, since_ms, until_ms,
+                                limit, seen, depth=0):
+    """Find flaky/failed scans in busy history windows.
+
+    The dashboard history endpoint caps ``testResults`` at 50 recent entries.
+    For high-volume tests, a day with flaky results can still return only
+    passed rows. Use the trend counts to split that window until the failed or
+    flaky rows are visible.
+    """
+    if limit <= 0:
+        return "", "", []
+
+    history = fetch_history(since_ms, until_ms)
+    sample_build, sample_failure = best_failure_sample(history)
+    scans = collect_flaky_scans(history, base=base, limit=limit, seen=seen)
+    if scans or flaky_result_count(history) == 0:
+        return sample_build, sample_failure, scans
+
+    if (depth >= MAX_HISTORY_SPLIT_DEPTH
+            or until_ms - since_ms <= MIN_HISTORY_WINDOW_MS):
+        return sample_build, sample_failure, scans
+
+    mid_ms = (since_ms + until_ms) // 2
+    right_build, right_failure, right_scans = collect_flaky_scans_by_time(
+        fetch_history, base=base, since_ms=mid_ms + 1, until_ms=until_ms,
+        limit=limit, seen=seen, depth=depth + 1,
+    )
+    scans.extend(right_scans)
+    if not sample_failure:
+        sample_build, sample_failure = right_build, right_failure
+
+    if len(scans) < limit:
+        left_build, left_failure, left_scans = collect_flaky_scans_by_time(
+            fetch_history, base=base, since_ms=since_ms, until_ms=mid_ms,
+            limit=limit - len(scans), seen=seen, depth=depth + 1,
+        )
+        scans.extend(left_scans)
+        if not sample_failure:
+            sample_build, sample_failure = left_build, left_failure
+
+    return sample_build, sample_failure, scans
 
 
 def per_day_flake_breakdown(history):
@@ -268,28 +330,30 @@ def main():
             since_ms=since_ms, until_ms=until_ms,
         )
         sample_build, sample_failure = best_failure_sample(history)
-        recent_scans = collect_flaky_scans(history, base=base, limit=5)
+        seen_scans = set()
+        recent_scans = collect_flaky_scans(
+            history, base=base, limit=5, seen=seen_scans)
         # The window-wide /tests-data/test-history response truncates
         # results and tends to omit the flaky/failed entries. Re-query
-        # narrowed to each day-bucket that had a flaky execution to fill
-        # in the failure sample and recent-scan list.
+        # narrowed to each day-bucket that had a flaky execution. Busy
+        # tests can still return only passed rows for an entire day, so
+        # recursively split those windows until the flaky rows are visible.
         if not sample_failure or not recent_scans:
-            for s_ms, e_ms in flaky_day_buckets(history):
-                day_history = fetch_test_history(
+            def fetch_history_window(since_ms, until_ms):
+                return fetch_test_history(
                     base, container=cname, test_name=chosen["name"],
-                    since_ms=s_ms, until_ms=e_ms,
+                    since_ms=since_ms, until_ms=until_ms,
+                )
+
+            for s_ms, e_ms in flaky_day_buckets(history):
+                day_build, day_failure, day_scans = collect_flaky_scans_by_time(
+                    fetch_history_window, base=base, since_ms=s_ms,
+                    until_ms=e_ms, limit=5 - len(recent_scans),
+                    seen=seen_scans,
                 )
                 if not sample_failure:
-                    sample_build, sample_failure = best_failure_sample(
-                        day_history)
-                day_scans = collect_flaky_scans(
-                    day_history, base=base, limit=5 - len(recent_scans),
-                )
-                seen = {s["build_id"] for s in recent_scans}
-                for s in day_scans:
-                    if s["build_id"] not in seen:
-                        recent_scans.append(s)
-                        seen.add(s["build_id"])
+                    sample_build, sample_failure = day_build, day_failure
+                recent_scans.extend(day_scans)
                 if sample_failure and len(recent_scans) >= 5:
                     break
 
