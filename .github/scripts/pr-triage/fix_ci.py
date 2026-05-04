@@ -183,15 +183,22 @@ def render_ci_plan(pr: int, checks: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def maybe_apply_deterministic_fix(bundle_dir: Path, plan_path: Path, summary: Summary) -> str | None:
+def maybe_apply_deterministic_fixes(bundle_dir: Path, plan_path: Path, summary: Summary) -> list[str]:
     text = plan_path.read_text(encoding="utf-8")
     for snippet in (bundle_dir / "snippets").glob("*.txt"):
         text += "\n" + snippet.read_text(encoding="utf-8", errors="replace")
-    if "spotless" not in text.lower():
-        return None
-    run(gradlew_cmd("spotless"), summary)
-    summary.notes.append("Applied deterministic spotless fix based on CI logs")
-    return "spotless"
+
+    text = text.lower()
+    fix_kinds = []
+    if "spotless" in text:
+        run(gradlew_cmd("spotless"), summary)
+        summary.notes.append("Applied deterministic spotless fix based on CI logs")
+        fix_kinds.append("spotless")
+    if "fossa" in text or "generatefossaconfiguration" in text or ".fossa.yml" in text:
+        run(gradlew_cmd("generateFossaConfiguration"), summary)
+        summary.notes.append("Applied deterministic FOSSA configuration fix based on CI logs")
+        fix_kinds.append("fossa")
+    return fix_kinds
 
 
 def ci_fix_commit_message(checks: list[dict[str, Any]], changed_paths: list[str]) -> list[str]:
@@ -212,23 +219,47 @@ def ci_fix_commit_message(checks: list[dict[str, Any]], changed_paths: list[str]
     return [subject, "\n".join(body_lines)]
 
 
-def deterministic_ci_fix_commit_message(fix_kind: str, checks: list[dict[str, Any]], changed_paths: list[str]) -> list[str]:
-    if fix_kind == "spotless":
+def append_deterministic_commit_details(body_lines: list[str], checks: list[dict[str, Any]], changed_paths: list[str], file_heading: str) -> None:
+    body_lines.extend(["", "Failed jobs:"])
+    body_lines.extend(f"- {family}" for family in sorted({job_family(check.get("name") or "unknown") for check in checks})[:8])
+    body_lines.append("")
+    body_lines.append(file_heading)
+    body_lines.extend(f"- {path}" for path in changed_paths[:12])
+    if len(changed_paths) > 12:
+        body_lines.append(f"- ... and {len(changed_paths) - 12} more")
+
+
+def deterministic_ci_fix_commit_message(fix_kinds: list[str], checks: list[dict[str, Any]], changed_paths: list[str]) -> list[str]:
+    if fix_kinds == ["spotless"]:
         subject = "Apply spotless formatting"
         body_lines = [
             "CI reported Spotless formatting violations.",
             "",
             "Ran:",
             "- ./gradlew spotless",
-            "",
-            "Failed jobs:",
         ]
-        body_lines.extend(f"- {family}" for family in sorted({job_family(check.get("name") or "unknown") for check in checks})[:8])
-        body_lines.append("")
-        body_lines.append("Formatted files:")
-        body_lines.extend(f"- {path}" for path in changed_paths[:12])
-        if len(changed_paths) > 12:
-            body_lines.append(f"- ... and {len(changed_paths) - 12} more")
+        append_deterministic_commit_details(body_lines, checks, changed_paths, "Formatted files:")
+        return [subject, "\n".join(body_lines)]
+    if fix_kinds == ["fossa"]:
+        subject = "Regenerate FOSSA configuration"
+        body_lines = [
+            "CI reported that the FOSSA configuration was out of date.",
+            "",
+            "Ran:",
+            "- ./gradlew generateFossaConfiguration",
+        ]
+        append_deterministic_commit_details(body_lines, checks, changed_paths, "Updated files:")
+        return [subject, "\n".join(body_lines)]
+    if set(fix_kinds) == {"spotless", "fossa"}:
+        subject = "Apply deterministic CI fixes"
+        body_lines = [
+            "CI reported deterministic Spotless and FOSSA configuration failures.",
+            "",
+            "Ran:",
+            "- ./gradlew spotless",
+            "- ./gradlew generateFossaConfiguration",
+        ]
+        append_deterministic_commit_details(body_lines, checks, changed_paths, "Updated files:")
         return [subject, "\n".join(body_lines)]
     return ci_fix_commit_message(checks, changed_paths)
 
@@ -319,8 +350,8 @@ def main() -> int:
         bundle_dir = make_temp_dir("otel-ci-fix", args.pr, args.keep_temp)
         plan_path = write_ci_bundle(args.pr, checks, bundle_dir, summary)
 
-        deterministic_fix = maybe_apply_deterministic_fix(bundle_dir, plan_path, summary)
-        if deterministic_fix is None and not args.skip_copilot:
+        deterministic_fixes = maybe_apply_deterministic_fixes(bundle_dir, plan_path, summary)
+        if not deterministic_fixes and not args.skip_copilot:
             commit_message_path = bundle_dir / "commit-message.txt"
             prompt_improvement_path = bundle_dir / "prompt-improvement.md"
             response = invoke_copilot(copilot_prompt(plan_path, commit_message_path, prompt_improvement_path), summary)
@@ -339,8 +370,8 @@ def main() -> int:
             return 0
 
         commit_message = (
-            deterministic_ci_fix_commit_message(deterministic_fix, checks, summary.changed_files)
-            if deterministic_fix is not None
+            deterministic_ci_fix_commit_message(deterministic_fixes, checks, summary.changed_files)
+            if deterministic_fixes
             else read_copilot_commit_message(bundle_dir / "commit-message.txt", summary)
         )
         if commit_message is None:
