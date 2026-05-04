@@ -267,7 +267,7 @@ class PekkoHttpServerRouteTest {
         {
           concat(
             pathPrefix("b") { req =>
-              val ignored = Future {
+              val _ = Future {
                 pathPrefix("c") { req =>
                   Await.result(p2.future, 2.seconds)
                   path("d") { complete("no") }(req)
@@ -276,7 +276,7 @@ class PekkoHttpServerRouteTest {
 
               concat(
                 req => {
-                  val ignored = Future {
+                  val _ = Future {
                     pathPrefix("c") { req =>
                       Await.result(p1.future, 2.seconds)
                       path("d") { complete("no") }(req)

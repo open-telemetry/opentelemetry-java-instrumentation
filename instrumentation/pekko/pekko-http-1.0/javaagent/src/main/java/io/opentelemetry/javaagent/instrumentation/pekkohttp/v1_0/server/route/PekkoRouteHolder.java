@@ -84,27 +84,20 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
       return null;
     }
     boolean shouldAddFinalWildcard = lastUnmatchedPath != null && !lastUnmatchedPath.isEmpty();
-    int size = shouldAddFinalWildcard ? 1 : 0;
-    Deque<PekkoRouteHolder> routeHolders = new ArrayDeque<>();
+    Deque<String> routePaths = new ArrayDeque<>();
+
     for (PekkoRouteHolder routeHolder = this;
         routeHolder != null;
         routeHolder = routeHolder.parent) {
-      routeHolders.addFirst(routeHolder);
-      for (String path : routeHolder.paths) {
-        size += path.length();
-      }
-    }
-    StringBuilder builder = new StringBuilder(size);
-    for (PekkoRouteHolder routeHolder : routeHolders) {
-      for (String path : routeHolder.paths) {
-        builder.append(path);
+
+      for (int i = routeHolder.paths.size() - 1; i >= 0; i--) {
+        routePaths.addFirst(routeHolder.paths.get(i));
       }
     }
     if (shouldAddFinalWildcard) {
-      builder.append("*");
+      routePaths.addLast("*");
     }
-
-    return builder.toString();
+    return String.join("", routePaths);
   }
 
   public boolean hasRoute() {
