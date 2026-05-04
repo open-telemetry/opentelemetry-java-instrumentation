@@ -47,7 +47,10 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
             .routeTo(
                 () ->
                     controller(
-                        SUCCESS, () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())))
+                        SUCCESS,
+                        () ->
+                            closeConnection(
+                                Results.status(SUCCESS.getStatus(), SUCCESS.getBody()))))
             .GET(INDEXED_CHILD.getPath())
             .routeTo(
                 () ->
@@ -101,6 +104,17 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                         }));
 
     return Server.forRouter(router.build(), port);
+  }
+
+  private static Results.Status closeConnection(Results.Status javaResult) {
+    Tuple2<String, String> header = new Tuple2<>("Connection", "close");
+    return new Results.Status(
+        javaResult
+            .toScala()
+            .withHeaders(
+                JavaConverters.asScalaIteratorConverter(singletonList(header).iterator())
+                    .asScala()
+                    .toSeq()));
   }
 
   @Override
