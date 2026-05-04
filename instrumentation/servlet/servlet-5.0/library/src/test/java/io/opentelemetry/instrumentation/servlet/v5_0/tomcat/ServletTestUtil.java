@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.v5_0.tomcat;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -24,7 +25,7 @@ class ServletTestUtil {
         ServletTelemetry.builder(openTelemetry)
             .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
             .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER));
-    Experimental.setCaptureRequestParameters(builder, singletonList("test-parameter"));
+    Experimental.setCaptureRequestParameters(builder, asList("test-parameter", "Test-Parameter"));
     Experimental.setTraceIdRequestAttributeEnabled(builder, true);
     return builder.build().createFilter();
   }

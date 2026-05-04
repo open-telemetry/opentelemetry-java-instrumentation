@@ -35,7 +35,7 @@ dependencies {
 
 tasks {
   test {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter,Test-Parameter")
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")

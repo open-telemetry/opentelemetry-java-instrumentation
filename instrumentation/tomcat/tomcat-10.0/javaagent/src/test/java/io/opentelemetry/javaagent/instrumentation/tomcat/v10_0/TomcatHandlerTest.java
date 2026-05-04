@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS_MIXED_CASE;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
@@ -54,6 +55,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
           NOT_FOUND,
           CAPTURE_HEADERS,
           CAPTURE_PARAMETERS,
+          CAPTURE_PARAMETERS_MIXED_CASE,
           QUERY_PARAM,
           PATH_PARAM,
           AUTH_REQUIRED,

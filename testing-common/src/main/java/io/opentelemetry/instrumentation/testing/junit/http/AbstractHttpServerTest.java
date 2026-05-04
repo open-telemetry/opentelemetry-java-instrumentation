@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS_MIXED_CASE;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
@@ -396,6 +397,30 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     String spanId = assertResponseHasCustomizedHeaders(response, CAPTURE_PARAMETERS, null);
     assertTheTraces(1, null, null, spanId, "POST", CAPTURE_PARAMETERS);
+  }
+
+  @Test
+  void captureRequestParametersPreservesCase() {
+    assumeTrue(options.testCaptureRequestParameters);
+
+    QueryParams formBody =
+        QueryParams.builder().add("Test-Parameter", "test value õäöü").build();
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            RequestHeaders.builder(
+                    HttpMethod.POST,
+                    resolveAddress(CAPTURE_PARAMETERS_MIXED_CASE, getProtocolPrefix()))
+                .contentType(MediaType.FORM_DATA)
+                .build(),
+            HttpData.ofUtf8(formBody.toQueryString()));
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(CAPTURE_PARAMETERS_MIXED_CASE.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(CAPTURE_PARAMETERS_MIXED_CASE.getBody());
+
+    String spanId =
+        assertResponseHasCustomizedHeaders(response, CAPTURE_PARAMETERS_MIXED_CASE, null);
+    assertTheTraces(1, null, null, spanId, "POST", CAPTURE_PARAMETERS_MIXED_CASE);
   }
 
   @Test
@@ -1168,6 +1193,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             assertThat(attrs)
                 .containsEntry(
                     stringArrayKey("servlet.request.parameter.test-parameter"),
+                    singletonList("test value õäöü"));
+          }
+          if (endpoint == CAPTURE_PARAMETERS_MIXED_CASE) {
+            assertThat(attrs)
+                .containsEntry(
+                    stringArrayKey("servlet.request.parameter.Test-Parameter"),
                     singletonList("test value õäöü"));
           }
         });

@@ -45,6 +45,14 @@ class TestServlet extends HttpServlet {
                     "request parameter does not have expected value " + value);
               }
             }
+            if (serverEndpoint == ServerEndpoint.CAPTURE_PARAMETERS_MIXED_CASE) {
+              req.setCharacterEncoding("UTF8");
+              String mixedCaseValue = req.getParameter("Test-Parameter");
+              if (!"test value õäöü".equals(mixedCaseValue)) {
+                throw new IllegalStateException(
+                    "request parameter does not have expected value " + mixedCaseValue);
+              }
+            }
             if (serverEndpoint == ServerEndpoint.INDEXED_CHILD) {
               ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(req::getParameter);
             }

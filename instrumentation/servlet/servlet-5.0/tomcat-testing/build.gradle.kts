@@ -21,6 +21,6 @@ if (otelProps.testLatestDeps) {
 
 tasks {
   test {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter,Test-Parameter")
   }
 }

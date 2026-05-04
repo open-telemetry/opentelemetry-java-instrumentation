@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.servlet.v3_0;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS_MIXED_CASE;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
@@ -103,6 +104,7 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
     addServlet(context, INDEXED_CHILD.getPath(), servlet);
     addServlet(context, CAPTURE_HEADERS.getPath(), servlet);
     addServlet(context, CAPTURE_PARAMETERS.getPath(), servlet);
+    addServlet(context, CAPTURE_PARAMETERS_MIXED_CASE.getPath(), servlet);
     addServlet(context, HTML_PRINT_WRITER.getPath(), servlet);
     addServlet(context, HTML_SERVLET_OUTPUT_STREAM.getPath(), servlet);
   }

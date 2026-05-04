@@ -61,6 +61,14 @@ public class TestController extends Controller {
         });
   }
 
+  public void captureParametersMixedCase() {
+    runWithSpan(
+        "controller",
+        () -> {
+          renderText(ServerEndpoint.CAPTURE_PARAMETERS_MIXED_CASE.getBody());
+        });
+  }
+
   public void query() {
 
     runWithSpan(

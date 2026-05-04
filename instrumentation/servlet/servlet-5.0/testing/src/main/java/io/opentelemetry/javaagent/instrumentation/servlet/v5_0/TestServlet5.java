@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS_MIXED_CASE;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
@@ -68,6 +69,16 @@ public class TestServlet5 {
               if (!"test value õäöü".equals(value)) {
                 throw new IllegalStateException(
                     "request parameter does not have expected value " + value);
+              }
+
+              resp.setStatus(endpoint.getStatus());
+              resp.getWriter().print(endpoint.getBody());
+            } else if (CAPTURE_PARAMETERS_MIXED_CASE.equals(endpoint)) {
+              req.setCharacterEncoding("UTF8");
+              String mixedCaseValue = req.getParameter("Test-Parameter");
+              if (!"test value õäöü".equals(mixedCaseValue)) {
+                throw new IllegalStateException(
+                    "request parameter does not have expected value " + mixedCaseValue);
               }
 
               resp.setStatus(endpoint.getStatus());
@@ -143,6 +154,17 @@ public class TestServlet5 {
                       if (!"test value õäöü".equals(value)) {
                         throw new IllegalStateException(
                             "request parameter does not have expected value " + value);
+                      }
+
+                      resp.setStatus(endpoint.getStatus());
+                      resp.getWriter().print(endpoint.getBody());
+                      context.complete();
+                    } else if (CAPTURE_PARAMETERS_MIXED_CASE.equals(endpoint)) {
+                      req.setCharacterEncoding("UTF8");
+                      String mixedCaseValue = req.getParameter("Test-Parameter");
+                      if (!"test value õäöü".equals(mixedCaseValue)) {
+                        throw new IllegalStateException(
+                            "request parameter does not have expected value " + mixedCaseValue);
                       }
 
                       resp.setStatus(endpoint.getStatus());
@@ -228,6 +250,16 @@ public class TestServlet5 {
                 if (!"test value õäöü".equals(value)) {
                   throw new IllegalStateException(
                       "request parameter does not have expected value " + value);
+                }
+
+                resp.setStatus(endpoint.getStatus());
+                resp.getWriter().print(endpoint.getBody());
+              } else if (CAPTURE_PARAMETERS_MIXED_CASE.equals(endpoint)) {
+                req.setCharacterEncoding("UTF8");
+                String mixedCaseValue = req.getParameter("Test-Parameter");
+                if (!"test value õäöü".equals(mixedCaseValue)) {
+                  throw new IllegalStateException(
+                      "request parameter does not have expected value " + mixedCaseValue);
                 }
 
                 resp.setStatus(endpoint.getStatus());
