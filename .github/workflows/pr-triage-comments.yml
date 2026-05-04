@@ -79,13 +79,13 @@ jobs:
           distribution: temurin
           java-version-file: .java-version
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-        with:
-          # Disable the Gradle build cache entirely. With cache enabled
-          # (even read-only), CodeQL flags this step as a cache poisoning
-          # vector because PR-controlled Gradle builds run in this job.
-          cache-disabled: true
+      # Intentionally not using gradle/actions/setup-gradle: even with
+      # `cache-disabled: true`, CodeQL's `actions/cache-poisoning` rule
+      # flags any subsequent step that runs PR-controlled code as a
+      # poisonable step. Invoking the Gradle wrapper directly avoids
+      # the cache vector entirely. We don't need setup-gradle's other
+      # features (dependency-graph submission, daemon shutdown, etc.)
+      # in this short-lived job.
 
       - name: Run gradle-phase worker
         id: run
