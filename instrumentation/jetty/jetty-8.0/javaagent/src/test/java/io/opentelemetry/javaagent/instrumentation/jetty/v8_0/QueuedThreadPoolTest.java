@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 import static org.junit.jupiter.api.Assumptions.abort;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Method;
@@ -19,6 +20,8 @@ class QueuedThreadPoolTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void dispatchPropagates() throws Exception {
@@ -33,32 +36,29 @@ class QueuedThreadPoolTest {
       return;
     }
     pool.start();
+    cleanup.deferCleanup(pool::stop);
 
-    try {
-      testing.runWithSpan(
-          "parent",
-          () -> {
-            // this child will have a span
-            JavaAsyncChild child1 = new JavaAsyncChild();
-            // this child won't
-            JavaAsyncChild child2 = new JavaAsyncChild(false, false);
-            dispatch.invoke(pool, child1);
-            dispatch.invoke(pool, child2);
-            child1.waitForCompletion();
-            child2.waitForCompletion();
-          });
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          // this child will have a span
+          JavaAsyncChild child1 = new JavaAsyncChild();
+          // this child won't
+          JavaAsyncChild child2 = new JavaAsyncChild(false, false);
+          dispatch.invoke(pool, child1);
+          dispatch.invoke(pool, child2);
+          child1.waitForCompletion();
+          child2.waitForCompletion();
+        });
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactlyInAnyOrder(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName("asyncChild")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))));
-    } finally {
-      pool.stop();
-    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("asyncChild")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -74,29 +74,26 @@ class QueuedThreadPoolTest {
       return;
     }
     pool.start();
+    cleanup.deferCleanup(pool::stop);
 
-    try {
-      JavaAsyncChild child = new JavaAsyncChild(true, true);
-      testing.runWithSpan(
-          "parent",
-          () -> {
-            dispatch.invoke(pool, JavaLambdaMaker.lambda(child));
-          });
+    JavaAsyncChild child = new JavaAsyncChild(true, true);
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          dispatch.invoke(pool, JavaLambdaMaker.lambda(child));
+        });
 
-      // We block in child to make sure spans close in predictable order
-      child.unblock();
-      child.waitForCompletion();
+    // We block in child to make sure spans close in predictable order
+    child.unblock();
+    child.waitForCompletion();
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName("asyncChild")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))));
-    } finally {
-      pool.stop();
-    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("asyncChild")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 }
