@@ -66,8 +66,7 @@ dependencies {
   // needed by S3
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
 
-  // 1.12.584 switches SQS to JSON protocol; these tests cover the query protocol path.
-  latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583") // documented limitation
+  latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:latest.release")
 }
 
 testing {
@@ -101,8 +100,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        // 1.12.584 switches SQS to JSON protocol; these tests cover the query protocol path.
-        implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest("1.12.583")}")
+        implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
       }
 
       targets {
@@ -118,8 +116,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        // 1.12.584 switches SQS to JSON protocol; these tests cover the query protocol path.
-        implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest("1.12.583")}")
+        implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
       }
     }
   }
