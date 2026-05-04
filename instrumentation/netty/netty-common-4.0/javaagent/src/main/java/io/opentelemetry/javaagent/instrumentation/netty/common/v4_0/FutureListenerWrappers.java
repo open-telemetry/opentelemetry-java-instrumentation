@@ -13,7 +13,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.ref.WeakReference;
-import javax.annotation.Nullable;
 
 public class FutureListenerWrappers {
   // note: it's ok if the value is collected prior to the key, since this cache is only used to
@@ -44,7 +43,7 @@ public class FutureListenerWrappers {
       };
 
   public static boolean shouldWrap(GenericFutureListener<? extends Future<?>> listener) {
-    return shouldWrap.get(listener.getClass());
+    return listener != null && shouldWrap.get(listener.getClass());
   }
 
   @SuppressWarnings("unchecked") // fine
@@ -80,12 +79,8 @@ public class FutureListenerWrappers {
     return wrapper;
   }
 
-  @Nullable
   public static GenericFutureListener<? extends Future<?>> getWrapper(
-      @Nullable GenericFutureListener<? extends Future<?>> delegate) {
-    if (delegate == null) {
-      return null;
-    }
+      GenericFutureListener<? extends Future<?>> delegate) {
     WeakReference<GenericFutureListener<? extends Future<?>>> wrapperReference =
         WRAPPER_VIRTUAL_FIELD.get(delegate);
     if (wrapperReference == null) {
