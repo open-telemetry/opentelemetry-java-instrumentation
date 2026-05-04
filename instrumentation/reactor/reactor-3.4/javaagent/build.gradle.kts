@@ -7,8 +7,8 @@ muzzle {
     group.set("io.projectreactor")
     module.set("reactor-core")
     versions.set("[3.4.0,)")
-    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     assertInverse.set(true)
+    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     excludeInstrumentationName("opentelemetry-api")
   }
 }
@@ -26,7 +26,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
 
-  testLibrary("io.projectreactor:reactor-test:3.1.0.RELEASE")
   testImplementation(project(":instrumentation-annotations-support-testing"))
   testImplementation(project(":instrumentation:reactor:reactor-3.1:testing"))
   testImplementation(project(":instrumentation-annotations"))

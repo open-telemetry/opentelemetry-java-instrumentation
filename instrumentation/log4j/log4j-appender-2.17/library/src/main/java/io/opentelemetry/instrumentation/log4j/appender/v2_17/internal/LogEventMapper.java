@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
+import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -42,10 +43,6 @@ public final class LogEventMapper<T> {
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = stringKey("thread.name");
-  // copied from EventIncubatingAttributes
-  private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
-  // copied from OtelIncubatingAttributes
-  private static final AttributeKey<String> OTEL_EVENT_NAME = stringKey("otel.event.name");
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
@@ -63,7 +60,6 @@ public final class LogEventMapper<T> {
   private final boolean captureMarkerAttribute;
   private final List<AttributeKey<String>> captureContextDataAttributeKeys;
   private final boolean captureAllContextDataAttributes;
-  private final boolean captureEventName;
   private final boolean v3Preview;
 
   public LogEventMapper(
@@ -73,7 +69,6 @@ public final class LogEventMapper<T> {
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       List<String> captureContextDataAttributes,
-      boolean captureEventName,
       boolean v3Preview) {
 
     this.contextDataAccessor = contextDataAccessor;
@@ -88,14 +83,12 @@ public final class LogEventMapper<T> {
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureContextDataAttributes.size());
       for (String key : captureContextDataAttributes) {
-        if (!OTEL_EVENT_NAME.getKey().equals(key)
-            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
           keys.add(getContextDataAttributeKey(key));
         }
       }
       this.captureContextDataAttributeKeys = keys;
     }
-    this.captureEventName = captureEventName;
     this.v3Preview = v3Preview;
   }
 
@@ -116,7 +109,7 @@ public final class LogEventMapper<T> {
       @Nullable Marker marker,
       @Nullable Throwable throwable,
       T contextData,
-      String threadName,
+      @Nullable String threadName,
       long threadId,
       Supplier<StackTraceElement> sourceSupplier,
       Context context) {
@@ -152,13 +145,11 @@ public final class LogEventMapper<T> {
       StackTraceElement source = sourceSupplier.get();
       if (source != null) {
         String fileName = source.getFileName();
-        if (fileName != null) {
-          if (emitStableCodeSemconv()) {
-            builder.setAttribute(CODE_FILE_PATH, fileName);
-          }
-          if (emitOldCodeSemconv()) {
-            builder.setAttribute(CODE_FILEPATH, fileName);
-          }
+        if (emitStableCodeSemconv()) {
+          builder.setAttribute(CODE_FILE_PATH, fileName);
+        }
+        if (emitOldCodeSemconv()) {
+          builder.setAttribute(CODE_FILEPATH, fileName);
         }
         if (emitStableCodeSemconv()) {
           builder.setAttribute(
@@ -230,23 +221,16 @@ public final class LogEventMapper<T> {
   // visible for testing
   void captureContextDataAttributes(LogRecordBuilder builder, T contextData) {
 
-    // otel.event.name takes priority over event.name
     String otelEventName = contextDataAccessor.getValue(contextData, OTEL_EVENT_NAME.getKey());
     if (otelEventName != null) {
       builder.setEventName(otelEventName);
-    } else if (captureEventName) {
-      String eventName = contextDataAccessor.getValue(contextData, EVENT_NAME.getKey());
-      if (eventName != null) {
-        builder.setEventName(eventName);
-      }
     }
 
     if (captureAllContextDataAttributes) {
       contextDataAccessor.forEach(
           contextData,
           (key, value) -> {
-            if (!OTEL_EVENT_NAME.getKey().equals(key)
-                && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+            if (!OTEL_EVENT_NAME.getKey().equals(key)) {
               builder.setAttribute(getContextDataAttributeKey(key), value);
             }
           });

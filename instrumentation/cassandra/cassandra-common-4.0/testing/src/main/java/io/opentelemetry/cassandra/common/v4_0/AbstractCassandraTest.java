@@ -44,6 +44,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -158,7 +159,7 @@ public abstract class AbstractCassandraTest {
 
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAsyncParameters")
-  void asyncTest(Parameter parameter) throws Exception {
+  void asyncTest(Parameter parameter) {
     CqlSession session = getSession(parameter.keyspace);
     cleanup.deferCleanup(session);
 
@@ -170,7 +171,7 @@ public abstract class AbstractCassandraTest {
                     .executeAsync(parameter.queryText)
                     .toCompletableFuture()
                     .whenComplete((result, throwable) -> testing().runWithSpan("child", () -> {}))
-                    .get());
+                    .join());
 
     testing()
         .waitAndAssertTraces(
@@ -324,20 +325,20 @@ public abstract class AbstractCassandraTest {
   }
 
   protected static class Parameter {
-    public final String keyspace;
+    @Nullable public final String keyspace;
     public final String queryText;
     public final String expectedQueryText;
     public final String spanName;
     public final String operation;
-    public final String table;
+    @Nullable public final String table;
 
     public Parameter(
-        String keyspace,
+        @Nullable String keyspace,
         String queryText,
         String expectedQueryText,
         String spanName,
         String operation,
-        String table) {
+        @Nullable String table) {
       this.keyspace = keyspace;
       this.queryText = queryText;
       this.expectedQueryText = expectedQueryText;
@@ -347,7 +348,7 @@ public abstract class AbstractCassandraTest {
     }
   }
 
-  protected CqlSession getSession(String keyspace) {
+  protected CqlSession getSession(@Nullable String keyspace) {
     DriverConfigLoader configLoader =
         DefaultDriverConfigLoader.builder()
             .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))

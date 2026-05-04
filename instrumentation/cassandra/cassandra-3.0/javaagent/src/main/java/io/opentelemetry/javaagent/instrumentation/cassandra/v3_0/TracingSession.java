@@ -116,6 +116,9 @@ public class TracingSession implements Session {
       ResultSetFuture future = session.executeAsync(query);
       addCallbackToEndSpan(future, context, request);
       return future;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, null, t);
+      throw t;
     }
   }
 
@@ -127,6 +130,9 @@ public class TracingSession implements Session {
       ResultSetFuture future = session.executeAsync(query, values);
       addCallbackToEndSpan(future, context, request);
       return future;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, null, t);
+      throw t;
     }
   }
 
@@ -138,6 +144,9 @@ public class TracingSession implements Session {
       ResultSetFuture future = session.executeAsync(query, values);
       addCallbackToEndSpan(future, context, request);
       return future;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, null, t);
+      throw t;
     }
   }
 
@@ -151,6 +160,9 @@ public class TracingSession implements Session {
       ResultSetFuture future = session.executeAsync(statement);
       addCallbackToEndSpan(future, context, request);
       return future;
+    } catch (Throwable t) {
+      instrumenter().end(context, request, null, t);
+      throw t;
     }
   }
 

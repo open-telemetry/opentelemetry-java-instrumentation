@@ -61,14 +61,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSqsTracingTest {
 
+  private static int sqsPort;
+  private static SQSRestServer sqsRestServer;
+  private static AmazonSQSAsync sqsClient;
+
   protected abstract InstrumentationExtension testing();
 
   protected abstract AmazonSQSAsyncClientBuilder configureClient(
       AmazonSQSAsyncClientBuilder client);
-
-  private static int sqsPort;
-  private static SQSRestServer sqsRestServer;
-  private static AmazonSQSAsync sqsClient;
 
   @BeforeEach
   void setUp() {
@@ -107,13 +107,16 @@ public abstract class AbstractSqsTracingTest {
       sendMessageRequest.addMessageAttributesEntry(
           "Test-Message-Header",
           new MessageAttributeValue().withDataType("String").withStringValue("test"));
+      sendMessageRequest.addMessageAttributesEntry(
+          "Uncaptured-Header",
+          new MessageAttributeValue().withDataType("String").withStringValue("password"));
     }
     sqsClient.sendMessage(sendMessageRequest);
 
     ReceiveMessageRequest receiveMessageRequest =
         new ReceiveMessageRequest("http://localhost:" + sqsPort + "/000000000000/testSdkSqs");
     if (testCaptureHeaders) {
-      receiveMessageRequest.withMessageAttributeNames("Test-Message-Header");
+      receiveMessageRequest.withMessageAttributeNames("Test-Message-Header", "Uncaptured-Header");
     }
     ReceiveMessageResult receiveMessageResult = sqsClient.receiveMessage(receiveMessageRequest);
 

@@ -77,8 +77,8 @@ final class ElasticsearchDbAttributesGetter
     return endpointDefinition != null ? endpointDefinition.getEndpointName() : null;
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getErrorType(
       ElasticsearchRestRequest request, @Nullable Response response, @Nullable Throwable error) {
     if (response != null) {

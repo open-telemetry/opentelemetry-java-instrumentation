@@ -67,14 +67,12 @@ testing {
   suites {
     val tapirTest by registering(JvmTestSuite::class) {
       dependencies {
+        val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
+        implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest()}")
+        implementation("org.apache.pekko:pekko-stream_$scalaVersion:${baseVersion("1.0.1").orLatest()}")
+        implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_$scalaVersion:${baseVersion("1.7.0").orLatest()}")
         if (otelProps.testLatestDeps) {
-          implementation("com.typesafe.akka:akka-http_2.13:latest.release")
-          implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
-          implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:latest.release")
-        } else {
-          implementation("org.apache.pekko:pekko-http_2.12:1.0.0")
-          implementation("org.apache.pekko:pekko-stream_2.12:1.0.1")
-          implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.12:1.7.0")
+          implementation("org.apache.pekko:pekko-slf4j_2.13:latest.release")
         }
       }
     }

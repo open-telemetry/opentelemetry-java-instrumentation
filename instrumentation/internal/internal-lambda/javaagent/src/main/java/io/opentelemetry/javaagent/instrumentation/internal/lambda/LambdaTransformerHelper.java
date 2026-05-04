@@ -12,8 +12,6 @@ import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
 /** Helper class for transforming lambda class bytes. */
 public class LambdaTransformerHelper {
 
-  private LambdaTransformerHelper() {}
-
   /**
    * Called from {@code java.lang.invoke.InnerClassLambdaMetafactory} to transform lambda class
    * bytes.
@@ -40,4 +38,6 @@ public class LambdaTransformerHelper {
     }
     return classBytes;
   }
+
+  private LambdaTransformerHelper() {}
 }

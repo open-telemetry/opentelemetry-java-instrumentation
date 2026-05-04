@@ -119,7 +119,7 @@ class RestletAppTestBase {
                   (key) -> {
                     try {
                       return constructor.newInstance(headerClass);
-                    } catch (Exception e) {
+                    } catch (ReflectiveOperationException e) {
                       throw new IllegalStateException(e);
                     }
                   });

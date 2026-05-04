@@ -15,10 +15,10 @@ public class JsfRequest {
   @Nullable private final String spanName;
 
   public JsfRequest(ActionEvent event) {
-    this.spanName = getSpanName(event);
+    this.spanName = extractSpanName(event);
   }
 
-  public String spanName() {
+  public String getSpanName() {
     return requireNonNull(spanName);
   }
 
@@ -26,7 +26,8 @@ public class JsfRequest {
     return spanName != null;
   }
 
-  private static String getSpanName(ActionEvent event) {
+  @Nullable
+  private static String extractSpanName(ActionEvent event) {
     // https://jakarta.ee/specifications/faces/2.3/apidocs/index.html?javax/faces/component/ActionSource2.html
     // ActionSource2 was added in JSF 1.2 and is implemented by components that have an action
     // attribute such as a button or a link

@@ -12,9 +12,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RxJava2SubscriptionTest extends AbstractRxJava2SubscriptionTest {
   @RegisterExtension
-  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  static final TracingAssembly tracingAssembly = TracingAssembly.create();
+  private static final TracingAssembly tracingAssembly = TracingAssembly.create();
 
   @Override
   protected InstrumentationExtension testing() {

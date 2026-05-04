@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -413,7 +414,7 @@ public abstract class AbstractSpringWebfluxTest {
   }
 
   private static void resource404Exception(EventDataAssert event) {
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       event
           .hasName("exception")
           .hasAttributesSatisfyingExactly(

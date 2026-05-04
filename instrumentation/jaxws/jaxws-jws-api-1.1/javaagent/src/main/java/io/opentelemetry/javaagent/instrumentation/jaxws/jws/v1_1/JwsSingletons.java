@@ -6,15 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.jaxws.common.JaxWsRequest;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.v2_0.JaxWsInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.v2_0.JaxWsRequest;
 
-public class JwsSingletons {
+class JwsSingletons {
 
   private static final Instrumenter<JaxWsRequest, Void> instrumenter =
       JaxWsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxws-jws-api-1.1");
 
-  public static Instrumenter<JaxWsRequest, Void> instrumenter() {
+  static Instrumenter<JaxWsRequest, Void> instrumenter() {
     return instrumenter;
   }
 

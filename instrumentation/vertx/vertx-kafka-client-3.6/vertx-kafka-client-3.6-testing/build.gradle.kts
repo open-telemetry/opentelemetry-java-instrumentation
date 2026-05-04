@@ -22,22 +22,9 @@ testing {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
-        val version = if (otelProps.testLatestDeps) "3.+" else "3.6.0"
+        val version = baseVersion("3.6.0").orLatest("3.+")
         implementation("io.vertx:vertx-kafka-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            systemProperty(
-              "metadataConfig",
-              "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=false",
-            )
-            jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-          }
-        }
       }
     }
   }
@@ -52,6 +39,10 @@ tasks {
 
   test {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   val testExperimental by registering(Test::class) {
@@ -60,7 +51,10 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
+    )
   }
 
   check {

@@ -29,7 +29,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
 
   // this is used elsewhere to manage the link between the underlying (user) handler and our handler
   // which is needed below so that we can unlink this handler when we remove it below
-  private static final VirtualField<ChannelHandler, ChannelHandler> instrumentationHandlerField =
+  private static final VirtualField<ChannelHandler, ChannelHandler> INSTRUMENTATION_HANDLER_FIELD =
       VirtualField.find(ChannelHandler.class, ChannelHandler.class);
 
   static {
@@ -45,7 +45,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
           MethodHandles.lookup()
               .findVirtual(
                   sslHandshakeCompletionEvent, "cause", MethodType.methodType(Throwable.class));
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       // no SSL classes on classpath
     }
     SSL_HANDSHAKE_COMPLETION_EVENT = sslHandshakeCompletionEvent;
@@ -70,7 +70,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     // are on classpath); checking just to be extra safe
     if (SSL_HANDSHAKE_COMPLETION_EVENT == null) {
       ctx.pipeline().remove(this);
-      instrumentationHandlerField.set(realHandler, null);
+      INSTRUMENTATION_HANDLER_FIELD.set(realHandler, null);
       super.channelRegistered(ctx);
       return;
     }
@@ -113,7 +113,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     if (sslHandshakeCompletionEvent != null && sslHandshakeCompletionEvent.isInstance(evt)) {
       if (ctx.pipeline().context(this) != null) {
         ctx.pipeline().remove(this);
-        instrumentationHandlerField.set(realHandler, null);
+        INSTRUMENTATION_HANDLER_FIELD.set(realHandler, null);
       }
 
       if (context != null && request != null) {
@@ -132,7 +132,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     }
     try {
       return (Throwable) getCause.invoke(evt);
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       // should not ever happen
       return null;
     }

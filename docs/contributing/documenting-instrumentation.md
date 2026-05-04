@@ -64,6 +64,7 @@ Every javaagent instrumentation module should have a README.md file in the javaa
 [Brief description of what the instrumentation does and what versions it applies to]
 
 ## Settings
+
 | System property | Type | Default | Description |
 |-----------------|------|---------|-------------|
 | `property.name` | Type | Default | Description |

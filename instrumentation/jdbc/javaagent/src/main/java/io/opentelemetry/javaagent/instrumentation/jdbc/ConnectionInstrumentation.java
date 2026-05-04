@@ -114,9 +114,9 @@ class ConnectionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void addDbInfo(
-        @Advice.Return PreparedStatement statement,
+        @Advice.Return @Nullable PreparedStatement statement,
         @Advice.Enter Object[] enterResult,
-        @Advice.Thrown Throwable error) {
+        @Advice.Thrown @Nullable Throwable error) {
       Context context = Java8BytecodeBridge.currentContext();
       PrepareContext prepareContext = PrepareContext.get(context);
       Scope scope = (Scope) enterResult[1];
@@ -124,6 +124,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
         scope.close();
       }
       if (error != null
+          || statement == null
           || prepareContext == null
           || JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
@@ -170,6 +171,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Connection connection, @Advice.Origin("#m") String methodName) {

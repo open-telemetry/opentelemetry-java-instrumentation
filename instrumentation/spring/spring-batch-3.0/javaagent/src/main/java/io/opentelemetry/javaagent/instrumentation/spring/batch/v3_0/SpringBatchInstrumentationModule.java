@@ -31,7 +31,7 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // JSR-352 Batch API
+    // added in 3.0.0.RELEASE (JSR-352 Batch API)
     return hasClassesNamed("org.springframework.batch.core.jsr.launch.JsrJobOperator");
   }
 

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jmx.testapp;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -19,8 +18,6 @@ public class JavaxSimpleServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    try (PrintWriter out = resp.getWriter()) {
-      out.write("hello!");
-    }
+    resp.getWriter().write("hello!");
   }
 }

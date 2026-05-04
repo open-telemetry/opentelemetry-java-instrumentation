@@ -21,7 +21,6 @@ import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper.HelperClassInfo;
 import io.opentelemetry.javaagent.bootstrap.advice.AdviceForwardLookupSupplier;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldLookupSupplier;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.instrumentation.executors.ExecutorLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaLookupSupplier;

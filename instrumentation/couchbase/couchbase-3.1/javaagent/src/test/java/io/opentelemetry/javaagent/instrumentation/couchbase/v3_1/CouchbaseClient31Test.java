@@ -62,6 +62,7 @@ class CouchbaseClient31Test {
         ClusterEnvironment.builder()
             .timeoutConfig(TimeoutConfig.kvTimeout(Duration.ofSeconds(30)))
             .build();
+    cleanup.deferAfterAll(environment::shutdown);
 
     cluster =
         Cluster.connect(
@@ -81,7 +82,7 @@ class CouchbaseClient31Test {
   void testEmitsSpans() {
     try {
       collection.get("id");
-    } catch (DocumentNotFoundException e) {
+    } catch (DocumentNotFoundException ignored) {
       // Expected
     }
 

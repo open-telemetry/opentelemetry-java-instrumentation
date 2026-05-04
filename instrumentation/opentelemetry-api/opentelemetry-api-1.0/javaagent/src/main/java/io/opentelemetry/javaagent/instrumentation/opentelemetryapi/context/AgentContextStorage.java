@@ -137,7 +137,7 @@ public class AgentContextStorage
 
   public static application.io.opentelemetry.context.Context toApplicationContext(
       Context agentContext) {
-    return new AgentContextWrapper(agentContext);
+    return AgentContextWrapper.getApplicationContext(agentContext);
   }
 
   public static application.io.opentelemetry.context.Context newContextWrapper(

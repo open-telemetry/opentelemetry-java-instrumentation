@@ -48,6 +48,11 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
+        "otel.instrumentation.common.experimental.view-telemetry.enabled=true"
+    )
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
@@ -55,7 +60,12 @@ tasks {
   val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
+        "otel.instrumentation.common.experimental.view-telemetry.enabled=true," +
+        "otel.instrumentation.spring-webmvc.experimental-span-attributes=true"
+    )
     jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
   }
 

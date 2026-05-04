@@ -25,10 +25,10 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed(
-            // added in 7.16
-            "co.elastic.clients.elasticsearch.ElasticsearchClient")
-        // added in 8.10 (native OTel instrumentation)
+    // added in 7.16
+    return hasClassesNamed("co.elastic.clients.elasticsearch.ElasticsearchClient")
+        // artifact presence gate (provides native OTel support)
+        // added in co.elastic.clients:elasticsearch-java 8.10
         .and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
   }
 

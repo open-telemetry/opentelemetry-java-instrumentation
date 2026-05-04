@@ -219,14 +219,14 @@ testing {
         implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
         implementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
         // configure Spring Boot 3.x dependencies for latest dep testing
-        val version = if (otelProps.testLatestDeps) "3.+" else springBootVersion
+        val version = baseVersion(springBootVersion).orLatest("3.+")
         implementation("org.springframework.boot:spring-boot-starter-test:$version")
         implementation("org.springframework.boot:spring-boot-starter-actuator:$version")
         implementation("org.springframework.boot:spring-boot-starter-web:$version")
         implementation("org.springframework.boot:spring-boot-starter-webflux:$version")
         implementation("org.springframework.boot:spring-boot-starter-jdbc:$version")
         implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:$version")
-        val springKafkaVersion = if (otelProps.testLatestDeps) "3.+" else "2.9.0"
+        val springKafkaVersion = baseVersion("2.9.0").orLatest("3.+")
         implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
         implementation("javax.servlet:javax.servlet-api:3.1.0")
         runtimeOnly("com.h2database:h2:1.4.197")
@@ -237,7 +237,7 @@ testing {
     val testSpring3 by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
-        val version = if (otelProps.testLatestDeps) "3.+" else "3.2.4"
+        val version = baseVersion("3.2.4").orLatest("3.+")
         implementation("org.springframework.boot:spring-boot-starter-web:$version")
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
         implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
@@ -252,7 +252,7 @@ testing {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-        val version = if (otelProps.testLatestDeps) "latest.release" else "4.0.0"
+        val version = baseVersion("4.0.0").orLatest()
         implementation("org.springframework.boot:spring-boot-starter-jdbc:$version")
         implementation("org.springframework.boot:spring-boot-restclient:$version")
         implementation("org.springframework.boot:spring-boot-webclient:$version")

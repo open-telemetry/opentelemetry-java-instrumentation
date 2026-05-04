@@ -10,24 +10,14 @@ muzzle {
     group.set("org.jboss.resteasy")
     module.set("resteasy-jaxrs")
     versions.set("[3.1.0.Final,3.5.0.Final)")
+    assertInverse.set(true)
   }
 
   pass {
     group.set("org.jboss.resteasy")
     module.set("resteasy-core")
     versions.set("[4.0.0.Final,6)")
-  }
-
-  fail {
-    group.set("org.jboss.resteasy")
-    module.set("resteasy-jaxrs")
-    versions.set("(2.1.0.GA,3.1.0.Final)")
-  }
-
-  fail {
-    group.set("org.jboss.resteasy")
-    module.set("resteasy-core")
-    versions.set("[6.0.0.Final,)")
+    assertInverse.set(true)
   }
 }
 
@@ -38,7 +28,7 @@ dependencies {
   library("org.jboss.resteasy:resteasy-jaxrs:3.1.0.Final")
 
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
-  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common:javaagent"))
+  implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common-3.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
 

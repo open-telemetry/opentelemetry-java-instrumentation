@@ -23,7 +23,7 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbNamespace(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.bucket();
+    return couchbaseRequest.getBucket();
   }
 
   @Override
@@ -50,7 +50,7 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbOperationName(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.operation();
+    return couchbaseRequest.getOperation();
   }
 
   @Override

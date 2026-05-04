@@ -36,7 +36,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
-import javax.annotation.Nullable;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import org.assertj.core.api.AbstractLongAssert;
@@ -55,7 +54,7 @@ class ReactorNettyClientSslTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static HttpClientTestServer server;
+  private static HttpClientTestServer server;
 
   @BeforeAll
   static void setUp() {
@@ -70,7 +69,7 @@ class ReactorNettyClientSslTest {
 
   @Test
   void shouldFailSslHandshake() throws SSLException {
-    HttpClient httpClient = createHttpClient("SSLv3");
+    HttpClient httpClient = createHttpClientWithProtocol("SSLv3");
     String uri = "https://localhost:" + server.httpsPort() + "/success";
 
     Mono<HttpClientResponse> responseMono =
@@ -215,15 +214,15 @@ class ReactorNettyClientSslTest {
   }
 
   private static HttpClient createHttpClient() throws SSLException {
-    return ReactorNettyClientSslTest.createHttpClient(null);
+    return buildHttpClient(SslContextBuilder.forClient());
   }
 
-  private static HttpClient createHttpClient(@Nullable String enabledProtocol) throws SSLException {
-    SslContextBuilder sslContext = SslContextBuilder.forClient();
-    if (enabledProtocol != null) {
-      sslContext = sslContext.protocols(enabledProtocol);
-    }
+  private static HttpClient createHttpClientWithProtocol(String enabledProtocol)
+      throws SSLException {
+    return buildHttpClient(SslContextBuilder.forClient().protocols(enabledProtocol));
+  }
 
+  private static HttpClient buildHttpClient(SslContextBuilder sslContext) throws SSLException {
     SslProvider sslProvider = SslProvider.builder().sslContext(sslContext.build()).build();
     return HttpClient.create().secure(sslProvider);
   }

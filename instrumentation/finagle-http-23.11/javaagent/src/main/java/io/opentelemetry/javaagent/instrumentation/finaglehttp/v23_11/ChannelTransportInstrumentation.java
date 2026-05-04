@@ -5,18 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
+import io.netty.channel.Channel;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import scala.Option;
 
+/** Amends the tail of the Netty pipeline to bridge the netty request to its finagle request. */
 class ChannelTransportInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -25,27 +24,15 @@ class ChannelTransportInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("write"), getClass().getName() + "$WriteAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class WriteAdvice {
+  public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static Scope methodEnter() {
-      Option<Context> ref = Helpers.contextLocal().apply();
-      if (ref.isDefined()) {
-        return ref.get().makeCurrent();
-      }
-      return null;
-    }
-
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter @Nullable Scope scope) {
-      if (scope != null) {
-        scope.close();
-      }
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void methodExit(@Advice.Argument(0) Channel ch) {
+      Helpers.mutateHandlerPipeline(ch);
     }
   }
 }

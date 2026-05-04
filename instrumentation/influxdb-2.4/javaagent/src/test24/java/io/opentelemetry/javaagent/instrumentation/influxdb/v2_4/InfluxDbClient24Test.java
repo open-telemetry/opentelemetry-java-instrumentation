@@ -20,6 +20,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.influxdb.InfluxDB;
@@ -28,7 +29,6 @@ import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Point;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -44,12 +44,15 @@ class InfluxDbClient24Test {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static final GenericContainer<?> influxDbServer =
       new GenericContainer<>("influxdb:1.8.10-alpine").withExposedPorts(8086);
 
   private static InfluxDB influxDb;
 
-  private static final String databaseName = "mydb";
+  private static final String DATABASE_NAME = "mydb";
 
   private static String host;
 
@@ -57,6 +60,7 @@ class InfluxDbClient24Test {
 
   @BeforeAll
   void setup() {
+    cleanup.deferAfterAll(influxDbServer::stop);
     influxDbServer.start();
     port = influxDbServer.getMappedPort(8086);
     host = influxDbServer.getHost();
@@ -64,18 +68,13 @@ class InfluxDbClient24Test {
     String username = "root";
     String password = "root";
     influxDb = InfluxDBFactory.connect(serverUrl, username, password);
-    influxDb.createDatabase(databaseName);
-  }
-
-  @AfterAll
-  void cleanup() {
-    influxDb.deleteDatabase(databaseName);
-    influxDbServer.stop();
+    influxDb.createDatabase(DATABASE_NAME);
+    cleanup.deferAfterAll(() -> influxDb.deleteDatabase(DATABASE_NAME));
   }
 
   @Test
   void testQueryAndModifyWithOneArgument() {
-    String dbName = databaseName + "2";
+    String dbName = DATABASE_NAME + "2";
     influxDb.createDatabase(dbName);
     BatchPoints batchPoints =
         BatchPoints.database(dbName).tag("async", "true").retentionPolicy("autogen").build();
@@ -154,7 +153,7 @@ class InfluxDbClient24Test {
 
   @Test
   void testQueryWithTwoArguments() {
-    Query query = new Query("SELECT * FROM cpu_load where test1 = 'influxDb'", databaseName);
+    Query query = new Query("SELECT * FROM cpu_load where test1 = 'influxDb'", DATABASE_NAME);
     influxDb.query(query, MILLISECONDS);
 
     testing.waitAndAssertTraces(
@@ -164,11 +163,11 @@ class InfluxDbClient24Test {
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "SELECT cpu_load"
-                                : "SELECT " + databaseName)
+                                : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
-                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(

@@ -47,9 +47,9 @@ class ServerInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context) {
         this.context = context;
-        this.scope = scope;
+        this.scope = context.makeCurrent();
       }
 
       @Nullable
@@ -61,10 +61,10 @@ class ServerInstrumentation implements TypeInstrumentation {
         }
 
         Context context = instrumenter().start(parentContext, request);
-        return new AdviceScope(context, context.makeCurrent());
+        return new AdviceScope(context);
       }
 
-      public void end(Throwable exception, Request request, Response response) {
+      public void end(@Nullable Throwable exception, Request request, Response response) {
         scope.close();
 
         if (Status.CLIENT_ERROR_NOT_FOUND.equals(response.getStatus())) {
@@ -88,8 +88,7 @@ class ServerInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope beginRequest(
-        @Advice.Argument(0) Request request, @Advice.Argument(1) Response response) {
+    public static AdviceScope beginRequest(@Advice.Argument(0) Request request) {
       return AdviceScope.start(request);
     }
 

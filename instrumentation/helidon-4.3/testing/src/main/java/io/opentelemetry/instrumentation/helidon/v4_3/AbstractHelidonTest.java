@@ -28,27 +28,6 @@ import java.util.Map;
 
 public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServer> {
 
-  protected void configureRoutes(HttpRouting.Builder routing) {}
-
-  static void sendResponse(ServerResponse res, int status, String response) {
-    sendResponse(res, status, emptyMap(), response);
-  }
-
-  static void sendResponse(ServerResponse res, int status, Map<String, String> headers) {
-    sendResponse(res, status, headers, "");
-  }
-
-  static void sendResponse(
-      ServerResponse res, int status, Map<String, String> headers, String response) {
-    res.header("Content-Type", "text/plain");
-    headers.forEach(res::header);
-    res.status(status).send(response);
-  }
-
-  private static String getUrlQuery(ServerRequest req) {
-    return req.query().rawValue();
-  }
-
   @Override
   protected WebServer setupServer() {
     var server = WebServer.builder().port(port);
@@ -147,5 +126,26 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
     // filter isn't called for non-standard method
     options.disableTestNonStandardHttpMethod();
     options.setTestException(false);
+  }
+
+  protected void configureRoutes(HttpRouting.Builder routing) {}
+
+  private static void sendResponse(ServerResponse res, int status, String response) {
+    sendResponse(res, status, emptyMap(), response);
+  }
+
+  private static void sendResponse(ServerResponse res, int status, Map<String, String> headers) {
+    sendResponse(res, status, headers, "");
+  }
+
+  private static void sendResponse(
+      ServerResponse res, int status, Map<String, String> headers, String response) {
+    res.header("Content-Type", "text/plain");
+    headers.forEach(res::header);
+    res.status(status).send(response);
+  }
+
+  private static String getUrlQuery(ServerRequest req) {
+    return req.query().rawValue();
   }
 }

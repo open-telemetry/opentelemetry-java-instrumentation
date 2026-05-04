@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming.serverSpanName;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -24,10 +26,7 @@ public class RequestContextHelper {
     Span currentSpan = Java8BytecodeBridge.spanFromContext(parentContext);
 
     HttpServerRoute.update(
-        parentContext,
-        HttpServerRouteSource.CONTROLLER,
-        JaxrsServerSpanNaming.serverSpanName(),
-        handlerData);
+        parentContext, HttpServerRouteSource.CONTROLLER, serverSpanName(), handlerData);
 
     if (currentSpan != null && currentSpan != serverSpan) {
       // there's already an active span, and it's not the same as the server (servlet) span,

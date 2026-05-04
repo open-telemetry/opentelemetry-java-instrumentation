@@ -22,6 +22,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.apache.http.HttpHost;
@@ -52,7 +53,7 @@ class ElasticsearchRest7Test {
   @BeforeAll
   static void setUp() {
     elasticsearch =
-        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2");
+        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.10.2");
     cleanup.deferAfterAll(elasticsearch::stop);
     // limit memory usage
     elasticsearch.withEnv(
@@ -77,7 +78,7 @@ class ElasticsearchRest7Test {
   }
 
   @Test
-  void elasticsearchStatus() throws Exception {
+  void elasticsearchStatus() throws IOException {
     Response response = client.performRequest(new Request("GET", "_cluster/health"));
     Map<?, ?> result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
     assertThat(result.get("status")).isEqualTo("green");
@@ -130,9 +131,7 @@ class ElasticsearchRest7Test {
         () -> client.performRequestAsync(new Request("GET", "_cluster/health"), responseListener));
     assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
-    if (asyncRequest.getException() != null) {
-      throw asyncRequest.getException();
-    }
+    assertThat(asyncRequest.getException()).isNull();
 
     Map<?, ?> result =
         objectMapper.readValue(
