@@ -15,3 +15,4 @@ io.opentelemetry.javaagent.instrumentation.vertx.rx.v3_5.server.VertxReactivePro
 io.opentelemetry.javaagent.instrumentation.grizzly.v2_3.SameThreadTest
 io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.CouchbaseClient26Test
 io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.CouchbaseAsyncClient26Test
+io.opentelemetry.javaagent.instrumentation.playmvc.v2_4.server.PlayServerTest
