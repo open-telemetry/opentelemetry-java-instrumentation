@@ -30,6 +30,8 @@ from typing import Any
 DEFAULT_OUTPUT = "pull-request-dashboard.md"
 DEFAULT_JOBS = 4
 DEFAULT_MODEL = "gpt-5.4-mini"
+GH_RETRY_ATTEMPTS = 4
+GH_RETRY_DELAY_SECONDS = 1.5
 PER_THREAD_TIMEOUT = 180
 PR_COMMENT_WINDOW = 20
 MAX_BODY_CHARS = 1200
@@ -89,20 +91,49 @@ Respond with a single JSON object and nothing else:
 # ---------------------------------------------------------------- gh helpers
 
 
+class TransientGhError(RuntimeError):
+    pass
+
+
+def is_retryable_gh_error(stderr: str) -> bool:
+    text = stderr.lower()
+    return (
+        "http 5" in text
+        or "gateway timeout" in text
+        or "timeout" in text
+        or "temporarily unavailable" in text
+        or "connection reset" in text
+        or "connection refused" in text
+    )
+
+
+def gh_retry_delay(attempt: int) -> None:
+    time.sleep(GH_RETRY_DELAY_SECONDS * (attempt + 1))
+
+
 def run_gh_json(cmd: list[str], token: str | None = None) -> Any:
     env = {**os.environ, "GH_TOKEN": token} if token else None
-    proc = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        check=False,
-        encoding="utf-8",
-        errors="replace",
-        env=env,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError(f"{' '.join(cmd)} failed: {proc.stderr.strip()}")
-    return json.loads(proc.stdout or "null")
+    last_stderr = ""
+    for attempt in range(GH_RETRY_ATTEMPTS):
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
+        )
+        if proc.returncode == 0:
+            return json.loads(proc.stdout or "null")
+        last_stderr = proc.stderr.strip()
+        if attempt == GH_RETRY_ATTEMPTS - 1 or not is_retryable_gh_error(last_stderr):
+            break
+        gh_retry_delay(attempt)
+    message = f"{' '.join(cmd)} failed: {last_stderr}"
+    if is_retryable_gh_error(last_stderr):
+        raise TransientGhError(message)
+    raise RuntimeError(message)
 
 
 def gh_api(path: str, paginate: bool = False, token: str | None = None) -> Any:
@@ -140,7 +171,8 @@ def gh_pr_view(repo: str, number: int) -> dict[str, Any]:
         "headRefOid", "body",
     ])
     last: dict[str, Any] = {}
-    for attempt in range(4):
+    last_stderr = ""
+    for attempt in range(GH_RETRY_ATTEMPTS):
         proc = subprocess.run(
             ["gh", "pr", "view", str(number), "--repo", repo, "--json", fields],
             capture_output=True,
@@ -150,12 +182,19 @@ def gh_pr_view(repo: str, number: int) -> dict[str, Any]:
             errors="replace",
         )
         if proc.returncode != 0:
-            raise RuntimeError(f"gh pr view {number} failed: {proc.stderr.strip()}")
+            last_stderr = proc.stderr.strip()
+            if attempt == GH_RETRY_ATTEMPTS - 1 or not is_retryable_gh_error(last_stderr):
+                message = f"gh pr view {number} failed: {last_stderr}"
+                if is_retryable_gh_error(last_stderr):
+                    raise TransientGhError(message)
+                raise RuntimeError(message)
+            gh_retry_delay(attempt)
+            continue
         last = json.loads(proc.stdout or "{}")
         if last.get("mergeable") not in (None, "", "UNKNOWN"):
             return last
-        if attempt < 3:
-            time.sleep(1.5)
+        if attempt < GH_RETRY_ATTEMPTS - 1:
+            gh_retry_delay(attempt)
     return last
 
 
@@ -785,9 +824,10 @@ SIDE_LABELS = {
     "approver": "Waiting on approvers",
     "author": "Waiting on authors",
     "external": "Waiting on external",
+    "transient-failure": "Transient GitHub failure retrieving PR data",
     "unknown": "Unknown",
 }
-SIDE_ORDER = ["maintainer", "approver", "author", "external", "unknown"]
+SIDE_ORDER = ["maintainer", "approver", "author", "external", "transient-failure", "unknown"]
 
 
 def action_counts(classifications: list[dict[str, Any]]) -> dict[str, int]:
@@ -861,6 +901,8 @@ def render_workflow_failure_section(issues: list[dict[str, Any]]) -> list[str]:
 
 
 def ci_cell(facts: dict[str, Any]) -> str:
+    if "ci_failing_count" not in facts and "ci_pending_count" not in facts:
+        return "?"
     if facts.get("ci_failing_count", 0) > 0:
         return "❌"
     if facts.get("ci_pending_count", 0) > 0:
@@ -908,14 +950,17 @@ def render_diagnostics_section(results: dict[int, dict[str, Any]]) -> list[str]:
 def render_markdown_compact(
     prs: list[dict[str, Any]],
     results: dict[int, dict[str, Any]],
+    repo: str,
     workflow_issues: list[dict[str, Any]] | None = None,
 ) -> str:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    source_url = f"https://github.com/{repo}/blob/main/.github/scripts/pull-request-dashboard.py"
+    refresh_url = f"https://github.com/{repo}/actions/workflows/pr-review-dashboard.yml"
     out: list[str] = [
         "> [!NOTE]",
-        "> Open PRs are grouped by deterministic routing over per-thread LLM classifications. "
-        "CI, conflicts, and activity age are computed deterministically and are shown as facts, "
-        "not used as standalone routing reasons.",
+        "> Open non-draft PRs grouped by who is expected to act next. The grouping is "
+        f"partly performed by an LLM ([source]({source_url})) and could contain mistakes. "
+        f"Refreshed about every hour. Last refresh: {now}.",
         "",
     ]
 
@@ -952,7 +997,7 @@ def render_markdown_compact(
 
     out.extend(render_workflow_failure_section(workflow_issues or []))
     out.extend(render_diagnostics_section(results))
-    out.append(f"_Generated {now}_")
+    out.append(f"_Approvers may [force a refresh]({refresh_url})._")
     out.append("")
     return "\n".join(out) + "\n"
 
@@ -986,6 +1031,16 @@ def build_pr_result(
             "threads": threads,
             "classifications": classifications,
             "side": side,
+        }
+    except TransientGhError as e:
+        return {
+            "pr": number,
+            "returncode": -1,
+            "facts": {},
+            "threads": [],
+            "classifications": [],
+            "side": "transient-failure",
+            "raw_stderr": repr(e),
         }
     except Exception as e:
         return {
@@ -1041,7 +1096,7 @@ def main() -> int:
             )
 
     workflow_issues = fetch_workflow_failure_issues(repo)
-    md = render_markdown_compact(prs, results, workflow_issues)
+    md = render_markdown_compact(prs, results, repo, workflow_issues)
     Path(args.output).write_text(md, encoding="utf-8")
     print(f"wrote {args.output}", file=sys.stderr)
     return 0
