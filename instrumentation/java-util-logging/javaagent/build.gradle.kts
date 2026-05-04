@@ -15,7 +15,6 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.java-util-logging.experimental-log-attributes=true")
   }
 
   check {
