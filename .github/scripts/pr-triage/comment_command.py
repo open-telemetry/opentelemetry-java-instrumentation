@@ -17,9 +17,9 @@ from common import REPO_ROOT, gh, gh_json, progress
 
 
 COMMANDS = {
-    "/run-spotless": "run_spotless",
-    "/fix-ci": "fix_ci",
-    "/resolve-conflicts": "resolve_conflicts",
+    "/spotless": "spotless",
+    "/fix": "fix",
+    "/update-branch": "update_branch",
     "/review": "review",
 }
 OUTPUT_LIMIT = 6000
@@ -120,12 +120,12 @@ def output_file() -> Path:
 
 
 def command_args(command: str) -> list[str]:
-    if command == "run_spotless":
-        return [sys.executable, ".github/scripts/pr-triage/run_spotless.py", pr_number()]
-    if command == "fix_ci":
-        return [sys.executable, ".github/scripts/pr-triage/fix_ci.py", pr_number()]
-    if command == "resolve_conflicts":
-        return [sys.executable, ".github/scripts/pr-triage/resolve_conflicts.py", pr_number()]
+    if command == "spotless":
+        return [sys.executable, ".github/scripts/pr-triage/spotless.py", pr_number()]
+    if command == "fix":
+        return [sys.executable, ".github/scripts/pr-triage/fix.py", pr_number()]
+    if command == "update_branch":
+        return [sys.executable, ".github/scripts/pr-triage/update_branch.py", pr_number()]
     if command == "review":
         return [sys.executable, ".github/scripts/pr-triage/review.py", pr_number()]
     raise RuntimeError(f"Unknown command: {command}")
