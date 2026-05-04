@@ -31,7 +31,7 @@ class JerseyResourceMethodDispatcherInstrumentation implements TypeInstrumentati
                 takesArgument(
                     1,
                     namedOneOf(
-                        "javax.ws.rs.core.Request",
+                        "jakarta.ws.rs.core.Request",
                         "org.glassfish.jersey.server.ContainerRequest"))),
         getClass().getName() + "$DispatchAdvice");
   }
