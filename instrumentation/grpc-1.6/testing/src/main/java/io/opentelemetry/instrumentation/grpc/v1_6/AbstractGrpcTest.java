@@ -1632,6 +1632,8 @@ public abstract class AbstractGrpcTest {
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
 
     ManagedChannel channel = createChannel(server);
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     Metadata extraMetadata = new Metadata();
     extraMetadata.put(
