@@ -15,7 +15,7 @@ import java.io.InputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-class Axis2JaxWs2Test extends AbstractJaxWs3Test {
+class Axis2JaxWs3Test extends AbstractJaxWs3Test {
   static {
     try {
       updateConfiguration();
@@ -49,7 +49,7 @@ class Axis2JaxWs2Test extends AbstractJaxWs3Test {
   }
 
   private static String readRequiredResource(String resourceName) throws IOException {
-    try (InputStream inputStream = Axis2JaxWs2Test.class.getResourceAsStream(resourceName)) {
+    try (InputStream inputStream = Axis2JaxWs3Test.class.getResourceAsStream(resourceName)) {
       if (inputStream == null) {
         throw new FileNotFoundException("Classpath resource not found: " + resourceName);
       }
