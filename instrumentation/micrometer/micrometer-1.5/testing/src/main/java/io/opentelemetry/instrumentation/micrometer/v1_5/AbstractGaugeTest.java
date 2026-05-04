@@ -155,7 +155,7 @@ public abstract class AbstractGaugeTest {
   }
 
   @Test
-  void testWeakRefGauge() throws InterruptedException, TimeoutException {
+  void testWeakRefGauge() throws TimeoutException {
     // given
     AtomicLong num = new AtomicLong(42);
     Gauge.builder("testWeakRefGauge", num, AtomicLong::get)
@@ -175,7 +175,12 @@ public abstract class AbstractGaugeTest {
     // when
     WeakReference<AtomicLong> numWeakRef = new WeakReference<>(num);
     num = null;
-    awaitGc(numWeakRef, Duration.ofSeconds(10));
+    try {
+      awaitGc(numWeakRef, Duration.ofSeconds(10));
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new AssertionError(e);
+    }
     testing().clearData();
 
     // then
