@@ -63,16 +63,16 @@ jobs:
           mkdir -p "$RUNNER_TEMP/pr-triage-trusted"
           cp -r .github/scripts/pr-triage/. "$RUNNER_TEMP/pr-triage-trusted/"
 
-      - name: Check out PR into subdirectory
+      - name: Check out PR into a separate directory
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Place the PR working tree at $RUNNER_TEMP/pr-tree, NOT at
-          # $GITHUB_WORKSPACE. This keeps $GITHUB_WORKSPACE pointing at
-          # the trusted default-branch checkout so that any tool whose
-          # cwd defaults to the workspace cannot accidentally execute
-          # PR-controlled code. Worker steps that run on the PR tree
-          # use `working-directory: ${{ runner.temp }}/pr-tree`.
+          # The PR working tree lives at $RUNNER_TEMP/pr-tree, separate
+          # from $GITHUB_WORKSPACE (which holds the trusted default-branch
+          # checkout). The worker run step below executes from
+          # $GITHUB_WORKSPACE so the scripts that drive the workflow are
+          # always the ones from `main`. Those scripts read
+          # $PR_TRIAGE_REPO_ROOT to find the PR working tree.
           git clone --no-local --quiet "$GITHUB_WORKSPACE" "$RUNNER_TEMP/pr-tree"
           cd "$RUNNER_TEMP/pr-tree"
           git remote set-url origin "https://github.com/${{ github.repository }}.git"
@@ -94,11 +94,12 @@ jobs:
 
       - name: Run gradle-phase worker
         id: run
-        working-directory: ${{ runner.temp }}/pr-tree
         env:
           GH_TOKEN: ${{ github.token }}
           PR_TRIAGE_REPO_ROOT: ${{ runner.temp }}/pr-tree
         run: |
+          # Runs from $GITHUB_WORKSPACE (trusted default-branch checkout).
+          # The script operates on the PR tree at $PR_TRIAGE_REPO_ROOT.
           mkdir -p "$RUNNER_TEMP/work"
           # Ensure the artifact has at least one file so upload/download
           # always succeed even when the worker fails before writing any
@@ -141,14 +142,16 @@ jobs:
           mkdir -p "$RUNNER_TEMP/pr-triage-trusted"
           cp -r .github/scripts/pr-triage/. "$RUNNER_TEMP/pr-triage-trusted/"
 
-      - name: Check out PR into subdirectory
+      - name: Check out PR into a separate directory
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Place the PR working tree at $RUNNER_TEMP/pr-tree, NOT at
-          # $GITHUB_WORKSPACE. This keeps $GITHUB_WORKSPACE pointing at
-          # the trusted default-branch checkout. Worker steps that run
-          # on the PR tree use `working-directory: ${{ runner.temp }}/pr-tree`.
+          # The PR working tree lives at $RUNNER_TEMP/pr-tree, separate
+          # from $GITHUB_WORKSPACE (which holds the trusted default-branch
+          # checkout). The worker run steps below execute from
+          # $GITHUB_WORKSPACE so the scripts that drive the workflow are
+          # always the ones from `main`. Those scripts read
+          # $PR_TRIAGE_REPO_ROOT to find the PR working tree.
           git clone --no-local --quiet "$GITHUB_WORKSPACE" "$RUNNER_TEMP/pr-tree"
           cd "$RUNNER_TEMP/pr-tree"
           git remote set-url origin "https://github.com/${{ github.repository }}.git"
@@ -166,7 +169,6 @@ jobs:
 
       - name: Run copilot-phase worker (review)
         if: needs.authorize-command.outputs.command == 'review'
-        working-directory: ${{ runner.temp }}/pr-tree
         env:
           # GITHUB_TOKEN is also set so Copilot CLI's `gh` subprocesses use the
           # read-only job token rather than falling back to the privileged
@@ -176,18 +178,21 @@ jobs:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           PR_TRIAGE_REPO_ROOT: ${{ runner.temp }}/pr-tree
         run: |
+          # Runs from $GITHUB_WORKSPACE (trusted default-branch checkout).
+          # The script operates on the PR tree at $PR_TRIAGE_REPO_ROOT.
           mkdir -p "$RUNNER_TEMP/work"
           touch "$RUNNER_TEMP/work/.placeholder"
           python3 "$RUNNER_TEMP/pr-triage-trusted/worker_copilot.py" --out-dir "$RUNNER_TEMP/work"
 
       - name: Run copilot-phase worker (fix)
         if: needs.authorize-command.outputs.command == 'fix'
-        working-directory: ${{ runner.temp }}/pr-tree
         env:
           GH_TOKEN: ${{ github.token }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           PR_TRIAGE_REPO_ROOT: ${{ runner.temp }}/pr-tree
         run: |
+          # Runs from $GITHUB_WORKSPACE (trusted default-branch checkout).
+          # The script operates on the PR tree at $PR_TRIAGE_REPO_ROOT.
           mkdir -p "$RUNNER_TEMP/work"
           touch "$RUNNER_TEMP/work/.placeholder"
           python3 "$RUNNER_TEMP/pr-triage-trusted/worker_copilot.py" \

@@ -20,7 +20,15 @@ from pathlib import Path
 from typing import Any
 
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+# PR_TRIAGE_REPO_ROOT lets the workflow run trusted scripts (snapshotted
+# under $RUNNER_TEMP/pr-triage-trusted) against a PR working tree that
+# lives somewhere other than the script's own .github/scripts/pr-triage
+# directory. When unset, fall back to resolving relative to this file.
+REPO_ROOT = (
+    Path(os.environ["PR_TRIAGE_REPO_ROOT"]).resolve()
+    if os.environ.get("PR_TRIAGE_REPO_ROOT")
+    else Path(__file__).resolve().parents[3]
+)
 COPILOT_MODEL = os.environ.get("PR_AGENT_COPILOT_MODEL", "gpt-5.5")
 
 
