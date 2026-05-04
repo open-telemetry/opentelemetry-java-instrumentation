@@ -6,7 +6,7 @@ Provides OpenTelemetry instrumentation for [Apache Thrift](https://thrift.apache
 
 ### Add the following dependencies to your project
 
-Replace `OPENTELEMETRY_VERSION` with the [latest release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-thrift-0.13).
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-thrift-0.13).
 
 For Maven, add the following to your `pom.xml` dependencies:
 
