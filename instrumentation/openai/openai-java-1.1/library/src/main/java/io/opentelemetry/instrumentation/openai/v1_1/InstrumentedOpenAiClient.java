@@ -14,8 +14,7 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 
-final class InstrumentedOpenAiClient
-    extends DelegatingInvocationHandler<OpenAIClient, InstrumentedOpenAiClient> {
+final class InstrumentedOpenAiClient extends DelegatingInvocationHandler<OpenAIClient> {
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter;
   private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingInstrumenter;
