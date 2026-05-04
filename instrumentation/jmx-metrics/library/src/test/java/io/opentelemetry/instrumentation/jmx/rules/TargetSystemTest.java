@@ -262,20 +262,24 @@ class TargetSystemTest {
               List<ExportMetricsServiceRequest> receivedMetrics = otlpServer.getMetrics();
               assertThat(receivedMetrics).isNotEmpty();
 
-              List<Metric> metrics =
-                  receivedMetrics.stream()
-                      .map(ExportMetricsServiceRequest::getResourceMetricsList)
-                      .flatMap(rm -> rm.stream().map(ResourceMetrics::getScopeMetricsList))
-                      .flatMap(Collection::stream)
-                      .filter(
-                          // TODO: disabling batch span exporter might help remove unwanted metrics
-                          sm -> sm.getScope().getName().equals("io.opentelemetry.jmx"))
-                      .flatMap(sm -> sm.getMetricsList().stream())
-                      .collect(toList());
+              assertThat(receivedMetrics)
+                  .anySatisfy(
+                      request -> {
+                        List<Metric> metrics =
+                            request.getResourceMetricsList().stream()
+                                .map(ResourceMetrics::getScopeMetricsList)
+                                .flatMap(Collection::stream)
+                                .filter(
+                                    // TODO: disabling batch span exporter might help remove
+                                    // unwanted metrics
+                                    sm -> sm.getScope().getName().equals("io.opentelemetry.jmx"))
+                                .flatMap(sm -> sm.getMetricsList().stream())
+                                .collect(toList());
 
-              assertThat(metrics).isNotEmpty();
+                        assertThat(metrics).isNotEmpty();
 
-              metricsVerifier.verify(metrics);
+                        metricsVerifier.verify(metrics);
+                      });
             });
   }
 
