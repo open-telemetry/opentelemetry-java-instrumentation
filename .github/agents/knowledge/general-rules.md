@@ -21,7 +21,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation` | `javaagent-module-patterns.md` |
-| Javaagent | Singletons patterns | `*Singletons` holder classes, singleton accessors, callers of singleton accessors/fields | `javaagent-singletons-patterns.md` |
+| Javaagent | Singletons patterns | `*Singletons`, `*SpanNaming`, and similar holder classes; singleton accessors; callers of singleton accessors/fields | `javaagent-singletons-patterns.md` |
 | Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
@@ -104,9 +104,9 @@ Reason about visibility from "what does the advice method directly reference?".
 
 ## [Style] `@SuppressWarnings` Usage
 
-- Method-level `@SuppressWarnings` is preferred over class-level for tighter scope, but
-  if more than one method in the class needs the same suppression, class-level is fine.
-  Do not flag class-level `@SuppressWarnings` when multiple methods use the suppressed API.
+- Place `@SuppressWarnings` on the single member that needs it, or on the class when two
+  or more members in the class need the same suppression. Do not move an existing
+  suppression from a member to the class unless multiple members need it.
 - **Do not add `@SuppressWarnings("deprecation")` unless the build fails without it.**
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
@@ -376,13 +376,16 @@ ambiguous and the cast would otherwise be required). Do not flag those cases.
 
 ## [Semconv] Constants by Module Type
 
-- `library/src/main/`: incubating semconv constants (from
-  `io.opentelemetry.semconv.incubating`) must be copied locally as `private static final`
-  fields with a `// copied from <ClassName>` comment. Stable semconv constants (from
-  `io.opentelemetry.semconv`) may be imported directly.
+- `library/src/main/`: constants from `io.opentelemetry.semconv.incubating.*` must be
+  copied locally as `private static final` fields with a `// copied from <ClassName>`
+  comment. Constants from `io.opentelemetry.semconv.*` (stable) must be imported
+  directly via `import static` and must not be copied locally.
 - `javaagent/src/main/`: all semconv artifact constants (stable and incubating) may be used
   directly.
 - tests: all semconv artifact constants are allowed.
+
+The trigger for copying is the import package, not the constant name. Only convert an
+import to a local copy when it comes from `io.opentelemetry.semconv.incubating.*`.
 
 ## [NewModule] New Instrumentation Checklist
 

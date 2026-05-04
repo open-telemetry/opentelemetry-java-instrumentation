@@ -32,7 +32,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JavaUtilLoggingTest {
-  private static final boolean isExperimentalAttributesEnabled =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.java-util-logging.experimental-log-attributes");
 
   private static final Logger logger = Logger.getLogger("abc");
@@ -166,14 +166,14 @@ class JavaUtilLoggingTest {
   }
 
   private static String experimental(String value) {
-    if (isExperimentalAttributesEnabled) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return value;
     }
     return null;
   }
 
   private static Long experimental(long value) {
-    if (isExperimentalAttributesEnabled) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return value;
     }
     return null;

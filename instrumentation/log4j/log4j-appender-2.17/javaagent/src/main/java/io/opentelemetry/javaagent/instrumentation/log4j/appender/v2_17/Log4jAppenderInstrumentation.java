@@ -17,6 +17,7 @@ import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -71,11 +72,11 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
     public static CallDepth methodEnter(
         @Advice.This Logger logger,
         @Advice.Argument(0) Level level,
-        @Advice.Argument(1) Marker marker,
+        @Advice.Argument(1) @Nullable Marker marker,
         @Advice.Argument(2) String loggerClassName,
         @Advice.Argument(3) StackTraceElement location,
         @Advice.Argument(4) Message message,
-        @Advice.Argument(5) Throwable t) {
+        @Advice.Argument(5) @Nullable Throwable t) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
       CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
@@ -99,9 +100,9 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
         @Advice.This Logger logger,
         @Advice.Argument(0) String loggerClassName,
         @Advice.Argument(1) Level level,
-        @Advice.Argument(2) Marker marker,
+        @Advice.Argument(2) @Nullable Marker marker,
         @Advice.Argument(3) Message message,
-        @Advice.Argument(4) Throwable t) {
+        @Advice.Argument(4) @Nullable Throwable t) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
       CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);

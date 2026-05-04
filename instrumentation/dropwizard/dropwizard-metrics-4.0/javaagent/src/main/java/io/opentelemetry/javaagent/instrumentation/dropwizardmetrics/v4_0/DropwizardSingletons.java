@@ -9,11 +9,11 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 
 public class DropwizardSingletons {
 
-  private static final DropwizardMetricsAdapter metricsAdapter =
+  private static final DropwizardMetricsAdapter metrics =
       new DropwizardMetricsAdapter(GlobalOpenTelemetry.get());
 
   public static DropwizardMetricsAdapter metrics() {
-    return metricsAdapter;
+    return metrics;
   }
 
   private DropwizardSingletons() {}

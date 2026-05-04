@@ -6,7 +6,7 @@
 package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
-import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION;
+import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_VERSION;
 
 import java.time.Duration;
 import org.junit.jupiter.api.condition.DisabledIf;

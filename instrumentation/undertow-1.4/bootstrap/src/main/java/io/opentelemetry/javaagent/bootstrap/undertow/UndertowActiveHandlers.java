@@ -14,8 +14,6 @@ public final class UndertowActiveHandlers {
   private static final ContextKey<AtomicInteger> CONTEXT_KEY =
       ContextKey.named("opentelemetry-undertow-active-handlers");
 
-  private UndertowActiveHandlers() {}
-
   /**
    * Attach to context.
    *
@@ -56,4 +54,6 @@ public final class UndertowActiveHandlers {
     }
     return counter.decrementAndGet();
   }
+
+  private UndertowActiveHandlers() {}
 }

@@ -25,7 +25,7 @@ import org.testcontainers.images.builder.Transferable;
 
 class HadoopTest extends TargetSystemTest {
 
-  public static final String ENDPOINT_PLACEHOLDER = "<<ENDPOINT_PLACEHOLDER>>";
+  private static final String ENDPOINT_PLACEHOLDER = "<<ENDPOINT_PLACEHOLDER>>";
 
   @Test
   void testMetrics_Hadoop2x() throws IOException {

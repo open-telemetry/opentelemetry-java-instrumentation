@@ -21,7 +21,10 @@ public class ApplicationObservableLongGauge
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
-    agentGauge.close();
-    onClose.run();
+    try {
+      agentGauge.close();
+    } finally {
+      onClose.run();
+    }
   }
 }

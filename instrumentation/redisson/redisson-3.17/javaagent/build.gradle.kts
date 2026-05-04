@@ -14,14 +14,11 @@ muzzle {
 dependencies {
   library("org.redisson:redisson:3.17.0")
 
-  implementation(project(":instrumentation:redisson:redisson-common:javaagent"))
-
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
+  implementation(project(":instrumentation:redisson:redisson-common-3.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:redisson:redisson-3.0:javaagent"))
 
-  testImplementation(project(":instrumentation:redisson:redisson-common:testing"))
+  testImplementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
 }
 
 tasks {

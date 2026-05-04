@@ -33,7 +33,7 @@ dependencies {
   testLibrary("com.amazonaws:aws-lambda-java-events:3.10.0")
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")

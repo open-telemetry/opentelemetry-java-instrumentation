@@ -426,7 +426,7 @@ targets:
       target: ':instrumentation:cassandra:cassandra-4.4:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:clickhouse:clickhouse-client-common:javaagent'
+      target: ':instrumentation:clickhouse:clickhouse-client-common-0.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:clickhouse:clickhouse-client-v1-0.5:javaagent'
@@ -519,7 +519,7 @@ targets:
       target: ':instrumentation:hibernate:hibernate-6.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:hibernate:hibernate-common:javaagent'
+      target: ':instrumentation:hibernate:hibernate-common-3.3:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent'
@@ -570,16 +570,16 @@ targets:
       target: ':instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxws:jaxws-common:javaagent'
+      target: ':instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxws:jaxws-cxf-3.0:javaagent'
+      target: ':instrumentation:jaxws:jaxws-2.0-metro-2.2:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:jaxws:jaxws-common-2.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxws:jaxws-jws-api-1.1:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:jaxws:jaxws-metro-2.2:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent'
@@ -597,7 +597,7 @@ targets:
       target: ':instrumentation:jedis:jedis-4.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jedis:jedis-common:javaagent'
+      target: ':instrumentation:jedis:jedis-common-1.4:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jetty:jetty-11.0:javaagent'
@@ -630,10 +630,10 @@ targets:
       target: ':instrumentation:jms:jms-3.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jms:jms-common:bootstrap'
+      target: ':instrumentation:jms:jms-common-1.1:bootstrap'
     - type: gradle
       path: ./
-      target: ':instrumentation:jms:jms-common:javaagent'
+      target: ':instrumentation:jms:jms-common-1.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jsf:jsf-common-jakarta:javaagent'
@@ -888,7 +888,7 @@ targets:
       target: ':instrumentation:redisson:redisson-3.17:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:redisson:redisson-common:javaagent'
+      target: ':instrumentation:redisson:redisson-common-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:restlet:restlet-1.1:javaagent'
@@ -1059,7 +1059,7 @@ targets:
       target: ':instrumentation:xxl-job:xxl-job-2.3.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:xxl-job:xxl-job-common:javaagent'
+      target: ':instrumentation:xxl-job:xxl-job-common-1.9.2:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:zio:zio-2.0:javaagent'
@@ -1137,7 +1137,7 @@ targets:
       target: ':instrumentation:play:play-ws:play-ws-2.1:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:play:play-ws:play-ws-common:javaagent'
+      target: ':instrumentation:play:play-ws:play-ws-common-1.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:reactor:reactor-netty:reactor-netty-0.9:javaagent'
@@ -1200,7 +1200,7 @@ targets:
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent'
+      target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-common-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent'
@@ -1209,7 +1209,7 @@ targets:
       target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-common:javaagent'
+      target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent'
 
 experimental:
   gradle:

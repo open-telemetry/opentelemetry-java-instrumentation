@@ -8,7 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.azure.core.annotation.ExpectedResponses;
@@ -105,7 +109,12 @@ class AzureSdkTest {
                     span.hasKind(SpanKind.CLIENT)
                         .hasName(testLatestDeps() ? "GET" : "HTTP GET")
                         .hasStatus(StatusData.unset())
-                        .hasAttribute(HTTP_RESPONSE_STATUS_CODE, 200L)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(SERVER_ADDRESS, testLatestDeps() ? "azure.com" : null),
+                            equalTo(SERVER_PORT, testLatestDeps() ? 443L : null),
+                            equalTo(URL_FULL, "https://azure.com/path"))));
   }
 
   @Test
