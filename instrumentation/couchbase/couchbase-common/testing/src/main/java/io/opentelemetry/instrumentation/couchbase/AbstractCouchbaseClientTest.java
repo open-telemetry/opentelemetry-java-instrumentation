@@ -53,8 +53,6 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private CouchbaseEnvironment environmentCouchbase;
-  private CouchbaseEnvironment environmentMemcache;
   private CouchbaseCluster clusterCouchbase;
   private CouchbaseCluster clusterMemcache;
 
@@ -66,12 +64,12 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
 
   @BeforeAll
   void setUpClusters() {
-    environmentCouchbase = envBuilder(bucketCouchbase).build();
+    CouchbaseEnvironment environmentCouchbase = envBuilder(bucketCouchbase).build();
     clusterCouchbase = CouchbaseCluster.create(environmentCouchbase, singletonList("127.0.0.1"));
     cleanup.deferAfterAll(environmentCouchbase::shutdown);
     cleanup.deferAfterAll(clusterCouchbase::disconnect);
 
-    environmentMemcache = envBuilder(bucketMemcache).build();
+    CouchbaseEnvironment environmentMemcache = envBuilder(bucketMemcache).build();
     clusterMemcache = CouchbaseCluster.create(environmentMemcache, singletonList("127.0.0.1"));
     cleanup.deferAfterAll(environmentMemcache::shutdown);
     cleanup.deferAfterAll(clusterMemcache::disconnect);
