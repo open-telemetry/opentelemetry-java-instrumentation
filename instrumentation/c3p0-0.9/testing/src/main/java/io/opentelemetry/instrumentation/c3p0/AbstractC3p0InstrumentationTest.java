@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.c3p0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static java.util.Arrays.asList;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
@@ -17,8 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetrics
 import io.opentelemetry.instrumentation.testing.junit.db.MockDriver;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +43,6 @@ public abstract class AbstractC3p0InstrumentationTest {
     // when
     try (Connection connection = c3p0DataSource.getConnection()) {
       configure(c3p0DataSource);
-      MILLISECONDS.sleep(100);
     }
 
     // then
@@ -56,25 +52,23 @@ public abstract class AbstractC3p0InstrumentationTest {
     shutdown(c3p0DataSource);
     c3p0DataSource.close();
 
-    // wait interval of the test metrics exporter
-    Thread.sleep(100);
     testing().clearData();
-    Thread.sleep(100);
 
     // then
-    Set<String> metricNames =
-        new HashSet<>(
-            asList(
-                emitStableDatabaseSemconv()
-                    ? "db.client.connection.count"
-                    : "db.client.connections.usage",
-                "db.client.connections.pending_requests"));
-    assertThat(testing().metrics())
-        .filteredOn(
-            metricData ->
-                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && metricNames.contains(metricData.getName()))
-        .isEmpty();
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            emitStableDatabaseSemconv()
+                ? "db.client.connection.count"
+                : "db.client.connections.usage",
+            AbstractIterableAssert::isEmpty);
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            emitStableDatabaseSemconv()
+                ? "db.client.connection.pending_requests"
+                : "db.client.connections.pending_requests",
+            AbstractIterableAssert::isEmpty);
   }
 
   private void assertDataSourceMetrics(PooledDataSource dataSource) {
