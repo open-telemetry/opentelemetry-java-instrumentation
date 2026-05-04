@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 class MethodConfiguration {
 
@@ -97,7 +98,7 @@ class MethodConfiguration {
     return Stream.of(new MethodInstrumentation(clazz, methodNames));
   }
 
-  private static boolean isNullOrEmpty(String s) {
+  private static boolean isNullOrEmpty(@Nullable String s) {
     return s == null || s.isEmpty();
   }
 
