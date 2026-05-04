@@ -581,7 +581,7 @@ public final class LoggingEventMapper {
   }
 
   @Nullable
-  private static FieldReader createStringReader(Field field) {
+  private static FieldReader createStringReader(@Nullable Field field) {
     if (field == null) {
       return null;
     }
@@ -593,7 +593,7 @@ public final class LoggingEventMapper {
   }
 
   @Nullable
-  private static FieldReader createMapReader(Field field) {
+  private static FieldReader createMapReader(@Nullable Field field) {
     if (field == null) {
       return null;
     }
