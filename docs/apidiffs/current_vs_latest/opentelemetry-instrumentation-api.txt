@@ -1,11 +1,2 @@
 Comparing source compatibility of opentelemetry-instrumentation-api-2.28.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.27.0.jar
-***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor  (not serializable)
-	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
-	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
-	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.internal.ExceptionEventExtractorProvider
-	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.internal.InternalExceptionEventExtractor<?> internalGetExceptionEventExtractor()
-***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor  (not serializable)
-	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
-	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
-	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.internal.ExceptionEventExtractorProvider
-	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.internal.InternalExceptionEventExtractor<?> internalGetExceptionEventExtractor()
+No changes.
