@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
@@ -58,12 +59,14 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    @Nullable
     public static GenericFutureListener<? extends Future<?>> wrapListener(
-        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listenerArg) {
+        @Advice.Argument(value = 0) @Nullable
+            GenericFutureListener<? extends Future<?>> listenerArg) {
 
       // TODO remove this extra variable when migrating to "indy only" instrumentation.
-      GenericFutureListener<? extends Future<?>> listener = listenerArg;
-      if (FutureListenerWrappers.shouldWrap(listener)) {
+      @Nullable GenericFutureListener<? extends Future<?>> listener = listenerArg;
+      if (listener != null && FutureListenerWrappers.shouldWrap(listener)) {
         listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
       }
       return listener;
@@ -87,10 +90,11 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
       GenericFutureListener<? extends Future<?>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];
       for (int i = 0; i < listeners.length; ++i) {
-        if (FutureListenerWrappers.shouldWrap(listeners[i])) {
-          wrappedListeners[i] = FutureListenerWrappers.wrap(context, listeners[i]);
+        GenericFutureListener<? extends Future<?>> listener = listeners[i];
+        if (listener != null && FutureListenerWrappers.shouldWrap(listener)) {
+          wrappedListeners[i] = FutureListenerWrappers.wrap(context, listener);
         } else {
-          wrappedListeners[i] = listeners[i];
+          wrappedListeners[i] = listener;
         }
       }
       return wrappedListeners;
@@ -102,8 +106,9 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    @Nullable
     public static GenericFutureListener<? extends Future<?>> wrapListener(
-        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listener) {
+        @Advice.Argument(value = 0) @Nullable GenericFutureListener<? extends Future<?>> listener) {
       return FutureListenerWrappers.getWrapper(listener);
     }
   }
