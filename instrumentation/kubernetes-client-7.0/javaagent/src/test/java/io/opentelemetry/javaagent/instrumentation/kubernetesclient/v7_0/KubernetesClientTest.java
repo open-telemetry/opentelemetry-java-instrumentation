@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.kubernetes.client.openapi.ApiCallback;
@@ -187,7 +188,7 @@ class KubernetesClientTest {
                   }
                 }));
 
-    countDownLatch.await();
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
     assertThat(responseBodyReference.get()).isEqualTo("42");
     assertThat(mockWebServer.takeRequest().request().headers().get("traceparent")).isNotBlank();
@@ -247,7 +248,7 @@ class KubernetesClientTest {
                   }
                 }));
 
-    countDownLatch.await();
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
     assertThat(exceptionReference.get()).isNotNull();
     assertThat(mockWebServer.takeRequest().request().headers().get("traceparent")).isNotBlank();
