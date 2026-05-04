@@ -30,7 +30,6 @@ SOURCE_EXTS = (".java", ".groovy", ".kt")
 
 WINDOW_DAYS = 7
 MIN_FLAKY = 5
-RECENT_MODIFY_DAYS = 7
 FLAKY_OUTCOMES = ("flaky", "failed")
 MAX_HISTORY_SPLIT_DEPTH = 12
 MIN_HISTORY_WINDOW_MS = 60 * 1000
@@ -139,16 +138,6 @@ def find_test_source(class_fqcn, *, all_files):
             if package_path in f"/{hit}":
                 return WORKSPACE_ROOT / hit
     return WORKSPACE_ROOT / candidates[0]
-
-
-def recently_modified(path, *, days):
-    rel = path.relative_to(WORKSPACE_ROOT).as_posix()
-    result = subprocess.run(
-        ["git", "log", "-1", f"--since={days}.days.ago", "--format=%H",
-         "--", rel],
-        cwd=WORKSPACE_ROOT, capture_output=True, text=True, check=False,
-    )
-    return bool(result.stdout.strip())
 
 
 def best_failure_sample(history):
@@ -294,10 +283,6 @@ def main():
         source = find_test_source(outer, all_files=all_files)
         if source is None:
             print(f"info: skipping {cname}: source not found")
-            continue
-        if recently_modified(source, days=RECENT_MODIFY_DAYS):
-            print(f"info: skipping {cname}: source modified in last "
-                  f"{RECENT_MODIFY_DAYS}d")
             continue
 
         methods = fetch_container_methods(
