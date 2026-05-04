@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.HandlerData;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory;
 
-public class CxfSingletons {
+class CxfSingletons {
 
   private static final Instrumenter<HandlerData, Void> instrumenter =
       JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxrs-2.0-cxf-3.2");
