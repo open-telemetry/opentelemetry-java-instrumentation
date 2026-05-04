@@ -63,10 +63,20 @@ jobs:
           mkdir -p "$RUNNER_TEMP/pr-triage-trusted"
           cp -r .github/scripts/pr-triage/. "$RUNNER_TEMP/pr-triage-trusted/"
 
-      - name: Check out PR
+      - name: Check out PR into subdirectory
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh pr checkout "$PR_NUMBER"
+        run: |
+          # Place the PR working tree at $RUNNER_TEMP/pr-tree, NOT at
+          # $GITHUB_WORKSPACE. This keeps $GITHUB_WORKSPACE pointing at
+          # the trusted default-branch checkout so that any tool whose
+          # cwd defaults to the workspace cannot accidentally execute
+          # PR-controlled code. Worker steps that run on the PR tree
+          # use `working-directory: ${{ runner.temp }}/pr-tree`.
+          git clone --no-local --quiet "$GITHUB_WORKSPACE" "$RUNNER_TEMP/pr-tree"
+          cd "$RUNNER_TEMP/pr-tree"
+          git remote set-url origin "https://github.com/${{ github.repository }}.git"
+          gh pr checkout "$PR_NUMBER"
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -84,9 +94,10 @@ jobs:
 
       - name: Run gradle-phase worker
         id: run
+        working-directory: ${{ runner.temp }}/pr-tree
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_TRIAGE_REPO_ROOT: ${{ github.workspace }}
+          PR_TRIAGE_REPO_ROOT: ${{ runner.temp }}/pr-tree
         run: |
           mkdir -p "$RUNNER_TEMP/work"
           # Ensure the artifact has at least one file so upload/download
@@ -130,10 +141,18 @@ jobs:
           mkdir -p "$RUNNER_TEMP/pr-triage-trusted"
           cp -r .github/scripts/pr-triage/. "$RUNNER_TEMP/pr-triage-trusted/"
 
-      - name: Check out PR
+      - name: Check out PR into subdirectory
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh pr checkout "$PR_NUMBER"
+        run: |
+          # Place the PR working tree at $RUNNER_TEMP/pr-tree, NOT at
+          # $GITHUB_WORKSPACE. This keeps $GITHUB_WORKSPACE pointing at
+          # the trusted default-branch checkout. Worker steps that run
+          # on the PR tree use `working-directory: ${{ runner.temp }}/pr-tree`.
+          git clone --no-local --quiet "$GITHUB_WORKSPACE" "$RUNNER_TEMP/pr-tree"
+          cd "$RUNNER_TEMP/pr-tree"
+          git remote set-url origin "https://github.com/${{ github.repository }}.git"
+          gh pr checkout "$PR_NUMBER"
 
       - name: Install Copilot CLI
         run: npm install -g @github/copilot@1.0.40
@@ -147,6 +166,7 @@ jobs:
 
       - name: Run copilot-phase worker (review)
         if: needs.authorize-command.outputs.command == 'review'
+        working-directory: ${{ runner.temp }}/pr-tree
         env:
           # GITHUB_TOKEN is also set so Copilot CLI's `gh` subprocesses use the
           # read-only job token rather than falling back to the privileged
@@ -154,7 +174,7 @@ jobs:
           # environment of the children it spawns.
           GH_TOKEN: ${{ github.token }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          PR_TRIAGE_REPO_ROOT: ${{ github.workspace }}
+          PR_TRIAGE_REPO_ROOT: ${{ runner.temp }}/pr-tree
         run: |
           mkdir -p "$RUNNER_TEMP/work"
           touch "$RUNNER_TEMP/work/.placeholder"
@@ -162,10 +182,11 @@ jobs:
 
       - name: Run copilot-phase worker (fix)
         if: needs.authorize-command.outputs.command == 'fix'
+        working-directory: ${{ runner.temp }}/pr-tree
         env:
           GH_TOKEN: ${{ github.token }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          PR_TRIAGE_REPO_ROOT: ${{ github.workspace }}
+          PR_TRIAGE_REPO_ROOT: ${{ runner.temp }}/pr-tree
         run: |
           mkdir -p "$RUNNER_TEMP/work"
           touch "$RUNNER_TEMP/work/.placeholder"
