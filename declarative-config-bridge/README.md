@@ -92,15 +92,16 @@ First, there is a single defaults object that is unaware of the source of the co
 ```java
 InstrumentationDefaults defaults = new InstrumentationDefaults();
 defaults.get("micrometer").setDefault("base_time_unit", "s");
-defaults.get("log4j_appender").setDefault("experimental_log_attributes", "true");
+defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
 ```
 
 Navigation mirrors `DeclarativeConfigProperties` — reading uses
 `config.get("micrometer").getString("base_time_unit")`; writing defaults uses
 `defaults.get("micrometer").setDefault("base_time_unit", "s")`.
 
-Keys use underscore notation (matching the declarative config model). They are translated to
-hyphen notation (`otel.instrumentation.<name>.<key>`) when producing system property keys.
+Keys use the same declarative config shape as `DeclarativeConfigProperties`. When producing system
+property keys, underscores are translated to hyphens, and keys ending in `/development` are
+translated using the bridge's `experimental.` convention.
 
 The auto configuration **without declarative config** registers the defaults as a properties
 supplier, translating them to `otel.instrumentation.*` keys:
@@ -127,7 +128,7 @@ instrumentation/development:
     micrometer:
       base_time_unit: s
     log4j_appender:
-      experimental_log_attributes: "true"
+      experimental_log_attributes/development: "true"
 ```
 
 And now the customizer that applies the defaults to the model:

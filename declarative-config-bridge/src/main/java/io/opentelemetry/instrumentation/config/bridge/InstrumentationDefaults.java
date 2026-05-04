@@ -27,7 +27,7 @@ import java.util.Map;
  * <pre>{@code
  * InstrumentationDefaults defaults = new InstrumentationDefaults();
  * defaults.get("micrometer").setDefault("base_time_unit", "s");
- * defaults.get("log4j_appender").setDefault("experimental_log_attributes", "true");
+ * defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
  *
  * // Declarative config mode: inject into model
  * customizer.addModelCustomizer(model -> defaults.applyToModel(model));
@@ -57,9 +57,9 @@ public final class InstrumentationDefaults {
                 (key, value) ->
                     map.put(
                         "otel.instrumentation."
-                            + instrumentation.replace('_', '-')
+                            + translateName(instrumentation)
                             + "."
-                            + key.replace('_', '-'),
+                            + translateName(key),
                         value)));
     return map;
   }
@@ -119,7 +119,8 @@ public final class InstrumentationDefaults {
     /**
      * Sets a default value for a property. Keys use underscore notation (e.g. {@code
      * base_time_unit}); they are translated to hyphen notation when producing {@code
-     * otel.instrumentation.*} keys.
+     * otel.instrumentation.*} keys. Keys ending in {@code /development} follow the same {@code
+     * experimental.} translation as {@link ConfigPropertiesBackedDeclarativeConfigProperties}.
      *
      * @return {@code this} for chaining
      */
@@ -128,5 +129,15 @@ public final class InstrumentationDefaults {
       properties.put(key, value);
       return this;
     }
+  }
+
+  private static String translateName(String name) {
+    if (name.endsWith("/development")) {
+      name = name.substring(0, name.length() - "/development".length());
+      if (!name.contains("experimental")) {
+        name = "experimental." + name;
+      }
+    }
+    return name.replace('_', '-');
   }
 }

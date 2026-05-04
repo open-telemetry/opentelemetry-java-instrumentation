@@ -17,20 +17,30 @@ class InstrumentationDefaultsTest {
   void toConfigProperties() {
     InstrumentationDefaults defaults = new InstrumentationDefaults();
     defaults.get("micrometer").setDefault("base_time_unit", "s");
-    defaults.get("log4j_appender").setDefault("experimental_log_attributes", "true");
+    defaults
+        .get("log4j_appender")
+        .setDefault("experimental_log_attributes/development", "true");
+    defaults.get("spring_scheduling").setDefault("controller_telemetry/development", "false");
+    defaults.get("grpc").setDefault("experimental_span_attributes/development", "true");
 
     Map<String, String> props = defaults.toConfigProperties();
 
     assertThat(props)
         .containsEntry("otel.instrumentation.micrometer.base-time-unit", "s")
         .containsEntry("otel.instrumentation.log4j-appender.experimental-log-attributes", "true")
-        .hasSize(2);
+        .containsEntry(
+            "otel.instrumentation.spring-scheduling.experimental.controller-telemetry", "false")
+        .containsEntry("otel.instrumentation.grpc.experimental-span-attributes", "true")
+        .hasSize(4);
   }
 
   @Test
   void applyToModel() {
     InstrumentationDefaults defaults = new InstrumentationDefaults();
     defaults.get("micrometer").setDefault("base_time_unit", "s");
+    defaults
+        .get("log4j_appender")
+        .setDefault("experimental_log_attributes/development", "true");
 
     OpenTelemetryConfigurationModel model = new OpenTelemetryConfigurationModel();
     defaults.applyToModel(model);
@@ -43,6 +53,14 @@ class InstrumentationDefaultsTest {
                 .get("micrometer")
                 .getAdditionalProperties())
         .containsEntry("base_time_unit", "s");
+    assertThat(
+            model
+                .getInstrumentationDevelopment()
+                .getJava()
+                .getAdditionalProperties()
+                .get("log4j_appender")
+                .getAdditionalProperties())
+        .containsEntry("experimental_log_attributes/development", "true");
   }
 
   @Test
