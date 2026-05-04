@@ -275,6 +275,27 @@ def diff_check(summary: Summary) -> None:
     git(["diff", "--check"], summary)
 
 
+WORK_BUNDLE_REF = "refs/pr-triage-applied"
+
+
+def write_work_bundle(out_dir: Path, base_sha: str, summary: Summary | None = None) -> bool:
+    """Bundle commits between base_sha and HEAD into out_dir/bundle.git.
+
+    Returns True if a bundle was written (i.e. there are new commits)."""
+    head_sha = git(["rev-parse", "HEAD"], summary).stdout.strip()
+    if head_sha == base_sha:
+        return False
+    bundle_path = out_dir / "bundle.git"
+    git(["bundle", "create", str(bundle_path), f"{base_sha}..HEAD"], summary)
+    return True
+
+
+def fetch_work_bundle(bundle_path: Path, summary: Summary | None = None) -> str:
+    """Fetch a bundle into the current repo and return the bundled tip SHA."""
+    git(["fetch", str(bundle_path), f"+HEAD:{WORK_BUNDLE_REF}"], summary)
+    return git(["rev-parse", WORK_BUNDLE_REF], summary).stdout.strip()
+
+
 def make_temp_dir(prefix: str, pr: int, keep_temp: bool) -> Path:
     base_dir = REPO_ROOT / "build" / "pr-triage"
     base_dir.mkdir(parents=True, exist_ok=True)

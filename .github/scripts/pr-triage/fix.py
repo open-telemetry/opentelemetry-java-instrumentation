@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -47,6 +48,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-push", action="store_true", help="commit but do not push")
     parser.add_argument("--keep-temp", action="store_true", help="reuse and retain the temp bundle directory")
     parser.add_argument("--skip-copilot", action="store_true", help="download logs and stop before invoking Copilot")
+    parser.add_argument(
+        "--phase",
+        choices=("full", "gradle", "copilot"),
+        default="full",
+        help=(
+            "'full' (default) runs both deterministic Gradle fixes and Copilot in one process; "
+            "'gradle' stops before Copilot and saves the CI bundle for handoff; "
+            "'copilot' skips deterministic Gradle fixes and consumes a CI bundle from --in-dir."
+        ),
+    )
+    parser.add_argument("--in-dir", type=Path, help="input CI bundle directory (required for --phase=copilot)")
+    parser.add_argument("--out-dir", type=Path, help="output directory for handoff artifacts (used by --phase=gradle)")
     return parser.parse_args()
 
 
@@ -334,55 +347,130 @@ Rules:
 """
 
 
+def save_ci_bundle_for_handoff(bundle_dir: Path, out_dir: Path, summary: Summary) -> None:
+    """Copy the CI bundle into out_dir/ci-bundle/ so the copilot phase can consume it.
+
+    Also writes a needs-copilot.txt marker that the workflow uses to decide
+    whether to schedule the copilot-worker job."""
+    import shutil
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    target = out_dir / "ci-bundle"
+    if target.exists():
+        shutil.rmtree(target)
+    shutil.copytree(bundle_dir, target)
+    (out_dir / "needs-copilot.txt").write_text("true\n", encoding="utf-8")
+    progress(f"Saved CI bundle for Copilot handoff at {target}")
+    summary.notes.append("deferred to Copilot phase; CI bundle prepared for handoff")
+
+
+def invoke_copilot_for_fix(bundle_dir: Path, plan_path: Path, summary: Summary) -> None:
+    commit_message_path = bundle_dir / "commit-message.txt"
+    prompt_improvement_path = bundle_dir / "prompt-improvement.md"
+    response = invoke_copilot(copilot_prompt(plan_path, commit_message_path, prompt_improvement_path), summary)
+    (bundle_dir / "copilot-response.txt").write_text(response + "\n", encoding="utf-8")
+    read_prompt_improvement(prompt_improvement_path, summary)
+
+
+def commit_and_optionally_push(
+    args: argparse.Namespace,
+    bundle_dir: Path,
+    checks: list[dict[str, Any]],
+    deterministic_fixes: list[str],
+    summary: Summary,
+) -> int:
+    diff_check(summary)
+    if untracked_files(summary):
+        raise RuntimeError("untracked files are present after CI fix; refusing to commit")
+    summary.changed_files = changed_files(summary)
+    if not status_porcelain(summary).strip():
+        summary.outcome = "no code changes needed"
+        return 0
+
+    commit_message = (
+        deterministic_ci_fix_commit_message(deterministic_fixes, checks, summary.changed_files)
+        if deterministic_fixes
+        else read_copilot_commit_message(bundle_dir / "commit-message.txt", summary)
+    )
+    if commit_message is None:
+        commit_message = ci_fix_commit_message(checks, summary.changed_files)
+    commit_all_tracked(commit_message, summary)
+    if args.no_push:
+        summary.push_result = "not pushed (--no-push)"
+    else:
+        push(summary)
+    summary.outcome = "CI fix committed"
+    return 0
+
+
+def main_gradle_phase(args: argparse.Namespace, summary: Summary) -> int:
+    """Phase running on the gradle-worker (PR-controlled Gradle, no Copilot token).
+
+    For --phase=full this also invokes Copilot; for --phase=gradle it stops
+    before Copilot and writes a handoff bundle to --out-dir."""
+    require_clean_worktree(summary)
+    summary.original_branch = current_branch(summary)
+    verify_pr_checkout(args.pr, summary)
+
+    checks = failed_checks(args.pr, summary)
+    if not checks:
+        summary.outcome = "no failing checks found"
+        return 0
+
+    bundle_dir = make_temp_dir("otel-ci-fix", args.pr, args.keep_temp)
+    plan_path = write_ci_bundle(args.pr, checks, bundle_dir, summary)
+
+    deterministic_fixes = maybe_apply_deterministic_fixes(bundle_dir, plan_path, summary)
+
+    if not deterministic_fixes:
+        if args.skip_copilot:
+            summary.outcome = "downloaded CI logs; skipped Copilot handoff"
+            return 0
+        if args.phase == "gradle":
+            if args.out_dir is None:
+                raise RuntimeError("--phase=gradle requires --out-dir")
+            save_ci_bundle_for_handoff(bundle_dir, args.out_dir, summary)
+            summary.outcome = "deferred to Copilot phase"
+            return 0
+        invoke_copilot_for_fix(bundle_dir, plan_path, summary)
+
+    return commit_and_optionally_push(args, bundle_dir, checks, deterministic_fixes, summary)
+
+
+def main_copilot_phase(args: argparse.Namespace, summary: Summary) -> int:
+    """Phase running on the copilot-worker (Copilot token, no Gradle on PR tree).
+
+    Consumes the CI bundle prepared by --phase=gradle and runs Copilot only."""
+    if args.in_dir is None:
+        raise RuntimeError("--phase=copilot requires --in-dir")
+    bundle_dir = args.in_dir
+    plan_path = bundle_dir / "ci-plan.md"
+    if not plan_path.exists():
+        raise RuntimeError(f"CI bundle not found at {bundle_dir}; expected ci-plan.md")
+
+    require_clean_worktree(summary)
+    summary.original_branch = current_branch(summary)
+    verify_pr_checkout(args.pr, summary)
+
+    summary_path = bundle_dir / "summary.json"
+    bundle_data = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.exists() else {}
+    checks = bundle_data.get("failed_checks") or []
+
+    if args.skip_copilot:
+        summary.outcome = "copilot phase invoked with --skip-copilot; nothing to do"
+        return 0
+
+    invoke_copilot_for_fix(bundle_dir, plan_path, summary)
+    return commit_and_optionally_push(args, bundle_dir, checks, [], summary)
+
+
 def main() -> int:
     args = parse_args()
     summary = Summary(pr=args.pr)
     try:
-        require_clean_worktree(summary)
-        summary.original_branch = current_branch(summary)
-        verify_pr_checkout(args.pr, summary)
-
-        checks = failed_checks(args.pr, summary)
-        if not checks:
-            summary.outcome = "no failing checks found"
-            return 0
-
-        bundle_dir = make_temp_dir("otel-ci-fix", args.pr, args.keep_temp)
-        plan_path = write_ci_bundle(args.pr, checks, bundle_dir, summary)
-
-        deterministic_fixes = maybe_apply_deterministic_fixes(bundle_dir, plan_path, summary)
-        if not deterministic_fixes and not args.skip_copilot:
-            commit_message_path = bundle_dir / "commit-message.txt"
-            prompt_improvement_path = bundle_dir / "prompt-improvement.md"
-            response = invoke_copilot(copilot_prompt(plan_path, commit_message_path, prompt_improvement_path), summary)
-            (bundle_dir / "copilot-response.txt").write_text(response + "\n", encoding="utf-8")
-            read_prompt_improvement(prompt_improvement_path, summary)
-        elif args.skip_copilot:
-            summary.outcome = "downloaded CI logs; skipped Copilot handoff"
-            return 0
-
-        diff_check(summary)
-        if untracked_files(summary):
-            raise RuntimeError("untracked files are present after CI fix; refusing to commit")
-        summary.changed_files = changed_files(summary)
-        if not status_porcelain(summary).strip():
-            summary.outcome = "no code changes needed"
-            return 0
-
-        commit_message = (
-            deterministic_ci_fix_commit_message(deterministic_fixes, checks, summary.changed_files)
-            if deterministic_fixes
-            else read_copilot_commit_message(bundle_dir / "commit-message.txt", summary)
-        )
-        if commit_message is None:
-            commit_message = ci_fix_commit_message(checks, summary.changed_files)
-        commit_all_tracked(commit_message, summary)
-        if args.no_push:
-            summary.push_result = "not pushed (--no-push)"
-        else:
-            push(summary)
-        summary.outcome = "CI fix committed"
-        return 0
+        if args.phase == "copilot":
+            return main_copilot_phase(args, summary)
+        return main_gradle_phase(args, summary)
     except Exception as e:
         summary.outcome = "failed"
         print_failure(e)

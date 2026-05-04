@@ -20,6 +20,7 @@ jobs:
       pull-requests: write
     outputs:
       allowed: ${{ steps.authorize.outputs.allowed }}
+      command: ${{ steps.authorize.outputs.command }}
     env:
       PR_NUMBER: ${{ github.event.issue.number }}
     steps:
@@ -29,16 +30,27 @@ jobs:
         id: authorize
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          allowed=$(python3 .github/scripts/pr-triage/comment_command.py authorize)
-          echo "allowed=$allowed" >> "$GITHUB_OUTPUT"
+        run: python3 .github/scripts/pr-triage/authorize.py
 
-  run-command:
+  # gradle-worker runs the PR triage commands that need Gradle on the PR's
+  # working tree (/spotless, /update-branch, and the deterministic phase of
+  # /fix). It does NOT receive the Copilot token, so a malicious build cannot
+  # exfiltrate it.
+  #
+  # For /fix specifically: this phase downloads CI logs and tries
+  # deterministic fixes (Spotless, FOSSA). If those resolve the failures it
+  # commits and bundles. Otherwise it writes a CI bundle to handoff to
+  # copilot-worker and signals needs-copilot=true.
+  gradle-worker:
     needs: authorize-command
-    if: needs.authorize-command.outputs.allowed == 'true'
+    if: |
+      needs.authorize-command.outputs.allowed == 'true' &&
+      contains(fromJSON('["spotless","update_branch","fix"]'), needs.authorize-command.outputs.command)
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      needs-copilot: ${{ steps.run.outputs.needs-copilot }}
     env:
       PR_NUMBER: ${{ github.event.issue.number }}
     steps:
@@ -46,17 +58,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
-        id: otelbot-token
-        with:
-          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
-          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+      - name: Snapshot trusted PR triage scripts
+        run: |
+          mkdir -p "$RUNNER_TEMP/pr-triage-trusted"
+          cp -r .github/scripts/pr-triage/. "$RUNNER_TEMP/pr-triage-trusted/"
 
       - name: Check out PR
         env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
-        run: |
-          gh pr checkout "$PR_NUMBER"
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr checkout "$PR_NUMBER"
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -69,14 +79,145 @@ jobs:
         with:
           cache-read-only: true
 
+      - name: Run gradle-phase worker
+        id: run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_TRIAGE_REPO_ROOT: ${{ github.workspace }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/work"
+          # Ensure the artifact has at least one file so upload/download
+          # always succeed even when the worker fails before writing any
+          # outputs of its own.
+          touch "$RUNNER_TEMP/work/.placeholder"
+          python3 "$RUNNER_TEMP/pr-triage-trusted/worker_gradle.py" --out-dir "$RUNNER_TEMP/work"
+
+      - name: Upload gradle work bundle
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pr-triage-work-gradle
+          path: ${{ runner.temp }}/work
+          retention-days: 1
+          if-no-files-found: ignore
+
+  # copilot-worker runs commands that need the Copilot CLI (/review and the
+  # Copilot phase of /fix). It does NOT execute Gradle or any other
+  # PR-controlled build tooling, so the Copilot token is never reachable
+  # by code from the PR working tree.
+  copilot-worker:
+    needs: [authorize-command, gradle-worker]
+    if: |
+      always() &&
+      needs.authorize-command.outputs.allowed == 'true' &&
+      (needs.authorize-command.outputs.command == 'review' ||
+       (needs.authorize-command.outputs.command == 'fix' && needs.gradle-worker.outputs.needs-copilot == 'true'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PR_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Snapshot trusted PR triage scripts
+        run: |
+          mkdir -p "$RUNNER_TEMP/pr-triage-trusted"
+          cp -r .github/scripts/pr-triage/. "$RUNNER_TEMP/pr-triage-trusted/"
+
+      - name: Check out PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr checkout "$PR_NUMBER"
+
       - name: Install Copilot CLI
         run: npm install -g @github/copilot@1.0.40
 
-      - name: Use CLA approved bot
-        run: .github/scripts/use-cla-approved-bot.sh
+      - name: Download gradle handoff bundle
+        if: needs.authorize-command.outputs.command == 'fix'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: pr-triage-work-gradle
+          path: ${{ runner.temp }}/gradle-in
 
-      - name: Run PR triage command
+      - name: Run copilot-phase worker
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          PR_TRIAGE_REPO_ROOT: ${{ github.workspace }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/work"
+          touch "$RUNNER_TEMP/work/.placeholder"
+          IN_DIR_ARG=""
+          if [[ "${{ needs.authorize-command.outputs.command }}" == "fix" ]]; then
+            IN_DIR_ARG="--in-dir $RUNNER_TEMP/gradle-in"
+          fi
+          # shellcheck disable=SC2086
+          python3 "$RUNNER_TEMP/pr-triage-trusted/worker_copilot.py" --out-dir "$RUNNER_TEMP/work" $IN_DIR_ARG
+
+      - name: Upload copilot work bundle
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pr-triage-work-copilot
+          path: ${{ runner.temp }}/work
+          retention-days: 1
+          if-no-files-found: ignore
+
+  # poster downloads both worker artifacts, picks the final result, and
+  # posts using the elevated otelbot token. It only runs trusted code
+  # snapshotted from the default branch and uses git/gh to apply bundles;
+  # it never executes anything from the PR working tree.
+  poster:
+    needs: [authorize-command, gradle-worker, copilot-worker]
+    if: |
+      always() &&
+      needs.authorize-command.outputs.allowed == 'true' &&
+      contains(fromJSON('["spotless","update_branch","fix","review"]'), needs.authorize-command.outputs.command)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      PR_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Snapshot trusted PR triage scripts
+        run: |
+          mkdir -p "$RUNNER_TEMP/pr-triage-trusted"
+          cp -r .github/scripts/pr-triage/. "$RUNNER_TEMP/pr-triage-trusted/"
+
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+
+      - name: Download gradle work bundle
+        if: needs.gradle-worker.result == 'success' || needs.gradle-worker.result == 'failure'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: pr-triage-work-gradle
+          path: ${{ runner.temp }}/work/gradle
+
+      - name: Download copilot work bundle
+        if: needs.copilot-worker.result == 'success' || needs.copilot-worker.result == 'failure'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: pr-triage-work-copilot
+          path: ${{ runner.temp }}/work/copilot
+
+      - name: Configure git identity
+        run: |
+          git config --global user.name otelbot
+          git config --global user.email 197425009+otelbot@users.noreply.github.com
+
+      - name: Run poster
         env:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-        run: python3 .github/scripts/pr-triage/comment_command.py execute
+          PR_TRIAGE_REPO_ROOT: ${{ github.workspace }}
+        run: python3 "$RUNNER_TEMP/pr-triage-trusted/poster.py" --in-dir "$RUNNER_TEMP/work"
+

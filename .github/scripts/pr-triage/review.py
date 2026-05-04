@@ -39,6 +39,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--keep-temp", action="store_true", help="reuse and retain the temp bundle directory")
     parser.add_argument("--no-post", action="store_true", help="prepare findings and payload but do not post")
     parser.add_argument("--skip-copilot", action="store_true", help="prepare the review bundle and stop")
+    parser.add_argument("--out-dir", type=Path, help="copy the review payload into this directory")
     return parser.parse_args()
 
 
@@ -311,6 +312,9 @@ def main() -> int:
 
         if args.no_post:
             summary.outcome = f"prepared pending review payload with {len(comments)} comments; not posted (--no-post)"
+            if args.out_dir is not None:
+                args.out_dir.mkdir(parents=True, exist_ok=True)
+                (args.out_dir / "review-payload.json").write_bytes(payload_path.read_bytes())
             return 0
         progress("Posting pending GitHub review")
         review_id = post_review(detect_repo(summary), args.pr, payload_path, summary)
