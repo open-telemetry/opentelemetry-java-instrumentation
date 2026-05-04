@@ -13,8 +13,8 @@ muzzle {
     group.set("io.netty")
     module.set("netty-all")
     versions.set("[4.0.0.Final,4.1.0.Final)")
-    excludeDependency("io.netty:netty-tcnative")
     assertInverse.set(true)
+    excludeDependency("io.netty:netty-tcnative")
   }
   fail {
     group.set("io.netty")
@@ -50,6 +50,7 @@ tasks {
     include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.netty.connection-telemetry.enabled=true,otel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
   test {
