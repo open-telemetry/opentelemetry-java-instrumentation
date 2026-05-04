@@ -212,9 +212,15 @@ jobs:
         if: steps.cleanup-loop.outputs.processed_count != '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: progress
         run: |
+          set -euo pipefail
+          cd progress
+
+          git config user.name otelbot
+          git config user.email 197425009+otelbot@users.noreply.github.com
+
           cat "$PROCESSED_MODULES" >> reviewed.txt
+
           git add reviewed.txt
           git commit -m "Mark $(wc -l < "$PROCESSED_MODULES" | tr -d ' ') module(s) as reviewed"
           git push origin HEAD:otelbot/module-cleanup-progress
