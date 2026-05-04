@@ -28,7 +28,7 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
     return hasClassesNamed(
         // added in 1.37.0 (renamed from extension.incubator)
         "application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder",
-        // added in opentelemetry-api 1.38.0 (used to refine the version boundary)
+        // added in io.opentelemetry:opentelemetry-api 1.38.0 (used to refine the version boundary)
         "application.io.opentelemetry.api.metrics.LongGauge");
   }
 
