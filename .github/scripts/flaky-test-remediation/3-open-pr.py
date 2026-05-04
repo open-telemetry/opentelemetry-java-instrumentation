@@ -42,10 +42,8 @@ def render(selected):
         f"Automated attempt at fixing flakiness in `{fq}`.",
         "",
         f"- Source: [`{source_file}`]({source_file})",
-        f"- Flaky executions in last {window_days}d (this test): "
-        f"**{selected['flaky_count']}**",
-        f"- Flaky executions in last {window_days}d (test container): "
-        f"**{selected['container_flaky_count']}**",
+        f"- Exact test invocation: **{selected['flaky_count']}** "
+        f"flaky executions in last {window_days}d",
     ]
     if sample_url:
         lines.append(f"- Primary failed scan: {sample_url}")
