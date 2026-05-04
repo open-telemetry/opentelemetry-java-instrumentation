@@ -9,38 +9,52 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class InstrumentationDefaultsTest {
 
-  @Test
-  void toConfigProperties() {
+  private static Stream<Arguments> configPropertyDefaults() {
+    return Stream.of(
+        Arguments.of(
+            "micrometer", "base_time_unit", "s", "otel.instrumentation.micrometer.base-time-unit"),
+        Arguments.of(
+            "log4j_appender",
+            "experimental_log_attributes/development",
+            "true",
+            "otel.instrumentation.log4j-appender.experimental-log-attributes"),
+        Arguments.of(
+            "spring_scheduling",
+            "controller_telemetry/development",
+            "false",
+            "otel.instrumentation.spring-scheduling.experimental.controller-telemetry"),
+        Arguments.of(
+            "grpc",
+            "experimental_span_attributes/development",
+            "true",
+            "otel.instrumentation.grpc.experimental-span-attributes"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("configPropertyDefaults")
+  void toConfigProperties(
+      String instrumentation, String key, String value, String expectedPropertyKey) {
     InstrumentationDefaults defaults = new InstrumentationDefaults();
-    defaults.get("micrometer").setDefault("base_time_unit", "s");
-    defaults
-        .get("log4j_appender")
-        .setDefault("experimental_log_attributes/development", "true");
-    defaults.get("spring_scheduling").setDefault("controller_telemetry/development", "false");
-    defaults.get("grpc").setDefault("experimental_span_attributes/development", "true");
+    defaults.get(instrumentation).setDefault(key, value);
 
     Map<String, String> props = defaults.toConfigProperties();
 
-    assertThat(props)
-        .containsEntry("otel.instrumentation.micrometer.base-time-unit", "s")
-        .containsEntry("otel.instrumentation.log4j-appender.experimental-log-attributes", "true")
-        .containsEntry(
-            "otel.instrumentation.spring-scheduling.experimental.controller-telemetry", "false")
-        .containsEntry("otel.instrumentation.grpc.experimental-span-attributes", "true")
-        .hasSize(4);
+    assertThat(props).containsEntry(expectedPropertyKey, value).hasSize(1);
   }
 
   @Test
   void applyToModel() {
     InstrumentationDefaults defaults = new InstrumentationDefaults();
     defaults.get("micrometer").setDefault("base_time_unit", "s");
-    defaults
-        .get("log4j_appender")
-        .setDefault("experimental_log_attributes/development", "true");
+    defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
 
     OpenTelemetryConfigurationModel model = new OpenTelemetryConfigurationModel();
     defaults.applyToModel(model);
