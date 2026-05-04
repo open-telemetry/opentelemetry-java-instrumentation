@@ -38,6 +38,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -52,27 +53,43 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  private CouchbaseEnvironment environmentCouchbase;
+  private CouchbaseEnvironment environmentMemcache;
+  private CouchbaseCluster clusterCouchbase;
+  private CouchbaseCluster clusterMemcache;
+
   private static Stream<Arguments> bucketSettings() {
     return Stream.of(
         Arguments.of(named(bucketCouchbase.type().name(), bucketCouchbase)),
         Arguments.of(named(bucketMemcache.type().name(), bucketMemcache)));
   }
 
-  protected CouchbaseCluster prepareCluster(BucketSettings bucketSettings) {
-    CouchbaseEnvironment environment = envBuilder(bucketSettings).build();
-    CouchbaseCluster cluster = CouchbaseCluster.create(environment, singletonList("127.0.0.1"));
-    // AutoCleanupExtension runs in LIFO order; clear spans emitted while closing the client.
-    cleanup.deferCleanup(testing::clearData);
-    cleanup.deferCleanup(environment::shutdown);
-    cleanup.deferCleanup(cluster::disconnect);
+  @BeforeAll
+  void setUpClusters() {
+    environmentCouchbase = envBuilder(bucketCouchbase).build();
+    clusterCouchbase = CouchbaseCluster.create(environmentCouchbase, singletonList("127.0.0.1"));
+    cleanup.deferAfterAll(environmentCouchbase::shutdown);
+    cleanup.deferAfterAll(clusterCouchbase::disconnect);
 
-    return cluster;
+    environmentMemcache = envBuilder(bucketMemcache).build();
+    clusterMemcache = CouchbaseCluster.create(environmentMemcache, singletonList("127.0.0.1"));
+    cleanup.deferAfterAll(environmentMemcache::shutdown);
+    cleanup.deferAfterAll(clusterMemcache::disconnect);
+  }
+
+  protected CouchbaseCluster getCluster(BucketSettings bucketSettings) {
+    if (bucketSettings == bucketCouchbase) {
+      return clusterCouchbase;
+    } else if (bucketSettings == bucketMemcache) {
+      return clusterMemcache;
+    }
+    throw new IllegalArgumentException("unknown setting " + bucketSettings.name());
   }
 
   @ParameterizedTest
   @MethodSource("bucketSettings")
   void hasBucket(BucketSettings bucketSettings) {
-    CouchbaseCluster cluster = prepareCluster(bucketSettings);
+    CouchbaseCluster cluster = getCluster(bucketSettings);
     ClusterManager manager = cluster.clusterManager(USERNAME, PASSWORD);
 
     testing.waitForTraces(1);
@@ -101,10 +118,11 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
   @ParameterizedTest
   @MethodSource("bucketSettings")
   void upsertAndGet(BucketSettings bucketSettings) {
-    CouchbaseCluster cluster = prepareCluster(bucketSettings);
+    CouchbaseCluster cluster = getCluster(bucketSettings);
 
     // Connect to the bucket and open it
     Bucket bucket = cluster.openBucket(bucketSettings.name(), bucketSettings.password());
+    cleanup.deferCleanup(bucket::close);
 
     // Create a JSON document and store it with the ID "helloworld"
     JsonObject content = JsonObject.create().put("hello", "world");
@@ -170,8 +188,9 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
   @Test
   void query() {
     // Only couchbase buckets support queries.
-    CouchbaseCluster cluster = prepareCluster(bucketCouchbase);
+    CouchbaseCluster cluster = getCluster(bucketCouchbase);
     Bucket bucket = cluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password());
+    cleanup.deferCleanup(bucket::close);
 
     // Mock expects this specific query.
     // See com.couchbase.mock.http.query.QueryServer.handleString.
