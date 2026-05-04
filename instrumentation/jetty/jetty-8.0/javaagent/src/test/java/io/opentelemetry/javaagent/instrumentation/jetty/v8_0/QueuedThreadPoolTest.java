@@ -34,29 +34,31 @@ class QueuedThreadPoolTest {
     }
     pool.start();
 
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          // this child will have a span
-          JavaAsyncChild child1 = new JavaAsyncChild();
-          // this child won't
-          JavaAsyncChild child2 = new JavaAsyncChild(false, false);
-          dispatch.invoke(pool, child1);
-          dispatch.invoke(pool, child2);
-          child1.waitForCompletion();
-          child2.waitForCompletion();
-        });
+    try {
+      testing.runWithSpan(
+          "parent",
+          () -> {
+            // this child will have a span
+            JavaAsyncChild child1 = new JavaAsyncChild();
+            // this child won't
+            JavaAsyncChild child2 = new JavaAsyncChild(false, false);
+            dispatch.invoke(pool, child1);
+            dispatch.invoke(pool, child2);
+            child1.waitForCompletion();
+            child2.waitForCompletion();
+          });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("asyncChild")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
-
-    pool.stop();
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactlyInAnyOrder(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      span.hasName("asyncChild")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0))));
+    } finally {
+      pool.stop();
+    }
   }
 
   @Test
@@ -73,26 +75,28 @@ class QueuedThreadPoolTest {
     }
     pool.start();
 
-    JavaAsyncChild child = new JavaAsyncChild(true, true);
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          dispatch.invoke(pool, JavaLambdaMaker.lambda(child));
-        });
+    try {
+      JavaAsyncChild child = new JavaAsyncChild(true, true);
+      testing.runWithSpan(
+          "parent",
+          () -> {
+            dispatch.invoke(pool, JavaLambdaMaker.lambda(child));
+          });
 
-    // We block in child to make sure spans close in predictable order
-    child.unblock();
-    child.waitForCompletion();
+      // We block in child to make sure spans close in predictable order
+      child.unblock();
+      child.waitForCompletion();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("asyncChild")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
-
-    pool.stop();
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      span.hasName("asyncChild")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0))));
+    } finally {
+      pool.stop();
+    }
   }
 }
