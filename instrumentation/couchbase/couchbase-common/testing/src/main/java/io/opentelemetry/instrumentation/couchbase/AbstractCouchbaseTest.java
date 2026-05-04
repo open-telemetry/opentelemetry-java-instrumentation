@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.couchbase;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -129,21 +128,5 @@ public abstract class AbstractCouchbaseTest {
 
   protected StringAssertConsumer experimentalAttribute() {
     return includesExperimentalAttributes() ? val -> val.isNotNull() : val -> val.isNull();
-  }
-
-  protected StringAssertConsumer optionalNetworkType() {
-    return val -> val.isIn(networkType(), null);
-  }
-
-  protected StringAssertConsumer optionalNetworkPeerAddress() {
-    return val -> val.isIn(networkPeerAddress(), null);
-  }
-
-  protected LongAssertConsumer optionalNetworkPeerPort() {
-    return includesNetworkAttributes()
-        ? val ->
-            val.satisfiesAnyOf(
-                v -> assertThat(v).isNull(), v -> assertThat(v).isGreaterThan(0L))
-        : val -> val.isNull();
   }
 }

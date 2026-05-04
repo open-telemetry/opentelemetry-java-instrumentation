@@ -121,10 +121,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            satisfies(NETWORK_TYPE, optionalNetworkType()),
-                            satisfies(NETWORK_PEER_ADDRESS, optionalNetworkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, optionalNetworkPeerPort())),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
                     span.hasName("ClusterManager.hasBucket")
                         .hasKind(SpanKind.CLIENT)
@@ -172,10 +169,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            satisfies(NETWORK_TYPE, optionalNetworkType()),
-                            satisfies(NETWORK_PEER_ADDRESS, optionalNetworkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, optionalNetworkPeerPort())),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
                     span.hasName("Bucket.upsert")
                         .hasKind(SpanKind.CLIENT)
@@ -234,9 +228,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            satisfies(NETWORK_TYPE, optionalNetworkType()),
-                            satisfies(NETWORK_PEER_ADDRESS, optionalNetworkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, optionalNetworkPeerPort())),
+                            equalTo(NETWORK_TYPE, networkType()),
+                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
+                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            satisfies(
+                                stringKey("couchbase.local.address"), experimentalAttribute())),
                 span ->
                     span.hasName("Bucket.upsert")
                         .hasKind(SpanKind.CLIENT)
@@ -303,10 +299,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
-                            satisfies(NETWORK_TYPE, optionalNetworkType()),
-                            satisfies(NETWORK_PEER_ADDRESS, optionalNetworkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, optionalNetworkPeerPort())),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
