@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
 public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     extends HttpCommonAttributesExtractor<
         REQUEST, RESPONSE, HttpServerAttributesGetter<REQUEST, RESPONSE>>
-  implements SpanKeyProvider {
+    implements SpanKeyProvider {
 
   /**
    * Creates the HTTP server attributes extractor with default configuration.

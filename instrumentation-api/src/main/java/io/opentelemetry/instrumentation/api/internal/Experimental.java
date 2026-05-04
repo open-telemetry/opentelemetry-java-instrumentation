@@ -40,8 +40,8 @@ public final class Experimental {
   private static volatile BiConsumer<InstrumenterBuilder<?, ?>, AttributesExtractor<?, ?>>
       operationListenerAttributesExtractorAdder;
 
-    @Nullable
-    private static volatile BiConsumer<InstrumenterBuilder<?, ?>, InternalExceptionEventExtractor<?>>
+  @Nullable
+  private static volatile BiConsumer<InstrumenterBuilder<?, ?>, InternalExceptionEventExtractor<?>>
       exceptionEventExtractorSetter;
 
   private Experimental() {}

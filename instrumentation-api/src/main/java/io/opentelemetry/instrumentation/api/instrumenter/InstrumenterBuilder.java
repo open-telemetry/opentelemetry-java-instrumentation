@@ -84,9 +84,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
                 requireNonNull(
                     operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
     Experimental.internalSetExceptionEventExtractor(
-      (builder, exceptionEventExtractor) ->
-        builder.exceptionEventExtractor =
-          requireNonNull(exceptionEventExtractor, "exceptionEventExtractor"));
+        (builder, exceptionEventExtractor) ->
+            builder.exceptionEventExtractor =
+                requireNonNull(exceptionEventExtractor, "exceptionEventExtractor"));
   }
 
   InstrumenterBuilder(
