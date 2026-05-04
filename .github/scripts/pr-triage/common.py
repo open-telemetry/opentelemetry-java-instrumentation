@@ -246,6 +246,8 @@ def checkout_pr(pr: int, summary: Summary) -> dict[str, Any]:
 
 
 def gradlew_cmd(task: str) -> list[str]:
+    if os.name == "nt":
+        return [str(REPO_ROOT / "gradlew.bat"), task]
     return ["./gradlew", task]
 
 
