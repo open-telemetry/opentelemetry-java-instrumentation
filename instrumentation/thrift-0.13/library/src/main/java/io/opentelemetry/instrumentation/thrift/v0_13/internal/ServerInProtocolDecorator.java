@@ -64,6 +64,10 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       super.readFieldEnd();
 
       Socket socket = SocketAccessor.getSocket(super.getTransport());
+      if (socket == null) {
+        // for non-blocking server, the socket may not be available through super.getTransport()
+        socket = SocketAccessor.getSocket(ServerCallContext.getTransport());
+      }
       ThriftRequest request = newThriftRequest(methodName, serviceName, socket, headers);
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {

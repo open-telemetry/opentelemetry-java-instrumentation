@@ -34,7 +34,7 @@ class ThriftServiceClientInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(0, named("org.apache.thrift.protocol.TProtocol"))
                     .and(takesArgument(1, named("org.apache.thrift.protocol.TProtocol")))),
-        this.getClass().getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")

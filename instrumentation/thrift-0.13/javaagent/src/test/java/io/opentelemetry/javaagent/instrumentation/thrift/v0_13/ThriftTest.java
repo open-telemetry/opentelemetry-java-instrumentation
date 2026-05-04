@@ -44,4 +44,9 @@ class ThriftTest extends AbstractThriftTest {
   protected CustomService.AsyncIface configure(CustomService.AsyncClient asyncClient) {
     return asyncClient;
   }
+
+  @Override
+  protected boolean hasAsyncServerNetworkAttributes() {
+    return true;
+  }
 }

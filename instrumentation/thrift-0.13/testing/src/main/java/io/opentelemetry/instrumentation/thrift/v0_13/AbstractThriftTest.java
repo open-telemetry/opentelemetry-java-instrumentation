@@ -43,6 +43,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.Named.named;
 
 import custom.Address;
 import custom.CustomService;
@@ -60,6 +61,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.TProcessorFactory;
@@ -78,10 +80,13 @@ import org.apache.thrift.transport.TNonblockingTransport;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportFactory;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractThriftTest {
@@ -89,6 +94,8 @@ public abstract class AbstractThriftTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension getTesting();
+
+  protected abstract boolean hasAsyncServerNetworkAttributes();
 
   protected abstract TProcessor configure(TProcessor processor, String serviceName);
 
@@ -104,6 +111,15 @@ public abstract class AbstractThriftTest {
   }
 
   protected int startSimpleServer(boolean configure) throws Exception {
+    return startSimpleServer(configure, null);
+  }
+
+  protected int startSimpleServer(TTransportFactory transportFactory) throws Exception {
+    return startSimpleServer(true, transportFactory);
+  }
+
+  protected int startSimpleServer(boolean configure, TTransportFactory transportFactory)
+      throws Exception {
     CustomHandler handler = new CustomHandler();
     TProcessor processor = new CustomService.Processor<CustomService.Iface>(handler);
     if (configure) {
@@ -111,7 +127,11 @@ public abstract class AbstractThriftTest {
     }
 
     TServerSocket transport = new TServerSocket(0);
-    TServer server = new TSimpleServer(new TServer.Args(transport).processor(processor));
+    TServer.Args serverArgs = new TServer.Args(transport).processor(processor);
+    if (transportFactory != null) {
+      serverArgs.transportFactory(transportFactory);
+    }
+    TServer server = new TSimpleServer(serverArgs);
 
     new Thread(server::serve).start();
     cleanup.deferCleanup(server::stop);
@@ -188,7 +208,20 @@ public abstract class AbstractThriftTest {
   }
 
   protected CustomService.Client createClient(int port, boolean configure) throws Exception {
+    return createClient(port, configure, null);
+  }
+
+  protected CustomService.Client createClient(int port, TTransportFactory transportFactory)
+      throws Exception {
+    return createClient(port, true, transportFactory);
+  }
+
+  protected CustomService.Client createClient(
+      int port, boolean configure, TTransportFactory transportFactory) throws Exception {
     TTransport transport = new TSocket("localhost", port);
+    if (transportFactory != null) {
+      transport = transportFactory.getTransport(transport);
+    }
     transport.open();
     cleanup.deferCleanup(transport);
     TProtocol protocol = new TBinaryProtocol(transport);
@@ -363,6 +396,52 @@ public abstract class AbstractThriftTest {
     assertMetrics(port);
   }
 
+  private static Stream<Arguments> transports() throws Exception {
+    Class<?> framedTransportClass;
+    try {
+      framedTransportClass = Class.forName("org.apache.thrift.transport.TFramedTransport$Factory");
+    } catch (ClassNotFoundException e) {
+      framedTransportClass =
+          Class.forName("org.apache.thrift.transport.layered.TFramedTransport$Factory");
+    }
+    Class<?> fastFramedTransportClass;
+    try {
+      fastFramedTransportClass =
+          Class.forName("org.apache.thrift.transport.TFastFramedTransport$Factory");
+    } catch (ClassNotFoundException e) {
+      fastFramedTransportClass =
+          Class.forName("org.apache.thrift.transport.layered.TFastFramedTransport$Factory");
+    }
+    TTransportFactory framedTransportFactory =
+        (TTransportFactory) framedTransportClass.getConstructor().newInstance();
+    TTransportFactory fastFramedTransportFactory =
+        (TTransportFactory) fastFramedTransportClass.getConstructor().newInstance();
+    return Stream.of(
+        Arguments.of(named("framed", framedTransportFactory)),
+        Arguments.of(named("fast framed", fastFramedTransportFactory)));
+  }
+
+  @ParameterizedTest
+  @MethodSource(value = "transports")
+  void transportFactory(TTransportFactory transportFactory) throws Exception {
+    int port = startSimpleServer(transportFactory);
+    CustomService.Client client = createClient(port, transportFactory);
+
+    getTesting()
+        .runWithSpan(
+            "parent", () -> assertThat(client.say("Hello", "World")).isEqualTo("Say Hello World"));
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
+                    span -> assertServerSpan(span, "say", port).hasParent(trace.getSpan(1))));
+
+    assertMetrics(port);
+  }
+
   @Test
   void withoutArgs() throws Exception {
     int port = startSimpleServer();
@@ -477,7 +556,11 @@ public abstract class AbstractThriftTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span -> assertClientSpan(span, "say", port, false).hasParent(trace.getSpan(0)),
-                    span -> assertServerSpan(span, "say").hasParent(trace.getSpan(1)),
+                    span ->
+                        (hasAsyncServerNetworkAttributes()
+                                ? assertServerSpan(span, "say", port)
+                                : assertServerSpan(span, "say"))
+                            .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
@@ -526,7 +609,11 @@ public abstract class AbstractThriftTest {
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     assertClientSpan(span, "withDelay", port, false).hasParent(trace.getSpan(0)),
-                span -> assertServerSpan(span, "withDelay").hasParent(trace.getSpan(1)),
+                span ->
+                    (hasAsyncServerNetworkAttributes()
+                            ? assertServerSpan(span, "withDelay", port)
+                            : assertServerSpan(span, "withDelay"))
+                        .hasParent(trace.getSpan(1)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -582,7 +669,11 @@ public abstract class AbstractThriftTest {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         assertClientSpan(span, "oneWay", port, false).hasParent(trace.getSpan(0)),
-                    span -> assertServerSpan(span, "oneWay").hasParent(trace.getSpan(1)),
+                    span ->
+                        (hasAsyncServerNetworkAttributes()
+                                ? assertServerSpan(span, "oneWay", port)
+                                : assertServerSpan(span, "oneWay"))
+                            .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)

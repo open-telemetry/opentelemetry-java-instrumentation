@@ -52,6 +52,11 @@ final class ContextPropagationUtil {
             FINE,
             "Thrift context propagation entries count {0} exceeds maximum allowed of {1}, skipping context propagation.",
             new Object[] {map.size, MAX_CONTEXT_ENTRIES});
+        // skip remaining entries
+        for (int i = 0; i < map.size; i++) {
+          TProtocolUtil.skip(protocol, TType.STRING);
+          TProtocolUtil.skip(protocol, TType.STRING);
+        }
         return emptyMap();
       }
       int contextSize = 0;

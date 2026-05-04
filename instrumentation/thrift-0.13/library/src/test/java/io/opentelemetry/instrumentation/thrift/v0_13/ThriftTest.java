@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.thrift.v0_13;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import custom.CustomService;
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.apache.thrift.TProcessor;
@@ -24,8 +23,6 @@ class ThriftTest extends AbstractThriftTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
-
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   static ThriftTelemetry telemetry;
 
@@ -58,6 +55,11 @@ class ThriftTest extends AbstractThriftTest {
   @Override
   protected CustomService.AsyncIface configure(CustomService.AsyncClient asyncClient) {
     return telemetry.wrapAsyncClient(asyncClient, CustomService.AsyncIface.class);
+  }
+
+  @Override
+  protected boolean hasAsyncServerNetworkAttributes() {
+    return false;
   }
 
   @ParameterizedTest

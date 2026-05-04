@@ -22,7 +22,7 @@ final class SocketAccessor {
 
   @Nullable
   private static final Class<?> FRAMED_TRANSPORT =
-      getClass("org.apache.thrift.transport.TFastFramedTransport");
+      getClass("org.apache.thrift.transport.TFramedTransport");
 
   @Nullable
   private static final Class<?> FAST_FRAMED_TRANSPORT =

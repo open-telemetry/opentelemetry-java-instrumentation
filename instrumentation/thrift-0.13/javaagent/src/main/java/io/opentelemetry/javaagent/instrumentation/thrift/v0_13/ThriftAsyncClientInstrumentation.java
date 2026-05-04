@@ -45,7 +45,7 @@ class ThriftAsyncClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("org.apache.thrift.protocol.TProtocolFactory"))),
-        this.getClass().getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
 
     transformer.applyAdviceToMethod(
         isMethod()
@@ -59,7 +59,7 @@ class ThriftAsyncClientInstrumentation implements TypeInstrumentation {
                   }
                   return false;
                 }),
-        this.getClass().getName() + "$MethodAdvice");
+        getClass().getName() + "$MethodAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -93,7 +93,7 @@ class ThriftAsyncClientInstrumentation implements TypeInstrumentation {
       ClientCallContext clientContext = ClientCallContext.start();
       Object[] args = new Object[arguments.length];
       System.arraycopy(arguments, 0, args, 0, arguments.length);
-      if (args.length > 0 && args[args.length - 1] instanceof AsyncMethodCallback) {
+      if (args[args.length - 1] != null) {
         AsyncMethodCallback<?> callback = (AsyncMethodCallback<?>) args[args.length - 1];
         args[args.length - 1] = AsyncMethodCallbackUtil.wrap(callback, clientContext);
         clientContext.setHasAsyncCallback();
@@ -104,9 +104,6 @@ class ThriftAsyncClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
-      if (enterResult == null) {
-        return;
-      }
       ClientCallContext clientContext = (ClientCallContext) enterResult[1];
       clientContext.end();
       if (throwable != null) {

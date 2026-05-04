@@ -1,4 +1,4 @@
-# Library Instrumentation for gRPC 0.13.0+
+# Library Instrumentation for Apache Thrift 0.13.0+
 
 Provides OpenTelemetry instrumentation for [Apache Thrift](https://thrift.apache.org/).
 
@@ -6,7 +6,7 @@ Provides OpenTelemetry instrumentation for [Apache Thrift](https://thrift.apache
 
 ### Add the following dependencies to your project
 
-Replace `OPENTELEMETRY_VERSION` with the [latest release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-grpc-1.6).
+Replace `OPENTELEMETRY_VERSION` with the [latest release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-thrift-0.13).
 
 For Maven, add the following to your `pom.xml` dependencies:
 
@@ -34,22 +34,23 @@ The instrumentation library provides the implementation of `ClientInterceptor` a
 // For server-side, decorate processor with a tracing wrapper.
 TProcessor configureServer(OpenTelemetry openTelemetry, TProcessor processor, String serviceName) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return telemetry.wrapServerProcessor(processor, serviceName);
+  return thriftTelemetry.wrapServerProcessor(processor, serviceName);
 }
 
 // For client-side, decorate protocol with a tracing wrapper.
-TProtocol configureClient(OpenTelemetry openTelemetry, TProtocol processor, String serviceName) {
+TProtocol configureClient(OpenTelemetry openTelemetry, TProtocol protocol, String serviceName) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return telemetry.wrapClientProtocol(protocol, serviceName);
+  return thriftTelemetry.wrapClientProtocol(protocol, serviceName);
 }
 
 // For non-blocking client, decorate protocol factory and the async client with a tracing wrappers.
-TProtocol configureClient(OpenTelemetry openTelemetry, TProtocolFactory protocolFactory, String serviceName, TTransport transport) {
+TProtocolFactory configureClient(OpenTelemetry openTelemetry, TProtocolFactory protocolFactory, String serviceName, TTransport transport) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return telemetry.wrapClientProtocolFactory(protocolFactory, serviceName, transport);
+  return thriftTelemetry.wrapClientProtocolFactory(protocolFactory, serviceName, transport);
 }
 
 CustomService.AsyncIface configure(CustomService.AsyncClient asyncClient) {
-  return telemetry.wrapAsyncClient(asyncClient, CustomService.AsyncIface.class);
+  ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
+  return thriftTelemetry.wrapAsyncClient(asyncClient, CustomService.AsyncIface.class);
 }
 ```

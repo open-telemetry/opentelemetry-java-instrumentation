@@ -33,6 +33,7 @@ public class ThriftInstrumentationModule extends InstrumentationModule {
     return asList(
         new ThriftServiceClientInstrumentation(),
         new ThriftAsyncClientInstrumentation(),
-        new ThriftTBaseProcessorInstrumentation());
+        new ThriftTBaseProcessorInstrumentation(),
+        new ThriftFrameBufferInstrumentation());
   }
 }
