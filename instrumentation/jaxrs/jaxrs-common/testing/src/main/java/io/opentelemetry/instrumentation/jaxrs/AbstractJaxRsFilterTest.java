@@ -126,7 +126,7 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
                 ? 401 // Response.Status.UNAUTHORIZED.statusCode
                 : 200); // Response.Status.OK.statusCode
 
-    @Nullable String serverRoute = route != null ? route : defaultServerRoute();
+    String serverRoute = route != null ? route : defaultServerRoute();
     String method = runsOnServer() ? "POST" : "GET";
     String expectedServerSpanName = serverRoute == null ? method : method + " " + serverRoute;
     testing()
