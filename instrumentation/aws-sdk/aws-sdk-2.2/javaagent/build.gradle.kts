@@ -65,12 +65,10 @@ muzzle {
     module.set("lambda")
     versions.set("[2.17.0,)")
     skip("2.17.200") // broken AWS SDK release: sdk-core 2.17.200 was not published
-    assertInverse.set(true)
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-core")
     excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-sns")
@@ -79,12 +77,10 @@ muzzle {
     group.set("software.amazon.awssdk")
     module.set("bedrockruntime")
     versions.set("[2.25.63,)")
-    assertInverse.set(true)
     // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-core")
     excludeInstrumentationName("aws-sdk-2.2-lambda")
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-sns")
