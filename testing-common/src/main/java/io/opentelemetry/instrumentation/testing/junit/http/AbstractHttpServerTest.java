@@ -403,8 +403,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   void captureRequestParametersPreservesCase() {
     assumeTrue(options.testCaptureRequestParameters);
 
-    QueryParams formBody =
-        QueryParams.builder().add("Test-Parameter", "test value õäöü").build();
+    QueryParams formBody = QueryParams.builder().add("Test-Parameter", "test value õäöü").build();
     AggregatedHttpRequest request =
         AggregatedHttpRequest.of(
             RequestHeaders.builder(

@@ -33,7 +33,10 @@ public class ServerEndpoint {
       new ServerEndpoint("CAPTURE_PARAMETERS", "captureParameters", 200, "parameters captured");
   public static final ServerEndpoint CAPTURE_PARAMETERS_MIXED_CASE =
       new ServerEndpoint(
-          "CAPTURE_PARAMETERS_MIXED_CASE", "captureParametersMixedCase", 200, "parameters captured");
+          "CAPTURE_PARAMETERS_MIXED_CASE",
+          "captureParametersMixedCase",
+          200,
+          "parameters captured");
 
   // TODO: add tests for the following cases:
   public static final ServerEndpoint QUERY_PARAM =
