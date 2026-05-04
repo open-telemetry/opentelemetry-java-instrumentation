@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JaxrsAnnotationsSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
@@ -12,7 +13,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
@@ -53,10 +53,7 @@ class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrum
         Jaxrs3HandlerData handlerData = new Jaxrs3HandlerData(filterClass, method);
 
         HttpServerRoute.update(
-            parentContext,
-            HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.serverSpanName(),
-            handlerData);
+            parentContext, HttpServerRouteSource.CONTROLLER, serverSpanName(), handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
           return null;
