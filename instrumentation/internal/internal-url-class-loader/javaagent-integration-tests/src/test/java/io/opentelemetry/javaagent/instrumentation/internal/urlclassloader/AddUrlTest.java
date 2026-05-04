@@ -22,7 +22,7 @@ class AddUrlTest {
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
-  void testShouldInstrumentClassAfterItIsLoadedViaAddUrl() throws Exception {
+  void testShouldInstrumentClassAfterItIsLoadedViaAddUrl() throws ReflectiveOperationException {
     TestUrlClassLoader loader = new TestUrlClassLoader();
     cleanup.deferCleanup(loader);
 

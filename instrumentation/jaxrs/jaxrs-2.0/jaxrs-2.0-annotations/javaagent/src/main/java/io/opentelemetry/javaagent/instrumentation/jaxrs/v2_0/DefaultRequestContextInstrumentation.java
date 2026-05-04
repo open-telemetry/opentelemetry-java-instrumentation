@@ -21,8 +21,8 @@ import net.bytebuddy.asm.Advice;
 /**
  * Default context instrumentation.
  *
- * <p>JAX-RS does not define a way to get the matched resource method from the <code>
- * ContainerRequestContext</code>
+ * <p>JAX-RS does not define a way to get the matched resource method from the {@code
+ * ContainerRequestContext}
  *
  * <p>This default instrumentation uses the class name of the filter to create the span. More
  * specific instrumentations may override this value.
@@ -90,7 +90,7 @@ class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrum
       Method method = null;
       try {
         method = filterClass.getMethod("filter", ContainerRequestContext.class);
-      } catch (NoSuchMethodException e) {
+      } catch (NoSuchMethodException ignored) {
         // Unable to find the filter method.  This should not be reachable because the context
         // can only be aborted inside the filter method
       }
