@@ -25,8 +25,8 @@ public class ResteasySpanName implements HttpServerRouteGetter<String> {
 
   @Override
   @Nullable
-  public String get(Context context, @Nullable String name) {
-    if (name == null || name.isEmpty()) {
+  public String get(Context context, String name) {
+    if (name.isEmpty()) {
       return null;
     }
     return ServletContextPath.prepend(context, JaxrsContextPath.prepend(context, name));

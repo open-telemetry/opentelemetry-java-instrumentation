@@ -52,7 +52,10 @@ public class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstru
       // subresource locator returns a resource class that may have @Path annotations
       // append current path to jax-rs context path so that it would be present in the final path
       Context context =
-          JaxrsContextPath.init(currentContext, JaxrsContextPath.prepend(currentContext, name));
+          name == null
+              ? null
+              : JaxrsContextPath.init(
+                  currentContext, JaxrsContextPath.prepend(currentContext, name));
       return context != null ? context.makeCurrent() : null;
     }
 
