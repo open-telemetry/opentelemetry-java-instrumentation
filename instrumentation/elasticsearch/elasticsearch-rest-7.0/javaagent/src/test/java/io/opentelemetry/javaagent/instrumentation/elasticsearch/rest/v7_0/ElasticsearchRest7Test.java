@@ -47,13 +47,13 @@ class ElasticsearchRest7Test {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static ElasticsearchContainer elasticsearch;
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  static HttpHost httpHost;
+  private static ElasticsearchContainer elasticsearch;
 
-  static RestClient client;
+  private static HttpHost httpHost;
 
-  static ObjectMapper objectMapper;
+  private static RestClient client;
 
   @BeforeAll
   static void setUp() {
@@ -77,8 +77,6 @@ class ElasticsearchRest7Test {
                         .setSocketTimeout(Integer.MAX_VALUE))
             .build();
     cleanup.deferAfterAll(client);
-
-    objectMapper = new ObjectMapper();
   }
 
   @Test

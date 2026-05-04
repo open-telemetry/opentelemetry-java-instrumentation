@@ -26,7 +26,7 @@ public abstract class AbstractElasticsearch6NodeClientTest
   private static final Logger logger =
       LoggerFactory.getLogger(AbstractElasticsearch6NodeClientTest.class);
 
-  private static final String clusterName = UUID.randomUUID().toString();
+  private static final String CLUSTER_NAME = UUID.randomUUID().toString();
   private Node testNode;
   private Client client;
 
@@ -40,7 +40,7 @@ public abstract class AbstractElasticsearch6NodeClientTest
             // Since we use listeners to close spans this should make our span closing deterministic
             // which is good for tests
             .put("thread_pool.listener.size", 1)
-            .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+            .put(CLUSTER_NAME_SETTING.getKey(), CLUSTER_NAME)
             .put("discovery.type", "single-node")
             .build();
     testNode = getNodeFactory().newNode(settings);

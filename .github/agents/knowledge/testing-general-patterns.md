@@ -30,6 +30,11 @@
   non-checked wait path exists (for example, when a timeout is required via
   `get(timeout, unit)`), leave the test's `throws` clause as-is — including `throws Exception`
   — rather than inventing a new helper just to narrow it.
+- Do **not** replace a direct `CountDownLatch.await(timeout, unit)` assertion with Awaitility
+  polling of `getCount()` solely to avoid `InterruptedException` and narrow the test method's
+  `throws` clause. Prefer the conventional
+  `assertThat(latch.await(timeout, unit)).isTrue()` form for latch-based callback waits, even
+  when that means leaving `throws Exception` on the test method.
 - Do **not** wrap a checked exception inside a lambda body (for example, catching
   `IOException` and rethrowing `UncheckedIOException`) solely to narrow a test method's
   `throws` clause. That noisy try/catch inside the lambda is worse than leaving
