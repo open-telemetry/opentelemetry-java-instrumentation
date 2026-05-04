@@ -278,9 +278,10 @@ class ClickHouseClientV2Test {
     testing.runWithSpan(
         "parent",
         () -> {
-          CommandResponse results =
-              client.execute("select * from " + TABLE_NAME + " limit 1").join();
-          assertThat(results.getReadRows()).isEqualTo(0);
+          try (CommandResponse results =
+              client.execute("select * from " + TABLE_NAME + " limit 1").join()) {
+            assertThat(results.getReadRows()).isEqualTo(0);
+          }
         });
 
     testing.waitAndAssertTraces(
@@ -355,9 +356,10 @@ class ClickHouseClientV2Test {
               client.queryRecords("insert into " + TABLE_NAME + " values('test_value')").join();
           records.close();
 
-          records = client.queryRecords("select * from " + TABLE_NAME + " limit 1").join();
-          records.close();
-          assertThat(records.getReadRows()).isEqualTo(1);
+          try (Records selectRecords =
+              client.queryRecords("select * from " + TABLE_NAME + " limit 1").join()) {
+            assertThat(selectRecords.getReadRows()).isEqualTo(1);
+          }
         });
 
     testing.waitAndAssertTraces(
