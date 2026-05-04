@@ -65,7 +65,7 @@ final class MetroServerSpanNameUpdater {
     HttpServletRequestAdapter adapter;
     try {
       adapter = new HttpServletRequestAdapter(Class.forName(httpServletRequestClassName));
-    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException e) {
+    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException ignored) {
       // Ignore.  Don't register
       return;
     }
@@ -136,7 +136,7 @@ final class MetroServerSpanNameUpdater {
           lookup.unreflect(httpServletRequestClass.getMethod("getPathInfo"));
     }
 
-    boolean canHandle(Object httpServletRequest) {
+    boolean canHandle(@Nullable Object httpServletRequest) {
       return httpServletRequestClass.isInstance(httpServletRequest);
     }
 
