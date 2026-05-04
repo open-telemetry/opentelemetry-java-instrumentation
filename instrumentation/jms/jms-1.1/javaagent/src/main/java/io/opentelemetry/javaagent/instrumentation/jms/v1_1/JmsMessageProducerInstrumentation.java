@@ -110,7 +110,7 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
       Destination destination;
       try {
         destination = producer.getDestination();
-      } catch (JMSException e) {
+      } catch (JMSException ignored) {
         destination = null;
       }
       CallDepth callDepth = CallDepth.forClass(MessageProducer.class);

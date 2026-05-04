@@ -69,10 +69,7 @@ class Jms2InstrumentationTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static HornetQServer server;
-  static HornetQConnectionFactory connectionFactory;
-  static Session session;
-  static Connection connection;
+  private static Session session;
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -92,7 +89,7 @@ class Jms2InstrumentationTest {
         new HashSet<>(
             singletonList(new TransportConfiguration(InVMAcceptorFactory.class.getName()))));
 
-    server = HornetQServers.newHornetQServer(config);
+    HornetQServer server = HornetQServers.newHornetQServer(config);
     server.start();
     cleanup.deferAfterAll(server::stop);
 
@@ -107,10 +104,10 @@ class Jms2InstrumentationTest {
     sf.close();
     serverLocator.close();
 
-    connectionFactory =
+    HornetQConnectionFactory connectionFactory =
         HornetQJMSClient.createConnectionFactoryWithoutHA(
             JMSFactoryType.CF, new TransportConfiguration(InVMConnectorFactory.class.getName()));
-    connection = connectionFactory.createConnection();
+    Connection connection = connectionFactory.createConnection();
     connection.start();
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     session.run();
