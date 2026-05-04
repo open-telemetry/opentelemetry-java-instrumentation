@@ -23,11 +23,7 @@ testing {
   suites {
     val version20Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (otelProps.testLatestDeps) {
-          implementation("io.kubernetes:client-java-api:latest.release")
-        } else {
-          implementation("io.kubernetes:client-java-api:20.0.0")
-        }
+        implementation("io.kubernetes:client-java-api:${baseVersion("20.0.0").orLatest()}")
       }
     }
   }

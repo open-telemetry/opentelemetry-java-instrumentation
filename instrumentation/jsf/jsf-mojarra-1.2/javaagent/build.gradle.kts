@@ -65,7 +65,7 @@ testing {
         implementation("javax.faces:jsf-api:1.2")
         implementation("com.sun.facelets:jsf-facelets:1.1.14")
 
-        val version = if (otelProps.testLatestDeps) "1.+" else "1.2_04"
+        val version = baseVersion("1.2_04").orLatest("1.+")
         implementation("javax.faces:jsf-impl:$version")
       }
     }
@@ -74,7 +74,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
 
-        val version = if (otelProps.testLatestDeps) "2.+" else "2.2.0"
+        val version = baseVersion("2.2.0").orLatest("2.+")
         implementation("org.glassfish:javax.faces:$version")
       }
     }

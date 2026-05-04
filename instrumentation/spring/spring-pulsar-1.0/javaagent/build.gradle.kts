@@ -35,14 +35,14 @@ testing {
       dependencies {
         implementation(project(":instrumentation:spring:spring-pulsar-1.0:testing"))
 
+        val springBootVersion = baseVersion("3.2.4").orLatest()
+        val springPulsarVersion = baseVersion("1.0.0").orLatest()
+        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+        implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
         if (otelProps.testLatestDeps) {
-          implementation("org.springframework.boot:spring-boot-starter-pulsar:latest.release")
-          implementation("org.springframework.boot:spring-boot-starter-test:latest.release")
-          implementation("org.springframework.boot:spring-boot-starter:latest.release")
+          implementation("org.springframework.boot:spring-boot-starter-pulsar:$springPulsarVersion")
         } else {
-          implementation("org.springframework.pulsar:spring-pulsar:1.0.0")
-          implementation("org.springframework.boot:spring-boot-starter-test:3.2.4")
-          implementation("org.springframework.boot:spring-boot-starter:3.2.4")
+          implementation("org.springframework.pulsar:spring-pulsar:$springPulsarVersion")
         }
       }
 

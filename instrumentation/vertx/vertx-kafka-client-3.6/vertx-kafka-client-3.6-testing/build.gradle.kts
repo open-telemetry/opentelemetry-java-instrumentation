@@ -22,7 +22,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
-        val version = if (otelProps.testLatestDeps) "3.+" else "3.6.0"
+        val version = baseVersion("3.6.0").orLatest("3.+")
         implementation("io.vertx:vertx-kafka-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
       }
