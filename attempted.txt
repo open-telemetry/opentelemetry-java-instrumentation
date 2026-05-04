@@ -14,3 +14,4 @@ io.opentelemetry.instrumentation.jmx.rules.HadoopTest
 io.opentelemetry.javaagent.instrumentation.vertx.rx.v3_5.server.VertxReactivePropagationTest
 io.opentelemetry.javaagent.instrumentation.grizzly.v2_3.SameThreadTest
 io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.CouchbaseClient26Test
+io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.CouchbaseAsyncClient26Test
