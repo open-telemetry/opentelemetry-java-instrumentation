@@ -27,7 +27,7 @@ import net.bytebuddy.asm.Advice;
  * <p>This default instrumentation uses the class name of the filter to create the span. More
  * specific instrumentations may override this value.
  */
-public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   @Override
   protected String abortAdviceName() {
     return getClass().getName() + "$ContainerRequestContextAdvice";
@@ -88,7 +88,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       Method method = null;
       try {
         method = filterClass.getMethod("filter", ContainerRequestContext.class);
-      } catch (NoSuchMethodException e) {
+      } catch (NoSuchMethodException ignored) {
         // Unable to find the filter method.  This should not be reachable because the context
         // can only be aborted inside the filter method
       }
