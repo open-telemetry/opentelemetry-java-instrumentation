@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Set;
+import javax.management.JMException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
@@ -104,7 +105,7 @@ class AttributeExtractorTest {
   private static MBeanServer theServer;
 
   @BeforeAll
-  static void setUp() throws Exception {
+  static void setUp() throws JMException {
     theServer = MBeanServerFactory.createMBeanServer(DOMAIN);
     objectName = new ObjectName(OBJECT_NAME);
     theServer.registerMBean(test1, objectName);
