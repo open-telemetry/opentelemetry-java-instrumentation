@@ -21,7 +21,7 @@ class PowerJobExperimentalAttributeExtractor
       AttributeKey.stringKey("scheduling.powerjob.job.param");
   private static final AttributeKey<String> POWERJOB_JOB_INSTANCE_PARAM =
       AttributeKey.stringKey("scheduling.powerjob.job.instance.param");
-  private static final AttributeKey<String> POWERJOB_JOB_INSTANCE_TYPE =
+  private static final AttributeKey<String> POWERJOB_JOB_TYPE =
       AttributeKey.stringKey("scheduling.powerjob.job.type");
 
   @Override
@@ -32,7 +32,7 @@ class PowerJobExperimentalAttributeExtractor
     attributes.put(POWERJOB_JOB_ID, powerJobProcessRequest.getJobId());
     attributes.put(POWERJOB_JOB_PARAM, powerJobProcessRequest.getJobParams());
     attributes.put(POWERJOB_JOB_INSTANCE_PARAM, powerJobProcessRequest.getInstanceParams());
-    attributes.put(POWERJOB_JOB_INSTANCE_TYPE, powerJobProcessRequest.getJobType());
+    attributes.put(POWERJOB_JOB_TYPE, powerJobProcessRequest.getJobType());
   }
 
   @Override
