@@ -13,8 +13,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
-enum GrpcRequestGetter implements TextMapGetter<GrpcRequest> {
-  INSTANCE;
+final class GrpcRequestGetter implements TextMapGetter<GrpcRequest> {
 
   @Override
   public Iterable<String> keys(GrpcRequest request) {

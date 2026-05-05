@@ -17,12 +17,10 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-enum SpringWebMvcHttpAttributesGetter
+class SpringWebMvcHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpServletRequest, HttpServletResponse> {
-  INSTANCE;
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(HttpServletRequest request) {
     return request.getMethod();
   }
@@ -66,12 +64,10 @@ enum SpringWebMvcHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getUrlScheme(HttpServletRequest request) {
     return request.getScheme();
   }
 
-  @Nullable
   @Override
   public String getUrlPath(HttpServletRequest request) {
     return request.getRequestURI();
@@ -106,7 +102,6 @@ enum SpringWebMvcHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getNetworkPeerAddress(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getRemoteAddr();
@@ -127,7 +122,7 @@ enum SpringWebMvcHttpAttributesGetter
 
   @Override
   public Integer getNetworkLocalPort(
-      HttpServletRequest request, @Nullable HttpServletResponse respo) {
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getLocalPort();
   }
 }

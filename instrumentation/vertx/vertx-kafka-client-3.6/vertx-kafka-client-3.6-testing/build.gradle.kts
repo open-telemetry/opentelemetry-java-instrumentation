@@ -16,46 +16,48 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // documented limitation
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 testing {
   suites {
     val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
-        val version = if (latestDepTest) "3.+" else "3.6.0"
+        val version = baseVersion("3.6.0").orLatest("3.+")
         implementation("io.vertx:vertx-kafka-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-            systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-
-            jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-          }
-        }
       }
     }
   }
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
 
-    systemProperty("testLatestDeps", latestDepTest)
-
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+  test {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
+    )
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testExperimental)
   }
 }

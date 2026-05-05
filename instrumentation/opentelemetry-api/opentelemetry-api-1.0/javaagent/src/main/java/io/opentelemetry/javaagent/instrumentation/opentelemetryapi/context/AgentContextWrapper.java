@@ -46,10 +46,6 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
   final Context agentContext;
   final application.io.opentelemetry.context.Context applicationContext;
 
-  AgentContextWrapper(Context agentContext) {
-    this(agentContext, agentContext.get(AgentContextStorage.APPLICATION_CONTEXT));
-  }
-
   AgentContextWrapper(
       Context agentContext, application.io.opentelemetry.context.Context applicationContext) {
     if (applicationContext instanceof AgentContextWrapper) {
@@ -59,15 +55,31 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
     this.applicationContext = applicationContext;
   }
 
+  public static application.io.opentelemetry.context.Context getApplicationContext(
+      Context agentContext) {
+    application.io.opentelemetry.context.Context rootApplicationContext =
+        application.io.opentelemetry.context.Context.root();
+    if (agentContext == Context.root()) {
+      return rootApplicationContext;
+    }
+
+    application.io.opentelemetry.context.Context applicationContext =
+        agentContext.get(AgentContextStorage.APPLICATION_CONTEXT);
+    // application context can be null when the agent context is converted to application context
+    // from instrumented code e.g. instrumentation uses
+    // AgentContextStorage.toApplicationContext(agentContext) to get application context but agent
+    // context isn't really associated with application context
+    if (applicationContext == null) {
+      applicationContext = ((AgentContextWrapper) rootApplicationContext).applicationContext;
+    }
+    return new AgentContextWrapper(agentContext, applicationContext);
+  }
+
   Context toAgentContext() {
     if (agentContext.get(AgentContextStorage.APPLICATION_CONTEXT) == applicationContext) {
       return agentContext;
     }
     return agentContext.with(AgentContextStorage.APPLICATION_CONTEXT, applicationContext);
-  }
-
-  public Context getAgentContext() {
-    return agentContext;
   }
 
   @Override

@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class TransactionImplInstrumentation implements TypeInstrumentation {
+class TransactionImplInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.pulsar.client.impl.transaction.TransactionImpl");
@@ -32,14 +32,14 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
             .and(isPublic())
             .and(takesArguments(1))
             .and(takesArgument(0, String.class)),
-        TransactionImplInstrumentation.class.getName() + "$RegisterProducedTopicAdvice");
+        getClass().getName() + "$RegisterProducedTopicAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RegisterProducedTopicAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<Void> after(@Advice.Return CompletableFuture<Void> future) {
       return PulsarSingletons.wrap(future);
     }

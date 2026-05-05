@@ -15,6 +15,8 @@ import java.net.http.HttpResponse;
 
 /** Entrypoint for instrumenting Java HTTP Client. */
 public final class JavaHttpClientTelemetry {
+  private final Instrumenter<HttpRequest, HttpResponse<?>> instrumenter;
+  private final HttpHeadersSetter headersSetter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static JavaHttpClientTelemetry create(OpenTelemetry openTelemetry) {
@@ -25,9 +27,6 @@ public final class JavaHttpClientTelemetry {
   public static JavaHttpClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new JavaHttpClientTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<HttpRequest, HttpResponse<?>> instrumenter;
-  private final HttpHeadersSetter headersSetter;
 
   JavaHttpClientTelemetry(
       Instrumenter<HttpRequest, HttpResponse<?>> instrumenter, HttpHeadersSetter headersSetter) {

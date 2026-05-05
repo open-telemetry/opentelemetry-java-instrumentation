@@ -33,8 +33,7 @@ import org.junit.jupiter.api.Test;
 
 class DbClientAttributesExtractorTest {
 
-  static final class TestAttributesGetter
-      implements DbClientAttributesGetter<Map<String, String>, Void> {
+  static class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>, Void> {
     @Override
     public String getDbSystemName(Map<String, String> map) {
       return map.get("db.system");

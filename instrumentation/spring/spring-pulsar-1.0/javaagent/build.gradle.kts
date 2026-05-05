@@ -13,8 +13,6 @@ muzzle {
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 dependencies {
   library("org.springframework.pulsar:spring-pulsar:1.0.0")
   implementation(project(":instrumentation:pulsar:pulsar-2.8:javaagent"))
@@ -26,12 +24,10 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.2.4")
   testLibrary("org.springframework.boot:spring-boot-starter:3.2.4")
 
-  if (latestDepTest) {
+  if (otelProps.testLatestDeps) {
     testLibrary("org.springframework.boot:spring-boot-starter-pulsar:latest.release")
   }
 }
-
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {
   suites {
@@ -39,24 +35,26 @@ testing {
       dependencies {
         implementation(project(":instrumentation:spring:spring-pulsar-1.0:testing"))
 
-        if (latestDepTest) {
-          implementation("org.springframework.boot:spring-boot-starter-pulsar:latest.release")
-          implementation("org.springframework.boot:spring-boot-starter-test:latest.release")
-          implementation("org.springframework.boot:spring-boot-starter:latest.release")
+        val springBootVersion = baseVersion("3.2.4").orLatest()
+        val springPulsarVersion = baseVersion("1.0.0").orLatest()
+        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+        implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
+        if (otelProps.testLatestDeps) {
+          implementation("org.springframework.boot:spring-boot-starter-pulsar:$springPulsarVersion")
         } else {
-          implementation("org.springframework.pulsar:spring-pulsar:1.0.0")
-          implementation("org.springframework.boot:spring-boot-starter-test:3.2.4")
-          implementation("org.springframework.boot:spring-boot-starter:3.2.4")
+          implementation("org.springframework.pulsar:spring-pulsar:$springPulsarVersion")
         }
       }
 
       targets {
         all {
           testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
             jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+            systemProperty(
+              "metadataConfig",
+              "otel.instrumentation.pulsar.experimental-span-attributes=true",
+            )
           }
         }
       }
@@ -65,20 +63,25 @@ testing {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
 
+  test {
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {
     dependsOn(testing.suites)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

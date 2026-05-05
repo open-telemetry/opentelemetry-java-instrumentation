@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
@@ -27,6 +29,8 @@ import org.slf4j.LoggerFactory;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractCouchbaseTest {
   private static final Logger logger = LoggerFactory.getLogger(AbstractCouchbaseTest.class);
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
 
   protected static final String USERNAME = "Administrator";
   protected static final String PASSWORD = "password";
@@ -53,9 +57,9 @@ public abstract class AbstractCouchbaseTest {
   @BeforeAll
   void setUp() throws Exception {
     mock = new CouchbaseMock("127.0.0.1", port, 1, 1);
-    Field httpServerFiled = CouchbaseMock.class.getDeclaredField("httpServer");
-    httpServerFiled.setAccessible(true);
-    HttpServer httpServer = (HttpServer) httpServerFiled.get(mock);
+    Field httpServerField = CouchbaseMock.class.getDeclaredField("httpServer");
+    httpServerField.setAccessible(true);
+    HttpServer httpServer = (HttpServer) httpServerField.get(mock);
     httpServer.register("/query", new QueryServer());
     mock.start();
     logger.info("CouchbaseMock listening on localhost:{}", port);
@@ -79,7 +83,7 @@ public abstract class AbstractCouchbaseTest {
     mock.stop();
   }
 
-  protected DefaultCouchbaseEnvironment.Builder envBuilder(
+  private DefaultCouchbaseEnvironment.Builder envBuilder(
       EnvBuilder envBuilder, BucketSettings bucketSettings) {
     return envBuilder.apply(bucketSettings, mock.getCarrierPort(bucketSettings.name()), port);
   }
@@ -92,7 +96,7 @@ public abstract class AbstractCouchbaseTest {
   }
 
   @FunctionalInterface
-  public interface EnvBuilder {
+  private interface EnvBuilder {
     DefaultCouchbaseEnvironment.Builder apply(
         BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort);
   }
@@ -107,11 +111,11 @@ public abstract class AbstractCouchbaseTest {
    * otel.instrumentation.couchbase.experimental-span-attributes=true).
    */
   protected boolean includesExperimentalAttributes() {
-    return Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 
   protected String networkType() {
-    return includesNetworkAttributes() ? "ipv4" : null;
+    return includesNetworkAttributes() && emitOldDatabaseSemconv() ? "ipv4" : null;
   }
 
   protected String networkPeerAddress() {

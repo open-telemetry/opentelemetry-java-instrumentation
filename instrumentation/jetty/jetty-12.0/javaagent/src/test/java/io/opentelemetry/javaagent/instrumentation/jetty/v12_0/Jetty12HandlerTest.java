@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
@@ -26,6 +27,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.io.IOException;
+import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
@@ -57,6 +59,7 @@ class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
   protected void configure(HttpServerTestOptions options) {
     options.setHttpAttributes(unused -> DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE);
     options.setHasResponseCustomizer(endpoint -> endpoint != EXCEPTION);
+    options.setTestHttpBodyPipelining(true);
   }
 
   @Override
@@ -116,6 +119,11 @@ class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
           name -> Request.extractQueryParameters(request).getValue(name));
       response.setStatus(endpoint.getStatus());
       response.write(true, UTF_8.encode(endpoint.getBody()), Callback.NOOP);
+    } else if (INDEXED_CHILD_FROM_REQUEST_BODY.equals(endpoint)) {
+      String requestBody = Content.Source.asString(request);
+      bodyConsumer(endpoint, requestBody);
+      response.setStatus(endpoint.getStatus());
+      response.write(true, UTF_8.encode(requestBody), Callback.NOOP);
     } else {
       response.setStatus(NOT_FOUND.getStatus());
       response.write(true, UTF_8.encode(NOT_FOUND.getBody()), Callback.NOOP);

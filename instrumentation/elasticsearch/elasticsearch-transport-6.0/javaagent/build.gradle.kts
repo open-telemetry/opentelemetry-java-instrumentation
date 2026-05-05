@@ -7,10 +7,6 @@ muzzle {
     group.set("org.elasticsearch.client")
     module.set("transport")
     versions.set("[6.0.0,)")
-    // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
-    // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    // version 7.17.8 has broken module metadata
-    skip("7.11.0", "7.17.8")
     // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
     excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
@@ -19,9 +15,6 @@ muzzle {
     group.set("org.elasticsearch")
     module.set("elasticsearch")
     versions.set("[6.0.0,8.0.0)")
-    // version 7.11.0 depends on org.elasticsearch:elasticsearch:7.11.0 which depends on
-    // org.elasticsearch:elasticsearch-plugin-classloader:7.11.0 which does not exist
-    skip("7.11.0")
     // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
     excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
@@ -46,19 +39,13 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 testing {
   suites {
     val elasticsearch6Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
-          implementation("org.elasticsearch.client:transport:6.4.+")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:6.4.+")
-        } else {
-          implementation("org.elasticsearch.client:transport:6.0.0")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:6.0.0")
-        }
+        val version = baseVersion("6.0.0").orLatest("6.4.+")
+        implementation("org.elasticsearch.client:transport:$version")
+        implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
       }
@@ -66,13 +53,9 @@ testing {
 
     val elasticsearch65Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
-          implementation("org.elasticsearch.client:transport:6.+")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:6.+")
-        } else {
-          implementation("org.elasticsearch.client:transport:6.5.0")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:6.5.0")
-        }
+        val version = baseVersion("6.5.0").orLatest("6.+")
+        implementation("org.elasticsearch.client:transport:$version")
+        implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
       }
@@ -80,13 +63,9 @@ testing {
 
     val elasticsearch7Test by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
-          implementation("org.elasticsearch.client:transport:latest.release")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:latest.release")
-        } else {
-          implementation("org.elasticsearch.client:transport:7.0.0")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:7.0.0")
-        }
+        val version = baseVersion("7.0.0").orLatest()
+        implementation("org.elasticsearch.client:transport:$version")
+        implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
       }
@@ -96,9 +75,9 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testSuites = testing.suites.withType(JvmTestSuite::class)
@@ -127,7 +106,7 @@ tasks {
     dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

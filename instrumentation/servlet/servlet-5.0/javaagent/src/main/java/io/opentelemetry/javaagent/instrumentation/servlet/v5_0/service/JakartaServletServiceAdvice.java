@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.getSnippetInjectionHelper;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.helper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.snippetInjectionHelper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.servlet.internal.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
+import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5HttpServerResponseMutator;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.Servlet5SnippetInjectingResponseWrapper;
@@ -35,7 +35,7 @@ public class JakartaServletServiceAdvice {
   public static class AdviceScope {
     private final CallDepth callDepth;
     private final ServletRequestContext<HttpServletRequest> requestContext;
-    private final Context context;
+    @Nullable private final Context context;
     private final Scope scope;
 
     public AdviceScope(
@@ -84,7 +84,7 @@ public class JakartaServletServiceAdvice {
             .customize(
                 contextToUpdate,
                 (HttpServletResponse) response,
-                Servlet5HttpServerResponseMutator.INSTANCE);
+                new Servlet5HttpServerResponseMutator());
       }
     }
 
@@ -99,7 +99,7 @@ public class JakartaServletServiceAdvice {
     @ToArgument(value = 0, index = 1),
     @ToArgument(value = 1, index = 2)
   })
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static Object[] onEnter(
       @Advice.This(typing = Assigner.Typing.DYNAMIC) Object servletOrFilter,
       @Advice.Argument(0) ServletRequest request,
@@ -112,7 +112,7 @@ public class JakartaServletServiceAdvice {
     }
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-    String snippet = getSnippetInjectionHelper().getSnippet();
+    String snippet = snippetInjectionHelper().getSnippet();
     if (!snippet.isEmpty()
         && !((HttpServletResponse) response)
             .containsHeader(Servlet5SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
@@ -124,17 +124,17 @@ public class JakartaServletServiceAdvice {
         new AdviceScope(
             CallDepth.forClass(AppServerBridge.getCallDepthKey()),
             servletOrFilter,
-            (HttpServletRequest) request,
+            httpServletRequest,
             response);
 
     return new Object[] {adviceScope, request, response};
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
   public static void stopSpan(
       @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(1) ServletResponse response,
-      @Advice.Thrown Throwable throwable,
+      @Advice.Thrown @Nullable Throwable throwable,
       @Advice.Enter Object[] enterResult) {
 
     AdviceScope adviceScope = (AdviceScope) enterResult[0];

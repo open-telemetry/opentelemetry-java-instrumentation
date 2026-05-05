@@ -10,15 +10,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-abstract class DelegatingInvocationHandler<T, S extends DelegatingInvocationHandler<T, S>>
-    implements InvocationHandler {
+abstract class DelegatingInvocationHandler<T> implements InvocationHandler {
 
-  private static final ClassLoader CLASS_LOADER =
-      DelegatingInvocationHandler.class.getClassLoader();
+  private static final ClassLoader classLoader = DelegatingInvocationHandler.class.getClassLoader();
 
   protected final T delegate;
 
-  public DelegatingInvocationHandler(T delegate) {
+  DelegatingInvocationHandler(T delegate) {
     this.delegate = delegate;
   }
 
@@ -33,9 +31,9 @@ abstract class DelegatingInvocationHandler<T, S extends DelegatingInvocationHand
 
   protected abstract Class<T> getProxyType();
 
-  public T createProxy() {
+  T createProxy() {
     Class<T> proxyType = getProxyType();
-    Object proxy = Proxy.newProxyInstance(CLASS_LOADER, new Class<?>[] {proxyType}, this);
+    Object proxy = Proxy.newProxyInstance(classLoader, new Class<?>[] {proxyType}, this);
     return proxyType.cast(proxy);
   }
 }

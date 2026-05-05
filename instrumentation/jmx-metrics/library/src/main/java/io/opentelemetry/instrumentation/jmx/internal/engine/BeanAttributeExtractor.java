@@ -91,9 +91,8 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
       // The returned list is never empty ...
       verifyAndAddNameSegment(components, currentSegment);
 
-    } catch (IllegalArgumentException unused) {
-      // Drop the original exception. We have more meaningful context here.
-      throw new IllegalArgumentException("Invalid attribute name '" + rawName + "'");
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid attribute name '" + rawName + "'", e);
     }
 
     return components;

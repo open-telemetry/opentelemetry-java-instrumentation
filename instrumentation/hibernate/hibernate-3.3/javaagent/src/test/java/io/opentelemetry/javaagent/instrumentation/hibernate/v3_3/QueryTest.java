@@ -82,7 +82,7 @@ class QueryTest extends AbstractHibernateTest {
                           sess.createQuery(
                               "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value where id = ?");
                       q.setParameter(0, 1L);
-                      q.uniqueResult();
+                      q.list();
                     }))),
         Arguments.of(
             named(

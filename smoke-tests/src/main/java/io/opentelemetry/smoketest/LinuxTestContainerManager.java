@@ -126,9 +126,9 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
         if (execResult.getExitCode() != 0) {
           logger.warn("Command execution failed {}", execResult);
         }
-      } catch (IOException exception) {
-        logger.warn("Command execution failed", exception);
-      } catch (InterruptedException exception) {
+      } catch (IOException e) {
+        logger.warn("Command execution failed", e);
+      } catch (InterruptedException ignored) {
         Thread.currentThread().interrupt();
       }
 

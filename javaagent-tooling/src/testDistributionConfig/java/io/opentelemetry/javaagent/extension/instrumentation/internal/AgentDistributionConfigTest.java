@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation.internal;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
-import java.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -72,19 +72,16 @@ class AgentDistributionConfigTest {
     // armeria-grpc listed first: disabled wins
     assertThat(
             config.isInstrumentationEnabled(
-                Arrays.asList("armeria-grpc", "armeria-grpc-1.14", "armeria", "armeria-1.14"),
-                true))
+                asList("armeria-grpc", "armeria-grpc-1.14", "armeria", "armeria-1.14"), true))
         .isFalse();
 
     // armeria listed first: enabled wins
     assertThat(
             config.isInstrumentationEnabled(
-                Arrays.asList("armeria", "armeria-1.14", "armeria-grpc", "armeria-grpc-1.14"),
-                true))
+                asList("armeria", "armeria-1.14", "armeria-grpc", "armeria-grpc-1.14"), true))
         .isTrue();
 
     // armeria alone should be enabled
-    assertThat(config.isInstrumentationEnabled(Arrays.asList("armeria", "armeria-1.14"), true))
-        .isTrue();
+    assertThat(config.isInstrumentationEnabled(asList("armeria", "armeria-1.14"), true)).isTrue();
   }
 }

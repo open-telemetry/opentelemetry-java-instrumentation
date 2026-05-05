@@ -67,14 +67,6 @@ public final class SpringIntegrationTelemetryBuilder {
     return this;
   }
 
-  private static String consumerSpanName(MessageWithChannel messageWithChannel) {
-    return messageWithChannel.getChannelName() + " process";
-  }
-
-  private static String producerSpanName(MessageWithChannel messageWithChannel) {
-    return messageWithChannel.getChannelName() + " publish";
-  }
-
   /**
    * Returns a new {@link SpringIntegrationTelemetry} with the settings of this {@link
    * SpringIntegrationTelemetryBuilder}.
@@ -88,7 +80,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    SpringMessagingAttributesGetter.INSTANCE,
+                    new SpringMessagingAttributesGetter(),
                     MessageOperation.PROCESS,
                     capturedHeaders))
             .buildConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
@@ -101,7 +93,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    SpringMessagingAttributesGetter.INSTANCE,
+                    new SpringMessagingAttributesGetter(),
                     MessageOperation.PUBLISH,
                     capturedHeaders))
             .buildInstrumenter(SpanKindExtractor.alwaysProducer());
@@ -110,6 +102,14 @@ public final class SpringIntegrationTelemetryBuilder {
         consumerInstrumenter,
         producerInstrumenter,
         producerSpanEnabled);
+  }
+
+  private static String consumerSpanName(MessageWithChannel messageWithChannel) {
+    return messageWithChannel.getChannelName() + " process";
+  }
+
+  private static String producerSpanName(MessageWithChannel messageWithChannel) {
+    return messageWithChannel.getChannelName() + " publish";
   }
 
   private static AttributesExtractor<MessageWithChannel, Void> buildMessagingAttributesExtractor(

@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
@@ -18,11 +19,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -31,6 +32,8 @@ class ContextBridgeTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void testLocalRootSpanBridge() {
@@ -53,7 +56,7 @@ class ContextBridgeTest {
           assertThat(Span.fromContextOrNull(Context.current())).isNotNull();
 
           List<SpanKey> spanKeys =
-              Arrays.asList(
+              asList(
                   // span kind keys
                   SpanKey.KIND_SERVER,
                   SpanKey.KIND_CLIENT,
@@ -84,7 +87,8 @@ class ContextBridgeTest {
   @Test
   void testSpanKeyBridge_UnbridgedSpan() {
     OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder().build();
-    // span is bridged only when it is created though a bridged OpenTelemetry instance obtained
+    cleanup.deferCleanup(openTelemetry);
+    // span is bridged only when it is created through a bridged OpenTelemetry instance obtained
     // from GlobalOpenTelemetry
     Span span = openTelemetry.getTracer("test").spanBuilder("test").startSpan();
 

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -67,27 +66,25 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasSum(11.0)
-                                            .hasBucketBoundaries(10.0)
-                                            .hasAttributesSatisfying(
-                                                equalTo(stringKey("test"), "test"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(11.0)
+                                    .hasBucketBoundaries(10.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test"), "test")))));
   }
 
   @Test
@@ -103,26 +100,24 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasSum(12.1)
-                                            .hasBucketBoundaries(10.0)
-                                            .hasAttributesSatisfying(
-                                                equalTo(stringKey("test"), "test"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(12.1)
+                                    .hasBucketBoundaries(10.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test"), "test")))));
   }
 }

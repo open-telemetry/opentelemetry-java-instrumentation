@@ -8,19 +8,19 @@ package io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.glue.GlueTypeEnum;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobHelper;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobHelper;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobProcessRequest;
 
-public final class XxlJobSingletons {
+public class XxlJobSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.xxl-job-1.9.2";
-  private static final Instrumenter<XxlJobProcessRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<XxlJobProcessRequest, Void> instrumenter =
       XxlJobInstrumenterFactory.create(INSTRUMENTATION_NAME);
-  private static final XxlJobHelper HELPER =
+  private static final XxlJobHelper helper =
       XxlJobHelper.create(
-          INSTRUMENTER,
+          instrumenter,
           object -> {
-            if (object != null && (object instanceof ReturnT)) {
+            if (object instanceof ReturnT) {
               ReturnT<?> result = (ReturnT<?>) object;
               return result.getCode() == ReturnT.FAIL_CODE;
             }
@@ -28,10 +28,10 @@ public final class XxlJobSingletons {
           });
 
   public static XxlJobHelper helper() {
-    return HELPER;
+    return helper;
   }
 
-  @SuppressWarnings({"Unused", "ReturnValueIgnored"})
+  @SuppressWarnings({"unused", "ReturnValueIgnored"})
   private static void limitSupportedVersions() {
     // GLUE_POWERSHELL was added in 1.9.2. Using this constant here ensures that muzzle will disable
     // this instrumentation on earlier versions where this constant does not exist.

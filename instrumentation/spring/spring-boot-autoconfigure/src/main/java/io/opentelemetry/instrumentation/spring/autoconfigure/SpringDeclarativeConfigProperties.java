@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -13,7 +14,6 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -42,8 +42,7 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   private static final Set<Class<?>> SUPPORTED_SCALAR_TYPES =
       Collections.unmodifiableSet(
-          new LinkedHashSet<>(
-              Arrays.asList(String.class, Boolean.class, Long.class, Double.class)));
+          new LinkedHashSet<>(asList(String.class, Boolean.class, Long.class, Double.class)));
 
   /** Values are {@link #isPrimitive(Object)}, {@link List} of scalars. */
   private final Map<String, Object> simpleEntries;
@@ -51,17 +50,6 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
   private final Map<String, List<SpringDeclarativeConfigProperties>> listEntries;
   private final Map<String, SpringDeclarativeConfigProperties> mapEntries;
   private final ComponentLoader componentLoader;
-
-  private SpringDeclarativeConfigProperties(
-      Map<String, Object> simpleEntries,
-      Map<String, List<SpringDeclarativeConfigProperties>> listEntries,
-      Map<String, SpringDeclarativeConfigProperties> mapEntries,
-      ComponentLoader componentLoader) {
-    this.simpleEntries = simpleEntries;
-    this.listEntries = listEntries;
-    this.mapEntries = mapEntries;
-    this.componentLoader = componentLoader;
-  }
 
   /**
    * Create a {@link SpringDeclarativeConfigProperties} from the {@code properties} map.
@@ -114,6 +102,17 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
     }
     return new SpringDeclarativeConfigProperties(
         simpleEntries, listEntries, mapEntries, componentLoader);
+  }
+
+  private SpringDeclarativeConfigProperties(
+      Map<String, Object> simpleEntries,
+      Map<String, List<SpringDeclarativeConfigProperties>> listEntries,
+      Map<String, SpringDeclarativeConfigProperties> mapEntries,
+      ComponentLoader componentLoader) {
+    this.simpleEntries = simpleEntries;
+    this.listEntries = listEntries;
+    this.mapEntries = mapEntries;
+    this.componentLoader = componentLoader;
   }
 
   private static boolean isPrimitiveList(Object object) {

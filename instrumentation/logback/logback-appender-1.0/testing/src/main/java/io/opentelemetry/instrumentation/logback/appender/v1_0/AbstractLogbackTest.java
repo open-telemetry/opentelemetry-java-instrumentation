@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -15,16 +17,15 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -48,10 +49,6 @@ public abstract class AbstractLogbackTest {
     return true;
   }
 
-  protected boolean expectEventName() {
-    return true;
-  }
-
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
         Arguments.of(false, false),
@@ -62,7 +59,7 @@ public abstract class AbstractLogbackTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean logException, boolean withParent) throws InterruptedException {
+  void test(boolean logException, boolean withParent) throws InterruptedException {
     test(abcLogger, Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing().clearData();
     test(
@@ -172,12 +169,12 @@ public abstract class AbstractLogbackTest {
                     codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
                 if (logException) {
                   attributeAsserts.addAll(
-                      Arrays.asList(
+                      asList(
                           equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                           equalTo(EXCEPTION_MESSAGE, "hello"),
                           satisfies(
                               EXCEPTION_STACKTRACE,
-                              v -> v.contains(AbstractLogbackTest.class.getName()))));
+                              val -> val.contains(AbstractLogbackTest.class.getName()))));
                 }
                 logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
               });
@@ -191,7 +188,6 @@ public abstract class AbstractLogbackTest {
   void testMdc() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
-    MDC.put("event.name", "MyEventName");
     try {
       abcLogger.info("xyz: {}", 123);
     } finally {
@@ -205,29 +201,53 @@ public abstract class AbstractLogbackTest {
     assertions.addAll(
         codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
     assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testMdc"));
-    assertions.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
-    assertions.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
-    if (!expectEventName()) {
-      assertions.add(equalTo(AttributeKey.stringKey("event.name"), "MyEventName"));
-    }
+    assertions.add(equalTo(stringKey("key1"), "val1"));
+    assertions.add(equalTo(stringKey("key2"), "val2"));
 
     testing()
         .waitAndAssertLogRecords(
-            logRecord -> {
-              logRecord
-                  .hasBody("xyz: 123")
-                  .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                  .hasSeverity(Severity.INFO)
-                  .hasSeverityText("INFO")
-                  .hasAttributesSatisfyingExactly(assertions);
-              if (expectEventName()) {
-                logRecord.hasEventName("MyEventName");
-              }
-            });
+            logRecord ->
+                logRecord
+                    .hasBody("xyz: 123")
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
-  public void testMarker() {
+  void testEventNameMdc() {
+    MDC.put("key1", "val1");
+    MDC.put("otel.event.name", "MyEventName");
+    try {
+      abcLogger.info("xyz: {}", 123);
+    } finally {
+      MDC.clear();
+    }
+
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    if (expectThreadAttributes()) {
+      assertions.addAll(threadAssertions());
+    }
+    assertions.addAll(
+        codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
+    assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testEventNameMdc"));
+    assertions.add(equalTo(stringKey("key1"), "val1"));
+
+    testing()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasBody("xyz: 123")
+                    .hasEventName("MyEventName")
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
+  }
+
+  @Test
+  void testMarker() {
 
     String markerName = "aMarker";
     Marker marker = MarkerFactory.getMarker(markerName);
@@ -241,15 +261,14 @@ public abstract class AbstractLogbackTest {
     }
     assertions.addAll(
         codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
-    assertions.add(
-        equalTo(AttributeKey.stringArrayKey("logback.marker"), singletonList(markerName)));
+    assertions.add(equalTo(stringArrayKey("logback.marker"), singletonList(markerName)));
 
     testing()
         .waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly(assertions));
   }
 
   private static List<AttributeAssertion> threadAssertions() {
-    return Arrays.asList(
+    return asList(
         equalTo(THREAD_NAME, Thread.currentThread().getName()),
         equalTo(THREAD_ID, Thread.currentThread().getId()));
   }
@@ -267,12 +286,12 @@ public abstract class AbstractLogbackTest {
   }
 
   @FunctionalInterface
-  public interface OneArgLoggerMethod {
+  private interface OneArgLoggerMethod {
     void call(Logger logger, String msg, Object arg);
   }
 
   @FunctionalInterface
-  public interface TwoArgLoggerMethod {
+  private interface TwoArgLoggerMethod {
     void call(Logger logger, String msg, Object arg1, Object arg2);
   }
 }

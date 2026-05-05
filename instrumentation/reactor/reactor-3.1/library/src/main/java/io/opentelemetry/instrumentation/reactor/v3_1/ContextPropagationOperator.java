@@ -52,6 +52,8 @@ public final class ContextPropagationOperator {
 
   private static final Object VALUE = new Object();
 
+  private static final String SCHEDULERS_HOOK_KEY = RunnableWrapper.class.getName();
+
   @Nullable
   private static final MethodHandle MONO_CONTEXT_WRITE_METHOD = getContextWriteMethod(Mono.class);
 
@@ -61,42 +63,7 @@ public final class ContextPropagationOperator {
   @Nullable private static final MethodHandle SCHEDULERS_HOOK_METHOD = getSchedulersHookMethod();
 
   @Nullable
-  private static MethodHandle getContextWriteMethod(Class<?> type) {
-    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-    try {
-      return lookup.findVirtual(type, "contextWrite", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
-      // ignore
-    }
-    try {
-      return lookup.findVirtual(type, "subscriberContext", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
-      // ignore
-    }
-    return null;
-  }
-
-  @Nullable
-  private static MethodHandle getSchedulersHookMethod() {
-    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-    try {
-      return lookup.findStatic(
-          Schedulers.class, "onScheduleHook", methodType(void.class, String.class, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
-      // ignore
-    }
-    return null;
-  }
-
-  public static ContextPropagationOperator create() {
-    return builder().build();
-  }
-
-  public static ContextPropagationOperatorBuilder builder() {
-    return new ContextPropagationOperatorBuilder();
-  }
-
-  private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
+  private static final MethodHandle SCHEDULERS_RESET_HOOK_METHOD = getSchedulersResetHookMethod();
 
   private static final Object TRACE_CONTEXT_KEY =
       new Object() {
@@ -109,6 +76,56 @@ public final class ContextPropagationOperator {
   private static final Object lock = new Object();
 
   private static volatile boolean enabled = false;
+
+  private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
+
+  @Nullable
+  private static MethodHandle getContextWriteMethod(Class<?> type) {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    try {
+      return lookup.findVirtual(type, "contextWrite", methodType(type, Function.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      // ignore
+    }
+    try {
+      return lookup.findVirtual(type, "subscriberContext", methodType(type, Function.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      // ignore
+    }
+    return null;
+  }
+
+  @Nullable
+  private static MethodHandle getSchedulersHookMethod() {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    try {
+      return lookup.findStatic(
+          Schedulers.class, "onScheduleHook", methodType(void.class, String.class, Function.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      // ignore
+    }
+    return null;
+  }
+
+  @Nullable
+  private static MethodHandle getSchedulersResetHookMethod() {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    try {
+      return lookup.findStatic(
+          Schedulers.class, "resetOnScheduleHook", methodType(void.class, String.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      // ignore
+    }
+    return null;
+  }
+
+  public static ContextPropagationOperator create() {
+    return builder().build();
+  }
+
+  public static ContextPropagationOperatorBuilder builder() {
+    return new ContextPropagationOperatorBuilder();
+  }
 
   /**
    * Stores Trace {@link io.opentelemetry.context.Context} in Reactor {@link
@@ -171,7 +188,7 @@ public final class ContextPropagationOperator {
       Hooks.onEachOperator(
           TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
       AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
-      registerScheduleHook(RunnableWrapper.class.getName(), RunnableWrapper::new);
+      registerScheduleHook(SCHEDULERS_HOOK_KEY, RunnableWrapper::new);
       enabled = true;
     }
   }
@@ -182,8 +199,19 @@ public final class ContextPropagationOperator {
     }
     try {
       SCHEDULERS_HOOK_METHOD.invoke(key, function);
-    } catch (Throwable throwable) {
-      logger.log(WARNING, "Failed to install scheduler hook", throwable);
+    } catch (Throwable t) {
+      logger.log(WARNING, "Failed to install scheduler hook", t);
+    }
+  }
+
+  private static void resetScheduleHook(String key) {
+    if (SCHEDULERS_RESET_HOOK_METHOD == null) {
+      return;
+    }
+    try {
+      SCHEDULERS_RESET_HOOK_METHOD.invoke(key);
+    } catch (Throwable t) {
+      logger.log(WARNING, "Failed to remove scheduler hook", t);
     }
   }
 
@@ -195,6 +223,7 @@ public final class ContextPropagationOperator {
       }
       Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
       AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
+      resetScheduleHook(SCHEDULERS_HOOK_KEY);
       enabled = false;
     }
   }
@@ -359,7 +388,7 @@ public final class ContextPropagationOperator {
     }
   }
 
-  private static class RunnableWrapper implements Runnable {
+  static class RunnableWrapper implements Runnable {
     private final Runnable delegate;
     private final Context context;
 

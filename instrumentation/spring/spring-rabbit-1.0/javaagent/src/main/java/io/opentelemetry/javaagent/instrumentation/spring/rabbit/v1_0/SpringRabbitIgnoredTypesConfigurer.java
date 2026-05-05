@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 public class SpringRabbitIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
   @Override
   public void configure(IgnoredTypesBuilder builder) {
-    // contains a Runnable that servers as a worker that continuously reads messages from queue
+    // contains a Runnable that serves as a worker that continuously reads messages from queue
     builder
         .ignoreClass("org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$")
         .ignoreTaskClass("org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer$")

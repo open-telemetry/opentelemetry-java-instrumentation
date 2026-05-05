@@ -1094,13 +1094,21 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {DOUBLE_QUOTED_STR} {
-          if (dialect == SqlDialect.COUCHBASE) {
-            builder.append('?');
-          } else {
-            if (!insideComment) {
-              operation.handleIdentifier();
-            }
+          if (!insideComment) {
+            // Always notify the operation about double-quoted tokens regardless of dialect so
+            // that summarization works correctly even when the dialect treats them as string
+            // literals. For example, SELECT * FROM "my_table" should produce the summary
+            // "SELECT my_table" whether or not the dialect sanitizes the token.
+            //
+            // The operation's own state guards (e.g. identifierCaptured, captureTableList)
+            // ensure handleIdentifier() is a no-op when not structurally expected, so there
+            // is no risk of leaking sensitive string content into the summary.
+            operation.handleIdentifier();
+          }
+          if (dialect.doubleQuotesAreIdentifiers()) {
             appendCurrentFragment();
+          } else {
+            builder.append('?');
           }
           if (isOverLimit()) return YYEOF;
       }

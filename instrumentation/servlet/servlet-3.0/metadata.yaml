@@ -8,14 +8,24 @@ features:
   - HTTP_ROUTE
 configurations:
   - name: otel.instrumentation.servlet.experimental-span-attributes
+    declarative_name: java.servlet.experimental_span_attributes/development
     description: Enables capturing the experimental `servlet.timeout` span attribute.
     type: boolean
     default: false
-  - name: otel.instrumentation.servlet.capture-request-parameters
+  - name: otel.instrumentation.servlet.experimental.capture-request-parameters
+    declarative_name: java.servlet.capture_request_parameters/development
     description: List of request parameter names to capture as span attributes.
     type: list
     default: ""
-  - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-    description: Adds the trace ID and span ID as a request attributes for downstream servlet access.
+  - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
+    declarative_name: java.servlet.trace_id_request_attribute/development.enabled
+    description: Enables adding the trace ID and span ID as request attributes for downstream servlet access.
     type: boolean
     default: true
+  - name: otel.experimental.javascript-snippet
+    declarative_name: java.servlet.javascript_snippet/development
+    description: Experimental setting to inject a JavaScript snippet into HTML responses after the opening `<head>` tag.
+    type: string
+    default: ""
+    examples:
+      - "<script type=\"text/javascript\">console.log('test')</script>"

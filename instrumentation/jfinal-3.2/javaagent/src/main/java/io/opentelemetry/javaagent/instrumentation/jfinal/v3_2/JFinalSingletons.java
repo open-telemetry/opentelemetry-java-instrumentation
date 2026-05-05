@@ -17,33 +17,34 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import javax.annotation.Nullable;
 
-public final class JFinalSingletons {
+public class JFinalSingletons {
 
-  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
+  private static final Instrumenter<ClassAndMethod, Void> instrumenter;
 
   static {
     // see
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11465#issuecomment-2137294837
     excludeOtAttrs();
 
-    CodeAttributesGetter<ClassAndMethod> codedAttributesGetter =
+    CodeAttributesGetter<ClassAndMethod> codeAttributesGetter =
         ClassAndMethod.codeAttributesGetter();
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jfinal-3.2",
-                CodeSpanNameExtractor.create(codedAttributesGetter))
+                CodeSpanNameExtractor.create(codeAttributesGetter))
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-            .addAttributesExtractor(CodeAttributesExtractor.create(codedAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .buildInstrumenter();
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
-  public static void updateRoute(Action action) {
+  public static void updateRoute(@Nullable Action action) {
     if (action == null) {
       return;
     }

@@ -13,8 +13,8 @@ import graphql.execution.instrumentation.parameters.InstrumentationExecuteOperat
 import graphql.execution.instrumentation.parameters.InstrumentationExecutionParameters;
 import graphql.execution.instrumentation.parameters.InstrumentationFieldFetchParameters;
 import graphql.schema.DataFetcher;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationState;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationState;
 
 final class OpenTelemetryInstrumentation extends SimpleInstrumentation {
   private final OpenTelemetryInstrumentationHelper helper;

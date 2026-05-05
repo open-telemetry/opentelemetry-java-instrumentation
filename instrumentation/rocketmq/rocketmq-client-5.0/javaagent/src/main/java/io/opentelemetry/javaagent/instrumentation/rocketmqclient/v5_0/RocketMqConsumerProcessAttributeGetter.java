@@ -14,17 +14,14 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-enum RocketMqConsumerProcessAttributeGetter
+class RocketMqConsumerProcessAttributeGetter
     implements MessagingAttributesGetter<MessageView, ConsumeResult> {
-  INSTANCE;
 
-  @Nullable
   @Override
   public String getSystem(MessageView messageView) {
     return "rocketmq";
   }
 
-  @Nullable
   @Override
   public String getDestination(MessageView messageView) {
     return messageView.getTopic();
@@ -52,7 +49,6 @@ enum RocketMqConsumerProcessAttributeGetter
     return null;
   }
 
-  @Nullable
   @Override
   public Long getMessageBodySize(MessageView messageView) {
     return (long) messageView.getBody().remaining();
@@ -64,7 +60,6 @@ enum RocketMqConsumerProcessAttributeGetter
     return null;
   }
 
-  @Nullable
   @Override
   public String getMessageId(MessageView messageView, @Nullable ConsumeResult unused) {
     return messageView.getMessageId().toString();

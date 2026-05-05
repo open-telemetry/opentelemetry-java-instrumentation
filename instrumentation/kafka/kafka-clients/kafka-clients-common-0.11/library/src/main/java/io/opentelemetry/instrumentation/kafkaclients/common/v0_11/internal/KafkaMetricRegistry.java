@@ -7,12 +7,12 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_COUNTER;
 import static io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.InstrumentDescriptor.INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -28,7 +28,7 @@ import org.apache.kafka.common.metrics.Measurable;
 /** A registry mapping kafka metrics to corresponding OpenTelemetry metric definitions. */
 final class KafkaMetricRegistry {
 
-  private static final Set<String> groups = new HashSet<>(Arrays.asList("consumer", "producer"));
+  private static final Set<String> groups = new HashSet<>(asList("consumer", "producer"));
   private static final Map<Class<?>, String> measurableToInstrumentType = new HashMap<>();
   private static final Map<String, String> descriptionCache = new ConcurrentHashMap<>();
 
@@ -52,7 +52,7 @@ final class KafkaMetricRegistry {
     for (Map.Entry<String, String> entry : classNameToType.entrySet()) {
       try {
         measurableToInstrumentType.put(Class.forName(entry.getKey()), entry.getValue());
-      } catch (ClassNotFoundException e) {
+      } catch (ClassNotFoundException ignored) {
         // Class doesn't exist in this version of kafka client - skip
       }
     }
@@ -92,7 +92,7 @@ final class KafkaMetricRegistry {
   private static Class<? extends Measurable> getMeasurable(KafkaMetric kafkaMetric) {
     try {
       return kafkaMetric.measurable().getClass();
-    } catch (IllegalStateException e) {
+    } catch (IllegalStateException ignored) {
       return null;
     }
   }

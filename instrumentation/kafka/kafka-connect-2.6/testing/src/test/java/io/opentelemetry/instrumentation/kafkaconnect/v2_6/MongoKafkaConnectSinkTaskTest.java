@@ -47,13 +47,11 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-@Testcontainers
 class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   // MongoDB-specific constants
   private static final String MONGO_NETWORK_ALIAS = "mongodb";
@@ -102,13 +100,13 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  void testSingleMessage() throws Exception {
+  void testSingleMessage() throws IOException {
     String testTopicName = TOPIC_NAME;
     setupMongoSinkConnector(testTopicName);
     awaitForTopicCreation(testTopicName);
 
     Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBootstrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
@@ -171,7 +169,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  void testMultiTopic() throws Exception {
+  void testMultiTopic() throws IOException {
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";
@@ -182,7 +180,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     awaitForTopicCreation(topicName3);
 
     Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBootstrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.BATCH_SIZE_CONFIG, 10); // to send messages in one batch

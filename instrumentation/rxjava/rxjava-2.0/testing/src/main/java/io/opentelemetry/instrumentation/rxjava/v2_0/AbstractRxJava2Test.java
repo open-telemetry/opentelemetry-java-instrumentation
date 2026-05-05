@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.rxjava.v2_0;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -372,7 +373,7 @@ public abstract class AbstractRxJava2Test {
           assertThat(unused).isNotNull();
         });
 
-    latch.await();
+    assertThat(latch.await(10, SECONDS)).isTrue();
     assertThat(innerObservableTraceId.get()).isEqualTo(traceId.get());
     assertThat(endObservableTraceId.get()).isEqualTo(traceId.get());
   }
@@ -834,7 +835,7 @@ public abstract class AbstractRxJava2Test {
                       .toList()
                       .blockingGet();
                 });
-    assertThat(result.size()).isEqualTo(4);
+    assertThat(result).hasSize(4);
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -873,20 +874,20 @@ public abstract class AbstractRxJava2Test {
                   span ->
                       span.hasName("outer")
                           .hasNoParent()
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
                   span ->
                       span.hasName("middle")
                           .hasParent(trace.getSpan(0))
-                          .hasAttributes(attributeEntry("iteration", iteration)),
+                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
                   span ->
                       span.hasName("inner")
                           .hasParent(trace.getSpan(1))
-                          .hasAttributes(attributeEntry("iteration", iteration)));
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(longKey("iteration"), iteration)));
     }
     testing()
         .waitAndAssertSortedTraces(
-            Comparator.comparing(
-                span -> span.get(0).getAttributes().get(AttributeKey.longKey("iteration"))),
+            Comparator.comparing(span -> span.get(0).getAttributes().get(longKey("iteration"))),
             assertions);
     testing().clearData();
   }
@@ -926,7 +927,7 @@ public abstract class AbstractRxJava2Test {
                     .subscribe(result -> latch.countDown());
           });
 
-      latch.await();
+      assertThat(latch.await(10, SECONDS)).isTrue();
       assertThat(observableExecuted.get()).isTrue();
       assertThat(customHandlerExecuted.get()).isTrue();
       assertThat(customHandlerCallCount.get()).isGreaterThan(0);

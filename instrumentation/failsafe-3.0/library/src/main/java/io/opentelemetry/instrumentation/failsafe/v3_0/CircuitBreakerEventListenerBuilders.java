@@ -14,6 +14,7 @@ import dev.failsafe.event.ExecutionCompletedEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
+import javax.annotation.Nullable;
 
 final class CircuitBreakerEventListenerBuilders {
   private static final AttributeKey<String> OUTCOME_KEY =
@@ -63,7 +64,7 @@ final class CircuitBreakerEventListenerBuilders {
   }
 
   private static <T> EventListener<T> count(
-      LongCounter counter, Attributes attributes, EventListener<T> delegate) {
+      LongCounter counter, Attributes attributes, @Nullable EventListener<T> delegate) {
     return e -> {
       counter.add(1, attributes);
       if (delegate != null) {

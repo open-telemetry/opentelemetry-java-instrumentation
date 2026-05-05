@@ -15,8 +15,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCom
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +31,8 @@ class OpenTelemetryConnectionTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static final List<String> executedSql = new ArrayList<>();
 
   @BeforeEach
@@ -38,24 +42,24 @@ class OpenTelemetryConnectionTest {
 
   @SuppressWarnings("unchecked")
   @Test
-  void testVerifyCreateStatementReturnsOtelWrapper() throws Exception {
+  void testVerifyCreateStatementReturnsOtelWrapper() throws SQLException {
     OpenTelemetry openTelemetry = OpenTelemetry.propagating(ContextPropagators.noop());
     OpenTelemetryConnection connection = getConnection(openTelemetry);
+    cleanup.deferCleanup(connection);
 
     assertThat(connection.createStatement()).isInstanceOf(OpenTelemetryStatement.class);
     assertThat(connection.createStatement(0, 0)).isInstanceOf(OpenTelemetryStatement.class);
     assertThat(connection.createStatement(0, 0, 0)).isInstanceOf(OpenTelemetryStatement.class);
     assertThat(((OpenTelemetryStatement<Statement>) connection.createStatement()).instrumenter)
         .isEqualTo(connection.statementInstrumenter);
-
-    connection.close();
   }
 
   @SuppressWarnings("unchecked")
   @Test
-  void testVerifyPrepareStatementReturnsOtelWrapper() throws Exception {
+  void testVerifyPrepareStatementReturnsOtelWrapper() throws SQLException {
     OpenTelemetry openTelemetry = OpenTelemetry.propagating(ContextPropagators.noop());
     OpenTelemetryConnection connection = getConnection(openTelemetry);
+    cleanup.deferCleanup(connection);
 
     String query = "SELECT * FROM users";
 
@@ -74,15 +78,14 @@ class OpenTelemetryConnectionTest {
     assertThat(
             ((OpenTelemetryStatement<Statement>) connection.prepareStatement(query)).instrumenter)
         .isEqualTo(connection.statementInstrumenter);
-
-    connection.close();
   }
 
   @SuppressWarnings("unchecked")
   @Test
-  void testVerifyPrepareCallReturnsOtelWrapper() throws Exception {
+  void testVerifyPrepareCallReturnsOtelWrapper() throws SQLException {
     OpenTelemetry openTelemetry = OpenTelemetry.propagating(ContextPropagators.noop());
     OpenTelemetryConnection connection = getConnection(openTelemetry);
+    cleanup.deferCleanup(connection);
 
     String query = "SELECT * FROM users";
 
@@ -95,19 +98,18 @@ class OpenTelemetryConnectionTest {
         .isInstanceOf(OpenTelemetryCallableStatement.class);
     assertThat(((OpenTelemetryStatement<Statement>) connection.prepareCall(query)).instrumenter)
         .isEqualTo(connection.statementInstrumenter);
-
-    connection.close();
   }
 
   private static DbInfo getDbInfo() {
     return DbInfo.builder()
-        .system("my_system")
-        .subtype("my_sub_type")
-        .shortUrl("my_connection_string")
-        .user("my_user")
-        .name("my_name")
-        .host("my_host")
-        .port(1234)
+        .dbSystemName("my_system")
+        .dbSystem("my_system")
+        .dbConnectionString("my_connection_string")
+        .dbUser("my_user")
+        .dbName("my_name")
+        .dbNamespace("my_name")
+        .serverAddress("my_host")
+        .serverPort(1234)
         .build();
   }
 

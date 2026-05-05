@@ -4,7 +4,7 @@ plugins {
 
 muzzle {
   pass {
-    coreJdk()
+    coreJdk.set(true)
   }
 }
 
@@ -26,7 +26,7 @@ testing {
         all {
           testTask.configure {
             jvmArgs(
-              "-Dotel.experimental.config.file=$projectDir/src/declarativeConfigTest/resources/declarative-config.yaml"
+              "-Dotel.config.file=$projectDir/src/declarativeConfigTest/resources/declarative-config.yaml"
             )
           }
         }

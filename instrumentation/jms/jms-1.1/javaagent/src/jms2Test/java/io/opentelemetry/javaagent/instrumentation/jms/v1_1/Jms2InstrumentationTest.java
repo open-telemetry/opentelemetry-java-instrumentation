@@ -55,7 +55,6 @@ import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.HornetQServers;
 import org.hornetq.jms.client.HornetQConnectionFactory;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -70,10 +69,7 @@ class Jms2InstrumentationTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static HornetQServer server;
-  static HornetQConnectionFactory connectionFactory;
-  static Session session;
-  static Connection connection;
+  private static Session session;
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -93,8 +89,9 @@ class Jms2InstrumentationTest {
         new HashSet<>(
             singletonList(new TransportConfiguration(InVMAcceptorFactory.class.getName()))));
 
-    server = HornetQServers.newHornetQServer(config);
+    HornetQServer server = HornetQServers.newHornetQServer(config);
     server.start();
+    cleanup.deferAfterAll(server::stop);
 
     ServerLocator serverLocator =
         HornetQClient.createServerLocatorWithoutHA(
@@ -107,29 +104,16 @@ class Jms2InstrumentationTest {
     sf.close();
     serverLocator.close();
 
-    connectionFactory =
+    HornetQConnectionFactory connectionFactory =
         HornetQJMSClient.createConnectionFactoryWithoutHA(
             JMSFactoryType.CF, new TransportConfiguration(InVMConnectorFactory.class.getName()));
-    connection = connectionFactory.createConnection();
+    Connection connection = connectionFactory.createConnection();
     connection.start();
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     session.run();
-  }
-
-  @AfterAll
-  static void tearDown() throws Exception {
-    if (session != null) {
-      session.close();
-    }
-    if (connection != null) {
-      connection.close();
-    }
-    if (connectionFactory != null) {
-      connectionFactory.close();
-    }
-    if (server != null) {
-      server.stop();
-    }
+    cleanup.deferAfterAll(connectionFactory::close);
+    cleanup.deferAfterAll(connection);
+    cleanup.deferAfterAll(session);
   }
 
   @MethodSource("destinationArguments")

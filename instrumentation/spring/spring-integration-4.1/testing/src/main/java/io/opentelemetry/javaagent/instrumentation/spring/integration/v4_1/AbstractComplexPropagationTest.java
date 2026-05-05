@@ -9,6 +9,7 @@ import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toMap;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +18,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import javax.annotation.Nullable;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -34,15 +34,17 @@ import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.SubscribableChannel;
 
-public abstract class AbstractComplexPropagationTest {
+abstract class AbstractComplexPropagationTest {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private final Class<?> additionalContextClass;
-  protected InstrumentationExtension testing;
+  private final InstrumentationExtension testing;
 
-  ConfigurableApplicationContext applicationContext;
+  private ConfigurableApplicationContext applicationContext;
 
-  public AbstractComplexPropagationTest(
-      InstrumentationExtension testing, @Nullable Class<?> additionalContextClass) {
+  AbstractComplexPropagationTest(
+      InstrumentationExtension testing, Class<?> additionalContextClass) {
     this.testing = testing;
     this.additionalContextClass = additionalContextClass;
   }
@@ -59,13 +61,7 @@ public abstract class AbstractComplexPropagationTest {
     springApplication.setDefaultProperties(
         singletonMap("spring.main.web-application-type", "none"));
     applicationContext = springApplication.run();
-  }
-
-  @AfterEach
-  void tearDown() {
-    if (applicationContext != null) {
-      applicationContext.close();
-    }
+    cleanup.deferCleanup(applicationContext);
   }
 
   @Test
@@ -99,9 +95,14 @@ public abstract class AbstractComplexPropagationTest {
   @SpringBootConfiguration
   @EnableAutoConfiguration
   static class ExternalQueueConfig {
+    @Bean(destroyMethod = "shutdownNow")
+    ExecutorService sendChannelExecutor() {
+      return Executors.newSingleThreadExecutor();
+    }
+
     @Bean
     SubscribableChannel sendChannel() {
-      return new ExecutorChannel(Executors.newSingleThreadExecutor());
+      return new ExecutorChannel(sendChannelExecutor());
     }
 
     @Bean
@@ -139,8 +140,8 @@ public abstract class AbstractComplexPropagationTest {
   }
 
   static class Payload {
-    String body;
-    Map<String, String> headers;
+    private final String body;
+    private final Map<String, String> headers;
 
     Payload(String body, Map<String, String> headers) {
       this.body = body;

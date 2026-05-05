@@ -11,12 +11,11 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService({InstrumentationModule.class, EarlyInstrumentationModule.class})
 public class ExecutorsInstrumentationModule extends InstrumentationModule
-    implements EarlyInstrumentationModule, ExperimentalInstrumentationModule {
+    implements EarlyInstrumentationModule {
 
   public ExecutorsInstrumentationModule() {
     super("executors");
@@ -33,10 +32,5 @@ public class ExecutorsInstrumentationModule extends InstrumentationModule
         new ThreadPoolExtendingExecutorInstrumentation(),
         new VirtualThreadInstrumentation(),
         new StructuredTaskScopeInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

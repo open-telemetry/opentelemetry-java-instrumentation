@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.graphql.v12_0;
 
-import static io.opentelemetry.javaagent.instrumentation.graphql.v12_0.GraphqlSingletons.addInstrumentation;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -30,15 +29,15 @@ class GraphqlInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("checkInstrumentationDefaultState", "checkInstrumentation")
             .and(returns(named("graphql.execution.instrumentation.Instrumentation"))),
-        this.getClass().getName() + "$AddInstrumentationAdvice");
+        getClass().getName() + "$AddInstrumentationAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class AddInstrumentationAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Instrumentation onExit(@Advice.Return Instrumentation instrumentation) {
-      return addInstrumentation(instrumentation);
+      return GraphqlSingletons.addInstrumentation(instrumentation);
     }
   }
 }

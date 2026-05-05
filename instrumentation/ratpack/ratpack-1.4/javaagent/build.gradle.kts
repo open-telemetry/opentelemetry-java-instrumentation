@@ -17,6 +17,7 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-4.1:library"))
 
   testImplementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
+  testInstrumentation(project(":instrumentation:ratpack:ratpack-1.7:javaagent"))
 
   // 1.4.0 has a bug which makes tests flaky
   // (https://github.com/ratpack/ratpack/commit/dde536ac138a76c34df03a0642c88d64edde688e)
@@ -25,21 +26,24 @@ dependencies {
   if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
     testImplementation("com.sun.activation:jakarta.activation:1.2.2")
   }
+
+  latestDepTestLibrary("io.ratpack:ratpack-core:1.6.+") // see ratpack-1.7 module
+  latestDepTestLibrary("io.ratpack:ratpack-test:1.6.+") // see ratpack-1.7 module
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
-configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
+if (!otelProps.testLatestDeps) {
+  configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
+}
 
 // to allow all tests to pass we need to choose a specific netty version
-if (!(findProperty("testLatestDeps") as Boolean)) {
-  configurations.configureEach {
-    if (!name.contains("muzzle")) {
-      resolutionStrategy {
-        eachDependency {
-          // specifying a fixed version for all libraries with io.netty group
-          if (requested.group == "io.netty") {
-            useVersion("4.1.31.Final")
-          }
+configurations.configureEach {
+  if (!name.contains("muzzle")) {
+    resolutionStrategy {
+      eachDependency {
+        // specifying a fixed version for all libraries with io.netty group
+        if (requested.group == "io.netty") {
+          useVersion("4.1.31.Final")
         }
       }
     }
@@ -48,9 +52,11 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -64,7 +70,7 @@ tasks {
     dependsOn(testStableSemconv)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

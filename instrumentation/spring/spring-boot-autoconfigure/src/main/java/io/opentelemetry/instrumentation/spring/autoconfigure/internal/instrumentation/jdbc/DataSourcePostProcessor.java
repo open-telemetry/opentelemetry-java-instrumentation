@@ -41,7 +41,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
   private static Class<?> getRoutingDataSourceClass() {
     try {
       return Class.forName("org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }
@@ -71,7 +71,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
                   config.get("transaction/development").getBoolean("enabled", false))
               .setDataSourceInstrumenterEnabled(
                   config.get("datasource/development").getBoolean("enabled", false));
-      Experimental.setEnableSqlCommenter(
+      Experimental.setSqlCommenterEnabled(
           builder, config.get("sqlcommenter/development").getBoolean("enabled", false));
       DataSource otelDataSource = builder.build().wrap(dataSource);
 

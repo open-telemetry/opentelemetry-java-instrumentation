@@ -5,6 +5,9 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -23,31 +26,40 @@ import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import ch.qos.logback.classic.LoggerContext;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.condition.OS;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -77,6 +89,10 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   abstract void restTemplateCall(String path);
 
+  protected boolean preferJfr() {
+    return false;
+  }
+
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
   protected int port;
@@ -101,8 +117,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
               (resource, config) ->
                   resource.merge(
                       Resource.create(
-                          Attributes.of(
-                              AttributeKey.booleanKey("keyFromResourceCustomizer"), false))));
+                          Attributes.of(booleanKey("keyFromResourceCustomizer"), false))));
     }
 
     @Bean
@@ -113,8 +128,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
               (resource, config) ->
                   resource.merge(
                       Resource.create(
-                          Attributes.of(
-                              AttributeKey.booleanKey("keyFromResourceCustomizer"), true))));
+                          Attributes.of(booleanKey("keyFromResourceCustomizer"), true))));
     }
 
     @Bean
@@ -131,6 +145,16 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                 return resource;
               });
     }
+  }
+
+  @AfterAll
+  static void resetLogger() {
+    ILoggerFactory loggerFactorySpi = LoggerFactory.getILoggerFactory();
+    if (!(loggerFactorySpi instanceof LoggerContext)) {
+      return;
+    }
+    LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
+    loggerContext.reset();
   }
 
   @Test
@@ -153,7 +177,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @Test
   @org.junit.jupiter.api.Order(1) // This test validates startup telemetry, so must run first
   @SuppressWarnings("deprecation") // testing deprecated code semconv
-  void shouldSendTelemetry() {
+  void shouldSendTelemetry() throws InterruptedException, TimeoutException {
     makeClientCall();
 
     testing.waitAndAssertTraces(
@@ -171,7 +195,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                     clientSpan
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            satisfies(URL_FULL, stringAssert -> stringAssert.endsWith("/ping")),
+                            satisfies(URL_FULL, val -> val.endsWith("/ping")),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isNotZero())),
                 serverSpan ->
@@ -179,10 +203,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                         .assertServerGetRequest("/ping")
                         .hasResourceSatisfying(
                             r ->
-                                r.hasAttribute(
-                                        AttributeKey.booleanKey("keyFromResourceCustomizer"), true)
-                                    .hasAttribute(
-                                        AttributeKey.stringKey("attributeFromYaml"), "true")
+                                r.hasAttribute(booleanKey("keyFromResourceCustomizer"), true)
+                                    .hasAttribute(stringKey("attributeFromYaml"), "true")
                                     .hasAttribute(
                                         satisfies(SERVICE_INSTANCE_ID, val -> val.isNotBlank())))
                         .hasAttributesSatisfying(
@@ -192,8 +214,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(CLIENT_ADDRESS, s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
                             equalTo(
-                                AttributeKey.stringArrayKey("http.request.header.key"),
-                                singletonList("value")),
+                                stringArrayKey("http.request.header.key"), singletonList("value")),
                             satisfies(SERVER_PORT, val -> val.isNotZero()),
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),
@@ -205,26 +226,27 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
         OtelSpringStarterSmokeTestController.TEST_HISTOGRAM,
         AbstractIterableAssert::isNotEmpty);
 
-    // JMX based metrics - test one per JMX bean
-    List<String> jmxMetrics =
-        new ArrayList<>(Arrays.asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
+    // Runtime metrics - test one per JMX/JFR source
+    List<String> runtimeMetrics =
+        new ArrayList<>(asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
 
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
     // Also not available on Windows (getSystemLoadAverage returns -1)
-    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs()) {
-      jmxMetrics.add("jvm.system.cpu.load_1m");
+    // Not available when prefer-jfr is enabled (JMX-only metric with no JFR equivalent)
+    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs() && !preferJfr()) {
+      runtimeMetrics.add("jvm.system.cpu.load_1m");
     }
 
     boolean nativeImage = System.getProperty("org.graalvm.nativeimage.imagecode") != null;
     if (!nativeImage) {
       // GraalVM native image does not support buffer pools - have to investigate why
-      jmxMetrics.add("jvm.buffer.memory.used");
+      runtimeMetrics.add("jvm.buffer.memory.used");
     }
-    jmxMetrics.forEach(
+    runtimeMetrics.forEach(
         metricName ->
             testing.waitAndAssertMetrics(
-                "io.opentelemetry.runtime-telemetry-java8",
+                "io.opentelemetry.runtime-telemetry",
                 metricName,
                 AbstractIterableAssert::isNotEmpty));
 
@@ -232,17 +254,20 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
-    assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
+    assertThat(exportedLogRecords).isNotEmpty();
     if (!nativeImage) {
       // log records differ in native image mode due to different startup timing
-      LogRecordData firstLog = exportedLogRecords.get(0);
+      Optional<LogRecordData> firstInfo =
+          exportedLogRecords.stream().filter(log -> log.getSeverity() == Severity.INFO).findFirst();
+      assertThat(firstInfo).isPresent();
+
+      LogRecordData firstLog = firstInfo.get();
       assertThat(firstLog.getBodyValue().asString())
-          .as("Should instrument logs")
           .startsWith("Starting ")
           .contains(this.getClass().getSimpleName());
 
       MapAssert<AttributeKey<?>, Object> attributesAssert =
-          assertThat(firstLog.getAttributes().asMap()).as("Should capture code attributes");
+          assertThat(firstLog.getAttributes().asMap());
 
       if (emitStableDatabaseSemconv()) {
         attributesAssert.containsEntry(
@@ -256,27 +281,36 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     }
   }
 
-  protected void assertAdditionalMetrics() {
+  protected void assertAdditionalMetrics() throws InterruptedException, TimeoutException {
     if (!isFlightRecorderAvailable()) {
       return;
     }
 
+    // force gc so we'd get the jvm.gc.duration metric
+    GcUtils.awaitGc(Duration.ofSeconds(10));
+
+    double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // JFR based metrics
+    // Note: jvm.network.io is intentionally omitted because it is flaky across all JDK versions.
     for (String metric :
-        Arrays.asList(
-            "jvm.cpu.limit",
+        asList(
+            "jvm.cpu.count",
             "jvm.buffer.count",
             "jvm.class.count",
             "jvm.cpu.context_switch",
+            "jvm.cpu.longlock",
             "jvm.system.cpu.utilization",
             "jvm.gc.duration",
             "jvm.memory.init",
             "jvm.memory.used",
             "jvm.memory.allocation",
-            "jvm.network.io",
             "jvm.thread.count")) {
+      // cpu longlock is missing on jdk 25
+      if (javaVersion >= 25 && "jvm.cpu.longlock".equals(metric)) {
+        continue;
+      }
       testing.waitAndAssertMetrics(
-          "io.opentelemetry.runtime-telemetry-java17", metric, AbstractIterableAssert::isNotEmpty);
+          "io.opentelemetry.runtime-telemetry", metric, AbstractIterableAssert::isNotEmpty);
     }
   }
 
@@ -284,7 +318,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     try {
       return (boolean)
           Class.forName("jdk.jfr.FlightRecorder").getMethod("isAvailable").invoke(null);
-    } catch (ReflectiveOperationException exception) {
+    } catch (ReflectiveOperationException ignored) {
       return false;
     }
   }
@@ -298,7 +332,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
               "select name from customer where id = 1", (rs, rowNum) -> rs.getString("name"));
         });
 
-    // 1 is not replaced by ?, otel.instrumentation.common.db-statement-sanitizer.enabled=false
+    // 1 is not replaced by ?, otel.instrumentation.common.db.query-sanitization.enabled=false
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(

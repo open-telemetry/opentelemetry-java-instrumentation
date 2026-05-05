@@ -9,6 +9,7 @@ import io.netty.channel.Channel;
 import io.netty.util.Attribute;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import javax.annotation.Nullable;
 
 /**
  * A helper class for keeping track of incoming requests and spans associated with them.
@@ -26,6 +27,7 @@ public final class ServerContexts {
 
   private ServerContexts() {}
 
+  @Nullable
   public static ServerContexts get(Channel channel) {
     return channel.attr(AttributeKeys.SERVER_CONTEXTS).get();
   }
@@ -40,23 +42,28 @@ public final class ServerContexts {
     return result;
   }
 
+  @Nullable
   public static ServerContext peekFirst(Channel channel) {
     ServerContexts serverContexts = get(channel);
     return serverContexts != null ? serverContexts.peekFirst() : null;
   }
 
+  @Nullable
   public ServerContext peekFirst() {
     return serverContexts.peekFirst();
   }
 
+  @Nullable
   public ServerContext peekLast() {
-    return serverContexts.peekFirst();
+    return serverContexts.peekLast();
   }
 
+  @Nullable
   public ServerContext pollFirst() {
     return serverContexts.pollFirst();
   }
 
+  @Nullable
   public ServerContext pollLast() {
     return serverContexts.pollLast();
   }
@@ -70,9 +77,10 @@ public final class ServerContexts {
     // from the deque and there could be a memory leak. This could happen when http server decides
     // not to send response to some requests, for example see
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11942
-    if (serverContexts.size() > PIPELINING_LIMIT) {
+    if (serverContexts.size() >= PIPELINING_LIMIT) {
       broken = true;
       serverContexts.clear();
+      return;
     }
     serverContexts.addLast(context);
   }

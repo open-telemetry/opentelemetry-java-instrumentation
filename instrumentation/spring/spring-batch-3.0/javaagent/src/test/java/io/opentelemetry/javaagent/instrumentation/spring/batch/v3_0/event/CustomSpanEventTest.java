@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.event;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -14,15 +16,12 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.JobRu
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class CustomSpanEventTest {
-
-  private static final boolean VERSION_GREATER_THAN_4_0 = Boolean.getBoolean("testLatestDeps");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -41,7 +40,7 @@ abstract class CustomSpanEventTest {
         trace -> {
           List<Consumer<SpanDataAssert>> assertions =
               new ArrayList<>(
-                  Arrays.asList(
+                  asList(
                       span ->
                           span.hasName("BatchJob customSpanEventsItemsJob")
                               .hasKind(SpanKind.INTERNAL)
@@ -59,7 +58,7 @@ abstract class CustomSpanEventTest {
                                     // times because of that a custom ChunkListener will always see
                                     // a Step span when using spring-batch versions [3, 4)
                                     // that bug was fixed in 4.0
-                                    if (VERSION_GREATER_THAN_4_0) {
+                                    if (testLatestDeps()) {
                                       assertThat(spanData)
                                           .hasEventsSatisfyingExactly(
                                               event -> event.hasName("step.before"),
@@ -85,7 +84,7 @@ abstract class CustomSpanEventTest {
                                     // times because of that a custom ChunkListener will always see
                                     // a Step span when using spring-batch versions [3, 4)
                                     // that bug was fixed in 4.0
-                                    if (VERSION_GREATER_THAN_4_0) {
+                                    if (testLatestDeps()) {
                                       assertThat(spanData)
                                           .hasEventsSatisfyingExactly(
                                               event -> event.hasName("chunk.before"),
@@ -101,7 +100,7 @@ abstract class CustomSpanEventTest {
 
   protected void itemSpans(TraceAssert trace, List<Consumer<SpanDataAssert>> assertions) {
     assertions.addAll(
-        Arrays.asList(
+        asList(
             span ->
                 span.hasName("BatchJob customSpanEventsItemsJob.customSpanEventsItemStep.ItemRead")
                     .hasKind(SpanKind.INTERNAL)

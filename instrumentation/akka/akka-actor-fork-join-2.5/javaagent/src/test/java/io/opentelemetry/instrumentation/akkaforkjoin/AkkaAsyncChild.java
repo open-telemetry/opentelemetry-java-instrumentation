@@ -12,14 +12,14 @@ import io.opentelemetry.javaagent.instrumentation.executors.TestTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-final class AkkaAsyncChild extends ForkJoinTask<Object> implements TestTask {
+class AkkaAsyncChild extends ForkJoinTask<Object> implements TestTask {
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;
   private final CountDownLatch latch = new CountDownLatch(1);
 
-  public AkkaAsyncChild(boolean doTraceableWork, boolean blockThread) {
+  AkkaAsyncChild(boolean doTraceableWork, boolean blockThread) {
     this.doTraceableWork = doTraceableWork;
     this.blockThread = new AtomicBoolean(blockThread);
   }

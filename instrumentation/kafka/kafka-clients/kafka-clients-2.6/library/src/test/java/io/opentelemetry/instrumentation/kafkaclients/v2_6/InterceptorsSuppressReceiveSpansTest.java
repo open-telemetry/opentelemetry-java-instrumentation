@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -16,7 +17,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
@@ -29,6 +29,11 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
   @Override
   protected KafkaTelemetry kafkaTelemetry() {
     return kafkaTelemetry;
+  }
+
+  @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return false;
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -46,9 +51,7 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "publish"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("producer"))),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer"))),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
@@ -64,15 +67,9 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                             satisfies(
                                 MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
-                            equalTo(
-                                AttributeKey.stringKey("test-baggage-key-1"),
-                                "test-baggage-value-1"),
-                            equalTo(
-                                AttributeKey.stringKey("test-baggage-key-2"),
-                                "test-baggage-value-2")),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                            equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"),
+                            equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2")),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)

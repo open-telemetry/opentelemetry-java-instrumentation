@@ -5,25 +5,31 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0
 
-import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
   InstrumentationExtension
 }
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
-import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.{AfterAll, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
 import java.util.function.Consumer
 import scala.collection.JavaConverters._
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PekkoActorTest {
 
   @RegisterExtension val testing: InstrumentationExtension =
     AgentInstrumentationExtension.create
+
+  @AfterAll
+  def cleanup(): Unit = {
+    Await.result(PekkoActors.system.terminate(), 10.seconds)
+  }
 
   @ParameterizedTest
   @ValueSource(ints = Array(1, 150))
@@ -42,7 +48,7 @@ class PekkoActorTest {
                 override def accept(span: SpanDataAssert): Unit = {
                   span
                     .hasName("parent")
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               },
               new Consumer[SpanDataAssert] {
@@ -50,7 +56,7 @@ class PekkoActorTest {
                   span
                     .hasName("Howdy, Pekko")
                     .hasParent(trace.getSpan(0))
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               }
             )
@@ -78,7 +84,7 @@ class PekkoActorTest {
                 override def accept(span: SpanDataAssert): Unit = {
                   span
                     .hasName("parent")
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               },
               new Consumer[SpanDataAssert] {
@@ -86,7 +92,7 @@ class PekkoActorTest {
                   span
                     .hasName("Howdy, Pekko")
                     .hasParent(trace.getSpan(0))
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               }
             )
@@ -114,7 +120,7 @@ class PekkoActorTest {
                 override def accept(span: SpanDataAssert): Unit = {
                   span
                     .hasName("parent")
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               },
               new Consumer[SpanDataAssert] {
@@ -122,7 +128,7 @@ class PekkoActorTest {
                   span
                     .hasName("Hello, Pekko")
                     .hasParent(trace.getSpan(0))
-                    .hasAttributes(Attributes.empty())
+                    .hasTotalAttributeCount(0)
                 }
               }
             )

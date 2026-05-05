@@ -12,9 +12,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 
-enum RocketMqProducerExperimentalAttributeExtractor
+final class RocketMqProducerExperimentalAttributeExtractor
     implements AttributesExtractor<SendMessageContext, Void> {
-  INSTANCE;
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_ROCKETMQ_MESSAGE_TAG =
@@ -29,15 +28,9 @@ enum RocketMqProducerExperimentalAttributeExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
     if (request.getMessage() != null) {
-      String tags = request.getMessage().getTags();
-      if (tags != null) {
-        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, tags);
-      }
+      attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, request.getMessage().getTags());
     }
-    String brokerAddr = request.getBrokerAddr();
-    if (brokerAddr != null) {
-      attributes.put(MESSAGING_ROCKETMQ_BROKER_ADDRESS, brokerAddr);
-    }
+    attributes.put(MESSAGING_ROCKETMQ_BROKER_ADDRESS, request.getBrokerAddr());
   }
 
   @Override

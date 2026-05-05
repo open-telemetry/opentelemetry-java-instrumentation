@@ -34,6 +34,7 @@ import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -63,19 +64,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   private boolean emitExperimentalHttpClientTelemetry = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
-  private DefaultHttpClientInstrumenterBuilder(
-      String instrumentationName,
-      OpenTelemetry openTelemetry,
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      @Nullable TextMapSetter<REQUEST> headerSetter) {
-    this.instrumentationName = requireNonNull(instrumentationName, "instrumentationName");
-    this.openTelemetry = requireNonNull(openTelemetry, "openTelemetry");
-    this.attributesGetter = requireNonNull(attributesGetter, "attributesGetter");
-    httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
-    httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
-    this.headerSetter = headerSetter;
-  }
-
   public static <REQUEST, RESPONSE> DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> create(
       String instrumentationName,
       OpenTelemetry openTelemetry,
@@ -94,6 +82,19 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
         openTelemetry,
         attributesGetter,
         requireNonNull(headerSetter, "headerSetter"));
+  }
+
+  private DefaultHttpClientInstrumenterBuilder(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      @Nullable TextMapSetter<REQUEST> headerSetter) {
+    this.instrumentationName = requireNonNull(instrumentationName, "instrumentationName");
+    this.openTelemetry = requireNonNull(openTelemetry, "openTelemetry");
+    this.attributesGetter = requireNonNull(attributesGetter, "attributesGetter");
+    httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
+    httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
+    this.headerSetter = headerSetter;
   }
 
   /**
@@ -173,14 +174,16 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Configures the instrumentation to redact sensitive URL parameters.
+   * Configures the instrumentation to redact specific URL query parameters.
    *
-   * @param redactQueryParameters {@code true} if the sensitive URL parameters have to be redacted.
+   * @param sensitiveQueryParameters the set of query parameter names whose values should be
+   *     redacted.
    */
   @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setRedactQueryParameters(
-      boolean redactQueryParameters) {
-    Experimental.setRedactQueryParameters(httpAttributesExtractorBuilder, redactQueryParameters);
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setSensitiveQueryParameters(
+      Set<String> sensitiveQueryParameters) {
+    Experimental.setSensitiveQueryParameters(
+        httpAttributesExtractorBuilder, sensitiveQueryParameters);
     return this;
   }
 
@@ -253,7 +256,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         this::setEmitExperimentalHttpClientTelemetry);
-    set(config::redactQueryParameters, this::setRedactQueryParameters);
+    set(config::getSensitiveQueryParameters, this::setSensitiveQueryParameters);
     addAttributesExtractor(
         HttpClientServicePeerAttributesExtractor.create(attributesGetter, openTelemetry));
     return this;

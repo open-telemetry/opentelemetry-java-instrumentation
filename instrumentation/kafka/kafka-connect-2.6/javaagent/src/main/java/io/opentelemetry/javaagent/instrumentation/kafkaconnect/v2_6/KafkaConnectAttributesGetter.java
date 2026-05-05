@@ -15,8 +15,7 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.connect.header.Header;
 
-enum KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConnectTask, Void> {
-  INSTANCE;
+class KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConnectTask, Void> {
 
   @Override
   public String getSystem(KafkaConnectTask request) {

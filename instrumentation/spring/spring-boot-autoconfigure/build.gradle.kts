@@ -68,8 +68,7 @@ dependencies {
   implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
   compileOnly("ch.qos.logback:logback-classic:1.0.0")
   implementation(project(":instrumentation:jdbc:library"))
-  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library"))
-  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library"))
+  implementation(project(":instrumentation:runtime-telemetry:library"))
 
   library("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
@@ -141,6 +140,7 @@ dependencies {
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-jdbc:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-jdbc:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-restclient:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-webclient:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-data-mongodb:4.0.0")
   add(
     "javaSpring4CompileOnly",
@@ -157,19 +157,17 @@ dependencies {
     "javaSpring4CompileOnly",
     project(":instrumentation:spring:spring-web:spring-web-3.1:library")
   )
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 // spring 6 (spring boot 3) requires java 17
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
 
-val testJavaVersion =
-  gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
+val testJavaVersion = otelProps.testJavaVersion
 val testSpring3 =
   (testJavaVersion == null || testJavaVersion.compareTo(JavaVersion.VERSION_17) >= 0)
 
@@ -221,13 +219,14 @@ testing {
         implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
         implementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
         // configure Spring Boot 3.x dependencies for latest dep testing
-        val version = if (latestDepTest) "3.+" else springBootVersion
+        val version = baseVersion(springBootVersion).orLatest("3.+")
         implementation("org.springframework.boot:spring-boot-starter-test:$version")
         implementation("org.springframework.boot:spring-boot-starter-actuator:$version")
         implementation("org.springframework.boot:spring-boot-starter-web:$version")
+        implementation("org.springframework.boot:spring-boot-starter-webflux:$version")
         implementation("org.springframework.boot:spring-boot-starter-jdbc:$version")
         implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:$version")
-        val springKafkaVersion = if (latestDepTest) "3.+" else "2.9.0"
+        val springKafkaVersion = baseVersion("2.9.0").orLatest("3.+")
         implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
         implementation("javax.servlet:javax.servlet-api:3.1.0")
         runtimeOnly("com.h2database:h2:1.4.197")
@@ -238,7 +237,7 @@ testing {
     val testSpring3 by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
-        val version = if (latestDepTest) "3.+" else "3.2.4"
+        val version = baseVersion("3.2.4").orLatest("3.+")
         implementation("org.springframework.boot:spring-boot-starter-web:$version")
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
         implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
@@ -253,9 +252,10 @@ testing {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-        val version = if (latestDepTest) "latest.release" else "4.0.0"
+        val version = baseVersion("4.0.0").orLatest()
         implementation("org.springframework.boot:spring-boot-starter-jdbc:$version")
         implementation("org.springframework.boot:spring-boot-restclient:$version")
+        implementation("org.springframework.boot:spring-boot-webclient:$version")
         implementation("org.springframework.boot:spring-boot-starter-kafka:$version")
         implementation("org.springframework.boot:spring-boot-starter-actuator:$version")
         implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:$version")
@@ -298,7 +298,7 @@ tasks {
   }
 
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", latestDepTest)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")

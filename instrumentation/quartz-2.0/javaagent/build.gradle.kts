@@ -8,7 +8,6 @@ muzzle {
     module.set("quartz")
     versions.set("[2.0.0,)")
     assertInverse.set(true)
-    skip("1.7.0") // missing in maven central
   }
 }
 
@@ -22,7 +21,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {

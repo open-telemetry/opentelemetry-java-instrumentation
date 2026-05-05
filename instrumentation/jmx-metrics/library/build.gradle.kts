@@ -11,13 +11,14 @@ dependencies {
 
   testImplementation("org.testcontainers:testcontainers-junit-jupiter")
   testImplementation("com.linecorp.armeria:armeria-junit5:1.31.3")
-  testImplementation("com.linecorp.armeria:armeria-junit5:1.31.3")
   testImplementation("com.linecorp.armeria:armeria-grpc:1.31.3")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.5.0-alpha")
 }
 
 tasks {
   test {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
     val testAppTask = project(":instrumentation:jmx-metrics:testing-apps:testing-webapp").tasks.named<War>("war")
     val camelTestAppTask = project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app").tasks.named<Jar>("camelTestAppJar")

@@ -5,28 +5,30 @@
 
 package io.opentelemetry.javaagent.instrumentation.restlet.v2_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import java.util.Arrays;
 import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class RestletInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class RestletInstrumentationModule extends InstrumentationModule {
 
   public RestletInstrumentationModule() {
     super("restlet", "restlet-2.0");
   }
 
   @Override
-  public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(new ServerInstrumentation(), new RouteInstrumentation());
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 2.0
+    return hasClassesNamed("org.restlet.Request");
   }
 
   @Override
-  public boolean isIndyReady() {
-    return true;
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(new ServerInstrumentation(), new RouteInstrumentation());
   }
 }

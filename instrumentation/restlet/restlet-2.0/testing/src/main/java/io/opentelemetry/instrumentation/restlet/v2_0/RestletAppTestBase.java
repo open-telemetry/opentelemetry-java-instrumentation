@@ -101,8 +101,8 @@ class RestletAppTestBase {
 
       Method responseAttributesMethod = response.getClass().getMethod("getAttributes");
       responseAttributes = (Map<String, Object>) responseAttributesMethod.invoke(response);
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException exception) {
-      throw new IllegalStateException(exception);
+    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+      throw new IllegalStateException(e);
     }
     Series<?> requestHeaders = (Series<?>) attributes.get("org.restlet.http.headers");
     Series<?> responseHeaders;
@@ -119,11 +119,11 @@ class RestletAppTestBase {
                   (key) -> {
                     try {
                       return constructor.newInstance(headerClass);
-                    } catch (Exception exception) {
-                      throw new IllegalStateException(exception);
+                    } catch (ReflectiveOperationException e) {
+                      throw new IllegalStateException(e);
                     }
                   });
-    } catch (ClassNotFoundException | NoClassDefFoundError | NoSuchMethodException exception) {
+    } catch (ClassNotFoundException | NoClassDefFoundError | NoSuchMethodException ignored) {
       responseHeaders =
           (Series<?>)
               responseAttributes.computeIfAbsent("org.restlet.http.headers", (key) -> new Form());

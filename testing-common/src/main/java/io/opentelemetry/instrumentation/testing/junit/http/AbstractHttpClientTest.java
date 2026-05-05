@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -23,9 +25,9 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
-import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TEMPLATE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -83,11 +85,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   static final String BASIC_AUTH_VAL = "plain text auth token";
 
   /** Returns the connection timeout that should be used when setting up tested clients. */
-  protected final Duration connectTimeout() {
+  protected Duration connectTimeout() {
     return CONNECTION_TIMEOUT;
   }
 
-  protected final Duration readTimeout() {
+  protected Duration readTimeout() {
     return READ_TIMEOUT;
   }
 
@@ -109,7 +111,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {}
 
   // called by the HttpClientInstrumentationExtension
-  final void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
+  void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
     this.testing = testing;
     this.server = server;
   }
@@ -558,11 +560,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasAttributesSatisfying(
                           asList(
                               equalTo(
-                                  AttributeKey.stringArrayKey("http.request.header.x-test-request"),
+                                  stringArrayKey("http.request.header.x-test-request"),
                                   singletonList("test")),
                               equalTo(
-                                  AttributeKey.stringArrayKey(
-                                      "http.response.header.x-test-response"),
+                                  stringArrayKey("http.response.header.x-test-response"),
                                   singletonList("test")))),
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
         });
@@ -755,17 +756,14 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
-        "http.client.request.duration",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("Duration of HTTP client requests.")
-                        .hasUnit("s")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point -> point.hasSumGreaterThan(0.0)))));
+        metric ->
+            metric
+                .hasName("http.client.request.duration")
+                .hasDescription("Duration of HTTP client requests.")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
   }
 
   /**
@@ -804,11 +802,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                             method, uri, singletonMap("test-request-id", String.valueOf(index)));
                       });
               assertThat(result).isEqualTo(200);
-            } catch (Throwable throwable) {
-              if (throwable instanceof AssertionError) {
-                throw (AssertionError) throwable;
+            } catch (Throwable t) {
+              if (t instanceof AssertionError) {
+                throw (AssertionError) t;
               }
-              throw new AssertionError(throwable);
+              throw new AssertionError(t);
             }
           };
       pool.submit(job);
@@ -829,13 +827,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
+                            equalTo(longKey("test.request.id"), requestId)),
                 span -> assertClientSpan(span, uri, method, 200, null).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)));
+                            equalTo(longKey("test.request.id"), requestId)));
           });
     }
 
@@ -879,11 +877,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                                     () -> testing.runWithSpan("child", () -> {}));
                               });
                       assertThat(result.get()).isEqualTo(200);
-                    } catch (Throwable throwable) {
-                      if (throwable instanceof AssertionError) {
-                        throw (AssertionError) throwable;
+                    } catch (Throwable t) {
+                      if (t instanceof AssertionError) {
+                        throw (AssertionError) t;
                       }
-                      throw new AssertionError(throwable);
+                      throw new AssertionError(t);
                     }
                   };
               pool.submit(job);
@@ -904,13 +902,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
+                            equalTo(longKey("test.request.id"), requestId)),
                 span -> assertClientSpan(span, uri, method, 200, null).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
+                            equalTo(longKey("test.request.id"), requestId)),
                 span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(rootSpan));
           });
     }
@@ -956,11 +954,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                             path, singletonMap("test-request-id", String.valueOf(index)));
                       });
               assertThat(result).isEqualTo(200);
-            } catch (Throwable throwable) {
-              if (throwable instanceof AssertionError) {
-                throw (AssertionError) throwable;
+            } catch (Throwable t) {
+              if (t instanceof AssertionError) {
+                throw (AssertionError) t;
               }
-              throw new AssertionError(throwable);
+              throw new AssertionError(t);
             }
           };
       pool.submit(job);
@@ -981,13 +979,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)),
+                            equalTo(longKey("test.request.id"), requestId)),
                 span -> assertClientSpan(span, uri, method, 200, null).hasParent(rootSpan),
                 span ->
                     assertServerSpan(span)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(AttributeKey.longKey("test.request.id"), requestId)));
+                            equalTo(longKey("test.request.id"), requestId)));
           });
     }
 
@@ -1101,11 +1099,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(SERVER_PORT)) {
                 int uriPort = uri.getPort();
                 if (uriPort <= 0) {
-                  if (attrs.get(SERVER_PORT) != null) {
-                    int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
-                    assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
-                  }
-                  // alternatively, peer port is not emitted -- and that's fine too
+                  int effectivePort = defaultPortForScheme(uri.getScheme());
+                  assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
                 } else {
                   assertThat(attrs).containsEntry(SERVER_PORT, uriPort);
                 }
@@ -1208,7 +1203,17 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return httpClientResult;
   }
 
-  protected final URI resolveAddress(String path) {
+  protected URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
+  }
+
+  private static int defaultPortForScheme(String scheme) {
+    if ("https".equals(scheme)) {
+      return 443;
+    }
+    if ("http".equals(scheme)) {
+      return 80;
+    }
+    throw new IllegalArgumentException("Unexpected URI scheme: " + scheme);
   }
 }

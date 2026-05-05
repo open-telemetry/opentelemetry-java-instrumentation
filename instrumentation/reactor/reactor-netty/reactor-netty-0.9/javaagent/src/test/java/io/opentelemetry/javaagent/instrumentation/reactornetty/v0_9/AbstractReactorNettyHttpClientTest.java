@@ -19,6 +19,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -41,6 +42,9 @@ abstract class AbstractReactorNettyHttpClientTest
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+
+  private static final String UNUSABLE_PORT_URI =
+      "http://localhost:" + PortUtils.UNUSABLE_PORT + "/";
 
   abstract HttpClient createHttpClient(boolean readTimeout);
 
@@ -96,7 +100,7 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
           switch (uri.toString()) {
-            case "http://localhost:61/": // unopened port
+            case UNUSABLE_PORT_URI: // unopened port
             case "https://192.0.2.1/": // non routable address
               return "CONNECT";
             default:
@@ -109,7 +113,7 @@ abstract class AbstractReactorNettyHttpClientTest
         (uri, exception) -> {
           if (exception.getClass().getName().endsWith("ReactiveException")) {
             // unopened port or non routable address
-            if ("http://localhost:61/".equals(uri.toString())
+            if (UNUSABLE_PORT_URI.equals(uri.toString())
                 || "https://192.0.2.1/".equals(uri.toString())) {
               exception = exception.getCause();
             }
@@ -120,7 +124,7 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.setHttpAttributes(
         uri -> {
           // unopened port or non routable address
-          if ("http://localhost:61/".equals(uri.toString())
+          if (UNUSABLE_PORT_URI.equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())) {
             return emptySet();
           }
@@ -166,7 +170,7 @@ abstract class AbstractReactorNettyHttpClientTest
                     })
                 .block());
 
-    latch.await(10, SECONDS);
+    assertThat(latch.await(10, SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(
         trace -> {
@@ -201,7 +205,7 @@ abstract class AbstractReactorNettyHttpClientTest
                     () ->
                         httpClient
                             .get()
-                            .uri("http://localhost:$UNUSABLE_PORT/")
+                            .uri(UNUSABLE_PORT_URI)
                             .responseSingle(
                                 (resp, content) -> {
                                   // Make sure to consume content since that's when we close the

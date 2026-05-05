@@ -33,10 +33,6 @@ public final class SqlQueryAnalyzer {
     this.querySanitizationEnabled = querySanitizationEnabled;
   }
 
-  public SqlQuery analyze(@Nullable String query) {
-    return analyze(query, SqlDialect.DEFAULT);
-  }
-
   public SqlQuery analyze(@Nullable String query, SqlDialect dialect) {
     if (!querySanitizationEnabled || query == null) {
       return SqlQuery.create(query, null, null);
@@ -54,11 +50,6 @@ public final class SqlQueryAnalyzer {
   private static SqlQuery analyzeImpl(String query, SqlDialect dialect) {
     supportability.incrementCounter(SQL_SANITIZER_CACHE_MISS);
     return AutoSqlSanitizer.sanitize(query, dialect);
-  }
-
-  /** Analyze and extract query summary. */
-  public SqlQuery analyzeWithSummary(@Nullable String query) {
-    return analyzeWithSummary(query, SqlDialect.DEFAULT);
   }
 
   /** Analyze and extract query summary. */
@@ -82,8 +73,8 @@ public final class SqlQueryAnalyzer {
   }
 
   // visible for tests
-  static boolean isCached(String query) {
-    return sqlToQueryCache.get(CacheKey.create(query, SqlDialect.DEFAULT)) != null;
+  static boolean isCached(String query, SqlDialect dialect) {
+    return sqlToQueryCache.get(CacheKey.create(query, dialect)) != null;
   }
 
   @AutoValue

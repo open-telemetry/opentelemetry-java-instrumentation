@@ -15,8 +15,8 @@ muzzle {
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:jms:jms-common:bootstrap"))
-  implementation(project(":instrumentation:jms:jms-common:javaagent"))
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+  implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
   implementation(project(":instrumentation:jms:jms-1.1:javaagent"))
   library("org.springframework:spring-jms:2.0")
   compileOnly("javax.jms:jms-api:1.1-rev-1")
@@ -26,6 +26,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
   testInstrumentation(project(":instrumentation:jms:jms-1.1:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-jms:spring-jms-6.0:javaagent"))
 
   testImplementation("org.springframework.boot:spring-boot-starter-activemq:2.5.3")
   testImplementation("org.springframework.boot:spring-boot-starter-test:2.5.3") {
@@ -61,12 +62,15 @@ configurations {
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
   // this does not apply to testReceiveSpansDisabled
   test {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {

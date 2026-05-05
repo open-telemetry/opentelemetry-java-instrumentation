@@ -23,10 +23,10 @@ import java.util.concurrent.CountDownLatch;
  * scheduler threads handling various stages of the chain will have to alternate between contexts
  * from different traces.
  */
-public class RxJava2ConcurrencyTestHelper {
+class RxJava2ConcurrencyTestHelper {
   private RxJava2ConcurrencyTestHelper() {}
 
-  public static void launchAndWait(
+  static void launchAndWait(
       Scheduler scheduler, int iterations, long timeoutMillis, InstrumentationExtension runner) {
     CountDownLatch latch = new CountDownLatch(iterations);
 
@@ -39,6 +39,7 @@ public class RxJava2ConcurrencyTestHelper {
       //noinspection ResultOfMethodCallIgnored
       latch.await(timeoutMillis, MILLISECONDS);
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new IllegalStateException(e);
     }
   }
@@ -54,7 +55,7 @@ public class RxJava2ConcurrencyTestHelper {
               .observeOn(iteration.scheduler)
               // Use varying delay so that different stages of the chain would alternate.
               .delay(iteration.index % 10, MILLISECONDS, iteration.scheduler)
-              .map((it) -> it)
+              .map(it -> it)
               .delay(iteration.index % 10, MILLISECONDS, iteration.scheduler)
               .doOnSuccess(v -> launchInner(v, runner))
               .subscribe();
@@ -72,7 +73,7 @@ public class RxJava2ConcurrencyTestHelper {
               .observeOn(iteration.scheduler)
               .delay(iteration.index % 10, MILLISECONDS, iteration.scheduler)
               .doOnSuccess(
-                  (it) -> {
+                  it -> {
                     runner.runWithSpan(
                         "inner",
                         () -> {

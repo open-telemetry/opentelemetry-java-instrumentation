@@ -15,13 +15,13 @@ import java.net.http.HttpResponse;
  * any time.
  */
 public class JavaHttpClientInstrumenterBuilderFactory {
-  private JavaHttpClientInstrumenterBuilderFactory() {}
-
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-client";
 
   public static DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> create(
       OpenTelemetry openTelemetry) {
     return DefaultHttpClientInstrumenterBuilder.create(
-        INSTRUMENTATION_NAME, openTelemetry, JavaHttpClientAttributesGetter.INSTANCE);
+        INSTRUMENTATION_NAME, openTelemetry, new JavaHttpClientAttributesGetter());
   }
+
+  private JavaHttpClientInstrumenterBuilderFactory() {}
 }

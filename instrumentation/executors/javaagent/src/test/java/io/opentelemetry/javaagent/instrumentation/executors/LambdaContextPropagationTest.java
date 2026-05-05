@@ -14,7 +14,6 @@ import io.opentelemetry.context.Scope;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -134,7 +133,7 @@ class LambdaContextPropagationTest {
   }
 
   @Test
-  void propagateContextInvokeAny() throws InterruptedException, ExecutionException {
+  void propagateContextInvokeAny() throws Exception {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     Baggage baggage = Baggage.builder().put("test", "test").build();

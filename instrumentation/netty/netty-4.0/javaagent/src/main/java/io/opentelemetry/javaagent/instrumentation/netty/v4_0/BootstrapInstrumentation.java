@@ -15,13 +15,14 @@ import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionReq
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.NettyScope;
+import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.NettyScope;
 import java.net.SocketAddress;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class BootstrapInstrumentation implements TypeInstrumentation {
+class BootstrapInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.netty.bootstrap.Bootstrap");
@@ -33,12 +34,13 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
         named("doConnect0")
             .and(takesArgument(2, SocketAddress.class))
             .and(takesArgument(4, named("io.netty.channel.ChannelPromise"))),
-        BootstrapInstrumentation.class.getName() + "$ConnectAdvice");
+        getClass().getName() + "$ConnectAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static NettyScope startConnect(@Advice.Argument(2) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
@@ -50,11 +52,11 @@ public class BootstrapInstrumentation implements TypeInstrumentation {
       return NettyScope.startNew(connectionInstrumenter(), parentContext, request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endConnect(
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(4) ChannelPromise channelPromise,
-        @Advice.Enter NettyScope enterScope) {
+        @Advice.Enter @Nullable NettyScope enterScope) {
 
       NettyScope.end(enterScope, connectionInstrumenter(), channelPromise, throwable);
     }

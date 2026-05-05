@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
 
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -16,12 +15,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseRequestInfo;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
+class CouchbaseCoreInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,17 +30,16 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(takesArgument(0, named("com.couchbase.client.core.message.CouchbaseRequest")))
             .and(named("send")),
-        CouchbaseCoreInstrumentation.class.getName() + "$CouchbaseCoreAdvice");
+        getClass().getName() + "$CouchbaseCoreAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CouchbaseCoreAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {

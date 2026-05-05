@@ -20,6 +20,7 @@ public final class OsResource {
   private static final AttributeKey<String> OS_DESCRIPTION =
       AttributeKey.stringKey("os.description");
   private static final AttributeKey<String> OS_TYPE = AttributeKey.stringKey("os.type");
+  private static final AttributeKey<String> OS_VERSION = AttributeKey.stringKey("os.version");
 
   private static final Resource INSTANCE = buildResource();
 
@@ -37,7 +38,7 @@ public final class OsResource {
     String os;
     try {
       os = System.getProperty("os.name");
-    } catch (SecurityException t) {
+    } catch (SecurityException ignored) {
       // Security manager enabled, can't provide much os information.
       return Resource.empty();
     }
@@ -49,16 +50,15 @@ public final class OsResource {
     AttributesBuilder attributes = Attributes.builder();
 
     String osName = getOs(os);
-    if (osName != null) {
-      attributes.put(OS_TYPE, osName);
-    }
+    attributes.put(OS_TYPE, osName);
 
     String version = null;
     try {
       version = System.getProperty("os.version");
-    } catch (SecurityException e) {
+    } catch (SecurityException ignored) {
       // Ignore
     }
+    attributes.put(OS_VERSION, version);
     String osDescription = version != null ? os + ' ' + version : os;
     attributes.put(OS_DESCRIPTION, osDescription);
 

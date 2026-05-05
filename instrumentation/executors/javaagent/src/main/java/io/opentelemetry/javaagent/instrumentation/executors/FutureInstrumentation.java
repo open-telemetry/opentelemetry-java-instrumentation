@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.executors;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.FUTURE_PROPAGATED_CONTEXT;
+import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -14,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -24,7 +24,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class FutureInstrumentation implements TypeInstrumentation {
+class FutureInstrumentation implements TypeInstrumentation {
   private static final Logger logger = Logger.getLogger(FutureInstrumentation.class.getName());
 
   /**
@@ -69,7 +69,7 @@ public class FutureInstrumentation implements TypeInstrumentation {
       "scala.concurrent.forkjoin.ForkJoinTask$AdaptedRunnableAction",
       "scala.concurrent.impl.ExecutionContextImpl$AdaptedForkJoinTask",
     };
-    ALLOWED_FUTURES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(allowed)));
+    ALLOWED_FUTURES = Collections.unmodifiableSet(new HashSet<>(asList(allowed)));
   }
 
   @Override
@@ -92,13 +92,13 @@ public class FutureInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("cancel").and(returns(boolean.class)),
-        FutureInstrumentation.class.getName() + "$CanceledFutureAdvice");
+        getClass().getName() + "$CanceledFutureAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CanceledFutureAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void exit(@Advice.This Future<?> future) {
       // Try to clear parent span even if future was not cancelled:
       // the expectation is that parent span should be cleared after 'cancel'

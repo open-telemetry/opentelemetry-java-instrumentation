@@ -23,10 +23,10 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.api.common.Attributes;
 import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -61,7 +61,7 @@ class QueryTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("UPDATE Value")
                         .hasKind(INTERNAL)
@@ -74,7 +74,7 @@ class QueryTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -134,7 +134,7 @@ class QueryTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName(parameter.expectedSpanName)
                         .hasKind(INTERNAL)
@@ -148,7 +148,7 @@ class QueryTest extends AbstractHibernateTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -215,7 +215,7 @@ class QueryTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SELECT Value")
                         .hasKind(INTERNAL)
@@ -229,7 +229,7 @@ class QueryTest extends AbstractHibernateTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(

@@ -56,7 +56,7 @@ public class AgentContextStorage
               application.io.opentelemetry.context.ContextStorage.class,
               "root",
               MethodType.methodType(application.io.opentelemetry.context.Context.class));
-    } catch (NoSuchMethodException | IllegalAccessException exception) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }
@@ -72,8 +72,8 @@ public class AgentContextStorage
       try {
         return (application.io.opentelemetry.context.Context)
             CONTEXT_STORAGE_ROOT_HANDLE.invoke(contextStorage);
-      } catch (Throwable throwable) {
-        throw new IllegalStateException("Failed to get root context", throwable);
+      } catch (Throwable t) {
+        throw new IllegalStateException("Failed to get root context", t);
       }
     } else {
       return RootContextHolder.APPLICATION_ROOT;
@@ -137,7 +137,7 @@ public class AgentContextStorage
 
   public static application.io.opentelemetry.context.Context toApplicationContext(
       Context agentContext) {
-    return new AgentContextWrapper(agentContext);
+    return AgentContextWrapper.getApplicationContext(agentContext);
   }
 
   public static application.io.opentelemetry.context.Context newContextWrapper(

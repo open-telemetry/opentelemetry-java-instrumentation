@@ -15,6 +15,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.SocketAddress;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,12 +24,12 @@ import java.net.SocketAddress;
 // inspired by reactor-netty SslProvider.SslReadHandler
 public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
 
-  private static final Class<?> SSL_HANDSHAKE_COMPLETION_EVENT;
-  private static final MethodHandle GET_CAUSE;
+  @Nullable private static final Class<?> SSL_HANDSHAKE_COMPLETION_EVENT;
+  @Nullable private static final MethodHandle GET_CAUSE;
 
   // this is used elsewhere to manage the link between the underlying (user) handler and our handler
   // which is needed below so that we can unlink this handler when we remove it below
-  private static final VirtualField<ChannelHandler, ChannelHandler> instrumentationHandlerField =
+  private static final VirtualField<ChannelHandler, ChannelHandler> INSTRUMENTATION_HANDLER_FIELD =
       VirtualField.find(ChannelHandler.class, ChannelHandler.class);
 
   static {
@@ -44,7 +45,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
           MethodHandles.lookup()
               .findVirtual(
                   sslHandshakeCompletionEvent, "cause", MethodType.methodType(Throwable.class));
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       // no SSL classes on classpath
     }
     SSL_HANDSHAKE_COMPLETION_EVENT = sslHandshakeCompletionEvent;
@@ -53,9 +54,9 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
 
   private final NettySslInstrumenter instrumenter;
   private final ChannelHandler realHandler;
-  private Context parentContext;
-  private NettySslRequest request;
-  private Context context;
+  @Nullable private Context parentContext;
+  @Nullable private NettySslRequest request;
+  @Nullable private Context context;
 
   public NettySslInstrumentationHandler(
       NettySslInstrumenter instrumenter, ChannelHandler realHandler) {
@@ -69,7 +70,7 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     // are on classpath); checking just to be extra safe
     if (SSL_HANDSHAKE_COMPLETION_EVENT == null) {
       ctx.pipeline().remove(this);
-      instrumentationHandlerField.set(realHandler, null);
+      INSTRUMENTATION_HANDLER_FIELD.set(realHandler, null);
       super.channelRegistered(ctx);
       return;
     }
@@ -108,13 +109,14 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
 
   @Override
   public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-    if (SSL_HANDSHAKE_COMPLETION_EVENT.isInstance(evt)) {
+    Class<?> sslHandshakeCompletionEvent = SSL_HANDSHAKE_COMPLETION_EVENT;
+    if (sslHandshakeCompletionEvent != null && sslHandshakeCompletionEvent.isInstance(evt)) {
       if (ctx.pipeline().context(this) != null) {
         ctx.pipeline().remove(this);
-        instrumentationHandlerField.set(realHandler, null);
+        INSTRUMENTATION_HANDLER_FIELD.set(realHandler, null);
       }
 
-      if (context != null) {
+      if (context != null && request != null) {
         instrumenter.end(context, request, getCause(evt));
       }
     }
@@ -122,10 +124,15 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     super.userEventTriggered(ctx, evt);
   }
 
+  @Nullable
   private static Throwable getCause(Object evt) {
+    MethodHandle getCause = GET_CAUSE;
+    if (getCause == null) {
+      return null;
+    }
     try {
-      return (Throwable) GET_CAUSE.invoke(evt);
-    } catch (Throwable e) {
+      return (Throwable) getCause.invoke(evt);
+    } catch (Throwable ignored) {
       // should not ever happen
       return null;
     }

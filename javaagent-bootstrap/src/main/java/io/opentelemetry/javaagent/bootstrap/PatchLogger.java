@@ -9,6 +9,7 @@ import static java.util.logging.Level.CONFIG;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINEST;
 import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.OFF;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
@@ -186,7 +187,7 @@ public class PatchLogger {
     } else if (internalLogger.isLoggable(InternalLogger.Level.TRACE)) {
       return FINEST;
     } else {
-      return Level.OFF;
+      return OFF;
     }
   }
 

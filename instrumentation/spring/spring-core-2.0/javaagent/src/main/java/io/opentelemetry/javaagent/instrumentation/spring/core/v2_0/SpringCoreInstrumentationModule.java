@@ -22,6 +22,7 @@ public class SpringCoreInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 2.0
     return hasClassesNamed("org.springframework.core.task.SimpleAsyncTaskExecutor");
   }
 

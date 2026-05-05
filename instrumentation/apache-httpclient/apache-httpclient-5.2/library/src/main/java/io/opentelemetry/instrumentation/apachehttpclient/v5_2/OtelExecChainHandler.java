@@ -23,11 +23,12 @@ class OtelExecChainHandler implements ExecChainHandler {
 
   private static final String REQUEST_PARENT_CONTEXT_ATTRIBUTE_ID =
       OtelExecChainHandler.class.getName() + ".context";
+  private static final HttpHeaderSetter httpHeaderSetter = new HttpHeaderSetter();
 
   private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
   private final ContextPropagators propagators;
 
-  public OtelExecChainHandler(
+  OtelExecChainHandler(
       Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter,
       ContextPropagators propagators) {
     this.instrumenter = instrumenter;
@@ -52,7 +53,7 @@ class OtelExecChainHandler implements ExecChainHandler {
     }
 
     Context context = instrumenter.start(parentContext, instrumenterRequest);
-    propagators.getTextMapPropagator().inject(context, request, HttpHeaderSetter.INSTANCE);
+    propagators.getTextMapPropagator().inject(context, request, httpHeaderSetter);
 
     return execute(request, instrumenterRequest, chain, scope, context);
   }
@@ -69,9 +70,9 @@ class OtelExecChainHandler implements ExecChainHandler {
     try (io.opentelemetry.context.Scope ignored = context.makeCurrent()) {
       response = chain.proceed(request, scope);
       return response;
-    } catch (Exception e) {
-      error = e;
-      throw e;
+    } catch (Throwable t) {
+      error = t;
+      throw t;
     } finally {
       instrumenter.end(context, instrumenterRequest, response, error);
     }

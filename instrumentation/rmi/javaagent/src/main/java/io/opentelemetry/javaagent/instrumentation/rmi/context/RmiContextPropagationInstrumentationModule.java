@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import io.opentelemetry.javaagent.instrumentation.rmi.context.client.RmiClientContextInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.server.RmiServerContextInstrumentation;
 import java.rmi.Remote;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.utility.JavaModule;
@@ -35,11 +34,6 @@ public class RmiContextPropagationInstrumentationModule extends InstrumentationM
   @Override
   public Map<JavaModule, List<String>> jpmsModulesToOpen() {
     return singletonMap(
-        JavaModule.ofType(Remote.class), Arrays.asList("sun.rmi.server", "sun.rmi.transport"));
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
+        JavaModule.ofType(Remote.class), asList("sun.rmi.server", "sun.rmi.transport"));
   }
 }

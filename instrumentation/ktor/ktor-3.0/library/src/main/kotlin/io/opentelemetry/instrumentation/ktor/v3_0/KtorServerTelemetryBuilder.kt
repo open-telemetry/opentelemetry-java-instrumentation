@@ -10,16 +10,19 @@ import io.ktor.server.routing.*
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
-import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorServerTelemetryBuilder
-import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorServerTelemetryUtil.configureTelemetry
+import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorServerTelemetryBuilder
+import io.opentelemetry.instrumentation.ktor.common.v2_0.internal.KtorServerTelemetryUtil.configureTelemetry
 import io.opentelemetry.instrumentation.ktor.v3_0.InstrumentationProperties.INSTRUMENTATION_NAME
 
 class KtorServerTelemetryBuilder internal constructor(
   instrumentationName: String
-) : AbstractKtorServerTelemetryBuilder(instrumentationName)
+) : AbstractKtorServerTelemetryBuilder(instrumentationName) {
+
+  internal fun isOpenTelemetrySet(): Boolean = isOpenTelemetryInitialized()
+}
 
 val KtorServerTelemetry = createRouteScopedPlugin("OpenTelemetry", { KtorServerTelemetryBuilder(INSTRUMENTATION_NAME) }) {
-  require(pluginConfig.isOpenTelemetryInitialized()) { "OpenTelemetry must be set" }
+  require(pluginConfig.isOpenTelemetrySet()) { "OpenTelemetry must be set" }
 
   configureTelemetry(pluginConfig, application)
 

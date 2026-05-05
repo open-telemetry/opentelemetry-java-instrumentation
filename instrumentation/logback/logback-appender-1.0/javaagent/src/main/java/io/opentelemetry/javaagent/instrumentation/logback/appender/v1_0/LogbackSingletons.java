@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.List;
 
-public final class LogbackSingletons {
+public class LogbackSingletons {
 
   private static final LoggingEventMapper mapper;
 
@@ -39,7 +39,6 @@ public final class LogbackSingletons {
         config.getBoolean("capture_logstash_structured_arguments/development", false);
     List<String> captureMdcAttributes =
         config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    boolean captureEventName = config.getBoolean("capture_event_name/development", false);
 
     mapper =
         LoggingEventMapper.builder()
@@ -53,7 +52,6 @@ public final class LogbackSingletons {
             .setCaptureArguments(captureArguments)
             .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
             .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
-            .setCaptureEventName(captureEventName)
             .build();
   }
 

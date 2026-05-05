@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.ktor.v2_0
 
-import io.ktor.client.*
+import io.ktor.client.HttpClientConfig
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -14,7 +14,7 @@ class KtorHttpClientTest : AbstractKtorHttpClientTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    private val TESTING = HttpClientInstrumentationExtension.forAgent()
+    private val testing = HttpClientInstrumentationExtension.forAgent()
   }
 
   override fun HttpClientConfig<*>.installTracing() {

@@ -12,9 +12,9 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-public final class ElasticsearchEndpointMap {
+public class ElasticsearchEndpointMap {
 
-  private static final Map<String, ElasticsearchEndpointDefinition> routesMap;
+  private static final Map<String, ElasticsearchEndpointDefinition> ROUTES_MAP;
 
   static {
     Map<String, ElasticsearchEndpointDefinition> routes = new HashMap<>(415);
@@ -857,10 +857,8 @@ public final class ElasticsearchEndpointMap {
         false,
         "/_security/service/{namespace}/{service}/credential/token/{name}/_clear_cache");
     initEndpoint(routes, "search_mvt", false, "/{index}/_mvt/{field}/{zoom}/{x}/{y}");
-    routesMap = Collections.unmodifiableMap(routes);
+    ROUTES_MAP = Collections.unmodifiableMap(routes);
   }
-
-  private ElasticsearchEndpointMap() {}
 
   private static void initEndpoint(
       Map<String, ElasticsearchEndpointDefinition> map,
@@ -874,10 +872,12 @@ public final class ElasticsearchEndpointMap {
 
   @Nullable
   public static ElasticsearchEndpointDefinition get(String endpointId) {
-    return routesMap.get(endpointId);
+    return ROUTES_MAP.get(endpointId);
   }
 
   public static Collection<ElasticsearchEndpointDefinition> getAllEndpoints() {
-    return routesMap.values();
+    return ROUTES_MAP.values();
   }
+
+  private ElasticsearchEndpointMap() {}
 }

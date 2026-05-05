@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.apachedbcp;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -15,9 +15,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.Driver;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,8 +25,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public abstract class AbstractApacheDbcpInstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-dbcp-2.0";
 
-  @Mock Driver driverMock;
-  @Mock Connection connectionMock;
+  @Mock private Driver driverMock;
+  @Mock private Connection connectionMock;
 
   protected abstract InstrumentationExtension testing();
 
@@ -67,26 +64,19 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
     dataSource.close();
     shutdown(dataSource);
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing().clearData();
-    Thread.sleep(100);
 
     // then
-    Set<String> metricNames =
-        new HashSet<>(
-            Arrays.asList(
-                emitStableDatabaseSemconv()
-                    ? "db.client.connection.count"
-                    : "db.client.connections.usage",
-                "db.client.connections.idle.min",
-                "db.client.connections.idle.max",
-                "db.client.connections.max"));
-    assertThat(testing().metrics())
-        .filteredOn(
-            metricData ->
-                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && metricNames.contains(metricData.getName()))
-        .isEmpty();
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing().metrics())
+                    .filteredOn(
+                        metricData ->
+                            metricData
+                                .getInstrumentationScopeInfo()
+                                .getName()
+                                .equals(INSTRUMENTATION_NAME))
+                    .isEmpty());
   }
 }

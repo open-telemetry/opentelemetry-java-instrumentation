@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationSingletons.instrumenter;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -27,7 +28,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMetho
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,10 +41,10 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
+class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   private static final Logger logger =
-      Logger.getLogger(ExternalAnnotationInstrumentationModule.class.getName());
+      Logger.getLogger(ExternalAnnotationInstrumentation.class.getName());
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
 
@@ -57,7 +57,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   // visible for testing
   static final List<String> DEFAULT_ANNOTATIONS =
-      Arrays.asList(
+      asList(
           "com.appoptics.api.ext.LogMethod",
           "com.newrelic.api.agent.Trace",
           "com.signalfx.tracing.api.Trace",
@@ -74,7 +74,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   /** This matcher matches all methods that should be excluded from transformation. */
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
-  public ExternalAnnotationInstrumentation() {
+  ExternalAnnotationInstrumentation() {
     Set<String> additionalTraceAnnotations =
         configureAdditionalTraceAnnotations(
             DeclarativeConfigUtil.getInstrumentationConfig(
@@ -109,7 +109,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isAnnotatedWith(traceAnnotationMatcher).and(not(excludedMethodsMatcher)).and(isMethod()),
-        ExternalAnnotationInstrumentation.class.getName() + "$ExternalAnnotationAdvice");
+        getClass().getName() + "$ExternalAnnotationAdvice");
   }
 
   // visible for testing
@@ -202,13 +202,14 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(declaringClass, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

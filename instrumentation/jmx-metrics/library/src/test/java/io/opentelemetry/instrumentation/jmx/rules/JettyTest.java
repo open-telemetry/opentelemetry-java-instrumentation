@@ -6,12 +6,12 @@
 package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +36,7 @@ class JettyTest extends TargetSystemTest {
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
 
-    Set<String> jettyModules = new HashSet<>(Arrays.asList("jmx", "http"));
+    Set<String> jettyModules = new HashSet<>(asList("jmx", "http"));
     if (jettyMajorVersion >= 12) {
       jettyModules.add("statistics");
       // required for session management

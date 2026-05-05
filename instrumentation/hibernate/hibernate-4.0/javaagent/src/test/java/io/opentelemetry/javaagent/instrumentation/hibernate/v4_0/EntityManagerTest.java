@@ -23,12 +23,12 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.function.BiConsumer;
@@ -42,6 +42,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 import org.hibernate.Version;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -49,8 +50,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class EntityManagerTest extends AbstractHibernateTest {
 
-  static final EntityManagerFactory entityManagerFactory =
+  private static final EntityManagerFactory entityManagerFactory =
       Persistence.createEntityManagerFactory("test-pu");
+
+  @AfterAll
+  static void closeEntityManagerFactory() {
+    entityManagerFactory.close();
+  }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
@@ -94,7 +100,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session." + action + " " + Value.class.getName())
                         .hasKind(INTERNAL)
@@ -116,7 +122,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -152,7 +158,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session." + action + " " + Value.class.getName())
                         .hasKind(INTERNAL)
@@ -165,7 +171,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -256,7 +262,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session.persist " + Value.class.getName())
                         .hasKind(INTERNAL)
@@ -267,7 +273,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -309,7 +315,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -362,7 +368,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SELECT Value")
                         .hasKind(INTERNAL)
@@ -376,7 +382,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(

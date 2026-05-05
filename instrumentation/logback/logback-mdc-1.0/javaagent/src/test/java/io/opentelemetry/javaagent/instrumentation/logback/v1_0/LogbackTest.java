@@ -31,13 +31,13 @@ class LogbackTest extends AbstractLogbackTest {
 
     List<ILoggingEvent> events = listAppender.list;
 
-    assertThat(events.size()).isEqualTo(1);
-    assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
-    assertThat(events.get(0).getMDCPropertyMap().get("trace_id")).isNull();
-    assertThat(events.get(0).getMDCPropertyMap().get("span_id")).isNull();
-    assertThat(events.get(0).getMDCPropertyMap().get("trace_flags")).isNull();
-    assertThat(events.get(0).getMDCPropertyMap().get("service.name"))
-        .isEqualTo("unknown_service:java");
-    assertThat(events.get(0).getMDCPropertyMap().get("telemetry.sdk.language")).isEqualTo("java");
+    assertThat(events).hasSize(1);
+    ILoggingEvent event = events.get(0);
+    assertThat(event.getMessage()).isEqualTo("log message 1");
+    assertThat(event.getMDCPropertyMap().get("trace_id")).isNull();
+    assertThat(event.getMDCPropertyMap().get("span_id")).isNull();
+    assertThat(event.getMDCPropertyMap().get("trace_flags")).isNull();
+    assertThat(event.getMDCPropertyMap().get("service.name")).isEqualTo("unknown_service:java");
+    assertThat(event.getMDCPropertyMap().get("telemetry.sdk.language")).isEqualTo("java");
   }
 }

@@ -16,15 +16,15 @@ dependencies {
 
   implementation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-common:javaagent"))
 
+  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
+
   compileOnly("jakarta.ws.rs:jakarta.ws.rs-api:3.0.0")
 
   testImplementation("jakarta.ws.rs:jakarta.ws.rs-api:3.0.0")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+tasks.test {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  }
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

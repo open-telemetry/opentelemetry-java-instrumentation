@@ -27,6 +27,8 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // this instrumentation module targets software.amazon.awssdk:sqs
+    // added in 2.2.0
     return hasClassesNamed("software.amazon.awssdk.services.sqs.SqsClient");
   }
 
@@ -40,13 +42,12 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
 
   @Override
   public void doTransform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        none(), SqsInstrumentationModule.class.getName() + "$RegisterAdvice");
+    transformer.applyAdviceToMethod(none(), getClass().getName() + "$RegisterAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RegisterAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(inline = false)
     public static void onExit() {
       // (indirectly) using SqsImpl class here to make sure it is available from SqsAccess
       // (injected into app classloader) and checked by Muzzle

@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import java.net.HttpURLConnection;
+import javax.annotation.Nullable;
 
 public class GetOutputStreamContext implements ImplicitContextKeyed {
   private static final ContextKey<GetOutputStreamContext> KEY =
@@ -32,6 +33,7 @@ public class GetOutputStreamContext implements ImplicitContextKeyed {
     return context.with(new GetOutputStreamContext());
   }
 
+  @Nullable
   public static GetOutputStreamContext get(Context context) {
     return context.get(KEY);
   }
@@ -43,13 +45,12 @@ public class GetOutputStreamContext implements ImplicitContextKeyed {
       String requestMethod) {
     GetOutputStreamContext getOutputStreamContext = context.get(KEY);
     String connectionClassName = connectionClass.getName();
+    // To be sure that getOutputStream has transformed GET into POST if the method raised an
+    // exception.
     if ("sun.net.www.protocol.http.HttpURLConnection".equals(connectionClassName)
         && "getOutputStream".equals(methodName)
-        && "POST"
-            .equals(
-                requestMethod) // To be sure that getOutputStream has transformed GET into POST if
-    // the method raised an exception
-    ) {
+        && "POST".equals(requestMethod)
+        && getOutputStreamContext != null) {
       getOutputStreamContext.outputStreamMethodOfSunConnectionCalled = true;
     }
   }

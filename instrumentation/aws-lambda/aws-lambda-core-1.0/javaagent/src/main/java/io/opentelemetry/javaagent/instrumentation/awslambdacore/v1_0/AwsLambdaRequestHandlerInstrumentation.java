@@ -7,11 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaSingletons.flushTimeout;
+import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaSingletons.FLUSH_TIMEOUT;
 import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaSingletons.functionInstrumenter;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -30,7 +29,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
+class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -51,11 +50,10 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("handleRequest"))
             .and(takesArgument(1, named("com.amazonaws.services.lambda.runtime.Context"))),
-        AwsLambdaRequestHandlerInstrumentation.class.getName() + "$HandleRequestAdvice");
+        getClass().getName() + "$HandleRequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -92,21 +90,21 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
       public void end(@Nullable Throwable throwable) {
         scope.close();
         functionInstrumenter().end(context, lambdaRequest, null, throwable);
-        OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), NANOSECONDS);
+        OpenTelemetrySdkAccess.forceFlush(FLUSH_TIMEOUT.toNanos(), NANOSECONDS);
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Argument(1) Context context) {
       return AdviceScope.start(arg, context);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(throwable);

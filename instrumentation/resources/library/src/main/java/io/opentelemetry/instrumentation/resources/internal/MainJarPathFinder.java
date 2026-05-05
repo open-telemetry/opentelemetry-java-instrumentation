@@ -86,7 +86,7 @@ class MainJarPathFinder {
     Path candidate;
     try {
       candidate = Paths.get(programArguments);
-    } catch (InvalidPathException e) {
+    } catch (InvalidPathException ignored) {
       return null;
     }
     return fileExists.test(candidate) ? candidate : null;

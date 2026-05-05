@@ -14,9 +14,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttribu
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum EmbeddingAttributesGetter
+final class EmbeddingAttributesGetter
     implements GenAiAttributesGetter<EmbeddingCreateParams, CreateEmbeddingResponse> {
-  INSTANCE;
+
+  EmbeddingAttributesGetter() {}
 
   @Override
   public String getOperationName(EmbeddingCreateParams request) {

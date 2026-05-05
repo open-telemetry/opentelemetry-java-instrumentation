@@ -5,19 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
+import io.netty.channel.Channel;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import scala.Option;
 
-public class ChannelTransportInstrumentation implements TypeInstrumentation {
+/** Amends the tail of the Netty pipeline to bridge the netty request to its finagle request. */
+class ChannelTransportInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.twitter.finagle.netty4.transport.ChannelTransport");
@@ -25,28 +24,15 @@ public class ChannelTransportInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("write")),
-        ChannelTransportInstrumentation.class.getName() + "$WriteAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class WriteAdvice {
+  public static class ConstructorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope methodEnter() {
-      Option<Context> ref = Helpers.CONTEXT_LOCAL.apply();
-      if (ref.isDefined()) {
-        return ref.get().makeCurrent();
-      }
-      return null;
-    }
-
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void methodExit(@Advice.Enter Scope scope, @Advice.Thrown Throwable thrown) {
-      if (scope != null) {
-        scope.close();
-      }
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void methodExit(@Advice.Argument(0) Channel ch) {
+      Helpers.mutateHandlerPipeline(ch);
     }
   }
 }

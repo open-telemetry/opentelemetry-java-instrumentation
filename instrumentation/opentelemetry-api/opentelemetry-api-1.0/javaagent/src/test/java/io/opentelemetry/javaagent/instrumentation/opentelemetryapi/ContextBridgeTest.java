@@ -6,8 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -20,16 +21,14 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // testing old code semconv
 class ContextBridgeTest {
 
   @RegisterExtension
@@ -44,9 +43,12 @@ class ContextBridgeTest {
     Context context = Context.current().with(ANIMAL, "cat");
     AtomicReference<String> captured = new AtomicReference<>();
     try (Scope ignored = context.makeCurrent()) {
-      Executors.newSingleThreadExecutor()
-          .submit(() -> captured.set(Context.current().get(ANIMAL)))
-          .get();
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      try {
+        executor.submit(() -> captured.set(Context.current().get(ANIMAL))).get();
+      } finally {
+        executor.shutdownNow();
+      }
     }
 
     // Then
@@ -78,14 +80,16 @@ class ContextBridgeTest {
     // When
     runnable.run();
     // Then
-    List<AttributeAssertion> assertions =
-        SemconvCodeStabilityUtil.codeFunctionAssertions(runnable.getClass(), "run");
-    assertions.add(equalTo(stringKey("cat"), "yes"));
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("test").hasNoParent().hasAttributesSatisfyingExactly(assertions)));
+                    span.hasName("test")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION, "run"),
+                            equalTo(CODE_NAMESPACE, runnable.getClass().getName()),
+                            equalTo(stringKey("cat"), "yes"))));
   }
 
   @Test
@@ -96,12 +100,12 @@ class ContextBridgeTest {
 
     Span testSpan = tracer.spanBuilder("test").startSpan();
     try (Scope ignored = testSpan.makeCurrent()) {
-      Executors.newSingleThreadExecutor()
-          .submit(
-              () -> {
-                Span.current().setAttribute("cat", "yes");
-              })
-          .get();
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      try {
+        executor.submit(() -> Span.current().setAttribute("cat", "yes")).get();
+      } finally {
+        executor.shutdownNow();
+      }
     }
     testSpan.end();
 
@@ -138,15 +142,17 @@ class ContextBridgeTest {
     // When
     runnable.run();
 
-    List<AttributeAssertion> assertions = codeFunctionAssertions(runnable.getClass(), "run");
-    assertions.add(equalTo(stringKey("cat"), "yes"));
-
     // Then
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("test").hasNoParent().hasAttributesSatisfyingExactly(assertions)));
+                    span.hasName("test")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION, "run"),
+                            equalTo(CODE_NAMESPACE, runnable.getClass().getName()),
+                            equalTo(stringKey("cat"), "yes"))));
   }
 
   @Test
@@ -155,20 +161,17 @@ class ContextBridgeTest {
     // When
     Baggage testBaggage = Baggage.builder().put("cat", "yes").build();
     AtomicReference<Baggage> ref = new AtomicReference<>();
-    CountDownLatch latch = new CountDownLatch(1);
     try (Scope ignored = testBaggage.makeCurrent()) {
-      Executors.newSingleThreadExecutor()
-          .submit(
-              () -> {
-                ref.set(Baggage.current());
-                latch.countDown();
-              })
-          .get();
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      try {
+        executor.submit(() -> ref.set(Baggage.current())).get();
+      } finally {
+        executor.shutdownNow();
+      }
     }
 
     // Then
-    latch.await();
-    assertThat(ref.get().size()).isEqualTo(1);
+    assertThat(ref.get().asMap()).hasSize(1);
     assertThat(ref.get().getEntryValue("cat")).isEqualTo("yes");
   }
 

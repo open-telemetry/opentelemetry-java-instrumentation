@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming.serverSpanName;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -12,8 +14,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import javax.annotation.Nullable;
 
-public final class RequestContextHelper {
+public class RequestContextHelper {
+  @Nullable
   public static <T extends HandlerData> Context createOrUpdateAbortSpan(
       Instrumenter<T, Void> instrumenter, T handlerData) {
 
@@ -22,10 +26,7 @@ public final class RequestContextHelper {
     Span currentSpan = Java8BytecodeBridge.spanFromContext(parentContext);
 
     HttpServerRoute.update(
-        parentContext,
-        HttpServerRouteSource.CONTROLLER,
-        JaxrsServerSpanNaming.SERVER_SPAN_NAME,
-        handlerData);
+        parentContext, HttpServerRouteSource.CONTROLLER, serverSpanName(), handlerData);
 
     if (currentSpan != null && currentSpan != serverSpan) {
       // there's already an active span, and it's not the same as the server (servlet) span,

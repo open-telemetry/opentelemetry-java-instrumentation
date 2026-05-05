@@ -5,18 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.boot.SpringApplication;
@@ -35,20 +38,22 @@ import org.springframework.messaging.support.MessageBuilder;
 
 abstract class AbstractSpringIntegrationTracingTest {
 
-  protected final InstrumentationExtension testing;
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  private final InstrumentationExtension testing;
 
   private final Class<?> additionalContextClass;
 
-  ConfigurableApplicationContext applicationContext;
+  private ConfigurableApplicationContext applicationContext;
 
-  public AbstractSpringIntegrationTracingTest(
+  AbstractSpringIntegrationTracingTest(
       InstrumentationExtension testing, Class<?> additionalContextClass) {
     this.testing = testing;
     this.additionalContextClass = additionalContextClass;
   }
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     List<Class<?>> contextClasses = new ArrayList<>();
     contextClasses.add(MessageChannelsConfig.class);
     if (additionalContextClass != null) {
@@ -59,13 +64,7 @@ abstract class AbstractSpringIntegrationTracingTest {
     springApplication.setDefaultProperties(
         singletonMap("spring.main.web-application-type", "none"));
     applicationContext = springApplication.run();
-  }
-
-  @AfterEach
-  public void tearDown() {
-    if (applicationContext != null) {
-      applicationContext.close();
-    }
+    cleanup.deferCleanup(applicationContext);
   }
 
   @ParameterizedTest
@@ -75,7 +74,7 @@ abstract class AbstractSpringIntegrationTracingTest {
         "executorChannel,executorChannel process"
       },
       delimiter = ',')
-  public void shouldPropagateContext(String channelName, String interceptorSpanName) {
+  void shouldPropagateContext(String channelName, String interceptorSpanName) {
     SubscribableChannel channel =
         applicationContext.getBean(channelName, SubscribableChannel.class);
 
@@ -182,7 +181,10 @@ abstract class AbstractSpringIntegrationTracingTest {
     channel.subscribe(messageHandler);
 
     channel.send(
-        MessageBuilder.withPayload("test").setHeader("Test-Message-Header", "test").build());
+        MessageBuilder.withPayload("test")
+            .setHeader("Test-Message-Header", "test")
+            .setHeader("Uncaptured-Header", "password")
+            .build());
 
     Message<?> capturedMessage = messageHandler.join();
 
@@ -208,7 +210,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   @EnableAutoConfiguration
   public static class MessageChannelsConfig {
 
-    SubscribableChannel problematicSharedChannel = new DirectChannel();
+    private final SubscribableChannel problematicSharedChannel = new DirectChannel();
 
     @Bean
     public SubscribableChannel directChannel() {
@@ -225,11 +227,16 @@ abstract class AbstractSpringIntegrationTracingTest {
       return problematicSharedChannel;
     }
 
+    @Bean(destroyMethod = "shutdownNow")
+    public ExecutorService executorChannelExecutor() {
+      return Executors.newSingleThreadExecutor();
+    }
+
     @Bean
     public SubscribableChannel executorChannel(GlobalChannelInterceptorWrapper otelInterceptor) {
       ExecutorSubscribableChannel channel =
-          new ExecutorSubscribableChannel(Executors.newSingleThreadExecutor());
-      if (!Boolean.getBoolean("testLatestDeps")) {
+          new ExecutorSubscribableChannel(executorChannelExecutor());
+      if (!testLatestDeps()) {
         // spring does not inject the interceptor in 4.1 because ExecutorSubscribableChannel isn't
         // ChannelInterceptorAware
         // in later versions spring injects the global interceptor into InterceptableChannel (which

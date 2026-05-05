@@ -34,18 +34,21 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
         named("storeInContext")
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context")))
             .and(takesArgument(1, named("application.io.opentelemetry.api.trace.Span"))),
-        this.getClass().getName() + "$StoreInContextAdvice");
+        getClass().getName() + "$StoreInContextAdvice");
     transformer.applyAdviceToMethod(
         named("fromContextOrNull")
             .and(takesArgument(0, named("application.io.opentelemetry.context.Context"))),
-        this.getClass().getName() + "$FromContextOrNullAdvice");
+        getClass().getName() + "$FromContextOrNullAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class StoreInContextAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(
+        suppress = Throwable.class,
+        skipOn = Advice.OnNonDefaultValue.class,
+        inline = false)
     public static application.io.opentelemetry.context.Context onEnter(
         @Advice.This
             application.io.opentelemetry.instrumentation.api.internal.SpanKey applicationSpanKey,
@@ -73,7 +76,7 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.context.Context onExit(
         @Advice.Return application.io.opentelemetry.context.Context originalResult,
         @Advice.Enter @Nullable
@@ -86,7 +89,10 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
   public static class FromContextOrNullAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    @Advice.OnMethodEnter(
+        suppress = Throwable.class,
+        skipOn = Advice.OnNonDefaultValue.class,
+        inline = false)
     public static application.io.opentelemetry.api.trace.Span onEnter(
         @Advice.This
             application.io.opentelemetry.instrumentation.api.internal.SpanKey applicationSpanKey,
@@ -110,9 +116,10 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.api.trace.Span onExit(
-        @Advice.Return application.io.opentelemetry.api.trace.Span originalResult,
+        @Advice.Return @Nullable application.io.opentelemetry.api.trace.Span originalResult,
         @Advice.Enter @Nullable application.io.opentelemetry.api.trace.Span applicationSpan) {
       return applicationSpan != null ? applicationSpan : originalResult;
     }

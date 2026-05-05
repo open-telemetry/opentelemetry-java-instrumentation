@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
@@ -17,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.PointData;
@@ -24,7 +26,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -45,10 +46,10 @@ import org.apache.kafka.common.metrics.Metrics;
 import org.apache.kafka.common.metrics.MetricsReporter;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -63,7 +64,9 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
   private static final Logger logger =
       LoggerFactory.getLogger(AbstractOpenTelemetryMetricsReporterTest.class);
 
-  private static final List<String> TOPICS = Arrays.asList("foo", "bar", "baz", "qux");
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  private static final List<String> TOPICS = asList("foo", "bar", "baz", "qux");
   private static final Random RANDOM = new Random();
 
   private static KafkaContainer kafka;
@@ -90,16 +93,12 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
+    cleanup.deferAfterAll(kafka::stop);
     kafka.start();
     producer = new KafkaProducer<>(producerConfig());
+    cleanup.deferAfterAll(producer);
     consumer = new KafkaConsumer<>(consumerConfig());
-  }
-
-  @AfterAll
-  static void afterAll() {
-    producer.close();
-    consumer.close();
-    kafka.stop();
+    cleanup.deferAfterAll(consumer);
   }
 
   @AfterEach
@@ -195,7 +194,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
   @Test
   void observeMetrics() {
-    // Firstly create new producer and consumer and close them. This is done tp verify that metrics
+    // Firstly create new producer and consumer and close them. This is done to verify that metrics
     // are still produced after closing one producer/consumer. See
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11880
     KafkaProducer<byte[], byte[]> producer2 = new KafkaProducer<>(producerConfig());
@@ -208,7 +207,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
     Set<String> expectedMetricNames =
         new HashSet<>(
-            Arrays.asList(
+            asList(
                 "kafka.consumer.commit_latency_avg",
                 "kafka.consumer.commit_latency_max",
                 "kafka.consumer.commit_rate",
@@ -495,7 +494,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     public void metricChange(KafkaMetric kafkaMetric) {
       try {
         kafkaMetric.measurable();
-      } catch (IllegalStateException exception) {
+      } catch (IllegalStateException ignored) {
         // ignore non-measurable metrics, we don't report them
         return;
       }

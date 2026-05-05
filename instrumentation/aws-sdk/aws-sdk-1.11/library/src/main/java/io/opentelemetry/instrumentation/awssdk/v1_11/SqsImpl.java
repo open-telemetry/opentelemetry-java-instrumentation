@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.lang.reflect.Field;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 final class SqsImpl {
   static {
@@ -28,8 +29,6 @@ final class SqsImpl {
     @SuppressWarnings("unused")
     String ensureLoadedDummy = AmazonSQS.class.getName();
   }
-
-  private SqsImpl() {}
 
   static boolean afterResponse(
       Request<?> request,
@@ -79,14 +78,15 @@ final class SqsImpl {
         receiveMessageResult, request, response, consumerProcessInstrumenter, receiveContext);
   }
 
-  private static final Field messagesField = getMessagesField();
+  @Nullable private static final Field messagesField = getMessagesField();
 
+  @Nullable
   private static Field getMessagesField() {
     try {
       Field field = ReceiveMessageResult.class.getDeclaredField("messages");
       field.setAccessible(true);
       return field;
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       return null;
     }
   }
@@ -96,7 +96,7 @@ final class SqsImpl {
       Request<?> request,
       Response<?> response,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
-      Context receiveContext) {
+      @Nullable Context receiveContext) {
     if (messagesField == null) {
       return;
     }
@@ -127,6 +127,7 @@ final class SqsImpl {
     return false;
   }
 
+  @Nullable
   static String getMessageAttribute(Request<?> request, String name) {
     if (request.getOriginalRequest() instanceof SendMessageRequest) {
       Map<String, MessageAttributeValue> map =
@@ -139,10 +140,13 @@ final class SqsImpl {
     return null;
   }
 
-  static String getMessageId(Response<?> response) {
+  @Nullable
+  static String getMessageId(@Nullable Response<?> response) {
     if (response != null && response.getAwsResponse() instanceof SendMessageResult) {
       return ((SendMessageResult) response.getAwsResponse()).getMessageId();
     }
     return null;
   }
+
+  private SqsImpl() {}
 }

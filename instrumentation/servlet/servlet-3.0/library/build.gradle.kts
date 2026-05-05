@@ -5,7 +5,7 @@ plugins {
 dependencies {
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
   implementation(project(":instrumentation:servlet:servlet-common:library"))
-  api(project(":instrumentation:servlet:servlet-javax-common:library"))
+  api(project(":instrumentation:servlet:servlet-common-javax:library"))
 
   testImplementation(project(":instrumentation:servlet:servlet-3.0:testing"))
 
@@ -22,13 +22,13 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (otelProps.testLatestDeps) {
     compileTestJava {
       options.release.set(11)
     }

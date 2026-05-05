@@ -31,7 +31,7 @@ final class ConnectionPoolMetrics {
   private static final Map<IdentityDataSourceKey, BatchCallback> dataSourceMetrics =
       new ConcurrentHashMap<>();
 
-  public static void registerMetrics(OpenTelemetry openTelemetry, PooledDataSource dataSource) {
+  static void registerMetrics(OpenTelemetry openTelemetry, PooledDataSource dataSource) {
     dataSourceMetrics.compute(
         new IdentityDataSourceKey(dataSource),
         (key, existingCallback) ->
@@ -75,7 +75,7 @@ final class ConnectionPoolMetrics {
         pendingRequestsForConnection);
   }
 
-  public static void unregisterMetrics(PooledDataSource dataSource) {
+  static void unregisterMetrics(PooledDataSource dataSource) {
     BatchCallback callback = dataSourceMetrics.remove(new IdentityDataSourceKey(dataSource));
     removeMetersFromRegistry(callback);
   }
@@ -90,8 +90,8 @@ final class ConnectionPoolMetrics {
    * A wrapper over {@link PooledDataSource} that implements identity comparison in its {@link
    * #equals(Object)} and {@link #hashCode()} methods.
    */
-  static final class IdentityDataSourceKey {
-    final PooledDataSource dataSource;
+  private static final class IdentityDataSourceKey {
+    private final PooledDataSource dataSource;
 
     IdentityDataSourceKey(PooledDataSource dataSource) {
       this.dataSource = dataSource;

@@ -15,11 +15,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 class WrapperTest {
 
+  // we don't implement methods introduced in jdbc 4.5 (added in java 26) yet
+  @EnabledForJreRange(max = JRE.JAVA_25)
   @Test
-  void wrapperImplementsAllMethods() throws Exception {
+  void wrapperImplementsAllMethods() throws NoSuchMethodException {
     validate(Statement.class, OpenTelemetryStatement.class);
     validate(PreparedStatement.class, OpenTelemetryPreparedStatement.class);
     validate(CallableStatement.class, OpenTelemetryCallableStatement.class);
@@ -31,7 +35,7 @@ class WrapperTest {
     validate(ResultSet.class, OpenTelemetryResultSet.class);
   }
 
-  void validate(Class<?> jdbcClass, Class<?> wrapperClass) throws Exception {
+  void validate(Class<?> jdbcClass, Class<?> wrapperClass) throws NoSuchMethodException {
     for (Method method : jdbcClass.getMethods()) {
       Method result = wrapperClass.getMethod(method.getName(), method.getParameterTypes());
       if (!result.getDeclaringClass().getName().startsWith("io.opentelemetry")) {

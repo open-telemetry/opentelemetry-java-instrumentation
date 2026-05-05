@@ -7,16 +7,17 @@ muzzle {
     group.set("javax.jws")
     module.set("javax.jws-api")
     versions.set("[1.1,]")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
   library("javax.jws:javax.jws-api:1.1")
-  implementation(project(":instrumentation:jaxws:jaxws-common:javaagent"))
+  implementation(project(":instrumentation:jaxws:jaxws-common-2.0:javaagent"))
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
   systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

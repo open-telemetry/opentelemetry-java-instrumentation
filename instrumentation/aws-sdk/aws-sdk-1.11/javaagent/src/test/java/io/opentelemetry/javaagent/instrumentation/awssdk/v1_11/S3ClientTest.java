@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -62,7 +63,7 @@ class S3ClientTest extends AbstractS3ClientTest {
   @ParameterizedTest
   @MethodSource("provideS3Arguments")
   void testRequestHandlerIsHookedUpWithBuilder(boolean addHandler, int size, int position)
-      throws Exception {
+      throws ReflectiveOperationException {
     AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1);
 
     if (addHandler) {
@@ -72,7 +73,7 @@ class S3ClientTest extends AbstractS3ClientTest {
 
     List<RequestHandler2> requestHandler2s = extractRequestHandlers(client);
     assertThat(requestHandler2s).isNotNull();
-    assertThat(requestHandler2s.size()).isEqualTo(size);
+    assertThat(requestHandler2s).hasSize(size);
     assertThat(requestHandler2s.get(position).getClass().getSimpleName())
         .isEqualTo("TracingRequestHandler");
   }
@@ -84,7 +85,8 @@ class S3ClientTest extends AbstractS3ClientTest {
   @ParameterizedTest
   @MethodSource("provideS3Arguments")
   @SuppressWarnings("deprecation") // AmazonS3Client constructor is deprecated
-  void testRequestHandlerIsHookedUpWithConstructor(boolean addHandler, int size) throws Exception {
+  void testRequestHandlerIsHookedUpWithConstructor(boolean addHandler, int size)
+      throws ReflectiveOperationException {
     BasicAWSCredentials credentials = new BasicAWSCredentials("asdf", "qwerty");
     AmazonS3Client client = new AmazonS3Client(credentials);
     if (addHandler) {
@@ -94,7 +96,7 @@ class S3ClientTest extends AbstractS3ClientTest {
     List<RequestHandler2> requestHandler2s = extractRequestHandlers(client);
 
     assertThat(requestHandler2s).isNotNull();
-    assertThat(requestHandler2s.size()).isEqualTo(size);
+    assertThat(requestHandler2s).hasSize(size);
     assertThat(requestHandler2s.get(0).getClass().getSimpleName())
         .isEqualTo("TracingRequestHandler");
   }
@@ -130,6 +132,7 @@ class S3ClientTest extends AbstractS3ClientTest {
                                 equalTo(URL_FULL, "https://s3.amazonaws.com"),
                                 equalTo(HTTP_REQUEST_METHOD, "HEAD"),
                                 equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
+                                equalTo(SERVER_PORT, 443L),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "Amazon S3"),
                                 equalTo(RPC_METHOD, "HeadBucket"),

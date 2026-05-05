@@ -69,11 +69,12 @@ public final class EnduserAttributesCapturer {
    * @param authentication the authentication from which to determine the {@code enduser.*}
    *     attributes.
    */
-  public void captureEnduserAttributes(Context otelContext, Authentication authentication) {
+  public void captureEnduserAttributes(
+      Context otelContext, @Nullable Authentication authentication) {
     if (authentication != null) {
       Span localRootSpan = LocalRootSpan.fromContext(otelContext);
 
-      if (enduserIdEnabled && authentication.getName() != null) {
+      if (enduserIdEnabled) {
         localRootSpan.setAttribute(ENDUSER_ID, authentication.getName());
       }
 
@@ -82,6 +83,9 @@ public final class EnduserAttributesCapturer {
       if (enduserRoleEnabled || enduserScopeEnabled) {
         for (GrantedAuthority authority : authentication.getAuthorities()) {
           String authorityString = authority.getAuthority();
+          if (authorityString == null) {
+            continue;
+          }
           if (enduserRoleEnabled && authorityString.startsWith(roleGrantedAuthorityPrefix)) {
             roleBuilder = appendSuffix(roleGrantedAuthorityPrefix, authorityString, roleBuilder);
           } else if (enduserScopeEnabled
@@ -144,7 +148,7 @@ public final class EnduserAttributesCapturer {
 
   public void setRoleGrantedAuthorityPrefix(String roleGrantedAuthorityPrefix) {
     this.roleGrantedAuthorityPrefix =
-        requireNonNull(roleGrantedAuthorityPrefix, "rolePrefix must not be null");
+        requireNonNull(roleGrantedAuthorityPrefix, "roleGrantedAuthorityPrefix must not be null");
   }
 
   public String getScopeGrantedAuthorityPrefix() {
@@ -153,6 +157,6 @@ public final class EnduserAttributesCapturer {
 
   public void setScopeGrantedAuthorityPrefix(String scopeGrantedAuthorityPrefix) {
     this.scopeGrantedAuthorityPrefix =
-        requireNonNull(scopeGrantedAuthorityPrefix, "scopePrefix must not be null");
+        requireNonNull(scopeGrantedAuthorityPrefix, "scopeGrantedAuthorityPrefix must not be null");
   }
 }

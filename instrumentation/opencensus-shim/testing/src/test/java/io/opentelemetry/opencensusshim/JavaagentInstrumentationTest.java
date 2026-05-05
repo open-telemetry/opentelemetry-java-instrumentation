@@ -5,19 +5,19 @@
 
 package io.opentelemetry.opencensusshim;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opencensus.trace.AttributeValue;
 import io.opencensus.trace.Tracing;
 import io.opencensus.trace.samplers.Samplers;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import org.assertj.core.api.AbstractBooleanAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -26,6 +26,8 @@ class JavaagentInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @BeforeEach
   void setup() {
@@ -43,6 +45,7 @@ class JavaagentInstrumentationTest {
   void testInterleavedSpansOcFirst() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
     Span midSpan;
@@ -72,49 +75,33 @@ class JavaagentInstrumentationTest {
       outerSpan.end();
     }
 
-    Tracing.getExportComponent().shutdown();
-
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
-        ta ->
+        trace ->
             // ensure each span's attributes haven't seeped into parents or children
-            ta.hasSpansSatisfyingExactly(
+            trace.hasSpansSatisfyingExactly(
                 // outer span
-                sa ->
-                    sa.hasName("outer-span")
+                span ->
+                    span.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
-                        .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("outer"), true)),
                 // middle span
-                sa ->
-                    sa.hasName("mid-span")
-                        .hasParent(ta.getSpan(0))
-                        .hasAttribute(AttributeKey.booleanKey("middle"), true)
-                        .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                span ->
+                    span.hasName("mid-span")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("middle"), true)),
                 // inner span
-                sa ->
-                    sa.hasName("inner-span")
-                        .hasParent(ta.getSpan(1))
-                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
-                        .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
+                span ->
+                    span.hasName("inner-span")
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("inner"), true))));
   }
 
   @Test
   void testInterleavedSpansOtelFirst() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     Span outerSpan =
         otelTracer
@@ -147,49 +134,33 @@ class JavaagentInstrumentationTest {
       outerSpan.end();
     }
 
-    Tracing.getExportComponent().shutdown();
-
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
-        ta ->
+        trace ->
             // ensure each span's attributes haven't seeped into parents or children
-            ta.hasSpansSatisfyingExactly(
+            trace.hasSpansSatisfyingExactly(
                 // outer span
-                sa ->
-                    sa.hasName("outer-span")
+                span ->
+                    span.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
-                        .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("outer"), true)),
                 // middle span
-                sa ->
-                    sa.hasName("mid-span")
-                        .hasParent(ta.getSpan(0))
-                        .hasAttribute(AttributeKey.booleanKey("middle"), true)
-                        .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                span ->
+                    span.hasName("mid-span")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("middle"), true)),
                 // inner span
-                sa ->
-                    sa.hasName("inner-span")
-                        .hasParent(ta.getSpan(1))
-                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
-                        .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
+                span ->
+                    span.hasName("inner-span")
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("inner"), true))));
   }
 
   @Test
   void testStartingWithOtelSpan() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     Span otelSpan =
         otelTracer
@@ -210,25 +181,26 @@ class JavaagentInstrumentationTest {
     }
     otelSpan.end();
 
-    Tracing.getExportComponent().shutdown();
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("otel-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("present-on-otel"), true),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(booleanKey("present-on-otel"), true)),
                 span ->
                     span.hasName("oc-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(AttributeKey.booleanKey("present-on-oc"), true)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(booleanKey("present-on-oc"), true))));
   }
 
   @Test
   void testStartingWithOpenCensusSpan() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
     Tracer otelTracer = testing.getOpenTelemetry().getTracer("test");
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     io.opencensus.trace.Span ocSpan = ocTracer.spanBuilder("oc-span").startSpan();
 
@@ -244,24 +216,24 @@ class JavaagentInstrumentationTest {
     }
     ocSpan.end();
 
-    Tracing.getExportComponent().shutdown();
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("oc-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("present-on-oc"), true),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("present-on-oc"), true)),
                 span ->
                     span.hasName("otel-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(AttributeKey.booleanKey("present-on-otel"), true)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(booleanKey("present-on-otel"), true))));
   }
 
   @Test
   void testNestedOpenCensusSpans() {
     io.opencensus.trace.Tracer ocTracer = Tracing.getTracer();
+    cleanup.deferCleanup(() -> Tracing.getExportComponent().shutdown());
 
     io.opencensus.trace.Span outerSpan = ocTracer.spanBuilder("outer-span").startSpan();
     io.opencensus.trace.Span midSpan;
@@ -287,42 +259,25 @@ class JavaagentInstrumentationTest {
       outerSpan.end();
     }
 
-    Tracing.getExportComponent().shutdown();
-
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
-        ta ->
+        trace ->
             // ensure each span's attributes haven't seeped into parents or children
-            ta.hasSpansSatisfyingExactly(
+            trace.hasSpansSatisfyingExactly(
                 // outer span
-                sa ->
-                    sa.hasName("outer-span")
+                span ->
+                    span.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
-                        .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("outer"), true)),
                 // middle span
-                sa ->
-                    sa.hasName("mid-span")
-                        .hasParent(ta.getSpan(0))
-                        .hasAttribute(AttributeKey.booleanKey("middle"), true)
-                        .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                span ->
+                    span.hasName("mid-span")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("middle"), true)),
                 // inner span
-                sa ->
-                    sa.hasName("inner-span")
-                        .hasParent(ta.getSpan(1))
-                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
-                        .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
+                span ->
+                    span.hasName("inner-span")
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("inner"), true))));
   }
 }

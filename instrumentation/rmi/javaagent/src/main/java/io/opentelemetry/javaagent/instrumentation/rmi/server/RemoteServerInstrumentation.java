@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
-import static io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.rmi.server.RmiServerSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -19,6 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.rmi.Remote;
@@ -27,7 +27,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class RemoteServerInstrumentation implements TypeInstrumentation {
+class RemoteServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return implementsInterface(named("java.rmi.Remote"))
@@ -38,7 +38,7 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(not(isStatic())),
-        this.getClass().getName() + "$PublicMethodAdvice");
+        getClass().getName() + "$PublicMethodAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -68,7 +68,7 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
         }
 
         // TODO review and unify with all other SERVER instrumentation
-        Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
+        Context parentContext = ThreadLocalContext.INSTANCE.getAndResetContext();
         if (parentContext == null) {
           return new AdviceScope(callDepth, null, null, null);
         }
@@ -80,7 +80,7 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
         return new AdviceScope(callDepth, classAndMethod, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
@@ -92,13 +92,13 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {
       return AdviceScope.start(CallDepth.forClass(Remote.class), declaringClass, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.end(throwable);

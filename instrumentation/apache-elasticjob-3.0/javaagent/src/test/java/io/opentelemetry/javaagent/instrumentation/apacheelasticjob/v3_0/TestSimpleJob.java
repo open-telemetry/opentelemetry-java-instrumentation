@@ -8,13 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 import org.apache.shardingsphere.elasticjob.api.ShardingContext;
 import org.apache.shardingsphere.elasticjob.simple.job.SimpleJob;
 
-public class TestSimpleJob implements SimpleJob {
+class TestSimpleJob implements SimpleJob {
 
   @Override
   public void execute(ShardingContext context) {
     try {
       Thread.sleep(100);
-    } catch (InterruptedException e) {
+    } catch (InterruptedException ignored) {
       Thread.currentThread().interrupt();
     }
   }

@@ -11,26 +11,35 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
+import javax.annotation.Nullable;
+import org.apache.pekko.http.javadsl.model.AttributeKey;
 import org.apache.pekko.http.scaladsl.model.Uri;
 
 public class PekkoRouteHolder implements ImplicitContextKeyed {
+  public static final AttributeKey<PekkoRouteHolder> ATTRIBUTE_KEY =
+      AttributeKey.create("opentelemetry-pekko-route", PekkoRouteHolder.class);
   private static final ContextKey<PekkoRouteHolder> KEY = named("opentelemetry-pekko-route");
 
-  private StringBuilder route = new StringBuilder();
+  private final List<String> paths = new ArrayList<>();
   private Uri.Path lastUnmatchedPath = null;
   private boolean lastWasMatched = false;
-  private final Deque<State> savedStates = new ArrayDeque<>();
+  @Nullable private final PekkoRouteHolder parent;
+  @Nullable private volatile PekkoRouteHolder override;
+  @Nullable private volatile PekkoRouteHolder fallback;
 
-  public static Context init(Context context) {
-    if (context.get(KEY) != null) {
-      return context;
-    }
-    return context.with(new PekkoRouteHolder());
+  public static PekkoRouteHolder create() {
+    return new PekkoRouteHolder(null);
   }
 
   public static PekkoRouteHolder get(Context context) {
     return context.get(KEY);
+  }
+
+  private PekkoRouteHolder(@Nullable PekkoRouteHolder parent) {
+    this.parent = parent;
   }
 
   public void push(Uri.Path beforeMatch, Uri.Path afterMatch, String pathToPush) {
@@ -44,8 +53,20 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     // - some part of the path has now been matched by this matcher
     if ((lastUnmatchedPath == null || lastUnmatchedPath.equals(beforeMatch))
         && !afterMatch.equals(beforeMatch)) {
-      route.append(pathToPush);
+      paths.add(pathToPush);
       lastUnmatchedPath = afterMatch;
+
+      // If there's nothing left to match, set this as the fallback route holder in case
+      // pekko cancels the user routes (e.g. in case of a request timeout).
+      // If the path is fully matched by multiple PekkoRouteHolders, the latest one wins,
+      // which is usually correct but not guaranteed to be.
+      if (afterMatch.isEmpty()) {
+        PekkoRouteHolder initialRouteHolder = this;
+        while (initialRouteHolder.parent != null) {
+          initialRouteHolder = initialRouteHolder.parent;
+        }
+        initialRouteHolder.fallback = this;
+      }
     }
     lastWasMatched = true;
   }
@@ -54,43 +75,53 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     lastWasMatched = false;
   }
 
-  public void pushIfNotCompletelyMatched(String pathToPush) {
-    if (lastUnmatchedPath != null && !lastUnmatchedPath.isEmpty()) {
-      route.append(pathToPush);
-    }
-  }
-
+  @Nullable
   public String route() {
-    return lastWasMatched ? route.toString() : null;
+    if (override != null && override != this) {
+      return override.route();
+    }
+    if (fallback != null && fallback != this) {
+      return fallback.route();
+    }
+    if (!lastWasMatched) {
+      return null;
+    }
+    boolean shouldAddFinalWildcard = lastUnmatchedPath != null && !lastUnmatchedPath.isEmpty();
+    Deque<String> routePaths = new ArrayDeque<>();
+
+    for (PekkoRouteHolder routeHolder = this;
+        routeHolder != null;
+        routeHolder = routeHolder.parent) {
+
+      for (int i = routeHolder.paths.size() - 1; i >= 0; i--) {
+        routePaths.addFirst(routeHolder.paths.get(i));
+      }
+    }
+    if (shouldAddFinalWildcard) {
+      routePaths.addLast("*");
+    }
+    return String.join("", routePaths);
   }
 
-  public void save() {
-    savedStates.add(new State(lastUnmatchedPath, route));
-    route = new StringBuilder(route);
+  public boolean hasRoute() {
+    return override != null || lastWasMatched;
   }
 
-  public void restore() {
-    State popped = savedStates.pollLast();
-    if (popped != null) {
-      lastUnmatchedPath = popped.lastUnmatchedPath;
-      route = popped.route;
+  public PekkoRouteHolder createChild() {
+    return new PekkoRouteHolder(this);
+  }
+
+  public void setOverride(PekkoRouteHolder override) {
+    if (override.override != null) {
+      // The given override itself has an override, so just use that one instead
+      this.override = override.override;
+    } else {
+      this.override = override;
     }
   }
 
   @Override
   public Context storeInContext(Context context) {
     return context.with(KEY, this);
-  }
-
-  private PekkoRouteHolder() {}
-
-  private static class State {
-    private final Uri.Path lastUnmatchedPath;
-    private final StringBuilder route;
-
-    private State(Uri.Path lastUnmatchedPath, StringBuilder route) {
-      this.lastUnmatchedPath = lastUnmatchedPath;
-      this.route = route;
-    }
   }
 }

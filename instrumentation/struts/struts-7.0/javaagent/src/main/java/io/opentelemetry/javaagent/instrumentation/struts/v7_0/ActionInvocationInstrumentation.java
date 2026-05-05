@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.struts.v7_0;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.struts.v7_0.StrutsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.struts.v7_0.StrutsSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -24,7 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.struts2.ActionInvocation;
 
-public class ActionInvocationInstrumentation implements TypeInstrumentation {
+class ActionInvocationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -39,8 +39,8 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("invokeActionOnly")),
-        this.getClass().getName() + "$InvokeActionOnlyAdvice");
+        isPublic().and(named("invokeActionOnly")),
+        getClass().getName() + "$InvokeActionOnlyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -50,7 +50,7 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope) {
         this.context = context;
         this.scope = scope;
       }
@@ -59,10 +59,7 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(ActionInvocation actionInvocation) {
         Context parentContext = Context.current();
         HttpServerRoute.update(
-            parentContext,
-            CONTROLLER,
-            StrutsServerSpanNaming.SERVER_SPAN_NAME,
-            actionInvocation.getProxy());
+            parentContext, CONTROLLER, serverSpanName(), actionInvocation.getProxy());
 
         if (!instrumenter().shouldStart(parentContext, actionInvocation)) {
           return null;
@@ -77,12 +74,13 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.This ActionInvocation actionInvocation) {
       return AdviceScope.start(actionInvocation);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.This ActionInvocation actionInvocation,

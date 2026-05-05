@@ -121,7 +121,7 @@ testing {
         all {
           testTask.configure {
             jvmArgs(
-              "-Dotel.experimental.config.file=$projectDir/src/testDistributionConfig/resources/distribution-config.yaml"
+              "-Dotel.config.file=$projectDir/src/testDistributionConfig/resources/distribution-config.yaml"
             )
           }
         }

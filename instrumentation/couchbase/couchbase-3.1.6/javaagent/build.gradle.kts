@@ -7,8 +7,6 @@ muzzle {
     group.set("com.couchbase.client")
     module.set("java-client")
     versions.set("[3.1.6,3.2.0)")
-    // these versions were released as ".bundle" instead of ".jar"
-    skip("2.7.5", "2.7.8")
     assertInverse.set(true)
   }
 }
@@ -46,7 +44,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -60,7 +58,7 @@ tasks {
     dependsOn(testStableSemconv)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

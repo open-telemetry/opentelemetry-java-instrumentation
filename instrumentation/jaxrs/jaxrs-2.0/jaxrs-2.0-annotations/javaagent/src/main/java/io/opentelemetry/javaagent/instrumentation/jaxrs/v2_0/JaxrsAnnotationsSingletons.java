@@ -12,17 +12,17 @@ import io.opentelemetry.javaagent.instrumentation.jaxrs.HandlerData;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory;
 import javax.ws.rs.container.AsyncResponse;
 
-public final class JaxrsAnnotationsSingletons {
+public class JaxrsAnnotationsSingletons {
 
-  private static final Instrumenter<HandlerData, Void> INSTANCE =
+  private static final Instrumenter<HandlerData, Void> instrumenter =
       JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxrs-2.0-annotations");
-
-  public static Instrumenter<HandlerData, Void> instrumenter() {
-    return INSTANCE;
-  }
 
   public static final VirtualField<AsyncResponse, AsyncResponseData> ASYNC_RESPONSE_DATA =
       VirtualField.find(AsyncResponse.class, AsyncResponseData.class);
+
+  public static Instrumenter<HandlerData, Void> instrumenter() {
+    return instrumenter;
+  }
 
   private JaxrsAnnotationsSingletons() {}
 }

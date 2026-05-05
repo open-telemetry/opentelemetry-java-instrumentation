@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -22,7 +21,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.impl.SendCallback;
 
-public class SendCallbackInstrumentation implements TypeInstrumentation {
+class SendCallbackInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -37,8 +36,7 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("sendComplete")),
-        SendCallbackInstrumentation.class.getName() + "$SendCallbackSendCompleteAdvice");
+        named("sendComplete"), getClass().getName() + "$SendCallbackSendCompleteAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -75,14 +73,15 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.This SendCallback callback) {
       return AdviceScope.start(callback);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Argument(0) Throwable t, @Advice.Enter @Nullable AdviceScope adviceScope) {
+        @Advice.Argument(0) @Nullable Throwable t,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(t);
       }

@@ -14,6 +14,10 @@ import org.springframework.messaging.support.ChannelInterceptor;
 
 /** Entrypoint for instrumenting Spring Integration {@link MessageChannel}s. */
 public final class SpringIntegrationTelemetry {
+  private final ContextPropagators propagators;
+  private final Instrumenter<MessageWithChannel, Void> consumerInstrumenter;
+  private final Instrumenter<MessageWithChannel, Void> producerInstrumenter;
+  private final boolean producerSpanEnabled;
 
   /**
    * Returns a new {@link SpringIntegrationTelemetry} configured with the given {@link
@@ -30,11 +34,6 @@ public final class SpringIntegrationTelemetry {
   public static SpringIntegrationTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringIntegrationTelemetryBuilder(openTelemetry);
   }
-
-  private final ContextPropagators propagators;
-  private final Instrumenter<MessageWithChannel, Void> consumerInstrumenter;
-  private final Instrumenter<MessageWithChannel, Void> producerInstrumenter;
-  private final boolean producerSpanEnabled;
 
   SpringIntegrationTelemetry(
       ContextPropagators propagators,

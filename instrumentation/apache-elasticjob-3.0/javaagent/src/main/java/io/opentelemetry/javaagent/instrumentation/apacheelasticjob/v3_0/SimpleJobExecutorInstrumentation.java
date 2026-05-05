@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobSingletons.helper;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -19,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.shardingsphere.elasticjob.api.ShardingContext;
 import org.apache.shardingsphere.elasticjob.simple.job.SimpleJob;
 
-public class SimpleJobExecutorInstrumentation implements TypeInstrumentation {
+class SimpleJobExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,22 +28,21 @@ public class SimpleJobExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("process"))
+        named("process")
             .and(
                 takesArgument(
                     0, named("org.apache.shardingsphere.elasticjob.simple.job.SimpleJob")))
             .and(
                 takesArgument(
                     3, named("org.apache.shardingsphere.elasticjob.api.ShardingContext"))),
-        SimpleJobExecutorInstrumentation.class.getName() + "$ProcessAdvice");
+        getClass().getName() + "$ProcessAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ProcessAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ElasticJobHelper.ElasticJobScope onEnter(
         @Advice.Argument(0) SimpleJob elasticJob,
         @Advice.Argument(3) ShardingContext shardingContext) {
@@ -56,9 +54,10 @@ public class SimpleJobExecutorInstrumentation implements TypeInstrumentation {
       return helper().startSpan(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Enter ElasticJobHelper.ElasticJobScope scope, @Advice.Thrown Throwable throwable) {
+        @Advice.Enter @Nullable ElasticJobHelper.ElasticJobScope scope,
+        @Advice.Thrown @Nullable Throwable throwable) {
       helper().endSpan(scope, throwable);
     }
   }

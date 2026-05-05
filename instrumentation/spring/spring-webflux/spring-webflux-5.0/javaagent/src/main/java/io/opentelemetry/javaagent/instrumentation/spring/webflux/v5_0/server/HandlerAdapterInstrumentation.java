@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.WebfluxSingletons.httpRouteGetter;
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.WebfluxSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -32,7 +31,7 @@ import org.springframework.web.reactive.HandlerResult;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-public class HandlerAdapterInstrumentation implements TypeInstrumentation {
+class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -48,13 +47,12 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("handle"))
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
             .and(takesArgument(1, Object.class))
             .and(takesArguments(2)),
-        this.getClass().getName() + "$HandleAdvice");
+        getClass().getName() + "$HandleAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -93,7 +91,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       }
 
       public Mono<HandlerResult> exit(
-          Throwable throwable,
+          @Nullable Throwable throwable,
           ServerWebExchange exchange,
           Object handler,
           Mono<HandlerResult> mono) {
@@ -114,19 +112,19 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(
         @Advice.Argument(0) ServerWebExchange exchange, @Advice.Argument(1) Object handler) {
       return AdviceScope.enter(exchange, handler);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Mono<HandlerResult> methodExit(
         @Advice.Return Mono<HandlerResult> mono,
         @Advice.Argument(0) ServerWebExchange exchange,
         @Advice.Argument(1) Object handler,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope == null) {

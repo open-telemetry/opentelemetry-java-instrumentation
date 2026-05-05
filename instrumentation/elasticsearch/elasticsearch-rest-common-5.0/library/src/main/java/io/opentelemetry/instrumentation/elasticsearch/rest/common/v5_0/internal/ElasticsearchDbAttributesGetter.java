@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbResponseStatusUtil.dbResponseStatusCode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.joining;
@@ -59,12 +58,11 @@ final class ElasticsearchDbAttributesGetter
         && epDefinition.isSearchEndpoint()
         && httpEntity != null
         && httpEntity.isRepeatable()) {
-      // Retrieve HTTP body for search-type Elasticsearch requests when CAPTURE_SEARCH_QUERY is
+      // Retrieve HTTP body for search-type Elasticsearch requests when captureSearchQuery is
       // enabled.
-      try {
-        return new BufferedReader(new InputStreamReader(httpEntity.getContent(), UTF_8))
-            .lines()
-            .collect(joining());
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(httpEntity.getContent(), UTF_8))) {
+        return reader.lines().collect(joining());
       } catch (IOException e) {
         logger.log(FINE, "Failed reading HTTP body content.", e);
       }
@@ -79,9 +77,16 @@ final class ElasticsearchDbAttributesGetter
     return endpointDefinition != null ? endpointDefinition.getEndpointName() : null;
   }
 
-  @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable Response response, @Nullable Throwable error) {
-    return response != null ? dbResponseStatusCode(response.getStatusLine().getStatusCode()) : null;
+  @Nullable
+  public String getErrorType(
+      ElasticsearchRestRequest request, @Nullable Response response, @Nullable Throwable error) {
+    if (response != null) {
+      int statusCode = response.getStatusLine().getStatusCode();
+      if (statusCode >= 400 || statusCode < 100) {
+        return Integer.toString(statusCode);
+      }
+    }
+    return null;
   }
 }

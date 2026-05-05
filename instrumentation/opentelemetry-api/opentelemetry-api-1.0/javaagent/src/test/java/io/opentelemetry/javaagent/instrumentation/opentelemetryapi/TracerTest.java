@@ -16,6 +16,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -75,13 +76,11 @@ class TracerTest {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
-    Scope parentScope = Context.current().with(parentSpan).makeCurrent();
-
-    Span testSpan = tracer.spanBuilder("test").startSpan();
-    testSpan.end();
-
+    try (Scope parentScope = Context.current().with(parentSpan).makeCurrent()) {
+      Span testSpan = tracer.spanBuilder("test").startSpan();
+      testSpan.end();
+    }
     parentSpan.end();
-    parentScope.close();
 
     // Then
     testing.waitAndAssertTraces(
@@ -98,13 +97,11 @@ class TracerTest {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
-    Scope parentScope = parentSpan.makeCurrent();
-
-    Span testSpan = tracer.spanBuilder("test").startSpan();
-    testSpan.end();
-
+    try (Scope parentScope = parentSpan.makeCurrent()) {
+      Span testSpan = tracer.spanBuilder("test").startSpan();
+      testSpan.end();
+    }
     parentSpan.end();
-    parentScope.close();
 
     // Then
     testing.waitAndAssertTraces(
@@ -123,13 +120,11 @@ class TracerTest {
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
     Context parentContext = Context.current().with(parentSpan);
-    Scope parentScope = parentContext.makeCurrent();
-
-    Span testSpan = tracer.spanBuilder("test").startSpan();
-    testSpan.end();
-
+    try (Scope parentScope = parentContext.makeCurrent()) {
+      Span testSpan = tracer.spanBuilder("test").startSpan();
+      testSpan.end();
+    }
     parentSpan.end();
-    parentScope.close();
 
     // Then
     testing.waitAndAssertTraces(
@@ -166,11 +161,11 @@ class TracerTest {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span parentSpan = tracer.spanBuilder("parent").startSpan();
-    Scope parentScope = parentSpan.makeCurrent();
-    Span testSpan = tracer.spanBuilder("test").setNoParent().startSpan();
-    testSpan.end();
+    try (Scope parentScope = parentSpan.makeCurrent()) {
+      Span testSpan = tracer.spanBuilder("test").setNoParent().startSpan();
+      testSpan.end();
+    }
     parentSpan.end();
-    parentScope.close();
 
     // Then
     testing.waitAndAssertSortedTraces(
@@ -208,9 +203,6 @@ class TracerTest {
     IllegalStateException throwable = new IllegalStateException();
     testSpan.recordException(throwable);
     testSpan.end();
-
-    StringWriter writer = new StringWriter();
-    throwable.printStackTrace(new PrintWriter(writer));
 
     // Then
     testing.waitAndAssertTraces(
@@ -255,9 +247,9 @@ class TracerTest {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
-    Scope testScope = Context.current().with(testSpan).makeCurrent();
-    Span.current().updateName("test2");
-    testScope.close();
+    try (Scope testScope = Context.current().with(testSpan).makeCurrent()) {
+      Span.current().updateName("test2");
+    }
     testSpan.end();
 
     // Then
@@ -273,9 +265,9 @@ class TracerTest {
     // When
     Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Span testSpan = tracer.spanBuilder("test").startSpan();
-    Scope testScope = Context.current().with(testSpan).makeCurrent();
-    Span.fromContext(Context.current()).updateName("test2");
-    testScope.close();
+    try (Scope testScope = Context.current().with(testSpan).makeCurrent()) {
+      Span.fromContext(Context.current()).updateName("test2");
+    }
     testSpan.end();
 
     // Then
@@ -360,7 +352,7 @@ class TracerTest {
                                   .isEqualTo(linkedSpanContext.getTraceFlags().asByte());
                               assertThat(link.getSpanContext().isRemote())
                                   .isEqualTo(linkedSpanContext.isRemote());
-                              assertThat(link.getAttributes().size()).isEqualTo(0);
+                              assertThat(link.getAttributes().asMap()).isEmpty();
                             })));
   }
 
@@ -407,12 +399,13 @@ class TracerTest {
                                   .isEqualTo(linkedSpanContext.getTraceFlags().asByte());
                               assertThat(link.getSpanContext().isRemote())
                                   .isEqualTo(linkedSpanContext.isRemote());
-                              assertThat(link.getTotalAttributeCount()).isEqualTo(4);
                               Attributes attrs = link.getAttributes();
-                              assertThat(attrs.get(stringKey("string"))).isEqualTo("1");
-                              assertThat(attrs.get(longKey("long"))).isEqualTo(2L);
-                              assertThat(attrs.get(doubleKey("double"))).isEqualTo(3.0);
-                              assertThat(attrs.get(booleanKey("boolean"))).isEqualTo(true);
+                              assertThat(attrs.asMap())
+                                  .containsOnly(
+                                      entry(stringKey("string"), "1"),
+                                      entry(longKey("long"), 2L),
+                                      entry(doubleKey("double"), 3.0),
+                                      entry(booleanKey("boolean"), true));
                             })));
   }
 }

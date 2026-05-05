@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:clickhouse:clickhouse-client-common:javaagent"))
+  implementation(project(":instrumentation:clickhouse:clickhouse-client-common-0.5:javaagent"))
   library("com.clickhouse:client-v2:0.8.0")
   testInstrumentation(project(":instrumentation:clickhouse:clickhouse-client-v1-0.5:javaagent"))
 }
@@ -20,7 +20,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

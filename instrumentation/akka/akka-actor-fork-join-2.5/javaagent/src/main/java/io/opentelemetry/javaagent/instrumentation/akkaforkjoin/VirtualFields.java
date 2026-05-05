@@ -12,8 +12,6 @@ import java.util.concurrent.Callable;
 
 public class VirtualFields {
 
-  private VirtualFields() {}
-
   public static final VirtualField<ForkJoinTask<?>, PropagatedContext>
       FORK_JOIN_TASK_PROPAGATED_CONTEXT =
           VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
@@ -21,4 +19,6 @@ public class VirtualFields {
       VirtualField.find(Runnable.class, PropagatedContext.class);
   public static final VirtualField<Callable<?>, PropagatedContext> CALLABLE_PROPAGATED_CONTEXT =
       VirtualField.find(Callable.class, PropagatedContext.class);
+
+  private VirtualFields() {}
 }

@@ -22,7 +22,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class AddingSpanAttributesInstrumentationTest {
 
   @RegisterExtension
-  public static final AgentInstrumentationExtension testing =
+  private static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -34,12 +34,12 @@ class AddingSpanAttributesInstrumentationTest {
             new ExtractAttributesUsingAddingSpanAttributes()
                 .withSpanTakesPrecedence("foo", "bar", null, "baz"));
 
-    List<AttributeAssertion> attributesAsertions =
+    List<AttributeAssertion> attributesAssertions =
         new ArrayList<>(
             SemconvCodeStabilityUtil.codeFunctionAssertions(
                 ExtractAttributesUsingAddingSpanAttributes.class, "withSpanTakesPrecedence"));
-    attributesAsertions.add(equalTo(stringKey("implicitName"), "foo"));
-    attributesAsertions.add(equalTo(stringKey("explicitName"), "bar"));
+    attributesAssertions.add(equalTo(stringKey("implicitName"), "foo"));
+    attributesAssertions.add(equalTo(stringKey("explicitName"), "bar"));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -50,7 +50,7 @@ class AddingSpanAttributesInstrumentationTest {
                             "ExtractAttributesUsingAddingSpanAttributes.withSpanTakesPrecedence")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
-                        .hasAttributesSatisfyingExactly(attributesAsertions)));
+                        .hasAttributesSatisfyingExactly(attributesAssertions)));
   }
 
   @Test

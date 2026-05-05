@@ -26,9 +26,12 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
+            // added in 1.42
             "application.io.opentelemetry.api.common.Value",
+            // added in 1.40
             "application.io.opentelemetry.api.incubator.logs.ExtendedLogger")
         .and(
+            // added in 1.50
             not(
                 hasClassesNamed(
                     "application.io.opentelemetry.api.incubator.common.ExtendedAttributes")));
@@ -42,10 +45,5 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
   @Override
   public String getModuleGroup() {
     return "opentelemetry-api-bridge";
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

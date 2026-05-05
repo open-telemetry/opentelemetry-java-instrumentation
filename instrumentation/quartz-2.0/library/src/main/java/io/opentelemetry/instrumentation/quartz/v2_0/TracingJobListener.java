@@ -9,13 +9,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
 
 final class TracingJobListener implements JobListener {
 
-  private static final VirtualField<JobExecutionContext, ContextAndScope> contextVirtualField =
+  private static final VirtualField<JobExecutionContext, ContextAndScope> CONTEXT_VIRTUAL_FIELD =
       VirtualField.find(JobExecutionContext.class, ContextAndScope.class);
 
   private final Instrumenter<JobExecutionContext, Void> instrumenter;
@@ -49,18 +50,19 @@ final class TracingJobListener implements JobListener {
     // executed. Library instrumentation users need to make sure other listeners don't throw
     // exceptions.
     Scope scope = context.makeCurrent();
-    contextVirtualField.set(job, new ContextAndScope(context, scope));
+    CONTEXT_VIRTUAL_FIELD.set(job, new ContextAndScope(context, scope));
   }
 
   @Override
-  public void jobWasExecuted(JobExecutionContext job, JobExecutionException error) {
-    ContextAndScope contextAndScope = contextVirtualField.get(job);
+  public void jobWasExecuted(JobExecutionContext job, @Nullable JobExecutionException error) {
+    ContextAndScope contextAndScope = CONTEXT_VIRTUAL_FIELD.get(job);
     if (contextAndScope == null) {
       // Would only happen if we didn't start a span (maybe a previous joblistener threw an
       // exception before ours could process the start event).
       return;
     }
 
+    CONTEXT_VIRTUAL_FIELD.set(job, null);
     contextAndScope.closeScope();
     instrumenter.end(contextAndScope.getContext(), job, null, error);
   }

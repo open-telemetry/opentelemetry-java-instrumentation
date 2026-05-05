@@ -5,17 +5,20 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -35,7 +38,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -44,7 +46,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -53,7 +54,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   private static String dbUriNonExistent;
   private static int incorrectPort;
 
-  private static final ImmutableMap<String, String> testHashMap =
+  private static final ImmutableMap<String, String> TEST_HASH_MAP =
       ImmutableMap.of(
           "firstname", "John",
           "lastname", "Doe",
@@ -64,6 +65,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   @BeforeAll
   void setUp() throws UnknownHostException {
     redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
     host = redisServer.getHost();
     ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
@@ -73,9 +75,11 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     dbUriNonExistent = "redis://" + host + ":" + incorrectPort + "/" + DB_INDEX;
 
     redisClient = createClient(embeddedDbUri);
+    cleanup.deferAfterAll(redisClient::shutdown);
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
 
     connection = redisClient.connect();
+    cleanup.deferAfterAll(connection);
     asyncCommands = connection.async();
     RedisCommands<String, String> syncCommands = connection.sync();
 
@@ -84,13 +88,6 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     // 1 set trace
     testing().waitForTraces(1);
     testing().clearData();
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    connection.close();
-    redisClient.shutdown();
-    redisServer.stop();
   }
 
   boolean testCallback() {
@@ -110,8 +107,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
         testConnectionClient.connectAsync(
             StringCodec.UTF8, RedisURI.create("redis://" + host + ":" + port + "?timeout=3s"));
     StatefulRedisConnection<String, String> connection1 = connectionFuture.get();
-    cleanup.deferCleanup(connection1);
     cleanup.deferCleanup(testConnectionClient::shutdown);
+    cleanup.deferCleanup(connection1);
 
     assertThat(connection1).isNotNull();
     if (connectHasSpans()) {
@@ -166,7 +163,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -203,7 +200,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                           span ->
                               span.hasName(spanName("GET"))
@@ -211,7 +208,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       addExtraAttributes(
-                                          equalTo(NETWORK_TYPE, "ipv4"),
+                                          equalTo(
+                                              NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                           equalTo(NETWORK_PEER_ADDRESS, ip),
                                           equalTo(NETWORK_PEER_PORT, port),
                                           equalTo(SERVER_ADDRESS, host),
@@ -282,7 +280,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                           span ->
                               span.hasName(spanName("GET"))
@@ -290,7 +288,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       addExtraAttributes(
-                                          equalTo(NETWORK_TYPE, "ipv4"),
+                                          equalTo(
+                                              NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                           equalTo(NETWORK_PEER_ADDRESS, ip),
                                           equalTo(NETWORK_PEER_PORT, port),
                                           equalTo(SERVER_ADDRESS, host),
@@ -304,7 +303,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
               if (testCallback()) {
                 spanAsserts.addAll(
-                    Arrays.asList(
+                    asList(
                         span ->
                             span.hasName("callback1")
                                 .hasKind(SpanKind.INTERNAL)
@@ -349,7 +348,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                           span ->
                               span.hasName(spanName("RANDOMKEY"))
@@ -357,7 +356,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       addExtraAttributes(
-                                          equalTo(NETWORK_TYPE, "ipv4"),
+                                          equalTo(
+                                              NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                           equalTo(NETWORK_PEER_ADDRESS, ip),
                                           equalTo(NETWORK_PEER_PORT, port),
                                           equalTo(SERVER_ADDRESS, host),
@@ -383,7 +383,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   void testHashSetAndThenNestApplyToHashGetall() throws Exception {
     CompletableFuture<Map<String, String>> future = new CompletableFuture<>();
 
-    RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", testHashMap);
+    RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", TEST_HASH_MAP);
     hmsetFuture.thenApplyAsync(
         setResult -> {
           // Wait for 'hmset' trace to get written
@@ -406,7 +406,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
           return null;
         });
 
-    assertThat(future.get(10, SECONDS)).isEqualTo(testHashMap);
+    assertThat(future.get(10, SECONDS)).isEqualTo(TEST_HASH_MAP);
 
     testing()
         .waitAndAssertTraces(
@@ -417,7 +417,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -435,7 +435,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),

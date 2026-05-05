@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.utility.JavaModule;
@@ -19,18 +18,6 @@ import net.bytebuddy.utility.JavaModule;
  * any time.
  */
 public interface ExperimentalInstrumentationModule {
-
-  /**
-   * Only functional for Modules where {@link InstrumentationModule#isIndyModule()} returns {@code
-   * true}.
-   *
-   * <p>Normally, helper and advice classes are loaded in a child classloader of the instrumented
-   * classloader. This method allows to inject classes directly into the instrumented classloader
-   * instead.
-   *
-   * @param injector the builder for injecting classes
-   */
-  default void injectClasses(ClassInjector injector) {}
 
   /**
    * Returns a list of helper classes that will be defined in the class loader of the instrumented
@@ -77,12 +64,46 @@ public interface ExperimentalInstrumentationModule {
   }
 
   /**
-   * Signals that the advice in this module is ready to be used with indy instrumentation and the
-   * automatic advice conversion doesn't need to be applied.
+   * Returns a list of instrumentation helper classes that are exposed to the application class
+   * loader.
    *
-   * @return true if module is ready to be used with indy instrumentation.
+   * <p>When using non-inline advice helper classes are loaded into a separate class loader. Classes
+   * from that class loader aren't visible to the instrumented application. This method can be used
+   * to expose some of the helper classes to the application class loader, so that they can be
+   * loaded through the loadClass method of the application class loader. This can for example be
+   * used to add a SPI implementation that can be loaded via the ServiceLoader.
    */
-  default boolean isIndyReady() {
-    return false;
+  default List<String> exposedClassNames() {
+    return emptyList();
+  }
+
+  /**
+   * Allows instrumentation modules to choose whether the helper classes should be injected into the
+   * same class loader as the instrumented library, or into an isolated class loader.
+   */
+  default HelperClassStrategy helperClassStrategy() {
+    return HelperClassStrategy.DEFAULT;
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  enum HelperClassStrategy {
+    /**
+     * Depending on whether the instrumentation uses inline advice or not, helper classes are either
+     * loaded in the same classloader as the instrumented library, or into an isolated classloader.
+     */
+    DEFAULT,
+    /**
+     * Helper classes are loaded in the same classloader as the instrumented library, and are
+     * visible to the application.
+     */
+    INJECTED,
+    /**
+     * Helper classes are loaded into an isolated classloader, and aren't visible to the
+     * application.
+     */
+    ISOLATED
   }
 }

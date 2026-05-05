@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.basic;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonMap;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -23,12 +24,19 @@ import org.springframework.batch.core.JobParameter;
 
 abstract class SpringBatchTest {
 
-  private final JobRunner runner;
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.spring-batch.experimental-span-attributes");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public SpringBatchTest(JobRunner runner) {
+  private final JobRunner runner;
+
+  static String experimental() {
+    return EXPERIMENTAL_ATTRIBUTES ? "spring_batch" : null;
+  }
+
+  SpringBatchTest(JobRunner runner) {
     this.runner = runner;
   }
 
@@ -42,7 +50,8 @@ abstract class SpringBatchTest {
                 span ->
                     span.hasName("BatchJob taskletJob")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttribute(AttributeKey.stringKey("job.system"), "spring_batch"),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("job.system"), experimental())),
                 span ->
                     span.hasName("BatchJob taskletJob.step")
                         .hasKind(SpanKind.INTERNAL)
@@ -65,7 +74,8 @@ abstract class SpringBatchTest {
                 span ->
                     span.hasName("BatchJob taskletJob")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttribute(AttributeKey.stringKey("job.system"), "spring_batch"),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("job.system"), experimental())),
                 span ->
                     span.hasName("BatchJob taskletJob.step")
                         .hasKind(SpanKind.INTERNAL)
@@ -96,7 +106,8 @@ abstract class SpringBatchTest {
               span ->
                   span.hasName("BatchJob itemsAndTaskletJob")
                       .hasKind(SpanKind.INTERNAL)
-                      .hasAttribute(AttributeKey.stringKey("job.system"), "spring_batch"),
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(stringKey("job.system"), experimental())),
               span ->
                   span.hasName("BatchJob itemsAndTaskletJob.itemStep")
                       .hasKind(SpanKind.INTERNAL)
@@ -128,7 +139,8 @@ abstract class SpringBatchTest {
                 span ->
                     span.hasName("BatchJob flowJob")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttribute(AttributeKey.stringKey("job.system"), "spring_batch"),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("job.system"), experimental())),
                 span ->
                     span.hasName("BatchJob flowJob.flowStep1")
                         .hasKind(SpanKind.INTERNAL)
@@ -161,7 +173,8 @@ abstract class SpringBatchTest {
                 span ->
                     span.hasName("BatchJob splitJob")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttribute(AttributeKey.stringKey("job.system"), "spring_batch"),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("job.system"), experimental())),
                 span ->
                     span.satisfies(
                             spanData ->
@@ -205,7 +218,8 @@ abstract class SpringBatchTest {
                 span ->
                     span.hasName("BatchJob decisionJob")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttribute(AttributeKey.stringKey("job.system"), "spring_batch"),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("job.system"), experimental())),
                 span ->
                     span.hasName("BatchJob decisionJob.decisionStepStart")
                         .hasKind(SpanKind.INTERNAL)
@@ -235,7 +249,8 @@ abstract class SpringBatchTest {
               span ->
                   span.hasName("BatchJob partitionedJob")
                       .hasKind(SpanKind.INTERNAL)
-                      .hasAttribute(AttributeKey.stringKey("job.system"), "spring_batch"),
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(stringKey("job.system"), experimental())),
               span ->
                   span.hasName(
                           hasPartitionManagerStep()

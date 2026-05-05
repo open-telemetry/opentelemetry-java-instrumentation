@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -38,9 +39,9 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -75,9 +76,9 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
       connection.setUseCaches(true);
       connection.setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis());
       Span parentSpan = Span.current();
-      InputStream stream = connection.getInputStream();
-      assertThat(Span.current()).isEqualTo(parentSpan);
-      stream.close();
+      try (InputStream stream = connection.getInputStream()) {
+        assertThat(Span.current()).isEqualTo(parentSpan);
+      }
       return connection.getResponseCode();
     } finally {
       connection.disconnect();
@@ -96,7 +97,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  public void traceRequest(boolean useCache) throws IOException {
+  void traceRequest(boolean useCache) throws IOException {
     URL url = resolveAddress("/success").toURL();
 
     testing.runWithSpan(
@@ -105,9 +106,10 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
           HttpURLConnection connection = (HttpURLConnection) url.openConnection();
           connection.setUseCaches(useCache);
           assertThat(Span.current().getSpanContext().isValid()).isTrue();
-          InputStream stream = connection.getInputStream();
-          List<String> lines = readLines(stream);
-          stream.close();
+          List<String> lines;
+          try (InputStream stream = connection.getInputStream()) {
+            lines = readLines(stream);
+          }
           assertThat(connection.getResponseCode()).isEqualTo(STATUS);
           assertThat(lines).isEqualTo(RESPONSE);
 
@@ -118,15 +120,16 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
           // call before input stream to test alternate behavior
           assertThat(connection.getResponseCode()).isEqualTo(STATUS);
           connection.getInputStream();
-          stream = connection.getInputStream(); // one more to ensure state is working
-          lines = readLines(stream);
-          stream.close();
+          // one more to ensure state is working
+          try (InputStream stream = connection.getInputStream()) {
+            lines = readLines(stream);
+          }
           assertThat(lines).isEqualTo(RESPONSE);
         });
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, url.getPort()),
@@ -155,9 +158,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3))));
   }
 
-  @ParameterizedTest
-  @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
-  public void testBrokenApiUsage() throws IOException {
+  @RepeatedTest(10)
+  void testBrokenApiUsage() throws IOException {
     URL url = resolveAddress("/success").toURL();
     HttpURLConnection connection =
         testing.runWithSpan(
@@ -172,7 +174,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, url.getPort()),
@@ -197,7 +199,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Test
-  public void testPostRequest() throws IOException {
+  void testPostRequest() throws IOException {
     URL url = resolveAddress("/success").toURL();
     testing.runWithSpan(
         "someTrace",
@@ -209,22 +211,23 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
           // Send post request
           connection.setDoOutput(true);
-          DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-          wr.writeBytes(urlParameters);
-          wr.flush();
-          wr.close();
+          try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
+            outputStream.writeBytes(urlParameters);
+            outputStream.flush();
+          }
 
           assertThat(connection.getResponseCode()).isEqualTo(STATUS);
 
-          InputStream stream = connection.getInputStream();
-          List<String> lines = readLines(stream);
-          stream.close();
+          List<String> lines;
+          try (InputStream stream = connection.getInputStream()) {
+            lines = readLines(stream);
+          }
           assertThat(lines).isEqualTo(RESPONSE);
         });
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, url.getPort()),
@@ -247,7 +250,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
   }
 
   @Test
-  public void getOutputStreamShouldTransformGetIntoPost() throws IOException {
+  void getOutputStreamShouldTransformGetIntoPost() throws IOException {
     URL url = resolveAddress("/success").toURL();
     testing.runWithSpan(
         "someTrace",
@@ -263,22 +266,23 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
           // Send POST request
           connection.setDoOutput(true);
-          DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-          wr.writeBytes(urlParameters);
-          wr.flush();
-          wr.close();
+          try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
+            outputStream.writeBytes(urlParameters);
+            outputStream.flush();
+          }
 
           assertThat(connection.getResponseCode()).isEqualTo(STATUS);
 
-          InputStream stream = connection.getInputStream();
-          List<String> lines = readLines(stream);
-          stream.close();
+          List<String> lines;
+          try (InputStream stream = connection.getInputStream()) {
+            lines = readLines(stream);
+          }
           assertThat(lines).isEqualTo(RESPONSE);
         });
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, url.getPort()),
@@ -302,7 +306,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @ParameterizedTest
   @ValueSource(strings = {"http", "https"})
-  public void traceRequestWithConnectionFailure(String scheme) {
+  void traceRequestWithConnectionFailure(String scheme) {
     String uri = scheme + "://localhost:" + PortUtils.UNUSABLE_PORT;
 
     Throwable thrown =
@@ -321,7 +325,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),

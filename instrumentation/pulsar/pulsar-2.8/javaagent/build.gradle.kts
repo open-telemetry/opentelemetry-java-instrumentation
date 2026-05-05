@@ -16,12 +16,12 @@ dependencies {
 
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
   testImplementation("org.testcontainers:testcontainers-pulsar")
-  testImplementation("org.apache.pulsar:pulsar-client-admin:2.8.0")
+  testLibrary("org.apache.pulsar:pulsar-client-admin:2.8.0")
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
@@ -52,13 +52,17 @@ tasks {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {
     dependsOn(testReceiveSpanDisabled, testExperimental)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

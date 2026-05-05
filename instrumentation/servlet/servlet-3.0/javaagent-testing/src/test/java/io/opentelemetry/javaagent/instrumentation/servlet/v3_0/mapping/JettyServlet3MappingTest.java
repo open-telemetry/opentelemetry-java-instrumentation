@@ -26,7 +26,7 @@ class JettyServlet3MappingTest extends AbstractServlet3MappingTest<Server, Servl
   }
 
   @Override
-  public void stopServer(Server server) throws Exception {
+  protected void stopServer(Server server) throws Exception {
     server.stop();
     server.destroy();
   }
@@ -39,13 +39,13 @@ class JettyServlet3MappingTest extends AbstractServlet3MappingTest<Server, Servl
   }
 
   @Override
-  public void addServlet(
+  protected void addServlet(
       ServletContextHandler servletContextHandler, String path, Class<? extends Servlet> servlet) {
     servletContextHandler.addServlet(servlet, path);
   }
 
   @Override
-  public String getContextPath() {
+  protected String getContextPath() {
     return "/jetty-context";
   }
 

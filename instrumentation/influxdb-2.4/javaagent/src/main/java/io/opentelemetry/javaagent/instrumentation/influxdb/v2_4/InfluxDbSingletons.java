@@ -6,34 +6,35 @@
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 
-public final class InfluxDbSingletons {
+@SuppressWarnings("deprecation") // to support old semconv
+public class InfluxDbSingletons {
 
-  private static final Instrumenter<InfluxDbRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<InfluxDbRequest, Void> instrumenter;
 
   static {
     InfluxDbAttributesGetter dbAttributesGetter = new InfluxDbAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<InfluxDbRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.influxdb-2.4",
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
             .addAttributesExtractor(
-                ServerAttributesExtractor.create(new InfluxDbNetworkAttributesGetter()))
+                SqlClientAttributesExtractor.builder(dbAttributesGetter)
+                    .setTableAttribute(null)
+                    .build())
             .addOperationMetrics(DbClientMetrics.get())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<InfluxDbRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private InfluxDbSingletons() {}

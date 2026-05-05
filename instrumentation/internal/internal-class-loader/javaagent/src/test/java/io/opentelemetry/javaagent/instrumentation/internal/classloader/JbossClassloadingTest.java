@@ -13,7 +13,6 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleClassLoader;
 import org.jboss.modules.ModuleFinder;
 import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoadException;
 import org.jboss.modules.ModuleLoader;
 import org.jboss.modules.ModuleSpec;
 import org.junit.jupiter.api.Test;
@@ -25,8 +24,7 @@ class JbossClassloadingTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void testDelegatesToBootstrapClassLoaderForAgentClasses()
-      throws ModuleLoadException, ClassNotFoundException {
+  void testDelegatesToBootstrapClassLoaderForAgentClasses() throws Exception {
     ModuleFinder[] moduleFinders = new ModuleFinder[1];
     moduleFinders[0] = (identifier, delegateLoader) -> ModuleSpec.build(identifier).create();
 

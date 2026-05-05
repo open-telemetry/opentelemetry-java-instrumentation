@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
@@ -31,69 +32,78 @@ class CgroupV2ContainerIdExtractorTest {
     when(filesystem.isReadable(V2_CGROUP_PATH)).thenReturn(false);
     CgroupV2ContainerIdExtractor extractor = new CgroupV2ContainerIdExtractor(filesystem);
     Optional<String> result = extractor.extractContainerId();
-    assertThat(result).isSameAs(Optional.empty());
+    assertThat(result).isEmpty();
   }
 
-  private void verifyContainerId(String rawFileContent, String containerId) throws Exception {
+  private void verifyContainerId(String rawFileContent, String containerId) throws IOException {
     when(filesystem.isReadable(V2_CGROUP_PATH)).thenReturn(true);
     when(filesystem.lineList(V2_CGROUP_PATH)).thenReturn(fileToListOfLines(rawFileContent));
     CgroupV2ContainerIdExtractor extractor = new CgroupV2ContainerIdExtractor(filesystem);
     Optional<String> result = extractor.extractContainerId();
-    assertThat(result.orElse("fail")).isEqualTo(containerId);
+    assertThat(result).contains(containerId);
   }
 
   @Test
-  void extractSuccess_docker() throws Exception {
+  void extractSuccess_docker() throws IOException {
     verifyContainerId(
         "docker_proc_self_mountinfo",
         "be522444b60caf2d3934b8b24b916a8a314f4b68d4595aa419874657e8d103f2");
   }
 
   @Test
-  void extractSuccess_docker1() throws Exception {
+  void extractSuccess_docker1() throws IOException {
     verifyContainerId(
         "docker_proc_self_mountinfo1",
         "188329f95b930c32eeeffd34658ed2538960947e166743fa3743f5ce3d739b40");
   }
 
   @Test
-  void extractSuccess_containerd() throws Exception {
+  void extractSuccess_containerd() throws IOException {
     verifyContainerId(
         "containerd_proc_self_mountinfo",
         "f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91");
   }
 
   @Test
-  void extractSuccess_podman() throws Exception {
+  void extractSuccess_podman1() throws IOException {
     verifyContainerId(
-        "podman_proc_self_mountinfo",
+        "podman_proc_self_mountinfo1",
         "2a33efc76e519c137fe6093179653788bed6162d4a15e5131c8e835c968afbe6");
   }
 
   @Test
-  void extractSuccess_crio() throws Exception {
+  void extractSuccess_podman2() throws IOException {
+    verifyContainerId(
+        "podman_proc_self_mountinfo2",
+        "1b8f3c3819fbae7b858e55c52ec5783d06aa9cbf337815ecb9b96f47babcee5d");
+  }
+
+  @Test
+  void extractSuccess_crio() throws IOException {
     verifyContainerId(
         "crio_proc_self_mountinfo",
         "a8f62e52ed7c2cd85242dcf0eb1d727b643540ceca7f328ad7d2f31aedf07731");
   }
 
   @Test
-  void extractSuccess_crio1() throws Exception {
+  void extractSuccess_crio1() throws IOException {
     verifyContainerId(
         "crio_proc_self_mountinfo1",
         "f23ec1d4b715c6531a17e9c549222fbbe1f7ffff697a29a2212b3b4cdc37f52e");
   }
 
   @Test
-  void extractSuccess_crio2() throws Exception {
+  void extractSuccess_crio2() throws IOException {
     verifyContainerId(
         "crio_proc_self_mountinfo2",
         "b4873629b312dc1d77472aba6fb177c6ce9a8f7c205ad7a03302726805007fe6");
   }
 
-  private static List<String> fileToListOfLines(String filename) {
+  private static List<String> fileToListOfLines(String filename) throws IOException {
     InputStream in =
         CgroupV2ContainerIdExtractorTest.class.getClassLoader().getResourceAsStream(filename);
-    return new BufferedReader(new InputStreamReader(in, UTF_8)).lines().collect(toList());
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, UTF_8))) {
+      return reader.lines().collect(toList());
+    }
   }
 }
