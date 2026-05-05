@@ -63,23 +63,19 @@ class ResourceDeclarativeConfigTest {
               // ContainerResourceComponentProvider - no container attributes reliably provided
               // HostIdResourceComponentProvider - host.id attribute not reliably provided
               // HostResourceComponentProvider
-              assertThat(attributeKeys).contains("host.arch");
-              assertThat(attributeKeys).contains("host.name");
+              assertThat(attributeKeys).contains("host.arch", "host.name");
               // OsResourceComponentProvider
-              assertThat(attributeKeys).contains("os.description");
-              assertThat(attributeKeys).contains("os.type");
+              assertThat(attributeKeys).contains("os.description", "os.type");
               // ProcessResourceComponentProvider
               assertThat(attributeKeys)
                   .contains(
                       java8 || OS.WINDOWS.isCurrentOs()
                           ? "process.command_line"
                           : "process.command_args");
-              assertThat(attributeKeys).contains("process.executable.path");
-              assertThat(attributeKeys).contains("process.pid");
+              assertThat(attributeKeys).contains("process.executable.path", "process.pid");
               // ProcessRuntimeResourceComponentProvider
               assertThat(attributeKeys).contains("process.runtime.description");
-              assertThat(attributeKeys).contains("process.runtime.name");
-              assertThat(attributeKeys).contains("process.runtime.version");
+              assertThat(attributeKeys).contains("process.runtime.name", "process.runtime.version");
             });
   }
 }

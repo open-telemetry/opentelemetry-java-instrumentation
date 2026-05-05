@@ -14,7 +14,7 @@ import org.restlet.util.Series;
 public enum RestletResponseMutator implements HttpServerResponseMutator<Response> {
   INSTANCE;
 
-  public static final String HEADERS_ATTRIBUTE = "org.restlet.http.headers";
+  private static final String HEADERS_ATTRIBUTE = "org.restlet.http.headers";
 
   @Override
   public void appendHeader(Response response, String name, String value) {

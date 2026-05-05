@@ -67,7 +67,7 @@ public abstract class RedissonRequest {
     }
   }
 
-  public static RedissonRequest create(InetSocketAddress address, Object command) {
+  public static RedissonRequest create(@Nullable InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);
   }
 
