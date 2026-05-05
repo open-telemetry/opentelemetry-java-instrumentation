@@ -115,8 +115,11 @@ class TomcatServlet5WebXmlFilterTest {
   @AfterAll
   static void cleanup() throws Exception {
     if (tomcat != null) {
-      tomcat.stop();
-      tomcat.destroy();
+      try {
+        tomcat.stop();
+      } finally {
+        tomcat.destroy();
+      }
     }
   }
 
@@ -145,15 +148,18 @@ class TomcatServlet5WebXmlFilterTest {
     HttpURLConnection connection =
         (HttpURLConnection)
             URI.create("http://localhost:" + port + "/app/users/123").toURL().openConnection();
-    int responseCode = connection.getResponseCode();
-    String body;
-    try (InputStream inputStream = connection.getInputStream()) {
-      body = readFully(inputStream);
-    }
-    connection.disconnect();
+    try {
+      int responseCode = connection.getResponseCode();
+      String body;
+      try (InputStream inputStream = connection.getInputStream()) {
+        body = readFully(inputStream);
+      }
 
-    assertThat(responseCode).isEqualTo(200);
-    assertThat(body).isEqualTo("OK");
+      assertThat(responseCode).isEqualTo(200);
+      assertThat(body).isEqualTo("OK");
+    } finally {
+      connection.disconnect();
+    }
 
     testing.waitAndAssertTraces(
         trace ->

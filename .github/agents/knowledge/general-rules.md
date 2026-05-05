@@ -36,6 +36,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, enum/static singletons | — |
 | Style | Prefer `value == null` / `value != null` over `null == value` / `null != value` | Null comparisons | — |
+| Style | Do not rewrite `value.equals(CONSTANT)` to `CONSTANT.equals(value)` solely for defensive null-safety; first verify that `value` can be null and that treating null as non-equal is the intended behavior | `.equals(...)` comparisons | — |
 | Style | No unnecessary explicit type witnesses on generic method calls (`Collections.<String>emptyList()`) | Java generic method calls with explicit type parameters | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
 | General | No redundant `ByteBuffer.duplicate()` on `Value.getValue()` | `Value.getValue()` with `BYTES` type, `ByteBuffer` handling | — |
@@ -124,6 +125,15 @@ Reason about visibility from "what does the advice method directly reference?".
 ## [Naming] Getter Naming
 
 Public API getters should use `get*` (or `is*` for booleans).
+
+## [Style] Equals Comparisons
+
+Prefer the natural receiver form, such as `value.equals(CONSTANT)`, when `value` is expected to be
+non-null. Do not flip operands to `CONSTANT.equals(value)` as a blanket null-safety cleanup.
+
+If `value` can actually be null, first decide whether null should be tolerated or should fail fast.
+Use an explicit null check or `Objects.equals(...)` when null is part of the valid contract; otherwise
+keep the dereference so an unexpected null is visible.
 
 ## [Style] Catch Exception Variable Naming
 
