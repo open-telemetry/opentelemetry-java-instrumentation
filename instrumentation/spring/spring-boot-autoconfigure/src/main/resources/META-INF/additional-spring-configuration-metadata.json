@@ -314,7 +314,7 @@
     {
       "name": "otel.instrumentation.http.client.emit-experimental-telemetry",
       "type": "java.lang.Boolean",
-      "description": "Enable the capture of experimental HTTP client telemetry. Add the <code>http.request.body.size</code> and <code>http.response.body.size> attributes to spans, and record the <code>http.client.request.size</code> and <code>http.client.response.size</code> metrics.",
+      "description": "Enable the capture of experimental HTTP client telemetry. Add the <code>http.request.body.size</code> and <code>http.response.body.size</code> attributes to spans, and record the <code>http.client.request.size</code> and <code>http.client.response.size</code> metrics.",
       "defaultValue": false
     },
     {

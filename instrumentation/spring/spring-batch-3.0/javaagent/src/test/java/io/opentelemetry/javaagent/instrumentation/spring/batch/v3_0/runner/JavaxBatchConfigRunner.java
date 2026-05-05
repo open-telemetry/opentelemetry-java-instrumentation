@@ -15,8 +15,8 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.springframework.batch.core.JobParameter;
 
 public class JavaxBatchConfigRunner implements BeforeEachCallback, JobRunner {
-  static JobOperator jobOperator;
-  static AtomicInteger counter = new AtomicInteger();
+  private static final AtomicInteger counter = new AtomicInteger();
+  private static JobOperator jobOperator;
 
   @Override
   public void beforeEach(ExtensionContext context) {
