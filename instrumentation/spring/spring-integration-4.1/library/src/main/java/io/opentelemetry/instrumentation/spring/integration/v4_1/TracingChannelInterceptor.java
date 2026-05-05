@@ -264,14 +264,13 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
 
   // unwrap spring aop proxy
   // based on org.springframework.test.util.AopTestUtils#getTargetObject
+  @SuppressWarnings("unchecked")
   public static <T> T unwrapProxy(T candidate) {
     try {
       if (AopUtils.isAopProxy(candidate) && candidate instanceof Advised) {
         Object target = ((Advised) candidate).getTargetSource().getTarget();
         if (target != null) {
-          @SuppressWarnings("unchecked") // cast to the same type as the proxy candidate
-          T unwrapped = (T) target;
-          return unwrapped;
+          return (T) target;
         }
       }
 
