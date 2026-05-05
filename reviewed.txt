@@ -413,3 +413,13 @@ rmi:bootstrap
 rmi:javaagent
 rocketmq-client-4.8:javaagent
 rocketmq-client-4.8:library
+rocketmq-client-4.8:testing
+rocketmq-client-5.0:javaagent
+runtime-telemetry:javaagent
+runtime-telemetry:jfr-testing
+runtime-telemetry:library
+runtime-telemetry:testing
+rxjava-1.0:library
+rxjava-2.0:javaagent
+rxjava-2.0:library
+rxjava-2.0:testing
