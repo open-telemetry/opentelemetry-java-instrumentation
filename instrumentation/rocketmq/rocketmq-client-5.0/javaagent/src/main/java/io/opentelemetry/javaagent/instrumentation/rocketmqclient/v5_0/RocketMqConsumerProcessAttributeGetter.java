@@ -17,13 +17,11 @@ import org.apache.rocketmq.client.apis.message.MessageView;
 class RocketMqConsumerProcessAttributeGetter
     implements MessagingAttributesGetter<MessageView, ConsumeResult> {
 
-  @Nullable
   @Override
   public String getSystem(MessageView messageView) {
     return "rocketmq";
   }
 
-  @Nullable
   @Override
   public String getDestination(MessageView messageView) {
     return messageView.getTopic();
@@ -51,7 +49,6 @@ class RocketMqConsumerProcessAttributeGetter
     return null;
   }
 
-  @Nullable
   @Override
   public Long getMessageBodySize(MessageView messageView) {
     return (long) messageView.getBody().remaining();
@@ -63,7 +60,6 @@ class RocketMqConsumerProcessAttributeGetter
     return null;
   }
 
-  @Nullable
   @Override
   public String getMessageId(MessageView messageView, @Nullable ConsumeResult unused) {
     return messageView.getMessageId().toString();

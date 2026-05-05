@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -372,7 +373,7 @@ public abstract class AbstractRxJava2Test {
           assertThat(unused).isNotNull();
         });
 
-    latch.await();
+    assertThat(latch.await(10, SECONDS)).isTrue();
     assertThat(innerObservableTraceId.get()).isEqualTo(traceId.get());
     assertThat(endObservableTraceId.get()).isEqualTo(traceId.get());
   }
@@ -926,7 +927,7 @@ public abstract class AbstractRxJava2Test {
                     .subscribe(result -> latch.countDown());
           });
 
-      latch.await();
+      assertThat(latch.await(10, SECONDS)).isTrue();
       assertThat(observableExecuted.get()).isTrue();
       assertThat(customHandlerExecuted.get()).isTrue();
       assertThat(customHandlerCallCount.get()).isGreaterThan(0);

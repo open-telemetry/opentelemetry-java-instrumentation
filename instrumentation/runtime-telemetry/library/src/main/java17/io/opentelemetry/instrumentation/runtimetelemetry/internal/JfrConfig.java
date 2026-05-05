@@ -214,7 +214,7 @@ public class JfrConfig {
     private static boolean isJfrAvailable() {
       try {
         return FlightRecorder.isAvailable();
-      } catch (Throwable e) {
+      } catch (Throwable t) {
         // NoClassDefFoundError, UnsatisfiedLinkError (native images), or other issues
         return false;
       }
