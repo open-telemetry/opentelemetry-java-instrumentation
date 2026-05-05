@@ -107,7 +107,7 @@ public class TestServlet3 {
           startAsyncInSpan
               ? GlobalTraceUtil.runWithSpan("startAsync", () -> req.startAsync())
               : req.startAsync();
-      if (endpoint.equals(EXCEPTION)) {
+      if (EXCEPTION.equals(endpoint)) {
         context.setTimeout(5000);
       }
 
@@ -292,7 +292,7 @@ public class TestServlet3 {
   public static class DispatchRecursive extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-      if (req.getServletPath().equals("/recursive")) {
+      if ("/recursive".equals(req.getServletPath())) {
         resp.getWriter().print("Hello Recursive");
         return;
       }

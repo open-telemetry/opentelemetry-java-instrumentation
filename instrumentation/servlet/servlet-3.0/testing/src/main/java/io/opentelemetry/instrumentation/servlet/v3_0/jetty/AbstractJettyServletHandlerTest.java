@@ -46,7 +46,7 @@ public abstract class AbstractJettyServletHandlerTest
 
   @Override
   public boolean hasResponseSpan(ServerEndpoint endpoint) {
-    return (AbstractJettyServlet3Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION))
+    return (AbstractJettyServlet3Test.IS_BEFORE_94 && EXCEPTION.equals(endpoint))
         || super.hasResponseSpan(endpoint);
   }
 
@@ -58,8 +58,8 @@ public abstract class AbstractJettyServletHandlerTest
       SpanData handlerSpan,
       String method,
       ServerEndpoint endpoint) {
-    if (AbstractJettyServlet3Test.IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
-      span.satisfies(it -> assertThat(it.getName()).matches(".*\\.sendError"))
+    if (AbstractJettyServlet3Test.IS_BEFORE_94 && EXCEPTION.equals(endpoint)) {
+      span.satisfies(spanData -> assertThat(spanData.getName()).matches(".*\\.sendError"))
           .hasKind(SpanKind.INTERNAL)
           .hasParent(serverSpan);
     }
