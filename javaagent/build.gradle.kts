@@ -185,6 +185,9 @@ tasks {
     filesMatching("META-INF/io/opentelemetry/instrumentation/**") {
       duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
+    filesMatching("**/InstrumentationVersion.class") {
+      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
     exclude("META-INF/LICENSE")
     exclude("META-INF/NOTICE")
     exclude("META-INF/maven/**")
