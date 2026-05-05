@@ -83,7 +83,7 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
   }
 
   protected boolean hasResponseSpan(ServerEndpoint endpoint) {
-    return REDIRECT.equals(endpoint) || (ERROR.equals(endpoint) && errorEndpointUsesSendError());
+    return endpoint.equals(REDIRECT) || (endpoint.equals(ERROR) && errorEndpointUsesSendError());
   }
 
   public abstract Class<? extends Servlet> servlet();
