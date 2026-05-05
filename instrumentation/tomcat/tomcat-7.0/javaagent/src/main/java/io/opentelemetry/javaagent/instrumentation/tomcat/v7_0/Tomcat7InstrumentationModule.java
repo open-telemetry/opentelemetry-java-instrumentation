@@ -90,7 +90,7 @@ public class Tomcat7InstrumentationModule extends InstrumentationModule {
         return new AdviceScope(context, scope);
       }
 
-      public void end(Request request, Response response, Throwable throwable) {
+      public void end(Request request, Response response, @Nullable Throwable throwable) {
         helper().end(request, response, throwable, context, scope);
       }
     }
