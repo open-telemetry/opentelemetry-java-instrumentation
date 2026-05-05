@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
   testImplementation("org.testcontainers:testcontainers:2.0.5")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
   testImplementation("com.google.protobuf:protobuf-java-util:4.34.1")
   testImplementation("com.squareup.okhttp3:okhttp:5.3.2")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.10.0-alpha")
