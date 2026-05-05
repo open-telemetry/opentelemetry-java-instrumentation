@@ -372,7 +372,7 @@ public abstract class AbstractRxJava2Test {
           assertThat(unused).isNotNull();
         });
 
-    latch.await();
+    assertThat(latch.await(10_000, MILLISECONDS)).isTrue();
     assertThat(innerObservableTraceId.get()).isEqualTo(traceId.get());
     assertThat(endObservableTraceId.get()).isEqualTo(traceId.get());
   }
@@ -926,7 +926,7 @@ public abstract class AbstractRxJava2Test {
                     .subscribe(result -> latch.countDown());
           });
 
-      latch.await();
+      assertThat(latch.await(10_000, MILLISECONDS)).isTrue();
       assertThat(observableExecuted.get()).isTrue();
       assertThat(customHandlerExecuted.get()).isTrue();
       assertThat(customHandlerCallCount.get()).isGreaterThan(0);
