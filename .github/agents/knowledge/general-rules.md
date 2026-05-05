@@ -34,7 +34,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Config | metadata.yaml format and declarative_name conversion — Mandatory for every instrumentation module | Any instrumentation module in scope (javaagent, library, or testing) | `metadata-yaml-format.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
-| Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, enum/static singletons | — |
 | Style | Prefer `value == null` / `value != null` over `null == value` / `null != value` | Null comparisons | — |
 | Style | No unnecessary explicit type witnesses on generic method calls (`Collections.<String>emptyList()`) | Java generic method calls with explicit type parameters | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
@@ -152,9 +152,8 @@ recognizes `expected` and `ok`.
 ## [Style] Prefer Instance Creation Over Singletons
 
 Stateless implementations of telemetry interfaces — `TextMapGetter`, `TextMapSetter`,
-`*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`,
-`HttpServerResponseMutator` — should use instance creation (`new MyGetter()`) instead of
-singleton patterns.
+`*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor` — should use instance creation
+(`new MyGetter()`) instead of singleton patterns.
 
 Replace every singleton reference (`MyGetter.INSTANCE`, `MyGetter.getInstance()`) with
 `new MyGetter()`. Do not restructure surrounding code — if the original used a local
