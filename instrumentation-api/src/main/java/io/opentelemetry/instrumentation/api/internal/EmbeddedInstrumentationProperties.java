@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -54,6 +55,36 @@ public final class EmbeddedInstrumentationProperties {
 
   @Nullable
   private static String loadVersion(String instrumentationName) {
+    String version = loadVersionFromClass(instrumentationName);
+    if (version == null) {
+      version = loadVersionFromProperties(instrumentationName);
+    }
+    return version;
+  }
+
+  private static final Pattern stripVersionSuffix = Pattern.compile("(-[0-9.]*)$");
+  private static final Pattern normalizeVersion = Pattern.compile("([0-9]+)\\.([0-9]+)");
+  private static final Pattern extractVersion = Pattern.compile(".*?([0-9.]*)$");
+
+  @Nullable
+  private static String loadVersionFromClass(String instrumentationName) {
+    String moduleName =
+        stripVersionSuffix.matcher(instrumentationName).replaceAll("").replace("-", "");
+    moduleName = normalizeVersion.matcher(moduleName).replaceAll("$1_$2");
+    String baseVersion =
+        extractVersion.matcher(instrumentationName).replaceAll("$1").replace(".", "_");
+    String packageName = moduleName + (baseVersion.isEmpty() ? "" : ".v" + baseVersion);
+
+    try {
+      Class<?> clazz = Class.forName(packageName + ".internal.InstrumentationVersion");
+      return clazz.getConstructor().newInstance().toString();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static String loadVersionFromProperties(String instrumentationName) {
     String path =
         "META-INF/io/opentelemetry/instrumentation/" + instrumentationName + ".properties";
     try (InputStream in = loader.getResourceAsStream(path)) {

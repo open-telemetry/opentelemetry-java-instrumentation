@@ -53,6 +53,7 @@ tasks {
     into("build/extracted/shadow-javaagent")
     exclude("META-INF/**")
     exclude("io/opentelemetry/javaagent/bootstrap/**")
+    exclude("**/InstrumentationVersion.class")
   }
 
   // this will be included in bootstrap module

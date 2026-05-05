@@ -34,6 +34,7 @@ tasks {
     dependsOn(shadowJar)
     from(zipTree(shadowJar.get().archiveFile))
     exclude("META-INF/**")
+    exclude("**/InstrumentationVersion.class")
     into("build/extracted/shadow")
   }
 
