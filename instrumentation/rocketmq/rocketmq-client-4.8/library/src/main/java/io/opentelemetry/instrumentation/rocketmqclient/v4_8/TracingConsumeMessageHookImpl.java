@@ -12,8 +12,9 @@ import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 
 final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
 
-  private static final VirtualField<ConsumeMessageContext, ContextAndScope> contextAndScopeField =
-      VirtualField.find(ConsumeMessageContext.class, ContextAndScope.class);
+  private static final VirtualField<ConsumeMessageContext, ContextAndScope>
+      CONTEXT_AND_SCOPE_FIELD =
+          VirtualField.find(ConsumeMessageContext.class, ContextAndScope.class);
 
   private final RocketMqConsumerInstrumenter instrumenter;
 
@@ -39,7 +40,7 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     // - ConsumeMessageConcurrentlyService$ConsumeRequest#run()
     // - ConsumeMessageOrderlyService$ConsumeRequest#run()
     if (newContext != parentContext) {
-      contextAndScopeField.set(
+      CONTEXT_AND_SCOPE_FIELD.set(
           context, ContextAndScope.create(newContext, newContext.makeCurrent()));
     }
   }
@@ -49,7 +50,7 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     if (context == null || context.getMsgList() == null || context.getMsgList().isEmpty()) {
       return;
     }
-    ContextAndScope contextAndScope = contextAndScopeField.get(context);
+    ContextAndScope contextAndScope = CONTEXT_AND_SCOPE_FIELD.get(context);
     if (contextAndScope != null) {
       contextAndScope.close();
       instrumenter.end(contextAndScope.getContext(), context.getMsgList());
