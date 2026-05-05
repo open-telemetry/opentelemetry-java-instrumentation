@@ -33,8 +33,8 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
             not(
                 hasClassesNamed(
                     // artifact presence gate
-                    // added in io.opentelemetry:opentelemetry-api-incubator 1.37.0
-                    // (renamed from io.opentelemetry:opentelemetry-extension-incubator)
+                    // added in opentelemetry-api-incubator 1.37.0
+                    // (renamed from io.opentelemetry.extension.incubator)
                     "application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder")));
   }
 
