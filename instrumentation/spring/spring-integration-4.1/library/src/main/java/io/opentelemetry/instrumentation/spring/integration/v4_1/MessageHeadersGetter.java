@@ -65,9 +65,11 @@ enum MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
     return values.get(0);
   }
 
-  @SuppressWarnings("unchecked") // casting headers map
   private static Map<String, List<String>> getNativeHeaders(MessageHeaders carrier) {
-    return (Map<String, List<String>>)
-        carrier.get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
+    @SuppressWarnings("unchecked") // casting headers map
+    Map<String, List<String>> nativeHeaders =
+        (Map<String, List<String>>)
+            carrier.get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
+    return nativeHeaders;
   }
 }
