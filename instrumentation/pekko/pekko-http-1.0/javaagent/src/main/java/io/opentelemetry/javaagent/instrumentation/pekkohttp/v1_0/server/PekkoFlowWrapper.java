@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 import io.opentelemetry.context.Context;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import javax.annotation.Nullable;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.Attributes;
@@ -36,6 +37,7 @@ public class PekkoFlowWrapper
     return handler.join(new PekkoFlowWrapper());
   }
 
+  @Nullable
   public static Context getAndRemoveContext(OutHandler outHandler) {
     if (outHandler instanceof TracingLogic.ApplicationOutHandler) {
       // We have multiple requests here only when requests are pipelined on the same connection.
