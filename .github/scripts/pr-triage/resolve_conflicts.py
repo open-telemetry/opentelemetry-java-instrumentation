@@ -9,17 +9,13 @@ from pathlib import Path
 
 from common import (
     Summary,
-    checkout_pr,
-    current_branch,
     diff_check,
     git,
     invoke_copilot,
     make_temp_dir,
-    print_failure,
     progress,
     push,
-    require_clean_worktree,
-    restore_original_branch,
+    run_pr_workflow,
     unmerged_paths,
     write_json,
 )
@@ -29,7 +25,6 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pr", type=int, help="pull request number")
     parser.add_argument("--upstream", default="upstream", help="upstream remote name")
-    parser.add_argument("--json", action="store_true", help="print JSON summary")
     parser.add_argument("--no-push", action="store_true", help="commit but do not push")
     parser.add_argument("--keep-temp", action="store_true", help="reuse and retain the temp bundle directory")
     parser.add_argument("--skip-copilot", action="store_true", help="stop after collecting conflict context")
@@ -79,12 +74,8 @@ Rules:
 
 def main() -> int:
     args = parse_args()
-    summary = Summary(pr=args.pr)
-    try:
-        require_clean_worktree(summary)
-        summary.original_branch = current_branch(summary)
-        checkout_pr(args.pr, summary)
 
+    def workflow(summary: Summary) -> int:
         progress(f"Fetching {args.upstream}")
         git(["fetch", args.upstream], summary)
         git(["rev-parse", "--verify", f"{args.upstream}/main"], summary)
@@ -129,16 +120,8 @@ def main() -> int:
             push(summary)
         summary.outcome = "resolved conflicts and merged upstream/main"
         return 0
-    except Exception as e:
-        summary.outcome = "failed"
-        print_failure(e)
-        return 1
-    finally:
-        restore_original_branch(summary)
-        if args.json:
-            summary.print_json()
-        else:
-            summary.print_text()
+
+    return run_pr_workflow(args.pr, workflow)
 
 
 if __name__ == "__main__":

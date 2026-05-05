@@ -13,16 +13,13 @@ from typing import Any
 from common import (
     REPO_ROOT,
     Summary,
-    current_branch,
     detect_repo,
     gh,
     gh_json,
     invoke_copilot,
     make_temp_dir,
-    print_failure,
     progress,
-    require_clean_worktree,
-    restore_original_branch,
+    run_pr_workflow,
     status_porcelain,
     write_json,
 )
@@ -35,7 +32,6 @@ MAX_FILE_CHARS = 80_000
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pr", type=int, help="pull request number")
-    parser.add_argument("--json", action="store_true", help="print JSON summary")
     parser.add_argument("--keep-temp", action="store_true", help="reuse and retain the temp bundle directory")
     parser.add_argument("--no-post", action="store_true", help="prepare findings and payload but do not post")
     parser.add_argument("--skip-copilot", action="store_true", help="prepare the review bundle and stop")
@@ -45,12 +41,6 @@ def parse_args() -> argparse.Namespace:
 def pr_metadata(pr: int, summary: Summary) -> dict[str, Any]:
     fields = ",".join(["number", "title", "url", "headRefOid", "baseRefName", "headRefName"])
     return gh_json(["pr", "view", str(pr), "--json", fields], summary)
-
-
-def checkout_pr_for_review(pr: int, summary: Summary) -> None:
-    progress(f"Checking out PR #{pr} for review")
-    gh(["pr", "checkout", str(pr)], summary)
-    summary.pr_branch = current_branch(summary)
 
 
 def parse_diff(diff: str) -> dict[str, dict[str, Any]]:
@@ -279,12 +269,8 @@ def post_review(repo: str, pr: int, payload_path: Path, summary: Summary) -> str
 
 def main() -> int:
     args = parse_args()
-    summary = Summary(pr=args.pr)
-    try:
-        require_clean_worktree(summary)
-        summary.original_branch = current_branch(summary)
-        checkout_pr_for_review(args.pr, summary)
 
+    def workflow(summary: Summary) -> int:
         metadata = pr_metadata(args.pr, summary)
         progress("Collecting PR diff")
         diff_names = gh(["pr", "diff", str(args.pr), "--name-only"], summary).stdout.splitlines()
@@ -326,16 +312,8 @@ def main() -> int:
             )
         )
         return 0
-    except Exception as e:
-        summary.outcome = "failed"
-        print_failure(e)
-        return 1
-    finally:
-        restore_original_branch(summary)
-        if args.json:
-            summary.print_json()
-        else:
-            summary.print_text()
+
+    return run_pr_workflow(args.pr, workflow, push_required=False)
 
 
 if __name__ == "__main__":

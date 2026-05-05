@@ -15,6 +15,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -26,23 +27,6 @@ COPILOT_MODEL = os.environ.get("PR_AGENT_COPILOT_MODEL", "gpt-5.5")
 
 class WorkflowError(RuntimeError):
     """A user-facing workflow failure."""
-
-
-class CommandError(WorkflowError):
-    def __init__(self, cmd: list[str], returncode: int, stdout: str, stderr: str):
-        super().__init__(f"command failed ({returncode}): {format_cmd(cmd)}")
-        self.cmd = cmd
-        self.returncode = returncode
-        self.stdout = stdout
-        self.stderr = stderr
-
-
-@dataclass
-class RunResult:
-    cmd: list[str]
-    returncode: int
-    stdout: str
-    stderr: str
 
 
 @dataclass
@@ -58,11 +42,7 @@ class Summary:
     push_result: str | None = None
     failures: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
-    commands: list[str] = field(default_factory=list)
     temp_dir: str | None = None
-
-    def add_command(self, cmd: list[str]) -> None:
-        self.commands.append(format_cmd(cmd))
 
     def print_text(self) -> None:
         print(f"PR: #{self.pr}")
@@ -97,9 +77,6 @@ class Summary:
             for note in self.notes:
                 print(f"- {note}")
 
-    def print_json(self) -> None:
-        print(json.dumps(self.__dict__, indent=2, sort_keys=True))
-
 
 def format_cmd(cmd: list[str]) -> str:
     return " ".join(shlex.quote(part) for part in cmd)
@@ -116,30 +93,25 @@ def progress(message: str) -> None:
     print(f"[pr-triage] {message}", flush=True)
 
 
-def run(cmd: list[str], summary: Summary | None = None, check: bool = True) -> RunResult:
+def run(cmd: list[str], summary: Summary | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
     if summary is not None:
-        summary.add_command(cmd)
         progress(f"Running: {format_cmd(cmd)}")
-    proc = subprocess.run(
+    return subprocess.run(
         cmd,
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
-        check=False,
+        check=check,
     )
-    result = RunResult(cmd, proc.returncode, proc.stdout, proc.stderr)
-    if check and proc.returncode != 0:
-        raise CommandError(cmd, proc.returncode, proc.stdout, proc.stderr)
-    return result
 
 
-def git(args: list[str], summary: Summary | None = None, check: bool = True) -> RunResult:
+def git(args: list[str], summary: Summary | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
     return run(["git", *args], summary, check)
 
 
-def gh(args: list[str], summary: Summary | None = None, check: bool = True) -> RunResult:
+def gh(args: list[str], summary: Summary | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
     return run(["gh", *args], summary, check)
 
 
@@ -245,6 +217,31 @@ def checkout_pr(pr: int, summary: Summary) -> dict[str, Any]:
     return ensure_pr_push_allowed(pr, summary)
 
 
+def checkout_pr_no_push_check(pr: int, summary: Summary) -> None:
+    progress(f"Checking out PR #{pr}")
+    gh(["pr", "checkout", str(pr)], summary)
+    summary.pr_branch = current_branch(summary)
+
+
+def run_pr_workflow(pr: int, body: Callable[[Summary], int], *, push_required: bool = True) -> int:
+    summary = Summary(pr=pr)
+    try:
+        require_clean_worktree(summary)
+        summary.original_branch = current_branch(summary)
+        if push_required:
+            checkout_pr(pr, summary)
+        else:
+            checkout_pr_no_push_check(pr, summary)
+        return body(summary)
+    except Exception as e:
+        summary.outcome = "failed"
+        print_failure(e)
+        return 1
+    finally:
+        restore_original_branch(summary)
+        summary.print_text()
+
+
 def gradlew_cmd(task: str) -> list[str]:
     if os.name == "nt":
         return [str(REPO_ROOT / "gradlew.bat"), task]
@@ -268,11 +265,8 @@ def commit_all_tracked(message: str | list[str], summary: Summary) -> str:
 
 def push(summary: Summary) -> None:
     progress("Pushing PR branch")
-    result = git(["push"], summary, check=False)
-    if result.returncode != 0:
-        raise CommandError(result.cmd, result.returncode, result.stdout, result.stderr)
+    git(["push"], summary)
     summary.push_result = "pushed successfully"
-
 
 def diff_check(summary: Summary) -> None:
     git(["diff", "--check"], summary)
@@ -294,10 +288,9 @@ def make_temp_dir(prefix: str, pr: int, keep_temp: bool) -> Path:
 def download_actions_job_log(owner: str, repo: str, job_id: int, path: Path, summary: Summary) -> None:
     api_path = f"repos/{owner}/{repo}/actions/jobs/{job_id}/logs"
     cmd = ["gh", "api", "-H", "Accept: application/vnd.github+json", api_path]
-    summary.add_command([*cmd, ">", str(path)])
     progress(f"Downloading Actions job log {job_id} to {path}")
     with path.open("wb") as output:
-        proc = subprocess.run(
+        subprocess.run(
             cmd,
             cwd=REPO_ROOT,
             stdout=output,
@@ -305,10 +298,8 @@ def download_actions_job_log(owner: str, repo: str, job_id: int, path: Path, sum
             text=True,
             encoding="utf-8",
             errors="replace",
-            check=False,
+            check=True,
         )
-    if proc.returncode != 0:
-        raise CommandError(cmd, proc.returncode, "", proc.stderr)
 
 
 def extract_job_id(check: dict[str, Any]) -> int | None:
@@ -322,7 +313,6 @@ def extract_job_id(check: dict[str, Any]) -> int | None:
 
 def invoke_copilot(prompt: str, summary: Summary) -> str:
     cmd = ["copilot", "-p", prompt, "--allow-all-tools", "--model", COPILOT_MODEL]
-    summary.add_command(["copilot", "-p", "<generated prompt>", "--allow-all-tools", "--model", COPILOT_MODEL])
     progress(f"Handing off to Copilot CLI using {COPILOT_MODEL}; streaming output below")
     proc = subprocess.Popen(
         cmd,
@@ -342,9 +332,9 @@ def invoke_copilot(prompt: str, summary: Summary) -> str:
     returncode = proc.wait()
     output = "".join(output_parts)
     if returncode != 0:
-        raise CommandError(
-            ["copilot", "-p", "<generated prompt>", "--allow-all-tools", "--model", COPILOT_MODEL],
+        raise subprocess.CalledProcessError(
             returncode,
+            ["copilot", "-p", "<generated prompt>", "--allow-all-tools", "--model", COPILOT_MODEL],
             output,
             "",
         )
@@ -358,10 +348,10 @@ def write_json(path: Path, value: Any) -> None:
 
 def print_failure(error: Exception) -> None:
     print(f"ERROR: {error}", file=sys.stderr)
-    if isinstance(error, CommandError):
-        if error.stdout.strip():
+    if isinstance(error, subprocess.CalledProcessError):
+        if error.stdout and error.stdout.strip():
             print("--- stdout ---", file=sys.stderr)
             print(error.stdout, file=sys.stderr)
-        if error.stderr.strip():
+        if error.stderr and error.stderr.strip():
             print("--- stderr ---", file=sys.stderr)
             print(error.stderr, file=sys.stderr)
