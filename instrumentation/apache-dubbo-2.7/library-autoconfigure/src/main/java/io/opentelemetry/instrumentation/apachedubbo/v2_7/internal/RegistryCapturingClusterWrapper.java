@@ -29,26 +29,15 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
   /** Dubbo 3.0.4+: join(Directory, boolean). Absent on 2.7 and 3.0.0-3.0.3. */
   @Nullable private static final MethodHandle JOIN_TWO_ARG;
 
-  /** Dubbo 2.7 and 3.0.0-3.0.3: join(Directory). Absent on 3.0.4+. */
-  @Nullable private static final MethodHandle JOIN_ONE_ARG;
-
   static {
     MethodHandle two = null;
-    MethodHandle one = null;
     try {
       Method m = Cluster.class.getMethod("join", Directory.class, boolean.class);
       two = LOOKUP.unreflect(m);
     } catch (ReflectiveOperationException ignored) {
       // Dubbo 2.7 / 3.0.0-3.0.3
     }
-    try {
-      Method m = Cluster.class.getMethod("join", Directory.class);
-      one = LOOKUP.unreflect(m);
-    } catch (ReflectiveOperationException ignored) {
-      // Dubbo 3.0.4+
-    }
     JOIN_TWO_ARG = two;
-    JOIN_ONE_ARG = one;
   }
 
   private final Cluster cluster;
@@ -61,7 +50,7 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
 
   @Override
   public <T> Invoker<T> join(Directory<T> directory) {
-    return wrapIfNeeded(directory, delegateJoin(cluster, directory, true));
+    return wrapIfNeeded(directory, cluster.join(directory));
   }
 
   /**
@@ -84,31 +73,19 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
       if (JOIN_TWO_ARG != null) {
         return (Invoker<T>) JOIN_TWO_ARG.invoke(cluster, directory, buildFilterChain);
       }
-      if (JOIN_ONE_ARG != null) {
-        return (Invoker<T>) JOIN_ONE_ARG.invoke(cluster, directory);
-      }
+      return cluster.join(directory);
     } catch (RpcException e) {
       throw e;
     } catch (Throwable t) {
       throw new RpcException(t.getMessage(), t);
     }
-    throw new RpcException("No join(Directory) or join(Directory,boolean) on Cluster");
   }
 
   private static <T> Invoker<T> wrapIfNeeded(Directory<T> directory, Invoker<T> invoker) {
-    if (isStaticDirectory(directory)) {
-      return invoker;
-    }
     String registryAddress = DubboRegistryUtil.tryExtractRegistryAddressFromDirectory(directory);
     if (registryAddress == null) {
       return invoker;
     }
     return new RegistryCapturingInvoker<>(invoker, registryAddress);
-  }
-
-  private static boolean isStaticDirectory(Directory<?> directory) {
-    return directory != null
-        && "org.apache.dubbo.rpc.cluster.directory.StaticDirectory"
-            .equals(directory.getClass().getName());
   }
 }

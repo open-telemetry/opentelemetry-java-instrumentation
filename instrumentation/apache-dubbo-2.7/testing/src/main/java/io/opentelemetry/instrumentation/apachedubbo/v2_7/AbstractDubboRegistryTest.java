@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -40,7 +41,6 @@ import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 import org.apache.dubbo.rpc.service.GenericService;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -58,7 +58,6 @@ public abstract class AbstractDubboRegistryTest {
   private static final String SERVICE_GROUP = "testGroup";
 
   private static TestingServer zkServer;
-  private static InetAddress originalLocalAddress;
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -69,26 +68,16 @@ public abstract class AbstractDubboRegistryTest {
   @BeforeAll
   static void setUp() throws Exception {
     zkServer = new TestingServer();
+    cleanup.deferAfterAll(zkServer);
     zkServer.start();
 
     System.setProperty("dubbo.application.qos-enable", "false");
+    cleanup.deferAfterAll(() -> System.clearProperty("dubbo.application.qos-enable"));
     Field field = NetUtils.class.getDeclaredField("LOCAL_ADDRESS");
     field.setAccessible(true);
-    originalLocalAddress = (InetAddress) field.get(null);
+    InetAddress originalLocalAddress = (InetAddress) field.get(null);
     field.set(null, InetAddress.getLoopbackAddress());
-  }
-
-  @AfterAll
-  static void tearDown() throws Exception {
-    System.clearProperty("dubbo.application.qos-enable");
-    if (originalLocalAddress != null) {
-      Field field = NetUtils.class.getDeclaredField("LOCAL_ADDRESS");
-      field.setAccessible(true);
-      field.set(null, originalLocalAddress);
-    }
-    if (zkServer != null) {
-      zkServer.close();
-    }
+    cleanup.deferAfterAll(() -> field.set(null, originalLocalAddress));
   }
 
   private static String zkAddress() {
@@ -219,7 +208,7 @@ public abstract class AbstractDubboRegistryTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && Boolean.getBoolean("testLatestDeps")
+                                    hasServicePeerName() && testLatestDeps()
                                         ? "test-peer-service"
                                         : null),
                                 satisfies(
