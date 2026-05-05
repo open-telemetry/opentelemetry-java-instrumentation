@@ -255,7 +255,7 @@ tasks {
 
     val moduleName = name.replace("(-[0-9.]*)$".toRegex(), "").replace("-", "").replace("([0-9]+)\\.([0-9]+)".toRegex(), "$1_$2")
     val baseVersion = name.replace(".*?([0-9.]*)$".toRegex(), "$1").replace(".", "_")
-    val packageName = moduleName + if (baseVersion.isNotEmpty()) "_v$baseVersion" else ""
+    val packageName = moduleName + if (baseVersion.isNotEmpty()) ".v$baseVersion" else ""
 
     val classDir = layout.buildDirectory.dir("generated/instrumentationVersionClass/${packageName.replace('.', '/')}/internal")
     outputs.dir(classDir)

@@ -73,7 +73,7 @@ public final class EmbeddedInstrumentationProperties {
     moduleName = normalizeVersion.matcher(moduleName).replaceAll("$1_$2");
     String baseVersion =
         extractVersion.matcher(instrumentationName).replaceAll("$1").replace(".", "_");
-    String packageName = moduleName + (baseVersion.isEmpty() ? "" : "_v" + baseVersion);
+    String packageName = moduleName + (baseVersion.isEmpty() ? "" : ".v" + baseVersion);
 
     try {
       Class<?> clazz = Class.forName(packageName + ".internal.InstrumentationVersion");
