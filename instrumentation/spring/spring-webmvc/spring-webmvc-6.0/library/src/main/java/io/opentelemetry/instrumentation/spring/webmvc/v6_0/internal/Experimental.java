@@ -28,6 +28,8 @@ public final class Experimental {
    */
   public static void setEmitExperimentalTelemetry(
       SpringWebMvcTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
+    BiConsumer<SpringWebMvcTelemetryBuilder, Boolean> setEmitExperimentalTelemetry =
+        Experimental.setEmitExperimentalTelemetry;
     if (setEmitExperimentalTelemetry != null) {
       setEmitExperimentalTelemetry.accept(builder, emitExperimentalTelemetry);
     }

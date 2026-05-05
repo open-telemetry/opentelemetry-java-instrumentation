@@ -18,7 +18,7 @@ import java.util.function.Function;
  */
 public final class SpringMvcBuilderUtil {
   // allows access to the private field for the spring starter
-  private static Function<
+  private static volatile Function<
           SpringWebMvcTelemetryBuilder,
           DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>>
       builderExtractor;
