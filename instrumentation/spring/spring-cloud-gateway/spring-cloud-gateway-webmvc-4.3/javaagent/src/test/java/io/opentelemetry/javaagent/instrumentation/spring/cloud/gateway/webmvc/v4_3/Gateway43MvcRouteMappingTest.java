@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.webmvc.v
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.spring.gateway.common.AbstractRouteMappingTest;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -36,9 +36,7 @@ class Gateway43MvcRouteMappingTest extends AbstractRouteMappingTest {
    */
   @Override
   protected List<AttributeAssertion> getExpectedAttributes() {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(stringKey("spring-cloud-gateway.route.id"), "test-route-id"));
-    return assertions;
+    return singletonList(equalTo(stringKey("spring-cloud-gateway.route.id"), "test-route-id"));
   }
 
   @Override
@@ -49,9 +47,7 @@ class Gateway43MvcRouteMappingTest extends AbstractRouteMappingTest {
 
   @Override
   protected List<AttributeAssertion> getRandomUuidExpectedAttributes() {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(stringKey("spring-cloud-gateway.route.id"), "test-route-id"));
-    return assertions;
+    return singletonList(equalTo(stringKey("spring-cloud-gateway.route.id"), "test-route-id"));
   }
 
   @Override
@@ -62,8 +58,6 @@ class Gateway43MvcRouteMappingTest extends AbstractRouteMappingTest {
 
   @Override
   protected List<AttributeAssertion> getFakeUuidExpectedAttributes(String routeId) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(stringKey("spring-cloud-gateway.route.id"), routeId));
-    return assertions;
+    return singletonList(equalTo(stringKey("spring-cloud-gateway.route.id"), routeId));
   }
 }
