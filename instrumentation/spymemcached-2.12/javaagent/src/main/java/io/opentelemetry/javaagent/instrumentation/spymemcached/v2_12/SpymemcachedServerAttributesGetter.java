@@ -9,8 +9,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGett
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class SpymemcachedServerAttributesGetter
-    implements ServerAttributesGetter<SpymemcachedRequest> {
+class SpymemcachedServerAttributesGetter implements ServerAttributesGetter<SpymemcachedRequest> {
 
   @Nullable
   @Override
