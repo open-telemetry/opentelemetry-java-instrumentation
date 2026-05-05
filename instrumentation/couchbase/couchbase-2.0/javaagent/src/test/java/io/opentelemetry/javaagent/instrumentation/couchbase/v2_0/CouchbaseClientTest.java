@@ -27,7 +27,7 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
 
   @Test
   void hasDurationMetric() {
-    CouchbaseCluster cluster = prepareCluster(bucketCouchbase);
+    CouchbaseCluster cluster = getCluster(bucketCouchbase);
     ClusterManager manager = cluster.clusterManager(USERNAME, PASSWORD);
 
     testing.waitForTraces(1);

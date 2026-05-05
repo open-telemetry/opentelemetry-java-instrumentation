@@ -29,7 +29,7 @@ class DropwizardMetricsTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void gauge() throws InterruptedException {
+  void gauge() {
     // given
     MetricRegistry metricRegistry = new MetricRegistry();
 
@@ -48,17 +48,15 @@ class DropwizardMetricsTest {
 
     // when
     metricRegistry.remove("test'gauge");
-    Thread.sleep(100); // give time for any inflight metric export to be received
     testing.clearData();
 
     // then
-    Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testgauge", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void counter() throws InterruptedException {
+  void counter() {
     // given
     MetricRegistry metricRegistry = new MetricRegistry();
 
@@ -83,13 +81,12 @@ class DropwizardMetricsTest {
     counter.inc(123);
 
     // then
-    Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testcounter", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void histogram() throws InterruptedException {
+  void histogram() {
     // given
     MetricRegistry metricRegistry = new MetricRegistry();
 
@@ -115,13 +112,12 @@ class DropwizardMetricsTest {
     histogram.update(100);
 
     // then
-    Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testhistogram", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void meter() throws InterruptedException {
+  void meter() {
     // given
     MetricRegistry metricRegistry = new MetricRegistry();
 
@@ -145,14 +141,13 @@ class DropwizardMetricsTest {
     meter.mark();
 
     // then
-    Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testmeter", AbstractIterableAssert::isEmpty);
   }
 
   @Test
   @SuppressWarnings("PreferJavaTimeOverload")
-  void timer() throws InterruptedException {
+  void timer() {
     // given
     MetricRegistry metricRegistry = new MetricRegistry();
 
@@ -178,7 +173,6 @@ class DropwizardMetricsTest {
     timer.update(12, SECONDS);
 
     // then
-    Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testtimer", AbstractIterableAssert::isEmpty);
   }

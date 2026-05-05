@@ -34,6 +34,7 @@ public class JdbcSingletons {
   private static final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
   private static final SqlCommenter sqlCommenter = configureSqlCommenter();
+  private static final Cache<Class<?>, Boolean> wrapperClassCache = Cache.weak();
   public static final boolean CAPTURE_QUERY_PARAMETERS;
 
   static {
@@ -74,8 +75,6 @@ public class JdbcSingletons {
     return dataSourceInstrumenter;
   }
 
-  private static final Cache<Class<?>, Boolean> wrapperClassCache = Cache.weak();
-
   /**
    * Returns true if the given object is a wrapper and shouldn't be instrumented. We'll instrument
    * the underlying object called by the wrapper instead.
@@ -94,7 +93,7 @@ public class JdbcSingletons {
           return true;
         }
       }
-    } catch (SQLException | AbstractMethodError e) {
+    } catch (SQLException | AbstractMethodError ignored) {
       // ignore
     }
     return false;

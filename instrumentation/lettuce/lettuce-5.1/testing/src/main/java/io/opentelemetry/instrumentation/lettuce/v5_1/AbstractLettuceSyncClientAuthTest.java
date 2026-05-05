@@ -30,7 +30,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +40,10 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
   void setUp() throws UnknownHostException {
     redisServer = redisServer.withCommand("redis-server", "--requirepass password");
     redisServer.start();
+    // Set back so other tests don't fail due to NOAUTH error.
+    cleanup.deferAfterAll(
+        () -> redisServer = redisServer.withCommand("redis-server", "--requirepass \"\""));
+    cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
     ip = InetAddress.getByName(host).getHostAddress();
@@ -48,16 +51,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
     redisClient = createClient(embeddedDbUri);
+    cleanup.deferAfterAll(redisClient::shutdown);
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    redisClient.shutdown();
-    redisServer.stop();
-
-    // Set back so other tests don't fail due to NOAUTH error
-    redisServer = redisServer.withCommand("redis-server", "--requirepass \"\"");
   }
 
   @Test

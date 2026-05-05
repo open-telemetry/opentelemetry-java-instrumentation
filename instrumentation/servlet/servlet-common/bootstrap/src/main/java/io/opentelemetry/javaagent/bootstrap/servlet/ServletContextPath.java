@@ -27,6 +27,12 @@ public final class ServletContextPath {
   private static final ContextKey<ServletContextPath> CONTEXT_KEY =
       ContextKey.named("opentelemetry-servlet-context-path-key");
 
+  @Nullable private final String contextPath;
+
+  private ServletContextPath(@Nullable String contextPath) {
+    this.contextPath = contextPath;
+  }
+
   public static <REQUEST> Context init(
       Context context, Function<REQUEST, String> contextPathExtractor, REQUEST request) {
     ServletContextPath servletContextPath = context.get(CONTEXT_KEY);
@@ -45,16 +51,10 @@ public final class ServletContextPath {
     return context.with(CONTEXT_KEY, new ServletContextPath(contextPath));
   }
 
-  @Nullable private final String contextPath;
-
-  private ServletContextPath(@Nullable String contextPath) {
-    this.contextPath = contextPath;
-  }
-
   /**
    * Returns a concatenation of a servlet context path stored in the given {@code context} and a
-   * given {@code spanName}. If there is no servlet path stored in the context, returns {@code
-   * spanName}.
+   * given {@code spanName}. If there is no servlet context path stored in the context, returns
+   * {@code spanName}.
    */
   @Nullable
   public static String prepend(Context context, @Nullable String spanName) {

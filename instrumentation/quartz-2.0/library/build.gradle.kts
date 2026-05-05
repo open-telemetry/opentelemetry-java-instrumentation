@@ -10,11 +10,16 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.quartz.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.quartz.experimental-span-attributes=true")
   }
 
   check {

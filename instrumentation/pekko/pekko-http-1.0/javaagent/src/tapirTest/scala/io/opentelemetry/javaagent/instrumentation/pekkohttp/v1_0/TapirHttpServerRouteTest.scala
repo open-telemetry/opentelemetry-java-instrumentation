@@ -108,6 +108,31 @@ class TapirHttpServerRouteTest {
 
   }
 
+  @Test def testMultipleTapirEndpoints(): Unit = {
+    val interpreter = PekkoHttpServerInterpreter()(system.dispatcher)
+    val tapirRoute = interpreter.toRoute(
+      endpoint.get
+        .in(path[Int]("i") / "no1")
+        .errorOut(stringBody)
+        .out(stringBody)
+        .serverLogicPure[Future](_ => Right("nope"))
+        :: endpoint.get
+          .in(path[Int]("i") / "bar")
+          .errorOut(stringBody)
+          .out(stringBody)
+          .serverLogicPure[Future](_ => Right("ok"))
+        :: endpoint.get
+          .in(path[Int]("i") / "no2")
+          .errorOut(stringBody)
+          .out(stringBody)
+          .serverLogicPure[Future](_ => Right("nope"))
+        :: Nil
+    )
+
+    val prefixedRoute = pathPrefix("foo") { tapirRoute }
+    test(prefixedRoute, "/foo/123/bar", "GET /foo/{i}/bar")
+  }
+
   def test(route: Route, path: String, spanName: String): Unit = {
     val port = PortUtils.findOpenPort
     val address: URI = buildAddress(port)

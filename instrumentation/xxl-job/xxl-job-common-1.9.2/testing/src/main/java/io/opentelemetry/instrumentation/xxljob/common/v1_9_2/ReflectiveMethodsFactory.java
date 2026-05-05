@@ -1,0 +1,63 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.xxljob.common.v1_9_2;
+
+import com.xxl.job.core.biz.model.ReturnT;
+import java.lang.reflect.Method;
+import javax.annotation.Nullable;
+
+class ReflectiveMethodsFactory {
+
+  private static final Object singletonObject = new ReflectObject();
+
+  static Object getTarget() {
+    return singletonObject;
+  }
+
+  @Nullable
+  static Method getMethod() {
+    try {
+      return ReflectObject.class.getMethod("echo", String.class);
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  static Method getInitMethod() {
+    try {
+      return ReflectObject.class.getMethod("initMethod");
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  static Method getDestroyMethod() {
+    try {
+      return ReflectObject.class.getMethod("destroyMethod");
+    } catch (Throwable ignored) {
+      return null;
+    }
+  }
+
+  private ReflectiveMethodsFactory() {}
+
+  public static class ReflectObject {
+
+    private ReflectObject() {}
+
+    public void initMethod() {}
+
+    public void destroyMethod() {}
+
+    public ReturnT<String> echo(String param) {
+      ReturnT<String> result = new ReturnT<>();
+      result.setContent("echo: " + param);
+      return result;
+    }
+  }
+}

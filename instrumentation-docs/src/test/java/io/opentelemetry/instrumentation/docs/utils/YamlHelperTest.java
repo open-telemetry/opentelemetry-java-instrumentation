@@ -216,6 +216,56 @@ class YamlHelperTest {
   }
 
   @Test
+  void testTargetVersionsAreOrdered() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+
+    modules.add(
+        new InstrumentationModule.Builder("test-instrumentation")
+            .srcPath("instrumentation/test-instrumentation")
+            .targetVersions(
+                Set.of(
+                    "org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)",
+                    "org.springframework:spring-aop:[1.2,)"))
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder("test-instrumentation2")
+            .srcPath("instrumentation/test-instrumentation2")
+            .targetVersions(
+                Set.of(
+                    "org.springframework:spring-aop:[1.2,)",
+                    "org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)"))
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+        libraries:
+        - name: test-instrumentation
+          source_path: instrumentation/test-instrumentation
+          scope:
+            name: io.opentelemetry.test-instrumentation
+          javaagent_target_versions:
+          - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)
+          - org.springframework:spring-aop:[1.2,)
+        - name: test-instrumentation2
+          source_path: instrumentation/test-instrumentation2
+          scope:
+            name: io.opentelemetry.test-instrumentation2
+          javaagent_target_versions:
+          - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)
+          - org.springframework:spring-aop:[1.2,)
+        """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
   void testMetadataParser() throws JsonProcessingException {
     String input =
         """

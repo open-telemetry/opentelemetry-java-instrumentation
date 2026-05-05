@@ -19,6 +19,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -55,6 +56,7 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
     return false;
   }
 
+  @Nullable
   protected String defaultServerRoute() {
     return null;
   }
@@ -106,7 +108,7 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
       String resource,
       boolean abortNormal,
       boolean abortPrematch,
-      String route,
+      @Nullable String route,
       String controllerName,
       String expectedResponse)
       throws Exception {

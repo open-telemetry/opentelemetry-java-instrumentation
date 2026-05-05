@@ -19,7 +19,7 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_23)
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("--add-exports=java.base/sun.misc=ALL-UNNAMED")

@@ -87,6 +87,12 @@ Add `examples` only for module-specific configs with non-obvious format (lists, 
 ### 1. Validate experimental markers match
 
 - `/development` in declarative_name ↔ `experimental` in flat name (MUST match both ways)
+- Do not rename an existing, published `declarative_name` solely to make it match the mechanical
+  conversion rule. Flat property lookup normalizes `-` to `.`, so a legacy YAML key such as
+  `java.aws_sdk.use_propagator_for_messaging/development` can still resolve to
+  `otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging` without a special
+  mapping. Let the automated validation decide whether a `SPECIAL_MAPPINGS` entry is actually
+  needed.
 - WRONG: `otel.instrumentation.servlet.capture-request-parameters` + `java.servlet.capture_request_parameters/development`
 - RIGHT: `otel.instrumentation.servlet.experimental.capture-request-parameters` + `java.servlet.capture_request_parameters/development`
 
@@ -152,4 +158,6 @@ FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
 ## Edge Cases
 
 - Properties without `otel.instrumentation.` prefix → check SPECIAL_MAPPINGS
-- Already has declarative_name → skip conversion
+- Already has declarative_name → skip conversion unless the automated validation fails; preserve
+  existing user-facing YAML keys and add a `SPECIAL_MAPPINGS` bridge entry only when normalized flat
+  property lookup cannot resolve the existing name

@@ -39,7 +39,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
   private static Method findMethod(String name, Class<?>... parameterTypes) {
     try {
       return SimpleAsyncTaskExecutor.class.getMethod(name, parameterTypes);
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }

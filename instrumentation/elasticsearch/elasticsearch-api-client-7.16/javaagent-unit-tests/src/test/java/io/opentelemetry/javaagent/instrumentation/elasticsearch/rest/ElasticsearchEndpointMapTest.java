@@ -34,6 +34,40 @@ class ElasticsearchEndpointMapTest {
               "msearch_template",
               "render_search_template"));
 
+  @Test
+  void testIsSearchEndpoint() {
+    for (ElasticsearchEndpointDefinition esEndpointDefinition :
+        ElasticsearchEndpointMap.getAllEndpoints()) {
+      String endpointId = esEndpointDefinition.getEndpointName();
+      if (esEndpointDefinition.isSearchEndpoint()) {
+        assertThat(SEARCH_ENDPOINTS).contains(endpointId);
+      } else {
+        assertThat(SEARCH_ENDPOINTS).doesNotContain(endpointId);
+      }
+    }
+  }
+
+  @Test
+  void testProcessPathParts() {
+    for (ElasticsearchEndpointDefinition esEndpointDefinition :
+        ElasticsearchEndpointMap.getAllEndpoints()) {
+      for (String route :
+          esEndpointDefinition.getRoutes().stream()
+              .map(ElasticsearchEndpointDefinition.Route::getName)
+              .collect(toList())) {
+        List<String> pathParts = getPathParts(route);
+        String resolvedRoute = route.replace("{", "").replace("}", "");
+        Map<String, String> observedParams = new HashMap<>();
+        esEndpointDefinition.processPathParts(resolvedRoute, (k, v) -> observedParams.put(k, v));
+
+        Map<String, String> expectedMap = new HashMap<>();
+        pathParts.forEach(part -> expectedMap.put(part, part));
+
+        assertThat(observedParams).isEqualTo(expectedMap);
+      }
+    }
+  }
+
   private static List<String> getPathParts(String route) {
     List<String> pathParts = new ArrayList<>();
     String routeFragment = route;
@@ -57,44 +91,13 @@ class ElasticsearchEndpointMapTest {
   }
 
   @Test
-  void testIsSearchEndpoint() {
-    for (ElasticsearchEndpointDefinition esEndpointDefinition :
-        ElasticsearchEndpointMap.getAllEndpoints()) {
-      String endpointId = esEndpointDefinition.getEndpointName();
-      assertThat(SEARCH_ENDPOINTS.contains(endpointId))
-          .isEqualTo(esEndpointDefinition.isSearchEndpoint());
-    }
-  }
-
-  @Test
-  void testProcessPathParts() {
-    for (ElasticsearchEndpointDefinition esEndpointDefinition :
-        ElasticsearchEndpointMap.getAllEndpoints()) {
-      for (String route :
-          esEndpointDefinition.getRoutes().stream()
-              .map(ElasticsearchEndpointDefinition.Route::getName)
-              .collect(toList())) {
-        List<String> pathParts = getPathParts(route);
-        String resolvedRoute = route.replace("{", "").replace("}", "");
-        Map<String, String> observedParams = new HashMap<>();
-        esEndpointDefinition.processPathParts(resolvedRoute, (k, v) -> observedParams.put(k, v));
-
-        Map<String, String> expectedMap = new HashMap<>();
-        pathParts.forEach(part -> expectedMap.put(part, part));
-
-        assertThat(expectedMap).isEqualTo(observedParams);
-      }
-    }
-  }
-
-  @Test
   void testSearchEndpoint() {
     ElasticsearchEndpointDefinition esEndpoint = ElasticsearchEndpointMap.get("search");
     Map<String, String> observedParams = new HashMap<>();
     esEndpoint.processPathParts(
         "/test-index-1,test-index-2/_search", (k, v) -> observedParams.put(k, v));
 
-    assertThat(observedParams.get("index")).isEqualTo("test-index-1,test-index-2");
+    assertThat(observedParams).containsEntry("index", "test-index-1,test-index-2");
   }
 
   @Test

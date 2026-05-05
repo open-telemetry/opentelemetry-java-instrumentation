@@ -47,7 +47,7 @@ class MeterTest {
   }
 
   @Test
-  void batchLongCounter() throws InterruptedException {
+  void batchLongCounter() {
     ObservableLongMeasurement observableMeasurement =
         meter.counterBuilder("test").setDescription("d").setUnit("u").buildObserver();
 
@@ -82,16 +82,13 @@ class MeterTest {
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void batchDoubleCounter() throws InterruptedException {
+  void batchDoubleCounter() {
     ObservableDoubleMeasurement observableMeasurement =
         meter.counterBuilder("test").ofDoubles().setDescription("d").setUnit("u").buildObserver();
 
@@ -126,16 +123,13 @@ class MeterTest {
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void batchLongUpDownCounter() throws InterruptedException {
+  void batchLongUpDownCounter() {
     ObservableLongMeasurement observableMeasurement =
         meter.upDownCounterBuilder("test").setDescription("d").setUnit("u").buildObserver();
 
@@ -170,16 +164,13 @@ class MeterTest {
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void batchDoubleUpDownCounter() throws InterruptedException {
+  void batchDoubleUpDownCounter() {
     ObservableDoubleMeasurement observableMeasurement =
         meter
             .upDownCounterBuilder("test")
@@ -219,16 +210,13 @@ class MeterTest {
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void batchLongGauge() throws InterruptedException {
+  void batchLongGauge() {
     ObservableLongMeasurement observableMeasurement =
         meter.gaugeBuilder("test").ofLongs().setDescription("d").setUnit("u").buildObserver();
 
@@ -262,16 +250,13 @@ class MeterTest {
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void batchDoubleGauge() throws InterruptedException {
+  void batchDoubleGauge() {
     ObservableDoubleMeasurement observableMeasurement =
         meter.gaugeBuilder("test").setDescription("d").setUnit("u").buildObserver();
 
@@ -305,10 +290,7 @@ class MeterTest {
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }

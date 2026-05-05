@@ -96,14 +96,14 @@ public abstract class AbstractJdbcInstrumentationTest {
     return true;
   }
 
-  private static final String databaseName = "jdbcUnitTest";
-  private static final String databaseNameLower = databaseName.toLowerCase(Locale.ROOT);
-  private static final Map<String, String> jdbcUrls =
+  private static final String DATABASE_NAME = "jdbcUnitTest";
+  private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
+  private static final Map<String, String> JDBC_URLS =
       ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + databaseName,
-          "derby", "jdbc:derby:memory:" + databaseName,
-          "hsqldb", "jdbc:hsqldb:mem:" + databaseName);
-  private static final Map<String, String> jdbcDriverClassNames =
+          "h2", "jdbc:h2:mem:" + DATABASE_NAME,
+          "derby", "jdbc:derby:memory:" + DATABASE_NAME,
+          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
+  private static final Map<String, String> JDBC_DRIVER_CLASS_NAMES =
       ImmutableMap.of(
           "h2", "org.h2.Driver",
           "derby", "org.apache.derby.jdbc.EmbeddedDriver",
@@ -132,7 +132,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     connectionPoolNames.forEach(
         cpName -> {
           Map<String, DataSource> dbDsMapping = new HashMap<>();
-          jdbcUrls.forEach(
+          JDBC_URLS.forEach(
               (dbType, jdbcUrl) -> {
                 DataSource dataSource = createDs(cpName, dbType, jdbcUrl);
                 if (dataSource instanceof Closeable) {
@@ -148,7 +148,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     org.apache.tomcat.jdbc.pool.DataSource ds = new org.apache.tomcat.jdbc.pool.DataSource();
     String jdbcUrlToSet = dbType.equals("derby") ? jdbcUrl + ";create=true" : jdbcUrl;
     ds.setUrl(jdbcUrlToSet);
-    ds.setDriverClassName(jdbcDriverClassNames.get(dbType));
+    ds.setDriverClassName(JDBC_DRIVER_CLASS_NAMES.get(dbType));
     String username = jdbcUserNames.get(dbType);
     if (username != null) {
       ds.setUsername(username);
@@ -179,7 +179,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   static DataSource createC3P0Ds(String dbType, String jdbcUrl) {
     ComboPooledDataSource ds = new ComboPooledDataSource();
     try {
-      ds.setDriverClass(jdbcDriverClassNames.get(dbType));
+      ds.setDriverClass(JDBC_DRIVER_CLASS_NAMES.get(dbType));
     } catch (PropertyVetoException e) {
       throw new IllegalStateException(e);
     }
@@ -211,16 +211,16 @@ public abstract class AbstractJdbcInstrumentationTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            new org.h2.Driver().connect(JDBC_URLS.get("h2"), null),
             null,
             "SELECT 3",
             "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), null),
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
@@ -229,7 +229,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SYSIBM.SYSDUMMY1"),
         Arguments.of(
             "hsqldb",
-            new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null),
+            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
             "SA",
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS",
             "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS",
@@ -238,16 +238,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), connectionProps),
+            new org.h2.Driver().connect(JDBC_URLS.get("h2"), connectionProps),
             null,
             "SELECT 3",
             "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), connectionProps),
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
@@ -256,7 +256,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SYSIBM.SYSDUMMY1"),
         Arguments.of(
             "hsqldb",
-            new JDBCDriver().connect(jdbcUrls.get("hsqldb"), connectionProps),
+            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), connectionProps),
             "SA",
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS",
             "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS",
@@ -269,7 +269,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
@@ -296,7 +296,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
@@ -323,7 +323,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
@@ -347,11 +347,11 @@ public abstract class AbstractJdbcInstrumentationTest {
         // stored procedure test
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            new org.h2.Driver().connect(JDBC_URLS.get("h2"), null),
             null,
             "CALL ABS(-3)",
             "CALL ABS(?)",
-            emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + databaseNameLower + ".ABS",
+            emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + DATABASE_NAME_LOWER + ".ABS",
             "h2:mem:",
             null));
   }
@@ -388,7 +388,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -422,16 +422,16 @@ public abstract class AbstractJdbcInstrumentationTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            new org.h2.Driver().connect(JDBC_URLS.get("h2"), null),
             null,
             "SELECT 3",
             emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), null),
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
             emitStableDatabaseSemconv()
@@ -446,7 +446,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
@@ -466,7 +466,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
@@ -486,7 +486,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "SELECT 3",
             emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
@@ -503,11 +503,11 @@ public abstract class AbstractJdbcInstrumentationTest {
         // stored procedure test
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            new org.h2.Driver().connect(JDBC_URLS.get("h2"), null),
             null,
             "CALL ABS(-3)",
             emitStableDatabaseSemconv() ? "CALL ABS(-3)" : "CALL ABS(?)",
-            emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + databaseNameLower + ".ABS",
+            emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + DATABASE_NAME_LOWER + ".ABS",
             "h2:mem:",
             null));
   }
@@ -551,7 +551,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -610,7 +610,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -669,7 +669,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -700,7 +700,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            new org.h2.Driver().connect(JDBC_URLS.get("h2"), null),
             null,
             "CREATE TABLE S_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))",
             emitStableDatabaseSemconv() ? "CREATE TABLE S_H2" : "CREATE TABLE jdbcunittest.S_H2",
@@ -708,7 +708,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             "S_H2"),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), null),
             "APP",
             "CREATE TABLE S_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))",
             emitStableDatabaseSemconv()
@@ -718,7 +718,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             "S_DERBY"),
         Arguments.of(
             "hsqldb",
-            new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null),
+            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
             "SA",
             "CREATE TABLE PUBLIC.S_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))",
             "CREATE TABLE PUBLIC.S_HSQLDB",
@@ -840,7 +840,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -860,7 +860,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            new org.h2.Driver().connect(JDBC_URLS.get("h2"), null),
             null,
             "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))",
             emitStableDatabaseSemconv() ? "CREATE TABLE PS_H2" : "CREATE TABLE jdbcunittest.PS_H2",
@@ -868,7 +868,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             "PS_H2"),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), null),
             "APP",
             "CREATE TABLE PS_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))",
             emitStableDatabaseSemconv()
@@ -965,7 +965,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            new org.h2.Driver().connect(JDBC_URLS.get("h2"), null),
             null,
             "CREATE TABLE PS_LARGE_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))",
             emitStableDatabaseSemconv()
@@ -995,7 +995,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             "PS_LARGE_H2_HIKARI"),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), null),
             "APP",
             "CREATE TABLE PS_LARGE_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))",
             emitStableDatabaseSemconv()
@@ -1005,7 +1005,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             "PS_LARGE_DERBY"),
         Arguments.of(
             "hsqldb",
-            new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null),
+            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
             "SA",
             "CREATE TABLE PUBLIC.PS_LARGE_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))",
             "CREATE TABLE PUBLIC.PS_LARGE_HSQLDB",
@@ -1073,7 +1073,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1095,18 +1095,18 @@ public abstract class AbstractJdbcInstrumentationTest {
             true,
             "h2",
             new org.h2.Driver(),
-            "jdbc:h2:mem:" + databaseName,
+            "jdbc:h2:mem:" + DATABASE_NAME,
             null,
             "SELECT 3;",
             emitStableDatabaseSemconv() ? "SELECT 3;" : "SELECT ?;",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
             true,
             "derby",
             new EmbeddedDriver(),
-            "jdbc:derby:memory:" + databaseName + ";create=true",
+            "jdbc:derby:memory:" + DATABASE_NAME + ";create=true",
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
             emitStableDatabaseSemconv()
@@ -1119,18 +1119,18 @@ public abstract class AbstractJdbcInstrumentationTest {
             false,
             "h2",
             new org.h2.Driver(),
-            "jdbc:h2:mem:" + databaseName,
+            "jdbc:h2:mem:" + DATABASE_NAME,
             null,
             "SELECT 3;",
             "SELECT ?;",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
             false,
             "derby",
             new EmbeddedDriver(),
-            "jdbc:derby:memory:" + databaseName + ";create=true",
+            "jdbc:derby:memory:" + DATABASE_NAME + ";create=true",
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
@@ -1193,7 +1193,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1215,14 +1215,14 @@ public abstract class AbstractJdbcInstrumentationTest {
     return Stream.of(
         Arguments.of(
             new JdbcDataSource(),
-            (Consumer<DataSource>) ds -> ((JdbcDataSource) ds).setURL(jdbcUrls.get("h2")),
+            (Consumer<DataSource>) ds -> ((JdbcDataSource) ds).setURL(JDBC_URLS.get("h2")),
             "h2",
             null,
             "h2:mem:"),
         Arguments.of(
             new EmbeddedDataSource(),
             (Consumer<DataSource>)
-                ds -> ((EmbeddedDataSource) ds).setDatabaseName("memory:" + databaseName),
+                ds -> ((EmbeddedDataSource) ds).setDatabaseName("memory:" + DATABASE_NAME),
             "derby",
             "APP",
             "derby:memory:"),
@@ -1422,7 +1422,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @ValueSource(strings = {"hikari", "tomcat", "c3p0"})
   void testConnectionCached(String connectionPoolName) throws SQLException {
     String dbType = "hsqldb";
-    DataSource ds = wrap(createDs(connectionPoolName, dbType, jdbcUrls.get(dbType)));
+    DataSource ds = wrap(createDs(connectionPoolName, dbType, JDBC_URLS.get(dbType)));
     cleanup.deferCleanup(
         () -> {
           if (ds instanceof Closeable) {
@@ -1458,7 +1458,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), HSQLDB),
-                            equalTo(maybeStable(DB_NAME), databaseNameLower),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "SA"),
                             equalTo(
                                 DB_CONNECTION_STRING,
@@ -1571,7 +1571,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @DisplayName("test proxy statement")
   @Test
   void testProxyStatement() throws Exception {
-    Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
     cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
@@ -1590,7 +1590,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                         span.hasName(
                                 emitStableDatabaseSemconv()
                                     ? "SELECT"
-                                    : "SELECT " + databaseNameLower)
+                                    : "SELECT " + DATABASE_NAME_LOWER)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))));
   }
@@ -1600,7 +1600,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @DisplayName("test proxy prepared statement")
   @Test
   void testProxyPreparedStatement() throws SQLException {
-    Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
     cleanup.deferCleanup(connection);
     PreparedStatement statement = connection.prepareStatement("SELECT 3");
     cleanup.deferCleanup(statement);
@@ -1619,21 +1619,24 @@ public abstract class AbstractJdbcInstrumentationTest {
                         span.hasName(
                                 emitStableDatabaseSemconv()
                                     ? "SELECT"
-                                    : "SELECT " + databaseNameLower)
+                                    : "SELECT " + DATABASE_NAME_LOWER)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))));
   }
 
   static Stream<Arguments> batchStream() throws SQLException {
     return Stream.of(
-        Arguments.of("h2", new org.h2.Driver().connect(jdbcUrls.get("h2"), null), null, "h2:mem:"),
+        Arguments.of("h2", new org.h2.Driver().connect(JDBC_URLS.get("h2"), null), null, "h2:mem:"),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), null),
             "APP",
             "derby:memory:"),
         Arguments.of(
-            "hsqldb", new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null), "SA", "hsqldb:mem:"));
+            "hsqldb",
+            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
+            "SA",
+            "hsqldb:mem:"));
   }
 
   @ParameterizedTest
@@ -1655,9 +1658,11 @@ public abstract class AbstractJdbcInstrumentationTest {
       throws SQLException {
 
     Statement createTable = wrap(connection).createStatement();
+    cleanup.deferCleanup(createTable);
     createTable.execute(
         "CREATE TABLE simple_batch_test_large (id INTEGER not NULL, PRIMARY KEY ( id ))");
     Statement statement = wrap(connection).createStatement();
+    cleanup.deferCleanup(statement);
     statement.addBatch("INSERT INTO simple_batch_test_large VALUES(1)");
     statement.addBatch("INSERT INTO simple_batch_test_large VALUES(2)");
 
@@ -1708,7 +1713,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1765,7 +1770,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1817,7 +1822,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1876,7 +1881,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1911,8 +1916,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     String query = "SELECT 1";
     testing().runWithSpan("parent", () -> statement.execute(query));
 
-    assertThat(executedSql).hasSize(1);
-    assertThat(executedSql.get(0)).isEqualTo(query);
+    assertThat(executedSql).containsExactly(query);
   }
 
   @ParameterizedTest
@@ -1956,7 +1960,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -1978,7 +1982,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 // COMMIT is not extracted from db.query.text - it's an explicit
                                 // transaction operation
                                 equalTo(maybeStable(DB_OPERATION), "COMMIT"),
@@ -2029,7 +2033,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
@@ -2051,7 +2055,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 // ROLLBACK is not extracted from db.query.text - it's an explicit
                                 // transaction operation
                                 equalTo(maybeStable(DB_OPERATION), "ROLLBACK"),
@@ -2063,14 +2067,17 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   static Stream<Arguments> transactionOperationsStream() throws SQLException {
     return Stream.of(
-        Arguments.of("h2", new org.h2.Driver().connect(jdbcUrls.get("h2"), null), null, "h2:mem:"),
+        Arguments.of("h2", new org.h2.Driver().connect(JDBC_URLS.get("h2"), null), null, "h2:mem:"),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), null),
             "APP",
             "derby:memory:"),
         Arguments.of(
-            "hsqldb", new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null), "SA", "hsqldb:mem:"));
+            "hsqldb",
+            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
+            "SA",
+            "hsqldb:mem:"));
   }
 
   private PreparedStatement wrapPreparedStatement(PreparedStatement statement) {
@@ -2095,7 +2102,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/14733
   @Test
   void testPreparedStatementWrapper() throws SQLException {
-    Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
     cleanup.deferCleanup(connection);
     Connection proxyConnection =
         ProxyStatementFactory.proxy(
@@ -2128,7 +2135,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                         span.hasName(
                                 emitStableDatabaseSemconv()
                                     ? "SELECT"
-                                    : "SELECT " + databaseNameLower)
+                                    : "SELECT " + DATABASE_NAME_LOWER)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(1))));
   }
@@ -2138,7 +2145,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/14733
   @Test
   void testStatementWrapper() throws SQLException {
-    Connection connection = wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+    Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
     cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
@@ -2176,7 +2183,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                         span.hasName(
                                 emitStableDatabaseSemconv()
                                     ? "SELECT"
-                                    : "SELECT " + databaseNameLower)
+                                    : "SELECT " + DATABASE_NAME_LOWER)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(1))));
   }

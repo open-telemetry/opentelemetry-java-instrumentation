@@ -129,7 +129,8 @@ class LibertyWebAppInstrumentation implements TypeInstrumentation {
       helper().setAsyncListenerResponse(context, requestInfo.getResponse());
 
       HttpServerResponseCustomizerHolder.getCustomizer()
-          .customize(context, requestInfo.getResponse(), new Servlet3HttpServerResponseMutator());
+          .customize(
+              context, requestInfo.getResponse(), Servlet3HttpServerResponseMutator.INSTANCE);
     }
   }
 }

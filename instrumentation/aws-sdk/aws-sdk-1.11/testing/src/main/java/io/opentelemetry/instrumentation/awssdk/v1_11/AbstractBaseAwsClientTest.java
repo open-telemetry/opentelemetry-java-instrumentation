@@ -41,14 +41,14 @@ import org.junit.jupiter.api.BeforeEach;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractBaseAwsClientTest {
+  protected static final AWSStaticCredentialsProvider credentialsProvider =
+      new AWSStaticCredentialsProvider(new AnonymousAWSCredentials());
+  protected static final MockWebServerExtension server = new MockWebServerExtension();
+  protected static AwsClientBuilder.EndpointConfiguration endpoint;
+
   protected abstract InstrumentationExtension testing();
 
   protected abstract boolean hasRequestId();
-
-  protected static MockWebServerExtension server = new MockWebServerExtension();
-  protected static AwsClientBuilder.EndpointConfiguration endpoint;
-  protected static final AWSStaticCredentialsProvider credentialsProvider =
-      new AWSStaticCredentialsProvider(new AnonymousAWSCredentials());
 
   @BeforeAll
   static void setUp() {

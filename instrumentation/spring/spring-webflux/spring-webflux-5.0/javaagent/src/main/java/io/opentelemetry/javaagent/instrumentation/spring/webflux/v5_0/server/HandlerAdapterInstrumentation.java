@@ -91,7 +91,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
       }
 
       public Mono<HandlerResult> exit(
-          Throwable throwable,
+          @Nullable Throwable throwable,
           ServerWebExchange exchange,
           Object handler,
           Mono<HandlerResult> mono) {
@@ -124,7 +124,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Return Mono<HandlerResult> mono,
         @Advice.Argument(0) ServerWebExchange exchange,
         @Advice.Argument(1) Object handler,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope == null) {

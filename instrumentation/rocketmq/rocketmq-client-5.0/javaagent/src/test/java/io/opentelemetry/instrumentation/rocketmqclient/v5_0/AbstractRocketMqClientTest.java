@@ -348,6 +348,7 @@ abstract class AbstractRocketMqClientTest {
             .setKeys(keys)
             .setBody(body)
             .addProperty("Test-Message-Header", "test")
+            .addProperty("Uncaptured-Header", "password")
             .build();
 
     SendReceipt sendReceipt =

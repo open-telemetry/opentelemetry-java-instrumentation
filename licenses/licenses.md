@@ -19,26 +19,26 @@
 > - **Embedded license files**: [jackson-annotations-2.21.jar/META-INF/LICENSE](jackson-annotations-2.21.jar/META-INF/LICENSE)
     - [jackson-annotations-2.21.jar/META-INF/NOTICE](jackson-annotations-2.21.jar/META-INF/NOTICE)
 
-**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.21.2`
+**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.21.3`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.21.2.jar/META-INF/LICENSE](jackson-core-2.21.2.jar/META-INF/LICENSE)
-    - [jackson-core-2.21.2.jar/META-INF/NOTICE](jackson-core-2.21.2.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.21.3.jar/META-INF/LICENSE](jackson-core-2.21.3.jar/META-INF/LICENSE)
+    - [jackson-core-2.21.3.jar/META-INF/NOTICE](jackson-core-2.21.3.jar/META-INF/NOTICE)
 
-**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.21.2`
+**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.21.3`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-databind-2.21.2.jar/META-INF/LICENSE](jackson-databind-2.21.2.jar/META-INF/LICENSE)
-    - [jackson-databind-2.21.2.jar/META-INF/NOTICE](jackson-databind-2.21.2.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-databind-2.21.3.jar/META-INF/LICENSE](jackson-databind-2.21.3.jar/META-INF/LICENSE)
+    - [jackson-databind-2.21.3.jar/META-INF/NOTICE](jackson-databind-2.21.3.jar/META-INF/NOTICE)
 
-**6** **Group:** `com.fasterxml.jackson.dataformat` **Name:** `jackson-dataformat-yaml` **Version:** `2.21.2`
+**6** **Group:** `com.fasterxml.jackson.dataformat` **Name:** `jackson-dataformat-yaml` **Version:** `2.21.3`
 > - **Project URL**: [https://github.com/FasterXML/jackson-dataformats-text](https://github.com/FasterXML/jackson-dataformats-text)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-dataformat-yaml-2.21.2.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.21.2.jar/META-INF/LICENSE)
-    - [jackson-dataformat-yaml-2.21.2.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.21.2.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-dataformat-yaml-2.21.3.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.21.3.jar/META-INF/LICENSE)
+    - [jackson-dataformat-yaml-2.21.3.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.21.3.jar/META-INF/NOTICE)
 
 **7** **Group:** `com.googlecode.concurrentlinkedhashmap` **Name:** `concurrentlinkedhashmap-lru` **Version:** `1.4.2`
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
@@ -181,11 +181,11 @@
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**42** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv` **Version:** `1.40.0`
+**42** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv` **Version:** `1.41.0`
 > - **POM Project URL**: [https://github.com/open-telemetry/semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**43** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv-incubating` **Version:** `1.40.0-alpha`
+**43** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv-incubating` **Version:** `1.41.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 

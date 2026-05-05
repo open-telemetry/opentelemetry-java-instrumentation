@@ -201,8 +201,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))),
@@ -216,8 +216,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(22.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -226,8 +226,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(2.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -367,8 +367,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))),
@@ -382,8 +382,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(22.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -392,8 +392,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(3.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -469,8 +469,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))),
@@ -484,8 +484,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(22.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -494,8 +494,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(7.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -602,8 +602,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))),
@@ -617,8 +617,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(67)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -627,8 +627,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(46.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -751,8 +751,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))),
@@ -766,8 +766,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(99)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -776,8 +776,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(25.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -924,8 +924,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
@@ -995,8 +995,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL,
@@ -1084,8 +1084,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))),
@@ -1099,8 +1099,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(22.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -1109,8 +1109,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSum(3.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
@@ -1204,8 +1204,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL,
@@ -1358,8 +1358,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL,
@@ -1489,8 +1489,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
                                                 GEN_AI_RESPONSE_MODEL,
@@ -1637,8 +1637,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();

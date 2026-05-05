@@ -1,0 +1,6 @@
+[settings]
+exclude = ["CHANGELOG.md", "licenses/licenses.md"]
+setup_migration_version = 2
+
+[checks.lychee]
+check_all_local = true

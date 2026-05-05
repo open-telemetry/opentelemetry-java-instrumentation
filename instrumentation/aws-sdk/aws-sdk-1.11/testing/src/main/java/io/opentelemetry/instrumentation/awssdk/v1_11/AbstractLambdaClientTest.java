@@ -120,6 +120,28 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
     return false;
   }
 
+  @ParameterizedTest
+  @MethodSource("provideArguments")
+  void testSendRequestWithMockedResponse(
+      String operation,
+      String method,
+      String responseBody,
+      List<AttributeAssertion> additionalAttributes,
+      Function<AWSLambda, Object> call)
+      throws ReflectiveOperationException {
+    AWSLambdaClientBuilder clientBuilder = AWSLambdaClientBuilder.standard();
+    AWSLambda client =
+        configureClient(clientBuilder)
+            .withEndpointConfiguration(endpoint)
+            .withCredentials(credentialsProvider)
+            .build();
+
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
+    Object response = call.apply(client);
+    assertRequestWithMockedResponse(
+        response, client, "AWSLambda", operation, method, additionalAttributes);
+  }
+
   private static Stream<Arguments> provideArguments() {
     return Stream.of(
         Arguments.of(
@@ -162,27 +184,5 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
                 c ->
                     c.getFunction(
                         new GetFunctionRequest().withFunctionName("lambda-function-name-foo"))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("provideArguments")
-  void testSendRequestWithMockedResponse(
-      String operation,
-      String method,
-      String responseBody,
-      List<AttributeAssertion> additionalAttributes,
-      Function<AWSLambda, Object> call)
-      throws ReflectiveOperationException {
-    AWSLambdaClientBuilder clientBuilder = AWSLambdaClientBuilder.standard();
-    AWSLambda client =
-        configureClient(clientBuilder)
-            .withEndpointConfiguration(endpoint)
-            .withCredentials(credentialsProvider)
-            .build();
-
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
-    Object response = call.apply(client);
-    assertRequestWithMockedResponse(
-        response, client, "AWSLambda", operation, method, additionalAttributes);
   }
 }

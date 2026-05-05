@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.rxjava.v2_0;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -34,7 +37,7 @@ public abstract class AbstractRxJava2SubscriptionTest {
                         countDownLatch.countDown();
                       });
             });
-    countDownLatch.await();
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
     testing()
         .waitAndAssertTraces(
             trace ->

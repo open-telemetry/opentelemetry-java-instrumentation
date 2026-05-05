@@ -74,7 +74,7 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled")
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
@@ -85,7 +85,7 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled," +
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
         "otel.semconv-stability.opt-in=service.peer"
     )
   }

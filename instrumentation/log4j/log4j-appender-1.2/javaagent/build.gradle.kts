@@ -15,8 +15,6 @@ dependencies {
   // 1.2 introduces MDC and there's no version earlier than 1.2.4 available
   library("log4j:log4j:1.2.4")
 
-  compileOnly(project(":javaagent-bootstrap"))
-
   testInstrumentation(project(":instrumentation:log4j:log4j-appender-2.17:javaagent"))
 }
 
@@ -34,4 +32,17 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+}
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

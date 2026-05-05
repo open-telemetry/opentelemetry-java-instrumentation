@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import javax.jms.ConnectionFactory;
@@ -23,7 +24,6 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,6 +32,8 @@ class JmsCamelTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static BrokerService broker;
   private static CamelContext camelContext;
@@ -43,6 +45,7 @@ class JmsCamelTest {
     broker.setUseJmx(false);
     broker.addConnector("vm://localhost");
     broker.start();
+    cleanup.deferAfterAll(broker::stop);
 
     camelContext = new DefaultCamelContext();
     ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
@@ -58,17 +61,8 @@ class JmsCamelTest {
         });
 
     camelContext.start();
+    cleanup.deferAfterAll(camelContext::stop);
     testing.clearData();
-  }
-
-  @AfterAll
-  static void tearDown() throws Exception {
-    if (camelContext != null) {
-      camelContext.stop();
-    }
-    if (broker != null) {
-      broker.stop();
-    }
   }
 
   @Test

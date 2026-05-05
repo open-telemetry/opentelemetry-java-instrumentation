@@ -47,6 +47,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
               new ProducerRecord<>(SHARED_TOPIC, 10, greeting);
           if (testHeaders) {
             producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
+            producerRecord.headers().add("Uncaptured-Header", "password".getBytes(UTF_8));
           }
           producer
               .send(
@@ -155,14 +156,14 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   @ValueSource(booleans = {true, false})
   void testRecordsWithTopicPartitionKafkaConsume(boolean testListIterator) throws Exception {
     String greeting = "Hello from MockConsumer!";
-    producer.send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting)).get(5, SECONDS);
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, PARTITION, null, greeting)).get(5, SECONDS);
 
     testing.waitForTraces(1);
 
     awaitUntilConsumerIsReady();
     ConsumerRecords<?, ?> consumerRecords = poll(Duration.ofSeconds(5));
     List<? extends ConsumerRecord<?, ?>> recordsInPartition =
-        consumerRecords.records(KafkaClientBaseTest.topicPartition);
+        consumerRecords.records(KafkaClientBaseTest.TOPIC_PARTITION);
     assertThat(recordsInPartition).hasSize(1);
 
     // iterate over records to generate spans

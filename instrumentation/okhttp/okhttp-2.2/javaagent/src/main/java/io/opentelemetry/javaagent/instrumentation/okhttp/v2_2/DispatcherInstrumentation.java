@@ -50,7 +50,7 @@ class DispatcherInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Argument(0) Runnable call,
         @Advice.Enter @Nullable PropagatedContext propagatedContext,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Thrown @Nullable Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
           propagatedContext, throwable, PROPAGATED_CONTEXT, call);
     }

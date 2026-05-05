@@ -66,7 +66,7 @@ enum WebfluxServerHttpAttributesGetter
     if (GET_RAW_STATUS_CODE != null) {
       try {
         return (Integer) GET_RAW_STATUS_CODE.invoke(response);
-      } catch (Throwable e) {
+      } catch (Throwable ignored) {
         // ignore
       }
     }
@@ -74,7 +74,7 @@ enum WebfluxServerHttpAttributesGetter
       try {
         Object statusCode = GET_STATUS_CODE.invoke(response);
         return (Integer) STATUS_CODE_VALUE.invoke(statusCode);
-      } catch (Throwable e) {
+      } catch (Throwable ignored) {
         // ignore
       }
     }

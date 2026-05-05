@@ -84,7 +84,11 @@ class ActiveContextManager {
     private final CamelRequest request;
     @Nullable private final Scope scope;
 
-    ContextWithScope(ContextWithScope parent, Context context, CamelRequest request, Scope scope) {
+    ContextWithScope(
+        @Nullable ContextWithScope parent,
+        @Nullable Context context,
+        CamelRequest request,
+        @Nullable Scope scope) {
       this.parent = parent;
       this.context = context;
       this.request = request;
@@ -97,11 +101,12 @@ class ActiveContextManager {
       return new ContextWithScope(parent, context, request, scope);
     }
 
+    @Nullable
     ContextWithScope getParent() {
       return parent;
     }
 
-    void deactivate(Exception exception) {
+    void deactivate(@Nullable Exception exception) {
       if (scope == null) {
         return;
       }

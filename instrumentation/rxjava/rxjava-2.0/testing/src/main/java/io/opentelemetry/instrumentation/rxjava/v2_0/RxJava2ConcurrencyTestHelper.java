@@ -39,6 +39,7 @@ class RxJava2ConcurrencyTestHelper {
       //noinspection ResultOfMethodCallIgnored
       latch.await(timeoutMillis, MILLISECONDS);
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new IllegalStateException(e);
     }
   }
@@ -54,7 +55,7 @@ class RxJava2ConcurrencyTestHelper {
               .observeOn(iteration.scheduler)
               // Use varying delay so that different stages of the chain would alternate.
               .delay(iteration.index % 10, MILLISECONDS, iteration.scheduler)
-              .map((it) -> it)
+              .map(it -> it)
               .delay(iteration.index % 10, MILLISECONDS, iteration.scheduler)
               .doOnSuccess(v -> launchInner(v, runner))
               .subscribe();
@@ -72,7 +73,7 @@ class RxJava2ConcurrencyTestHelper {
               .observeOn(iteration.scheduler)
               .delay(iteration.index % 10, MILLISECONDS, iteration.scheduler)
               .doOnSuccess(
-                  (it) -> {
+                  it -> {
                     runner.runWithSpan(
                         "inner",
                         () -> {

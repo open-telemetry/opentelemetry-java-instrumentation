@@ -54,7 +54,7 @@ class ActionInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope) {
         this.context = context;
         this.scope = scope;
       }
@@ -71,33 +71,34 @@ class ActionInstrumentation implements TypeInstrumentation {
 
       public void end(
           @Nullable Throwable throwable,
-          Future<Result> responseFuture,
+          @Nullable Future<Result> responseFuture,
           Action<?> thisAction,
           Request<?> req) {
         scope.close();
         updateSpan(context, req);
 
-        if (throwable == null) {
+        if (throwable != null || responseFuture == null) {
+          instrumenter().end(context, null, null, throwable);
+        } else {
           // span finished in RequestCompleteCallback
           responseFuture.onComplete(
               new RequestCompleteCallback(context), thisAction.executionContext());
-        } else {
-          instrumenter().end(context, null, null, throwable);
         }
       }
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.Argument(0) Request<?> req) {
+    @Nullable
+    public static AdviceScope onEnter() {
       return AdviceScope.start(currentContext());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopTraceOnResponse(
         @Advice.This Action<?> thisAction,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(0) Request<?> req,
-        @Advice.Return Future<Result> responseFuture,
+        @Advice.Return @Nullable Future<Result> responseFuture,
         @Advice.Enter @Nullable AdviceScope actionScope) {
       if (actionScope == null) {
         return;

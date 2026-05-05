@@ -13,8 +13,8 @@ muzzle {
     group.set("org.glassfish")
     module.set("javax.faces")
     versions.set("[2.0.7,3)")
-    extraDependency("javax.el:el-api:2.2")
     assertInverse.set(true)
+    extraDependency("javax.el:el-api:2.2")
   }
   pass {
     group.set("com.sun.faces")
@@ -34,9 +34,9 @@ muzzle {
     group.set("javax.faces")
     module.set("jsf-impl")
     versions.set("[1.2,2)")
+    assertInverse.set(true)
     extraDependency("javax.faces:jsf-api:1.2")
     extraDependency("javax.el:el-api:1.0")
-    assertInverse.set(true)
   }
   fail {
     group.set("org.glassfish")
@@ -65,7 +65,7 @@ testing {
         implementation("javax.faces:jsf-api:1.2")
         implementation("com.sun.facelets:jsf-facelets:1.1.14")
 
-        val version = if (otelProps.testLatestDeps) "1.+" else "1.2_04"
+        val version = baseVersion("1.2_04").orLatest("1.+")
         implementation("javax.faces:jsf-impl:$version")
       }
     }
@@ -74,7 +74,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
 
-        val version = if (otelProps.testLatestDeps) "2.+" else "2.2.0"
+        val version = baseVersion("2.2.0").orLatest("2.+")
         implementation("org.glassfish:javax.faces:$version")
       }
     }

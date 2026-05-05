@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hystrix.v1_4;
 
-import static io.opentelemetry.javaagent.instrumentation.hystrix.v1_4.ExperimentalTestHelper.HYSTRIX_CIRCUIT_OPEN;
-import static io.opentelemetry.javaagent.instrumentation.hystrix.v1_4.ExperimentalTestHelper.HYSTRIX_COMMAND;
-import static io.opentelemetry.javaagent.instrumentation.hystrix.v1_4.ExperimentalTestHelper.HYSTRIX_GROUP;
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.javaagent.instrumentation.hystrix.v1_4.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -94,9 +93,9 @@ class HystrixObservableChainTest {
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
-                            equalTo(HYSTRIX_GROUP, experimental("ExampleGroup")),
-                            equalTo(HYSTRIX_CIRCUIT_OPEN, experimental(false))),
+                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
                 span ->
                     span.hasName("tracedMethod")
                         .hasParent(trace.getSpan(1))
@@ -105,9 +104,10 @@ class HystrixObservableChainTest {
                     span.hasName("OtherGroup.AnotherTestCommand.execute")
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(HYSTRIX_COMMAND, experimental("AnotherTestCommand")),
-                            equalTo(HYSTRIX_GROUP, experimental("OtherGroup")),
-                            equalTo(HYSTRIX_CIRCUIT_OPEN, experimental(false))),
+                            equalTo(
+                                stringKey("hystrix.command"), experimental("AnotherTestCommand")),
+                            equalTo(stringKey("hystrix.group"), experimental("OtherGroup")),
+                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
                 span ->
                     span.hasName("anotherTracedMethod")
                         .hasParent(trace.getSpan(3))

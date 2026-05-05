@@ -27,7 +27,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -153,8 +152,8 @@ class GrpcTest extends AbstractGrpcTest {
         AttributesBuilder attributes,
         Context context,
         GrpcRequest grpcRequest,
-        @Nullable Status status,
-        @Nullable Throwable error) {
+        Status status,
+        Throwable error) {
 
       Metadata metadata = grpcRequest.getMetadata();
       if (metadata != null) {
@@ -184,7 +183,7 @@ class GrpcTest extends AbstractGrpcTest {
         AttributesBuilder attributes,
         Context context,
         GrpcRequest grpcRequest,
-        @Nullable Status status,
-        @Nullable Throwable error) {}
+        Status status,
+        Throwable error) {}
   }
 }

@@ -13,7 +13,7 @@ Available wrappers:
 
 - `io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestStreamWrapper` - for wrapping streaming handlers (implementing `RequestStreamHandler`), enabling HTTP context propagation for HTTP requests
 
-When using known Lambda event types as parameters, use [aws-lambda-events-2.2](../../aws-lambda-events-2.2/library).
+When using known Lambda event types as parameters, use [aws-lambda-events-3.11](../../aws-lambda-events-3.11/library).
 
 ## Using handlers
 
@@ -50,7 +50,7 @@ link to tracing information provided by Lambda itself. To do so, add a dependenc
 `io.opentelemetry.contrib:opentelemetry-aws-xray-propagator`.
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release]( https://central.sonatype.com/artifact/io.opentelemetry.contrib/opentelemetry-aws-xray-propagator).
+release](https://central.sonatype.com/artifact/io.opentelemetry.contrib/opentelemetry-aws-xray-propagator).
 
 Gradle:
 

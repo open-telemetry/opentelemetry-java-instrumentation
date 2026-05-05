@@ -20,6 +20,7 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import java.time.Duration;
 import java.util.Map;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -30,18 +31,27 @@ public abstract class AbstractQuarkusJaxRsTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static WebClient client;
+  private static ClientFactory clientFactory;
   private static int port;
 
   @BeforeAll
   static void setUp() {
+    clientFactory = ClientFactory.builder().connectTimeout(Duration.ofMinutes(1)).build();
     client =
         WebClient.builder()
             .responseTimeout(Duration.ofMinutes(1))
             .writeTimeout(Duration.ofMinutes(1))
-            .factory(ClientFactory.builder().connectTimeout(Duration.ofMinutes(1)).build())
+            .factory(clientFactory)
             .decorator(LoggingClient.newDecorator())
             .build();
     port = Integer.parseInt(System.getProperty("quarkus.http.test-port"));
+  }
+
+  @AfterAll
+  static void cleanUp() {
+    if (clientFactory != null) {
+      clientFactory.close();
+    }
   }
 
   @Test

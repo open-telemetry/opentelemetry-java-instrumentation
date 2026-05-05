@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   compileOnly("io.vertx:vertx-web:3.0.0")
 
-  // We need both version as different versions of Vert.x use different versions of Netty
+  // We need both versions as different versions of Vert.x use different versions of Netty
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
@@ -26,7 +26,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
-        val version = if (otelProps.testLatestDeps) "3.+" else "3.0.0"
+        val version = baseVersion("3.0.0").orLatest("3.+")
         implementation("io.vertx:vertx-web:$version")
         implementation("io.vertx:vertx-jdbc-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
@@ -38,7 +38,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
-        val version = if (otelProps.testLatestDeps) "4.+" else "4.1.0"
+        val version = baseVersion("4.1.0").orLatest("4.+")
         implementation("io.vertx:vertx-web:$version")
         implementation("io.vertx:vertx-jdbc-client:$version")
         implementation("io.vertx:vertx-codegen:$version")

@@ -54,6 +54,7 @@ configurations:
     type: list
     default: ""
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer services.
     type: map
     default: ""
@@ -66,6 +67,7 @@ configurations:
     type: boolean
     default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: list
     default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"

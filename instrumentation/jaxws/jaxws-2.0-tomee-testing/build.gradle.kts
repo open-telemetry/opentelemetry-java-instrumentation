@@ -12,7 +12,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))
 }
 
@@ -21,7 +21,7 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_23)
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("--add-exports=java.base/sun.misc=ALL-UNNAMED")

@@ -36,6 +36,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 abstract class AbstractIcebergTest {
   private static final int FORMAT_VERSION = 2;
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.iceberg-1.8";
   private static final Schema SCHEMA =
       new Schema(
           NestedField.required(3, "id", IntegerType.get()),
@@ -110,7 +111,7 @@ abstract class AbstractIcebergTest {
   private void assertScanDurationMetric(ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName("iceberg.scan.planning.duration")
@@ -134,7 +135,7 @@ abstract class AbstractIcebergTest {
   private void assertDataFilesCountMetrics(ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName("iceberg.scan.data_files.count")
@@ -171,7 +172,7 @@ abstract class AbstractIcebergTest {
   private void assertDataManifestCountMetrics(ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName("iceberg.scan.data_manifests.count")
@@ -214,7 +215,7 @@ abstract class AbstractIcebergTest {
   private void assertDeleteManifestCountMetrics(ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName("iceberg.scan.delete_manifests.count")
@@ -257,7 +258,7 @@ abstract class AbstractIcebergTest {
   private void assertDeleteFilesCountMetrics(ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName("iceberg.scan.delete_files.count")
@@ -366,7 +367,7 @@ abstract class AbstractIcebergTest {
       String otelMetricName, ScanReport expectedReport, long expectedValue) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName(otelMetricName)

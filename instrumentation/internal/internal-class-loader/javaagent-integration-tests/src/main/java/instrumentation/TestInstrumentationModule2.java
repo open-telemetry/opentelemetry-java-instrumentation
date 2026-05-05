@@ -54,7 +54,7 @@ public class TestInstrumentationModule2 extends InstrumentationModule {
 
     @SuppressWarnings("unused")
     static class TestAdvice {
-      @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+      @Advice.OnMethodEnter(inline = false)
       public static String onEnter() {
         return TestFailableCallable.class.getName();
       }

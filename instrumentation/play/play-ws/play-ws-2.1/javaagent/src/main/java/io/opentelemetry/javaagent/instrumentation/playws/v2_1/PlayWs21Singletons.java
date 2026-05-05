@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.PlayWsClientInstrumenterFactory;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 

@@ -67,9 +67,9 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     setAttributes(request, attributes::put);
   }
 
-  private static AttributeKey<List<String>> parameterAttributeKey(String headerName) {
+  private static AttributeKey<List<String>> parameterAttributeKey(String parameterName) {
     return parameterKeysCache.computeIfAbsent(
-        headerName, ServletRequestParametersExtractor::createKey);
+        parameterName, ServletRequestParametersExtractor::createKey);
   }
 
   private static AttributeKey<List<String>> createKey(String parameterName) {

@@ -23,7 +23,7 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
 
   protected abstract Class<?> getMeterRegistryClass();
 
-  protected final ApplicationContextRunner contextRunner =
+  private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withConfiguration(autoConfigurations());
@@ -36,7 +36,6 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
         .run(
             context ->
                 assertThat(context.getBean("otelMeterRegistry", getMeterRegistryClass()))
-                    .isNotNull()
                     .isInstanceOf(OpenTelemetryMeterRegistry.class));
   }
 
