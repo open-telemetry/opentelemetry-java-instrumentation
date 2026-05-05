@@ -17,6 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.Nullable;
 
 /** This is used to wrap Vert.x Handlers to provide nice user-friendly SERVER span names */
 public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
@@ -49,6 +50,7 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     }
   }
 
+  @Nullable
   private static String getRoute(Context otelContext, RoutingContext routingContext) {
     String route = routingContext.currentRoute().getPath();
     if (route == null) {

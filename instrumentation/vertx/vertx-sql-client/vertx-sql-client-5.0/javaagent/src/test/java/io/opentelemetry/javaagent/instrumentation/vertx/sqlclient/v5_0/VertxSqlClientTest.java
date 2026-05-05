@@ -26,6 +26,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -190,7 +191,7 @@ class VertxSqlClientTest {
                       }
                     }));
 
-    latch.await(30, SECONDS);
+    assertThat(latch.await(30, SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -378,7 +379,7 @@ class VertxSqlClientTest {
                         latch.countDown();
                       }));
     }
-    latch.await(30, SECONDS);
+    assertThat(latch.await(30, SECONDS)).isTrue();
     for (CompletableFuture<Object> result : resultList) {
       result.get(10, SECONDS);
     }
@@ -455,7 +456,7 @@ class VertxSqlClientTest {
                             }));
           });
     }
-    latch.await(30, SECONDS);
+    assertThat(latch.await(30, SECONDS)).isTrue();
     for (CompletableFuture<Object> result : resultList) {
       result.get(10, SECONDS);
     }
