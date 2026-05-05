@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DASHBOARD_TITLE: "Pull Request Dashboard"
+      DASHBOARD_LABEL: "dashboard"
       DASHBOARD_OUTPUT: pull-request-dashboard.md
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -44,15 +45,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Find the open issue with an exact title match. The search API
-          # does not support exact phrases, so filter the results in jq.
-          number=$(gh issue list \
-            --search "in:title $DASHBOARD_TITLE" \
-            --state open \
-            --limit 20 \
-            --json number,title \
-            --jq ".[] | select(.title == \"$DASHBOARD_TITLE\") | .number" \
-            | head -1)
+          set -euo pipefail
+
+          number=$(gh api \
+            --paginate \
+            "repos/$GITHUB_REPOSITORY/issues?state=open&labels=$DASHBOARD_LABEL&per_page=100" \
+            --jq '.[] | select(.pull_request == null and .title == env.DASHBOARD_TITLE) | .number' \
+            | sort -n \
+            | sed -n '1p')
 
           if [[ -n "$number" ]]; then
             echo "Updating existing issue #$number"
@@ -61,5 +61,6 @@ jobs:
             echo "Creating new dashboard issue"
             gh issue create \
               --title "$DASHBOARD_TITLE" \
+              --label "$DASHBOARD_LABEL" \
               --body-file "$DASHBOARD_OUTPUT"
           fi
