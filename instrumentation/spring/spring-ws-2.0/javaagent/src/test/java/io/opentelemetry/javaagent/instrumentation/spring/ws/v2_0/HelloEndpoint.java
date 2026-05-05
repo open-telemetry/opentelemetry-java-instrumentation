@@ -17,7 +17,7 @@ import org.springframework.ws.soap.addressing.server.annotation.Action;
 import org.springframework.ws.soap.server.endpoint.annotation.SoapAction;
 
 @Endpoint
-public class HelloEndpoint {
+class HelloEndpoint {
 
   private static final String NAMESPACE_URI = "http://opentelemetry.io/test/hello-web-service";
 

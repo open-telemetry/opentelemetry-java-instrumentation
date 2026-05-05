@@ -8,4 +8,4 @@ package io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AppConfig {}
+class AppConfig {}
