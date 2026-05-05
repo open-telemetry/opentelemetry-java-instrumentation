@@ -26,30 +26,29 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
 
   private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
-  /** Dubbo 2.7 and 3.0.0-3.0.3: join(Directory). Removed in 3.0.4. */
-  @Nullable private static final MethodHandle JOIN_ONE_ARG;
-
   /** Dubbo 3.0.4+: join(Directory, boolean). Absent on 2.7 and 3.0.0-3.0.3. */
   @Nullable private static final MethodHandle JOIN_TWO_ARG;
 
-  static {
-    MethodHandle one = null;
-    try {
-      Method m = Cluster.class.getMethod("join", Directory.class);
-      one = LOOKUP.unreflect(m);
-    } catch (ReflectiveOperationException ignored) {
-      // Dubbo 3.0.4+
-    }
+  /** Dubbo 2.7 and 3.0.0-3.0.3: join(Directory). Absent on 3.0.4+. */
+  @Nullable private static final MethodHandle JOIN_ONE_ARG;
 
+  static {
     MethodHandle two = null;
+    MethodHandle one = null;
     try {
       Method m = Cluster.class.getMethod("join", Directory.class, boolean.class);
       two = LOOKUP.unreflect(m);
     } catch (ReflectiveOperationException ignored) {
       // Dubbo 2.7 / 3.0.0-3.0.3
     }
-    JOIN_ONE_ARG = one;
+    try {
+      Method m = Cluster.class.getMethod("join", Directory.class);
+      one = LOOKUP.unreflect(m);
+    } catch (ReflectiveOperationException ignored) {
+      // Dubbo 3.0.4+
+    }
     JOIN_TWO_ARG = two;
+    JOIN_ONE_ARG = one;
   }
 
   private final Cluster cluster;
@@ -62,7 +61,7 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
 
   @Override
   public <T> Invoker<T> join(Directory<T> directory) {
-    return wrapIfNeeded(directory, delegateJoin(cluster, directory));
+    return wrapIfNeeded(directory, delegateJoin(cluster, directory, true));
   }
 
   /**
@@ -76,28 +75,7 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
 
   /**
    * {@link MethodHandle#invoke} is untyped; the returned invoker matches the generic {@code T} from
-   * the {@code directory} argument and delegate {@code Cluster.join}.
-   */
-  @SuppressWarnings("unchecked")
-  private static <T> Invoker<T> delegateJoin(Cluster cluster, Directory<T> directory) {
-    try {
-      if (JOIN_ONE_ARG != null) {
-        return (Invoker<T>) JOIN_ONE_ARG.invoke(cluster, directory);
-      }
-      if (JOIN_TWO_ARG == null) {
-        throw noClusterJoinMethod();
-      }
-      return (Invoker<T>) JOIN_TWO_ARG.invoke(cluster, directory, true);
-    } catch (RpcException e) {
-      throw e;
-    } catch (Throwable t) {
-      throw new RpcException(t.getMessage(), t);
-    }
-  }
-
-  /**
-   * {@link MethodHandle#invoke} is untyped; the returned invoker matches the generic {@code T} from
-   * the {@code directory} argument and delegate {@code Cluster.join}.
+   * the {@code directory} argument and delegate {@link Cluster#join}.
    */
   @SuppressWarnings("unchecked")
   private static <T> Invoker<T> delegateJoin(
@@ -106,15 +84,15 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
       if (JOIN_TWO_ARG != null) {
         return (Invoker<T>) JOIN_TWO_ARG.invoke(cluster, directory, buildFilterChain);
       }
-      if (JOIN_ONE_ARG == null) {
-        throw noClusterJoinMethod();
+      if (JOIN_ONE_ARG != null) {
+        return (Invoker<T>) JOIN_ONE_ARG.invoke(cluster, directory);
       }
-      return (Invoker<T>) JOIN_ONE_ARG.invoke(cluster, directory);
     } catch (RpcException e) {
       throw e;
     } catch (Throwable t) {
       throw new RpcException(t.getMessage(), t);
     }
+    throw new RpcException("No join(Directory) or join(Directory,boolean) on Cluster");
   }
 
   private static <T> Invoker<T> wrapIfNeeded(Directory<T> directory, Invoker<T> invoker) {
@@ -125,7 +103,4 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
     return new RegistryCapturingInvoker<>(invoker, registryAddress);
   }
 
-  private static RpcException noClusterJoinMethod() {
-    return new RpcException("No supported org.apache.dubbo.rpc.cluster.Cluster.join method found");
-  }
 }
