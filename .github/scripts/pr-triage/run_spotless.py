@@ -33,7 +33,7 @@ def main() -> int:
 
     def body(summary: Summary) -> int:
         progress("Running Spotless")
-        run(gradlew_cmd("spotless"), summary)
+        run(gradlew_cmd("spotlessApply"), summary)
         progress("Checking Spotless changes")
         diff_check(summary)
 

@@ -162,7 +162,7 @@ Rules:
 - Edit only files needed to fix the failures listed in the CI bundle.
 - Use the downloaded log files as the source of truth.
 - For deterministic formatting or generated-file failures (for example Spotless
-  or FOSSA), run the corresponding Gradle task (for example `./gradlew spotless`
+  or FOSSA), run the corresponding Gradle task (for example `./gradlew spotlessApply`
   or `./gradlew generateFossaConfiguration`) instead of editing files by hand.
 - If the failures are flaky or infrastructure-only, do not invent a code fix; leave the tree clean and explain why.
 - When done, print a concise summary of the files changed and validation commands run.
