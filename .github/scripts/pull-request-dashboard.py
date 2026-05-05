@@ -57,23 +57,22 @@ Use these labels:
   - unclear: the thread does not contain enough information to decide
 
 Guidance:
-  - A reviewer saying "this works", "sounds good", or answering the author's
-    question may still leave the next implementation step with the author.
-  - An author saying "fixed", pushing a commit after feedback, or answering a
-    reviewer question usually puts the thread back in the reviewer court.
-  - If the author's latest comment asks the reviewer a question or requests
-    reviewer input, classify the thread as reviewer.
-    - If thread_facts.same_actor_approved_after_thread is true, use that only as
-        supporting evidence that an optional suggestion or informational comment is
-        non-blocking. Do not classify required follow-up as none just because the
-        same actor later approved.
-    - A reviewer sharing a reference, example, optional suggestion, or "for ideas"
-        link without an explicit requested change is informational; classify it as
-        none.
-  - If the thread is merely informational and does not require action, classify
-    it as none.
-  - If the thread is purely social, for example "thanks", "LGTM", or "nice work",
-    with no follow-up requested or implied, classify it as none.
+  - Default heuristic: whoever commented last has passed the ball to the other
+    side. If the latest comment is from a reviewer/approver, the author owes a
+    response (classify as author). If the latest comment is from the author,
+    the reviewer owes a response (classify as reviewer).
+  - This applies even to optional suggestions, "for ideas" links, references,
+    or links to a reviewer's own pull request / patch with proposed changes.
+    The author still needs to acknowledge, accept, or push back.
+  - Exceptions that map to none:
+    - Purely social comments ("thanks", "LGTM", "nice work") with no follow-up
+      requested or implied.
+    - The reviewer's last comment is a clear acknowledgement of the author's
+      previous reply ("sounds good", "ok thanks") that closes the thread.
+  - Exception that keeps the ball with the author: if the author's latest
+    comment is a self-deferral ("still working on it", "WIP", "I'll get to
+    this", "will fix") rather than a question or completed reply, classify as
+    author — they have not yet handed the ball back.
 
 Respond with a single JSON object and nothing else:
 {{"thread_action": "author" | "reviewer" | "external" | "none" | "unclear", "reason": "short explanation grounded in this thread"}}
@@ -533,35 +532,13 @@ def thread_comment(timestamp: str, actor: str, author: str, reviewers: set[str],
     }
 
 
-def approver_approved_after_thread(raw: dict[str, Any], comments: list[dict[str, Any]]) -> bool:
-    last_comment_ts = comments[-1]["timestamp"]
-    thread_approvers = {
-        c["actor"].lower()
-        for c in comments
-        if c["actor_role"] == "approver" and c.get("actor")
-    }
-    if not thread_approvers:
-        return False
-    for review in raw["reviews"]:
-        reviewer = actor_login(review.get("user") or {}).lower()
-        if reviewer not in thread_approvers:
-            continue
-        if review.get("state") != "APPROVED":
-            continue
-        if (review.get("submitted_at") or "") > last_comment_ts:
-            return True
-    return False
-
-
 def add_thread_facts(
-    raw: dict[str, Any],
     thread: dict[str, Any],
     comments: list[dict[str, Any]],
     facts: dict[str, Any],
 ) -> dict[str, Any]:
     thread["thread_facts"] = {
         "latest_comment_role": comments[-1].get("actor_role"),
-        "same_actor_approved_after_thread": approver_approved_after_thread(raw, comments),
         "current_conflicts": facts.get("conflicts"),
     }
     return thread
@@ -585,7 +562,7 @@ def group_review_threads(
         comments.sort(key=lambda c: c["timestamp"])
         if not comments:
             continue
-        threads.append(add_thread_facts(raw, {
+        threads.append(add_thread_facts({
             "thread_id": thread.get("id") or f"review-thread-{len(threads) + 1}",
             "thread_kind": "review-comment-thread",
             "path": thread.get("path"),
@@ -641,7 +618,7 @@ def group_pr_conversation(
     selected = selected[-PR_COMMENT_WINDOW:]
     if not selected:
         return []
-    return [add_thread_facts(raw, {
+    return [add_thread_facts({
         "thread_id": "pr-conversation",
         "thread_kind": "pr-conversation",
         "path": None,
@@ -919,6 +896,12 @@ def conflicts_cell(facts: dict[str, Any]) -> str:
     return "?"
 
 
+def approved_cell(facts: dict[str, Any]) -> str:
+    if "approved" not in facts:
+        return "?"
+    return "✅" if facts.get("approved") else " "
+
+
 def _html_escape(s: str) -> str:
     return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -978,8 +961,8 @@ def render_markdown_compact(
         rows.sort(key=lambda p: -p["number"])
         out.append(f"## {SIDE_LABELS.get(side, side)}")
         out.append("")
-        out.append("| PR | Author | CI | Conflicts | Activity |")
-        out.append("|---|---|---|---|---|")
+        out.append("| PR | Author | CI | Conflicts | Approved | Activity |")
+        out.append("|---|---|---|---|---|---|")
         for pr in rows:
             number = pr["number"]
             title = _md_escape(pr.get("title", ""))
@@ -991,7 +974,7 @@ def render_markdown_compact(
             activity_cell = "?" if activity is None else f"{activity}d"
             out.append(
                 f"| [{title}]({url}) | {author} | {ci_cell(facts)} | "
-                f"{conflicts_cell(facts)} | {activity_cell} |"
+                f"{conflicts_cell(facts)} | {approved_cell(facts)} | {activity_cell} |"
             )
         out.append("")
 
