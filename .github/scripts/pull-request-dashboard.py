@@ -519,12 +519,30 @@ def compute_conflicts(pr: dict[str, Any]) -> str:
     return "no"
 
 
-def compute_facts(raw: dict[str, Any], author: str) -> dict[str, Any]:
+def latest_substantive_activity(events: list[dict[str, Any]], actor_roles: set[str]) -> datetime | None:
+    timestamps = [
+        parse_ts(e["timestamp"])
+        for e in events
+        if e.get("actor_role") in actor_roles and is_substantive_activity(e)
+    ]
+    timestamps = [ts for ts in timestamps if ts is not None]
+    return max(timestamps) if timestamps else None
+
+
+def ts_text(ts: datetime | None) -> str:
+    return ts.isoformat() if ts else ""
+
+
+def compute_facts(raw: dict[str, Any], author: str, events: list[dict[str, Any]]) -> dict[str, Any]:
     pr = raw["pr"]
     checks = raw["checks"]
     failing = [c for c in checks if (c.get("state") or "").upper() in ("FAILURE", "ERROR")]
     pending = [c for c in checks if (c.get("state") or "").upper() in ("PENDING", "QUEUED", "IN_PROGRESS")]
     last_activity_ts = parse_ts(pr["updatedAt"])
+    created_ts = parse_ts(pr["createdAt"])
+    author_activity_ts = latest_substantive_activity(events, {"author"})
+    approver_activity_ts = latest_substantive_activity(events, {"approver"})
+    external_activity_ts = latest_substantive_activity(events, {"outsider"})
     api_author = actor_login(pr.get("author") or {})
     return {
         "author": author,
@@ -534,6 +552,11 @@ def compute_facts(raw: dict[str, Any], author: str) -> dict[str, Any]:
         "ci_failing_count": len(failing),
         "ci_pending_count": len(pending),
         "conflicts": compute_conflicts(pr),
+        "created_at": ts_text(created_ts),
+        "last_activity_at": ts_text(last_activity_ts),
+        "last_author_activity_at": ts_text(author_activity_ts),
+        "last_approver_activity_at": ts_text(approver_activity_ts),
+        "last_external_activity_at": ts_text(external_activity_ts),
         "seconds_since_last_activity": seconds_since(last_activity_ts),
         "last_activity_age": activity_age(last_activity_ts),
     }
@@ -821,6 +844,12 @@ SIDE_LABELS = {
     "unknown": "Unknown",
 }
 SIDE_ORDER = ["maintainer", "approver", "author", "external", "transient-failure", "unknown"]
+SIDE_THREAD_ACTIONS = {
+    "author": "author",
+    "approver": "reviewer",
+    "maintainer": "reviewer",
+    "external": "external",
+}
 
 
 def action_counts(classifications: list[dict[str, Any]]) -> dict[str, int]:
@@ -846,6 +875,61 @@ def route_pr(facts: dict[str, Any], classifications: list[dict[str, Any]]) -> st
     if facts.get("approved"):
         return "maintainer"
     return "approver"
+
+
+def thread_by_id(threads: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return {t["thread_id"]: t for t in threads}
+
+
+def thread_latest_comment_ts(thread: dict[str, Any] | None) -> datetime | None:
+    comments = (thread or {}).get("comments") or []
+    if not comments:
+        return None
+    return parse_ts(comments[-1].get("timestamp") or "")
+
+
+def oldest_thread_wait_ts(
+    threads: list[dict[str, Any]],
+    classifications: list[dict[str, Any]],
+    action: str,
+) -> datetime | None:
+    threads_by_id = thread_by_id(threads)
+    timestamps = [
+        thread_latest_comment_ts(threads_by_id.get(c.get("thread_id") or ""))
+        for c in classifications
+        if valid_thread_action((c.get("decision") or {}).get("thread_action") or "") == action
+    ]
+    timestamps = [ts for ts in timestamps if ts is not None]
+    return min(timestamps) if timestamps else None
+
+
+def fallback_wait_ts(side: str, facts: dict[str, Any]) -> tuple[datetime | None, str]:
+    if side in ("approver", "maintainer"):
+        return parse_ts(facts.get("last_author_activity_at") or ""), "last_author_activity"
+    if side == "author":
+        return parse_ts(facts.get("last_approver_activity_at") or ""), "last_approver_activity"
+    if side == "external":
+        return parse_ts(facts.get("last_external_activity_at") or ""), "last_external_activity"
+    return parse_ts(facts.get("last_activity_at") or ""), "last_activity"
+
+
+def add_wait_age_facts(
+    facts: dict[str, Any],
+    side: str,
+    threads: list[dict[str, Any]],
+    classifications: list[dict[str, Any]],
+) -> None:
+    action = SIDE_THREAD_ACTIONS.get(side)
+    wait_ts = oldest_thread_wait_ts(threads, classifications, action) if action else None
+    basis = "oldest_pending_thread" if wait_ts else ""
+    if wait_ts is None:
+        wait_ts, basis = fallback_wait_ts(side, facts)
+    if wait_ts is None:
+        wait_ts = parse_ts(facts.get("created_at") or "")
+        basis = "created"
+    facts["seconds_since_waiting"] = seconds_since(wait_ts)
+    facts["waiting_age"] = activity_age(wait_ts)
+    facts["waiting_age_basis"] = basis
 
 
 def _md_escape(s: str) -> str:
@@ -893,6 +977,25 @@ def render_workflow_failure_section(issues: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def render_draft_pr_section(prs: list[dict[str, Any]]) -> list[str]:
+    drafts = [p for p in prs if p.get("isDraft")]
+    if not drafts:
+        return []
+    drafts.sort(key=lambda p: p.get("updatedAt") or "")
+    lines = ["## Draft pull requests", ""]
+    lines.append("| PR | Author | Updated |")
+    lines.append("|---|---|:---:|")
+    for pr in drafts:
+        number = pr["number"]
+        title = _md_escape(pr.get("title", ""))
+        url = pr.get("url", "")
+        author = actor_login(pr.get("author") or {})
+        updated = activity_age(parse_ts(pr.get("updatedAt") or ""))
+        lines.append(f"| [{title} (#{number})]({url}) | {author} | {updated} |")
+    lines.append("")
+    return lines
+
+
 def ci_cell(facts: dict[str, Any]) -> str:
     if "ci_failing_count" not in facts and "ci_pending_count" not in facts:
         return "?"
@@ -918,6 +1021,18 @@ def approved_cell(facts: dict[str, Any]) -> str:
     return "✅" if facts.get("approved") else " "
 
 
+def age_seconds(facts: dict[str, Any]) -> int | None:
+    value = facts.get("seconds_since_waiting")
+    if isinstance(value, int):
+        return value
+    fallback = facts.get("seconds_since_last_activity")
+    return fallback if isinstance(fallback, int) else None
+
+
+def age_cell(facts: dict[str, Any]) -> str:
+    return facts.get("waiting_age") or facts.get("last_activity_age") or "?"
+
+
 def _html_escape(s: str) -> str:
     return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -931,6 +1046,8 @@ def render_diagnostics_section(results: dict[int, dict[str, Any]]) -> list[str]:
         lines.append(f"PR #{number}")
         lines.append(
             f"facts: approved={facts.get('approved')} conflicts={facts.get('conflicts')} "
+            f"age={age_cell(facts)} "
+            f"age_basis={facts.get('waiting_age_basis')} "
             f"last_activity_age={facts.get('last_activity_age')}"
         )
         lines.append("threads: " + " ".join(f"{k}={v}" for k, v in counts.items()))
@@ -957,7 +1074,8 @@ def render_markdown_compact(
     refresh_url = f"https://github.com/{repo}/actions/workflows/pr-review-dashboard.yml"
     out: list[str] = [
         "> [!NOTE]",
-        "> Open non-draft PRs grouped by who is expected to act next. The grouping is "
+        "> Open non-draft PRs grouped by who is expected to act next. Draft PRs are "
+        "listed separately. The grouping is "
         f"partly performed by an LLM ([source]({source_url})) and could contain mistakes. "
         f"Refreshed about every hour. Last refresh: {now}.",
         "",
@@ -973,7 +1091,7 @@ def render_markdown_compact(
     def row_sort_key(pr: dict[str, Any]) -> tuple[int, int]:
         res = results.get(pr["number"]) or {}
         facts = res.get("facts") or {}
-        activity = facts.get("seconds_since_last_activity")
+        activity = age_seconds(facts)
         return (activity if isinstance(activity, int) else -1, pr["number"])
 
     for side in SIDE_ORDER:
@@ -983,7 +1101,7 @@ def render_markdown_compact(
         rows.sort(key=row_sort_key, reverse=True)
         out.append(f"## {SIDE_LABELS.get(side, side)}")
         out.append("")
-        out.append("| PR | Author | CI | Conflicts | Inactive |")
+        out.append("| PR | Author | CI | Conflicts | Age |")
         out.append("|---|---|:---:|:---:|:---:|")
         for pr in rows:
             number = pr["number"]
@@ -992,7 +1110,7 @@ def render_markdown_compact(
             res = results.get(number) or {}
             facts = res.get("facts") or {}
             author = facts.get("author") or actor_login(pr.get("author") or {})
-            activity_cell = facts.get("last_activity_age") or "?"
+            activity_cell = age_cell(facts)
             pr_cell = f"[{title} (#{number})]({url})"
             if facts.get("approved"):
                 pr_cell += " ✅"
@@ -1003,6 +1121,7 @@ def render_markdown_compact(
         out.append("")
 
     out.extend(render_workflow_failure_section(workflow_issues or []))
+    out.extend(render_draft_pr_section(prs))
     out.extend(render_diagnostics_section(results))
     out.append(f"_Approvers may [force a refresh]({refresh_url})._")
     out.append("")
@@ -1025,10 +1144,11 @@ def build_pr_result(
         raw = fetch_pr_raw(repo, owner, repo_name, pr_summary)
         author, delegator = effective_author(raw)
         events = normalize_events(raw, author, reviewers)
-        facts = compute_facts(raw, author)
+        facts = compute_facts(raw, author, events)
         threads = group_discussion_threads(raw, events, author, reviewers, facts)
         classifications = classify_threads(repo, number, raw["pr"], facts, threads, model)
         side = route_pr(facts, classifications)
+        add_wait_age_facts(facts, side, threads, classifications)
         return {
             "pr": number,
             "returncode": 0,
