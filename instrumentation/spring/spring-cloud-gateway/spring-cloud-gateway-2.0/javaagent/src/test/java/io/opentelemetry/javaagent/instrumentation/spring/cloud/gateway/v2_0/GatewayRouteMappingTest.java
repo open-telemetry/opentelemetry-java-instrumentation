@@ -24,6 +24,11 @@ class GatewayRouteMappingTest extends AbstractRouteMappingTest {
   }
 
   @Override
+  protected String getHttpRoute() {
+    return "path_route";
+  }
+
+  @Override
   protected List<AttributeAssertion> getExpectedAttributes() {
     return buildAttributeAssertions("path_route", "h1c://mock.response", 0, 1);
   }
@@ -31,6 +36,16 @@ class GatewayRouteMappingTest extends AbstractRouteMappingTest {
   @Override
   protected List<AttributeAssertion> getRandomUuidExpectedAttributes() {
     return buildAttributeAssertions("h1c://mock.uuid", 0, 1);
+  }
+
+  @Override
+  protected String getRandomUuidHttpRoute() {
+    return null;
+  }
+
+  @Override
+  protected String getFakeUuidHttpRoute(String routeId) {
+    return routeId;
   }
 
   @Override

@@ -49,7 +49,9 @@ class Gateway43MvcRouteMappingTest extends AbstractRouteMappingTest {
 
   @Override
   protected List<AttributeAssertion> getRandomUuidExpectedAttributes() {
-    return new ArrayList<>();
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.add(equalTo(stringKey("spring-cloud-gateway.route.id"), "test-route-id"));
+    return assertions;
   }
 
   @Override

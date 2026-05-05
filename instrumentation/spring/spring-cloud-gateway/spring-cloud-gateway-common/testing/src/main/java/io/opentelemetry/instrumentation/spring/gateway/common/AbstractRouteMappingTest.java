@@ -8,6 +8,19 @@ package io.opentelemetry.instrumentation.spring.gateway.common;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -19,6 +32,8 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -26,6 +41,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 
 public abstract class AbstractRouteMappingTest {
+  private static final String UUID_REGEX =
+      "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -42,6 +60,11 @@ public abstract class AbstractRouteMappingTest {
 
   protected String getInternalSpanName() {
     return WEBFLUX_SPAN_NAME;
+  }
+
+  @Nullable
+  protected String getHttpRoute() {
+    return "/gateway/echo";
   }
 
   protected List<AttributeAssertion> getExpectedAttributes() {
@@ -66,7 +89,9 @@ public abstract class AbstractRouteMappingTest {
                 span ->
                     span.hasName(getSpanName())
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(getExpectedAttributes()),
+                        .hasAttributesSatisfyingExactly(
+                            withHttpServerAttributes(
+                                getExpectedAttributes(), getHttpRoute(), "/gateway/echo")),
                 span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
   }
 
@@ -82,7 +107,11 @@ public abstract class AbstractRouteMappingTest {
                 span ->
                     span.hasName(getRandomUuidSpanName())
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(getRandomUuidExpectedAttributes()),
+                        .hasAttributesSatisfyingExactly(
+                            withHttpServerAttributes(
+                                getRandomUuidExpectedAttributes(),
+                                getRandomUuidHttpRoute(),
+                                "/uuid/echo")),
                 span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
   }
 
@@ -99,12 +128,21 @@ public abstract class AbstractRouteMappingTest {
                 span ->
                     span.hasName(getFakeUuidSpanName(routeId))
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(getFakeUuidExpectedAttributes(routeId)),
+                        .hasAttributesSatisfyingExactly(
+                            withHttpServerAttributes(
+                                getFakeUuidExpectedAttributes(routeId),
+                                getFakeUuidHttpRoute(routeId),
+                                "/fake/echo")),
                 span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
   }
 
   protected String getRandomUuidSpanName() {
     return "POST";
+  }
+
+  @Nullable
+  protected String getRandomUuidHttpRoute() {
+    return "/uuid/echo";
   }
 
   protected List<AttributeAssertion> getRandomUuidExpectedAttributes() {
@@ -115,6 +153,11 @@ public abstract class AbstractRouteMappingTest {
     return "POST " + routeId;
   }
 
+  @Nullable
+  protected String getFakeUuidHttpRoute(String routeId) {
+    return "/fake/echo";
+  }
+
   protected List<AttributeAssertion> getFakeUuidExpectedAttributes(String routeId) {
     return buildAttributeAssertions(routeId, "h1c://mock.fake", 0, 0);
   }
@@ -122,7 +165,10 @@ public abstract class AbstractRouteMappingTest {
   protected List<AttributeAssertion> buildAttributeAssertions(
       @Nullable String routeId, String uri, int order, int filterSize) {
     List<AttributeAssertion> assertions = new ArrayList<>();
-    if (!StringUtils.isEmpty(routeId)) {
+    if (routeId == null) {
+      assertions.add(
+          satisfies(stringKey("spring-cloud-gateway.route.id"), val -> val.matches(UUID_REGEX)));
+    } else if (!StringUtils.isEmpty(routeId)) {
       assertions.add(equalTo(stringKey("spring-cloud-gateway.route.id"), routeId));
     }
     assertions.add(equalTo(stringKey("spring-cloud-gateway.route.uri"), uri));
@@ -134,5 +180,25 @@ public abstract class AbstractRouteMappingTest {
   protected List<AttributeAssertion> buildAttributeAssertions(
       String uri, int order, int filterSize) {
     return buildAttributeAssertions(null, uri, order, filterSize);
+  }
+
+  private static List<AttributeAssertion> withHttpServerAttributes(
+      List<AttributeAssertion> routeAssertions, @Nullable String httpRoute, String urlPath) {
+    List<AttributeAssertion> assertions = new ArrayList<>(routeAssertions);
+    if (httpRoute != null) {
+      assertions.add(equalTo(HTTP_ROUTE, httpRoute));
+    }
+    assertions.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+    assertions.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+    assertions.add(equalTo(URL_PATH, urlPath));
+    assertions.add(equalTo(URL_SCHEME, "http"));
+    assertions.add(satisfies(CLIENT_ADDRESS, AbstractStringAssert::isNotBlank));
+    assertions.add(satisfies(NETWORK_PEER_ADDRESS, AbstractStringAssert::isNotBlank));
+    assertions.add(satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isPositive));
+    assertions.add(satisfies(NETWORK_PROTOCOL_VERSION, AbstractStringAssert::isNotBlank));
+    assertions.add(satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank));
+    assertions.add(satisfies(SERVER_PORT, AbstractLongAssert::isPositive));
+    assertions.add(satisfies(USER_AGENT_ORIGINAL, AbstractStringAssert::isNotBlank));
+    return assertions;
   }
 }

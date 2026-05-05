@@ -11,4 +11,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = {Gateway22TestApplication.class})
-class Gateway22RouteMappingTest extends AbstractRouteMappingTest {}
+class Gateway22RouteMappingTest extends AbstractRouteMappingTest {
+
+  @Override
+  protected String getHttpRoute() {
+    return null;
+  }
+
+  @Override
+  protected String getRandomUuidHttpRoute() {
+    return null;
+  }
+
+  @Override
+  protected String getFakeUuidHttpRoute(String routeId) {
+    return routeId;
+  }
+}
