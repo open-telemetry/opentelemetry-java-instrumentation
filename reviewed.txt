@@ -512,3 +512,16 @@ tomcat-7.0:javaagent
 tomcat-common:javaagent
 tomcat-jdbc:javaagent
 twilio-6.6:javaagent
+undertow-1.4:bootstrap
+undertow-1.4:javaagent
+vaadin-14.2:javaagent
+vaadin-14.2:testing
+vertx-http-client-3.0:javaagent
+vertx-http-client-4.0:javaagent
+vertx-http-client-5.0:javaagent
+vertx-http-client-common-3.0:javaagent
+vertx-kafka-client-3.6:javaagent
+vertx-kafka-client-3.6:testing
+vertx-kafka-client-3.6:vertx-kafka-client-3.6-testing
+vertx-kafka-client-3.6:vertx-kafka-client-4-testing
+vertx-kafka-client-3.6:vertx-kafka-client-5-testing
