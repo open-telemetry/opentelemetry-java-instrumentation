@@ -32,6 +32,8 @@ class WorkflowError(RuntimeError):
 @dataclass
 class Summary:
     pr: int
+    pr_url: str | None = None
+    review_url: str | None = None
     original_branch: str = ""
     pr_branch: str = ""
     restored_branch: str | None = None
@@ -76,6 +78,12 @@ class Summary:
             print("Notes:")
             for note in self.notes:
                 print(f"- {note}")
+        if self.pr_url or self.review_url:
+            print("Links:")
+            if self.pr_url:
+                print(f"- PR: {self.pr_url}")
+            if self.review_url:
+                print(f"- Review: {self.review_url}")
 
 
 def format_cmd(cmd: list[str]) -> str:
@@ -190,8 +198,14 @@ def detect_repo(summary: Summary | None = None) -> str:
 
 
 def pr_view(pr: int, summary: Summary) -> dict[str, Any]:
-    fields = "headRepositoryOwner,headRepository,headRefName,isCrossRepository,maintainerCanModify"
+    fields = "headRepositoryOwner,headRepository,headRefName,isCrossRepository,maintainerCanModify,url"
     return gh_json(["pr", "view", str(pr), "--json", fields], summary)
+
+
+def remember_pr_url(metadata: dict[str, Any], summary: Summary) -> None:
+    url = metadata.get("url")
+    if isinstance(url, str) and url:
+        summary.pr_url = url
 
 
 def authed_login(summary: Summary) -> str:
@@ -214,13 +228,16 @@ def checkout_pr(pr: int, summary: Summary) -> dict[str, Any]:
     progress(f"Checking out PR #{pr}")
     gh(["pr", "checkout", str(pr)], summary)
     summary.pr_branch = current_branch(summary)
-    return ensure_pr_push_allowed(pr, summary)
+    metadata = ensure_pr_push_allowed(pr, summary)
+    remember_pr_url(metadata, summary)
+    return metadata
 
 
 def checkout_pr_no_push_check(pr: int, summary: Summary) -> None:
     progress(f"Checking out PR #{pr}")
     gh(["pr", "checkout", str(pr)], summary)
     summary.pr_branch = current_branch(summary)
+    remember_pr_url(pr_view(pr, summary), summary)
 
 
 def run_pr_workflow(pr: int, body: Callable[[Summary], int], *, push_required: bool = True) -> int:

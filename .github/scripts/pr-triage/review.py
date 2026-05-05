@@ -251,7 +251,7 @@ def validate_comments(findings: dict[str, Any], diff_scope: dict[str, dict[str, 
 
 
 def post_review(repo: str, pr: int, payload_path: Path, summary: Summary) -> str:
-    result = gh(
+    review = gh_json(
         [
             "api",
             f"repos/{repo}/pulls/{pr}/reviews",
@@ -259,12 +259,16 @@ def post_review(repo: str, pr: int, payload_path: Path, summary: Summary) -> str
             "POST",
             "--input",
             str(payload_path),
-            "--jq",
-            ".id",
         ],
         summary,
     )
-    return result.stdout.strip()
+    review_id = str(review.get("id") or "")
+    review_url = review.get("html_url")
+    if isinstance(review_url, str) and review_url:
+        summary.review_url = review_url
+    elif review_id and summary.pr_url:
+        summary.review_url = f"{summary.pr_url}#pullrequestreview-{review_id}"
+    return review_id
 
 
 def main() -> int:
@@ -272,6 +276,7 @@ def main() -> int:
 
     def workflow(summary: Summary) -> int:
         metadata = pr_metadata(args.pr, summary)
+        summary.pr_url = metadata.get("url")
         progress("Collecting PR diff")
         diff_names = gh(["pr", "diff", str(args.pr), "--name-only"], summary).stdout.splitlines()
         diff_text = gh(["pr", "diff", str(args.pr), "--color", "never"], summary).stdout
