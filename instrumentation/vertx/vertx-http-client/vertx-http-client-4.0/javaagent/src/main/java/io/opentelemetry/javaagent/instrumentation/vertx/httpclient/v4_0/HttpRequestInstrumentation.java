@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v4_0.VertxClientSingletons.CONTEXTS;
 import static io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v4_0.VertxClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -60,8 +59,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(nameStartsWith("end").or(named("sendHead"))),
-        getClass().getName() + "$EndRequestAdvice");
+        nameStartsWith("end").or(named("sendHead")), getClass().getName() + "$EndRequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("handleException"), getClass().getName() + "$HandleExceptionAdvice");
@@ -72,7 +70,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$HandleResponseAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(isPrivate()).and(nameStartsWith("write").or(nameStartsWith("connected"))),
+        isPrivate().and(nameStartsWith("write").or(nameStartsWith("connected"))),
         getClass().getName() + "$MountContextAdvice");
 
     transformer.applyAdviceToMethod(
@@ -87,23 +85,22 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context) {
         this.context = context;
-        this.scope = scope;
+        this.scope = context.makeCurrent();
       }
 
       @Nullable
-      public static AdviceScope startAndAttachContext(HttpClientRequest request) {
+      public static AdviceScope start(HttpClientRequest request) {
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }
 
         Context context = instrumenter().start(parentContext, request);
-        Contexts contexts = new Contexts(parentContext, context);
-        CONTEXTS.set(request, contexts);
+        CONTEXTS.set(request, new Contexts(parentContext, context));
 
-        return new AdviceScope(context, context.makeCurrent());
+        return new AdviceScope(context);
       }
 
       public void end(HttpClientRequest request, @Nullable Throwable throwable) {
@@ -117,7 +114,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope attachContext(@Advice.This HttpClientRequest request) {
-      return AdviceScope.startAndAttachContext(request);
+      return AdviceScope.start(request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
