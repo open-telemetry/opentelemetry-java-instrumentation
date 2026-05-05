@@ -103,6 +103,12 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties, Map<String, String> mappings) {
+    for (String mapping : mappings.keySet()) {
+      if (SPECIAL_MAPPINGS.containsKey(mapping)) {
+        throw new IllegalArgumentException(
+            "Custom mapping must not override built-in mapping: " + mapping);
+      }
+    }
     Map<String, String> mergedMappings = new HashMap<>(SPECIAL_MAPPINGS);
     mergedMappings.putAll(mappings);
     return new ConfigPropertiesBackedDeclarativeConfigProperties(

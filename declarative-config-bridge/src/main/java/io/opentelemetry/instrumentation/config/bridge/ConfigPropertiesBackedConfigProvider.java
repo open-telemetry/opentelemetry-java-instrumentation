@@ -39,6 +39,8 @@ public final class ConfigPropertiesBackedConfigProvider implements ConfigProvide
   public static final class Builder {
     private final Map<String, String> mappings = new HashMap<>();
 
+    private Builder() {}
+
     @CanIgnoreReturnValue
     public Builder addMapping(String declarativeProperty, String configProperty) {
       mappings.put(declarativeProperty, configProperty);

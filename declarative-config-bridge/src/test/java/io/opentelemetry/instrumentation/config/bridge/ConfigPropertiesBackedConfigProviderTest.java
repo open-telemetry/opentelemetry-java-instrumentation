@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.config.bridge;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -63,5 +64,17 @@ class ConfigPropertiesBackedConfigProviderTest {
                 .getStructured("http")
                 .getString("known_methods"))
         .isEqualTo("GET,POST");
+  }
+
+  @Test
+  void testBuilderRejectsSpecialMappingOverride() {
+    assertThatThrownBy(
+            () ->
+                ConfigPropertiesBackedConfigProvider.builder()
+                    .addMapping(
+                        "java.common.http.known_methods", "otel.instrumentation.http.known-methods")
+                    .build(DefaultConfigProperties.createFromMap(Map.of())))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("java.common.http.known_methods");
   }
 }
