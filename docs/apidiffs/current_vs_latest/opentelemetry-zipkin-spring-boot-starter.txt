@@ -1,0 +1,2 @@
+Comparing source compatibility of opentelemetry-zipkin-spring-boot-starter-2.28.0-SNAPSHOT.jar against 
+No changes.
