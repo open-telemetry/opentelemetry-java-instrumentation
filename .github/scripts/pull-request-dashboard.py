@@ -312,10 +312,25 @@ def parse_ts(s: str | None) -> datetime | None:
     return datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
-def days_since(ts: datetime | None) -> int | None:
+def seconds_since(ts: datetime | None) -> int | None:
     if ts is None:
         return None
-    return max(0, (datetime.now(timezone.utc) - ts).days)
+    return max(0, int((datetime.now(timezone.utc) - ts).total_seconds()))
+
+
+def activity_age(ts: datetime | None) -> str:
+    seconds = seconds_since(ts)
+    if seconds is None:
+        return "?"
+    minutes = seconds // 60
+    if minutes < 1:
+        return "<1m"
+    if minutes < 60:
+        return f"{minutes}m"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours}h"
+    return f"{hours // 24}d"
 
 
 def truncate(s: str, n: int = MAX_BODY_CHARS) -> str:
@@ -519,7 +534,8 @@ def compute_facts(raw: dict[str, Any], author: str) -> dict[str, Any]:
         "ci_failing_count": len(failing),
         "ci_pending_count": len(pending),
         "conflicts": compute_conflicts(pr),
-        "days_since_last_activity": days_since(last_activity_ts),
+        "seconds_since_last_activity": seconds_since(last_activity_ts),
+        "last_activity_age": activity_age(last_activity_ts),
     }
 
 
@@ -915,7 +931,7 @@ def render_diagnostics_section(results: dict[int, dict[str, Any]]) -> list[str]:
         lines.append(f"PR #{number}")
         lines.append(
             f"facts: approved={facts.get('approved')} conflicts={facts.get('conflicts')} "
-            f"days_since_last_activity={facts.get('days_since_last_activity')}"
+            f"last_activity_age={facts.get('last_activity_age')}"
         )
         lines.append("threads: " + " ".join(f"{k}={v}" for k, v in counts.items()))
         for c in result.get("classifications") or []:
@@ -957,7 +973,7 @@ def render_markdown_compact(
     def row_sort_key(pr: dict[str, Any]) -> tuple[int, int]:
         res = results.get(pr["number"]) or {}
         facts = res.get("facts") or {}
-        activity = facts.get("days_since_last_activity")
+        activity = facts.get("seconds_since_last_activity")
         return (activity if isinstance(activity, int) else -1, pr["number"])
 
     for side in SIDE_ORDER:
@@ -976,8 +992,7 @@ def render_markdown_compact(
             res = results.get(number) or {}
             facts = res.get("facts") or {}
             author = facts.get("author") or actor_login(pr.get("author") or {})
-            activity = facts.get("days_since_last_activity")
-            activity_cell = "?" if activity is None else f"{activity}d"
+            activity_cell = facts.get("last_activity_age") or "?"
             pr_cell = f"[{title} (#{number})]({url})"
             if facts.get("approved"):
                 pr_cell += " ✅"
