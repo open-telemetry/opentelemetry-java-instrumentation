@@ -208,32 +208,32 @@ abstract class AbstractSpringIntegrationTracingTest {
 
   @SpringBootConfiguration
   @EnableAutoConfiguration
-  public static class MessageChannelsConfig {
+  static class MessageChannelsConfig {
 
     private final SubscribableChannel problematicSharedChannel = new DirectChannel();
 
     @Bean
-    public SubscribableChannel directChannel() {
+    SubscribableChannel directChannel() {
       return new DirectChannel();
     }
 
     @Bean
-    public SubscribableChannel directChannel1() {
+    SubscribableChannel directChannel1() {
       return problematicSharedChannel;
     }
 
     @Bean
-    public SubscribableChannel directChannel2() {
+    SubscribableChannel directChannel2() {
       return problematicSharedChannel;
     }
 
     @Bean(destroyMethod = "shutdownNow")
-    public ExecutorService executorChannelExecutor() {
+    ExecutorService executorChannelExecutor() {
       return Executors.newSingleThreadExecutor();
     }
 
     @Bean
-    public SubscribableChannel executorChannel(GlobalChannelInterceptorWrapper otelInterceptor) {
+    SubscribableChannel executorChannel(GlobalChannelInterceptorWrapper otelInterceptor) {
       ExecutorSubscribableChannel channel =
           new ExecutorSubscribableChannel(executorChannelExecutor());
       if (!testLatestDeps()) {
@@ -247,17 +247,17 @@ abstract class AbstractSpringIntegrationTracingTest {
     }
 
     @Bean
-    public SubscribableChannel linkedChannel1() {
+    SubscribableChannel linkedChannel1() {
       return new DirectChannel();
     }
 
     @Bean
-    public SubscribableChannel linkedChannel2() {
+    SubscribableChannel linkedChannel2() {
       return new DirectChannel();
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void initialize() {
+    void initialize() {
       linkedChannel1().subscribe(message -> linkedChannel2().send(message));
     }
   }
