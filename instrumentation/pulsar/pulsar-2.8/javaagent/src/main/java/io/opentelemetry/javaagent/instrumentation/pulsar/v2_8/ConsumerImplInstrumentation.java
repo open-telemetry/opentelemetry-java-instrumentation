@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.P
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -34,9 +33,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf(
-        "org.apache.pulsar.client.impl.ConsumerImpl",
-        "org.apache.pulsar.client.impl.MultiTopicsConsumerImpl");
+    return named("org.apache.pulsar.client.impl.ConsumerImpl");
   }
 
   @Override
