@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import java.util.List;
-import javax.annotation.Nullable;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 
@@ -35,7 +34,6 @@ public class PekkoHttpUtil {
         .orElse(emptyList());
   }
 
-  @Nullable
   public static String protocolName(HttpRequest request) {
     String protocol = request.protocol().value();
     if (protocol.startsWith("HTTP/")) {
@@ -44,7 +42,6 @@ public class PekkoHttpUtil {
     return null;
   }
 
-  @Nullable
   public static String protocolVersion(HttpRequest request) {
     String protocol = request.protocol().value();
     if (protocol.startsWith("HTTP/")) {

@@ -12,14 +12,13 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import javax.annotation.Nullable;
 import org.apache.pekko.http.scaladsl.model.Uri;
 
 public class PekkoRouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<PekkoRouteHolder> KEY = named("opentelemetry-pekko-route");
 
   private StringBuilder route = new StringBuilder();
-  @Nullable private Uri.Path lastUnmatchedPath = null;
+  private Uri.Path lastUnmatchedPath = null;
   private boolean lastWasMatched = false;
   private final Deque<State> savedStates = new ArrayDeque<>();
 
@@ -27,7 +26,6 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     return context.with(new PekkoRouteHolder());
   }
 
-  @Nullable
   public static PekkoRouteHolder get(Context context) {
     return context.get(KEY);
   }
@@ -59,7 +57,6 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     }
   }
 
-  @Nullable
   public String route() {
     return lastWasMatched ? route.toString() : null;
   }
@@ -85,10 +82,10 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
   private PekkoRouteHolder() {}
 
   private static class State {
-    @Nullable private final Uri.Path lastUnmatchedPath;
+    private final Uri.Path lastUnmatchedPath;
     private final StringBuilder route;
 
-    private State(@Nullable Uri.Path lastUnmatchedPath, StringBuilder route) {
+    private State(Uri.Path lastUnmatchedPath, StringBuilder route) {
       this.lastUnmatchedPath = lastUnmatchedPath;
       this.route = route;
     }

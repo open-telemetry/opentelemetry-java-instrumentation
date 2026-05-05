@@ -39,8 +39,8 @@ class TapirHttpServerRouteTest {
   private def buildAddress(port: Int): URI = try
     new URI("http://localhost:" + port + "/")
   catch {
-    case e: URISyntaxException =>
-      throw new IllegalStateException(e)
+    case exception: URISyntaxException =>
+      throw new IllegalStateException(exception)
   }
 
   @Test def testSimple(): Unit = {
