@@ -57,23 +57,22 @@ Use these labels:
   - unclear: the thread does not contain enough information to decide
 
 Guidance:
-  - A reviewer saying "this works", "sounds good", or answering the author's
-    question may still leave the next implementation step with the author.
-  - An author saying "fixed", pushing a commit after feedback, or answering a
-    reviewer question usually puts the thread back in the reviewer court.
-  - If the author's latest comment asks the reviewer a question or requests
-    reviewer input, classify the thread as reviewer.
-    - If thread_facts.same_actor_approved_after_thread is true, use that only as
-        supporting evidence that an optional suggestion or informational comment is
-        non-blocking. Do not classify required follow-up as none just because the
-        same actor later approved.
-    - A reviewer sharing a reference, example, optional suggestion, or "for ideas"
-        link without an explicit requested change is informational; classify it as
-        none.
-  - If the thread is merely informational and does not require action, classify
-    it as none.
-  - If the thread is purely social, for example "thanks", "LGTM", or "nice work",
-    with no follow-up requested or implied, classify it as none.
+  - Default heuristic: whoever commented last has passed the ball to the other
+    side. If the latest comment is from a reviewer/approver, the author owes a
+    response (classify as author). If the latest comment is from the author,
+    the reviewer owes a response (classify as reviewer).
+  - This applies even to optional suggestions, "for ideas" links, references,
+    or links to a reviewer's own pull request / patch with proposed changes.
+    The author still needs to acknowledge, accept, or push back.
+  - Exceptions that map to none:
+    - Purely social comments ("thanks", "LGTM", "nice work") with no follow-up
+      requested or implied.
+    - The reviewer's last comment is a clear acknowledgement of the author's
+      previous reply ("sounds good", "ok thanks") that closes the thread.
+  - Exception that keeps the ball with the author: if the author's latest
+    comment is a self-deferral ("still working on it", "WIP", "I'll get to
+    this", "will fix") rather than a question or completed reply, classify as
+    author — they have not yet handed the ball back.
 
 Respond with a single JSON object and nothing else:
 {{"thread_action": "author" | "reviewer" | "external" | "none" | "unclear", "reason": "short explanation grounded in this thread"}}
@@ -313,10 +312,25 @@ def parse_ts(s: str | None) -> datetime | None:
     return datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
-def days_since(ts: datetime | None) -> int | None:
+def seconds_since(ts: datetime | None) -> int | None:
     if ts is None:
         return None
-    return max(0, (datetime.now(timezone.utc) - ts).days)
+    return max(0, int((datetime.now(timezone.utc) - ts).total_seconds()))
+
+
+def activity_age(ts: datetime | None) -> str:
+    seconds = seconds_since(ts)
+    if seconds is None:
+        return "?"
+    minutes = seconds // 60
+    if minutes < 1:
+        return "<1m"
+    if minutes < 60:
+        return f"{minutes}m"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours}h"
+    return f"{hours // 24}d"
 
 
 def truncate(s: str, n: int = MAX_BODY_CHARS) -> str:
@@ -520,7 +534,8 @@ def compute_facts(raw: dict[str, Any], author: str) -> dict[str, Any]:
         "ci_failing_count": len(failing),
         "ci_pending_count": len(pending),
         "conflicts": compute_conflicts(pr),
-        "days_since_last_activity": days_since(last_activity_ts),
+        "seconds_since_last_activity": seconds_since(last_activity_ts),
+        "last_activity_age": activity_age(last_activity_ts),
     }
 
 
@@ -533,35 +548,13 @@ def thread_comment(timestamp: str, actor: str, author: str, reviewers: set[str],
     }
 
 
-def approver_approved_after_thread(raw: dict[str, Any], comments: list[dict[str, Any]]) -> bool:
-    last_comment_ts = comments[-1]["timestamp"]
-    thread_approvers = {
-        c["actor"].lower()
-        for c in comments
-        if c["actor_role"] == "approver" and c.get("actor")
-    }
-    if not thread_approvers:
-        return False
-    for review in raw["reviews"]:
-        reviewer = actor_login(review.get("user") or {}).lower()
-        if reviewer not in thread_approvers:
-            continue
-        if review.get("state") != "APPROVED":
-            continue
-        if (review.get("submitted_at") or "") > last_comment_ts:
-            return True
-    return False
-
-
 def add_thread_facts(
-    raw: dict[str, Any],
     thread: dict[str, Any],
     comments: list[dict[str, Any]],
     facts: dict[str, Any],
 ) -> dict[str, Any]:
     thread["thread_facts"] = {
         "latest_comment_role": comments[-1].get("actor_role"),
-        "same_actor_approved_after_thread": approver_approved_after_thread(raw, comments),
         "current_conflicts": facts.get("conflicts"),
     }
     return thread
@@ -585,7 +578,7 @@ def group_review_threads(
         comments.sort(key=lambda c: c["timestamp"])
         if not comments:
             continue
-        threads.append(add_thread_facts(raw, {
+        threads.append(add_thread_facts({
             "thread_id": thread.get("id") or f"review-thread-{len(threads) + 1}",
             "thread_kind": "review-comment-thread",
             "path": thread.get("path"),
@@ -641,7 +634,7 @@ def group_pr_conversation(
     selected = selected[-PR_COMMENT_WINDOW:]
     if not selected:
         return []
-    return [add_thread_facts(raw, {
+    return [add_thread_facts({
         "thread_id": "pr-conversation",
         "thread_kind": "pr-conversation",
         "path": None,
@@ -820,7 +813,7 @@ def classify_threads(
 
 
 SIDE_LABELS = {
-    "maintainer": "Waiting on maintainer (approved)",
+    "maintainer": "Waiting on maintainers",
     "approver": "Waiting on approvers",
     "author": "Waiting on authors",
     "external": "Waiting on external",
@@ -919,6 +912,12 @@ def conflicts_cell(facts: dict[str, Any]) -> str:
     return "?"
 
 
+def approved_cell(facts: dict[str, Any]) -> str:
+    if "approved" not in facts:
+        return "?"
+    return "✅" if facts.get("approved") else " "
+
+
 def _html_escape(s: str) -> str:
     return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -932,7 +931,7 @@ def render_diagnostics_section(results: dict[int, dict[str, Any]]) -> list[str]:
         lines.append(f"PR #{number}")
         lines.append(
             f"facts: approved={facts.get('approved')} conflicts={facts.get('conflicts')} "
-            f"days_since_last_activity={facts.get('days_since_last_activity')}"
+            f"last_activity_age={facts.get('last_activity_age')}"
         )
         lines.append("threads: " + " ".join(f"{k}={v}" for k, v in counts.items()))
         for c in result.get("classifications") or []:
@@ -971,15 +970,21 @@ def render_markdown_compact(
         res = results.get(pr["number"]) or {"side": "unknown"}
         by_side.setdefault(res.get("side") or "unknown", []).append(pr)
 
+    def row_sort_key(pr: dict[str, Any]) -> tuple[int, int]:
+        res = results.get(pr["number"]) or {}
+        facts = res.get("facts") or {}
+        activity = facts.get("seconds_since_last_activity")
+        return (activity if isinstance(activity, int) else -1, pr["number"])
+
     for side in SIDE_ORDER:
         rows = by_side.get(side) or []
         if not rows:
             continue
-        rows.sort(key=lambda p: -p["number"])
+        rows.sort(key=row_sort_key, reverse=True)
         out.append(f"## {SIDE_LABELS.get(side, side)}")
         out.append("")
-        out.append("| PR | Author | CI | Conflicts | Activity |")
-        out.append("|---|---|---|---|---|")
+        out.append("| PR | Author | CI | Conflicts | Inactive |")
+        out.append("|---|---|:---:|:---:|:---:|")
         for pr in rows:
             number = pr["number"]
             title = _md_escape(pr.get("title", ""))
@@ -987,10 +992,12 @@ def render_markdown_compact(
             res = results.get(number) or {}
             facts = res.get("facts") or {}
             author = facts.get("author") or actor_login(pr.get("author") or {})
-            activity = facts.get("days_since_last_activity")
-            activity_cell = "?" if activity is None else f"{activity}d"
+            activity_cell = facts.get("last_activity_age") or "?"
+            pr_cell = f"[{title} (#{number})]({url})"
+            if facts.get("approved"):
+                pr_cell += " ✅"
             out.append(
-                f"| [{title}]({url}) | {author} | {ci_cell(facts)} | "
+                f"| {pr_cell} | {author} | {ci_cell(facts)} | "
                 f"{conflicts_cell(facts)} | {activity_cell} |"
             )
         out.append("")
