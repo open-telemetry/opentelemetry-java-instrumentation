@@ -35,9 +35,8 @@ AGGREGATE_CHECK_SUFFIX = "required-status-check"
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pr", type=int, help="pull request number")
-    parser.add_argument("--no-push", action="store_true", help="commit but do not push")
+    parser.add_argument("--no-push", action="store_true", help="commit locally but do not push to the PR")
     parser.add_argument("--keep-temp", action="store_true", help="reuse and retain the temp bundle directory")
-    parser.add_argument("--skip-copilot", action="store_true", help="download logs and stop before invoking Copilot")
     return parser.parse_args()
 
 
@@ -181,10 +180,6 @@ def main() -> int:
         bundle_dir = make_temp_dir("otel-ci-fix", args.pr, args.keep_temp)
         bundle_checks = write_ci_bundle(args.pr, checks, bundle_dir, summary)
 
-        if args.skip_copilot:
-            summary.outcome = "downloaded CI logs; skipped Copilot handoff"
-            return 0
-
         commit_message_path = bundle_dir / "commit-message.txt"
         prompt_improvement_path = bundle_dir / "prompt-improvement.md"
         response = invoke_copilot(copilot_prompt(args.pr, bundle_checks, commit_message_path, prompt_improvement_path), summary)
@@ -208,7 +203,7 @@ def main() -> int:
         summary.outcome = "CI fix committed"
         return 0
 
-    return run_pr_workflow(args.pr, body)
+    return run_pr_workflow(args.pr, body, push_required=not args.no_push)
 
 
 if __name__ == "__main__":

@@ -25,9 +25,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pr", type=int, help="pull request number")
     parser.add_argument("--upstream", default="upstream", help="upstream remote name")
-    parser.add_argument("--no-push", action="store_true", help="commit but do not push")
+    parser.add_argument("--no-push", action="store_true", help="commit locally but do not push to the PR")
     parser.add_argument("--keep-temp", action="store_true", help="reuse and retain the temp bundle directory")
-    parser.add_argument("--skip-copilot", action="store_true", help="stop after collecting conflict context")
     return parser.parse_args()
 
 
@@ -100,9 +99,6 @@ def main() -> int:
         summary.changed_files = conflicts
         bundle_dir = make_temp_dir("otel-conflicts", args.pr, args.keep_temp)
         plan_path = write_conflict_bundle(bundle_dir, summary)
-        if args.skip_copilot:
-            summary.outcome = "collected conflict context; skipped Copilot handoff"
-            return 1
 
         response = invoke_copilot(copilot_prompt(plan_path), summary)
         (bundle_dir / "copilot-response.txt").write_text(response + "\n", encoding="utf-8")
@@ -121,7 +117,7 @@ def main() -> int:
         summary.outcome = "resolved conflicts and merged upstream/main"
         return 0
 
-    return run_pr_workflow(args.pr, workflow)
+    return run_pr_workflow(args.pr, workflow, push_required=not args.no_push)
 
 
 if __name__ == "__main__":
