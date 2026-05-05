@@ -797,7 +797,7 @@ def classify_threads(
 
 
 SIDE_LABELS = {
-    "maintainer": "Waiting on maintainer (approved)",
+    "maintainer": "Waiting on maintainers",
     "approver": "Waiting on approvers",
     "author": "Waiting on authors",
     "external": "Waiting on external",
@@ -954,15 +954,21 @@ def render_markdown_compact(
         res = results.get(pr["number"]) or {"side": "unknown"}
         by_side.setdefault(res.get("side") or "unknown", []).append(pr)
 
+    def row_sort_key(pr: dict[str, Any]) -> tuple[int, int]:
+        res = results.get(pr["number"]) or {}
+        facts = res.get("facts") or {}
+        activity = facts.get("days_since_last_activity")
+        return (activity if isinstance(activity, int) else -1, pr["number"])
+
     for side in SIDE_ORDER:
         rows = by_side.get(side) or []
         if not rows:
             continue
-        rows.sort(key=lambda p: -p["number"])
+        rows.sort(key=row_sort_key, reverse=True)
         out.append(f"## {SIDE_LABELS.get(side, side)}")
         out.append("")
-        out.append("| PR | Author | CI | Conflicts | Approved | Activity |")
-        out.append("|---|---|---|---|---|---|")
+        out.append("| PR | Author | CI | Conflicts | Inactive |")
+        out.append("|---|---|:---:|:---:|:---:|")
         for pr in rows:
             number = pr["number"]
             title = _md_escape(pr.get("title", ""))
@@ -972,9 +978,12 @@ def render_markdown_compact(
             author = facts.get("author") or actor_login(pr.get("author") or {})
             activity = facts.get("days_since_last_activity")
             activity_cell = "?" if activity is None else f"{activity}d"
+            pr_cell = f"[{title} (#{number})]({url})"
+            if facts.get("approved"):
+                pr_cell += " ✅"
             out.append(
-                f"| [{title}]({url}) | {author} | {ci_cell(facts)} | "
-                f"{conflicts_cell(facts)} | {approved_cell(facts)} | {activity_cell} |"
+                f"| {pr_cell} | {author} | {ci_cell(facts)} | "
+                f"{conflicts_cell(facts)} | {activity_cell} |"
             )
         out.append("")
 
