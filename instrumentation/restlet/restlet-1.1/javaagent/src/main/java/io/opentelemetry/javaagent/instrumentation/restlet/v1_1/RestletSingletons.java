@@ -17,6 +17,7 @@ import org.restlet.data.Response;
 public class RestletSingletons {
 
   private static final Instrumenter<Request, Response> instrumenter;
+  private static final HttpServerRouteGetter<String> serverSpanName = ServletContextPath::prepend;
 
   static {
     instrumenter =
@@ -29,7 +30,7 @@ public class RestletSingletons {
   }
 
   public static HttpServerRouteGetter<String> serverSpanName() {
-    return ServletContextPath::prepend;
+    return serverSpanName;
   }
 
   private RestletSingletons() {}
