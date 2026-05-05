@@ -11,11 +11,11 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.ParameterList;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class KotlinCoroutineUtil {
+class KotlinCoroutineUtil {
 
   private KotlinCoroutineUtil() {}
 
-  public static ElementMatcher<MethodDescription> isKotlinSuspendMethod() {
+  static ElementMatcher<MethodDescription> isKotlinSuspendMethod() {
     // kotlin suspend methods return Object and take kotlin.coroutines.Continuation as last argument
     return returns(Object.class)
         .and(

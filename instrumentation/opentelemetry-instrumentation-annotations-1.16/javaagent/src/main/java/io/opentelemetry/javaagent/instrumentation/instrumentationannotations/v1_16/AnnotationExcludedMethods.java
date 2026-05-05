@@ -19,13 +19,13 @@ import net.bytebuddy.description.ByteCodeElement;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AnnotationExcludedMethods {
+class AnnotationExcludedMethods {
 
   /*
   Returns a matcher for all methods that should be excluded from auto-instrumentation by
   annotation-based advices.
   */
-  public static ElementMatcher.Junction<MethodDescription> configureExcludedMethods() {
+  static ElementMatcher.Junction<MethodDescription> configureExcludedMethods() {
     ElementMatcher.Junction<MethodDescription> result = none();
 
     Map<String, Set<String>> excludedMethods =
