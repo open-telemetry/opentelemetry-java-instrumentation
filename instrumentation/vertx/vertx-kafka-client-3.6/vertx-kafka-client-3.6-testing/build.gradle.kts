@@ -26,6 +26,15 @@ testing {
         implementation("io.vertx:vertx-kafka-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
       }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+          }
+        }
+      }
     }
   }
 }
