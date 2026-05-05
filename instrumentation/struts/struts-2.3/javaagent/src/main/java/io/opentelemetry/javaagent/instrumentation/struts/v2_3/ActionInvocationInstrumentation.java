@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.struts.v2_3;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.struts.v2_3.StrutsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.struts.v2_3.StrutsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -49,25 +50,22 @@ class ActionInvocationInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context) {
         this.context = context;
-        this.scope = scope;
+        this.scope = context.makeCurrent();
       }
 
       @Nullable
       public static AdviceScope start(ActionInvocation actionInvocation) {
         Context parentContext = Context.current();
         HttpServerRoute.update(
-            parentContext,
-            CONTROLLER,
-            StrutsServerSpanNaming.serverSpanName(),
-            actionInvocation.getProxy());
+            parentContext, CONTROLLER, serverSpanName(), actionInvocation.getProxy());
 
         if (!instrumenter().shouldStart(parentContext, actionInvocation)) {
           return null;
         }
         Context context = instrumenter().start(parentContext, actionInvocation);
-        return new AdviceScope(context, context.makeCurrent());
+        return new AdviceScope(context);
       }
 
       public void end(ActionInvocation actionInvocation, @Nullable Throwable throwable) {
