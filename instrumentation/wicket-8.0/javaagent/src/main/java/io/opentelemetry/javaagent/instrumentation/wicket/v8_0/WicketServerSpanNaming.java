@@ -11,7 +11,7 @@ import org.apache.wicket.core.request.handler.IPageClassRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceReferenceRequestHandler;
 
-public class WicketServerSpanNaming {
+class WicketServerSpanNaming {
 
   private static final HttpServerRouteGetter<IPageClassRequestHandler> serverSpanName =
       (context, handler) -> {
