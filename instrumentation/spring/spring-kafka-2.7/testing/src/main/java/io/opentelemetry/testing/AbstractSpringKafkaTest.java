@@ -8,6 +8,7 @@ package io.opentelemetry.testing;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.lang.invoke.MethodHandle;
@@ -19,10 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -37,9 +37,10 @@ public abstract class AbstractSpringKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractSpringKafkaTest.class);
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   protected static KafkaContainer kafka;
 
-  private ConfigurableApplicationContext applicationContext;
   protected KafkaTemplate<String, String> kafkaTemplate;
 
   @BeforeAll
@@ -49,12 +50,8 @@ public abstract class AbstractSpringKafkaTest {
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m")
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
+    cleanup.deferAfterAll(kafka::stop);
     kafka.start();
-  }
-
-  @AfterAll
-  static void tearDownKafka() {
-    kafka.stop();
   }
 
   protected abstract InstrumentationExtension testing();
@@ -77,15 +74,9 @@ public abstract class AbstractSpringKafkaTest {
     SpringApplication app = new SpringApplication(ConsumerConfig.class);
     app.addPrimarySources(additionalSpringConfigs());
     app.setDefaultProperties(props);
-    applicationContext = app.run();
+    ConfigurableApplicationContext applicationContext = app.run();
+    cleanup.deferCleanup(applicationContext);
     kafkaTemplate = applicationContext.getBean("kafkaTemplate", KafkaTemplate.class);
-  }
-
-  @AfterEach
-  void tearDownApp() {
-    if (applicationContext != null) {
-      applicationContext.close();
-    }
   }
 
   private static final MethodHandle send;
