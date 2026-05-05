@@ -36,9 +36,13 @@ public abstract class AbstractProcessMetricsTest {
                             // TODO: Provide fuzzy value matching
                             .hasLongSumSatisfying(
                                 sum ->
-                                    assertThat(metric.getLongSumData().getPoints())
-                                        .anySatisfy(
-                                            point -> assertThat(point.getValue()).isPositive()))));
+                                    sum.satisfies(
+                                        sumData ->
+                                            assertThat(sumData.getPoints())
+                                                .anySatisfy(
+                                                    point ->
+                                                        assertThat(point.getValue())
+                                                            .isPositive())))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
@@ -51,8 +55,12 @@ public abstract class AbstractProcessMetricsTest {
                             // TODO: Provide fuzzy value matching
                             .hasLongGaugeSatisfying(
                                 gauge ->
-                                    assertThat(metric.getLongGaugeData().getPoints())
-                                        .anySatisfy(
-                                            point -> assertThat(point.getValue()).isPositive()))));
+                                    gauge.satisfies(
+                                        gaugeData ->
+                                            assertThat(gaugeData.getPoints())
+                                                .anySatisfy(
+                                                    point ->
+                                                        assertThat(point.getValue())
+                                                            .isPositive())))));
   }
 }
