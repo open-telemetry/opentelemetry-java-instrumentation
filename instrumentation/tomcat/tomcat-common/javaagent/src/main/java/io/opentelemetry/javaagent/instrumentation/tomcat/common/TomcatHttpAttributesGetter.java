@@ -27,7 +27,6 @@ class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   }
 
   @Override
-  @Nullable
   public String getUrlScheme(Request request) {
     MessageBytes schemeMessageBytes = request.scheme();
     return schemeMessageBytes.isNull() ? "http" : messageBytesToString(schemeMessageBytes);
@@ -61,7 +60,6 @@ class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   }
 
   @Override
-  @Nullable
   public Integer getHttpResponseStatusCode(
       Request request, Response response, @Nullable Throwable error) {
     return response.getStatus();
@@ -100,7 +98,6 @@ class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   }
 
   @Override
-  @Nullable
   public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, request);
     return request.getRemotePort();
@@ -113,7 +110,6 @@ class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     return messageBytesToString(request.localAddr());
   }
 
-  @Nullable
   @Override
   public Integer getNetworkLocalPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_LOCALPORT_ATTRIBUTE, request);
