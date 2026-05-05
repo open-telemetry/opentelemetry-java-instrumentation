@@ -14,20 +14,21 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class ServletAndFilterInstrumentation implements TypeInstrumentation {
   private final String basePackageName;
   private final String adviceClassName;
-  private final String servletInitAdviceClassName;
-  private final String filterInitAdviceClassName;
+  @Nullable private final String servletInitAdviceClassName;
+  @Nullable private final String filterInitAdviceClassName;
 
   public ServletAndFilterInstrumentation(
       String basePackageName,
       String adviceClassName,
-      String servletInitAdviceClassName,
-      String filterInitAdviceClassName) {
+      @Nullable String servletInitAdviceClassName,
+      @Nullable String filterInitAdviceClassName) {
     this.basePackageName = basePackageName;
     this.adviceClassName = adviceClassName;
     this.servletInitAdviceClassName = servletInitAdviceClassName;

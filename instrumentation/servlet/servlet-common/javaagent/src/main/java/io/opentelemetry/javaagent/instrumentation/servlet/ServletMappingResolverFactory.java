@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  */
 public abstract class ServletMappingResolverFactory implements MappingResolver.Factory {
 
-  private volatile MappingResolverHolder holder;
+  @Nullable private volatile MappingResolverHolder holder;
 
   @Nullable
   protected abstract Mappings getMappings();
