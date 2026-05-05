@@ -17,13 +17,11 @@ import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 class RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<PublishingMessageImpl, SendReceiptImpl> {
 
-  @Nullable
   @Override
   public String getSystem(PublishingMessageImpl message) {
     return "rocketmq";
   }
 
-  @Nullable
   @Override
   public String getDestination(PublishingMessageImpl message) {
     return message.getTopic();
@@ -62,7 +60,6 @@ class RocketMqProducerAttributeGetter
     return null;
   }
 
-  @Nullable
   @Override
   public String getMessageId(PublishingMessageImpl message, @Nullable SendReceiptImpl sendReceipt) {
     return message.getMessageId().toString();
