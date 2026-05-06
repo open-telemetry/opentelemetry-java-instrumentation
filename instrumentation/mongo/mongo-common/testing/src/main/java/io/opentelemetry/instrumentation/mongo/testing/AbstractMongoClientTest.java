@@ -27,13 +27,13 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -125,14 +125,10 @@ public abstract class AbstractMongoClientTest<T> {
 
   @Test
   @DisplayName("test port open")
-  void testPortOpen() {
-    assertThatNoException()
-        .isThrownBy(
-            () -> {
-              try (Socket ignored = new Socket(host, port)) {
-                // verify port is reachable
-              }
-            });
+  void testPortOpen() throws IOException {
+    try (Socket socket = new Socket(host, port)) {
+      assertThat(socket.isConnected()).isTrue();
+    }
   }
 
   @Test

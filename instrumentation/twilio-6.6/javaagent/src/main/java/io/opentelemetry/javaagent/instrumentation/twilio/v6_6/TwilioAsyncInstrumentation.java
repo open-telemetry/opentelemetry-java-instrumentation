@@ -92,7 +92,7 @@ class TwilioAsyncInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent(), spanName);
       }
 
-      public void end(Throwable throwable, ListenableFuture<?> response) {
+      public void end(@Nullable Throwable throwable, ListenableFuture<?> response) {
         scope.close();
         if (throwable != null) {
           // There was a synchronous error,

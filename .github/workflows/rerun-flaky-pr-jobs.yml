@@ -27,4 +27,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
-        run: python .github/scripts/rerun-flaky-pr-jobs.py
+        run: python .github/scripts/rerun-failed-workflow-jobs.py

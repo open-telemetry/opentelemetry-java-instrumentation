@@ -13,8 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TomcatServlet3Test extends BaseTomcatServlet3Test {
   @RegisterExtension
-  protected static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forLibrary();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
 
   @Override
   protected void configureServer(Context servletContext) {

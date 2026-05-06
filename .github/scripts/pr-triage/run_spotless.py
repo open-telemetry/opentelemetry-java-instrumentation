@@ -9,17 +9,13 @@ import sys
 from common import (
     Summary,
     changed_files,
-    checkout_pr,
     commit_all_tracked,
-    current_branch,
     diff_check,
     gradlew_cmd,
-    print_failure,
     progress,
     push,
-    require_clean_worktree,
-    restore_original_branch,
     run,
+    run_pr_workflow,
     status_porcelain,
     untracked_files,
 )
@@ -28,21 +24,16 @@ from common import (
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pr", type=int, help="pull request number")
-    parser.add_argument("--json", action="store_true", help="print JSON summary")
     parser.add_argument("--no-push", action="store_true", help="commit but do not push")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    summary = Summary(pr=args.pr)
-    try:
-        require_clean_worktree(summary)
-        summary.original_branch = current_branch(summary)
-        checkout_pr(args.pr, summary)
 
+    def body(summary: Summary) -> int:
         progress("Running Spotless")
-        run(gradlew_cmd("spotless"), summary)
+        run(gradlew_cmd("spotlessApply"), summary)
         progress("Checking Spotless changes")
         diff_check(summary)
 
@@ -62,16 +53,8 @@ def main() -> int:
             push(summary)
         summary.outcome = "spotless changes committed"
         return 0
-    except Exception as e:
-        summary.outcome = "failed"
-        print_failure(e)
-        return 1
-    finally:
-        restore_original_branch(summary)
-        if args.json:
-            summary.print_json()
-        else:
-            summary.print_text()
+
+    return run_pr_workflow(args.pr, body)
 
 
 if __name__ == "__main__":

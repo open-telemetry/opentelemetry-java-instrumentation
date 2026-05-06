@@ -83,7 +83,7 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope enter(ModelAndView mv) {
+      public static AdviceScope start(ModelAndView mv) {
         Context parentContext = Context.current();
         if (!modelAndViewInstrumenter().shouldStart(parentContext, mv)) {
           return null;
@@ -92,7 +92,7 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent());
       }
 
-      public void exit(ModelAndView mv, @Nullable Throwable throwable) {
+      public void end(ModelAndView mv, @Nullable Throwable throwable) {
         scope.close();
         modelAndViewInstrumenter().end(context, mv, null, throwable);
       }
@@ -101,7 +101,7 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) ModelAndView mv) {
-      return AdviceScope.enter(mv);
+      return AdviceScope.start(mv);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -110,7 +110,7 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(mv, throwable);
+        adviceScope.end(mv, throwable);
       }
     }
   }

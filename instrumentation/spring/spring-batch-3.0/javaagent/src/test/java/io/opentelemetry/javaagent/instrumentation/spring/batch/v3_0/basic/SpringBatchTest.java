@@ -18,7 +18,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.batch.core.JobParameter;
@@ -33,7 +32,6 @@ abstract class SpringBatchTest {
 
   private final JobRunner runner;
 
-  @Nullable
   static String experimental() {
     return EXPERIMENTAL_ATTRIBUTES ? "spring_batch" : null;
   }

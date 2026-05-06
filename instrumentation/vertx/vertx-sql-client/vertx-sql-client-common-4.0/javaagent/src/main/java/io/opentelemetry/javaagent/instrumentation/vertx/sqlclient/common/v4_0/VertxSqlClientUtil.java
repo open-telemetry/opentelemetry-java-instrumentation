@@ -28,10 +28,10 @@ import javax.annotation.Nullable;
 public class VertxSqlClientUtil {
 
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
-  private static final VirtualField<Pool, SqlConnectOptions> poolConnectOptions =
+  private static final VirtualField<Pool, SqlConnectOptions> POOL_CONNECT_OPTIONS =
       VirtualField.find(Pool.class, SqlConnectOptions.class);
   private static final Map<String, String> dbSystemNameByPackage = buildPackageDbSystemNameMap();
-  private static final VirtualField<Promise<?>, RequestData> requestDataField =
+  private static final VirtualField<Promise<?>, RequestData> REQUEST_DATA =
       VirtualField.find(Promise.class, RequestData.class);
 
   public static void setSqlConnectOptions(@Nullable SqlConnectOptions sqlConnectOptions) {
@@ -48,12 +48,12 @@ public class VertxSqlClientUtil {
   }
 
   public static void setPoolConnectOptions(Pool pool, SqlConnectOptions sqlConnectOptions) {
-    poolConnectOptions.set(pool, sqlConnectOptions);
+    POOL_CONNECT_OPTIONS.set(pool, sqlConnectOptions);
   }
 
   @Nullable
   public static SqlConnectOptions getPoolSqlConnectOptions(Pool pool) {
-    return poolConnectOptions.get(pool);
+    return POOL_CONNECT_OPTIONS.get(pool);
   }
 
   public static String getDbSystemNameFromClassName(@Nullable Object instance) {
@@ -82,7 +82,7 @@ public class VertxSqlClientUtil {
 
   public static void attachRequest(
       Promise<?> promise, VertxSqlClientRequest request, Context context, Context parentContext) {
-    requestDataField.set(promise, new RequestData(request, context, parentContext));
+    REQUEST_DATA.set(promise, new RequestData(request, context, parentContext));
   }
 
   @Nullable
@@ -90,7 +90,7 @@ public class VertxSqlClientUtil {
       Instrumenter<VertxSqlClientRequest, Void> instrumenter,
       Promise<?> promise,
       @Nullable Throwable throwable) {
-    RequestData requestData = requestDataField.get(promise);
+    RequestData requestData = REQUEST_DATA.get(promise);
     if (requestData == null) {
       return null;
     }

@@ -1017,6 +1017,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -1182,29 +1183,35 @@ libraries:
   - org.apache.httpcomponents.client5:httpclient5:[5.0,)
   configurations:
   - name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
     description: |
       Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
     type: list
     default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
   - name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
     description: List of HTTP response headers to capture in HTTP client telemetry.
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
       attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
     type: list
@@ -1399,6 +1406,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -1827,6 +1835,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -1947,6 +1956,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -2095,7 +2105,7 @@ libraries:
 - name: aws-lambda-events-2.2
   display_name: AWS Lambda Events
   description: |
-    This version of the library instrumentation is deprecated, please use `aws-lambda-events-3.11` instead. This instrumentation enables FaaS spans and messaging spans for AWS Lambda functions handling event types.
+    This instrumentation enables FaaS spans and messaging spans for AWS Lambda functions handling event types.
   semantic_conventions:
   - FAAS_SERVER_SPANS
   - MESSAGING_SPANS
@@ -2103,7 +2113,6 @@ libraries:
   source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
   scope:
     name: io.opentelemetry.aws-lambda-events-2.2
-  has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
   - com.amazonaws:aws-lambda-java-core:[1.0.0,)
@@ -3310,6 +3319,12 @@ libraries:
   - com.datastax.oss:java-driver-core:[4.4,)
   - org.apache.cassandra:java-driver-core:(,)
   configurations:
+  - name: otel.instrumentation.cassandra.query-sanitization.enabled
+    declarative_name: java.cassandra.query_sanitization.enabled
+    description: |
+      Enables query sanitization for Cassandra queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+    type: boolean
+    default: true
   - name: otel.instrumentation.common.db.query-sanitization.enabled
     declarative_name: java.common.db.query_sanitization.enabled
     description: Enables query sanitization for database queries.
@@ -4748,6 +4763,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -6402,7 +6418,7 @@ libraries:
     type: boolean
     default: false
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -6732,7 +6748,7 @@ libraries:
     type: boolean
     default: false
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -6740,7 +6756,7 @@ libraries:
         type: STRING
       - name: code.namespace
         type: STRING
-  - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true,otel.instrumentation.jaxrs.experimental-span-attributes=true
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -7911,7 +7927,7 @@ libraries:
     type: list
     default: ''
   telemetry:
-  - when: default
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -7968,6 +7984,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -8624,6 +8641,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -12112,7 +12130,7 @@ libraries:
     type: boolean
     default: false
   telemetry:
-  - when: default
+  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
     metrics:
     - name: messaging.publish.duration
       description: Measures the duration of publish operation.
@@ -12666,6 +12684,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -12954,6 +12973,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -14810,14 +14830,17 @@ libraries:
   - org.springframework.security:spring-security-config:[6.0.0,]
   configurations:
   - name: otel.instrumentation.common.enduser.id.enabled
+    declarative_name: java.common.enduser.id.enabled
     description: Enables capturing the enduser.id attribute.
     type: boolean
     default: false
   - name: otel.instrumentation.common.enduser.role.enabled
+    declarative_name: java.common.enduser.role.enabled
     description: Enables capturing the enduser.role attribute.
     type: boolean
     default: false
   - name: otel.instrumentation.common.enduser.scope.enabled
+    declarative_name: java.common.enduser.scope.enabled
     description: Enables capturing the enduser.scope attribute.
     type: boolean
     default: false
@@ -15888,7 +15911,7 @@ libraries:
   - name: otel.instrumentation.twilio.experimental-span-attributes
     declarative_name: java.twilio.experimental_span_attributes/development
     description: |
-      Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`, and `twilio.status`.
+      Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`, `twilio.parentSid`, and `twilio.status`.
     type: boolean
     default: false
   telemetry:
@@ -17025,6 +17048,27 @@ custom:
     name: io.opentelemetry.jmx-metrics
   has_standalone_library: true
   has_javaagent: true
+  configurations:
+  - name: otel.jmx.enabled
+    declarative_name: java.jmx.enabled
+    description: Enables collection of JMX metrics.
+    type: boolean
+    default: true
+  - name: otel.jmx.config
+    declarative_name: java.jmx.config
+    description: List of paths to JMX metric definition YAML files.
+    type: list
+    default: ''
+  - name: otel.jmx.discovery.delay
+    declarative_name: java.jmx.discovery.delay
+    description: Time in milliseconds between JMX MBean detection attempts.
+    type: int
+    default: 60000
+  - name: otel.jmx.target.system
+    declarative_name: java.jmx.target.system
+    description: List of predefined JMX target systems to collect metrics for.
+    type: list
+    default: ''
 - name: methods
   display_name: Methods
   description: |

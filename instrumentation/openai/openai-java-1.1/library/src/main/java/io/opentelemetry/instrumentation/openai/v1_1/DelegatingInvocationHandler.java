@@ -10,8 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-abstract class DelegatingInvocationHandler<T, S extends DelegatingInvocationHandler<T, S>>
-    implements InvocationHandler {
+abstract class DelegatingInvocationHandler<T> implements InvocationHandler {
 
   private static final ClassLoader classLoader = DelegatingInvocationHandler.class.getClassLoader();
 

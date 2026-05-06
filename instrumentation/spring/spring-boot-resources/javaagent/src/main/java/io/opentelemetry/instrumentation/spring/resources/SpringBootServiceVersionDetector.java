@@ -64,7 +64,7 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
     // (not under BOOT-INF/classes/), so look it up at the jar root.
     try (InputStream in = system.openJarRootResource("META-INF/build-info.properties")) {
       return in != null ? getServiceVersionPropertyFromStream(in) : Optional.empty();
-    } catch (IOException e) {
+    } catch (IOException ignored) {
       return Optional.empty();
     }
   }
@@ -75,7 +75,7 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
       // Note: load() uses ISO 8859-1 encoding, same as spring uses by default for property files
       properties.load(in);
       return Optional.ofNullable(properties.getProperty("build.version"));
-    } catch (IOException e) {
+    } catch (IOException ignored) {
       return Optional.empty();
     }
   }

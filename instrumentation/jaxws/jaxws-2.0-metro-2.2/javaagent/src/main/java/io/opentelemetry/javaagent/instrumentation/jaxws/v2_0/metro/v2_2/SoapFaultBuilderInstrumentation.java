@@ -12,6 +12,7 @@ import com.sun.xml.ws.api.message.Packet;
 import com.sun.xml.ws.api.pipe.Fiber;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,7 +37,7 @@ class SoapFaultBuilderInstrumentation implements TypeInstrumentation {
   public static class CaptureThrowableAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Argument(2) Throwable throwable) {
+    public static void onExit(@Advice.Argument(2) @Nullable Throwable throwable) {
       if (throwable == null) {
         return;
       }

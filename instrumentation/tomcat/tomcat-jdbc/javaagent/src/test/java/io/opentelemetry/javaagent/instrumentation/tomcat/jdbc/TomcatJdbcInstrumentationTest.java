@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
+import java.sql.SQLException;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -30,20 +31,19 @@ class TomcatJdbcInstrumentationTest {
   @Mock Connection connectionMock;
 
   @Test
-  void shouldReportMetrics() throws Exception {
+  void shouldReportMetrics() throws SQLException {
     // given
     when(dataSourceMock.getConnection()).thenReturn(connectionMock);
 
     DataSource tomcatDataSource = new DataSource();
     tomcatDataSource.setDataSource(dataSourceMock);
 
-    // there shouldn't be any problems if this methods gets called more than once
+    // there shouldn't be any problems if this method gets called more than once
     tomcatDataSource.createPool();
     tomcatDataSource.createPool();
 
     // when
     Connection connection = tomcatDataSource.getConnection();
-    Thread.sleep(100);
     connection.close();
 
     // then
@@ -53,9 +53,7 @@ class TomcatJdbcInstrumentationTest {
     // this one too shouldn't cause any problems when called more than once
     tomcatDataSource.close();
     tomcatDataSource.close();
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     // then
     assertNoConnectionPoolMetrics();

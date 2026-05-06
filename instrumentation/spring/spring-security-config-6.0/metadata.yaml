@@ -7,14 +7,17 @@ description: >
 library_link: https://spring.io/projects/spring-security
 configurations:
   - name: otel.instrumentation.common.enduser.id.enabled
+    declarative_name: java.common.enduser.id.enabled
     description: Enables capturing the enduser.id attribute.
     type: boolean
     default: false
   - name: otel.instrumentation.common.enduser.role.enabled
+    declarative_name: java.common.enduser.role.enabled
     description: Enables capturing the enduser.role attribute.
     type: boolean
     default: false
   - name: otel.instrumentation.common.enduser.scope.enabled
+    declarative_name: java.common.enduser.scope.enabled
     description: Enables capturing the enduser.scope attribute.
     type: boolean
     default: false

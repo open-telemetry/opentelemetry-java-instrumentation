@@ -10,7 +10,7 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }

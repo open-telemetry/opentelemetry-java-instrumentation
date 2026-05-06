@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.management.InstanceNotFoundException;
+import javax.management.JMException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
@@ -77,7 +78,7 @@ class MetricAggregationTest {
   }
 
   @AfterEach
-  void after() throws Exception {
+  void after() throws JMException {
     ObjectName objectName = new ObjectName(DOMAIN + ":type=" + Hello.class.getSimpleName() + ",*");
     theServer
         .queryMBeans(objectName, null)
@@ -109,7 +110,7 @@ class MetricAggregationTest {
 
   @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)
   @MethodSource("metricTypes")
-  void singleInstance(MetricInfo.Type metricType) throws Exception {
+  void singleInstance(MetricInfo.Type metricType) throws JMException {
     ObjectName bean = getObjectName(null, null);
     theServer.registerMBean(new Hello(42), bean);
 
@@ -121,7 +122,7 @@ class MetricAggregationTest {
 
   @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)
   @MethodSource("metricTypes")
-  void aggregateOneParam(MetricInfo.Type metricType) throws Exception {
+  void aggregateOneParam(MetricInfo.Type metricType) throws JMException {
     theServer.registerMBean(new Hello(42), getObjectName("value1", null));
     theServer.registerMBean(new Hello(37), getObjectName("value2", null));
 
@@ -141,7 +142,7 @@ class MetricAggregationTest {
 
   @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)
   @MethodSource("metricTypes")
-  void aggregateMultipleParams(MetricInfo.Type metricType) throws Exception {
+  void aggregateMultipleParams(MetricInfo.Type metricType) throws JMException {
     theServer.registerMBean(new Hello(1), getObjectName("1", "x"));
     theServer.registerMBean(new Hello(2), getObjectName("2", "y"));
     theServer.registerMBean(new Hello(3), getObjectName("3", "x"));
@@ -163,7 +164,7 @@ class MetricAggregationTest {
 
   @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)
   @MethodSource("metricTypes")
-  void partialAggregateMultipleParams(MetricInfo.Type metricType) throws Exception {
+  void partialAggregateMultipleParams(MetricInfo.Type metricType) throws JMException {
     theServer.registerMBean(new Hello(1), getObjectName("1", "x"));
     theServer.registerMBean(new Hello(2), getObjectName("2", "y"));
     theServer.registerMBean(new Hello(3), getObjectName("3", "x"));

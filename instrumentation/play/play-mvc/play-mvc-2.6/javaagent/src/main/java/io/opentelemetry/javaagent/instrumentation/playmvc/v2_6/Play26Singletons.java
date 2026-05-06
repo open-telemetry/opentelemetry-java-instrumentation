@@ -21,7 +21,7 @@ import play.libs.typedmap.TypedKey;
 import play.routing.Router;
 import scala.Option;
 
-public class Play26Singletons {
+class Play26Singletons {
 
   private static final String SPAN_NAME = "play.request";
   private static final Instrumenter<Void, Void> instrumenter =
@@ -51,11 +51,11 @@ public class Play26Singletons {
     typedKeyGetUnderlying = typedKeyGetUnderlyingCheck;
   }
 
-  public static Instrumenter<Void, Void> instrumenter() {
+  static Instrumenter<Void, Void> instrumenter() {
     return instrumenter;
   }
 
-  public static void updateSpan(Context context, Request<?> request) {
+  static void updateSpan(Context context, Request<?> request) {
     String route = getRoute(request);
     if (route == null) {
       return;

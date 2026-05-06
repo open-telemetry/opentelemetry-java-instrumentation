@@ -35,7 +35,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -115,7 +114,7 @@ class SpringSchedulingTest {
     cleanup.deferCleanup(context);
 
     LambdaTaskConfigurer configurer = context.getBean(LambdaTaskConfigurer.class);
-    configurer.singleUseLatch.await(2000, MILLISECONDS);
+    assertThat(configurer.singleUseLatch.await(2000, MILLISECONDS)).isTrue();
 
     List<AttributeAssertion> assertions =
         codeFunctionPrefixAssertions(LambdaTaskConfigurer.class.getName() + "$$Lambda", "run");
@@ -138,7 +137,7 @@ class SpringSchedulingTest {
     cleanup.deferCleanup(context);
 
     CountDownLatch latch = context.getBean(CountDownLatch.class);
-    latch.await(5, SECONDS);
+    assertThat(latch.await(5, SECONDS)).isTrue();
 
     List<AttributeAssertion> assertions =
         codeFunctionAssertions(EnhancedClassTaskConfig.class, "run");
@@ -189,7 +188,6 @@ class SpringSchedulingTest {
                 span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
   }
 
-  @Nullable
   private static <T> T experimental(T value) {
     return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }

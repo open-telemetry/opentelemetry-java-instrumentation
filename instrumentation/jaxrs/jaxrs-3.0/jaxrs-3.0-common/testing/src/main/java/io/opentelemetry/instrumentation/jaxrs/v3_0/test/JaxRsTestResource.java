@@ -131,7 +131,7 @@ public class JaxRsTestResource {
           // await for the test method to verify that there are no spans yet
           try {
             barrier.await(10, SECONDS);
-          } catch (InterruptedException e) {
+          } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
           } catch (BrokenBarrierException | TimeoutException e) {
             throw new IllegalStateException(e);
@@ -163,7 +163,7 @@ public class JaxRsTestResource {
           // await for the test method to verify that there are no spans yet
           try {
             barrier.await(10, SECONDS);
-          } catch (InterruptedException e) {
+          } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
           } catch (BrokenBarrierException | TimeoutException e) {
             throw new IllegalStateException(e);

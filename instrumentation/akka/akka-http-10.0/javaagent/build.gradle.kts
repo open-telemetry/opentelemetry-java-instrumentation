@@ -46,13 +46,9 @@ testing {
   suites {
     val javaRouteTest by registering(JvmTestSuite::class) {
       dependencies {
-        if (otelProps.testLatestDeps) {
-          implementation("com.typesafe.akka:akka-http_2.13:latest.release")
-          implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
-        } else {
-          implementation("com.typesafe.akka:akka-http_2.12:10.2.0")
-          implementation("com.typesafe.akka:akka-stream_2.12:2.6.21")
-        }
+        val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
+        implementation("com.typesafe.akka:akka-http_$scalaVersion:${baseVersion("10.2.0").orLatest()}")
+        implementation("com.typesafe.akka:akka-stream_$scalaVersion:${baseVersion("2.6.21").orLatest()}")
       }
     }
   }

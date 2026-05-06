@@ -64,7 +64,7 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     return tomcatServer;
   }
 
-  protected void setupServlets(Context context) throws Exception {
+  private static void setupServlets(Context context) throws Exception {
     Class<? extends Servlet> servlet = servlet();
 
     addServlet(context, SUCCESS.getPath(), servlet);
@@ -77,14 +77,14 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     addServlet(context, INDEXED_CHILD.getPath(), servlet);
   }
 
-  void addServlet(Context servletContext, String path, Class<? extends Servlet> servlet)
-      throws Exception {
+  private static void addServlet(
+      Context servletContext, String path, Class<? extends Servlet> servlet) throws Exception {
     String name = UUID.randomUUID().toString();
     Tomcat.addServlet(servletContext, name, servlet.getDeclaredConstructor().newInstance());
     servletContext.addServletMappingDecoded(path, name);
   }
 
-  Class<? extends Servlet> servlet() {
+  private static Class<? extends Servlet> servlet() {
     return AsyncServlet.class;
   }
 

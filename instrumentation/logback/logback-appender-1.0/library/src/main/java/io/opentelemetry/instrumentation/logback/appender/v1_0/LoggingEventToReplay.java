@@ -11,6 +11,7 @@ import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.LoggerContextVO;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.slf4j.Marker;
 import org.slf4j.event.KeyValuePair;
 
@@ -18,8 +19,8 @@ class LoggingEventToReplay implements ILoggingEvent {
 
   private final ILoggingEvent loggingEvent;
   private final long timeStamp;
-  private final StackTraceElement[] callerData;
-  private final String threadName;
+  @Nullable private final StackTraceElement[] callerData;
+  @Nullable private final String threadName;
 
   LoggingEventToReplay(
       ILoggingEvent loggingEvent,
@@ -34,6 +35,7 @@ class LoggingEventToReplay implements ILoggingEvent {
   }
 
   @Override
+  @Nullable
   public String getThreadName() {
     return threadName;
   }
@@ -74,6 +76,7 @@ class LoggingEventToReplay implements ILoggingEvent {
   }
 
   @Override
+  @Nullable
   public StackTraceElement[] getCallerData() {
     return callerData;
   }
