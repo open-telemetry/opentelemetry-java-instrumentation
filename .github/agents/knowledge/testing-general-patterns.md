@@ -12,6 +12,39 @@
 - Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
   Prefer direct assertions whose failure output shows the unexpected values.
 
+## Parameterized Tests
+
+- When the same test logic is repeated for multiple input/output cases, prefer
+  `@ParameterizedTest` over one large test with many unrelated assertions or many small tests that
+  duplicate the same setup.
+- Prefer `@MethodSource` with a private static `Stream<Arguments>` provider for multi-field cases.
+  Keep the provider close to the test that uses it.
+- Prefer a human-readable case name in each row, either as a standalone first parameter or as part
+  of a named test-case object, so failures identify the scenario without reading the whole row.
+- Each `Arguments.of(...)` entry should describe one coherent scenario. Prefer one expected outcome
+  per row instead of packing several unrelated expectations into a single parameterized case.
+- In the test body, keep the setup and assertion flow the same for every row. If different rows need
+  materially different control flow, split them into separate tests instead of forcing everything
+  into one parameterized method.
+- For more complex parameterized tests, prefer a small test DTO / test-case type instead of a long
+  positional argument list. Include a `name` field and the scenario inputs/expected outputs needed
+  by the test.
+- When the test-case shape becomes large or deeply nested, prefer a small builder or factory helpers
+  for constructing cases so each row stays readable. The goal is the structure: named scenario,
+  explicit inputs, and explicit expected result, rather than a wide `Arguments.of(...)` tuple.
+
+Example shape:
+
+```java
+record TestCase(String name, Input input, Output expected) {}
+
+@ParameterizedTest(name = "{0}")
+@MethodSource("testCases")
+void test(String name, TestCase testCase) {
+  assertThat(run(testCase.input())).isEqualTo(testCase.expected());
+}
+```
+
 ## Test Method Throws Clauses
 
 - On methods annotated with `@Test`, keep the `throws` clause to a single exception type.
