@@ -384,7 +384,7 @@ def fetch_pr_raw(
     pr_summary: dict[str, Any],
 ) -> dict[str, Any]:
     number = pr_summary["number"]
-    with ThreadPoolExecutor(max_workers=7) as pool:
+    with ThreadPoolExecutor(max_workers=8) as pool:
         f_pr = pool.submit(gh_pr_view, repo, number)
         f_issue = pool.submit(
             gh_api,
@@ -406,6 +406,11 @@ def fetch_pr_raw(
             f"/repos/{owner}/{repo_name}/pulls/{number}/commits?per_page=100",
             True,
         )
+        f_timeline = pool.submit(
+            gh_api,
+            f"/repos/{owner}/{repo_name}/issues/{number}/timeline?per_page=100",
+            True,
+        )
         f_checks = pool.submit(gh_pr_checks, repo, number)
         f_threads = pool.submit(fetch_review_threads, owner, repo_name, number)
         return {
@@ -415,6 +420,7 @@ def fetch_pr_raw(
             "review_comments": f_revcom.result() or [],
             "reviews": f_reviews.result() or [],
             "commits": f_commits.result() or [],
+            "timeline": f_timeline.result() or [],
             "checks": f_checks.result() or [],
             "review_threads": f_threads.result() or [],
         }
@@ -494,6 +500,21 @@ def normalize_events(raw: dict[str, Any], author: str, reviewers: set[str]) -> l
             "sha": None,
             "is_merge_from_base_by_non_author": False,
         })
+    for t in raw["timeline"]:
+        if t.get("event") != "ready_for_review":
+            continue
+        login = actor_login(t.get("actor") or {})
+        events.append({
+            "kind": "ready-for-review",
+            "timestamp": t.get("created_at") or "",
+            "actor": login,
+            "actor_role": "author",
+            "body": "",
+            "state": None,
+            "path": None,
+            "sha": None,
+            "is_merge_from_base_by_non_author": False,
+        })
     events = [e for e in events if e["timestamp"]]
     events.sort(key=lambda e: e["timestamp"])
     return events
@@ -504,6 +525,8 @@ def is_substantive_activity(event: dict[str, Any]) -> bool:
         return False
     if event.get("actor_role") == "bot":
         return False
+    if event["kind"] == "ready-for-review":
+        return True
     if event["kind"] == "review-state" and event.get("state") != "COMMENTED":
         return True
     return bool((event.get("body") or "").strip())
