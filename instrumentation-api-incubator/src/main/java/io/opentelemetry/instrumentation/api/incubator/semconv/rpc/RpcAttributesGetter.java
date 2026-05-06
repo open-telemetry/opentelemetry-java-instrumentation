@@ -69,6 +69,15 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
+   * Returns the original method name when the method reported via {@link #getRpcMethod(REQUEST)} is
+   * set to {@code _OTHER} because the method is not recognized by the RPC framework.
+   */
+  @Nullable
+  default String getRpcMethodOriginal(REQUEST request) {
+    return null;
+  }
+
+  /**
    * Returns a description of a class of error the operation ended with.
    *
    * <p>This method should return {@code null} if there was no error.
