@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.clientInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.getPropagators;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -17,6 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.AsyncMethodCallbackUtil;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ClientCallContext;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ClientProtocolDecorator;
+import io.opentelemetry.instrumentation.thrift.v0_13.internal.SocketAccessor;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -25,6 +27,7 @@ import net.bytebuddy.description.method.ParameterList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.thrift.async.AsyncMethodCallback;
+import org.apache.thrift.async.TAsyncClient;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.transport.TNonblockingTransport;
 
@@ -67,20 +70,9 @@ class ThriftAsyncClientInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static TProtocolFactory onEnter(
-        @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Argument(0) TProtocolFactory protocolFactory,
         @Advice.Argument(2) TNonblockingTransport transport) {
-      Class<?> serviceClass = declaringClass;
-      if (serviceClass.getDeclaringClass() != null) {
-        serviceClass = serviceClass.getDeclaringClass();
-      }
-
-      return new ClientProtocolDecorator.Factory(
-          protocolFactory,
-          serviceClass.getName(),
-          ThriftSingletons.clientInstrumenter(),
-          getPropagators(),
-          transport);
+      return new ClientProtocolDecorator.Factory(protocolFactory, getPropagators());
     }
   }
 
@@ -89,24 +81,36 @@ class ThriftAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Advice.AssignReturned.ToAllArguments(index = 0)
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object[] onEnter(@Advice.AllArguments Object[] arguments) {
-      ClientCallContext clientContext = ClientCallContext.start();
+    public static Object[] onEnter(
+        @Advice.This TAsyncClient client,
+        @Advice.Origin("#m") String methodName,
+        @Advice.Origin("#t") Class<?> declaringClass,
+        @Advice.AllArguments Object[] arguments) {
+      ClientCallContext clientContext =
+          ClientCallContext.start(
+              clientInstrumenter(),
+              methodName,
+              declaringClass,
+              null,
+              SocketAccessor.getSocketAddress(client));
       Object[] args = new Object[arguments.length];
       System.arraycopy(arguments, 0, args, 0, arguments.length);
+      boolean hasAsyncCallback = false;
       if (args[args.length - 1] != null) {
         AsyncMethodCallback<?> callback = (AsyncMethodCallback<?>) args[args.length - 1];
         args[args.length - 1] = AsyncMethodCallbackUtil.wrap(callback, clientContext);
-        clientContext.setHasAsyncCallback();
+        hasAsyncCallback = true;
       }
-      return new Object[] {args, clientContext};
+      return new Object[] {args, clientContext, hasAsyncCallback};
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
       ClientCallContext clientContext = (ClientCallContext) enterResult[1];
-      clientContext.end();
-      if (throwable != null) {
+      boolean hasAsyncCallback = (boolean) enterResult[2];
+      clientContext.close();
+      if (throwable != null || !hasAsyncCallback) {
         clientContext.endSpan(throwable);
       }
     }

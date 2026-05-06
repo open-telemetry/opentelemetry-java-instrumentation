@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
-import org.apache.thrift.transport.TTransport;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,19 +41,23 @@ class ThriftTest extends AbstractThriftTest {
   }
 
   @Override
-  protected TProtocol configure(TProtocol protocol, String serviceName) {
-    return telemetry.wrapClientProtocol(protocol, serviceName);
+  protected TProtocol configure(TProtocol protocol) {
+    return telemetry.wrapClientProtocol(protocol);
   }
 
   @Override
-  protected TProtocolFactory configure(
-      TProtocolFactory protocolFactory, String serviceName, TTransport transport) {
-    return telemetry.wrapClientProtocolFactory(protocolFactory, serviceName, transport);
+  protected TProtocolFactory configure(TProtocolFactory protocolFactory) {
+    return telemetry.wrapClientProtocolFactory(protocolFactory);
   }
 
   @Override
   protected CustomService.AsyncIface configure(CustomService.AsyncClient asyncClient) {
     return telemetry.wrapAsyncClient(asyncClient, CustomService.AsyncIface.class);
+  }
+
+  @Override
+  protected CustomService.Iface configure(CustomService.Client client) {
+    return telemetry.wrapClient(client, CustomService.Iface.class);
   }
 
   @Override
@@ -66,7 +69,7 @@ class ThriftTest extends AbstractThriftTest {
   @ValueSource(strings = {"simple", "threadPool"})
   void instrumentedClientPlainSimpleServer(String serverKind) throws Exception {
     int port = startServer(serverKind, false);
-    CustomService.Client client = createClient(port, true);
+    CustomService.Iface client = createClient(port, true);
 
     assertThat(client.say("Plain", "Server")).isEqualTo("Say Plain Server");
 
@@ -80,7 +83,7 @@ class ThriftTest extends AbstractThriftTest {
   @ValueSource(strings = {"simple", "threadPool"})
   void plainClientInstrumentedSimpleServer(String serverKind) throws Exception {
     int port = startServer(serverKind, true);
-    CustomService.Client client = createClient(port, false);
+    CustomService.Iface client = createClient(port, false);
 
     assertThat(client.say("Instrumented", "Server")).isEqualTo("Say Instrumented Server");
 

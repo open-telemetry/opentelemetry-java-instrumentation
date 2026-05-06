@@ -99,12 +99,13 @@ public abstract class AbstractThriftTest {
 
   protected abstract TProcessor configure(TProcessor processor, String serviceName);
 
-  protected abstract TProtocol configure(TProtocol protocol, String serviceName);
+  protected abstract TProtocol configure(TProtocol protocol);
 
-  protected abstract TProtocolFactory configure(
-      TProtocolFactory protocolFactory, String serviceName, TTransport transport);
+  protected abstract TProtocolFactory configure(TProtocolFactory protocolFactory);
 
   protected abstract CustomService.AsyncIface configure(CustomService.AsyncClient asyncClient);
+
+  protected abstract CustomService.Iface configure(CustomService.Client client);
 
   protected int startSimpleServer() throws Exception {
     return startSimpleServer(true);
@@ -203,20 +204,20 @@ public abstract class AbstractThriftTest {
     }
   }
 
-  protected CustomService.Client createClient(int port) throws Exception {
+  protected CustomService.Iface createClient(int port) throws Exception {
     return createClient(port, true);
   }
 
-  protected CustomService.Client createClient(int port, boolean configure) throws Exception {
+  protected CustomService.Iface createClient(int port, boolean configure) throws Exception {
     return createClient(port, configure, null);
   }
 
-  protected CustomService.Client createClient(int port, TTransportFactory transportFactory)
+  protected CustomService.Iface createClient(int port, TTransportFactory transportFactory)
       throws Exception {
     return createClient(port, true, transportFactory);
   }
 
-  protected CustomService.Client createClient(
+  protected CustomService.Iface createClient(
       int port, boolean configure, TTransportFactory transportFactory) throws Exception {
     TTransport transport = new TSocket("localhost", port);
     if (transportFactory != null) {
@@ -225,27 +226,22 @@ public abstract class AbstractThriftTest {
     transport.open();
     cleanup.deferCleanup(transport);
     TProtocol protocol = new TBinaryProtocol(transport);
-    if (configure) {
-      protocol = configure(protocol, CustomService.class.getName());
+    if (!configure) {
+      return new CustomService.Client(protocol);
     }
-    return new CustomService.Client(protocol);
+    protocol = configure(protocol);
+    return configure(new CustomService.Client(protocol));
   }
 
   protected CustomService.AsyncIface createAsyncClient(int port) throws Exception {
     TNonblockingTransport transport = new TNonblockingSocket("localhost", port);
-    TProtocolFactory protocolFactory =
-        configure(new TBinaryProtocol.Factory(), CustomService.class.getName(), transport);
+    TProtocolFactory protocolFactory = configure(new TBinaryProtocol.Factory());
     TAsyncClientManager clientManager = new TAsyncClientManager();
     return configure(new CustomService.AsyncClient(protocolFactory, clientManager, transport));
   }
 
-  protected SpanDataAssert assertClientSpan(SpanDataAssert span, String method, int port) {
-    return assertClientSpan(span, method, port, true);
-  }
-
   @SuppressWarnings({"deprecation"}) // using deprecated semconv
-  protected SpanDataAssert assertClientSpan(
-      SpanDataAssert span, String method, long port, boolean hasServerAttributes) {
+  protected SpanDataAssert assertClientSpan(SpanDataAssert span, String method, int port) {
     return span.hasName(CustomService.class.getName() + "/" + method)
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(
@@ -255,8 +251,8 @@ public abstract class AbstractThriftTest {
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? CustomService.class.getName() : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
-            equalTo(SERVER_PORT, hasServerAttributes ? port : null),
-            equalTo(SERVER_ADDRESS, hasServerAttributes ? "localhost" : null),
+            equalTo(SERVER_PORT, port),
+            equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(NETWORK_TYPE, "ipv4"),
             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_PEER_PORT, port));
@@ -379,7 +375,7 @@ public abstract class AbstractThriftTest {
   @ValueSource(strings = {"simple", "threadPool"})
   void instrumentedClientAndServer(String serverKind) throws Exception {
     int port = startServer(serverKind);
-    CustomService.Client client = createClient(port);
+    CustomService.Iface client = createClient(port);
 
     getTesting()
         .runWithSpan(
@@ -425,7 +421,7 @@ public abstract class AbstractThriftTest {
   @MethodSource(value = "transports")
   void transportFactory(TTransportFactory transportFactory) throws Exception {
     int port = startSimpleServer(transportFactory);
-    CustomService.Client client = createClient(port, transportFactory);
+    CustomService.Iface client = createClient(port, transportFactory);
 
     getTesting()
         .runWithSpan(
@@ -445,7 +441,7 @@ public abstract class AbstractThriftTest {
   @Test
   void withoutArgs() throws Exception {
     int port = startSimpleServer();
-    CustomService.Client client = createClient(port);
+    CustomService.Iface client = createClient(port);
 
     assertThat(client.withoutArgs()).isEqualTo("no args");
 
@@ -461,7 +457,7 @@ public abstract class AbstractThriftTest {
   @Test
   void withError() throws Exception {
     int port = startSimpleServer();
-    CustomService.Client client = createClient(port);
+    CustomService.Iface client = createClient(port);
 
     assertThatThrownBy(client::withError).isInstanceOf(TApplicationException.class);
 
@@ -482,7 +478,7 @@ public abstract class AbstractThriftTest {
   @Test
   void withCollision() throws Exception {
     int port = startSimpleServer();
-    CustomService.Client client = createClient(port);
+    CustomService.Iface client = createClient(port);
 
     assertThat(client.withCollision("collision")).isEqualTo("collision");
 
@@ -498,7 +494,7 @@ public abstract class AbstractThriftTest {
   @Test
   void oneWayWithError() throws Exception {
     int port = startSimpleServer();
-    CustomService.Client client = createClient(port);
+    CustomService.Iface client = createClient(port);
 
     client.oneWayWithError();
 
@@ -555,7 +551,7 @@ public abstract class AbstractThriftTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span -> assertClientSpan(span, "say", port, false).hasParent(trace.getSpan(0)),
+                    span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
                     span ->
                         (hasAsyncServerNetworkAttributes()
                                 ? assertServerSpan(span, "say", port)
@@ -607,8 +603,7 @@ public abstract class AbstractThriftTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertClientSpan(span, "withDelay", port, false).hasParent(trace.getSpan(0)),
+                span -> assertClientSpan(span, "withDelay", port).hasParent(trace.getSpan(0)),
                 span ->
                     (hasAsyncServerNetworkAttributes()
                             ? assertServerSpan(span, "withDelay", port)
@@ -624,7 +619,7 @@ public abstract class AbstractThriftTest {
   @Test
   void oneWay() throws Exception {
     int port = startSimpleServer();
-    CustomService.Client client = createClient(port);
+    CustomService.Iface client = createClient(port);
 
     client.oneWay();
 
@@ -667,8 +662,7 @@ public abstract class AbstractThriftTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        assertClientSpan(span, "oneWay", port, false).hasParent(trace.getSpan(0)),
+                    span -> assertClientSpan(span, "oneWay", port).hasParent(trace.getSpan(0)),
                     span ->
                         (hasAsyncServerNetworkAttributes()
                                 ? assertServerSpan(span, "oneWay", port)
@@ -683,7 +677,7 @@ public abstract class AbstractThriftTest {
   @Test
   void withStruct() throws Exception {
     int port = startSimpleServer();
-    CustomService.Client client = createClient(port);
+    CustomService.Iface client = createClient(port);
 
     User user = new User("name32", 30);
     Address address = new Address("line", "City", "1234AB");
@@ -704,7 +698,7 @@ public abstract class AbstractThriftTest {
   @Test
   void manyCalls() throws Exception {
     int port = startSimpleServer();
-    CustomService.Client client = createClient(port);
+    CustomService.Iface client = createClient(port);
 
     assertThat(client.say("one", "two")).isEqualTo("Say one two");
     assertThat(client.say("three", "four")).isEqualTo("Say three four");
@@ -744,7 +738,7 @@ public abstract class AbstractThriftTest {
           CompletableFuture.supplyAsync(
               () -> {
                 try {
-                  CustomService.Client client = createClient(port);
+                  CustomService.Iface client = createClient(port);
                   return getTesting().runWithSpan("parent", () -> client.withDelay(1));
                 } catch (Exception e) {
                   throw new IllegalStateException(e);

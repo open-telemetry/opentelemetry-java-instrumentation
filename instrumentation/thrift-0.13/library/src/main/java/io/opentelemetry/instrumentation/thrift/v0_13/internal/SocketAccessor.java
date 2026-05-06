@@ -9,13 +9,19 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
+import org.apache.thrift.async.TAsyncClient;
 import org.apache.thrift.transport.TNonblockingSocket;
 import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 
-final class SocketAccessor {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class SocketAccessor {
   @Nullable
   private static final Class<?> LAYERED_TRANSPORT =
       getClass("org.apache.thrift.transport.layered.TLayeredTransport");
@@ -39,10 +45,39 @@ final class SocketAccessor {
   private static final Method layeredTransportMethod =
       LAYERED_TRANSPORT != null ? getMethod(LAYERED_TRANSPORT, "getInnerTransport") : null;
 
+  @Nullable
+  private static final Field asyncClientTransportField =
+      getField(TAsyncClient.class, "___transport");
+
+  @Nullable
+  private static final Field socketAddressField =
+      getField(TNonblockingSocket.class, "socketAddress_");
+
   private SocketAccessor() {}
 
   @Nullable
-  static Socket getSocket(@Nullable TTransport transport) {
+  public static SocketAddress getSocketAddress(TAsyncClient asyncClient) {
+    if (asyncClientTransportField == null || socketAddressField == null) {
+      return null;
+    }
+    Object fieldTransport;
+    try {
+      fieldTransport = asyncClientTransportField.get(asyncClient);
+    } catch (IllegalAccessException e) {
+      return null;
+    }
+    if (!(fieldTransport instanceof TNonblockingSocket)) {
+      return null;
+    }
+    try {
+      return (SocketAddress) socketAddressField.get(fieldTransport);
+    } catch (IllegalAccessException e) {
+      return null;
+    }
+  }
+
+  @Nullable
+  public static Socket getSocket(@Nullable TTransport transport) {
     if (transport == null) {
       return null;
     }

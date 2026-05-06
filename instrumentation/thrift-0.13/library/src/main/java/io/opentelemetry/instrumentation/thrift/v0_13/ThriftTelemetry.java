@@ -12,15 +12,15 @@ import io.opentelemetry.instrumentation.thrift.v0_13.internal.AsyncMethodCallbac
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ClientCallContext;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ClientProtocolDecorator;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerProcessorDecorator;
+import io.opentelemetry.instrumentation.thrift.v0_13.internal.SocketAccessor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
-import javax.annotation.Nullable;
 import org.apache.thrift.TProcessor;
+import org.apache.thrift.TServiceClient;
 import org.apache.thrift.async.AsyncMethodCallback;
 import org.apache.thrift.async.TAsyncClient;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
-import org.apache.thrift.transport.TTransport;
 
 /** Entrypoint for instrumenting Thrift. */
 public final class ThriftTelemetry {
@@ -54,53 +54,98 @@ public final class ThriftTelemetry {
   }
 
   /** Returns a {@link TProtocol} that instruments Thrift client requests. */
-  public TProtocol wrapClientProtocol(TProtocol delegate, String serviceName) {
-    return new ClientProtocolDecorator(delegate, serviceName, clientInstrumenter, propagators);
+  public TProtocol wrapClientProtocol(TProtocol delegate) {
+    return new ClientProtocolDecorator(delegate, propagators);
   }
 
   /** Returns a {@link TProtocolFactory} that instruments Thrift client requests. */
-  public TProtocolFactory wrapClientProtocolFactory(
-      TProtocolFactory delegate, String serviceName, @Nullable TTransport transport) {
-    return new ClientProtocolDecorator.Factory(
-        delegate, serviceName, clientInstrumenter, propagators, transport);
+  public TProtocolFactory wrapClientProtocolFactory(TProtocolFactory delegate) {
+    return new ClientProtocolDecorator.Factory(delegate, propagators);
   }
 
-  /** Wraps the provided {@link TAsyncClient}, enabling telemetry for it. */
-  public <T> T wrapAsyncClient(TAsyncClient client, Class<T> asyncInterface) {
-    if (!asyncInterface.isInterface()) {
+  /** Wraps the provided {@link TServiceClient}, enabling telemetry for it. */
+  public <T> T wrapClient(TServiceClient client, Class<T> clientInterface) {
+    if (!clientInterface.isInterface()) {
       throw new IllegalArgumentException(
-          "Supplied class must be an interface, but was " + asyncInterface.getName());
+          "Supplied class must be an interface, but was " + clientInterface.getName());
     }
-    if (!asyncInterface.isInstance(client)) {
+    if (!clientInterface.isInstance(client)) {
       throw new IllegalArgumentException(
           "Client must implement "
-              + asyncInterface.getName()
+              + clientInterface.getName()
               + ", but was "
               + client.getClass().getName());
     }
-    return asyncInterface.cast(
+    return clientInterface.cast(
         Proxy.newProxyInstance(
             client.getClass().getClassLoader(),
-            new Class<?>[] {asyncInterface},
+            new Class<?>[] {clientInterface},
             (proxy, method, args) -> {
               Throwable error = null;
-              ClientCallContext clientContext = ClientCallContext.start();
+              ClientCallContext clientContext =
+                  ClientCallContext.start(
+                      clientInstrumenter,
+                      method.getName(),
+                      clientInterface,
+                      SocketAccessor.getSocket(client.getInputProtocol().getTransport()));
               try {
-                if (args.length > 0 && args[args.length - 1] instanceof AsyncMethodCallback) {
-                  AsyncMethodCallback<?> callback = (AsyncMethodCallback<?>) args[args.length - 1];
-                  args[args.length - 1] = AsyncMethodCallbackUtil.wrap(callback, clientContext);
-                  clientContext.setHasAsyncCallback();
-                }
                 return method.invoke(client, args);
               } catch (InvocationTargetException e) {
                 error = e.getCause();
-                throw e.getCause();
+                throw error;
               } catch (Throwable t) {
                 error = t;
                 throw t;
               } finally {
-                clientContext.end();
-                if (error != null) {
+                clientContext.close();
+                clientContext.endSpan(error);
+              }
+            }));
+  }
+
+  /** Wraps the provided {@link TAsyncClient}, enabling telemetry for it. */
+  public <T> T wrapAsyncClient(TAsyncClient client, Class<T> clientInterface) {
+    if (!clientInterface.isInterface()) {
+      throw new IllegalArgumentException(
+          "Supplied class must be an interface, but was " + clientInterface.getName());
+    }
+    if (!clientInterface.isInstance(client)) {
+      throw new IllegalArgumentException(
+          "Client must implement "
+              + clientInterface.getName()
+              + ", but was "
+              + client.getClass().getName());
+    }
+    return clientInterface.cast(
+        Proxy.newProxyInstance(
+            client.getClass().getClassLoader(),
+            new Class<?>[] {clientInterface},
+            (proxy, method, args) -> {
+              Throwable error = null;
+              boolean hasAsyncCallback = false;
+              ClientCallContext clientContext =
+                  ClientCallContext.start(
+                      clientInstrumenter,
+                      method.getName(),
+                      clientInterface,
+                      null,
+                      SocketAccessor.getSocketAddress(client));
+              try {
+                if (args.length > 0 && args[args.length - 1] instanceof AsyncMethodCallback) {
+                  AsyncMethodCallback<?> callback = (AsyncMethodCallback<?>) args[args.length - 1];
+                  args[args.length - 1] = AsyncMethodCallbackUtil.wrap(callback, clientContext);
+                  hasAsyncCallback = true;
+                }
+                return method.invoke(client, args);
+              } catch (InvocationTargetException e) {
+                error = e.getCause();
+                throw error;
+              } catch (Throwable t) {
+                error = t;
+                throw t;
+              } finally {
+                clientContext.close();
+                if (error != null || !hasAsyncCallback) {
                   clientContext.endSpan(error);
                 }
               }

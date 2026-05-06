@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13.internal;
 
-import static io.opentelemetry.instrumentation.thrift.v0_13.internal.ThriftRequestAccess.newThriftRequest;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -68,7 +66,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
         // for non-blocking server, the socket may not be available through super.getTransport()
         socket = SocketAccessor.getSocket(ServerCallContext.getTransport());
       }
-      ThriftRequest request = newThriftRequest(methodName, serviceName, socket, headers);
+      ThriftRequest request = new ThriftRequest(methodName, serviceName, socket, headers);
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
         // proceed to the next field
@@ -90,7 +88,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     if (currentContext == null) {
       // for non-blocking server, the socket may not be available through super.getTransport()
       Socket socket = SocketAccessor.getSocket(super.getTransport());
-      ThriftRequest request = newThriftRequest(this.methodName, this.serviceName, socket);
+      ThriftRequest request = new ThriftRequest(this.methodName, this.serviceName, socket);
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
         return;
@@ -108,6 +106,6 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     currentScope.close();
 
     instrumenter.end(
-        currentContext, currentRequest, failed ? ThriftResponseAccess.failed() : null, throwable);
+        currentContext, currentRequest, failed ? ThriftResponse.FAILED : null, throwable);
   }
 }

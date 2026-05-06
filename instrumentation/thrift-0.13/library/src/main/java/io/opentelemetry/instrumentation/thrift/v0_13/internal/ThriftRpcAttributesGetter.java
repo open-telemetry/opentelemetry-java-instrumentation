@@ -48,7 +48,7 @@ final class ThriftRpcAttributesGetter
       ThriftRequest request, @Nullable ThriftResponse response, @Nullable Throwable error) {
     if (error instanceof TTransportException) {
       int errorCode = ((TTransportException) error).getType();
-      switch (((TTransportException) error).getType()) {
+      switch (errorCode) {
         case 0:
           return "UNKNOWN";
         case 1:

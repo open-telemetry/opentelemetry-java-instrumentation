@@ -28,7 +28,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-thrift-0.13:OPENT
 
 ### Usage
 
-The instrumentation library provides the implementation of `ClientInterceptor` and `ServerInterceptor` to provide OpenTelemetry-based spans and context propagation.
+The instrumentation library provides wrappers for thrift servers and clients that provide OpenTelemetry-based spans and context propagation.
 
 ```java
 // For server-side, decorate processor with a tracing wrapper.
@@ -37,19 +37,24 @@ TProcessor configureServer(OpenTelemetry openTelemetry, TProcessor processor, St
   return thriftTelemetry.wrapServerProcessor(processor, serviceName);
 }
 
-// For client-side, decorate protocol with a tracing wrapper.
-TProtocol configureClient(OpenTelemetry openTelemetry, TProtocol protocol, String serviceName) {
+// For client-side, decorate protocol and client with a tracing wrappers.
+TProtocol configureClient(OpenTelemetry openTelemetry, TProtocol protocol) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.wrapClientProtocol(protocol, serviceName);
+  return thriftTelemetry.wrapClientProtocol(protocol);
+}
+
+CustomService.Iface configureClient(CustomService.Client client) {
+  ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
+  return thriftTelemetry.wrapClient(client, CustomService.Iface.class);
 }
 
 // For non-blocking client, decorate protocol factory and the async client with a tracing wrappers.
-TProtocolFactory configureClient(OpenTelemetry openTelemetry, TProtocolFactory protocolFactory, String serviceName, TTransport transport) {
+TProtocolFactory configureClient(OpenTelemetry openTelemetry, TProtocolFactory protocolFactory) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.wrapClientProtocolFactory(protocolFactory, serviceName, transport);
+  return thriftTelemetry.wrapClientProtocolFactory(protocolFactory);
 }
 
-CustomService.AsyncIface configure(CustomService.AsyncClient asyncClient) {
+CustomService.AsyncIface configureClient(CustomService.AsyncClient asyncClient) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
   return thriftTelemetry.wrapAsyncClient(asyncClient, CustomService.AsyncIface.class);
 }

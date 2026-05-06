@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.thrift.v0_13.AbstractThriftTest;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
-import org.apache.thrift.transport.TTransport;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ThriftTest extends AbstractThriftTest {
@@ -30,19 +29,23 @@ class ThriftTest extends AbstractThriftTest {
   }
 
   @Override
-  protected TProtocol configure(TProtocol protocol, String serviceName) {
+  protected TProtocol configure(TProtocol protocol) {
     return protocol;
   }
 
   @Override
-  protected TProtocolFactory configure(
-      TProtocolFactory protocolFactory, String serviceName, TTransport transport) {
+  protected TProtocolFactory configure(TProtocolFactory protocolFactory) {
     return protocolFactory;
   }
 
   @Override
   protected CustomService.AsyncIface configure(CustomService.AsyncClient asyncClient) {
     return asyncClient;
+  }
+
+  @Override
+  protected CustomService.Iface configure(CustomService.Client client) {
+    return client;
   }
 
   @Override
