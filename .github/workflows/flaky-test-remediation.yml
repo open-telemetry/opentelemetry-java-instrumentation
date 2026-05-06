@@ -1,0 +1,197 @@
+name: Flaky Test Remediation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flaky-test-remediation
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
+    runs-on: ubuntu-latest
+    outputs:
+      has_candidate: ${{ steps.select.outputs.has_candidate }}
+      selected_json: ${{ steps.select.outputs.selected_json }}
+      class: ${{ steps.select.outputs.class }}
+      method: ${{ steps.select.outputs.method }}
+      source_file: ${{ steps.select.outputs.source_file }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0  # need history to detect recently-modified files
+
+      - name: Fetch progress branch
+        run: git fetch origin otelbot/flaky-test-remediation-progress
+
+      - name: Materialize skip list
+        run: |
+          mkdir -p build/flaky-test-remediation
+          git show origin/otelbot/flaky-test-remediation-progress:attempted.txt > build/flaky-test-remediation/skip.txt
+
+      - name: Find top flaky test
+        id: select
+        env:
+          DEVELOCITY_URL: https://develocity.opentelemetry.io
+        run: |
+          python .github/scripts/flaky-test-remediation/1-select-flaky-test.py
+
+          if [[ -f build/flaky-test-remediation/selected.json ]]; then
+            {
+              echo "has_candidate=true"
+              echo "class=$(jq -r .class build/flaky-test-remediation/selected.json)"
+              echo "method=$(jq -r .method build/flaky-test-remediation/selected.json)"
+              echo "source_file=$(jq -r .source_file build/flaky-test-remediation/selected.json)"
+              # Compact JSON for downstream job; expand on the consumer side.
+              echo "selected_json<<__EOF__"
+              jq -c . build/flaky-test-remediation/selected.json
+              echo "__EOF__"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "has_candidate=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload analysis artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: flaky-test-remediation-analysis-${{ github.run_id }}
+          path: build/flaky-test-remediation
+          if-no-files-found: ignore
+
+  fix:
+    needs: analyze
+    if: needs.analyze.outputs.has_candidate == 'true'
+    runs-on: ubuntu-latest
+    environment: protected
+    permissions:
+      contents: write
+    env:
+      SELECTED_JSON: ${{ needs.analyze.outputs.selected_json }}
+      TEST_CLASS: ${{ needs.analyze.outputs.class }}
+      TEST_METHOD: ${{ needs.analyze.outputs.method }}
+      TEST_SOURCE_FILE: ${{ needs.analyze.outputs.source_file }}
+      OUT_DIR: build/flaky-test-remediation
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - name: Set up JDK
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          cache-read-only: true
+
+      - name: Install Copilot CLI
+        run: |
+          curl -fsSL https://gh.io/copilot-install | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - name: Resolve Copilot model
+        id: model
+        run: |
+          git fetch origin otelbot/flaky-test-remediation-progress
+          model=$(git show origin/otelbot/flaky-test-remediation-progress:model.txt | xargs)
+          echo "model=$model" >> "$GITHUB_OUTPUT"
+
+      - name: Check out fix branch
+        id: branch
+        run: |
+          # Slugify the fully-qualified test for the branch name (max 60 chars
+          # of class+method, sanitized).
+          slug=$(printf '%s.%s' "$TEST_CLASS" "$TEST_METHOD" \
+            | tr -c 'A-Za-z0-9' '-' \
+            | sed -E 's/-+/-/g; s/^-//; s/-$//' \
+            | cut -c1-60)
+          branch="otelbot/flaky-test-remediation-${slug}-${GITHUB_RUN_ID}"
+          git checkout -B "$branch" origin/main
+          echo "name=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Materialize selection
+        env:
+          SELECTED_JSON: ${{ needs.analyze.outputs.selected_json }}
+        run: |
+          mkdir -p "$OUT_DIR"
+          printf '%s' "$SELECTED_JSON" > "$OUT_DIR/selected.json"
+
+      - name: Run Copilot fix
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          MODEL: ${{ steps.model.outputs.model }}
+        run: python .github/scripts/flaky-test-remediation/2-fix-flaky-test.py
+
+      - name: Detect changes
+        id: changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add -A
+            git commit -m "Reduce flakiness in $TEST_CLASS.$TEST_METHOD" \
+                       -m "Automated fix attempt based on Develocity flaky-test analysis."
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload fix diagnostics artifact
+        if: always()
+        id: upload-fix-diagnostics
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: flaky-test-remediation-diagnostics-${{ github.run_id }}
+          path: |
+            ${{ env.OUT_DIR }}/**
+          if-no-files-found: ignore
+
+      - name: Push branch
+        if: steps.changes.outputs.committed == 'true'
+        run: git push -f origin "${{ steps.branch.outputs.name }}"
+
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: otelbot-token
+        if: steps.changes.outputs.committed == 'true'
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
+      - name: Create PR
+        if: steps.changes.outputs.committed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          ARTIFACT_URL: ${{ steps.upload-fix-diagnostics.outputs.artifact-url }}
+          PR_HEAD: ${{ steps.branch.outputs.name }}
+          PR_BASE: main
+        run: python .github/scripts/flaky-test-remediation/3-open-pr.py
+
+      - name: Check out progress branch
+        if: steps.changes.outputs.committed == 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: otelbot/flaky-test-remediation-progress
+          path: progress
+
+      - name: Record attempt
+        if: steps.changes.outputs.committed == 'true'
+        working-directory: progress
+        run: |
+          if grep -Fxq "$TEST_CLASS" attempted.txt; then
+            echo "$TEST_CLASS already recorded"
+          else
+            echo "$TEST_CLASS" >> attempted.txt
+            git add attempted.txt
+            git commit -m "Record attempt: $TEST_CLASS"
+            git push origin HEAD:otelbot/flaky-test-remediation-progress
+          fi
