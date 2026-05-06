@@ -120,7 +120,7 @@ dependencies {
   // needed for the Spring Boot 3 support
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
 
-  // give access to common classes, e.g. InstrumentationConfigUtil
+  // give access to common classes
   add("javaSpring3CompileOnly", files(sourceSets.main.get().output.classesDirs))
   add("javaSpring3CompileOnly", "org.springframework.boot:spring-boot-starter-web:3.2.4")
   add("javaSpring3CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
