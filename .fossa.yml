@@ -849,6 +849,9 @@ targets:
       target: ':instrumentation:pekko:pekko-http-1.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:pekko:pekko-remote-1.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:pulsar:pulsar-2.8:javaagent'
     - type: gradle
       path: ./
