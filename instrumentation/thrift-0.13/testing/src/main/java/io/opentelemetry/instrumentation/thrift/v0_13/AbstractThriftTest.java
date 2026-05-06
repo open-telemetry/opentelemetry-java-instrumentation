@@ -28,6 +28,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -240,9 +241,14 @@ public abstract class AbstractThriftTest {
     return configure(new CustomService.AsyncClient(protocolFactory, clientManager, transport));
   }
 
-  @SuppressWarnings({"deprecation"}) // using deprecated semconv
   protected SpanDataAssert assertClientSpan(SpanDataAssert span, String method, int port) {
-    return span.hasName(CustomService.class.getName() + "/" + method)
+    return assertClientSpan(span, method, port, false);
+  }
+
+  @SuppressWarnings({"deprecation"}) // using deprecated semconv
+  protected SpanDataAssert assertClientSpan(
+      SpanDataAssert span, String method, int port, boolean hasError) {
+    span.hasName(CustomService.class.getName() + "/" + method)
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(
             equalTo(
@@ -255,7 +261,14 @@ public abstract class AbstractThriftTest {
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(NETWORK_TYPE, "ipv4"),
             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-            equalTo(NETWORK_PEER_PORT, port));
+            equalTo(NETWORK_PEER_PORT, port),
+            equalTo(
+                ERROR_TYPE,
+                hasError && emitStableRpcSemconv() ? TApplicationException.class.getName() : null));
+    if (hasError) {
+      span.hasException(new TApplicationException());
+    }
+    return span;
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -466,7 +479,7 @@ public abstract class AbstractThriftTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        assertClientSpan(span, "withError", port)
+                        assertClientSpan(span, "withError", port, true)
                             .hasNoParent()
                             .hasStatus(StatusData.error()),
                     span ->
@@ -614,6 +627,59 @@ public abstract class AbstractThriftTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0)));
     getTesting().waitAndAssertTraces(traceAssert, traceAssert, traceAssert, traceAssert);
+  }
+
+  @Test
+  void asyncWithError() throws Exception {
+    // with thrift 0.13 fails on Java 8 due to java.lang.NoSuchMethodError:
+    // java.nio.ByteBuffer.rewind()Ljava/nio/ByteBuffer;
+    assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
+
+    int port = startAsyncServer();
+    CustomService.AsyncIface asyncClient = createAsyncClient(port);
+
+    CompletableFuture<String> completableFuture = new CompletableFuture<>();
+    getTesting()
+        .runWithSpan(
+            "parent",
+            () ->
+                asyncClient.withError(
+                    new AsyncMethodCallback<String>() {
+                      @Override
+                      public void onComplete(String response) {
+                        completableFuture.complete(response);
+                      }
+
+                      @Override
+                      public void onError(Exception exception) {
+                        getTesting()
+                            .runWithSpan(
+                                "callback",
+                                () -> completableFuture.completeExceptionally(exception));
+                      }
+                    }));
+
+    assertThatThrownBy(() -> completableFuture.get(15, SECONDS))
+        .hasRootCauseInstanceOf(TApplicationException.class);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        assertClientSpan(span, "withError", port, true)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error()),
+                    span ->
+                        (hasAsyncServerNetworkAttributes()
+                                ? assertServerSpan(span, "withError", port)
+                                : assertServerSpan(span, "withError"))
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 
   @Test
