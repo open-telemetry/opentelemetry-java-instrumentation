@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 
@@ -15,6 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.tooling.AgentExtension;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.lang.instrument.Instrumentation;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
@@ -22,14 +24,16 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 public class InstrumentationLoader implements AgentExtension {
   private static final Logger logger = Logger.getLogger(InstrumentationLoader.class.getName());
 
-  private final InstrumentationModuleInstaller instrumentationModuleInstaller =
-      new InstrumentationModuleInstaller(InstrumentationHolder.getInstrumentation());
-
   @Override
   public AgentBuilder extend(AgentBuilder agentBuilder, ConfigProperties config) {
+    InstrumentationModuleInstaller instrumentationModuleInstaller =
+        new InstrumentationModuleInstaller(InstrumentationHolder.getInstrumentation());
     int numberOfLoadedModules = 0;
+    ClassLoader extensionsClassLoader =
+        requireNonNull(
+            Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
     for (InstrumentationModule instrumentationModule :
-        loadOrdered(InstrumentationModule.class, Utils.getExtensionsClassLoader())) {
+        loadOrdered(InstrumentationModule.class, extensionsClassLoader)) {
       if (logger.isLoggable(FINE)) {
         logger.log(
             FINE,

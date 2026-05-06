@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader.BootstrapClassLoaderProxy;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import java.security.PrivilegedAction;
+import javax.annotation.Nullable;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDefinition;
 
@@ -24,6 +25,7 @@ public class Utils {
     return AgentInstaller.class.getClassLoader();
   }
 
+  @Nullable
   public static ClassLoader getExtensionsClassLoader() {
     return AgentInitializer.getExtensionsClassLoader();
   }
