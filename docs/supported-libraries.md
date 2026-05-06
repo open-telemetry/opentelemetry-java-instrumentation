@@ -201,7 +201,7 @@ These are the supported libraries and frameworks:
 [System Metrics]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/system/system-metrics.md
 [GraphQL Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/graphql/graphql-spans.md
 [FaaS Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md
-[GenAI Client Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md
+[GenAI Client Spans]: https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md
 [GenAI Client Metrics]: https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics
 
 ## Application Servers
