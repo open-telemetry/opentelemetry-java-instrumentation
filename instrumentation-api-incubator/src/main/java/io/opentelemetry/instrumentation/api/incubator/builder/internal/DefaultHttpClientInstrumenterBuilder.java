@@ -9,6 +9,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
@@ -225,7 +226,13 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get())
-            .setSchemaUrl(SchemaUrls.V1_37_0);
+            .setSchemaUrl(SchemaUrls.V1_41_0);
+    Experimental.setExceptionEventExtractor(
+        builder,
+        (logRecordBuilder, context, request) -> {
+          logRecordBuilder.setEventName("http.client.request.exception");
+          logRecordBuilder.setSeverity(Severity.WARN);
+        });
     if (emitExperimentalHttpClientTelemetry) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
@@ -245,7 +252,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
           SpanNameExtractor<? super BUILDERREQUEST> spanNameExtractor) {
     return Instrumenter.<BUILDERREQUEST, BUILDERRESPONSE>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
-        .setSchemaUrl(SchemaUrls.V1_37_0);
+        .setSchemaUrl(SchemaUrls.V1_41_0);
   }
 
   @CanIgnoreReturnValue

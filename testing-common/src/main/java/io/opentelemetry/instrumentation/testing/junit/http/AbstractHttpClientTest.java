@@ -1158,7 +1158,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .satisfies(
             spanData ->
                 assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_37_0));
+                    .isEqualTo(SchemaUrls.V1_41_0));
   }
 
   protected static SpanDataAssert assertServerSpan(SpanDataAssert span) {

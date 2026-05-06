@@ -14,6 +14,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.logs.LoggerBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -28,6 +29,7 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.InternalExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
@@ -71,6 +73,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
+  @Nullable InternalExceptionEventExtractor<? super REQUEST> exceptionEventExtractor;
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
 
@@ -80,6 +83,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             builder.operationListenerAttributesExtractors.add(
                 requireNonNull(
                     operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
+    Experimental.internalSetExceptionEventExtractor(
+        (builder, exceptionEventExtractor) ->
+            builder.exceptionEventExtractor =
+                requireNonNull(exceptionEventExtractor, "exceptionEventExtractor"));
   }
 
   InstrumenterBuilder(
@@ -312,6 +319,18 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       tracerBuilder.setSchemaUrl(schemaUrl);
     }
     return tracerBuilder.build();
+  }
+
+  io.opentelemetry.api.logs.Logger buildLogger() {
+    LoggerBuilder loggerBuilder = openTelemetry.getLogsBridge().loggerBuilder(instrumentationName);
+    if (instrumentationVersion != null) {
+      loggerBuilder.setInstrumentationVersion(instrumentationVersion);
+    }
+    String schemaUrl = getSchemaUrl();
+    if (schemaUrl != null) {
+      loggerBuilder.setSchemaUrl(schemaUrl);
+    }
+    return loggerBuilder.build();
   }
 
   List<OperationListener> buildOperationListeners() {
