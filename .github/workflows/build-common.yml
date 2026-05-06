@@ -186,9 +186,11 @@ jobs:
           distribution: temurin
           java-version-file: .java-version
 
-      - name: Increase gradle daemon heap size
+      - name: Increase gradle daemon heap size and enable OOM diagnostics
         run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
+          mkdir -p "$GITHUB_WORKSPACE/gradle-diagnostics"
+          sed -i "s|org.gradle.jvmargs=|org.gradle.jvmargs=-Xmx3g -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$GITHUB_WORKSPACE/gradle-diagnostics/daemon.hprof -Xlog:gc*,gc+heap=info,gc+age=info:file=$GITHUB_WORKSPACE/gradle-diagnostics/gc.log:time,uptime,level,tags:filecount=5,filesize=50M |" gradle.properties
+          grep '^org.gradle.jvmargs' gradle.properties
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
@@ -199,6 +201,32 @@ jobs:
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: ./gradlew check javadoc sourcesJar spdxSbom -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+
+      - name: Collect Gradle daemon diagnostics on failure
+        if: failure()
+        run: |
+          set -x
+          mkdir -p "$GITHUB_WORKSPACE/gradle-diagnostics"
+          # Heap dumps written by -XX:HeapDumpPath above (and any sibling pid-suffixed ones)
+          ls -la "$GITHUB_WORKSPACE/gradle-diagnostics" || true
+          # Daemon logs (include stdout/stderr captured by Gradle)
+          if [ -d "$HOME/.gradle/daemon" ]; then
+            cp -r "$HOME/.gradle/daemon" "$GITHUB_WORKSPACE/gradle-diagnostics/daemon-logs" || true
+          fi
+          # JVM hs_err files if any were produced
+          find "$GITHUB_WORKSPACE" -maxdepth 4 -name 'hs_err_pid*.log' -exec cp {} "$GITHUB_WORKSPACE/gradle-diagnostics/" \; 2>/dev/null || true
+          # Free space + memory snapshot for context
+          { df -h; echo '---'; free -m; echo '---'; uname -a; } > "$GITHUB_WORKSPACE/gradle-diagnostics/system-info.txt" || true
+          du -sh "$GITHUB_WORKSPACE/gradle-diagnostics"/* 2>/dev/null || true
+
+      - name: Upload Gradle daemon diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gradle-daemon-diagnostics
+          path: gradle-diagnostics
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Check for jApiCmp diffs
         # The jApiCmp diff compares current to latest, which isn't appropriate for release branches
