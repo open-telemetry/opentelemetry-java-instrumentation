@@ -78,7 +78,11 @@ tasks {
 
       subprojects {
         configurations
-          .filter { it.isCanBeResolved && it.name.contains("test", ignoreCase = true) && it.name.endsWith("RuntimeClasspath") }
+          .filter {
+            it.isCanBeResolved &&
+              ((it.name.contains("test", ignoreCase = true) && it.name.endsWith("RuntimeClasspath")) ||
+                it.name == "compileClasspath")
+          }
           .forEach { config ->
             config.incoming.resolutionResult.allDependencies.forEach { dep ->
               if (dep is org.gradle.api.artifacts.result.ResolvedDependencyResult) {

@@ -28,17 +28,16 @@ sourceSets {
 }
 
 dependencies {
-  // these are needed for compileGwt task
+  // GWT moved from `com.google.gwt` to `org.gwtproject` in 2.10.0
   if (otelProps.testLatestDeps) {
-    compileOnly("org.gwtproject:gwt-user:latest.release")
-    compileOnly("org.gwtproject:gwt-dev:latest.release")
-    compileOnly("org.gwtproject:gwt-servlet:latest.release")
-    testImplementation("org.gwtproject:gwt-servlet:latest.release")
+    library("org.gwtproject:gwt-servlet:latest.release")
+    library("org.gwtproject:gwt-user:latest.release")
+    library("org.gwtproject:gwt-dev:latest.release")
   } else {
+    library("com.google.gwt:gwt-servlet:2.0.0")
+    // these are needed for compileGwt task
     compileOnly("com.google.gwt:gwt-user:2.0.0")
     compileOnly("com.google.gwt:gwt-dev:2.0.0")
-    compileOnly("com.google.gwt:gwt-servlet:2.0.0")
-    testImplementation("com.google.gwt:gwt-servlet:2.0.0")
   }
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))

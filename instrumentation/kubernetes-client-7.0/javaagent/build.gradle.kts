@@ -19,11 +19,31 @@ dependencies {
   latestDepTestLibrary("io.kubernetes:client-java-api:19.+") // see test suite below
 }
 
+val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+
 testing {
   suites {
-    val version20Test by registering(JvmTestSuite::class) {
+    // version22Test reuses the same test source against `latest.release` in latest-deps mode
+    // (currently 26.x), and against 22.0.0 otherwise, to exercise the upper end of the v20+
+    // builder API line.
+    val version22Test by registering(JvmTestSuite::class) {
+      sources {
+        java {
+          setSrcDirs(listOf("src/version20Test/java"))
+        }
+      }
       dependencies {
-        implementation("io.kubernetes:client-java-api:${baseVersion("20.0.0").orLatest()}")
+        implementation("io.kubernetes:client-java-api:${baseVersion("22.0.0").orLatest()}")
+      }
+      targets {
+        all {
+          testTask.configure {
+            // client-java-api 22.0.0+ requires Java 11+
+            if (testJavaVersion.isJava8) {
+              enabled = false
+            }
+          }
+        }
       }
     }
   }
