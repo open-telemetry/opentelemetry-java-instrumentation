@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_PRINT_WRITER;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -154,12 +155,14 @@ public class TestServlet5 {
                       context.complete();
                     } else if (EXCEPTION.equals(endpoint)) {
                       resp.setStatus(endpoint.getStatus());
+                      if (isOldTomcat(req)) {
+                        resp.setContentLength(endpoint.getBody().length());
+                      }
                       PrintWriter writer = resp.getWriter();
                       writer.print(endpoint.getBody());
-                      if (req.getClass().getName().contains("catalina")) {
-                        // on tomcat close the writer to ensure response is sent immediately,
-                        // otherwise there is a chance that tomcat resets the connection before the
-                        // response is sent
+                      if (isOldTomcat(req)) {
+                        // Older Tomcat versions may close the connection before sending an async
+                        // response when the servlet throws after writing the response body.
                         writer.close();
                       }
                       throw new IllegalStateException(endpoint.getBody());
@@ -238,10 +241,9 @@ public class TestServlet5 {
                 resp.setStatus(endpoint.getStatus());
                 PrintWriter writer = resp.getWriter();
                 writer.print(endpoint.getBody());
-                if (req.getClass().getName().contains("catalina")) {
-                  // on tomcat close the writer to ensure response is sent immediately,
-                  // otherwise there is a chance that tomcat resets the connection before the
-                  // response is sent
+                if (isOldTomcat(req)) {
+                  // Older Tomcat versions may close the connection before sending an async
+                  // response when the servlet throws after writing the response body.
                   writer.close();
                 }
                 throw new IllegalStateException(endpoint.getBody());
@@ -309,6 +311,10 @@ public class TestServlet5 {
         req.startAsync().dispatch("/recursive");
       }
     }
+  }
+
+  private static boolean isOldTomcat(HttpServletRequest req) {
+    return req.getClass().getName().contains("catalina") && !testLatestDeps();
   }
 
   private TestServlet5() {}

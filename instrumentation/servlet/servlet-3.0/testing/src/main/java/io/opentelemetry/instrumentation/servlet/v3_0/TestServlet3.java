@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
@@ -158,10 +159,9 @@ public class TestServlet3 {
                       resp.setStatus(endpoint.getStatus());
                       PrintWriter writer = resp.getWriter();
                       writer.print(endpoint.getBody());
-                      if (req.getClass().getName().contains("catalina")) {
-                        // on tomcat close the writer to ensure response is sent immediately,
-                        // otherwise there is a chance that tomcat resets the connection before the
-                        // response is sent
+                      if (req.getClass().getName().contains("catalina") && !testLatestDeps()) {
+                        // Older Tomcat versions may close the connection before sending an async
+                        // response when the servlet throws after writing the response body.
                         writer.close();
                       }
                       throw new IllegalStateException(endpoint.getBody());
