@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.config.bridge;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -92,16 +93,32 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   private final ConfigProperties configProperties;
   private final List<String> path;
+  private final Map<String, String> mappings;
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
-    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, emptyList());
+    return createInstrumentationConfig(configProperties, emptyMap());
+  }
+
+  public static DeclarativeConfigProperties createInstrumentationConfig(
+      ConfigProperties configProperties, Map<String, String> mappings) {
+    for (String mapping : mappings.keySet()) {
+      if (SPECIAL_MAPPINGS.containsKey(mapping)) {
+        throw new IllegalArgumentException(
+            "Custom mapping must not override built-in mapping: " + mapping);
+      }
+    }
+    Map<String, String> mergedMappings = new HashMap<>(SPECIAL_MAPPINGS);
+    mergedMappings.putAll(mappings);
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(
+        configProperties, emptyList(), mergedMappings);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
-      ConfigProperties configProperties, List<String> path) {
+      ConfigProperties configProperties, List<String> path, Map<String, String> mappings) {
     this.configProperties = configProperties;
     this.path = path;
+    this.mappings = mappings;
   }
 
   @Nullable
@@ -160,7 +177,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   public DeclarativeConfigProperties getStructured(String name) {
     List<String> newPath = new ArrayList<>(path);
     newPath.add(name);
-    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, newPath);
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(
+        configProperties, newPath, mappings);
   }
 
   @Nullable
@@ -206,7 +224,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     String fullPath = pathWithName(name);
 
     // Check explicit property mappings first
-    String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
+    String mappedKey = mappings.get(fullPath);
     if (mappedKey != null) {
       return mappedKey;
     }
