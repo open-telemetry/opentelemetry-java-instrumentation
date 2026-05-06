@@ -72,7 +72,7 @@ public final class DeprecatedInstrumentationNames {
       expanded.add(deprecated);
       List<String> probe = singletonList(deprecated);
       if (config.isInstrumentationEnabled(probe, true)
-          != config.isInstrumentationEnabled(probe, false)) {
+          == config.isInstrumentationEnabled(probe, false)) {
         logger.log(
             WARNING,
             "otel.instrumentation.{0}.enabled is deprecated; "
