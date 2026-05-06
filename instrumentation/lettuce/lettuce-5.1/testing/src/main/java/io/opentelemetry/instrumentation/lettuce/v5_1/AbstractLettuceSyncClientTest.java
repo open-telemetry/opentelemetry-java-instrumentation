@@ -41,8 +41,6 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -64,21 +62,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   private static RedisCommands<String, String> syncCommands;
 
   @BeforeAll
-  void setUp() throws UnknownHostException {
-    redisServer.start();
-    cleanup.deferAfterAll(redisServer::stop);
-
-    host = redisServer.getHost();
-    ip = InetAddress.getByName(host).getHostAddress();
-    port = redisServer.getMappedPort(6379);
-    embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
-
+  void setUp() {
     int incorrectPort = PortUtils.findOpenPort();
     dbUriNonExistent = "redis://" + host + ":" + incorrectPort + "/" + DB_INDEX;
-
-    redisClient = createClient(embeddedDbUri);
-    cleanup.deferAfterAll(redisClient::shutdown);
-    redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
 
     connection = redisClient.connect();
     cleanup.deferAfterAll(connection);
