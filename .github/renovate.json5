@@ -374,7 +374,7 @@
     {
       // pinned version to Jetty 8 (Servlet 3.0) for compatibility
       matchFileNames: [
-        'examples/distro/instrumentation/servlet-3/build.gradle',
+        'examples/distro/instrumentation/servlet-3/build.gradle.kts',
       ],
       matchUpdateTypes: [
         'major',
