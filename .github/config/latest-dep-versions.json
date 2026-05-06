@@ -5,6 +5,7 @@
     "co.elastic.clients:elasticsearch-java#+": "9.3.4",
     "co.elastic.clients:elasticsearch-java#8.9.+": "8.9.2",
     "com.alibaba:druid#+": "1.2.28",
+    "com.alipay.sofa:sofa-rpc-all#+": "5.13.5",
     "com.amazonaws:aws-java-sdk-core#+": "1.12.797",
     "com.amazonaws:aws-java-sdk-dynamodb#+": "1.12.797",
     "com.amazonaws:aws-java-sdk-ec2#+": "1.12.797",
