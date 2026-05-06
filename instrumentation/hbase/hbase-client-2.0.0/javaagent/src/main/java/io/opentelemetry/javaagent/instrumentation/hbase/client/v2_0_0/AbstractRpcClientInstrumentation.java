@@ -1,0 +1,134 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0;
+
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0.HbaseSingletons.RC_THREAD_LOCAL;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0.HbaseSingletons.TABLE_THREAD_LOCAL;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0_0.HbaseSingletons.instrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.hbase.common.CallMethodHelper;
+import io.opentelemetry.javaagent.instrumentation.hbase.common.HbaseRequest;
+import io.opentelemetry.javaagent.instrumentation.hbase.common.RequestAndContext;
+import java.net.InetSocketAddress;
+import javax.annotation.Nullable;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.hadoop.hbase.net.Address;
+import org.apache.hadoop.hbase.security.User;
+import org.apache.hbase.thirdparty.com.google.protobuf.Descriptors;
+
+public final class AbstractRpcClientInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("org.apache.hadoop.hbase.ipc.AbstractRpcClient");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        named("callMethod")
+            .and(
+                takesArgument(
+                    0,
+                    named(
+                        "org.apache.hbase.thirdparty.com.google.protobuf.Descriptors$MethodDescriptor")))
+            .and(takesArgument(4, named("org.apache.hadoop.hbase.security.User")))
+            .and(takesArgument(5, named("java.net.InetSocketAddress"))),
+        AbstractRpcClientInstrumentation.class.getName() + "$CallMethodAdvice");
+
+    // 2.4.18 version
+    transformer.applyAdviceToMethod(
+        named("callMethod")
+            .and(
+                takesArgument(
+                    0,
+                    named(
+                        "org.apache.hbase.thirdparty.com.google.protobuf.Descriptors$MethodDescriptor")))
+            .and(takesArgument(4, named("org.apache.hadoop.hbase.security.User")))
+            .and(takesArgument(5, named("org.apache.hadoop.hbase.net.Address"))),
+        AbstractRpcClientInstrumentation.class.getName() + "$CallMethodLastAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class CallMethodAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static RequestAndContext onEnter(
+        @Advice.Argument(0) Descriptors.MethodDescriptor md,
+        @Advice.Argument(4) User ticket,
+        @Advice.Argument(5) InetSocketAddress addr) {
+      HbaseRequest request =
+          CallMethodHelper.buildRequest(
+              md.getName(), TABLE_THREAD_LOCAL.get(), ticket.getName(), addr);
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return null;
+      }
+      Context context = instrumenter().start(parentContext, request);
+      Scope scope = context.makeCurrent();
+      RequestAndContext requestAndContext = RequestAndContext.create(request, scope, context);
+      RC_THREAD_LOCAL.set(requestAndContext);
+      return requestAndContext;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Thrown Throwable throwable,
+        @Advice.Enter @Nullable RequestAndContext requestAndContext) {
+      if (requestAndContext == null) {
+        return;
+      }
+      RC_THREAD_LOCAL.remove();
+      CallMethodHelper.handleOnExit(throwable, requestAndContext, instrumenter(), false);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CallMethodLastAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static RequestAndContext onEnter(
+        @Advice.Argument(0) Descriptors.MethodDescriptor md,
+        @Advice.Argument(4) User ticket,
+        @Advice.Argument(5) Address addr) {
+      HbaseRequest request =
+          CallMethodHelper.buildRequest(
+              md.getName(),
+              TABLE_THREAD_LOCAL.get(),
+              ticket.getName(),
+              addr.getHostname(),
+              addr.getPort());
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return null;
+      }
+      Context context = instrumenter().start(parentContext, request);
+      Scope scope = context.makeCurrent();
+
+      RequestAndContext requestAndContext = RequestAndContext.create(request, scope, context);
+      RC_THREAD_LOCAL.set(requestAndContext);
+      return requestAndContext;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Thrown Throwable throwable,
+        @Advice.Enter @Nullable RequestAndContext requestAndContext) {
+      if (requestAndContext == null) {
+        return;
+      }
+      RC_THREAD_LOCAL.remove();
+      CallMethodHelper.handleOnExit(throwable, requestAndContext, instrumenter(), false);
+    }
+  }
+}
