@@ -38,6 +38,10 @@ otel:
       - tracecontext:
       - baggage:
 
+  distribution:
+    spring_starter:
+      thread_details_enabled: true
+
   instrumentation/development:
     java:
       common:
@@ -46,3 +50,6 @@ otel:
             emit_experimental_telemetry/development: true
       runtime_telemetry:
         emit_experimental_metrics/development: true
+      spring_starter:
+        thread_details:
+          enabled: true

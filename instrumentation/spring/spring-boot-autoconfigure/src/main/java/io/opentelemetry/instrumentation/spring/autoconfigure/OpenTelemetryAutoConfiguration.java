@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.Declarativ
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread.ThreadDetailsInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
@@ -127,7 +128,9 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       public OpenTelemetry openTelemetry(
           AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk,
-          ConfigProperties otelProperties) {
+          ConfigProperties otelProperties,
+          Environment environment) {
+        ThreadDetailsInstrumenterCustomizerProvider.configureProperties(environment);
         logStart();
         OpenTelemetrySdk openTelemetry = autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
         ConfigProvider configProvider = ConfigPropertiesBackedConfigProvider.create(otelProperties);
@@ -167,10 +170,12 @@ public class OpenTelemetryAutoConfiguration {
           OpenTelemetryConfigurationModel model, ApplicationContext applicationContext) {
         OpenTelemetrySdkComponentLoader componentLoader =
             new OpenTelemetrySdkComponentLoader(applicationContext);
+        SpringConfigProvider configProvider = SpringConfigProvider.create(model, componentLoader);
+        ThreadDetailsInstrumenterCustomizerProvider.configureDeclarativeConfig(configProvider);
         OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model, componentLoader).getSdk();
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
-        return new SpringOpenTelemetrySdk(sdk, SpringConfigProvider.create(model, componentLoader));
+        return new SpringOpenTelemetrySdk(sdk, configProvider);
       }
 
       /**
