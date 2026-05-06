@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanExceptionHandler;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 
@@ -74,6 +75,10 @@ public final class LettuceTelemetryBuilder {
                         .extract(spanStatusBuilder, request, response, error);
                   }
                 })
+            .setSpanExceptionHandler(
+                querySanitizationEnabled
+                    ? LettuceSanitizingSpanExceptionHandler.INSTANCE
+                    : SpanExceptionHandler.getDefault())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     return new LettuceTelemetry(instrumenter, querySanitizationEnabled, encodingEventsEnabled);

@@ -117,7 +117,7 @@ class OpenTelemetryConnectionTest {
     Instrumenter<DbRequest, Void> statementInstrumenter =
         createStatementInstrumenter(openTelemetry);
     Instrumenter<DbRequest, Void> transactionInstrumenter =
-        createTransactionInstrumenter(openTelemetry, true);
+        createTransactionInstrumenter(openTelemetry, true, true);
     DbInfo dbInfo = getDbInfo();
     return new OpenTelemetryConnection(
         new TestConnection(executedSql::add),
