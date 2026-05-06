@@ -15,6 +15,11 @@ on:
         type: string
         required: false
         description: "Custom title for the issue (defaults to 'Workflow failed: $GITHUB_WORKFLOW')"
+      failure-notification-after-attempts:
+        type: number
+        required: false
+        default: 0
+        description: "Only notify on failure after this many workflow run attempts"
 
 permissions:
   contents: read
@@ -25,6 +30,7 @@ jobs:
       contents: read
       issues: write
     runs-on: ubuntu-latest
+    if: ${{ inputs.success || github.run_attempt > inputs.failure-notification-after-attempts }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 

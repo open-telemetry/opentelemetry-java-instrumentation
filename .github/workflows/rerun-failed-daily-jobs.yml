@@ -1,22 +1,26 @@
-name: Rerun flaky PR jobs
+name: Rerun failed daily jobs
 
 on:
   workflow_run:
     workflows:
-      - "Build pull request"
+      - "Build (daily)"
+      - "Build (daily --no-build-cache)"
+      - "Daily GraalVM native tests"
     types:
       - completed
 
 concurrency:
-  group: rerun-flaky-pr-jobs
+  group: rerun-failed-daily-jobs
   cancel-in-progress: false
 
 permissions:
-  actions: write
   contents: read
 
 jobs:
   rerun-failed-jobs:
+    permissions:
+      contents: read
+      actions: write
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: github.event.workflow_run.conclusion == 'failure'
