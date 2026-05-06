@@ -1,0 +1,38 @@
+---
+id: 7efd30b4-7368-4454-b018-c2ef226a3f40
+name: v1_chat_completions
+request:
+  url: /v1/chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "Answer in up to 3 words: Which ocean contains Bouvet Island?",
+          "role" : "user"
+        } ],
+        "model" : "gpt-4o",
+        "stream" : true,
+        "temperature" : 0.7
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 404
+  body: "{\"error\":{\"message\":\"The model `gpt-4o` does not exist or you do not\
+    \ have access to it.\",\"type\":\"invalid_request_error\",\"param\":null,\"code\"\
+    :\"model_not_found\"},\"request_id\":\"5710f1fc-5b88-4835-9c4e-20efc1ef35af\"}"
+  headers:
+    vary: "Origin,Access-Control-Request-Method,Access-Control-Request-Headers, Accept-Encoding"
+    x-request-id: 5710f1fc-5b88-4835-9c4e-20efc1ef35af
+    content-type: application/json
+    req-cost-time: "8"
+    req-arrive-time: "1758118389053"
+    resp-start-time: "1758118389061"
+    x-envoy-upstream-service-time: "7"
+    set-cookie: test_set_cookie
+    date: "Wed, 17 Sep 2025 14:13:08 GMT"
+    server: istio-envoy
+uuid: 7efd30b4-7368-4454-b018-c2ef226a3f40
+persistent: true
+insertionIndex: 11

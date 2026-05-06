@@ -1,0 +1,82 @@
+---
+id: eaa62748-608a-4627-bda2-93545f27c16d
+name: v1_chat_completions
+request:
+  url: /v1/chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "You are a helpful assistant providing weather updates.",
+          "role" : "system"
+        }, {
+          "content" : "What is the weather in New York City and London?",
+          "role" : "user"
+        } ],
+        "model" : "qwen3-coder-flash",
+        "stream" : true,
+        "temperature" : 0.7,
+        "tools" : [ {
+          "type" : "function",
+          "function" : {
+            "description" : "The location to get the current temperature for",
+            "name" : "get_weather",
+            "parameters" : {
+              "$schema" : "https://json-schema.org/draft/2020-12/schema",
+              "additionalProperties" : false,
+              "type" : "object",
+              "properties" : {
+                "location" : {
+                  "type" : "string"
+                }
+              },
+              "required" : [ "location" ]
+            }
+          }
+        } ]
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: |+
+    data: {"choices":[{"delta":{"content":null,"tool_calls":[{"index":0,"id":"call_b2455b7da6524dc2b90f11ff","type":"function","function":{"name":"get_weather","arguments":""}}],"role":"assistant"},"finish_reason":null,"index":0,"logprobs":null}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: {"choices":[{"delta":{"content":null,"tool_calls":[{"index":0,"id":"","type":"function","function":{"arguments":"{\"location\": \""}}]},"finish_reason":null,"index":0,"logprobs":null}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: {"choices":[{"delta":{"content":null,"tool_calls":[{"index":0,"id":"","type":"function","function":{"arguments":"New York City"}}]},"finish_reason":null,"index":0,"logprobs":null}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: {"choices":[{"delta":{"content":null,"tool_calls":[{"index":0,"id":"","type":"function","function":{"arguments":"\""}}]},"finish_reason":null,"index":0,"logprobs":null}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: {"choices":[{"delta":{"content":null,"tool_calls":[{"index":0,"id":"","type":"function","function":{"arguments":"}"}}]},"finish_reason":null,"index":0,"logprobs":null}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: {"choices":[{"delta":{"content":null,"tool_calls":[{"index":1,"id":"call_587ea3e2c2184dcfb35d3c7e","type":"function","function":{"name":"get_weather","arguments":""}}]},"finish_reason":null,"index":0,"logprobs":null}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: {"choices":[{"delta":{"content":null,"tool_calls":[{"index":1,"id":"","type":"function","function":{"arguments":"{\"location\": \""}}]},"finish_reason":null,"index":0,"logprobs":null}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: {"choices":[{"delta":{"content":null,"tool_calls":[{"index":1,"id":"","type":"function","function":{"arguments":"London"}}]},"finish_reason":null,"index":0,"logprobs":null}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: {"choices":[{"delta":{"content":null,"tool_calls":[{"index":1,"id":"","type":"function","function":{"arguments":"\"}"}}]},"finish_reason":null,"index":0,"logprobs":null}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: {"choices":[{"delta":{"tool_calls":[{"function":{"arguments":""},"index":1,"id":"","type":"function"}]},"index":0}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: {"choices":[{"finish_reason":"tool_calls","delta":{},"index":0,"logprobs":null}],"object":"chat.completion.chunk","usage":null,"created":1758165571,"system_fingerprint":null,"model":"qwen3-coder-flash","id":"chatcmpl-604a5ad5-5d76-42ad-a689-6f6f60c61e5f"}
+
+    data: [DONE]
+
+  headers:
+    vary: Origin
+    x-request-id: 604a5ad5-5d76-42ad-a689-6f6f60c61e5f
+    content-type: text/event-stream;charset=UTF-8
+    x-dashscope-call-gateway: "true"
+    req-cost-time: "252"
+    req-arrive-time: "1758165570636"
+    resp-start-time: "1758165570888"
+    x-envoy-upstream-service-time: "250"
+    set-cookie: test_set_cookie
+    date: "Thu, 18 Sep 2025 03:19:30 GMT"
+    server: istio-envoy
+uuid: eaa62748-608a-4627-bda2-93545f27c16d
+persistent: true
+insertionIndex: 14
