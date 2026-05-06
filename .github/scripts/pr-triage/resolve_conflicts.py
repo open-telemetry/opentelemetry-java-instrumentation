@@ -37,6 +37,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--upstream", default="upstream", help="upstream remote name")
     parser.add_argument("--no-push", action="store_true", help="commit locally but do not push to the PR")
     parser.add_argument("--keep-temp", action="store_true", help="reuse and retain the temp bundle directory")
+    parser.add_argument(
+        "--capture-tool-usage",
+        action="store_true",
+        help="capture Copilot JSONL events and tool usage summary in the work bundle",
+    )
     return parser.parse_args()
 
 
@@ -163,7 +168,14 @@ def main() -> int:
         bundle_dir = make_temp_dir("otel-conflicts", args.pr, args.keep_temp)
         plan_path = write_conflict_bundle(bundle_dir, summary)
 
-        response = invoke_copilot(copilot_prompt(plan_path), summary)
+        event_log_path = bundle_dir / "copilot-events.jsonl" if args.capture_tool_usage else None
+        tool_usage_path = bundle_dir / "copilot-tools-used.json" if args.capture_tool_usage else None
+        response = invoke_copilot(
+            copilot_prompt(plan_path),
+            summary,
+            event_log_path=event_log_path,
+            tool_usage_path=tool_usage_path,
+        )
         (bundle_dir / "copilot-response.txt").write_text(response + "\n", encoding="utf-8")
 
         remaining = unmerged_paths(summary)
