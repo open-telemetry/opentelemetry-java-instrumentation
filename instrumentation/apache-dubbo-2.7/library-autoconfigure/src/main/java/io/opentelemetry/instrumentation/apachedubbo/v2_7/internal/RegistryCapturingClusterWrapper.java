@@ -102,5 +102,4 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
     }
     return new RegistryCapturingInvoker<>(invoker, registryAddress);
   }
-
 }
