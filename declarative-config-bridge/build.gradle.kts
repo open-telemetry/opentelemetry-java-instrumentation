@@ -8,6 +8,7 @@ group = "io.opentelemetry.instrumentation"
 
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-incubator")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   implementation("io.opentelemetry:opentelemetry-api-incubator")
 

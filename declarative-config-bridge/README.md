@@ -82,3 +82,66 @@ public class InferredSpansComponentProvider implements ComponentProvider {
   }
 }
 ```
+
+## InstrumentationDefaults
+
+`InstrumentationDefaults` lets distribution authors define instrumentation property defaults once
+and have them work in both configuration modes.
+First, there is a single defaults object that is unaware of the source of the configuration:
+
+```java
+InstrumentationDefaults defaults = new InstrumentationDefaults();
+defaults.get("micrometer").setDefault("base_time_unit", "s");
+defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
+```
+
+Navigation mirrors `DeclarativeConfigProperties` — reading uses
+`config.get("micrometer").getString("base_time_unit")`; writing defaults uses
+`defaults.get("micrometer").setDefault("base_time_unit", "s")`.
+
+Keys use the same declarative config shape as `DeclarativeConfigProperties`. When producing system
+property keys, underscores are translated to hyphens, and keys ending in `/development` are
+translated using the bridge's `experimental.` convention.
+
+The auto configuration **without declarative config** registers the defaults as a properties
+supplier, translating them to `otel.instrumentation.*` keys:
+
+```java
+@AutoService(AutoConfigurationCustomizerProvider.class)
+public class MyDistroAutoConfig implements AutoConfigurationCustomizerProvider {
+  @Override
+  public void customize(AutoConfigurationCustomizer autoConfiguration) {
+    autoConfiguration.addPropertiesSupplier(defaults::toConfigProperties);
+  }
+}
+```
+
+The auto configuration **with declarative config** registers the defaults as a model customizer,
+injecting them under `instrumentation/development.java`.
+
+Let's first look at the yaml file that the defaults effectively merge into:
+
+```yaml
+file_format: 1.0
+instrumentation/development:
+  java:
+    micrometer:
+      base_time_unit: s
+    log4j_appender:
+      experimental_log_attributes/development: "true"
+```
+
+And now the customizer that applies the defaults to the model:
+
+```java
+@AutoService(DeclarativeConfigurationCustomizerProvider.class)
+public class MyDistroDeclarativeConfig implements DeclarativeConfigurationCustomizerProvider {
+  @Override
+  public void customize(DeclarativeConfigurationCustomizer customizer) {
+    customizer.addModelCustomizer(model -> defaults.applyToModel(model));
+  }
+}
+```
+
+Explicit user configuration always takes precedence — defaults are only applied for properties not
+already present (`putIfAbsent`).
