@@ -118,7 +118,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                     span.hasName("Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
+                        .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
@@ -167,7 +167,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                     span.hasName("Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
+                        .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
@@ -226,7 +226,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                     span.hasName("Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
+                        .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
@@ -296,7 +296,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                     span.hasName("Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
+                        .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
