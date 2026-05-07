@@ -58,6 +58,10 @@ tasks {
       || it.name == "compileKotlin" || it.name == "kotlinSourcesJar" }.configureEach {
     dependsOn(generateInstrumentationVersionFile, generateInstrumentationVersionClass)
   }
+
+  named<Checkstyle>("checkstyleMain") {
+    exclude("**/InstrumentationVersion.java")
+  }
 }
 
 fun computeInstrumentationName(): String {
