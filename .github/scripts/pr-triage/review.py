@@ -32,7 +32,11 @@ HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
 MAX_FILE_CHARS = 80_000
 # apply_patch is the write tool; the prompt restricts it to findings.json, and any
 # stray edit to the working tree is caught by the post-run status_porcelain() check.
-REVIEW_COPILOT_TOOLS = ["view", "rg", "web_fetch", "apply_patch"]
+# Tool names differ between models. gpt-5.5 exposes `rg` + `apply_patch`;
+# Claude models expose `grep` + `create`/`edit`. Listing an unknown name
+# triggers "Unknown tool name in the tool allowlist" and silently drops it,
+# so we send the union and let the CLI keep whichever ones the model knows.
+REVIEW_COPILOT_TOOLS = ["view", "rg", "grep", "web_fetch", "apply_patch", "create", "edit"]
 
 
 def parse_args() -> argparse.Namespace:
@@ -41,6 +45,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--upstream", default="upstream", help="upstream remote name for trusted base checkout")
     parser.add_argument("--keep-temp", action="store_true", help="reuse and retain the temp bundle directory")
     parser.add_argument("--no-post", action="store_true", help="prepare findings and payload but do not post")
+    parser.add_argument(
+        "--replace-pending",
+        action="store_true",
+        help="delete an existing pending review by the current user before posting",
+    )
     parser.add_argument("--skip-copilot", action="store_true", help="prepare the review bundle and stop")
     parser.add_argument(
         "--capture-tool-usage",
@@ -387,11 +396,12 @@ def checkout_trusted_base(upstream: str, base_branch: str, base_ref_oid: str, su
     git(["checkout", "--detach", base_ref_oid], summary)
 
 
-def check_no_pending_review(repo: str, pr: int, summary: Summary) -> None:
+def check_no_pending_review(repo: str, pr: int, summary: Summary, *, replace: bool = False) -> None:
     """Fail fast if the current user already has a pending review on this PR.
 
     GitHub rejects a second pending review with HTTP 422, and discovering that
-    after a multi-minute Copilot run wastes time and tokens.
+    after a multi-minute Copilot run wastes time and tokens. When ``replace``
+    is true, an existing pending review by the current user is deleted instead.
     """
     progress("Checking for an existing pending review")
     viewer = gh(["api", "user", "-q", ".login"], summary).stdout.strip()
@@ -406,10 +416,19 @@ def check_no_pending_review(repo: str, pr: int, summary: Summary) -> None:
         state = review.get("state")
         user_login = ((review.get("user") or {}).get("login") or "")
         if state == "PENDING" and user_login == viewer:
+            review_id = review.get("id")
             html_url = review.get("html_url") or ""
+            if replace and review_id is not None:
+                progress(f"Deleting existing pending review {review_id}")
+                gh(
+                    ["api", "-X", "DELETE", f"repos/{repo}/pulls/{pr}/reviews/{review_id}"],
+                    summary,
+                )
+                continue
+            hint = f" ({html_url})" if html_url else ""
             raise WorkflowError(
-                f"{viewer} already has a pending review on PR #{pr}; submit or delete it first"
-                + (f" ({html_url})" if html_url else "")
+                f"{viewer} already has a pending review on PR #{pr}; submit it, "
+                f"re-run with --replace-pending, or delete it manually{hint}"
             )
 
 
@@ -425,10 +444,10 @@ def main() -> int:
         base_ref_oid = metadata.get("baseRefOid")
         if not isinstance(base_ref_oid, str) or not base_ref_oid:
             raise RuntimeError("PR metadata did not include a base ref OID")
-        checkout_trusted_base(args.upstream, base_branch, base_ref_oid, summary)
         base_repo = detect_repo(summary)
         if not args.no_post:
-            check_no_pending_review(base_repo, args.pr, summary)
+            check_no_pending_review(base_repo, args.pr, summary, replace=args.replace_pending)
+        checkout_trusted_base(args.upstream, base_branch, base_ref_oid, summary)
         progress("Collecting PR diff")
         diff_names = gh(["pr", "diff", str(args.pr), "--name-only"], summary).stdout.splitlines()
         diff_text = gh(["pr", "diff", str(args.pr), "--color", "never"], summary).stdout
