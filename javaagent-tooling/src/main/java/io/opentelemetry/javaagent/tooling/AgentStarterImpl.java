@@ -99,8 +99,8 @@ public class AgentStarterImpl implements AgentStarter {
       loggingCustomizer.init();
       EarlyInitAgentConfig.get().logEarlyConfigErrorsIfAny();
 
-      AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader);
       WeakConcurrentMapCleaner.start();
+      AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader);
 
       // LazyStorage reads system properties. Initialize it here where we have permissions to avoid
       // failing permission checks when it is initialized from user code.
