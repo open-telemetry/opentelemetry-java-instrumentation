@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import java.lang.reflect.Field;
@@ -35,17 +36,21 @@ public class ClassLoaderMatcher {
       ClassLoader classLoader, boolean injectHelpers, Set<String> excludedInstrumentationNames) {
     disableMatcherCache();
 
-    Map<String, List<Mismatch>> result = new HashMap<>();
-    ServiceLoader.load(InstrumentationModule.class, ClassLoaderMatcher.class.getClassLoader())
-        .forEach(
-            module -> {
-              if (module.instrumentationNames().stream()
-                  .noneMatch(excludedInstrumentationNames::contains)) {
-                result.put(
-                    module.getClass().getName(), matches(module, classLoader, injectHelpers));
-              }
-            });
-    return result;
+    try {
+      Map<String, List<Mismatch>> result = new HashMap<>();
+      ServiceLoader.load(InstrumentationModule.class, ClassLoaderMatcher.class.getClassLoader())
+          .forEach(
+              module -> {
+                if (module.instrumentationNames().stream()
+                    .noneMatch(excludedInstrumentationNames::contains)) {
+                  result.put(
+                      module.getClass().getName(), matches(module, classLoader, injectHelpers));
+                }
+              });
+      return result;
+    } finally {
+      WeakConcurrentMapCleaner.stop();
+    }
   }
 
   /**
