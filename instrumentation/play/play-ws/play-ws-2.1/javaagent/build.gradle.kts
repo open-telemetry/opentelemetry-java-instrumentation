@@ -27,7 +27,7 @@ muzzle {
   }
 
   pass {
-    group.set("org.playframewor")
+    group.set("org.playframework")
     module.set("play-ahc-ws-standalone_3")
     versions.set("[3.0.0,]")
     assertInverse.set(true)

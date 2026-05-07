@@ -84,8 +84,9 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
+  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   // Play doesn't work with Java 9+ until 2.6.12
-  if (!otelProps.testLatestDeps && !JavaVersion.current().isJava8) {
+  if (!otelProps.testLatestDeps && !testJavaVersion.isJava8) {
     named("test") {
       enabled = false
     }
@@ -93,9 +94,23 @@ tasks {
       enabled = false
     }
   }
+  if (testJavaVersion.isJava8) {
+    named("play3Test") {
+      enabled = false
+    }
+    named("compilePlay3TestJava") {
+      enabled = false
+    }
+  }
 
   check {
     dependsOn(testing.suites)
+  }
+
+  if (otelProps.denyUnsafe) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
 
