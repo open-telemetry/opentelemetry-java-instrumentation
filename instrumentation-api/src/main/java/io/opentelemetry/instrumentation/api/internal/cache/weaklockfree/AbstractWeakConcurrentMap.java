@@ -53,6 +53,9 @@ import javax.annotation.Nullable;
 abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<K, V>> {
 
   private static final ReferenceQueue<Object> REFERENCE_QUEUE = new ReferenceQueue<>();
+  static {
+    WeakConcurrentMapCleaner.start();
+  }
 
   final ConcurrentMap<WeakKey<K>, V> target;
   private final WeakReference<ConcurrentMap<WeakKey<K>, ?>> weakTarget;
