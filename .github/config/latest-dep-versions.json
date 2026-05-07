@@ -432,6 +432,7 @@
     "org.opensearch.client:opensearch-rest-client#+": "3.6.0",
     "org.opensearch.client:opensearch-rest-client#2.+": "2.19.5",
     "org.opensearch.client:rest#+": "0.0",
+    "org.playframework:play-ahc-ws-standalone_3#+": "3.0.11",
     "org.playframework:play-java_3#+": "3.0.10",
     "org.playframework:play-pekko-http-server_3#+": "3.0.10",
     "org.playframework:play-test_3#+": "3.0.10",

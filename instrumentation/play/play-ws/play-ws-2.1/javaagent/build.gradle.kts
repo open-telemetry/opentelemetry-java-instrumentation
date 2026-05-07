@@ -81,6 +81,16 @@ tasks {
     enabled = otelProps.testLatestDeps
   }
 
+  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+  if (testJavaVersion.isJava8) {
+    named("play3Test") {
+      enabled = false
+    }
+    named("compilePlay3TestJava") {
+      enabled = false
+    }
+  }
+
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
