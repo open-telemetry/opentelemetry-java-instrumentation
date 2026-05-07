@@ -14,7 +14,7 @@ final class WeakLockFreeCache<K, V> implements Cache<K, V> {
   private final WeakConcurrentMap<K, V> delegate;
 
   WeakLockFreeCache() {
-    this.delegate = new WeakConcurrentMap.WithInlinedExpunction<>();
+    this.delegate = new WeakConcurrentMap<>();
   }
 
   @Override
