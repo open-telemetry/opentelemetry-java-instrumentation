@@ -1,63 +1,60 @@
 #!/usr/bin/env python3
-"""Build the ordered list of instrumentation modules for this review run.
+"""Pick the next instrumentation module for this cleanup run.
 
-Reads module list from settings.gradle.kts, filters out already-reviewed
-modules (read from the otelbot/module-cleanup-progress branch by the workflow
-and passed via REVIEW_PROGRESS), respects the open-PR cap, and writes a
-`modules` JSON array + `has_work` flag to $GITHUB_OUTPUT.
+Reads the module list from settings.gradle.kts, filters out already-processed
+modules (passed via REVIEW_PROGRESS), and emits a single module to walk this
+run plus a count of how many unprocessed modules remain after it.
 
-The review job processes modules sequentially on a single branch, stopping
-after it accumulates at least `FILE_THRESHOLD` modified files, so the list
-emitted here is an upper-bound slice the job is allowed to walk through.
+The workflow chains itself one module at a time. The finalize step uses
+`queue_remaining` to decide whether to self-dispatch or flush the pending
+queue into a PR.
 
 Environment variables:
-  GITHUB_OUTPUT      - path to the GitHub Actions output file
-  GH_TOKEN           - token for `gh` CLI (set automatically by the workflow)
-  REVIEW_PROGRESS    - newline-separated list of reviewed module names
-                       (contents of reviewed.txt on the progress branch)
+  GITHUB_OUTPUT   - path to the GitHub Actions output file
+  GH_TOKEN        - token for `gh` CLI (set automatically by the workflow)
+  REVIEW_PROGRESS - newline-separated list of processed module names
+                    (contents of processed.txt on the memory branch, plus
+                    shorts already in inflight module-cleanup PR bodies)
+
+Outputs (to $GITHUB_OUTPUT):
+  has_work        - "true" if a module was picked, "false" otherwise
+  short_name      - picked module's gradle short name (e.g. "akka-actor:javaagent")
+  module_dir      - picked module's repo-relative directory
+  queue_remaining - count of unprocessed modules left AFTER this one
 """
 
-import json
 import os
 import re
 import subprocess
 from pathlib import Path
 
 SETTINGS_FILE = "settings.gradle.kts"
-# Skip the run entirely if at least this many automated review PRs are already open.
+# Skip the run entirely if at least this many module-cleanup PRs are already open.
 MAX_OPEN_PRS = 5
-# Upper bound on modules the review job will walk through in a single run,
-# even if the file-count threshold is never reached. Keeps one run bounded.
-MODULE_LIMIT_PER_RUN = 50
 
 
 def parse_modules() -> list[tuple[str, str]]:
     """Return list of (gradle_name, module_dir) from settings.gradle.kts."""
     text = Path(SETTINGS_FILE).read_text(encoding="utf-8")
-    # Match include(":instrumentation:activej-http:6.0:javaagent")
     raw = re.findall(r'include\(":instrumentation:([^"]+)"\)', text)
     pairs = []
     for entry in sorted(raw):
         parts = entry.split(":")
-        # Skip shared/helper modules (e.g. "cdi-testing") that don't follow the
-        # <library>:<variant> layout used for real instrumentation modules.
         if len(parts) < 2:
             continue
         module_dir = "instrumentation/" + "/".join(parts)
-        # Gradle module name: second-to-last:last
         gradle_name = f"{parts[-2]}:{parts[-1]}"
         pairs.append((gradle_name, module_dir))
     return pairs
 
 
-def load_reviewed() -> set[str]:
-    """Load already-reviewed module names from the REVIEW_PROGRESS env var."""
+def load_processed() -> set[str]:
+    """Load already-processed module names from the REVIEW_PROGRESS env var."""
     progress = os.environ.get("REVIEW_PROGRESS", "")
     return {line.strip() for line in progress.splitlines() if line.strip()}
 
 
 def count_open_prs() -> int:
-    """Count open PRs with the module cleanup label."""
     result = subprocess.run(
         ["gh", "pr", "list", "--label", "module cleanup",
          "--state", "open", "--json", "number", "--jq", "length"],
@@ -67,46 +64,49 @@ def count_open_prs() -> int:
 
 
 def write_output(key: str, value: str) -> None:
-    """Append a key=value to $GITHUB_OUTPUT. Values must not contain newlines."""
     assert "\n" not in value, f"multi-line $GITHUB_OUTPUT value not supported: {value!r}"
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
         f.write(f"{key}={value}\n")
+
+
+def emit_no_work() -> None:
+    write_output("has_work", "false")
+    write_output("short_name", "")
+    write_output("module_dir", "")
+    write_output("queue_remaining", "0")
 
 
 def main() -> None:
     all_modules = parse_modules()
     print(f"Total instrumentation modules: {len(all_modules)}")
 
-    reviewed = load_reviewed()
-    print(f"Already reviewed: {len(reviewed)}")
+    processed = load_processed()
+    print(f"Already processed: {len(processed)}")
 
-    remaining = [(name, d) for name, d in all_modules if name not in reviewed]
+    remaining = [(n, d) for n, d in all_modules if n not in processed]
     print(f"Remaining modules: {len(remaining)}")
 
     if not remaining:
-        print("All modules have been reviewed!")
-        write_output("has_work", "false")
-        write_output("modules", "[]")
+        print("All modules have been processed!")
+        emit_no_work()
         return
 
     open_prs = count_open_prs()
-    print(f"Open review PRs: {open_prs}")
-
+    print(f"Open module-cleanup PRs: {open_prs}")
     if open_prs >= MAX_OPEN_PRS:
         print(f"PR cap reached ({open_prs} open >= {MAX_OPEN_PRS}). Skipping this cycle.")
-        write_output("has_work", "false")
-        write_output("modules", "[]")
+        emit_no_work()
         return
 
-    batch = remaining[:MODULE_LIMIT_PER_RUN]
-    print(f"Dispatching {len(batch)} modules (upper bound for this run)")
-
-    modules = [{"short_name": name, "module_dir": d} for name, d in batch]
-    modules_json = json.dumps(modules)
-    print(json.dumps(modules, indent=2))
+    short_name, module_dir = remaining[0]
+    queue_remaining = len(remaining) - 1
+    print(f"Picked: {short_name} ({module_dir})")
+    print(f"Queue remaining after this run: {queue_remaining}")
 
     write_output("has_work", "true")
-    write_output("modules", modules_json)
+    write_output("short_name", short_name)
+    write_output("module_dir", module_dir)
+    write_output("queue_remaining", str(queue_remaining))
 
 
 if __name__ == "__main__":
