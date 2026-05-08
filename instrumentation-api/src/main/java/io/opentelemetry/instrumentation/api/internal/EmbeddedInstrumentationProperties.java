@@ -62,23 +62,30 @@ public final class EmbeddedInstrumentationProperties {
     return version;
   }
 
-  private static final Pattern stripVersionSuffix = Pattern.compile("(-[0-9.]*)$");
-  private static final Pattern normalizeVersion = Pattern.compile("([0-9]+)\\.([0-9]+)");
-  private static final Pattern extractVersion = Pattern.compile(".*?([0-9.]*)$");
+  private static final Pattern STRIP_VERSION_SUFFIX = Pattern.compile("(-[0-9.]*)$");
+  private static final Pattern NORMALIZE_VERSION = Pattern.compile("([0-9]+)\\.([0-9]+)");
+  private static final Pattern EXTRACT_VERSION = Pattern.compile(".*?([0-9.]*)$");
 
   @Nullable
   private static String loadVersionFromClass(String instrumentationName) {
+    // The same logic is duplicated in otel.instrumentation-version
+    // Strip trailing version suffix and remove dashes
     String moduleName =
-        stripVersionSuffix.matcher(instrumentationName).replaceAll("").replace("-", "");
-    moduleName = normalizeVersion.matcher(moduleName).replaceAll("$1_$2");
+        STRIP_VERSION_SUFFIX.matcher(instrumentationName).replaceAll("").replace("-", "");
+    // If the module name contains a non-trailing version number e.g. jaxrs-3.0-jersey-3.0 replace
+    // the dot with underscore. This is needed to turn the module name into valid package name, java
+    // package name segments cannot start with a number.
+    moduleName = NORMALIZE_VERSION.matcher(moduleName).replaceAll("$1_$2");
+    // Extract trailing version number and replace dots with underscores so it could be used as a
+    // package name segment.
     String baseVersion =
-        extractVersion.matcher(instrumentationName).replaceAll("$1").replace(".", "_");
+        EXTRACT_VERSION.matcher(instrumentationName).replaceAll("$1").replace(".", "_");
     String packageName = moduleName + (baseVersion.isEmpty() ? "" : ".v" + baseVersion);
 
     try {
       Class<?> clazz = Class.forName(packageName + ".internal.InstrumentationVersion");
-      return clazz.getConstructor().newInstance().toString();
-    } catch (Exception e) {
+      return clazz.getField("VERSION").get(null).toString();
+    } catch (ReflectiveOperationException e) {
       return null;
     }
   }
