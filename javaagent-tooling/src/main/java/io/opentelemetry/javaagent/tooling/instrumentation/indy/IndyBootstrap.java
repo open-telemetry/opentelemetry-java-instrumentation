@@ -117,8 +117,12 @@ public class IndyBootstrap {
     // callsite resolution needs privileged access to call Class#getClassLoader() and
     // MethodHandles$Lookup#findStatic
     return java.security.AccessController.doPrivileged(
-        (PrivilegedAction<CallSite>)
-            () -> internalBootstrap(lookup, adviceMethodName, adviceMethodType, args));
+        new PrivilegedAction<CallSite>() {
+          @Override
+          public CallSite run() {
+            return internalBootstrap(lookup, adviceMethodName, adviceMethodType, args);
+          }
+        });
   }
 
   private static CallSite internalBootstrap(
