@@ -42,6 +42,7 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -438,6 +439,25 @@ class InstrumenterTest {
               equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
               equalTo(EXCEPTION_MESSAGE, "test"),
               satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull));
+    }
+  }
+
+  @Test
+  void error_log_usesExplicitEndTime() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .buildInstrumenter();
+
+    IllegalStateException error = new IllegalStateException("test");
+    Instant endTime = Instant.ofEpochSecond(123, 456);
+    instrumenter.startAndEnd(
+        Context.root(), REQUEST, RESPONSE, error, Instant.ofEpochSecond(100), endTime);
+
+    if (emitExceptionAsLogs()) {
+      List<LogRecordData> logs = otelTesting.getLogRecords();
+      assertThat(logs).hasSize(1);
+      assertThat(logs.get(0).getTimestampEpochNanos()).isEqualTo(123_000_000_456L);
     }
   }
 

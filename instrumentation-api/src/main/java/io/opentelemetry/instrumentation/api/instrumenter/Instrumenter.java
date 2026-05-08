@@ -283,7 +283,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
         span.recordException(error);
       }
       if (emitExceptionAsLogs() && exceptionEventExtractor != null) {
-        emitExceptionLog(context, error, request);
+        emitExceptionLog(context, error, request, endTime);
       }
     }
 
@@ -325,7 +325,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
   }
 
-  private void emitExceptionLog(Context context, Throwable throwable, REQUEST request) {
+  private void emitExceptionLog(
+      Context context, Throwable throwable, REQUEST request, @Nullable Instant endTime) {
     if (logger == null || exceptionEventExtractor == null) {
       // this condition is to keep nullaway happy
       // doEnd already guards on exceptionEventExtractor != null, so this is unreachable
@@ -333,6 +334,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
     LogRecordBuilder logRecordBuilder = logger.logRecordBuilder();
     logRecordBuilder.setContext(context);
+    if (endTime != null) {
+      logRecordBuilder.setTimestamp(endTime);
+    }
     exceptionEventExtractor.extract(logRecordBuilder, context, request);
     logRecordBuilder.setException(throwable);
     logRecordBuilder.emit();

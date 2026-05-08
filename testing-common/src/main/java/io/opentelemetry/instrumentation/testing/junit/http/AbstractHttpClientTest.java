@@ -1273,8 +1273,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                   .hasAttributesSatisfyingExactly(
                       equalTo(EXCEPTION_TYPE, exception.getClass().getCanonicalName()),
                       equalTo(EXCEPTION_MESSAGE, exception.getMessage()),
-                      satisfies(
-                          EXCEPTION_STACKTRACE, stacktrace -> assertThat(stacktrace).isNotNull()));
+                      satisfies(EXCEPTION_STACKTRACE, stacktrace -> stacktrace.isNotNull()));
             });
   }
 
@@ -1293,8 +1292,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                   .hasAttributesSatisfyingExactly(
                       equalTo(EXCEPTION_TYPE, exception.getClass().getCanonicalName()),
                       equalTo(EXCEPTION_MESSAGE, exception.getMessage()),
-                      satisfies(
-                          EXCEPTION_STACKTRACE, stacktrace -> assertThat(stacktrace).isNotNull()));
+                      satisfies(EXCEPTION_STACKTRACE, stacktrace -> stacktrace.isNotNull()));
             });
   }
 }
