@@ -151,10 +151,16 @@ jobs:
       pull-requests: write
       actions: write
     steps:
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: true
+          token: ${{ steps.otelbot-token.outputs.token }}
       - name: Configure git author
         run: .github/scripts/use-cla-approved-bot.sh
       - name: Download agent artifact
@@ -165,7 +171,8 @@ jobs:
         continue-on-error: true
       - name: Finalize
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
           SHORT_NAME: ${{ needs.dispatch.outputs.short_name }}
           AGENT_RESULT: ${{ needs.agent.result }}
           QUEUE_REMAINING: ${{ needs.dispatch.outputs.queue_remaining }}
