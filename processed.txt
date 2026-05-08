@@ -1,1 +1,2 @@
 activej-http-6.0:javaagent
+akka-actor-2.3:javaagent
