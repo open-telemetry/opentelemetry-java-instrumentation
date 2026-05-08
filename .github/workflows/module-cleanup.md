@@ -32,7 +32,8 @@ on:
   schedule:
     - cron: "every 1h"
 
-permissions: read-all
+permissions:
+  contents: read
 
 concurrency:
   group: module-cleanup
