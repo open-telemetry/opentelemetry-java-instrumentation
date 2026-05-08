@@ -30,8 +30,8 @@ jobs:
 
       - name: Install Copilot CLI
         run: |
-          npm ci --prefix .github/copilot-cli
-          echo "$GITHUB_WORKSPACE/.github/copilot-cli/node_modules/.bin" >> "$GITHUB_PATH"
+          npm ci --prefix .github/scripts/copilot-cli
+          echo "$GITHUB_WORKSPACE/.github/scripts/copilot-cli/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Generate dashboard
         env:
