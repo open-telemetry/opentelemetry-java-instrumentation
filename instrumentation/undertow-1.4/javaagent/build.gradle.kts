@@ -19,11 +19,11 @@ dependencies {
   bootstrap(project(":instrumentation:undertow-1.4:bootstrap"))
 }
 
-tasks.test {
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-}
-
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath

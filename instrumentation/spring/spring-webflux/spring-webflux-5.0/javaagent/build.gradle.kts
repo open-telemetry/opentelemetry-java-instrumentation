@@ -94,7 +94,11 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.opt-in=logs")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled," +
+        "otel.semconv.exception.signal.opt-in=logs"
+    )
   }
 
   check {
