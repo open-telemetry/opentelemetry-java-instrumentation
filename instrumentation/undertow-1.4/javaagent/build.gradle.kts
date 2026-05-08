@@ -23,6 +23,19 @@ tasks.test {
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 
+tasks {
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.opt-in=logs")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs)
+  }
+}
+
 // since 2.3.x, undertow is compiled by JDK 11
 if (otelProps.testLatestDeps) {
   otelJava {
