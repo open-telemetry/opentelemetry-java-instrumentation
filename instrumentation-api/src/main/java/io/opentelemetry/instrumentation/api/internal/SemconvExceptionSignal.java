@@ -22,10 +22,7 @@ public final class SemconvExceptionSignal {
     boolean spanEvents = true;
     boolean logs = false;
 
-    String value = System.getProperty("otel.semconv.exception.signal.opt-in");
-    if (value == null) {
-      value = System.getenv("OTEL_SEMCONV_EXCEPTION_SIGNAL_OPT_IN");
-    }
+    String value = ConfigPropertiesUtil.getString("otel.semconv.exception.signal.opt-in");
     if (value != null) {
       if (value.equals("logs")) {
         spanEvents = false;

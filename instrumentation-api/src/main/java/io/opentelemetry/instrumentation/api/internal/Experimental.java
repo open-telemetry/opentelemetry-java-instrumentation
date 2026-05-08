@@ -124,7 +124,8 @@ public final class Experimental {
 
   /**
    * Sets the {@link InternalExceptionEventExtractor} that will determine the exception event name
-   * and severity. Only used when stable exception semconv is enabled.
+   * and severity. Only used when emitting exceptions as logs is enabled via the {@code
+   * otel.semconv.exception.signal.opt-in} flag.
    */
   public static <REQUEST> void setExceptionEventExtractor(
       InstrumenterBuilder<REQUEST, ?> builder,
