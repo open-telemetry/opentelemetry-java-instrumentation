@@ -2,3 +2,4 @@ activej-http-6.0:javaagent
 akka-actor-2.3:javaagent
 akka-actor-fork-join-2.5:javaagent
 akka-http-10.0:javaagent
+alibaba-druid-1.0:javaagent
