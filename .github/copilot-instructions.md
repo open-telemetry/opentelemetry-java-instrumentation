@@ -1,27 +1,6 @@
 # OpenTelemetry Java Instrumentation
 
-## Scope
-
-Repository-wide defaults for Copilot behavior, including PR review.
-
-## Knowledge Loading (Agent / Chat Mode)
-
-For coding, fix, and refactoring tasks, consult `.github/agents/knowledge/README.md`
-and load only the article(s) relevant to the current task.
-
-## Gradle Execution Rules
-
-- Never use `--rerun-tasks`. Use `--rerun` when needed.
-- Builds and tests can take several minutes. Run Gradle with timeout `0` and wait.
-  Slow output is not a hang.
-- Never pipe Gradle output through `tail`, `head`, `grep`, etc. Piping masks the
-  Gradle exit code.
-
----
-
-# PR Review Rules (First Pass)
-
-This is the **first-pass** review. A deep review with full knowledge files runs
+First-pass PR review rules. A deep review with full knowledge files runs
 separately later in the PR lifecycle. **Prefer silence over uncertainty.** Only
 flag substantive issues on changed lines. Skip stylistic preferences not listed
 below. Do not nitpick.
