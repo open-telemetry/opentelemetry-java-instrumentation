@@ -5,3 +5,4 @@ akka-http-10.0:javaagent
 alibaba-druid-1.0:javaagent
 alibaba-druid-1.0:library
 alibaba-druid-1.0:testing
+apache-dbcp-2.0:javaagent
