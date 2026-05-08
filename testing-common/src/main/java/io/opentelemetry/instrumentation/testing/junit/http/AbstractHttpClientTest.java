@@ -1258,7 +1258,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             () -> {
               List<LogRecordData> logs =
                   testing.getExportedLogRecords().stream()
-                      .filter(log -> log.getEventName() == null || log.getEventName().isEmpty())
+                      .filter(log -> "exception".equals(log.getEventName()))
                       .filter(
                           log ->
                               exception
