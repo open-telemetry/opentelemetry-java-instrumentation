@@ -45,6 +45,32 @@ void test(String name, TestCase testCase) {
 }
 ```
 
+In modules that still target a Java version below 16 (most javaagent
+instrumentation modules use `minJavaVersionSupported = 8`), records are not
+available in test sources because `--release` is shared with main sources. Use
+a `static final class` with explicit fields and a constructor, and override
+`toString()` to return the case name so `@ParameterizedTest(name = "{0}")`
+prints a readable scenario:
+
+```java
+static final class TestCase {
+  final String name;
+  final Input input;
+  final Output expected;
+
+  TestCase(String name, Input input, Output expected) {
+    this.name = name;
+    this.input = input;
+    this.expected = expected;
+  }
+
+  @Override
+  public String toString() {
+    return name;
+  }
+}
+```
+
 ## Test Method Throws Clauses
 
 - On methods annotated with `@Test`, keep the `throws` clause to a single exception type.
