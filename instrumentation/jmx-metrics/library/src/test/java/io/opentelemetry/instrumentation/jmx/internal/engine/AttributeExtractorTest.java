@@ -6,8 +6,10 @@
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
@@ -16,6 +18,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class AttributeExtractorTest {
@@ -127,100 +131,53 @@ class AttributeExtractorTest {
     assertThat(set).isNotNull().hasSize(1).contains(objectName);
   }
 
-  @Test
-  void testByteAttribute() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ByteAttribute");
+  private static Stream<Arguments> longAttributes() {
+    return Stream.of(
+        arguments("ByteAttribute", 10L),
+        arguments("ShortAttribute", 11L),
+        arguments("IntAttribute", 12L),
+        arguments("LongAttribute", 13L));
+  }
+
+  private static Stream<Arguments> doubleAttributes() {
+    // accurate representation
+    return Stream.of(arguments("FloatAttribute", 14.0), arguments("DoubleAttribute", 15.0));
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("longAttributes")
+  void longAttributeInfo(String attributeName, long expectedValue) {
+    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName(attributeName);
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isFalse();
   }
 
-  @Test
-  void testByteAttributeValue() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ByteAttribute");
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("longAttributes")
+  void longAttributeValue(String attributeName, long expectedValue) {
+    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName(attributeName);
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
     assertThat(number).isNotNull();
-    assertThat(number.longValue()).isEqualTo(10);
+    assertThat(number.longValue()).isEqualTo(expectedValue);
   }
 
-  @Test
-  void testShortAttribute() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ShortAttribute");
-    AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info).isNotNull();
-    assertThat(info.usesDoubleValues()).isFalse();
-  }
-
-  @Test
-  void testShortAttributeValue() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ShortAttribute");
-    Number number = extractor.extractNumericalAttribute(theServer, objectName);
-    assertThat(number).isNotNull();
-    assertThat(number.longValue()).isEqualTo(11);
-  }
-
-  @Test
-  void testIntAttribute() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("IntAttribute");
-    AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info).isNotNull();
-    assertThat(info.usesDoubleValues()).isFalse();
-  }
-
-  @Test
-  void testIntAttributeValue() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("IntAttribute");
-    Number number = extractor.extractNumericalAttribute(theServer, objectName);
-    assertThat(number).isNotNull();
-    assertThat(number.longValue()).isEqualTo(12);
-  }
-
-  @Test
-  void testLongAttribute() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("LongAttribute");
-    AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info).isNotNull();
-    assertThat(info.usesDoubleValues()).isFalse();
-  }
-
-  @Test
-  void testLongAttributeValue() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("LongAttribute");
-    Number number = extractor.extractNumericalAttribute(theServer, objectName);
-    assertThat(number).isNotNull();
-    assertThat(number.longValue()).isEqualTo(13);
-  }
-
-  @Test
-  void testFloatAttribute() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("FloatAttribute");
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("doubleAttributes")
+  void doubleAttributeInfo(String attributeName, double expectedValue) {
+    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName(attributeName);
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isTrue();
   }
 
-  @Test
-  void testFloatAttributeValue() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("FloatAttribute");
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("doubleAttributes")
+  void doubleAttributeValue(String attributeName, double expectedValue) {
+    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName(attributeName);
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
     assertThat(number).isNotNull();
-    assertThat(number.doubleValue()).isEqualTo(14.0); // accurate representation
-  }
-
-  @Test
-  void testDoubleAttribute() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("DoubleAttribute");
-    AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info).isNotNull();
-    assertThat(info.usesDoubleValues()).isTrue();
-  }
-
-  @Test
-  void testDoubleAttributeValue() {
-    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("DoubleAttribute");
-    Number number = extractor.extractNumericalAttribute(theServer, objectName);
-    assertThat(number).isNotNull();
-    assertThat(number.doubleValue()).isEqualTo(15.0); // accurate representation
+    assertThat(number.doubleValue()).isEqualTo(expectedValue);
   }
 
   @Test
