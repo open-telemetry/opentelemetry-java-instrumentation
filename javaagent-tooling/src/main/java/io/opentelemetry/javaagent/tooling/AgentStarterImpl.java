@@ -99,6 +99,7 @@ public class AgentStarterImpl implements AgentStarter {
       loggingCustomizer.init();
       EarlyInitAgentConfig.get().logEarlyConfigErrorsIfAny();
 
+      // start cleaner first so weak refs created during bytebuddy install get cleaned up
       WeakConcurrentMapCleaner.start();
       AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader);
 
