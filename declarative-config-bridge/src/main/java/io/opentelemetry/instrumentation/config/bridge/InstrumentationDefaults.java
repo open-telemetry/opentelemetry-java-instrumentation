@@ -11,7 +11,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.Experi
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalLanguageSpecificInstrumentationPropertyModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -38,7 +37,7 @@ import java.util.Map;
  */
 public final class InstrumentationDefaults {
 
-  private final Map<String, InstrumentationProperties> instrumentations = new LinkedHashMap<>();
+  private final Map<String, InstrumentationProperties> instrumentations = new HashMap<>();
 
   /**
    * Returns the defaults builder for the given instrumentation, creating it if absent. Mirrors
@@ -112,7 +111,7 @@ public final class InstrumentationDefaults {
   /** Defaults for a single instrumentation. Keys use underscore notation. */
   public static final class InstrumentationProperties {
 
-    private final Map<String, String> properties = new LinkedHashMap<>();
+    private final Map<String, String> properties = new HashMap<>();
 
     private InstrumentationProperties() {}
 
