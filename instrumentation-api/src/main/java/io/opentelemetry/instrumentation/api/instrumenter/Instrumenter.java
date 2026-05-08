@@ -282,6 +282,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       if (emitExceptionAsSpanEvents()) {
         span.recordException(error);
       }
+      // Exception logs are intentionally emitted even when the span is not recording.
       if (emitExceptionAsLogs() && exceptionEventExtractor != null) {
         emitExceptionLog(context, error, request, endTime);
       }

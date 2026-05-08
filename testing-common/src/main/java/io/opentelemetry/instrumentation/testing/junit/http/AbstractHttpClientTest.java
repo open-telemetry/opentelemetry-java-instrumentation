@@ -1263,7 +1263,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                           log ->
                               exception
                                   .getClass()
-                                  .getCanonicalName()
+                                  .getName()
                                   .equals(log.getAttributes().get(EXCEPTION_TYPE)))
                       .collect(toList());
 
@@ -1271,7 +1271,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               assertThat(logs.get(0))
                   .hasSeverity(Severity.WARN)
                   .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, exception.getClass().getCanonicalName()),
+                      equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
                       equalTo(EXCEPTION_MESSAGE, exception.getMessage()),
                       satisfies(EXCEPTION_STACKTRACE, stacktrace -> stacktrace.isNotNull()));
             });
@@ -1290,7 +1290,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               assertThat(logs.get(0))
                   .hasSeverity(Severity.WARN)
                   .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, exception.getClass().getCanonicalName()),
+                      equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
                       equalTo(EXCEPTION_MESSAGE, exception.getMessage()),
                       satisfies(EXCEPTION_STACKTRACE, stacktrace -> stacktrace.isNotNull()));
             });
