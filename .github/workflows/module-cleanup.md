@@ -40,6 +40,8 @@ concurrency:
 
 timeout-minutes: 30
 
+environment: protected
+
 # Disable strict mode so we can opt out of the AWF agent sandbox below.
 strict: false
 
@@ -172,7 +174,7 @@ steps:
     run: .github/scripts/use-cla-approved-bot.sh
 ---
 
-# Module Cleanup — Single Module
+# Module Cleanup
 
 You clean up exactly **one** instrumentation module this run, then export
 your commit so the finalize job can roll it into a batched PR.
