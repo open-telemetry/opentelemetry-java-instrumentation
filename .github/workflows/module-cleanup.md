@@ -65,10 +65,34 @@ tools:
   edit:
   bash: [":*"]
 
-# No safe-outputs: the finalize job owns PR creation directly via `gh`,
-# and memory-branch state is managed by plain git pushes from the finalize
-# script. This keeps all post-LLM logic in shell where it can run reliably
-# regardless of how the agent session ends.
+# The finalize job owns PR creation directly via `gh`, and memory-branch
+# state is managed by plain git pushes from the finalize script. This
+# keeps all post-LLM logic in shell where it can run reliably regardless
+# of how the agent session ends.
+#
+# The `safe-outputs.jobs.suppress_default_create_issue` placeholder below
+# exists solely to opt out of gh-aw's default behavior, which auto-injects
+# a `create-issue` safe output whenever no non-builtin safe output is
+# configured (see https://github.github.io/gh-aw/reference/safe-outputs/
+# under "System Types"). Without this opt-out, every successful run posts
+# the agent's narration as a separate `[module-cleanup]` issue, which is
+# noise on top of the batch PR the finalize job already opens.
+#
+# The placeholder safe-job is intentionally never invoked by the agent
+# (see "What you must NOT do" in the persona). gh-aw only emits the job
+# when the corresponding MCP tool is called, so leaving it uninvoked
+# costs nothing at runtime.
+
+safe-outputs:
+  # Threat detection requires the AWF agent sandbox, which we disable
+  # below. The placeholder safe-job below carries no untrusted output,
+  # so threat detection is unnecessary.
+  threat-detection: false
+  jobs:
+    suppress_default_create_issue:
+      runs-on: ubuntu-latest
+      steps:
+        - run: 'true'
 
 imports:
   - .github/agents/module-cleanup.agent.md
@@ -228,3 +252,8 @@ instructions imported into this prompt are yours; execute them yourself.
   persona is loaded into this session; execute it inline.
 - Do not modify files outside `$MODULE_DIR` unless the persona's
   out-of-module-edit allowance applies to your specific change.
+- Do not invoke the `suppress_default_create_issue` MCP tool. It is a
+  placeholder that exists only to disable gh-aw's default
+  create-issue auto-injection; calling it would launch a needless
+  no-op job. Use `noop` (already enabled) if you need to record a
+  completion message.
