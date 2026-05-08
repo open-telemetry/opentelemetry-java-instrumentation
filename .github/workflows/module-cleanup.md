@@ -75,7 +75,7 @@ imports:
 
 jobs:
   dispatch:
-    if: github.repository == 'trask/opentelemetry-java-instrumentation'
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     runs-on: ubuntu-latest
     permissions:
       contents: read
