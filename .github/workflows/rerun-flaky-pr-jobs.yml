@@ -12,11 +12,13 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  actions: write
   contents: read
 
 jobs:
   rerun-failed-jobs:
+    permissions:
+      actions: write
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: github.event.workflow_run.conclusion == 'failure'

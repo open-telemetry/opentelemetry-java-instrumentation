@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"2d7fb23e57279329a2b74ea80f53ffd0c3f8f71e4c35c52332465e2d73ac7f8f","compiler_version":"v0.71.5","agent_id":"copilot","agent_model":"${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"9b938d106ba95d6baccb3b46709e68bc744fe7eb3878cafdbeb675644403e4af","compiler_version":"v0.71.5","agent_id":"copilot","agent_model":"${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"de0fac2e4500dabe0009e67214ff5f5447ce83dd"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9"},{"repo":"actions/setup-java","sha":"be666c2fcd27ec809703dec50e508c2fdc7f6654","version":"be666c2fcd27ec809703dec50e508c2fdc7f6654"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"b8068426813005612b960b5ab0b8bd2c27142323","version":"v0.71.5"},{"repo":"gradle/actions/setup-gradle","sha":"50e97c2cd7a37755bbfafc9c5b7cafaece252f6e","version":"50e97c2cd7a37755bbfafc9c5b7cafaece252f6e"}],"containers":[{"image":"ghcr.io/github/github-mcp-server:v1.0.3","digest":"sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -77,7 +77,7 @@
 name: "Module Cleanup"
 "on":
   schedule:
-  - cron: "9 */1 * * *"
+  - cron: "26 */1 * * *"
     # Friendly format: every 1h (scattered)
   workflow_dispatch:
     inputs:
@@ -205,23 +205,23 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_cacf02a790dc3a5e_EOF'
+          cat << 'GH_AW_PROMPT_cf00297bcb349da9_EOF'
           <system>
-          GH_AW_PROMPT_cacf02a790dc3a5e_EOF
+          GH_AW_PROMPT_cf00297bcb349da9_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_cacf02a790dc3a5e_EOF'
+          cat << 'GH_AW_PROMPT_cf00297bcb349da9_EOF'
           <safe-output-tools>
           Tools: create_issue
-          GH_AW_PROMPT_cacf02a790dc3a5e_EOF
+          GH_AW_PROMPT_cf00297bcb349da9_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_auto_create_issue.md"
-          cat << 'GH_AW_PROMPT_cacf02a790dc3a5e_EOF'
+          cat << 'GH_AW_PROMPT_cf00297bcb349da9_EOF'
           </safe-output-tools>
-          GH_AW_PROMPT_cacf02a790dc3a5e_EOF
+          GH_AW_PROMPT_cf00297bcb349da9_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_cacf02a790dc3a5e_EOF'
+          cat << 'GH_AW_PROMPT_cf00297bcb349da9_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if __GH_AW_GITHUB_ACTOR__ }}
@@ -250,13 +250,13 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_cacf02a790dc3a5e_EOF
+          GH_AW_PROMPT_cf00297bcb349da9_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_cacf02a790dc3a5e_EOF'
+          cat << 'GH_AW_PROMPT_cf00297bcb349da9_EOF'
           </system>
           {{#runtime-import .github/agents/module-cleanup.agent.md}}
           {{#runtime-import .github/workflows/module-cleanup.md}}
-          GH_AW_PROMPT_cacf02a790dc3a5e_EOF
+          GH_AW_PROMPT_cf00297bcb349da9_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -335,7 +335,8 @@ jobs:
     if: needs.dispatch.outputs.has_work == 'true'
     runs-on: ubuntu-latest
     environment: protected
-    permissions: read-all
+    permissions:
+      contents: read
     concurrency:
       group: "gh-aw-copilot-${{ github.workflow }}"
     env:
@@ -377,6 +378,17 @@ jobs:
             echo "GH_AW_SAFE_OUTPUTS_CONFIG_PATH=${RUNNER_TEMP}/gh-aw/safeoutputs/config.json"
             echo "GH_AW_SAFE_OUTPUTS_TOOLS_PATH=${RUNNER_TEMP}/gh-aw/safeoutputs/tools.json"
           } >> "$GITHUB_OUTPUT"
+      - name: Merge remote .github folder
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          GH_AW_AGENT_FILE: ".github/agents/module-cleanup.agent.md"
+          GH_AW_AGENT_IMPORT_SPEC: ".github/agents/module-cleanup.agent.md"
+        with:
+          script: |
+            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io, getOctokit);
+            const { main } = require('${{ runner.temp }}/gh-aw/actions/merge_remote_agent_github_folder.cjs');
+            await main();
       - name: Create gh-aw temp directory
         run: bash "${RUNNER_TEMP}/gh-aw/actions/create_gh_aw_tmp_dir.sh"
       - name: Configure gh CLI for GitHub Enterprise
@@ -464,9 +476,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_a962fe520425872a_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_d81b8414d6c1c63b_EOF'
           {"create_issue":{"labels":["module-cleanup"],"max":1,"title_prefix":"[module-cleanup]"}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_a962fe520425872a_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_d81b8414d6c1c63b_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -593,7 +605,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_7e94630598f07df2_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_3b93ced615af4e8f_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -634,7 +646,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_7e94630598f07df2_EOF
+          GH_AW_MCP_CONFIG_3b93ced615af4e8f_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
