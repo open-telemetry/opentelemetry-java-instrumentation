@@ -338,8 +338,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
     logRecordBuilder.emit();
   }
 
-  // Per semconv (docs/exceptions/exceptions-logs.md), SERVER and CONSUMER spans should record
-  // exceptions with ERROR severity, while CLIENT and PRODUCER spans should use WARN.
+  // Per semconv
+  // (https://opentelemetry.io/docs/specs/semconv/general/recording-errors/#errors-in-logs),
+  // SERVER and CONSUMER spans should record exceptions with ERROR severity, while CLIENT and
+  // PRODUCER spans should use WARN.
   private static <REQUEST> InternalExceptionEventExtractor<REQUEST> defaultExceptionEventExtractor(
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
     return (logRecordBuilder, context, request) -> {
