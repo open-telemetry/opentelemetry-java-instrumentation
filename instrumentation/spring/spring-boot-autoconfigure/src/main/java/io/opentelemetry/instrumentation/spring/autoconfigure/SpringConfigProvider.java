@@ -15,8 +15,8 @@ import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfig
 import java.util.Map;
 
 /**
- * Spring flavor of {@code SdkConfigProvider}
- * that tries to coerce types, because spring doesn't tell what the original type was.
+ * Spring flavor of {@code SdkConfigProvider} that tries to coerce types, because spring doesn't
+ * tell what the original type was.
  *
  * <p>The entire class is a copy of <a
  * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/SdkConfigProvider.java">SdkConfigProvider</a>

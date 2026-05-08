@@ -170,6 +170,7 @@ tasks {
     exclude("META-INF/LICENSE")
     exclude("META-INF/NOTICE")
     exclude("META-INF/maven/**")
+    exclude("META-INF/versions/*/OSGI-INF/MANIFEST.MF")
 
     archiveFileName.set("baseJavaagentLibs-relocated.jar")
   }
