@@ -48,6 +48,7 @@ import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -116,7 +117,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.awaitility.Awaitility;
@@ -1049,7 +1049,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               List<LogRecordData> logs =
                   testing.getExportedLogRecords().stream()
                       .filter(log -> expectedEventName.equals(log.getEventName()))
-                      .collect(Collectors.toList());
+                      .collect(toList());
 
               assertThat(logs).hasSize(1);
               assertThat(logs.get(0))
