@@ -5,14 +5,23 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@SuppressWarnings("deprecation") // ConfigPropertiesUtil
+@SuppressWarnings("deprecation")
 public final class SemconvExceptionSignal {
+
+  private static final String CONFIG_PROPERTY = "otel.semconv.exception.signal.opt-in";
 
   private static final Logger logger = Logger.getLogger(SemconvExceptionSignal.class.getName());
 
@@ -20,27 +29,11 @@ public final class SemconvExceptionSignal {
   private static final boolean emitExceptionAsLogs;
 
   static {
-    boolean spanEvents = true;
-    boolean logs = false;
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
+    String optInValue = resolveOptInValue(openTelemetry);
 
-    String value = ConfigPropertiesUtil.getString("otel.semconv.exception.signal.opt-in");
-    if (value != null) {
-      if (value.equals("logs")) {
-        spanEvents = false;
-        logs = true;
-      } else if (value.equals("logs/dup")) {
-        spanEvents = true;
-        logs = true;
-      } else if (!value.isEmpty()) {
-        logger.warning(
-            "Unrecognized value for otel.semconv.exception.signal.opt-in: \""
-                + value
-                + "\". Expected \"logs\" or \"logs/dup\". Defaulting to span events.");
-      }
-    }
-
-    emitExceptionAsSpanEvents = spanEvents;
-    emitExceptionAsLogs = logs;
+    emitExceptionAsSpanEvents = shouldEmitSpanEvents(optInValue);
+    emitExceptionAsLogs = shouldEmitLogs(optInValue);
   }
 
   public static boolean emitExceptionAsSpanEvents() {
@@ -49,6 +42,47 @@ public final class SemconvExceptionSignal {
 
   public static boolean emitExceptionAsLogs() {
     return emitExceptionAsLogs;
+  }
+
+  private static boolean shouldEmitSpanEvents(@Nullable String value) {
+    return !"logs".equals(value);
+  }
+
+  private static boolean shouldEmitLogs(@Nullable String value) {
+    if (value == null || value.isEmpty()) {
+      return false;
+    }
+    if ("logs".equals(value) || "logs/dup".equals(value)) {
+      return true;
+    }
+    logger.warning(
+        "Unrecognized value for "
+            + CONFIG_PROPERTY
+            + ": \""
+            + value
+            + "\". Expected \"logs\" or \"logs/dup\". Defaulting to span events.");
+    return false;
+  }
+
+  @Nullable
+  private static String resolveOptInValue(OpenTelemetry openTelemetry) {
+    // Try declarative config via GlobalOpenTelemetry first
+    String value =
+        getGeneralInstrumentationConfig(openTelemetry)
+            .get("semconv_exception")
+            .get("signal")
+            .getString("opt_in");
+    if (value != null) {
+      return value;
+    }
+    return ConfigPropertiesUtil.getString(CONFIG_PROPERTY);
+  }
+
+  private static DeclarativeConfigProperties getGeneralInstrumentationConfig(
+      OpenTelemetry openTelemetry) {
+    return openTelemetry instanceof ExtendedOpenTelemetry
+        ? ((ExtendedOpenTelemetry) openTelemetry).getGeneralInstrumentationConfig()
+        : empty();
   }
 
   private SemconvExceptionSignal() {}
