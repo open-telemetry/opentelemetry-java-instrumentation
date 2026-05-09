@@ -20,7 +20,6 @@ import org.elasticsearch.node.internal.InternalSettingsPreparer;
 import org.elasticsearch.transport.Netty3Plugin;
 import org.elasticsearch.transport.TransportService;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
@@ -50,6 +49,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
         new Node(
             new Environment(InternalSettingsPreparer.prepareSettings(settings)),
             singletonList(Netty3Plugin.class)) {};
+    cleanup.deferAfterAll(testNode);
     startNode(testNode);
 
     tcpPublishAddress =
@@ -63,6 +63,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
                 .put("thread_pool.listener.size", 1)
                 .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
                 .build());
+    cleanup.deferAfterAll(client);
     client.addTransportAddress(tcpPublishAddress);
     testing.runWithSpan(
         "setup",
@@ -79,11 +80,6 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
                 .actionGet(TIMEOUT));
     testing.waitForTraces(1);
     testing.clearData();
-  }
-
-  @AfterAll
-  static void cleanUp() throws Exception {
-    testNode.close();
   }
 
   @Override

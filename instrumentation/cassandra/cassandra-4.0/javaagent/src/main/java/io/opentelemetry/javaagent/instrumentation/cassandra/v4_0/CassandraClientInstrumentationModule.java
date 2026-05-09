@@ -29,13 +29,9 @@ public class CassandraClientInstrumentationModule extends InstrumentationModule 
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed(
-            // added in 4.0
-            "com.datastax.oss.driver.api.core.CqlSession")
-        .and(
-            not(
-                hasClassesNamed(
-                    // added in 4.4
-                    "com.datastax.dse.driver.api.core.cql.reactive.ReactiveSession")));
+    // added in 4.0
+    return hasClassesNamed("com.datastax.oss.driver.api.core.CqlSession")
+        // added in 4.4
+        .and(not(hasClassesNamed("com.datastax.dse.driver.api.core.cql.reactive.ReactiveSession")));
   }
 }

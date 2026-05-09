@@ -19,6 +19,9 @@ import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CxfHttpServerTest extends JaxRsHttpServerTest<Server> {
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -58,6 +61,6 @@ class CxfHttpServerTest extends JaxRsHttpServerTest<Server> {
 
   @Override
   protected boolean testExperimental() {
-    return Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 }

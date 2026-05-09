@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.List;
 
 /** A builder of {@link AwsSdkTelemetry}. */
-public class AwsSdkTelemetryBuilder {
+public final class AwsSdkTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 

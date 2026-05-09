@@ -20,7 +20,7 @@ class TracingIterator implements Iterator<Message> {
   private final Instrumenter<SqsProcessRequest, Response<?>> instrumenter;
   private final Request<?> request;
   private final Response<?> response;
-  private final Context receiveContext;
+  @Nullable private final Context receiveContext;
 
   /*
    * Note: this may potentially create problems if this iterator is used from different threads. But
@@ -35,7 +35,7 @@ class TracingIterator implements Iterator<Message> {
       Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,
       Response<?> response,
-      Context receiveContext) {
+      @Nullable Context receiveContext) {
     this.delegateIterator = delegateIterator;
     this.instrumenter = instrumenter;
     this.request = request;
@@ -48,7 +48,7 @@ class TracingIterator implements Iterator<Message> {
       Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,
       Response<?> response,
-      Context receiveContext) {
+      @Nullable Context receiveContext) {
     return new TracingIterator(delegateIterator, instrumenter, request, response, receiveContext);
   }
 

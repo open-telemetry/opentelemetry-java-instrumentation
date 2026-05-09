@@ -14,14 +14,14 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 public class ExperimentalTestHelper {
-  public static final boolean isEnabled =
+  public static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.hibernate.experimental-span-attributes");
 
   public static final AttributeKey<String> HIBERNATE_SESSION_ID = stringKey("hibernate.session_id");
 
   @Nullable
   public static String experimental(@Nullable String value) {
-    if (isEnabled) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return value;
     }
     return null;
@@ -32,7 +32,7 @@ public class ExperimentalTestHelper {
     return satisfies(
         key,
         val -> {
-          if (isEnabled) {
+          if (EXPERIMENTAL_ATTRIBUTES) {
             val.satisfies(assertion::accept);
           }
         });

@@ -62,7 +62,7 @@ final class CassandraAttributesExtractor
   private static final AttributeKey<Long> CASSANDRA_SPECULATIVE_EXECUTION_COUNT =
       AttributeKey.longKey("cassandra.speculative_execution.count");
 
-  private static final Field proxyAddressField = getProxyAddressField();
+  private static final Field PROXY_ADDRESS_FIELD = getProxyAddressField();
 
   @Override
   public void onStart(
@@ -161,11 +161,11 @@ final class CassandraAttributesExtractor
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
       attributes.put(SERVER_ADDRESS, address.getHostString());
       attributes.put(SERVER_PORT, address.getPort());
-    } else if (endPoint instanceof SniEndPoint && proxyAddressField != null) {
+    } else if (endPoint instanceof SniEndPoint && PROXY_ADDRESS_FIELD != null) {
       SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
       Object object = null;
       try {
-        object = proxyAddressField.get(sniEndPoint);
+        object = PROXY_ADDRESS_FIELD.get(sniEndPoint);
       } catch (Exception e) {
         logger.log(
             FINE,

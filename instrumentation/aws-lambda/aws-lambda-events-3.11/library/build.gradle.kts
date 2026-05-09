@@ -22,15 +22,11 @@ dependencies {
   testImplementation("uk.org.webcompere:system-stubs-jupiter")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
+tasks.test {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-  test {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

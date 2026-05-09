@@ -44,18 +44,17 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ElasticJobTest {
 
-  private static String zookeeperConnectionString;
-
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.apache-elasticjob.experimental-span-attributes");
+
+  private static String zookeeperConnectionString;
   private static CoordinatorRegistryCenter regCenter;
   private static HttpServer httpServer;
-
-  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
-      Boolean.getBoolean("otel.instrumentation.apache-elasticjob.experimental-span-attributes");
 
   @BeforeAll
   static void init() throws Exception {
@@ -345,7 +344,7 @@ class ElasticJobTest {
   }
 
   private static <T> T experimental(T value) {
-    return EXPERIMENTAL_ATTRIBUTES_ENABLED ? value : null;
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
   private static List<AttributeAssertion> elasticJobAttributes(
@@ -380,7 +379,7 @@ class ElasticJobTest {
         satisfies(
             stringKey("scheduling.apache-elasticjob.task.id"),
             val -> {
-              if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+              if (EXPERIMENTAL_ATTRIBUTES) {
                 val.contains(jobName);
               } else {
                 val.isNull();

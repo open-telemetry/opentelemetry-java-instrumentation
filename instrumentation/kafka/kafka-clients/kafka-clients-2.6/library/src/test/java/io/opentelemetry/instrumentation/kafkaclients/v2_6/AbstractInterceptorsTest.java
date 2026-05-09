@@ -81,6 +81,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
               .headers()
               // add header to test capturing header value as span attribute
               .add("Test-Message-Header", "test".getBytes(UTF_8))
+              .add("Uncaptured-Header", "password".getBytes(UTF_8))
               // adding baggage header in w3c baggage format
               .add("baggage", "test-baggage-key-1=test-baggage-value-1".getBytes(UTF_8))
               .add("baggage", "test-baggage-key-2=test-baggage-value-2".getBytes(UTF_8));

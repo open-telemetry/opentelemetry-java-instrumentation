@@ -39,7 +39,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 class LoggerTest {
 
   @RegisterExtension
-  static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final AgentInstrumentationExtension testing =
+      AgentInstrumentationExtension.create();
 
   private String instrumentationName;
   private Logger logger;

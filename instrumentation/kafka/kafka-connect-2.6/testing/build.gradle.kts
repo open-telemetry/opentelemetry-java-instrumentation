@@ -23,10 +23,7 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-mongodb") // For MongoDBContainer
   testImplementation("org.mongodb:mongodb-driver-sync:4.11.0") // MongoDB Java driver
 
-  // Testcontainers dependencies for integration testing
-  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
   testImplementation("org.testcontainers:testcontainers")
-  testImplementation("org.testcontainers:testcontainers-kafka")
   testImplementation("io.rest-assured:rest-assured:5.5.5")
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }

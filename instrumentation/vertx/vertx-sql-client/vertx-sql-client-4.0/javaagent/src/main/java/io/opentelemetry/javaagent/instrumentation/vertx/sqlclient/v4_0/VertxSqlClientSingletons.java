@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientRequest;
-import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
@@ -20,15 +20,15 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
-    return instrumenter;
-  }
-
   private static final VirtualField<SqlClientBase<?>, SqlConnectOptions> connectOptionsField =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
 
   private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
       VirtualField.find(SqlConnectOptions.class, String.class);
+
+  public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
+    return instrumenter;
+  }
 
   public static void storeConnectOptionsDbSystem(
       SqlConnectOptions connectOptions, String dbSystem) {

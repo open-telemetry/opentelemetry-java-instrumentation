@@ -17,35 +17,35 @@ import javax.ws.rs.core.Response;
 interface ResteasyProxyResource {
   @GET
   @Path("error")
-  Response get_error(
+  Response getError(
       @QueryParam("with") String param,
       @HeaderParam("is-test-server") String isTestServer,
       @HeaderParam("test-request-id") String requestId);
 
   @GET
   @Path("client-error")
-  Response get_client_error(
+  Response getClientError(
       @QueryParam("with") String param,
       @HeaderParam("is-test-server") String isTestServer,
       @HeaderParam("test-request-id") String requestId);
 
   @GET
   @Path("success")
-  Response get_success(
+  Response getSuccess(
       @QueryParam("with") String param,
       @HeaderParam("is-test-server") String isTestServer,
       @HeaderParam("test-request-id") String requestId);
 
   @POST
   @Path("success")
-  Response post_success(
+  Response postSuccess(
       @QueryParam("with") String param,
       @HeaderParam("is-test-server") String isTestServer,
       @HeaderParam("test-request-id") String requestId);
 
   @PUT
   @Path("success")
-  Response put_success(
+  Response putSuccess(
       @QueryParam("with") String param,
       @HeaderParam("is-test-server") String isTestServer,
       @HeaderParam("test-request-id") String requestId);

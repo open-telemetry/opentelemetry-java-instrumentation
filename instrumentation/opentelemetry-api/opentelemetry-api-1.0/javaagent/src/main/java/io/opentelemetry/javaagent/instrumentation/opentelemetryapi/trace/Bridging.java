@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * This class translates between the (unshaded) OpenTelemetry API that the application brings and
@@ -72,6 +73,7 @@ public class Bridging {
     return applicationTraceState.build();
   }
 
+  @Nullable
   public static Span toAgentOrNull(application.io.opentelemetry.api.trace.Span applicationSpan) {
     if (!applicationSpan.getSpanContext().isValid()) {
       // no need to wrap
@@ -83,6 +85,7 @@ public class Bridging {
     }
   }
 
+  @Nullable
   public static SpanKind toAgentOrNull(
       application.io.opentelemetry.api.trace.SpanKind applicationSpanKind) {
     try {
@@ -131,6 +134,7 @@ public class Bridging {
   // TODO optimize this by storing shaded AttributeKey inside of application AttributeKey instead of
   // creating every time
   @SuppressWarnings({"rawtypes"}) // conversion uses raw AttributeKey
+  @Nullable
   public static AttributeKey toAgent(
       application.io.opentelemetry.api.common.AttributeKey applicationKey) {
     switch (applicationKey.getType()) {

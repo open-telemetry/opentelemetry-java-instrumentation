@@ -37,7 +37,7 @@ final class RequestContextGetter implements TextMapGetter<ServiceRequestContext>
     return carrier.request().headers().valueIterator(key);
   }
 
-  static final class HeaderNamesIterator implements Iterator<String> {
+  private static final class HeaderNamesIterator implements Iterator<String> {
 
     private final Iterator<AsciiString> delegate;
 

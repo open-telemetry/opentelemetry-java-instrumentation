@@ -68,8 +68,8 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
       try {
         val statusCode = client.request(request).status.value
         httpClientResult.complete(statusCode)
-      } catch (e: Throwable) {
-        httpClientResult.complete(e)
+      } catch (t: Throwable) {
+        httpClientResult.complete(t)
       }
     }
   }

@@ -31,20 +31,20 @@ class AgentSpanTestingInstrumentation implements TypeInstrumentation {
         named("runWithAllSpanKeys"), getClass().getName() + "$RunWithAllSpanKeysAdvice");
   }
 
-  private static class AdviceScope {
+  public static class AdviceScope {
     private final Context context;
     private final Scope scope;
 
-    private AdviceScope(Context context, Scope scope) {
+    public AdviceScope(Context context, Scope scope) {
       this.context = context;
       this.scope = scope;
     }
 
-    private Context getContext() {
+    public Context getContext() {
       return context;
     }
 
-    private void end() {
+    public void end() {
       scope.close();
     }
   }
@@ -60,9 +60,12 @@ class AgentSpanTestingInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
-      adviceScope.end();
-      AgentSpanTestingInstrumenter.endHttpServer(adviceScope.getContext(), throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end();
+        AgentSpanTestingInstrumenter.endHttpServer(adviceScope.getContext(), throwable);
+      }
     }
   }
 
@@ -77,9 +80,12 @@ class AgentSpanTestingInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
-      adviceScope.end();
-      AgentSpanTestingInstrumenter.end(adviceScope.getContext(), throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end();
+        AgentSpanTestingInstrumenter.end(adviceScope.getContext(), throwable);
+      }
     }
   }
 }

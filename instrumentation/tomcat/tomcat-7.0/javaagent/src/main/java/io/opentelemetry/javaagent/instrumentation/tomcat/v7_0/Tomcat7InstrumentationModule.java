@@ -51,7 +51,7 @@ public class Tomcat7InstrumentationModule extends InstrumentationModule {
   @SuppressWarnings("unused")
   public static class Tomcat7AttachResponseAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void attachResponse(
         @Advice.Argument(2) Response response, @Advice.Return boolean success) {
 
@@ -90,7 +90,7 @@ public class Tomcat7InstrumentationModule extends InstrumentationModule {
         return new AdviceScope(context, scope);
       }
 
-      public void end(Request request, Response response, Throwable throwable) {
+      public void end(Request request, Response response, @Nullable Throwable throwable) {
         helper().end(request, response, throwable, context, scope);
       }
     }

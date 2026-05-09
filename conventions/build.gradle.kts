@@ -77,6 +77,9 @@ dependencies {
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:5.1.0")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:3.0.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
+  // Used by otel.spring-native-test-conventions for typed access to the metadata repository
+  // extension. Provided at runtime by smoke-test modules that apply this plugin via settings.
+  compileOnly("org.graalvm.buildtools:native-gradle-plugin:1.1.0")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")

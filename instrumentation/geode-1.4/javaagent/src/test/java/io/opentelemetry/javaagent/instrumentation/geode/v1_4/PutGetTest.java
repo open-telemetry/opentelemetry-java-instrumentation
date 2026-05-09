@@ -33,6 +33,7 @@ import org.apache.geode.cache.client.ClientRegionFactory;
 import org.apache.geode.cache.client.ClientRegionShortcut;
 import org.apache.geode.cache.query.QueryException;
 import org.apache.geode.cache.query.SelectResults;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,6 +49,11 @@ class PutGetTest {
   private static final ClientRegionFactory<Object, Object> regionFactory =
       cache.createClientRegionFactory(ClientRegionShortcut.LOCAL);
   private static final Region<Object, Object> region = regionFactory.create("test-region");
+
+  @AfterAll
+  static void closeCache() {
+    cache.close();
+  }
 
   private static Stream<Arguments> provideParameters() {
     return Stream.of(

@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSp
 abstract class BaseGuavaWithSpanTest
     extends AbstractWithSpanTest<SettableFuture<String>, ListenableFuture<String>> {
 
-  static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.guava.experimental-span-attributes");
 
   @Override
@@ -49,6 +49,6 @@ abstract class BaseGuavaWithSpanTest
 
   @Override
   protected boolean isExperimentalSpanAttributesEnabled() {
-    return EXPERIMENTAL_ATTRIBUTES_ENABLED;
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 }

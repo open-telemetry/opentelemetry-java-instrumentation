@@ -36,7 +36,7 @@ by auto-formatting.
 
 To run these checks locally:
 
-```
+```bash
 ./gradlew checkstyleMain checkstyleTest
 ```
 
@@ -124,6 +124,11 @@ Examples that may remain uppercase include:
 - semantic keys and handles such as `AttributeKey`, `ContextKey`, `VirtualField`,
   `MethodHandle`, and `Pattern`
 - canonical singleton or sentinel fields named `INSTANCE`, `EMPTY`, or `NOOP`
+
+Private `static final` arrays of constant or immutable values should also use uppercase names when
+the array is not exposed outside the class and is not mutated after initialization. Even though Java
+arrays are technically mutable, treat this private, unexposed usage as constant-like for naming
+purposes.
 
 Do not use uppercase solely because a field is `static final`.
 

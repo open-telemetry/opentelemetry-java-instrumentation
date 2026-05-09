@@ -29,7 +29,7 @@ public abstract class AbstractElasticsearch6TransportClientTest
   private static final Logger logger =
       LoggerFactory.getLogger(AbstractElasticsearch6TransportClientTest.class);
 
-  private static final String clusterName = UUID.randomUUID().toString();
+  private static final String CLUSTER_NAME = UUID.randomUUID().toString();
   private Node testNode;
   private TransportAddress tcpPublishAddress;
   private TransportClient client;
@@ -41,7 +41,7 @@ public abstract class AbstractElasticsearch6TransportClientTest
     Settings settings =
         Settings.builder()
             .put("path.home", esWorkingDir.getPath())
-            .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+            .put(CLUSTER_NAME_SETTING.getKey(), CLUSTER_NAME)
             .put("discovery.type", "single-node")
             .build();
     testNode = getNodeFactory().newNode(settings);
@@ -57,7 +57,7 @@ public abstract class AbstractElasticsearch6TransportClientTest
                 // Since we use listeners to close spans this should make our span closing
                 // deterministic which is good for tests
                 .put("thread_pool.listener.size", 1)
-                .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
+                .put(CLUSTER_NAME_SETTING.getKey(), CLUSTER_NAME)
                 .build());
     cleanup.deferAfterAll(client);
     client.addTransportAddress(tcpPublishAddress);

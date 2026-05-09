@@ -6,13 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.KafkaStreamsSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.StateHolder.HOLDER;
+import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.StateHolder.holder;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -38,19 +39,23 @@ class StreamTaskInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static StateHolder onEnter() {
       StateHolder holder = new StateHolder();
-      HOLDER.set(holder);
+      holder().set(holder);
       return holder;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Enter StateHolder holder, @Advice.Thrown Throwable throwable) {
-      HOLDER.remove();
+        @Advice.Enter @Nullable StateHolder stateHolder,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      holder().remove();
+      if (stateHolder == null) {
+        return;
+      }
 
-      Context context = holder.getContext();
+      Context context = stateHolder.getContext();
       if (context != null) {
-        holder.closeScope();
-        instrumenter().end(context, holder.getRequest(), null, throwable);
+        stateHolder.closeScope();
+        instrumenter().end(context, stateHolder.getRequest(), null, throwable);
       }
     }
   }

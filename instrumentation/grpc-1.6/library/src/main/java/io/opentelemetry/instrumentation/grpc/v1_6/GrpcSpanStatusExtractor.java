@@ -23,6 +23,19 @@ enum GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, Status>
   CLIENT(GrpcSpanStatusExtractor::isClientError),
   SERVER(GrpcSpanStatusExtractor::isServerError);
 
+  private static final Set<Status.Code> serverErrorStatuses = new HashSet<>();
+
+  static {
+    serverErrorStatuses.addAll(
+        asList(
+            Status.Code.UNKNOWN,
+            Status.Code.DEADLINE_EXCEEDED,
+            Status.Code.UNIMPLEMENTED,
+            Status.Code.INTERNAL,
+            Status.Code.UNAVAILABLE,
+            Status.Code.DATA_LOSS));
+  }
+
   private final ErrorStatusPredicate isError;
 
   GrpcSpanStatusExtractor(ErrorStatusPredicate isError) {
@@ -49,19 +62,6 @@ enum GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, Status>
     } else {
       SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, status, error);
     }
-  }
-
-  private static final Set<Status.Code> serverErrorStatuses = new HashSet<>();
-
-  static {
-    serverErrorStatuses.addAll(
-        asList(
-            Status.Code.UNKNOWN,
-            Status.Code.DEADLINE_EXCEEDED,
-            Status.Code.UNIMPLEMENTED,
-            Status.Code.INTERNAL,
-            Status.Code.UNAVAILABLE,
-            Status.Code.DATA_LOSS));
   }
 
   private static boolean isServerError(Status status) {

@@ -42,7 +42,7 @@ class ArmeriaStreamCollectTest {
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension
-  static ServerExtension server =
+  static final ServerExtension server =
       new ServerExtension() {
         @Override
         protected void configure(ServerBuilder sb) {

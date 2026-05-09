@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Executor;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -49,6 +50,7 @@ class GuavaListenableFutureInstrumentation implements TypeInstrumentation {
   public static class AddListenerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static PropagatedContext addListenerEnter(@Advice.Argument(0) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
@@ -60,8 +62,8 @@ class GuavaListenableFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void addListenerExit(
         @Advice.Argument(0) Runnable task,
-        @Advice.Enter PropagatedContext propagatedContext,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Enter @Nullable PropagatedContext propagatedContext,
+        @Advice.Thrown @Nullable Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
           propagatedContext, throwable, PROPAGATED_CONTEXT, task);
     }

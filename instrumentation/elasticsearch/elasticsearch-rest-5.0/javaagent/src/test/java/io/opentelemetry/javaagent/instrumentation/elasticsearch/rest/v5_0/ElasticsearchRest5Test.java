@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
@@ -33,7 +34,6 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -45,13 +45,15 @@ class ElasticsearchRest5Test {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static ElasticsearchContainer elasticsearch;
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static HttpHost httpHost;
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  static RestClient client;
+  private static ElasticsearchContainer elasticsearch;
 
-  static ObjectMapper objectMapper;
+  private static HttpHost httpHost;
+
+  private static RestClient client;
 
   @BeforeAll
   static void setup() {
@@ -62,13 +64,14 @@ class ElasticsearchRest5Test {
               .withEnv("xpack.security.enabled", "false");
     } else {
       elasticsearch =
-          new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16");
+          new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:6.8.16");
     }
     // limit memory usage
     elasticsearch.withEnv(
         "ES_JAVA_OPTS",
         "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     elasticsearch.start();
+    cleanup.deferAfterAll(elasticsearch::stop);
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
     client =
@@ -80,14 +83,7 @@ class ElasticsearchRest5Test {
                         .setConnectTimeout(Integer.MAX_VALUE)
                         .setSocketTimeout(Integer.MAX_VALUE))
             .build();
-
-    objectMapper = new ObjectMapper();
-  }
-
-  @AfterAll
-  static void cleanUp() throws IOException {
-    client.close();
-    elasticsearch.stop();
+    cleanup.deferAfterAll(client);
   }
 
   @Test

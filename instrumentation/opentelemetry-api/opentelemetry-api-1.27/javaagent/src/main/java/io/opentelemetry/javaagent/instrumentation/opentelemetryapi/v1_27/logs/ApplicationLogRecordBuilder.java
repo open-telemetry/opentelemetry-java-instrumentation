@@ -90,7 +90,6 @@ public class ApplicationLogRecordBuilder
   @SuppressWarnings({"unchecked", "rawtypes"})
   public <T> application.io.opentelemetry.api.logs.LogRecordBuilder setAttribute(
       application.io.opentelemetry.api.common.AttributeKey<T> attributeKey, T value) {
-    @SuppressWarnings("unchecked") // toAgent uses raw AttributeKey
     AttributeKey<T> agentKey = Bridging.toAgent(attributeKey);
     if (agentKey != null) {
       // For VALUE type attributes, need to bridge the Value object as well

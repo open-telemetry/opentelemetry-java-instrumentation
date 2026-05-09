@@ -812,7 +812,7 @@ class SessionTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void testHibernateOverlappingSessions() {
-    assumeTrue(ExperimentalTestHelper.isEnabled); // needs experimental session id
+    assumeTrue(ExperimentalTestHelper.EXPERIMENTAL_ATTRIBUTES); // needs experimental session id
 
     testing.runWithSpan(
         "overlapping Sessions",

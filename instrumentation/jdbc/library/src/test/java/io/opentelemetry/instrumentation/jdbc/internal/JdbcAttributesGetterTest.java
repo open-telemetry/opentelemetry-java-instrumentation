@@ -25,7 +25,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class JdbcAttributesGetterTest {
 
-  private static final JdbcAttributesGetter ATTRIBUTES_GETTER = new JdbcAttributesGetter();
+  private static final JdbcAttributesGetter attributesGetter = new JdbcAttributesGetter();
   private static final String POLARDB = "polardb";
 
   private static Stream<String> identifierDialectDbSystemNames() {
@@ -50,7 +50,7 @@ class JdbcAttributesGetterTest {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(dbSystemName).build(), "SELECT 1", false);
 
-    assertThat(ATTRIBUTES_GETTER.getSqlDialect(request)).isEqualTo(DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    assertThat(attributesGetter.getSqlDialect(request)).isEqualTo(DOUBLE_QUOTES_ARE_IDENTIFIERS);
   }
 
   @ParameterizedTest
@@ -59,7 +59,7 @@ class JdbcAttributesGetterTest {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(dbSystemName).build(), "SELECT 1", false);
 
-    assertThat(ATTRIBUTES_GETTER.getSqlDialect(request))
+    assertThat(attributesGetter.getSqlDialect(request))
         .isEqualTo(DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 }

@@ -443,6 +443,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     String queueName = channel.queueDeclare().getQueue();
     Map<String, Object> headers = new HashMap<>();
     headers.put("Test_Message_Header", "test");
+    headers.put("Uncaptured-Header", "password");
     AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder().headers(headers).build();
     channel.basicPublish(
         "", queueName, properties, "Hello, world!".getBytes(Charset.defaultCharset()));

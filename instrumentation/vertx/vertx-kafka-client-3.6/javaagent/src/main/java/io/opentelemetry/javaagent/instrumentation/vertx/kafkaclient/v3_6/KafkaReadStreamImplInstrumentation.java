@@ -84,12 +84,12 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
-      return KafkaClientsConsumerProcessTracing.setEnabled(false);
+      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
-      KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
+      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
     }
   }
 }

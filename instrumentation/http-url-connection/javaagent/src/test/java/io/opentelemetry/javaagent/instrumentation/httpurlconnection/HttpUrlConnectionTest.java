@@ -41,6 +41,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -157,8 +158,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3))));
   }
 
-  @ParameterizedTest
-  @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+  @RepeatedTest(10)
   void testBrokenApiUsage() throws IOException {
     URL url = resolveAddress("/success").toURL();
     HttpURLConnection connection =

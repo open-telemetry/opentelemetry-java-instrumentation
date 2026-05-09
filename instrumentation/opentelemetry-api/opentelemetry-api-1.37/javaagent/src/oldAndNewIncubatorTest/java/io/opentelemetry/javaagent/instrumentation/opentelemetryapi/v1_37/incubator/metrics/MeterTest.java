@@ -286,7 +286,7 @@ class MeterTest {
   }
 
   @Test
-  void longGauge() throws InterruptedException {
+  void longGauge() {
     LongGaugeBuilder builder =
         meter.gaugeBuilder("test").ofLongs().setDescription("d").setUnit("u");
     assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
@@ -321,16 +321,13 @@ class MeterTest {
 
     observableGauge.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void syncLongGauge() throws InterruptedException {
+  void syncLongGauge() {
     LongGaugeBuilder builder =
         meter.gaugeBuilder("test").ofLongs().setDescription("d").setUnit("u");
     assertThat(builder).isInstanceOf(ExtendedLongGaugeBuilder.class);
@@ -363,16 +360,13 @@ class MeterTest {
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test"), "test")))));
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void doubleGauge() throws InterruptedException {
+  void doubleGauge() {
     DoubleGaugeBuilder builder = meter.gaugeBuilder("test").setDescription("d").setUnit("u");
     assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
     ExtendedDoubleGaugeBuilder extendedBuilder = (ExtendedDoubleGaugeBuilder) builder;
@@ -406,16 +400,13 @@ class MeterTest {
 
     observableGauge.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void syncDoubleGauge() throws InterruptedException {
+  void syncDoubleGauge() {
     DoubleGaugeBuilder builder = meter.gaugeBuilder("test").setDescription("d").setUnit("u");
     assertThat(builder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
     ExtendedDoubleGaugeBuilder extendedBuilder = (ExtendedDoubleGaugeBuilder) builder;
@@ -447,10 +438,7 @@ class MeterTest {
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test"), "test")))));
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }

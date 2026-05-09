@@ -29,7 +29,6 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
@@ -54,7 +53,7 @@ configurations.configureEach {
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")

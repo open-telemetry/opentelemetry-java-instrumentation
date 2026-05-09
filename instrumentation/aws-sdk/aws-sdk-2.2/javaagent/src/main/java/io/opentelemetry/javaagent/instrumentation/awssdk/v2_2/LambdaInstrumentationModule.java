@@ -39,7 +39,7 @@ public class LambdaInstrumentationModule extends AbstractAwsSdkInstrumentationMo
 
   @SuppressWarnings("unused")
   public static class RegisterAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(inline = false)
     public static void onExit() {
       // (indirectly) using LambdaImpl class here to make sure it is available from LambdaAccess
       // (injected into app classloader) and checked by Muzzle

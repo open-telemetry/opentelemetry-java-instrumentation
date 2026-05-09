@@ -23,12 +23,13 @@ final class AsyncHttpClient18Helper implements AsyncHttpClientHelper {
   public String getUrlFull(Request request) {
     try {
       return request.getURI().toURL().toString();
-    } catch (MalformedURLException e) {
+    } catch (MalformedURLException ignored) {
       return null;
     }
   }
 
   @Override
+  @Nullable
   public String getServerAddress(Request request) {
     return request.getOriginalURI().getHost();
   }

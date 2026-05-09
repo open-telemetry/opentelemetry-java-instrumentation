@@ -63,7 +63,7 @@ class S3ClientTest extends AbstractS3ClientTest {
   @ParameterizedTest
   @MethodSource("provideS3Arguments")
   void testRequestHandlerIsHookedUpWithBuilder(boolean addHandler, int size, int position)
-      throws Exception {
+      throws ReflectiveOperationException {
     AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1);
 
     if (addHandler) {
@@ -85,7 +85,8 @@ class S3ClientTest extends AbstractS3ClientTest {
   @ParameterizedTest
   @MethodSource("provideS3Arguments")
   @SuppressWarnings("deprecation") // AmazonS3Client constructor is deprecated
-  void testRequestHandlerIsHookedUpWithConstructor(boolean addHandler, int size) throws Exception {
+  void testRequestHandlerIsHookedUpWithConstructor(boolean addHandler, int size)
+      throws ReflectiveOperationException {
     BasicAWSCredentials credentials = new BasicAWSCredentials("asdf", "qwerty");
     AmazonS3Client client = new AmazonS3Client(credentials);
     if (addHandler) {

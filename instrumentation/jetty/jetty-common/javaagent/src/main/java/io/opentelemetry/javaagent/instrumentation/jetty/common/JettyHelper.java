@@ -38,8 +38,8 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
       throwable = errorException(request);
     }
 
-    ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
     if (throwable != null || mustEndOnHandlerMethodExit(context)) {
+      ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
       instrumenter.end(context, requestContext, responseContext, throwable);
     }
   }

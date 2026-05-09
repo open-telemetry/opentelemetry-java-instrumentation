@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   compileOnly("org.hibernate:hibernate-core:4.0.0.Final")
 
-  implementation(project(":instrumentation:hibernate:hibernate-common:javaagent"))
+  implementation(project(":instrumentation:hibernate:hibernate-common-3.3:javaagent"))
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   // Added to ensure cross compatibility:
@@ -65,15 +65,10 @@ testing {
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
 
-        if (otelProps.testLatestDeps) {
-          implementation("org.hibernate:hibernate-core:5.0.0.Final")
-          implementation("org.hibernate:hibernate-entitymanager:5.0.0.Final")
-          implementation("org.springframework.data:spring-data-jpa:2.3.0.RELEASE")
-        } else {
-          implementation("org.hibernate:hibernate-core:5.+")
-          implementation("org.hibernate:hibernate-entitymanager:5.+")
-          implementation("org.springframework.data:spring-data-jpa:(2.4.0,3)")
-        }
+        val hibernateVersion = baseVersion("5.+").orLatest("5.0.0.Final")
+        implementation("org.hibernate:hibernate-core:$hibernateVersion")
+        implementation("org.hibernate:hibernate-entitymanager:$hibernateVersion")
+        implementation("org.springframework.data:spring-data-jpa:${baseVersion("(2.4.0,3)").orLatest("2.3.0.RELEASE")}")
       }
     }
   }

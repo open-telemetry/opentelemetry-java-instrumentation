@@ -10,8 +10,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientRequest;
-import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;

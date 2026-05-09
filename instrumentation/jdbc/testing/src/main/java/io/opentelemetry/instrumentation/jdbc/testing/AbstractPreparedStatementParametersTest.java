@@ -60,14 +60,14 @@ public abstract class AbstractPreparedStatementParametersTest {
     return connection;
   }
 
-  private static final String databaseName = "jdbcUnitTest";
-  private static final String databaseNameLower = databaseName.toLowerCase(Locale.ROOT);
+  private static final String DATABASE_NAME = "jdbcUnitTest";
+  private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
 
-  private static final Map<String, String> jdbcUrls =
+  private static final Map<String, String> JDBC_URLS =
       ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + databaseName,
-          "derby", "jdbc:derby:memory:" + databaseName,
-          "hsqldb", "jdbc:hsqldb:mem:" + databaseName);
+          "h2", "jdbc:h2:mem:" + DATABASE_NAME,
+          "derby", "jdbc:derby:memory:" + DATABASE_NAME,
+          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
   private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
   private static final Properties connectionProps = new Properties();
 
@@ -85,16 +85,16 @@ public abstract class AbstractPreparedStatementParametersTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new Driver().connect(jdbcUrls.get("h2"), null),
+            new Driver().connect(JDBC_URLS.get("h2"), null),
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
             "h2:mem:",
             null),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), connectionProps),
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=? OR 1=1",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=? OR 1=1",
@@ -103,7 +103,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             "SYSIBM.SYSDUMMY1"),
         Arguments.of(
             "hsqldb",
-            new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null),
+            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
             "SA",
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS WHERE USER_NAME=? OR 1=1",
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS WHERE USER_NAME=? OR 1=1",
@@ -626,7 +626,7 @@ public abstract class AbstractPreparedStatementParametersTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), databaseNameLower),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),

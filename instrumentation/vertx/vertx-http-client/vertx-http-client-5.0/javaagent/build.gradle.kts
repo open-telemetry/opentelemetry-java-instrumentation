@@ -21,7 +21,7 @@ dependencies {
   // vertx-codegen dependency is needed for Xlint's annotation checking
   library("io.vertx:vertx-codegen:5.0.0")
 
-  implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent"))
+  implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common-3.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent"))

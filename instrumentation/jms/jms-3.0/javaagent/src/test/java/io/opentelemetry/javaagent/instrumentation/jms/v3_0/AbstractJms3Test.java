@@ -51,7 +51,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 abstract class AbstractJms3Test {
-  static final Logger logger = LoggerFactory.getLogger(AbstractJms3Test.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractJms3Test.class);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -179,6 +179,7 @@ abstract class AbstractJms3Test {
     Destination destination = destinationFactory.create(session);
     TextMessage sentMessage = session.createTextMessage("hello there");
     sentMessage.setStringProperty("Test_Message_Header", "test");
+    sentMessage.setStringProperty("Uncaptured_Header", "password");
     sentMessage.setIntProperty("Test_Message_Int_Header", 1234);
 
     MessageProducer producer = session.createProducer(destination);

@@ -49,31 +49,28 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 abstract class AbstractJms1Test {
-  static final Logger logger = LoggerFactory.getLogger(AbstractJms1Test.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractJms1Test.class);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static GenericContainer<?> broker;
-  static ActiveMQConnectionFactory connectionFactory;
-  static Connection connection;
   static Session session;
 
   @BeforeAll
   static void setUp() throws JMSException {
-    broker =
+    GenericContainer<?> broker =
         new GenericContainer<>("apache/activemq-classic:5.19.2")
             .withExposedPorts(61616, 8161)
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
     cleanup.deferAfterAll(broker);
 
-    connectionFactory =
+    ActiveMQConnectionFactory connectionFactory =
         new ActiveMQConnectionFactory(
             "tcp://" + broker.getHost() + ":" + broker.getMappedPort(61616));
-    connection = connectionFactory.createConnection();
+    Connection connection = connectionFactory.createConnection();
     connection.start();
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     cleanup.deferAfterAll(connection::close);
@@ -167,6 +164,7 @@ abstract class AbstractJms1Test {
     Destination destination = destinationFactory.create(session);
     TextMessage sentMessage = session.createTextMessage("a message");
     sentMessage.setStringProperty("Test_Message_Header", "test");
+    sentMessage.setStringProperty("Uncaptured_Header", "password");
     sentMessage.setIntProperty("Test_Message_Int_Header", 1234);
 
     MessageProducer producer = session.createProducer(destination);

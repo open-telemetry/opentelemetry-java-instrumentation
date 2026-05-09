@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClie
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -73,8 +74,11 @@ class JettyHttpClient9Instrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void exitTracingInterceptor(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Enter Object[] enterResult) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable Object[] enterResult) {
+      if (enterResult == null) {
+        return;
+      }
       AdviceLocals locals = (AdviceLocals) enterResult[0];
 
       if (locals == null) {

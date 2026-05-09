@@ -169,8 +169,8 @@ public class Threads {
     boolean isDaemon;
     try {
       isDaemon = (boolean) requireNonNull(THREAD_INFO_IS_DAEMON).invoke(threadInfo);
-    } catch (Throwable e) {
-      throw new IllegalStateException("Unexpected error happened during ThreadInfo#isDaemon()", e);
+    } catch (Throwable t) {
+      throw new IllegalStateException("Unexpected error happened during ThreadInfo#isDaemon()", t);
     }
     String threadState = threadInfo.getThreadState().name().toLowerCase(Locale.ROOT);
     return Attributes.of(JVM_THREAD_DAEMON, isDaemon, JVM_THREAD_STATE, threadState);

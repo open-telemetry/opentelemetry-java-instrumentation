@@ -24,9 +24,8 @@ public class HibernateInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed(
-        // added in 4.3.0.Final
-        "org.hibernate.procedure.ProcedureCall");
+    // added in 4.3.0.Final
+    return hasClassesNamed("org.hibernate.procedure.ProcedureCall");
   }
 
   @Override

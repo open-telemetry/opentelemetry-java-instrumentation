@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -133,7 +134,9 @@ public class YamlHelper {
     }
 
     if (module.getAgentTargetVersions() != null && !module.getAgentTargetVersions().isEmpty()) {
-      moduleMap.put("javaagent_target_versions", new ArrayList<>(module.getAgentTargetVersions()));
+      List<String> agentTargetVersions = new ArrayList<>(module.getAgentTargetVersions());
+      Collections.sort(agentTargetVersions);
+      moduleMap.put("javaagent_target_versions", agentTargetVersions);
     }
 
     addConfigurations(module, moduleMap);

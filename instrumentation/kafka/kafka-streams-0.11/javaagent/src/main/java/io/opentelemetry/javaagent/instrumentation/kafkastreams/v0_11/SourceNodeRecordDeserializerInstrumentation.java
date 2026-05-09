@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -43,9 +44,10 @@ class SourceNodeRecordDeserializerInstrumentation implements TypeInstrumentation
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Nullable
     public static ConsumerRecord<?, ?> saveHeaders(
         @Advice.Argument(0) ConsumerRecord<?, ?> incoming,
-        @Advice.Return ConsumerRecord<?, ?> result) {
+        @Advice.Return @Nullable ConsumerRecord<?, ?> result) {
       if (result == null) {
         return null;
       }

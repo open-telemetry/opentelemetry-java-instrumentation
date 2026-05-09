@@ -28,6 +28,6 @@ if (otelProps.testLatestDeps) {
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }

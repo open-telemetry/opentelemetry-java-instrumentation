@@ -75,7 +75,7 @@ class ChannelPipelineTest {
     // when no handlers
     assertThat(channelPipeline.first()).isNull();
     assertThat(channelPipeline.last()).isNull();
-    assertThat(channelPipeline.toMap()).hasSize(0);
+    assertThat(channelPipeline.toMap()).isEmpty();
 
     // then add handler
     channelPipeline.addLast("http", handler);
@@ -91,7 +91,7 @@ class ChannelPipelineTest {
     // removing handler also removes our handler
     assertThat(channelPipeline.first()).isNull();
     assertThat(channelPipeline.last()).isNull();
-    assertThat(channelPipeline.toMap()).hasSize(0);
+    assertThat(channelPipeline.toMap()).isEmpty();
   }
 
   static Stream<Arguments> replaceMethodProvider() {
@@ -132,7 +132,7 @@ class ChannelPipelineTest {
     // no handlers initially
     assertThat(channelPipeline.first()).isNull();
     assertThat(channelPipeline.last()).isNull();
-    assertThat(channelPipeline.toMap()).hasSize(0);
+    assertThat(channelPipeline.toMap()).isEmpty();
 
     NoopChannelHandler noopHandler = new NoopChannelHandler();
     channelPipeline.addFirst("test", noopHandler);
@@ -166,7 +166,7 @@ class ChannelPipelineTest {
     // no handlers initially
     assertThat(channelPipeline.first()).isNull();
     assertThat(channelPipeline.last()).isNull();
-    assertThat(channelPipeline.toMap()).hasSize(0);
+    assertThat(channelPipeline.toMap()).isEmpty();
 
     channelPipeline.addLast("http", handler);
     assertThat(channelPipeline.toMap()).hasSize(1);
@@ -190,7 +190,7 @@ class ChannelPipelineTest {
 
     ChannelHandler removed = channelPipeline.removeLast();
     // removing tracing handler also removes the http handler and returns it
-    assertThat(channelPipeline.toMap()).hasSize(0);
+    assertThat(channelPipeline.toMap()).isEmpty();
     assertThat(channelPipeline.first()).isNull();
     assertThat(channelPipeline.last()).isNull();
     assertThat(removed).isEqualTo(handler);
@@ -204,7 +204,7 @@ class ChannelPipelineTest {
     // no handlers initially
     assertThat(channelPipeline.first()).isNull();
     assertThat(channelPipeline.last()).isNull();
-    assertThat(channelPipeline.toMap()).hasSize(0);
+    assertThat(channelPipeline.toMap()).isEmpty();
 
     // add handler
     channelPipeline.addLast("http", handler);

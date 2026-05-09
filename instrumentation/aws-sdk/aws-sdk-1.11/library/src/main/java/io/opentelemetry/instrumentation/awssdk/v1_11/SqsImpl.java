@@ -96,7 +96,7 @@ final class SqsImpl {
       Request<?> request,
       Response<?> response,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
-      Context receiveContext) {
+      @Nullable Context receiveContext) {
     if (messagesField == null) {
       return;
     }

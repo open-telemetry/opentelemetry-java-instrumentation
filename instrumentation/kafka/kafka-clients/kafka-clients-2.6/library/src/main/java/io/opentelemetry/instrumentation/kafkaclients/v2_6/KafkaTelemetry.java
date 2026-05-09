@@ -122,7 +122,11 @@ public final class KafkaTelemetry {
               try {
                 result = method.invoke(consumer, args);
               } catch (InvocationTargetException e) {
-                throw e.getCause();
+                Throwable error = e.getCause();
+                if ("poll".equals(method.getName())) {
+                  consumerTelemetry.buildAndFinishErrorSpan(consumer, timer, error);
+                }
+                throw error;
               }
               // ConsumerRecords<K, V> poll(long timeout)
               // ConsumerRecords<K, V> poll(Duration duration)

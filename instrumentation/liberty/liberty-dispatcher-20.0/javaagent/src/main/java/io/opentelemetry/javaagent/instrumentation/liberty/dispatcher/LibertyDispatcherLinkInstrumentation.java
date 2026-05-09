@@ -92,6 +92,7 @@ class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.FieldValue("isc") HttpInboundServiceContextImpl isc) {
       return AdviceScope.start(isc);
     }

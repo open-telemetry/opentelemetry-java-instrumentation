@@ -27,7 +27,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -36,7 +35,9 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableList;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
@@ -239,13 +240,15 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
     client.createQueue(createQueueRequest);
 
+    Map<String, MessageAttributeValue> attributes = new HashMap<>();
+    attributes.put(
+        "Test-Message-Header",
+        MessageAttributeValue.builder().dataType("String").stringValue("test").build());
+    attributes.put(
+        "Uncaptured-Header",
+        MessageAttributeValue.builder().dataType("String").stringValue("password").build());
     SendMessageRequest newSendMessageRequest =
-        sendMessageRequest.toBuilder()
-            .messageAttributes(
-                singletonMap(
-                    "Test-Message-Header",
-                    MessageAttributeValue.builder().dataType("String").stringValue("test").build()))
-            .build();
+        sendMessageRequest.toBuilder().messageAttributes(attributes).build();
     client.sendMessage(newSendMessageRequest);
 
     ReceiveMessageRequest newReceiveMessageRequest =

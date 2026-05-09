@@ -28,6 +28,7 @@ import static java.util.logging.Level.FINE;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
@@ -35,6 +36,7 @@ class RestSpanDecorator extends HttpSpanDecorator {
 
   private static final Logger logger = Logger.getLogger(RestSpanDecorator.class.getName());
 
+  @Nullable
   @Override
   protected String getPath(Exchange exchange, Endpoint endpoint) {
     String endpointUri = endpoint.getEndpointUri();

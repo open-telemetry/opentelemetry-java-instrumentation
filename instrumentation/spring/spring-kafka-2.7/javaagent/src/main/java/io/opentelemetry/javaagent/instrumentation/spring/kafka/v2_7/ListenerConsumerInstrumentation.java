@@ -50,12 +50,12 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static boolean onEnter() {
-      return KafkaClientsConsumerProcessTracing.setEnabled(false);
+      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter boolean previousValue) {
-      KafkaClientsConsumerProcessTracing.setEnabled(previousValue);
+      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
     }
   }
 
@@ -89,7 +89,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope enter(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
+      public static AdviceScope start(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
         KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
         Context receiveContext = consumerContext.getContext();
 
@@ -104,7 +104,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
-      public void exit(@Nullable Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         batchProcessInstrumenter().end(context, request, null, throwable);
       }
@@ -115,7 +115,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
     public static AdviceScope onEnter(
         @Advice.Argument(0) ConsumerRecords<?, ?> records,
         @Advice.FieldValue("consumer") Consumer<?, ?> consumer) {
-      return AdviceScope.enter(records, consumer);
+      return AdviceScope.start(records, consumer);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
@@ -123,7 +123,7 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(throwable);
+        adviceScope.end(throwable);
       }
     }
   }

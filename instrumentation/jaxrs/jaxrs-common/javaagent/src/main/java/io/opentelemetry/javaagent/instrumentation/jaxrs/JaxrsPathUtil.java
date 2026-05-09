@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs;
 
+import javax.annotation.Nullable;
+
 public class JaxrsPathUtil {
-  public static String normalizePath(String path) {
+  public static String normalizePath(@Nullable String path) {
     // ensure that non-empty path starts with /
     if (path == null || path.equals("/")) {
       path = "";

@@ -21,7 +21,10 @@ public class ApplicationObservableLongCounter
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
-    agentCounter.close();
-    onClose.run();
+    try {
+      agentCounter.close();
+    } finally {
+      onClose.run();
+    }
   }
 }

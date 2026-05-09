@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.twilio.v6_6;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.twilio.v6_6.TwilioSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.twilio.v6_6.TwilioSingletons.spanName;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -83,7 +82,7 @@ class TwilioAsyncInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(Object target, String methodName) {
         Context parentContext = Context.current();
-        String spanName = spanName(target, methodName);
+        String spanName = TwilioSingletons.spanName(target, methodName);
         if (!instrumenter().shouldStart(parentContext, spanName)) {
           return null;
         }
@@ -93,7 +92,7 @@ class TwilioAsyncInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent(), spanName);
       }
 
-      public void end(Throwable throwable, ListenableFuture<?> response) {
+      public void end(@Nullable Throwable throwable, ListenableFuture<?> response) {
         scope.close();
         if (throwable != null) {
           // There was a synchronous error,

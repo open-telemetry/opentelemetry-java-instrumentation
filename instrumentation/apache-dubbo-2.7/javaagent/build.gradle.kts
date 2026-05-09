@@ -25,13 +25,9 @@ testing {
     val testDubbo by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:apache-dubbo-2.7:testing"))
-        if (otelProps.testLatestDeps) {
-          implementation("org.apache.dubbo:dubbo:latest.release")
-          implementation("org.apache.dubbo:dubbo-config-api:latest.release")
-        } else {
-          implementation("org.apache.dubbo:dubbo:2.7.0")
-          implementation("org.apache.dubbo:dubbo-config-api:2.7.0")
-        }
+        val version = baseVersion("2.7.0").orLatest()
+        implementation("org.apache.dubbo:dubbo:$version")
+        implementation("org.apache.dubbo:dubbo-config-api:$version")
       }
     }
   }

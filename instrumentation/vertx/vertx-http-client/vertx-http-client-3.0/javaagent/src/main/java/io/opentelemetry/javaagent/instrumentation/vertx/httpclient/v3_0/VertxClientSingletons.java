@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v3_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.vertx.client.Contexts;
-import io.opentelemetry.javaagent.instrumentation.vertx.client.VertxClientInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.Contexts;
+import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.VertxClientInstrumenterFactory;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;

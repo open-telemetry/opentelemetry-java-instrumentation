@@ -30,7 +30,7 @@ public class HandlerWrapper<T> implements Handler<T> {
 
   @Override
   public void handle(T t) {
-    try (Scope ignore = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       delegate.handle(t);
     }
   }

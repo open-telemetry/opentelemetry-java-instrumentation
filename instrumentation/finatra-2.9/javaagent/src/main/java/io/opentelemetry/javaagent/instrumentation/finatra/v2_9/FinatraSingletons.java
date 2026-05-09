@@ -24,6 +24,9 @@ public class FinatraSingletons {
   public static final VirtualField<Response, Throwable> THROWABLE =
       VirtualField.find(Response.class, Throwable.class);
 
+  private static final VirtualField<Route, Class<?>> CALLBACK_CLASS =
+      VirtualField.find(Route.class, Class.class);
+
   private static final Instrumenter<FinatraRequest, Void> instrumenter;
 
   static {
@@ -32,10 +35,7 @@ public class FinatraSingletons {
         Instrumenter.<FinatraRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.finatra-2.9",
-                request ->
-                    request.controllerClass() != null
-                        ? ClassNames.simpleName(request.controllerClass())
-                        : "<unknown>")
+                request -> ClassNames.simpleName(request.controllerClass()))
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .buildInstrumenter();
@@ -49,16 +49,13 @@ public class FinatraSingletons {
     HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, routeInfo.path());
   }
 
-  private static final VirtualField<Route, Class<?>> callbackClassField =
-      VirtualField.find(Route.class, Class.class);
-
   public static void setCallbackClass(Route route, Class<?> clazz) {
-    callbackClassField.set(route, clazz);
+    CALLBACK_CLASS.set(route, clazz);
   }
 
   @Nullable
   public static Class<?> getCallbackClass(Route route) {
-    return callbackClassField.get(route);
+    return CALLBACK_CLASS.get(route);
   }
 
   private FinatraSingletons() {}

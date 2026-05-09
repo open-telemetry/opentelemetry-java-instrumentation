@@ -16,7 +16,7 @@ class KafkaTestUtil {
   private static Method getConsumerPollDurationMethod() {
     try {
       return Consumer.class.getMethod("poll", Duration.class);
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }

@@ -21,8 +21,8 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * This adds the filter class name to the request properties. The class name is used by <code>
- * DefaultRequestContextInstrumentation</code>
+ * This adds the filter class name to the request properties. The class name is used by {@code
+ * DefaultRequestContextInstrumentation}
  */
 class ContainerRequestFilterInstrumentation implements TypeInstrumentation {
 

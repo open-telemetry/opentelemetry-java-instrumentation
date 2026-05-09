@@ -55,7 +55,8 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent());
       }
 
-      public void end(HttpRequest request, HttpResponse response, Throwable throwable) {
+      public void end(
+          HttpRequest request, @Nullable HttpResponse response, @Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, request, response, throwable);
       }

@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExt
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -356,10 +357,7 @@ public abstract class AbstractGrpcStreamingTest {
                                           equalTo(
                                               RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                           equalTo(
-                                              NETWORK_TYPE,
-                                              Boolean.getBoolean("testLatestDeps")
-                                                  ? "ipv4"
-                                                  : null)))));
+                                              NETWORK_TYPE, testLatestDeps() ? "ipv4" : null)))));
     }
     if (emitStableRpcSemconv()) {
       testing()

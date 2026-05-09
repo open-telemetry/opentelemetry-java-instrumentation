@@ -19,12 +19,12 @@ public class ElasticsearchRest7Singletons {
       ElasticsearchRestJavaagentInstrumenterFactory.create(
           "io.opentelemetry.elasticsearch-rest-7.0");
 
+  public static final VirtualField<Request, ElasticsearchEndpointDefinition> ENDPOINT_DEFINITION =
+      VirtualField.find(Request.class, ElasticsearchEndpointDefinition.class);
+
   public static Instrumenter<ElasticsearchRestRequest, Response> instrumenter() {
     return instrumenter;
   }
-
-  public static final VirtualField<Request, ElasticsearchEndpointDefinition> ENDPOINT_DEFINITION =
-      VirtualField.find(Request.class, ElasticsearchEndpointDefinition.class);
 
   private ElasticsearchRest7Singletons() {}
 }

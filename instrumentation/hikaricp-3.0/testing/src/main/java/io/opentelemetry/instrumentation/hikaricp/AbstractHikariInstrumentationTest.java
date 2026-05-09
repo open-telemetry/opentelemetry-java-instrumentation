@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.SQLException;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,8 @@ public abstract class AbstractHikariInstrumentationTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract void configure(HikariConfig poolConfig, MetricsTrackerFactory userTracker);
+  protected abstract void configure(
+      HikariConfig poolConfig, @Nullable MetricsTrackerFactory userTracker);
 
   @Test
   void shouldReportMetrics() throws SQLException, InterruptedException {
@@ -56,6 +58,7 @@ public abstract class AbstractHikariInstrumentationTest {
     hikariDataSource.setPoolName("testPool");
     hikariDataSource.setDataSource(dataSourceMock);
     configure(hikariDataSource, null);
+    cleanup.deferCleanup(hikariDataSource);
 
     // when
     Connection hikariConnection = hikariDataSource.getConnection();
@@ -72,10 +75,7 @@ public abstract class AbstractHikariInstrumentationTest {
     // when
     hikariDataSource.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing().clearData();
-    Thread.sleep(100);
 
     // then
     testing()
@@ -154,7 +154,7 @@ public abstract class AbstractHikariInstrumentationTest {
     Exception thrown = catchException(hikariDataSource::getConnection);
 
     // then
-    assertThat(thrown).isNotNull();
+    assertThat(thrown).isInstanceOf(SQLException.class);
 
     DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "timingOutPool")
         .disableMaxIdleConnections()

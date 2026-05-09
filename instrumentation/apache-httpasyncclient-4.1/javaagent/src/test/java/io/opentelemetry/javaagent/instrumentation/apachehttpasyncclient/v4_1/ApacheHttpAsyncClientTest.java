@@ -24,12 +24,10 @@ import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.nio.client.HttpAsyncClient;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApacheHttpAsyncClientTest {
 
   @RegisterExtension
@@ -37,25 +35,29 @@ class ApacheHttpAsyncClientTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private final RequestConfig requestConfig =
+  private static final RequestConfig requestConfig =
       RequestConfig.custom()
           .setConnectTimeout((int) AbstractHttpClientTest.CONNECTION_TIMEOUT.toMillis())
           .build();
 
-  private final RequestConfig requestWithReadTimeoutConfig =
+  private static final RequestConfig requestWithReadTimeoutConfig =
       RequestConfig.copy(requestConfig)
           .setSocketTimeout((int) AbstractHttpClientTest.READ_TIMEOUT.toMillis())
           .build();
 
-  private final CloseableHttpAsyncClient client =
-      HttpAsyncClients.custom().setDefaultRequestConfig(requestConfig).build();
-  private final CloseableHttpAsyncClient clientWithReadTimeout =
-      HttpAsyncClients.custom().setDefaultRequestConfig(requestWithReadTimeoutConfig).build();
+  private CloseableHttpAsyncClient client;
+  private CloseableHttpAsyncClient clientWithReadTimeout;
 
-  @BeforeAll
+  // Use a fresh client per test: with httpasyncclient 4.1.5 a failing test can leave the
+  // shared I/O reactor in a STOPPED state, cascading "Request execution cancelled" failures
+  // into every subsequent test.
+  @BeforeEach
   void setUp() {
-    cleanup.deferAfterAll(client);
-    cleanup.deferAfterAll(clientWithReadTimeout);
+    client = HttpAsyncClients.custom().setDefaultRequestConfig(requestConfig).build();
+    clientWithReadTimeout =
+        HttpAsyncClients.custom().setDefaultRequestConfig(requestWithReadTimeoutConfig).build();
+    cleanup.deferCleanup(client);
+    cleanup.deferCleanup(clientWithReadTimeout);
     client.start();
     clientWithReadTimeout.start();
   }

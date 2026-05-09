@@ -138,6 +138,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         return new WithSpanAdviceScope(method, context, context.makeCurrent());
       }
 
+      @Nullable
       public Object end(@Nullable Object returnValue, @Nullable Throwable throwable) {
         scope.close();
         AsyncOperationEndSupport<Method, Object> operationEndSupport =
@@ -156,8 +157,9 @@ class WithSpanInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Nullable
     public static Object stopSpan(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable WithSpanAdviceScope adviceScope) {
       if (adviceScope != null) {
@@ -195,6 +197,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         return new WithSpanAttributesAdviceScope(method, request, context, context.makeCurrent());
       }
 
+      @Nullable
       public Object end(@Nullable Object returnValue, @Nullable Throwable throwable) {
         scope.close();
         AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport =
@@ -216,6 +219,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Nullable
     public static Object stopSpan(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,

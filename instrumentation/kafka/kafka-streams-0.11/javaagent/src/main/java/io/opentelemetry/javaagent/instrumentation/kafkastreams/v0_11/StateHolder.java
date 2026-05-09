@@ -11,11 +11,15 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import javax.annotation.Nullable;
 
 public class StateHolder {
-  public static final ThreadLocal<StateHolder> HOLDER = new ThreadLocal<>();
+  private static final ThreadLocal<StateHolder> holder = new ThreadLocal<>();
 
   @Nullable private KafkaProcessRequest request;
   @Nullable private Context context;
   @Nullable private Scope scope;
+
+  public static ThreadLocal<StateHolder> holder() {
+    return holder;
+  }
 
   public void closeScope() {
     scope.close();

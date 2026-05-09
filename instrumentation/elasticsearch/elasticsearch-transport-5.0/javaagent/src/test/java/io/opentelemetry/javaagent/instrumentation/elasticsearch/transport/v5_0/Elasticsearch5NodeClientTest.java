@@ -17,7 +17,6 @@ import org.elasticsearch.env.Environment;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.internal.InternalSettingsPreparer;
 import org.elasticsearch.transport.Netty3Plugin;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -49,6 +48,7 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
         new Node(
             new Environment(InternalSettingsPreparer.prepareSettings(settings)),
             singletonList(Netty3Plugin.class)) {};
+    cleanup.deferAfterAll(testNode);
     startNode(testNode);
 
     client = testNode.client();
@@ -67,11 +67,6 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
                 .actionGet(TIMEOUT));
     testing.waitForTraces(1);
     testing.clearData();
-  }
-
-  @AfterAll
-  static void cleanUp() throws Exception {
-    testNode.close();
   }
 
   @Override

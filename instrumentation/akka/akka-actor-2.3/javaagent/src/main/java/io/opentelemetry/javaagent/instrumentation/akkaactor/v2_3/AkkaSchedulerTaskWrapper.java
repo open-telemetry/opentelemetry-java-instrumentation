@@ -15,7 +15,7 @@ public class AkkaSchedulerTaskWrapper {
   private static Class<?> getRunOnCloseTaskClass() {
     try {
       return Class.forName("akka.actor.Scheduler$TaskRunOnClose");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

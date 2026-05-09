@@ -64,7 +64,7 @@ spotless {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
     // required on jdk17

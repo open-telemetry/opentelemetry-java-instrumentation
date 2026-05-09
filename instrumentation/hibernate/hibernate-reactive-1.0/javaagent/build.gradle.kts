@@ -30,13 +30,8 @@ testing {
     val hibernateReactive1Test by registering(JvmTestSuite::class) {
       dependencies {
         implementation("org.testcontainers:testcontainers")
-        if (otelProps.testLatestDeps) {
-          implementation("org.hibernate.reactive:hibernate-reactive-core:1.+")
-          implementation("io.vertx:vertx-pg-client:4.+")
-        } else {
-          implementation("org.hibernate.reactive:hibernate-reactive-core:1.0.0.Final")
-          implementation("io.vertx:vertx-pg-client:4.1.5")
-        }
+        implementation("org.hibernate.reactive:hibernate-reactive-core:${baseVersion("1.0.0.Final").orLatest("1.+")}")
+        implementation("io.vertx:vertx-pg-client:${baseVersion("4.1.5").orLatest("4.+")}")
         compileOnly("io.vertx:vertx-codegen:4.1.5")
       }
     }
@@ -45,13 +40,8 @@ testing {
       dependencies {
         implementation("org.testcontainers:testcontainers")
         implementation(project(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing"))
-        if (otelProps.testLatestDeps) {
-          implementation("org.hibernate.reactive:hibernate-reactive-core:3.+")
-          implementation("io.vertx:vertx-pg-client:4.+")
-        } else {
-          implementation("org.hibernate.reactive:hibernate-reactive-core:2.0.0.Final")
-          implementation("io.vertx:vertx-pg-client:4.4.2")
-        }
+        implementation("org.hibernate.reactive:hibernate-reactive-core:${baseVersion("2.0.0.Final").orLatest("3.+")}")
+        implementation("io.vertx:vertx-pg-client:${baseVersion("4.4.2").orLatest("4.+")}")
         compileOnly("io.vertx:vertx-codegen:4.4.2")
       }
     }
@@ -60,13 +50,8 @@ testing {
       dependencies {
         implementation("org.testcontainers:testcontainers")
         implementation(project(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing"))
-        if (otelProps.testLatestDeps) {
-          implementation("org.hibernate.reactive:hibernate-reactive-core:latest.release")
-          implementation("io.vertx:vertx-pg-client:latest.release")
-        } else {
-          implementation("org.hibernate.reactive:hibernate-reactive-core:4.0.0.Final")
-          implementation("io.vertx:vertx-pg-client:5.0.0")
-        }
+        implementation("org.hibernate.reactive:hibernate-reactive-core:${baseVersion("4.0.0.Final").orLatest()}")
+        implementation("io.vertx:vertx-pg-client:${baseVersion("5.0.0").orLatest()}")
         compileOnly("io.vertx:vertx-codegen:4.4.2")
       }
     }

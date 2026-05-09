@@ -14,19 +14,17 @@ import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class RequestContextAccess {
-  @Nullable private static final MethodHandle remoteAddress = findAccessorOrNull("remoteAddress");
-  @Nullable private static final MethodHandle localAddress = findAccessorOrNull("localAddress");
-
-  private RequestContextAccess() {}
+  @Nullable private static final MethodHandle REMOTE_ADDRESS = findAccessorOrNull("remoteAddress");
+  @Nullable private static final MethodHandle LOCAL_ADDRESS = findAccessorOrNull("localAddress");
 
   @Nullable
   public static InetSocketAddress remoteAddress(RequestContext requestContext) {
-    return getAddress(remoteAddress, requestContext);
+    return getAddress(REMOTE_ADDRESS, requestContext);
   }
 
   @Nullable
   public static InetSocketAddress localAddress(RequestContext requestContext) {
-    return getAddress(localAddress, requestContext);
+    return getAddress(LOCAL_ADDRESS, requestContext);
   }
 
   @Nullable
@@ -60,8 +58,10 @@ final class RequestContextAccess {
     try {
       return MethodHandles.publicLookup()
           .findVirtual(RequestContext.class, methodName, MethodType.methodType(returnType));
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
+
+  private RequestContextAccess() {}
 }
