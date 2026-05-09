@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
@@ -46,9 +48,9 @@ public final class SpringWebfluxBuilderUtil {
       SpringWebfluxClientTelemetryBuilder builder, OpenTelemetry openTelemetry) {
     // clientBuilderExtractor is guaranteed non-null because the builder class registers it during
     // static initialization, before a builder instance can be passed here
-    if (clientBuilderExtractor != null) {
-      clientBuilderExtractor.apply(builder).configure(new CommonConfig(openTelemetry));
-    }
+    requireNonNull(clientBuilderExtractor, "clientBuilderExtractor")
+        .apply(builder)
+        .configure(new CommonConfig(openTelemetry));
     return builder;
   }
 
@@ -57,9 +59,9 @@ public final class SpringWebfluxBuilderUtil {
       SpringWebfluxServerTelemetryBuilder builder, OpenTelemetry openTelemetry) {
     // serverBuilderExtractor is guaranteed non-null because the builder class registers it during
     // static initialization, before a builder instance can be passed here
-    if (serverBuilderExtractor != null) {
-      serverBuilderExtractor.apply(builder).configure(new CommonConfig(openTelemetry));
-    }
+    requireNonNull(serverBuilderExtractor, "serverBuilderExtractor")
+        .apply(builder)
+        .configure(new CommonConfig(openTelemetry));
     return builder;
   }
 

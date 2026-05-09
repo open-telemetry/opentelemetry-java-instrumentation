@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v5_3.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
@@ -37,9 +39,9 @@ public final class SpringMvcBuilderUtil {
       SpringWebMvcTelemetryBuilder builder, OpenTelemetry openTelemetry) {
     // builderExtractor is guaranteed non-null because the builder class registers it during
     // static initialization, before a builder instance can be passed here
-    if (builderExtractor != null) {
-      builderExtractor.apply(builder).configure(new CommonConfig(openTelemetry));
-    }
+    requireNonNull(builderExtractor, "builderExtractor")
+        .apply(builder)
+        .configure(new CommonConfig(openTelemetry));
     return builder;
   }
 
