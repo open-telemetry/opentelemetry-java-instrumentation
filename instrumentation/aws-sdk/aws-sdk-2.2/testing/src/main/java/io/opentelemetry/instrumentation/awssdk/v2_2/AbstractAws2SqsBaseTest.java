@@ -38,6 +38,7 @@ import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -54,42 +55,25 @@ import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractAws2SqsBaseTest {
   protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
-  protected static int sqsPort;
-  protected static SQSRestServer sqs;
-  protected final String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+  protected int sqsPort;
+  protected SQSRestServer sqs;
+  protected String queueUrl;
 
-  protected ReceiveMessageRequest receiveMessageRequest =
-      ReceiveMessageRequest.builder().queueUrl(queueUrl).build();
+  protected ReceiveMessageRequest receiveMessageRequest;
 
-  protected ReceiveMessageRequest receiveMessageBatchRequest =
-      ReceiveMessageRequest.builder()
-          .queueUrl(queueUrl)
-          .maxNumberOfMessages(3)
-          .messageAttributeNames("All")
-          .waitTimeSeconds(5)
-          .build();
+  protected ReceiveMessageRequest receiveMessageBatchRequest;
 
   protected CreateQueueRequest createQueueRequest =
       CreateQueueRequest.builder().queueName("testSdkSqs").build();
 
-  protected SendMessageRequest sendMessageRequest =
-      SendMessageRequest.builder().queueUrl(queueUrl).messageBody("{\"type\": \"hello\"}").build();
+  protected SendMessageRequest sendMessageRequest;
 
-  @SuppressWarnings("unchecked")
-  protected SendMessageBatchRequest sendMessageBatchRequest =
-      SendMessageBatchRequest.builder()
-          .queueUrl(queueUrl)
-          .entries(
-              e -> e.messageBody("e1").id("i1"),
-              // 8 attributes, injection always possible
-              e -> e.messageBody("e2").id("i2").messageAttributes(dummyMessageAttributes(8)),
-              // 10 attributes, injection with custom propagator never possible
-              e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(10)))
-          .build();
+  protected SendMessageBatchRequest sendMessageBatchRequest;
 
   protected abstract InstrumentationExtension getTesting();
 
@@ -135,14 +119,39 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @BeforeAll
-  static void setUp() {
+  @SuppressWarnings("unchecked")
+  void setUp() {
     sqs = SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
     Http.ServerBinding server = sqs.waitUntilStarted();
     sqsPort = server.localAddress().getPort();
+    queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    receiveMessageRequest = ReceiveMessageRequest.builder().queueUrl(queueUrl).build();
+    receiveMessageBatchRequest =
+        ReceiveMessageRequest.builder()
+            .queueUrl(queueUrl)
+            .maxNumberOfMessages(3)
+            .messageAttributeNames("All")
+            .waitTimeSeconds(5)
+            .build();
+    sendMessageRequest =
+        SendMessageRequest.builder()
+            .queueUrl(queueUrl)
+            .messageBody("{\"type\": \"hello\"}")
+            .build();
+    sendMessageBatchRequest =
+        SendMessageBatchRequest.builder()
+            .queueUrl(queueUrl)
+            .entries(
+                e -> e.messageBody("e1").id("i1"),
+                // 8 attributes, injection always possible
+                e -> e.messageBody("e2").id("i2").messageAttributes(dummyMessageAttributes(8)),
+                // 10 attributes, injection with custom propagator never possible
+                e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(10)))
+            .build();
   }
 
   @AfterAll
-  static void cleanUp() {
+  void cleanUp() {
     if (sqs != null) {
       sqs.stopAndWait();
     }
@@ -200,7 +209,7 @@ public abstract class AbstractAws2SqsBaseTest {
     assertSqsTraces(false, false);
   }
 
-  static SpanDataAssert createQueueSpan(SpanDataAssert span) {
+  SpanDataAssert createQueueSpan(SpanDataAssert span) {
     return span.hasName("Sqs.CreateQueue")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
@@ -221,7 +230,7 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  static SpanDataAssert processSpan(SpanDataAssert span, SpanData parent) {
+  SpanDataAssert processSpan(SpanDataAssert span, SpanData parent) {
     return span.hasName("testSdkSqs process")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parent)
@@ -243,7 +252,7 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  static SpanDataAssert publishSpan(SpanDataAssert span, String queueUrl, String rcpMethod) {
+  SpanDataAssert publishSpan(SpanDataAssert span, String queueUrl, String rcpMethod) {
     return span.hasName("testSdkSqs publish")
         .hasKind(SpanKind.PRODUCER)
         .hasNoParent()

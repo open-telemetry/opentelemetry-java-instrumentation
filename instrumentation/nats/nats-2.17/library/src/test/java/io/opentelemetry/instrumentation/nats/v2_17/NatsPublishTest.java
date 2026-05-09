@@ -21,7 +21,7 @@ class NatsPublishTest extends AbstractNatsPublishTest {
   }
 
   @BeforeAll
-  static void beforeAll() {
+  void wrapConnection() {
     connection = NatsTelemetry.create(testing.getOpenTelemetry()).wrap(connection);
   }
 }

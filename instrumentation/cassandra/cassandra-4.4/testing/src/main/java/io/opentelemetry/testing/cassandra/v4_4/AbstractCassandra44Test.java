@@ -32,17 +32,13 @@ import static org.junit.jupiter.api.Named.named;
 import com.datastax.oss.driver.api.core.CqlSession;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.cassandra.common.v4_0.AbstractCassandraTest;
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import reactor.core.publisher.Flux;
 
 public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
-
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest(name = "{index}: {0}")
