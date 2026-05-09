@@ -5,6 +5,13 @@ separately later in the PR lifecycle. **Prefer silence over uncertainty.** Only
 flag substantive issues on changed lines. Skip stylistic preferences not listed
 below. Do not nitpick.
 
+Do not flag anything CI will catch. This includes compilation errors (missing
+imports, unbalanced braces, type errors, unresolved symbols), Spotless-covered
+formatting (indentation, wrapping, alignment, brace placement, import
+ordering/grouping, whitespace), Checkstyle/ErrorProne/NullAway findings, and
+test failures. Do not ask authors to run the formatter. CI surfaces these
+directly, so review comments on them are noise.
+
 Use category tags like `[Style]`, `[Naming]`, `[Testing]`, `[General]`.
 
 ## [Style] Style Guide
