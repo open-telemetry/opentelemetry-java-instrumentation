@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.apache.wicket.core.request.handler.IPageClassRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.handler.resource.ResourceReferenceRequestHandler;
 
 public class WicketServerSpanNaming {
 
@@ -22,8 +23,23 @@ public class WicketServerSpanNaming {
         return ServletContextPath.prepend(context, filterPath + "/" + pageName);
       };
 
-  public static HttpServerRouteGetter<IPageClassRequestHandler> getServerSpanName() {
+  private static final HttpServerRouteGetter<ResourceReferenceRequestHandler>
+      serverSpanNameResource =
+          (context, handler) -> {
+            // using class name as page name
+            String resourceName = handler.getResourceReference().getClass().getName();
+            // wicket filter mapping without wildcard, if wicket filter is mapped to /*
+            // this will be an empty string
+            String filterPath = RequestCycle.get().getRequest().getFilterPath();
+            return ServletContextPath.prepend(context, filterPath + "/" + resourceName);
+          };
+
+  public static HttpServerRouteGetter<IPageClassRequestHandler> serverSpanName() {
     return serverSpanName;
+  }
+
+  public static HttpServerRouteGetter<ResourceReferenceRequestHandler> serverSpanNameResource() {
+    return serverSpanNameResource;
   }
 
   private WicketServerSpanNaming() {}

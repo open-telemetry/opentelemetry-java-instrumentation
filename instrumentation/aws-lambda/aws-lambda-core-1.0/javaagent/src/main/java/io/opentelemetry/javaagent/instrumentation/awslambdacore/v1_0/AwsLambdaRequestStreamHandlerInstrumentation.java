@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaSingletons.flushTimeout;
+import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaSingletons.FLUSH_TIMEOUT;
 import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaSingletons.functionInstrumenter;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -92,7 +92,7 @@ class AwsLambdaRequestStreamHandlerInstrumentation implements TypeInstrumentatio
         scope.close();
         functionInstrumenter().end(context, lambdaRequest, null, throwable);
 
-        OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), NANOSECONDS);
+        OpenTelemetrySdkAccess.forceFlush(FLUSH_TIMEOUT.toNanos(), NANOSECONDS);
       }
     }
 

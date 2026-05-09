@@ -192,8 +192,8 @@ def get_commit_files(commit_hash: str) -> list[str]:
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
 
 
-def is_automated_review_commit(subject: str) -> bool:
-    return subject.startswith("Review fixes for ")
+def is_module_cleanup_commit(subject: str) -> bool:
+    return subject.startswith("Cleanup for ")
 
 
 # A file is "user-facing runtime" iff it sits under `/src/main/` and is not
@@ -264,7 +264,7 @@ def build_candidates(range_spec: str) -> list[Candidate]:
     warn(f"Inspecting {len(hashes)} commit(s) in {range_spec}...")
     for commit_hash in hashes:
         subject = get_commit_subject(commit_hash)
-        if is_automated_review_commit(subject):
+        if is_module_cleanup_commit(subject):
             continue
 
         files = get_commit_files(commit_hash)

@@ -30,14 +30,14 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 abstract class AbstractSpringJmsListenerTest {
-  static final Logger logger = LoggerFactory.getLogger(AbstractSpringJmsListenerTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractSpringJmsListenerTest.class);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static GenericContainer<?> broker;
+  private static GenericContainer<?> broker;
 
   @BeforeAll
   static void setUp() {

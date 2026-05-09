@@ -4,6 +4,9 @@
 # disable link text should be descriptive check
 disable = ["MD059", "line-length", "no-inline-html", "MD041", "MD022", "ul-style", "fenced-code-language"]
 
+[per-file-ignores]
+".github/workflows/*.md" = ["MD046"]
+
 [no-duplicate-heading]
 siblings-only = true
 

@@ -58,6 +58,10 @@ tasks {
     include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.reactor-netty.connection-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.netty.ssl-telemetry.enabled=true,otel.instrumentation.reactor-netty.connection-telemetry.enabled=true",
+    )
   }
 
   test {

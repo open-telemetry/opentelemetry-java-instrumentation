@@ -14,7 +14,7 @@ class TestSimpleJob implements SimpleJob {
   public void execute(ShardingContext context) {
     try {
       Thread.sleep(100);
-    } catch (InterruptedException e) {
+    } catch (InterruptedException ignored) {
       Thread.currentThread().interrupt();
     }
   }

@@ -83,7 +83,7 @@ class MeterTest {
   }
 
   @Test
-  void observableLongCounter() throws InterruptedException {
+  void observableLongCounter() {
     ObservableLongCounter observableCounter =
         meter
             .counterBuilder("test")
@@ -115,10 +115,7 @@ class MeterTest {
 
     close(observableCounter);
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
@@ -155,7 +152,7 @@ class MeterTest {
   }
 
   @Test
-  void observableDoubleCounter() throws InterruptedException {
+  void observableDoubleCounter() {
     ObservableDoubleCounter observableCounter =
         meter
             .counterBuilder("test")
@@ -188,10 +185,7 @@ class MeterTest {
 
     close(observableCounter);
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
@@ -228,7 +222,7 @@ class MeterTest {
   }
 
   @Test
-  void observableLongUpDownCounter() throws InterruptedException {
+  void observableLongUpDownCounter() {
     ObservableLongUpDownCounter observableCounter =
         meter
             .upDownCounterBuilder("test")
@@ -260,10 +254,7 @@ class MeterTest {
 
     close(observableCounter);
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
@@ -300,7 +291,7 @@ class MeterTest {
   }
 
   @Test
-  void observableDoubleUpDownCounter() throws InterruptedException {
+  void observableDoubleUpDownCounter() {
     ObservableDoubleUpDownCounter observableCounter =
         meter
             .upDownCounterBuilder("test")
@@ -333,10 +324,7 @@ class MeterTest {
 
     close(observableCounter);
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
@@ -402,7 +390,7 @@ class MeterTest {
   }
 
   @Test
-  void longGauge() throws InterruptedException {
+  void longGauge() {
     ObservableLongGauge observableGauge =
         meter
             .gaugeBuilder("test")
@@ -434,16 +422,13 @@ class MeterTest {
 
     close(observableGauge);
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void doubleGauge() throws InterruptedException {
+  void doubleGauge() {
     ObservableDoubleGauge observableGauge =
         meter
             .gaugeBuilder("test")
@@ -474,10 +459,7 @@ class MeterTest {
 
     close(observableGauge);
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }

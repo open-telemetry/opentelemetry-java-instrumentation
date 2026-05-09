@@ -20,6 +20,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -88,7 +89,7 @@ class RmiTest {
 
   @Test
   @SuppressWarnings("ReturnValueIgnored")
-  void serverBuiltinMethods() throws Exception {
+  void serverBuiltinMethods() throws RemoteException {
     Server server = new Server();
     serverRegistry.rebind(Server.RMI_ID, server);
     autoCleanup.deferCleanup(() -> serverRegistry.unbind(Server.RMI_ID));
@@ -103,7 +104,7 @@ class RmiTest {
   }
 
   @Test
-  void serviceThrownException() throws Exception {
+  void serviceThrownException() throws RemoteException {
     Server server = new Server();
     serverRegistry.rebind(Server.RMI_ID, server);
     autoCleanup.deferCleanup(() -> serverRegistry.unbind(Server.RMI_ID));

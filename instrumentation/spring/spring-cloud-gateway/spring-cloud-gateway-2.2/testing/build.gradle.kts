@@ -17,7 +17,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // see spring-cloud-gateway-4.3* module
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.spring-cloud-gateway.experimental-span-attributes=true")
 
   // required on jdk17

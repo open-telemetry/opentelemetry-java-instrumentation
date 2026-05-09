@@ -18,6 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.sqlclient.Pool;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -48,7 +49,7 @@ class DriverInstrumentation implements TypeInstrumentation {
   public static class NewPoolAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object driver, @Advice.Return Pool pool) {
+    public static void onExit(@Advice.This Object driver, @Advice.Return @Nullable Pool pool) {
       if (pool != null) {
         storePoolDbSystem(pool, getDbSystemNameFromClassName(driver));
       }

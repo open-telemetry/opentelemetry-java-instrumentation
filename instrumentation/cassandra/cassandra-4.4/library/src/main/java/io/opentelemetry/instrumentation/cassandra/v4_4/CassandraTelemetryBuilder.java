@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 /** A builder of {@link CassandraTelemetry}. */
-public class CassandraTelemetryBuilder {
+public final class CassandraTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-4.4";
   // copied from DbIncubatingAttributes
@@ -27,7 +27,7 @@ public class CassandraTelemetryBuilder {
 
   private boolean querySanitizationEnabled = true;
 
-  protected CassandraTelemetryBuilder(OpenTelemetry openTelemetry) {
+  CassandraTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
 
@@ -52,7 +52,7 @@ public class CassandraTelemetryBuilder {
   }
 
   @SuppressWarnings("deprecation") // to support old database semantic conventions
-  protected Instrumenter<CassandraRequest, ExecutionInfo> createInstrumenter(
+  private static Instrumenter<CassandraRequest, ExecutionInfo> createInstrumenter(
       OpenTelemetry openTelemetry, boolean querySanitizationEnabled) {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 

@@ -86,3 +86,4 @@ jobs:
           needs.lint.result == 'success' &&
           needs.publish-snapshots.result == 'success'
         }}
+      failure-notification-after-attempts: 2

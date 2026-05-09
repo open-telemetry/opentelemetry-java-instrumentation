@@ -6,13 +6,13 @@
 package org.springframework.web.servlet.v3_1;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
+import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcServerSpanNaming.serverSpanName;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
-import io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcServerSpanNaming;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -41,8 +41,8 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   private static final Logger logger =
       Logger.getLogger(OpenTelemetryHandlerMappingFilter.class.getName());
 
-  private static final MethodHandle usesPathPatternsMh = getUsesPathPatternsMh();
-  private static final MethodHandle parseAndCacheMh = parseAndCacheMh();
+  @Nullable private static final MethodHandle usesPathPatternsMh = getUsesPathPatternsMh();
+  @Nullable private static final MethodHandle parseAndCacheMh = parseAndCacheMh();
 
   private final HttpServerRouteGetter<HttpServletRequest> serverSpanName =
       (context, request) -> {
@@ -55,7 +55,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
         if (findMapping(request)) {
           // Name the parent span based on the matching pattern
           // Let the parent span resource name be set with the attribute set in findMapping.
-          return SpringWebMvcServerSpanNaming.serverSpanName().get(context, request);
+          return serverSpanName().get(context, request);
         }
 
         return null;
@@ -160,6 +160,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     return Ordered.HIGHEST_PRECEDENCE + 1;
   }
 
+  @Nullable
   private static MethodHandle getUsesPathPatternsMh() {
     // Method added in spring 5.3
     try {
@@ -182,6 +183,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     }
   }
 
+  @Nullable
   private static MethodHandle parseAndCacheMh() {
     // ServletRequestPathUtils added in spring 5.3
     try {

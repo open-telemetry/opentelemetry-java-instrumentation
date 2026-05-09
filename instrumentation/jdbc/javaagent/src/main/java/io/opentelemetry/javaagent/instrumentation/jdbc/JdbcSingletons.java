@@ -93,7 +93,7 @@ public class JdbcSingletons {
           return true;
         }
       }
-    } catch (SQLException | AbstractMethodError e) {
+    } catch (SQLException | AbstractMethodError ignored) {
       // ignore
     }
     return false;

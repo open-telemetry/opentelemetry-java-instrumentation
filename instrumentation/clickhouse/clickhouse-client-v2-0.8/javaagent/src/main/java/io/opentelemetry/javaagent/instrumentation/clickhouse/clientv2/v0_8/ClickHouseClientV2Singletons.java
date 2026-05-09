@@ -11,8 +11,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlPa
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseDbRequest;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
 import javax.annotation.Nullable;
 
 public class ClickHouseClientV2Singletons {

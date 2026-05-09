@@ -15,6 +15,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 
 public class TracingSqsEventWrapper extends TracingSqsEventHandler {
 
@@ -35,6 +36,7 @@ public class TracingSqsEventWrapper extends TracingSqsEventHandler {
   }
 
   @Override
+  @Nullable
   protected SQSBatchResponse handleEvent(SQSEvent sqsEvent, Context context) {
     Object[] parameters =
         LambdaParameters.toArray(targetMethod, sqsEvent, context, (event, clazz) -> event);

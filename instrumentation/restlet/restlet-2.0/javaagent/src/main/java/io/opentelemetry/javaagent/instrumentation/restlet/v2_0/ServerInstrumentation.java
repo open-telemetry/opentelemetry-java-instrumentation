@@ -47,9 +47,9 @@ class ServerInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context) {
         this.context = context;
-        this.scope = scope;
+        this.scope = context.makeCurrent();
       }
 
       @Nullable
@@ -61,7 +61,7 @@ class ServerInstrumentation implements TypeInstrumentation {
         }
 
         Context context = instrumenter().start(parentContext, request);
-        return new AdviceScope(context, context.makeCurrent());
+        return new AdviceScope(context);
       }
 
       public void end(@Nullable Throwable exception, Request request, Response response) {
