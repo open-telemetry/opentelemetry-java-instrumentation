@@ -25,38 +25,44 @@ class ManifestResourceExtractorTest {
   @ParameterizedTest(name = "{0}")
   @MethodSource("extractResourceCases")
   void extractResource(
-      String name, String expectedName, String expectedVersion, InputStream input) {
-    Resource resource =
-        new ManifestResourceExtractor(
-                new MainJarPathFinder(
-                    () -> JarServiceNameResourceExtractorTest.getArgs("app.jar"),
-                    prop -> null,
-                    JarServiceNameResourceExtractorTest::failPath),
-                p -> {
-                  if (input == null) {
-                    return Optional.empty();
-                  }
-                  try {
-                    Manifest manifest = new Manifest();
-                    manifest.read(input);
-                    return Optional.of(manifest);
-                  } catch (IOException ignored) {
-                    return Optional.empty();
-                  }
-                })
-            .extract();
-    assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(expectedName);
-    assertThat(resource.getAttribute(SERVICE_VERSION)).isEqualTo(expectedVersion);
+      String name, String expectedName, String expectedVersion, String resourceName)
+      throws IOException {
+    try (InputStream input = openClasspathResource(resourceName)) {
+      Resource resource =
+          new ManifestResourceExtractor(
+                  new MainJarPathFinder(
+                      () -> JarServiceNameResourceExtractorTest.getArgs("app.jar"),
+                      prop -> null,
+                      JarServiceNameResourceExtractorTest::failPath),
+                  p -> {
+                    if (input == null) {
+                      return Optional.empty();
+                    }
+                    try {
+                      Manifest manifest = new Manifest();
+                      manifest.read(input);
+                      return Optional.of(manifest);
+                    } catch (IOException ignored) {
+                      return Optional.empty();
+                    }
+                  })
+              .extract();
+      assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(expectedName);
+      assertThat(resource.getAttribute(SERVICE_VERSION)).isEqualTo(expectedVersion);
+    }
   }
 
   private static Stream<Arguments> extractResourceCases() {
     return Stream.of(
-        arguments("name ok", "demo", "0.0.1-SNAPSHOT", openClasspathResource("MANIFEST.MF")),
+        arguments("name ok", "demo", "0.0.1-SNAPSHOT", "MANIFEST.MF"),
         arguments("name - no resource", null, null, null),
-        arguments("name - empty resource", null, null, openClasspathResource("empty-MANIFEST.MF")));
+        arguments("name - empty resource", null, null, "empty-MANIFEST.MF"));
   }
 
   private static InputStream openClasspathResource(String resource) {
+    if (resource == null) {
+      return null;
+    }
     return ManifestResourceExtractorTest.class.getClassLoader().getResourceAsStream(resource);
   }
 }
