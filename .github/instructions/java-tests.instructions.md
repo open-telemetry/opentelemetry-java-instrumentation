@@ -4,7 +4,9 @@ applyTo: "**/*.java"
 
 # Java Test Rules (first-pass review)
 
-Apply only to changes in test code.
+This file is loaded for all Java changes, but the rules below apply only when
+reviewing test code (e.g. `src/test/**`, `src/*Test/**`, and `testing/`
+modules). Skip them on production sources.
 
 ## [Testing] General Patterns
 
