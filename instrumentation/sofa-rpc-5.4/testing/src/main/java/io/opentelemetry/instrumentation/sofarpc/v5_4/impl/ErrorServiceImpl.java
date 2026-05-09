@@ -22,7 +22,7 @@ public class ErrorServiceImpl implements ErrorService {
   @Override
   public String timeout() {
     try {
-      Thread.sleep(10_000);
+      Thread.sleep(2_000);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException(e);

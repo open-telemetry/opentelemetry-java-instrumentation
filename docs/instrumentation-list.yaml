@@ -14243,7 +14243,7 @@ libraries:
 - name: sofa-rpc-5.4
   display_name: SOFARPC
   description: |
-    The SOFARPC instrumentation provides RPC client spans and metrics, and RPC server spans and metrics for Apache SOFARPC RPC calls.
+    The SOFARPC instrumentation provides RPC client spans and metrics, and RPC server spans and metrics for SOFARPC RPC calls.
   semantic_conventions:
   - RPC_CLIENT_SPANS
   - RPC_CLIENT_METRICS
