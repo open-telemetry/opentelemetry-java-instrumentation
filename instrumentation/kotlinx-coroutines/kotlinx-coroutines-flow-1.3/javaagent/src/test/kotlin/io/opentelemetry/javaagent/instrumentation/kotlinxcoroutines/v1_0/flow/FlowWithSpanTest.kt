@@ -14,12 +14,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
-import org.assertj.core.api.Condition
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.time.Clock
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExperimentalCoroutinesApi
@@ -47,7 +48,9 @@ class FlowWithSpanTest {
               .hasAttributesSatisfyingExactly(
                 SemconvCodeStabilityUtil.codeFunctionAssertions(this.javaClass, "simple")
               )
-              .has(Condition({ spanData -> spanData.endEpochNanos > flowStartTime }, "end time after $flowStartTime"))
+              .satisfies(Consumer { spanData ->
+                assertThat(spanData.endEpochNanos).isGreaterThan(flowStartTime)
+              })
           }
         )
       }

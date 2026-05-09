@@ -346,6 +346,13 @@ resolve to `latest.release` during `testLatestDeps` builds. If you use `latestDe
 to constrain a version range (e.g. `2.+`), you need to add an entry for that range to the
 JSON file.
 
+> **Note:** When `-PtestLatestDeps=true` is set, every `library`/`testLibrary` dependency and
+> every `latestDepTestLibrary` range must have a matching entry in
+> `.github/config/latest-dep-versions.json`. If the entry is missing the build fails fast
+> rather than silently falling back to live Maven Central resolution. After adding a new
+> `library(...)`, `testLibrary(...)`, or ranged `latestDepTestLibrary(...)` declaration, run
+> the `resolveLatestDepVersions` command below to regenerate the JSON file.
+
 To update the pinned versions locally:
 
 ```

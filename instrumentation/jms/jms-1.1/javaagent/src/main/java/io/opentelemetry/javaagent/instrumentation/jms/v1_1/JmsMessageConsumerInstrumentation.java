@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
+import javax.annotation.Nullable;
 import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -60,7 +61,8 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void stopSpan(@Advice.Enter Timer timer, @Advice.Return Message message) {
+    public static void stopSpan(
+        @Advice.Enter Timer timer, @Advice.Return @Nullable Message message) {
       if (message == null) {
         // Do not create span when no message is received
         return;

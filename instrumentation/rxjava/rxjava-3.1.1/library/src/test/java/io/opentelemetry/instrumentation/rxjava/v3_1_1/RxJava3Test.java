@@ -24,7 +24,7 @@ class RxJava3Test extends AbstractRxJava3Test {
   }
 
   @BeforeAll
-  void setup() {
+  static void setup() {
     tracingAssembly.enable();
   }
 

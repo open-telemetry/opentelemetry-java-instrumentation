@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JaxrsAnnotationsSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
@@ -12,7 +13,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
@@ -27,7 +27,7 @@ import net.bytebuddy.asm.Advice;
  * <p>This default instrumentation uses the class name of the filter to create the span. More
  * specific instrumentations may override this value.
  */
-public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   @Override
   protected String abortAdviceName() {
     return getClass().getName() + "$ContainerRequestContextAdvice";
@@ -53,10 +53,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         Jaxrs3HandlerData handlerData = new Jaxrs3HandlerData(filterClass, method);
 
         HttpServerRoute.update(
-            parentContext,
-            HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.serverSpanName(),
-            handlerData);
+            parentContext, HttpServerRouteSource.CONTROLLER, serverSpanName(), handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
           return null;
@@ -88,7 +85,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       Method method = null;
       try {
         method = filterClass.getMethod("filter", ContainerRequestContext.class);
-      } catch (NoSuchMethodException e) {
+      } catch (NoSuchMethodException ignored) {
         // Unable to find the filter method.  This should not be reachable because the context
         // can only be aborted inside the filter method
       }

@@ -3,8 +3,8 @@ plugins {
 }
 
 muzzle {
-  // Cant assert fails because muzzle assumes all instrumentations will fail
-  // Instrumentations in jaxrs-2.0-common will pass
+  // Can't assert inverse because muzzle assumes all instrumentations will fail.
+  // Instrumentations in jaxrs-2.0-common will pass.
   pass {
     group.set("org.apache.cxf")
     module.set("cxf-rt-frontend-jaxrs")

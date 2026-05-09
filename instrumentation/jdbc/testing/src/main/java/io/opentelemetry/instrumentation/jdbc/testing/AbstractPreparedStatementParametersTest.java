@@ -63,7 +63,7 @@ public abstract class AbstractPreparedStatementParametersTest {
   private static final String DATABASE_NAME = "jdbcUnitTest";
   private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
 
-  private static final Map<String, String> jdbcUrls =
+  private static final Map<String, String> JDBC_URLS =
       ImmutableMap.of(
           "h2", "jdbc:h2:mem:" + DATABASE_NAME,
           "derby", "jdbc:derby:memory:" + DATABASE_NAME,
@@ -85,7 +85,7 @@ public abstract class AbstractPreparedStatementParametersTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new Driver().connect(jdbcUrls.get("h2"), null),
+            new Driver().connect(JDBC_URLS.get("h2"), null),
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
@@ -94,7 +94,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             null),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), connectionProps),
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=? OR 1=1",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=? OR 1=1",
@@ -103,7 +103,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             "SYSIBM.SYSDUMMY1"),
         Arguments.of(
             "hsqldb",
-            new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null),
+            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
             "SA",
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS WHERE USER_NAME=? OR 1=1",
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS WHERE USER_NAME=? OR 1=1",

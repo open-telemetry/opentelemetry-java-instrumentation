@@ -34,28 +34,6 @@ class ElasticsearchEndpointMapTest {
               "msearch_template",
               "render_search_template"));
 
-  private static List<String> getPathParts(String route) {
-    List<String> pathParts = new ArrayList<>();
-    String routeFragment = route;
-    int paramStartIndex = routeFragment.indexOf('{');
-    while (paramStartIndex >= 0) {
-      int paramEndIndex = routeFragment.indexOf('}');
-      if (paramEndIndex < 0 || paramEndIndex <= paramStartIndex + 1) {
-        throw new IllegalStateException("Invalid route syntax!");
-      }
-      pathParts.add(routeFragment.substring(paramStartIndex + 1, paramEndIndex));
-
-      int nextIdx = paramEndIndex + 1;
-      if (nextIdx >= routeFragment.length()) {
-        break;
-      }
-
-      routeFragment = routeFragment.substring(nextIdx);
-      paramStartIndex = routeFragment.indexOf('{');
-    }
-    return pathParts;
-  }
-
   @Test
   void testIsSearchEndpoint() {
     for (ElasticsearchEndpointDefinition esEndpointDefinition :
@@ -88,6 +66,28 @@ class ElasticsearchEndpointMapTest {
         assertThat(observedParams).isEqualTo(expectedMap);
       }
     }
+  }
+
+  private static List<String> getPathParts(String route) {
+    List<String> pathParts = new ArrayList<>();
+    String routeFragment = route;
+    int paramStartIndex = routeFragment.indexOf('{');
+    while (paramStartIndex >= 0) {
+      int paramEndIndex = routeFragment.indexOf('}');
+      if (paramEndIndex < 0 || paramEndIndex <= paramStartIndex + 1) {
+        throw new IllegalStateException("Invalid route syntax!");
+      }
+      pathParts.add(routeFragment.substring(paramStartIndex + 1, paramEndIndex));
+
+      int nextIdx = paramEndIndex + 1;
+      if (nextIdx >= routeFragment.length()) {
+        break;
+      }
+
+      routeFragment = routeFragment.substring(nextIdx);
+      paramStartIndex = routeFragment.indexOf('{');
+    }
+    return pathParts;
   }
 
   @Test

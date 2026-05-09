@@ -32,8 +32,8 @@ abstract class AbstractElasticsearchClientTest {
 
   protected static final long TIMEOUT = SECONDS.toMillis(10);
 
-  protected static final String EXPERIMENTAL_FLAG =
-      "otel.instrumentation.elasticsearch.experimental-span-attributes";
+  protected static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.elasticsearch.experimental-span-attributes");
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -88,14 +88,14 @@ abstract class AbstractElasticsearchClientTest {
   }
 
   protected static String experimental(String value) {
-    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+    if (!EXPERIMENTAL_ATTRIBUTES) {
       return null;
     }
     return value;
   }
 
   protected static Long experimental(long value) {
-    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+    if (!EXPERIMENTAL_ATTRIBUTES) {
       return null;
     }
     return value;

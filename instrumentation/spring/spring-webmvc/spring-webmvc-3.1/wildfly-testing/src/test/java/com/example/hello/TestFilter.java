@@ -17,8 +17,6 @@ import org.springframework.stereotype.Component;
 
 @Component("testFilter")
 public class TestFilter implements Filter {
-  public TestFilter() {}
-
   @Override
   public void init(FilterConfig filterConfig) {}
 

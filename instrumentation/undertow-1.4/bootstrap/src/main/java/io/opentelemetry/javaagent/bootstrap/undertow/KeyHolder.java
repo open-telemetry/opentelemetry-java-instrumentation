@@ -9,6 +9,7 @@ import java.util.IdentityHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 /**
  * Undertow's {@code io.undertow.server.HttpServerExchange} uses {@code
@@ -33,6 +34,7 @@ import java.util.function.Supplier;
 public final class KeyHolder {
   private static final ConcurrentMap<Class<?>, Object> contextKeys = new ConcurrentHashMap<>();
 
+  @Nullable
   public static Object get(Class<?> keyType) {
     return contextKeys.get(keyType);
   }

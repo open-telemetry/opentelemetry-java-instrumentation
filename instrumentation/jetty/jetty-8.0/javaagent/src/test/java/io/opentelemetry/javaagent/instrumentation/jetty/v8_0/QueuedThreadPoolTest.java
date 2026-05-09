@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 import static org.junit.jupiter.api.Assumptions.abort;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Method;
@@ -19,6 +20,8 @@ class QueuedThreadPoolTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void dispatchPropagates() throws Exception {
@@ -33,6 +36,7 @@ class QueuedThreadPoolTest {
       return;
     }
     pool.start();
+    cleanup.deferCleanup(pool::stop);
 
     testing.runWithSpan(
         "parent",
@@ -55,8 +59,6 @@ class QueuedThreadPoolTest {
                     span.hasName("asyncChild")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
-
-    pool.stop();
   }
 
   @Test
@@ -72,6 +74,7 @@ class QueuedThreadPoolTest {
       return;
     }
     pool.start();
+    cleanup.deferCleanup(pool::stop);
 
     JavaAsyncChild child = new JavaAsyncChild(true, true);
     testing.runWithSpan(
@@ -92,7 +95,5 @@ class QueuedThreadPoolTest {
                     span.hasName("asyncChild")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
-
-    pool.stop();
   }
 }

@@ -63,7 +63,8 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
     if (classLoader == BOOTSTRAP_LOADER) {
       classLoader = Utils.getBootstrapProxy();
     }
-    return matchCache.computeIfAbsent(classLoaderTransformer.apply(classLoader), this::doesMatch);
+    return matchCache.computeIfAbsent(
+        classLoader, cl -> doesMatch(classLoaderTransformer.apply(cl)));
   }
 
   private boolean doesMatch(ClassLoader classLoader) {

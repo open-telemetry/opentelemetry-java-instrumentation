@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - Use when: reviewing semconv dual-mode assertions or `testStableSemconv` / `testBothSemconv` tasks
-- Review focus: mode-specific assertions, `maybeStable()` usage boundaries, class-level deprecation suppression
+- Review focus: mode-specific assertions, `maybeStable()` usage boundaries
 
 ## Background: The Three Modes
 
@@ -109,7 +109,3 @@ if (emitOldCodeSemconv()) {
   assertThat(attributes).containsEntry(CODE_NAMESPACE, "MyClass");
 }
 ```
-
-## Key Rules
-
-- Add `@SuppressWarnings("deprecation")` at class level when tests use old Semconv constants.
