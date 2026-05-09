@@ -184,53 +184,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh extension install github/gh-aw --pin v0.71.5
 
-      - name: Determine workflows to compile
-        id: workflows
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          # Always compile all gh-aw workflows. The compiler is pinned via
-          # `gh extension install --pin` and `--no-check-update`, and action
-          # SHAs are pinned via .github/aw/actions-lock.json, so the output
-          # is deterministic for a given pinned version. Compiling all
-          # workflows takes only a couple of seconds.
-          mapfile -t workflow_ids < <(
-            find .github/workflows -maxdepth 1 -name "*.md" \
-              -exec basename {} .md \; \
-              | sort
-          )
-
-          if [[ ${#workflow_ids[@]} -eq 0 ]]; then
-            echo "No gh-aw workflow sources found."
-            echo "workflows=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "Workflows to compile:"
-          printf '%s\n' "${workflow_ids[@]}"
-
-          {
-            echo "workflows<<EOF"
-            printf '%s ' "${workflow_ids[@]}"
-            echo
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+      # Always compile all gh-aw workflows. The compiler is pinned via
+      # `gh extension install --pin` and `--no-check-update`, and action
+      # SHAs are pinned via .github/aw/actions-lock.json, so the output is
+      # deterministic for a given pinned version. With no arguments, both
+      # `gh aw validate` and `gh aw compile` operate on every Markdown file
+      # in .github/workflows. Compiling all workflows takes only a couple
+      # of seconds.
 
       - name: Validate gh-aw workflows
-        if: steps.workflows.outputs.workflows != ''
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh aw validate ${{ steps.workflows.outputs.workflows }} --no-check-update
+        run: gh aw validate --no-check-update
 
       - name: Compile gh-aw workflows
-        if: steps.workflows.outputs.workflows != ''
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh aw compile ${{ steps.workflows.outputs.workflows }} --no-check-update
+        run: gh aw compile --no-check-update
 
       - name: Check generated files are committed
-        if: steps.workflows.outputs.workflows != ''
         run: |
           git diff --exit-code -- \
             .github/workflows \
