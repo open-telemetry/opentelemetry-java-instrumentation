@@ -198,7 +198,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                      .hasException(emitExceptionAsSpanEvents() ? thrown : null),
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null),
                 span ->
                     span.hasName("GET")
                         .hasKind(CLIENT)

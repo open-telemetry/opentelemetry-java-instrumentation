@@ -60,8 +60,7 @@ public abstract class AbstractControllerSpringWebFluxServerTest
                               EXCEPTION_TYPE,
                               "org.springframework.web.reactive.resource.NoResourceFoundException"),
                           equalTo(
-                              EXCEPTION_MESSAGE,
-                              "404 NOT_FOUND \"No static resource notFound.\""),
+                              EXCEPTION_MESSAGE, "404 NOT_FOUND \"No static resource notFound.\""),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
         } else {
           span.hasEventsSatisfyingExactly(

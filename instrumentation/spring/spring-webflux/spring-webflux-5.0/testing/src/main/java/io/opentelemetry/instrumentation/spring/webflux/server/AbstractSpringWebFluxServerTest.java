@@ -80,18 +80,17 @@ public abstract class AbstractSpringWebFluxServerTest
   }
 
   protected static void assertHandlerExceptionLog(
-      StringAssertConsumer exceptionTypeAssertion,
-      StringAssertConsumer exceptionMessageAssertion) {
+      StringAssertConsumer exceptionTypeAssertion, StringAssertConsumer exceptionMessageAssertion) {
     Awaitility.await()
         .untilAsserted(
             () -> {
               List<LogRecordData> logs =
                   testing.logRecords().stream()
                       .filter(log -> "exception".equals(log.getEventName()))
-                    .filter(
-                      log ->
-                        INSTRUMENTATION_NAME.equals(
-                          log.getInstrumentationScopeInfo().getName()))
+                      .filter(
+                          log ->
+                              INSTRUMENTATION_NAME.equals(
+                                  log.getInstrumentationScopeInfo().getName()))
                       .collect(toList());
 
               assertThat(logs).hasSize(1);

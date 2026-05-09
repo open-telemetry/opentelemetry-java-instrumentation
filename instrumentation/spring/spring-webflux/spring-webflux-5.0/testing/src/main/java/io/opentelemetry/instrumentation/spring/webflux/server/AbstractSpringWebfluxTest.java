@@ -70,7 +70,7 @@ import server.TestController;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSpringWebfluxTest {
 
-    private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.0";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -411,21 +411,22 @@ public abstract class AbstractSpringWebfluxTest {
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/**")),
                 span -> {
-                    span.hasName("ResourceWebHandler.handle")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error());
-                    if (emitExceptionAsSpanEvents()) {
-                      span.hasEventsSatisfyingExactly(AbstractSpringWebfluxTest::resource404Exception);
-                    }
-                    span.hasAttributesSatisfyingExactly(
-                        codeFunctionAssertions(
-                            "org.springframework.web.reactive.resource.ResourceWebHandler",
-                            "handle"));
-                  }));
-        if (emitExceptionAsLogs()) {
-            assertResource404ExceptionLog();
-        }
+                  span.hasName("ResourceWebHandler.handle")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(0))
+                      .hasStatus(StatusData.error());
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasEventsSatisfyingExactly(
+                        AbstractSpringWebfluxTest::resource404Exception);
+                  }
+                  span.hasAttributesSatisfyingExactly(
+                      codeFunctionAssertions(
+                          "org.springframework.web.reactive.resource.ResourceWebHandler",
+                          "handle"));
+                }));
+    if (emitExceptionAsLogs()) {
+      assertResource404ExceptionLog();
+    }
   }
 
   private static void resource404Exception(EventDataAssert event) {
@@ -454,23 +455,22 @@ public abstract class AbstractSpringWebfluxTest {
     }
   }
 
-    private static void assertResource404ExceptionLog() {
-        if (testLatestDeps()) {
-            assertHandlerExceptionLog(
-                    type ->
-                            type.isEqualTo(
-                                    "org.springframework.web.reactive.resource.NoResourceFoundException"),
-                    message -> message.isInstanceOf(String.class));
-        } else {
-            assertHandlerExceptionLog(
-                    type ->
-                            type.isIn(
-                                    "org.springframework.web.server.ResponseStatusException",
-                                    // Changed in spring 7+
-                                    "org.springframework.web.reactive.resource.NoResourceFoundException"),
-                    message -> message.contains("404"));
+  private static void assertResource404ExceptionLog() {
+    if (testLatestDeps()) {
+      assertHandlerExceptionLog(
+          type ->
+              type.isEqualTo("org.springframework.web.reactive.resource.NoResourceFoundException"),
+          message -> message.isInstanceOf(String.class));
+    } else {
+      assertHandlerExceptionLog(
+          type ->
+              type.isIn(
+                  "org.springframework.web.server.ResponseStatusException",
+                  // Changed in spring 7+
+                  "org.springframework.web.reactive.resource.NoResourceFoundException"),
+          message -> message.contains("404"));
     }
-    }
+  }
 
   @Test
   void basicPostTest() {
