@@ -79,7 +79,7 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-data-jdbc:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   implementation(project(":sdk-autoconfigure-support"))
   implementation(project(":declarative-config-bridge"))
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")

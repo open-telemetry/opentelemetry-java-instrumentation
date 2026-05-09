@@ -15,7 +15,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.ByteArrayInputStream;
 import java.util.Set;

@@ -33,7 +33,7 @@ dependencies {
   testInstrumentation("io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-servlet-3.0:$opentelemetryJavaagentAlphaVersion")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common") {
-    exclude(group = "org.eclipse.jetty", module = "jetty-server")
+    exclude("org.eclipse.jetty", "jetty-server")
   }
 
   testImplementation("com.squareup.okhttp3:okhttp:5.3.2")

@@ -5,14 +5,16 @@
 
 package io.opentelemetry.instrumentation.logging.internal;
 
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ConsoleExporterModel;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.SimpleSpanProcessorModel;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.SpanExporterModel;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.SpanProcessorModel;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.TracerProviderModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.ConsoleExporterModel;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.SimpleSpanProcessorModel;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.SpanExporterModel;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.SpanProcessorModel;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.TracerProviderModel;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Adds span logging exporter for debug mode
@@ -47,12 +49,17 @@ public abstract class AbstractSpanLoggingCustomizerProvider
       tracerProvider = new TracerProviderModel();
       model.withTracerProvider(tracerProvider);
     }
+    List<SpanProcessorModel> processors = tracerProvider.getProcessors();
+    if (processors == null) {
+      processors = new ArrayList<>();
+      tracerProvider.withProcessors(processors);
+    }
     SpanProcessorModel processor =
         new SpanProcessorModel()
             .withSimple(
                 new SimpleSpanProcessorModel()
                     .withExporter(new SpanExporterModel().withConsole(new ConsoleExporterModel())));
-    tracerProvider.getProcessors().add(processor);
+    processors.add(processor);
   }
 
   private static boolean loggingExporterIsAlreadyConfigured(OpenTelemetryConfigurationModel model) {
@@ -60,7 +67,11 @@ public abstract class AbstractSpanLoggingCustomizerProvider
     if (tracerProvider == null) {
       return false;
     }
-    for (SpanProcessorModel processor : tracerProvider.getProcessors()) {
+    List<SpanProcessorModel> processors = tracerProvider.getProcessors();
+    if (processors == null) {
+      return false;
+    }
+    for (SpanProcessorModel processor : processors) {
       SimpleSpanProcessorModel simple = processor.getSimple();
       if (simple == null) {
         continue;
