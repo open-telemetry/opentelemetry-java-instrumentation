@@ -296,14 +296,14 @@ public abstract class AbstractR2dbcStatementTest {
 
   private static class Parameter {
 
-    final String system;
-    final String queryText;
-    final String expectedQueryText;
-    final String spanName;
-    final String table;
-    final String operation;
+    private final String system;
+    private final String queryText;
+    private final String expectedQueryText;
+    private final String spanName;
+    private final String table;
+    private final String operation;
 
-    Parameter(
+    private Parameter(
         String system,
         String queryText,
         String expectedQueryText,
@@ -318,7 +318,7 @@ public abstract class AbstractR2dbcStatementTest {
       this.operation = operation;
     }
 
-    String getQuerySummary() {
+    private String getQuerySummary() {
       if (!emitStableDatabaseSemconv()) {
         return null;
       }
@@ -328,19 +328,19 @@ public abstract class AbstractR2dbcStatementTest {
   }
 
   private static class DbSystemProps {
-    final String system;
-    final String image;
-    final int port;
-    final Map<String, String> envVariables = new HashMap<>();
+    private final String system;
+    private final String image;
+    private final int port;
+    private final Map<String, String> envVariables = new HashMap<>();
 
-    DbSystemProps(String system, String image, int port) {
+    private DbSystemProps(String system, String image, int port) {
       this.system = system;
       this.image = image;
       this.port = port;
     }
 
     @CanIgnoreReturnValue
-    DbSystemProps envVariables(String... keyValues) {
+    private DbSystemProps envVariables(String... keyValues) {
       for (int i = 0; i < keyValues.length / 2; i++) {
         envVariables.put(keyValues[2 * i], keyValues[2 * i + 1]);
       }

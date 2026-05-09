@@ -20,6 +20,7 @@ public class HelloApplication extends WebApplication {
     super.init();
 
     mountPage("/exception", ExceptionPage.class);
+    mountResource("/resource", new HelloResource());
   }
 
   @Override

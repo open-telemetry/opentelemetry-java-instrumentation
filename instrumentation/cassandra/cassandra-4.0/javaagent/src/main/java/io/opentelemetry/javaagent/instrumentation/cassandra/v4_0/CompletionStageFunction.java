@@ -7,11 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 public class CompletionStageFunction implements Function<Object, Object> {
 
   @Override
-  public Object apply(Object session) {
+  @Nullable
+  public Object apply(@Nullable Object session) {
     if (session == null) {
       return null;
     }

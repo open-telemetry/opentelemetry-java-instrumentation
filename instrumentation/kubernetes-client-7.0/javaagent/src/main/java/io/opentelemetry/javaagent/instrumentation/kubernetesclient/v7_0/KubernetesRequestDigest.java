@@ -14,6 +14,12 @@ class KubernetesRequestDigest {
   private static final Pattern RESOURCE_URL_PATH_PATTERN =
       Pattern.compile("^/(api|apis)(/\\S+)?/v\\d\\w*/\\S+");
 
+  private final String urlPath;
+  private final boolean isNonResourceRequest;
+
+  @Nullable private final KubernetesResource resourceMeta;
+  @Nullable private final KubernetesVerb verb;
+
   KubernetesRequestDigest(
       String urlPath,
       boolean isNonResourceRequest,
@@ -64,12 +70,6 @@ class KubernetesRequestDigest {
   private static boolean hasNamePathParameter(KubernetesResource resource) {
     return !isNullOrEmpty(resource.getName());
   }
-
-  private final String urlPath;
-  private final boolean isNonResourceRequest;
-
-  @Nullable private final KubernetesResource resourceMeta;
-  @Nullable private final KubernetesVerb verb;
 
   public String getUrlPath() {
     return urlPath;

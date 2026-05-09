@@ -19,12 +19,12 @@ public final class Timer implements ImplicitContextKeyed {
 
   private static final ContextKey<Timer> KEY = ContextKey.named("opentelemetry-timer-key");
 
+  private final Instant startTime;
+  private final long startNanoTime;
+
   public static Timer start() {
     return new Timer(Instant.now(), System.nanoTime());
   }
-
-  private final Instant startTime;
-  private final long startNanoTime;
 
   private Timer(Instant startTime, long startNanoTime) {
     this.startTime = startTime;

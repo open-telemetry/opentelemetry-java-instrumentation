@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.KafkaStreamsSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.StateHolder.HOLDER;
+import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.StateHolder.holder;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -44,13 +45,13 @@ class PartitionGroupInstrumentation implements TypeInstrumentation {
   public static class NextRecordAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Return StampedRecord record) {
+    public static void onExit(@Advice.Return @Nullable StampedRecord record) {
       if (record == null) {
         return;
       }
 
-      StateHolder holder = HOLDER.get();
-      if (holder == null) {
+      StateHolder stateHolder = holder().get();
+      if (stateHolder == null) {
         // somehow nextRecord() was called outside of process()
         return;
       }
@@ -66,7 +67,7 @@ class PartitionGroupInstrumentation implements TypeInstrumentation {
         return;
       }
       Context context = instrumenter().start(parentContext, request);
-      holder.set(request, context, context.makeCurrent());
+      stateHolder.set(request, context, context.makeCurrent());
     }
   }
 }

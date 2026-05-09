@@ -140,7 +140,7 @@ public class IntegrationTestBase {
     } catch (ClassNotFoundException
         | InvocationTargetException
         | NoSuchMethodException
-        | IllegalAccessException e) {
+        | IllegalAccessException ignored) {
 
       // RocketMQ 5.x
       try {

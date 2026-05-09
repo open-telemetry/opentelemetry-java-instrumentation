@@ -170,7 +170,7 @@ abstract class AbstractReactorNettyHttpClientTest
                     })
                 .block());
 
-    latch.await(10, SECONDS);
+    assertThat(latch.await(10, SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(
         trace -> {

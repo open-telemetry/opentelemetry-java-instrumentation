@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 public final class HttpSchemeUtil {
 
   @Nullable
-  private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
+  private static final Class<? extends ChannelHandler> SSL_HANDLER_CLASS = getSslHandlerClass();
 
   @Nullable
   private static Class<? extends ChannelHandler> getSslHandlerClass() {
@@ -33,8 +33,8 @@ public final class HttpSchemeUtil {
   }
 
   private static boolean isHttps(NettyCommonRequest requestAndChannel) {
-    return sslHandlerClass != null
-        && requestAndChannel.getChannel().pipeline().get(sslHandlerClass) != null;
+    return SSL_HANDLER_CLASS != null
+        && requestAndChannel.getChannel().pipeline().get(SSL_HANDLER_CLASS) != null;
   }
 
   private HttpSchemeUtil() {}

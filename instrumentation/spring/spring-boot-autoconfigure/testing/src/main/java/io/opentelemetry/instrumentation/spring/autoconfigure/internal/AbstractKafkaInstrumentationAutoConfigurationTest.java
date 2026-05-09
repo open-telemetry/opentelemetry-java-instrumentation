@@ -19,7 +19,7 @@ public abstract class AbstractKafkaInstrumentationAutoConfigurationTest {
 
   protected abstract void factoryTestAssertion(AssertableApplicationContext context);
 
-  protected final ApplicationContextRunner contextRunner =
+  private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withConfiguration(autoConfigurations())
           .withBean("openTelemetry", OpenTelemetry.class, OpenTelemetry::noop);

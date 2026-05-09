@@ -19,6 +19,14 @@ class KubernetesResource {
       Pattern.compile(
           "^/apis/(?<group>\\S+?)/(?<version>\\S+?)(/namespaces/(?<namespace>[\\w-]+))?/(?<resource>[\\w-]+)(/(?<name>[\\w-]+))?(/(?<subresource>[\\w-]+))?");
 
+  private final String apiGroup;
+  private final String apiVersion;
+  private final String resource;
+  @Nullable private final String subResource;
+
+  @Nullable private final String namespace;
+  @Nullable private final String name;
+
   public static KubernetesResource parseCoreResource(String urlPath)
       throws ParseKubernetesResourceException {
     Matcher matcher = CORE_RESOURCE_URL_PATH_PATTERN.matcher(urlPath);
@@ -63,14 +71,6 @@ class KubernetesResource {
     this.namespace = namespace;
     this.name = name;
   }
-
-  private final String apiGroup;
-  private final String apiVersion;
-  private final String resource;
-  @Nullable private final String subResource;
-
-  @Nullable private final String namespace;
-  @Nullable private final String name;
 
   public String getApiGroup() {
     return apiGroup;

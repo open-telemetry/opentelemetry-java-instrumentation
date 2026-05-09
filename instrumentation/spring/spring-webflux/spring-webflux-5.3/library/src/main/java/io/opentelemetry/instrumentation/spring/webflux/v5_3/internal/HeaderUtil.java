@@ -43,7 +43,7 @@ public final class HeaderUtil {
       headerNames =
           MethodHandles.lookup()
               .findVirtual(HttpHeaders.class, "headerNames", MethodType.methodType(Set.class));
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       // ignore - will fall back to casting to Map
     }
     HEADER_NAMES = headerNames;
@@ -59,7 +59,7 @@ public final class HeaderUtil {
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
     try {
       return MethodHandles.lookup().findVirtual(HttpHeaders.class, "get", methodType);
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -72,7 +72,7 @@ public final class HeaderUtil {
         if (result != null) {
           return result;
         }
-      } catch (Throwable t) {
+      } catch (Throwable ignored) {
         // ignore
       }
     }
@@ -88,7 +88,7 @@ public final class HeaderUtil {
         if (result != null) {
           return result;
         }
-      } catch (Throwable t) {
+      } catch (Throwable ignored) {
         // ignore
       }
     } else {

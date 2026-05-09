@@ -19,8 +19,7 @@ import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;
 
 final class InstrumentedChatCompletionServiceAsync
-    extends DelegatingInvocationHandler<
-        ChatCompletionServiceAsync, InstrumentedChatCompletionServiceAsync> {
+    extends DelegatingInvocationHandler<ChatCompletionServiceAsync> {
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
   private final Logger eventLogger;

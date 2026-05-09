@@ -1632,6 +1632,8 @@ public abstract class AbstractGrpcTest {
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
 
     ManagedChannel channel = createChannel(server);
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
 
     Metadata extraMetadata = new Metadata();
     extraMetadata.put(
@@ -1736,8 +1738,7 @@ public abstract class AbstractGrpcTest {
                                   point ->
                                       point.hasAttributesSatisfyingExactly(
                                           equalTo(SERVER_ADDRESS, "localhost"),
-                                          satisfies(
-                                              SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                          equalTo(SERVER_PORT, server.getPort()),
                                           equalTo(RPC_METHOD, "SayHello"),
                                           equalTo(RPC_SERVICE, "example.Greeter"),
                                           equalTo(RPC_SYSTEM, "grpc"),
@@ -1758,8 +1759,7 @@ public abstract class AbstractGrpcTest {
                                     point ->
                                         point.hasAttributesSatisfyingExactly(
                                             equalTo(SERVER_ADDRESS, "localhost"),
-                                            satisfies(
-                                                SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                            equalTo(SERVER_PORT, server.getPort()),
                                             equalTo(RPC_METHOD, "SayHello"),
                                             equalTo(RPC_SERVICE, "example.Greeter"),
                                             equalTo(RPC_SYSTEM, "grpc"),
@@ -1779,8 +1779,7 @@ public abstract class AbstractGrpcTest {
                                     point ->
                                         point.hasAttributesSatisfyingExactly(
                                             equalTo(SERVER_ADDRESS, "localhost"),
-                                            satisfies(
-                                                SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                            equalTo(SERVER_PORT, server.getPort()),
                                             equalTo(RPC_METHOD, "SayHello"),
                                             equalTo(RPC_SERVICE, "example.Greeter"),
                                             equalTo(RPC_SYSTEM, "grpc"),
@@ -1869,8 +1868,7 @@ public abstract class AbstractGrpcTest {
                                       point.hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "grpc"),
                                           equalTo(SERVER_ADDRESS, "localhost"),
-                                          satisfies(
-                                              SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                          equalTo(SERVER_PORT, server.getPort()),
                                           equalTo(RPC_METHOD, "example.Greeter/SayHello"),
                                           equalTo(RPC_RESPONSE_STATUS_CODE, statusCode.name())))));
       testing()

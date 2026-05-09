@@ -54,7 +54,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
       return lookup.findVirtual(type, "contextWrite", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     try {

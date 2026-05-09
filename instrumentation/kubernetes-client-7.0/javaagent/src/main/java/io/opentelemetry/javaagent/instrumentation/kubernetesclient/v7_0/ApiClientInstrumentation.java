@@ -80,7 +80,8 @@ class ApiClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Return ApiResponse<?> response, @Advice.Thrown Throwable throwable) {
+        @Advice.Return @Nullable ApiResponse<?> response,
+        @Advice.Thrown @Nullable Throwable throwable) {
       CurrentState currentState = CurrentState.remove();
       if (currentState == null) {
         return;
@@ -119,7 +120,11 @@ class ApiClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable Object[] enterResult) {
+      if (enterResult == null) {
+        return;
+      }
       CurrentState current = (CurrentState) enterResult[0];
       if (current != null) {
         current.getScope().close();

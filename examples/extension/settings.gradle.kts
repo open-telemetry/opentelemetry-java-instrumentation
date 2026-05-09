@@ -1,0 +1,11 @@
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    maven {
+      name = "sonatype"
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+    }
+  }
+}
+
+rootProject.name = "opentelemetry-java-instrumentation-extension-demo"

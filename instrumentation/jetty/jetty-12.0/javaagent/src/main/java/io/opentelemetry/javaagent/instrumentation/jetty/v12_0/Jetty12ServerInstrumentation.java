@@ -61,7 +61,7 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
         Context context = helper().start(parentContext, request, response);
         Scope scope = context.makeCurrent();
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(context, response, new Jetty12ResponseMutator());
+            .customize(context, response, Jetty12ResponseMutator.INSTANCE);
         return new AdviceScope(context, scope);
       }
 

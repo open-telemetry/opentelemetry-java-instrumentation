@@ -30,6 +30,11 @@
   non-checked wait path exists (for example, when a timeout is required via
   `get(timeout, unit)`), leave the test's `throws` clause as-is — including `throws Exception`
   — rather than inventing a new helper just to narrow it.
+- Do **not** replace a direct `CountDownLatch.await(timeout, unit)` assertion with Awaitility
+  polling of `getCount()` solely to avoid `InterruptedException` and narrow the test method's
+  `throws` clause. Prefer the conventional
+  `assertThat(latch.await(timeout, unit)).isTrue()` form for latch-based callback waits, even
+  when that means leaving `throws Exception` on the test method.
 - Do **not** wrap a checked exception inside a lambda body (for example, catching
   `IOException` and rethrowing `UncheckedIOException`) solely to narrow a test method's
   `throws` clause. That noisy try/catch inside the lambda is worse than leaving
@@ -83,6 +88,11 @@
   `hasAttributesSatisfyingExactly(...)` in the same assertion chain, because the exact
   variant already validates the total attribute count. Remove the `hasTotalAttributeCount`
   call.
+- These rules apply to **span** attribute assertions only. Metric point assertions are
+  different: metric point assertions do not have a `hasTotalAttributeCount(...)` method, so
+  the span guidance about preferring `hasTotalAttributeCount(0)` for zero-attribute checks
+  does not apply. For metric points, used `point.hasAttributes(Attributes.empty())` — it
+  reads more clearly than the no-arg `hasAttributesSatisfyingExactly()` form.
 - For non-semconv attribute keys in `equalTo(...)`, use inline `AttributeKey` factory
   methods — `longKey("name")`, `stringKey("name")`, etc. — directly in the assertion.
   Do **not** extract them into class-level `private static final AttributeKey<T>` constants.
@@ -91,6 +101,23 @@
   is already an `int` expression or variable. The assertion API already has an
   `equalTo(AttributeKey<Long>, int)` overload, so `equalTo(longKey("iteration"), iteration)` is
   preferred over `equalTo(longKey("iteration"), (long) iteration)`.
+
+## Metric Assertions
+
+- Prefer `InstrumentationExtension.waitAndAssertMetrics(...)` for metric assertions. It waits
+  until the supplied assertion passes, so fixed sleeps such as `Thread.sleep(100)`
+  usually unnecessary and make tests slower and more fragile.
+- `DbConnectionPoolMetricsAssertions.assertConnectionPoolEmitsMetrics()` already uses
+  `waitAndAssertMetrics(...)` for each expected pool metric. Keep the pool state being asserted
+  valid until this method returns; for example, if the assertion expects a `used` connection point,
+  keep the borrowed connection open until after the assertion.
+- After removing a metric-producing source or unregistering an observable callback, call
+  `testing().clearData()` and then use Awaitility around the simplest assertion that captures the
+  intent. For example, when the test expects no metrics from an instrumentation scope, prefer
+  `await().untilAsserted(() -> assertThat(testing().metrics()).filteredOn(...).isEmpty())` over
+  expanding the check into one `waitAndAssertMetrics(..., AbstractIterableAssert::isEmpty)` call per
+  possible metric name. Do not add an exporter-interval sleep before or after `clearData()` solely
+  to wait for metrics; the test runners force-flush metrics when reading them.
 
 ## Attribute Assertion `satisfies()` Lambda Parameters
 

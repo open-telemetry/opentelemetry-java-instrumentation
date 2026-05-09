@@ -50,7 +50,8 @@ class LettuceSyncClientTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
+  private static final DockerImageName CONTAINER_IMAGE =
+      DockerImageName.parse("redis:6.2.3-alpine");
 
   private static final int DB_INDEX = 0;
 
@@ -59,7 +60,7 @@ class LettuceSyncClientTest {
       new ClientOptions.Builder().autoReconnect(false).build();
 
   private static final GenericContainer<?> redisServer =
-      new GenericContainer<>(containerImage)
+      new GenericContainer<>(CONTAINER_IMAGE)
           .withExposedPorts(6379)
           .withLogConsumer(new Slf4jLogConsumer(logger))
           .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
@@ -70,16 +71,16 @@ class LettuceSyncClientTest {
   private static String dbUriNonExistent;
   private static String embeddedDbUri;
 
-  private static final ImmutableMap<String, String> testHashMap =
+  private static final ImmutableMap<String, String> TEST_HASH_MAP =
       ImmutableMap.of(
           "firstname", "John",
           "lastname", "Doe",
           "age", "53");
 
-  static RedisClient redisClient;
+  private static RedisClient redisClient;
 
   private static StatefulRedisConnection<String, String> connection;
-  static RedisCommands<String, String> syncCommands;
+  private static RedisCommands<String, String> syncCommands;
 
   @BeforeAll
   static void setUp() {
@@ -101,7 +102,7 @@ class LettuceSyncClientTest {
     syncCommands = connection.sync();
 
     syncCommands.set("TESTKEY", "TESTVAL");
-    syncCommands.hmset("TESTHM", testHashMap);
+    syncCommands.hmset("TESTHM", TEST_HASH_MAP);
 
     // 2 sets + 1 connect trace
     testing.waitForTraces(3);
@@ -239,7 +240,7 @@ class LettuceSyncClientTest {
 
   @Test
   void testHashSetCommand() {
-    String res = syncCommands.hmset("user", testHashMap);
+    String res = syncCommands.hmset("user", TEST_HASH_MAP);
     assertThat(res).isEqualTo("OK");
 
     testing.waitAndAssertTraces(
@@ -256,7 +257,7 @@ class LettuceSyncClientTest {
   @Test
   void testHashGetallCommand() {
     Map<String, String> res = syncCommands.hgetall("TESTHM");
-    assertThat(res).isEqualTo(testHashMap);
+    assertThat(res).isEqualTo(TEST_HASH_MAP);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -272,7 +273,7 @@ class LettuceSyncClientTest {
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
+    GenericContainer<?> server = new GenericContainer<>(CONTAINER_IMAGE).withExposedPorts(6379);
     server.start();
     cleanup.deferCleanup(server::stop);
 
@@ -304,7 +305,7 @@ class LettuceSyncClientTest {
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
+    GenericContainer<?> server = new GenericContainer<>(CONTAINER_IMAGE).withExposedPorts(6379);
     server.start();
     cleanup.deferCleanup(server::stop);
 

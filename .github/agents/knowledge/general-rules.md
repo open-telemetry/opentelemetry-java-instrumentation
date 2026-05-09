@@ -21,7 +21,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Naming | Module/package naming | New or renamed modules/packages | `module-naming.md` |
 | Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation` | `javaagent-module-patterns.md` |
-| Javaagent | Singletons patterns | `*Singletons` holder classes, singleton accessors, callers of singleton accessors/fields | `javaagent-singletons-patterns.md` |
+| Javaagent | Singletons patterns | `*Singletons`, `*SpanNaming`, and similar holder classes; singleton accessors; callers of singleton accessors/fields | `javaagent-singletons-patterns.md` |
 | Javaagent | Incorrect `classLoaderMatcher()` | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range) | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | — |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-stability.md` |
@@ -34,8 +34,9 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Config | metadata.yaml format and declarative_name conversion — Mandatory for every instrumentation module | Any instrumentation module in scope (javaagent, library, or testing) | `metadata-yaml-format.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
-| Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
+| Style | Prefer instance creation over singletons for stateless interface impls (except on hot paths or Kotlin `object` declarations) | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, enum/static singletons | — |
 | Style | Prefer `value == null` / `value != null` over `null == value` / `null != value` | Null comparisons | — |
+| Style | Do not rewrite `value.equals(CONSTANT)` to `CONSTANT.equals(value)` solely for defensive null-safety; first verify that `value` can be null and that treating null as non-equal is the intended behavior | `.equals(...)` comparisons | — |
 | Style | No unnecessary explicit type witnesses on generic method calls (`Collections.<String>emptyList()`) | Java generic method calls with explicit type parameters | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
 | General | No redundant `ByteBuffer.duplicate()` on `Value.getValue()` | `Value.getValue()` with `BYTES` type, `ByteBuffer` handling | — |
@@ -105,7 +106,8 @@ Reason about visibility from "what does the advice method directly reference?".
 ## [Style] `@SuppressWarnings` Usage
 
 - Place `@SuppressWarnings` on the single member that needs it, or on the class when two
-  or more members in the class need the same suppression.
+  or more members in the class need the same suppression. Do not move an existing
+  suppression from a member to the class unless multiple members need it.
 - **Do not add `@SuppressWarnings("deprecation")` unless the build fails without it.**
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
@@ -123,6 +125,15 @@ Reason about visibility from "what does the advice method directly reference?".
 ## [Naming] Getter Naming
 
 Public API getters should use `get*` (or `is*` for booleans).
+
+## [Style] Equals Comparisons
+
+Prefer the natural receiver form, such as `value.equals(CONSTANT)`, when `value` is expected to be
+non-null. Do not flip operands to `CONSTANT.equals(value)` as a blanket null-safety cleanup.
+
+If `value` can actually be null, first decide whether null should be tolerated or should fail fast.
+Use an explicit null check or `Objects.equals(...)` when null is part of the valid contract; otherwise
+keep the dereference so an unexpected null is visible.
 
 ## [Style] Catch Exception Variable Naming
 
@@ -151,9 +162,8 @@ recognizes `expected` and `ok`.
 ## [Style] Prefer Instance Creation Over Singletons
 
 Stateless implementations of telemetry interfaces — `TextMapGetter`, `TextMapSetter`,
-`*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`,
-`HttpServerResponseMutator` — should use instance creation (`new MyGetter()`) instead of
-singleton patterns.
+`*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor` — should use instance creation
+(`new MyGetter()`) instead of singleton patterns.
 
 Replace every singleton reference (`MyGetter.INSTANCE`, `MyGetter.getInstance()`) with
 `new MyGetter()`. Do not restructure surrounding code — if the original used a local

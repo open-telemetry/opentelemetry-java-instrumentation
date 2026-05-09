@@ -1,8 +1,7 @@
 display_name: AWS Lambda Events
 description: >
-  This version of the library instrumentation is deprecated, please use `aws-lambda-events-3.11`
-  instead. This instrumentation enables FaaS spans and messaging spans for AWS Lambda functions
-  handling event types.
+  This instrumentation enables FaaS spans and messaging spans for AWS Lambda functions handling
+  event types.
 semantic_conventions:
   - FAAS_SERVER_SPANS
   - MESSAGING_SPANS

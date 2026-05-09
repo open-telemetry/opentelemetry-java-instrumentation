@@ -15,9 +15,7 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.common.header.Header;
 
-enum KafkaConsumerRecordGetter implements TextMapGetter<KafkaProcessRequest> {
-  INSTANCE;
-
+class KafkaConsumerRecordGetter implements TextMapGetter<KafkaProcessRequest> {
   @Override
   public Iterable<String> keys(KafkaProcessRequest carrier) {
     return StreamSupport.stream(carrier.getRecord().headers().spliterator(), false)

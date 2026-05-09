@@ -39,14 +39,12 @@ dependencies {
     }
   }
 
-  compileOnly(project(":javaagent-bootstrap"))
-
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")

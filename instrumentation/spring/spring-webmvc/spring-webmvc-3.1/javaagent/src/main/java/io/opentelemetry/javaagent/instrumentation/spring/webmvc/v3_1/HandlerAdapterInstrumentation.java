@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcSingletons.handlerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -78,8 +79,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
         }
 
         // Name the parent span based on the matching pattern
-        HttpServerRoute.update(
-            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.serverSpanName(), request);
+        HttpServerRoute.update(parentContext, CONTROLLER, serverSpanName(), request);
 
         if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
           return null;

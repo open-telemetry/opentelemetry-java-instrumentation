@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -67,6 +66,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   @BeforeAll
   void setUp() throws UnknownHostException {
     redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
     ip = InetAddress.getByName(host).getHostAddress();
@@ -77,9 +77,11 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     dbUriNonExistent = "redis://" + host + ":" + incorrectPort + "/" + DB_INDEX;
 
     redisClient = createClient(embeddedDbUri);
+    cleanup.deferAfterAll(redisClient::shutdown);
     redisClient.setOptions(LettuceTestUtil.CLIENT_OPTIONS);
 
     connection = redisClient.connect();
+    cleanup.deferAfterAll(connection);
     syncCommands = connection.sync();
 
     syncCommands.set("TESTKEY", "TESTVAL");
@@ -88,13 +90,6 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     // 2 sets
     testing().waitForTraces(2);
     testing().clearData();
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    connection.close();
-    redisClient.shutdown();
-    redisServer.stop();
   }
 
   @Test

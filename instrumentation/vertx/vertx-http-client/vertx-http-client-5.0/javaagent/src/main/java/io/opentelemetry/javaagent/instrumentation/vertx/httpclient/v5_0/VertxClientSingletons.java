@@ -24,7 +24,7 @@ public class VertxClientSingletons {
       VertxClientInstrumenterFactory.create(
           "io.opentelemetry.vertx-http-client-5.0", new Vertx5HttpAttributesGetter());
 
-  private static final VirtualField<HttpClientRequest, HostAndPort> authorityField =
+  private static final VirtualField<HttpClientRequest, HostAndPort> AUTHORITY_FIELD =
       VirtualField.find(HttpClientRequest.class, HostAndPort.class);
 
   public static final VirtualField<HttpClientRequest, Contexts> CONTEXTS =
@@ -35,12 +35,12 @@ public class VertxClientSingletons {
   }
 
   public static void setAuthority(HttpClientRequest request, @Nullable HostAndPort authority) {
-    authorityField.set(request, authority);
+    AUTHORITY_FIELD.set(request, authority);
   }
 
   @Nullable
   public static HostAndPort getAuthority(HttpClientRequest request) {
-    return authorityField.get(request);
+    return AUTHORITY_FIELD.get(request);
   }
 
   public static <T> Future<T> wrapFuture(Future<T> future) {

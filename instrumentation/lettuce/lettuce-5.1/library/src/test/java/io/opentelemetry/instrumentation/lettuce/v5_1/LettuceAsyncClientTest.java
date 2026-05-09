@@ -16,7 +16,7 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
-  public InstrumentationExtension testing() {
+  protected InstrumentationExtension testing() {
     return testing;
   }
 

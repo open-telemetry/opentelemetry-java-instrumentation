@@ -110,7 +110,7 @@ class HooksTest {
       Schedulers.class.getMethod("onScheduleHook", String.class, Function.class);
       Schedulers.class.getMethod("resetOnScheduleHook", String.class);
       return true;
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return false;
     }
   }

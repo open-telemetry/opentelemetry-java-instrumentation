@@ -449,7 +449,7 @@ public final class LoggingEventMapper {
     }
   }
 
-  @SuppressWarnings("deprecation") // getMarker is deprecate since 1.3.0
+  @SuppressWarnings("deprecation") // getMarker is deprecated since 1.3.0
   private static void captureSingleMarkerAttribute(
       LogRecordBuilder builder, ILoggingEvent loggingEvent, boolean skipLogstashMarkers) {
     Marker marker = loggingEvent.getMarker();
@@ -581,7 +581,7 @@ public final class LoggingEventMapper {
   }
 
   @Nullable
-  private static FieldReader createStringReader(Field field) {
+  private static FieldReader createStringReader(@Nullable Field field) {
     if (field == null) {
       return null;
     }
@@ -593,7 +593,7 @@ public final class LoggingEventMapper {
   }
 
   @Nullable
-  private static FieldReader createMapReader(Field field) {
+  private static FieldReader createMapReader(@Nullable Field field) {
     if (field == null) {
       return null;
     }

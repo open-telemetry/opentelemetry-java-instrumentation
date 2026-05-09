@@ -20,7 +20,7 @@ abstract class AbstractNatsTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static GenericContainer<?> natsContainer;
+  private static GenericContainer<?> natsContainer;
   static Connection connection;
 
   protected abstract InstrumentationExtension testing();

@@ -62,8 +62,8 @@ dependencies {
     // We exclude plexus-xml and plexus-utils here because our current usages of the shadow plugin
     // don't require it, the  failure happens in spdx-gradle-plugin that can continue using and
     // older version of plexus-xml and plexus-utils
-    exclude(group = "org.codehaus.plexus", module = "plexus-utils")
-    exclude(group = "org.codehaus.plexus", module = "plexus-xml")
+    exclude("org.codehaus.plexus", "plexus-utils")
+    exclude("org.codehaus.plexus", "plexus-xml")
   }
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.4.1")

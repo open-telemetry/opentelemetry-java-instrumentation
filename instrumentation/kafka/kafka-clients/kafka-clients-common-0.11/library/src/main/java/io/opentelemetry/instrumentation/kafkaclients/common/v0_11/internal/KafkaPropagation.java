@@ -20,7 +20,7 @@ import org.apache.kafka.common.record.RecordBatch;
 public final class KafkaPropagation {
 
   private static final KafkaHeadersSetter SETTER = KafkaHeadersSetter.INSTANCE;
-  private static final boolean hasMaxUsableProduceMagic = hasMaxUsableProduceMagic();
+  private static final boolean HAS_MAX_USABLE_PRODUCE_MAGIC = hasMaxUsableProduceMagic();
 
   // Do not inject headers for batch versions below 2
   // This is how similar check is being done in Kafka client itself:
@@ -30,7 +30,7 @@ public final class KafkaPropagation {
   // headers attempt to read messages that were produced by clients > 0.11 and the magic
   // value of the broker(s) is >= 2
   public static boolean shouldPropagate(ApiVersions apiVersions) {
-    return !hasMaxUsableProduceMagic
+    return !HAS_MAX_USABLE_PRODUCE_MAGIC
         || maxUsableProduceMagic(apiVersions) >= RecordBatch.MAGIC_VALUE_V2;
   }
 
@@ -44,7 +44,7 @@ public final class KafkaPropagation {
       // missing in kafka 4.x
       ApiVersions.class.getMethod("maxUsableProduceMagic");
       return true;
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return false;
     }
   }
@@ -59,7 +59,7 @@ public final class KafkaPropagation {
       TextMapPropagator propagator, Context context, ProducerRecord<K, V> record) {
     try {
       inject(propagator, context, record);
-    } catch (IllegalStateException e) {
+    } catch (IllegalStateException ignored) {
       // headers must be read-only from reused record. try again with new one.
       record =
           new ProducerRecord<>(

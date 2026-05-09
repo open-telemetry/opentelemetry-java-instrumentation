@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.viburdbcp;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -35,7 +34,7 @@ public abstract class AbstractViburInstrumentationTest {
   protected abstract void shutdown(ViburDBCPDataSource viburDataSource);
 
   @Test
-  void shouldReportMetrics() throws SQLException, InterruptedException {
+  void shouldReportMetrics() throws SQLException {
     // given
     when(dataSourceMock.getConnection()).thenReturn(connectionMock);
 
@@ -47,8 +46,6 @@ public abstract class AbstractViburInstrumentationTest {
 
     // when
     Connection viburConnection = viburDataSource.getConnection();
-    MILLISECONDS.sleep(100);
-    viburConnection.close();
 
     // then
     DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "testPool")
@@ -62,15 +59,14 @@ public abstract class AbstractViburInstrumentationTest {
         .assertConnectionPoolEmitsMetrics();
 
     // when
+    viburConnection.close();
+
     // this one too shouldn't cause any problems when called more than once
     viburDataSource.close();
     viburDataSource.close();
     shutdown(viburDataSource);
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing().clearData();
-    Thread.sleep(100);
 
     // then
     String countMetricName =

@@ -154,7 +154,11 @@ public class PulsarSingletons {
 
   @Nullable
   public static Context startAndEndConsumerReceive(
-      Context parent, Message<?> message, Timer timer, Consumer<?> consumer, Throwable throwable) {
+      Context parent,
+      @Nullable Message<?> message,
+      Timer timer,
+      Consumer<?> consumer,
+      @Nullable Throwable throwable) {
     if (message == null) {
       return null;
     }
@@ -192,7 +196,7 @@ public class PulsarSingletons {
       Messages<?> messages,
       Timer timer,
       Consumer<?> consumer,
-      Throwable throwable) {
+      @Nullable Throwable throwable) {
     if (messages == null || messages.size() == 0) {
       return null;
     }

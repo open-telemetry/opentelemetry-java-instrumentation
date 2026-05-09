@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.ktor.v2_0
 
-import io.ktor.server.application.*
+import io.ktor.server.application.Application
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions

@@ -62,8 +62,10 @@ abstract class AbstractRocketMqClientTest {
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.rocketmq-client.experimental-span-attributes");
 
+  private static final Logger logger = LoggerFactory.getLogger(AbstractRocketMqClientTest.class);
+
   @Nullable
-  static <T> T experimental(T value) {
+  private static <T> T experimental(T value) {
     return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
@@ -78,8 +80,6 @@ abstract class AbstractRocketMqClientTest {
       val.isInstanceOf(Long.class);
     }
   }
-
-  private static final Logger logger = LoggerFactory.getLogger(AbstractRocketMqClientTest.class);
 
   private DefaultMQProducer producer;
 
