@@ -1027,18 +1027,14 @@ jobs:
           if git fetch origin "$MEMORY_BRANCH" --depth=1 2>/dev/null; then
             processed=$(git show "origin/$MEMORY_BRANCH:processed.txt" 2>/dev/null || true)
           fi
-          # Also exclude shorts already in inflight module-cleanup PRs (their
-          # bodies list the modules under "## Modules in this batch" as
-          # "- " followed by the short wrapped in backticks). Once a PR
-          # merges, those shorts also exist in processed.txt so they won't
-          # be re-picked. Only scan the "Modules in this batch" section
-          # (terminated by `---`) so an unrelated backticked line elsewhere
-          # in the body cannot poison the processed-set.
+          # Also exclude shorts already in inflight module-cleanup PRs. The
+          # finalize script emits one hidden marker per module in the PR body.
+          # Once a PR merges, those shorts also exist in processed.txt so they
+          # won't be re-picked.
           inflight=$(gh pr list --repo "$GITHUB_REPOSITORY" \
                        --label "module cleanup" --state open \
-                       --json body --jq '.[].body' \
-                     | awk '/^## Modules in this batch/{f=1; next} /^---/{f=0} f' \
-                     | sed -n 's/^- `\([^`]*\)`$/\1/p' || true)
+                       --json body --jq '.[].body | split("\n")[]' \
+                     | sed -n 's/^<!-- module-cleanup-module: \(.*\) -->$/\1/p' || true)
           export REVIEW_PROGRESS="$(printf '%s\n%s\n' "$processed" "$inflight" \
                                     | grep -v '^$' | sort -u)"
           python .github/scripts/module-cleanup/build-cleanup-matrix.py

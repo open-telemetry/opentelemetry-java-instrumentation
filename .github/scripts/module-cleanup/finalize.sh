@@ -174,6 +174,10 @@ if [ "$SHOULD_FLUSH" = "true" ]; then
     {
         echo "Automated module-cleanup batch."
         echo
+        git -C "$WIP_WT" log "origin/main..origin/$WIP_BRANCH" \
+            --reverse --format='<!-- module-cleanup-module: %s -->' \
+            | sed 's|: Cleanup for |: |'
+        echo
         echo "## Modules in this batch"
         echo
         git -C "$WIP_WT" log "origin/main..origin/$WIP_BRANCH" \
