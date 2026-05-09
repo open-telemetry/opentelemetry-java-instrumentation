@@ -239,6 +239,9 @@ public class TestServlet5 {
                 resp.sendError(endpoint.getStatus(), endpoint.getBody());
               } else if (EXCEPTION.equals(endpoint)) {
                 resp.setStatus(endpoint.getStatus());
+                if (isOldTomcat(req)) {
+                  resp.setContentLength(endpoint.getBody().length());
+                }
                 PrintWriter writer = resp.getWriter();
                 writer.print(endpoint.getBody());
                 if (isOldTomcat(req)) {
