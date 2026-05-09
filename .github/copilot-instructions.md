@@ -5,6 +5,10 @@ separately later in the PR lifecycle. **Prefer silence over uncertainty.** Only
 flag substantive issues on changed lines. Skip stylistic preferences not listed
 below. Do not nitpick.
 
+Do not comment on Spotless-covered formatting: indentation, wrapping, alignment,
+brace placement, imports, or whitespace. Do not ask authors to run the
+formatter. Only flag formatting that causes or hides a real correctness problem.
+
 Use category tags like `[Style]`, `[Naming]`, `[Testing]`, `[General]`.
 
 ## [Style] Style Guide
