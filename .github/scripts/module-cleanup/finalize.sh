@@ -1,5 +1,5 @@
 #!/bin/bash
-# Finalize: single writer for both module-cleanup-wip and the
+# Finalize: single writer for both otelbot/module-cleanup-wip and the
 # memory/module-cleanup branch. Runs after the agent job (regardless of
 # whether the agent succeeded, no-oped, or failed).
 #
@@ -9,7 +9,7 @@
 #      module is recorded as "processed" (so it isn't retried in a loop)
 #      AND logged as a failure for diagnostics.
 #   2. If the agent produced a cleanup patch, apply it onto the fixed
-#      module-cleanup-wip branch and push.
+#      otelbot/module-cleanup-wip branch and push.
 #   3. If wip diff vs origin/main has reached FLUSH_THRESHOLD files OR
 #      the queue is empty, atomically rename wip to a
 #      module-cleanup-batch-<run_id> branch and open the PR. The wip
@@ -36,12 +36,12 @@
 # Optional env:
 #   FLUSH_THRESHOLD   - file count that triggers a PR (default 10)
 #   MEMORY_BRANCH     - default: memory/module-cleanup
-#   WIP_BRANCH        - default: module-cleanup-wip
+#   WIP_BRANCH        - default: otelbot/module-cleanup-wip
 
 set -euo pipefail
 
 MEMORY_BRANCH="${MEMORY_BRANCH:-memory/module-cleanup}"
-WIP_BRANCH="${WIP_BRANCH:-module-cleanup-wip}"
+WIP_BRANCH="${WIP_BRANCH:-otelbot/module-cleanup-wip}"
 THRESHOLD="${FLUSH_THRESHOLD:-10}"
 QUEUE_REMAINING="${QUEUE_REMAINING:-0}"
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"

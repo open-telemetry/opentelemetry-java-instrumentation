@@ -2,7 +2,7 @@
 description: |
   Walks instrumentation modules one-at-a-time, processing exactly one
   module per run. Each successful run's commit is appended to the fixed
-  `module-cleanup-wip` branch. When that branch reaches FILE_THRESHOLD
+  `otelbot/module-cleanup-wip` branch. When that branch reaches FILE_THRESHOLD
   modified files (or when the unprocessed-module queue empties), the
   finalize job atomically renames wip to `module-cleanup-batch-<run_id>`
   and opens a PR against main. The next run, finding no wip on remote,
@@ -22,8 +22,8 @@ description: |
     - `memory/module-cleanup` branch holds `processed.txt` (modules already
       attempted; never re-picked automatically) and `failed.txt` (a
       diagnostic log of timeouts and patch-conflict failures).
-    - `module-cleanup-wip` branch holds not-yet-PR'd commits. Exists only
-      while there is uncommitted work; deleted when promoted to a batch.
+    - `otelbot/module-cleanup-wip` branch holds not-yet-PR'd commits. Exists
+      only while there is uncommitted work; deleted when promoted to a batch.
     - Open PRs labeled `module cleanup` count toward MAX_OPEN_PRS; while at
       cap, dispatch exits and waits for cron to retry.
 
@@ -148,9 +148,9 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           # Full history is required: finalize computes
-          # `origin/main..origin/module-cleanup-wip` to build the PR body and
-          # decide whether to flush. With a shallow `origin/main`, main's own
-          # ancestors leak into that range and corrupt both outputs.
+          # `origin/main..origin/otelbot/module-cleanup-wip` to build the PR
+          # body and decide whether to flush. With a shallow `origin/main`,
+          # main's own ancestors leak into that range and corrupt both outputs.
           fetch-depth: 0
           persist-credentials: true
           token: ${{ steps.otelbot-token.outputs.token }}
@@ -244,7 +244,7 @@ instructions imported into this prompt are yours; execute them yourself.
    This writes `/tmp/gh-aw/agent/cleanup.patch` (a `git format-patch` of
    your commit range) so gh-aw's auto-uploader includes it in the
    workflow's `agent` artifact. The finalize job downloads that artifact
-   and applies the patch to the `module-cleanup-wip` branch. The script
+   and applies the patch to the `otelbot/module-cleanup-wip` branch. The script
    is idempotent and exits cleanly with no patch if you produced no
    commit. **Run it exactly once as your last action.** If you do not run
    it, your work is lost.

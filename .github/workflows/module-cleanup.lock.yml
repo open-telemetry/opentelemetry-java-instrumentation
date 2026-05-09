@@ -24,7 +24,7 @@
 #
 # Walks instrumentation modules one-at-a-time, processing exactly one
 # module per run. Each successful run's commit is appended to the fixed
-# `module-cleanup-wip` branch. When that branch reaches FILE_THRESHOLD
+# `otelbot/module-cleanup-wip` branch. When that branch reaches FILE_THRESHOLD
 # modified files (or when the unprocessed-module queue empties), the
 # finalize job atomically renames wip to `module-cleanup-batch-<run_id>`
 # and opens a PR against main. The next run, finding no wip on remote,
@@ -44,7 +44,7 @@
 # - `memory/module-cleanup` branch holds `processed.txt` (modules already
 # attempted; never re-picked automatically) and `failed.txt` (a
 # diagnostic log of timeouts and patch-conflict failures).
-# - `module-cleanup-wip` branch holds not-yet-PR'd commits. Exists only
+# - `otelbot/module-cleanup-wip` branch holds not-yet-PR'd commits. Exists only
 # while there is uncommitted work; deleted when promoted to a batch.
 # - Open PRs labeled `module cleanup` count toward MAX_OPEN_PRS; while at
 # cap, dispatch exits and waits for cron to retry.
