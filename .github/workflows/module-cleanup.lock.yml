@@ -1022,22 +1022,16 @@ jobs:
         id: pick
         run: |
           set -euo pipefail
-          # processed.txt lives at the root of the memory branch.
+          # processed.txt lives at the root of the memory branch. The
+          # finalize job appends each attempted module to processed.txt
+          # before doing anything else, so this is the sole source of
+          # truth for what's already been picked - including modules
+          # currently sitting on the wip branch or in inflight batch PRs.
           processed=""
           if git fetch origin "$MEMORY_BRANCH" --depth=1 2>/dev/null; then
             processed=$(git show "origin/$MEMORY_BRANCH:processed.txt" 2>/dev/null || true)
           fi
-          # Also exclude shorts already in inflight module-cleanup PRs.
-          # Each module corresponds to one commit on the PR branch with subject
-          # "Cleanup for <module>", so commit subjects are the source of truth.
-          # Once a PR merges, those shorts also exist in processed.txt so they
-          # won't be re-picked.
-          inflight=$(gh pr list --repo "$GITHUB_REPOSITORY" \
-                       --label "module cleanup" --state open \
-                       --json commits --jq '.[].commits[].messageHeadline' \
-                     | sed -n 's/^Cleanup for //p' || true)
-          export REVIEW_PROGRESS="$(printf '%s\n%s\n' "$processed" "$inflight" \
-                                    | grep -v '^$' | sort -u)"
+          export REVIEW_PROGRESS="$(printf '%s\n' "$processed" | grep -v '^$' | sort -u)"
           python .github/scripts/module-cleanup/build-cleanup-matrix.py
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
