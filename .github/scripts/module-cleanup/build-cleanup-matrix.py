@@ -13,8 +13,7 @@ Environment variables:
   GITHUB_OUTPUT   - path to the GitHub Actions output file
   GH_TOKEN        - token for `gh` CLI (set automatically by the workflow)
   REVIEW_PROGRESS - newline-separated list of processed module names
-                    (contents of processed.txt on the memory branch, plus
-                    shorts already in inflight module-cleanup PR bodies)
+                    (contents of processed.txt on the memory branch)
 
 Outputs (to $GITHUB_OUTPUT):
   has_work        - "true" if a module was picked, "false" otherwise

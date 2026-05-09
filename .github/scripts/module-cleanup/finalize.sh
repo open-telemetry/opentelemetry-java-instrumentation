@@ -170,9 +170,8 @@ if [ "$SHOULD_FLUSH" = "true" ]; then
 
     MODULE_COUNT=$(git -C "$WIP_WT" rev-list --count "origin/main..origin/$WIP_BRANCH")
 
-    # The dispatch job derives the inflight-module list from commit subjects
-    # on open module-cleanup PR branches ("Cleanup for <module>"), so no
-    # hidden marker block is needed here.
+    # processed.txt on the memory branch is the sole source of truth for
+    # which modules dispatch skips, so no hidden marker block is needed here.
     BODY_FILE=$(mktemp)
     {
         echo "Automated module-cleanup batch."
