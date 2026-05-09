@@ -558,9 +558,7 @@ def ts_text(ts: datetime | None) -> str:
 
 def is_copilot_review(review: dict[str, Any]) -> bool:
     login = actor_login(review.get("user") or {}).lower()
-    if not login:
-        return False
-    return "copilot" in login and (login.endswith("[bot]") or "pull-request-reviewer" in login)
+    return login == "copilot-pull-request-reviewer[bot]"
 
 
 def latest_copilot_review_clean(reviews: list[dict[str, Any]], review_comments: list[dict[str, Any]]) -> tuple[bool, bool]:
