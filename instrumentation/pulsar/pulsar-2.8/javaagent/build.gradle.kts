@@ -52,6 +52,10 @@ tasks {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {

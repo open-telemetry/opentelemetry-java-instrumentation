@@ -33,3 +33,16 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

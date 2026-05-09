@@ -20,7 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
 import static java.util.Collections.singletonList;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -36,9 +36,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -50,7 +49,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
 
-  private static final int TIMEOUT_SECONDS = 10;
+  private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -74,15 +73,16 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
     clusterCouchbase =
         CouchbaseAsyncCluster.create(environmentCouchbase, singletonList("127.0.0.1"));
     cleanup.deferAfterAll(environmentCouchbase::shutdown);
-    cleanup.deferAfterAll(
-        () ->
-            clusterCouchbase.disconnect().timeout(TIMEOUT_SECONDS, SECONDS).toBlocking().single());
+    cleanup.deferAfterAll(() -> disconnect(clusterCouchbase));
 
     environmentMemcache = envBuilder(bucketMemcache).build();
     clusterMemcache = CouchbaseAsyncCluster.create(environmentMemcache, singletonList("127.0.0.1"));
     cleanup.deferAfterAll(environmentMemcache::shutdown);
-    cleanup.deferAfterAll(
-        () -> clusterMemcache.disconnect().timeout(TIMEOUT_SECONDS, SECONDS).toBlocking().single());
+    cleanup.deferAfterAll(() -> disconnect(clusterMemcache));
+  }
+
+  private static void disconnect(CouchbaseAsyncCluster cluster) {
+    cluster.disconnect().timeout(TIMEOUT.toMillis(), MILLISECONDS).toBlocking().single();
   }
 
   private CouchbaseAsyncCluster getCluster(BucketSettings bucketSettings) {
@@ -96,8 +96,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
 
   @ParameterizedTest
   @MethodSource("bucketSettings")
-  void hasBucket(BucketSettings bucketSettings)
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void hasBucket(BucketSettings bucketSettings) {
     CouchbaseAsyncCluster cluster = getCluster(bucketSettings);
     AsyncClusterManager manager = cluster.clusterManager(USERNAME, PASSWORD).toBlocking().single();
 
@@ -110,7 +109,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
         .subscribe(
             bucket -> manager.hasBucket(bucketSettings.name()).subscribe(hasBucket::complete));
 
-    assertThat(hasBucket.get(TIMEOUT_SECONDS, SECONDS)).isTrue();
+    assertThat(hasBucket).succeedsWithin(TIMEOUT).isEqualTo(true);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -138,8 +137,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
 
   @ParameterizedTest
   @MethodSource("bucketSettings")
-  void upsert(BucketSettings bucketSettings)
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void upsert(BucketSettings bucketSettings) {
     CouchbaseAsyncCluster cluster = getCluster(bucketSettings);
 
     JsonObject content = JsonObject.create().put("hello", "world");
@@ -156,7 +154,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                           .subscribe(inserted::complete));
         });
 
-    assertThat(inserted.get(TIMEOUT_SECONDS, SECONDS).content().getString("hello"))
+    assertThat(inserted)
+        .succeedsWithin(TIMEOUT)
+        .extracting(result -> result.content().getString("hello"))
         .isEqualTo("world");
 
     testing.waitAndAssertTraces(
@@ -189,8 +189,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
 
   @ParameterizedTest
   @MethodSource("bucketSettings")
-  void upsertAndGet(BucketSettings bucketSettings)
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void upsertAndGet(BucketSettings bucketSettings) {
     CouchbaseAsyncCluster cluster = getCluster(bucketSettings);
 
     JsonObject content = JsonObject.create().put("hello", "world");
@@ -212,10 +211,12 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                               }));
         });
 
-    JsonDocument insertedResult = inserted.get(TIMEOUT_SECONDS, SECONDS);
-    JsonDocument foundResult = found.get(TIMEOUT_SECONDS, SECONDS);
-    assertThat(foundResult).isEqualTo(insertedResult);
-    assertThat(foundResult.content().getString("hello")).isEqualTo("world");
+    assertThat(inserted).succeedsWithin(TIMEOUT);
+    assertThat(found)
+        .succeedsWithin(TIMEOUT)
+        .isEqualTo(inserted.join())
+        .extracting(result -> result.content().getString("hello"))
+        .isEqualTo("world");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -261,7 +262,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
   }
 
   @Test
-  void query() throws ExecutionException, InterruptedException, TimeoutException {
+  void query() {
     // Only couchbase buckets support queries.
     CouchbaseAsyncCluster cluster = getCluster(bucketCouchbase);
 
@@ -282,7 +283,10 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                           .subscribe(row -> queryResult.complete(row.value())));
         });
 
-    assertThat(queryResult.get(TIMEOUT_SECONDS, SECONDS).get("row")).isEqualTo("value");
+    assertThat(queryResult)
+        .succeedsWithin(TIMEOUT)
+        .extracting(result -> result.get("row"))
+        .isEqualTo("value");
 
     testing.waitAndAssertTraces(
         trace ->

@@ -17,11 +17,9 @@ testing {
     val http2Test by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
+        implementation("com.squareup.okhttp3:okhttp:${baseVersion("3.11.0").orLatest()}")
         if (otelProps.testLatestDeps) {
-          implementation("com.squareup.okhttp3:okhttp:latest.release")
           compileOnly("com.google.android:annotations:4.1.1.4")
-        } else {
-          implementation("com.squareup.okhttp3:okhttp:3.11.0")
         }
         implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
       }

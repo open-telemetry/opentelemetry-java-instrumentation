@@ -22,13 +22,12 @@ public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String getModuleGroup() {
-    return "netty";
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new LocalSchedulerActivationInstrumentation(), new PromiseMonitoredInstrumentation());
+        new FutureInstrumentation(),
+        new FuturePoolInstrumentation(),
+        new PromiseKInstrumentation(),
+        new PromiseInterruptibleInstrumentation(),
+        new LocalSchedulerActivationInstrumentation());
   }
 }

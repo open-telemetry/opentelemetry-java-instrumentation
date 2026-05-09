@@ -123,7 +123,7 @@ class RestletAppTestBase {
                       throw new IllegalStateException(e);
                     }
                   });
-    } catch (ClassNotFoundException | NoClassDefFoundError | NoSuchMethodException e) {
+    } catch (ClassNotFoundException | NoClassDefFoundError | NoSuchMethodException ignored) {
       responseHeaders =
           (Series<?>)
               responseAttributes.computeIfAbsent("org.restlet.http.headers", (key) -> new Form());

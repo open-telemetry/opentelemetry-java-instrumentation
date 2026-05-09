@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public class JedisSingletons {
+class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
@@ -34,7 +34,7 @@ public class JedisSingletons {
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<JedisRequest, Void> instrumenter() {
+  static Instrumenter<JedisRequest, Void> instrumenter() {
     return instrumenter;
   }
 

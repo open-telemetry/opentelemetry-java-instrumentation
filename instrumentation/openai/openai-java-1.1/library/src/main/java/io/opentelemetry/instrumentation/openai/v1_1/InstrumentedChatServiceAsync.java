@@ -12,8 +12,7 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 
-final class InstrumentedChatServiceAsync
-    extends DelegatingInvocationHandler<ChatServiceAsync, InstrumentedChatServiceAsync> {
+final class InstrumentedChatServiceAsync extends DelegatingInvocationHandler<ChatServiceAsync> {
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
   private final Logger eventLogger;

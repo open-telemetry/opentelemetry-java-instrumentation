@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
@@ -93,5 +95,24 @@ public class KafkaConsumerTelemetry {
     // this is the suggested behavior according to the spec batch receive scenario:
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
     return context;
+  }
+
+  public <K, V> void buildAndFinishErrorSpan(
+      Consumer<K, V> consumer, Timer timer, Throwable error) {
+    Context parentContext = Context.current();
+    ConsumerRecords<K, V> records = new ConsumerRecords<>(emptyMap());
+    KafkaReceiveRequest request =
+        KafkaReceiveRequest.create(
+            records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+    if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
+      InstrumenterUtil.startAndEnd(
+          consumerReceiveInstrumenter,
+          parentContext,
+          request,
+          null,
+          error,
+          timer.startTime(),
+          timer.now());
+    }
   }
 }

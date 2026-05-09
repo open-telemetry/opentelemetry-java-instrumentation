@@ -31,7 +31,11 @@ There are two options for capturing traces, either using interceptors or wrappin
 
 #### Using interceptors
 
-The Kafka clients API provides a way to intercept messages before they are sent to the brokers as well as messages received from the broker before being passed to the application.
+The Kafka clients API provides a way to intercept messages before they are sent to the brokers
+as well as messages received from the broker before being passed to the application.
+Note that interceptors are not able to capture errors that occur during the sending or receiving
+of messages. If you want to capture those as well, you should consider the wrapping option described
+in the next section.
 
 To intercept messages and emit telemetry for a `KafkaProducer`:
 

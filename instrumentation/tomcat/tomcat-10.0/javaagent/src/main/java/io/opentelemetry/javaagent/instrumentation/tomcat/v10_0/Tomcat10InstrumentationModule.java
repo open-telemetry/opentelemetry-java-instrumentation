@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.tomcat.v10_0.Tomcat10Singletons.helper;
 import static java.util.Collections.singletonList;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
@@ -33,13 +34,13 @@ public class Tomcat10InstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in Servlet 5.0 (renamed from javax.servlet)
-    return hasClassesNamed("jakarta.servlet.http.HttpServletRequest")
-        .and(
-            // added in 10.0.11
-            hasClassesNamed("org.apache.catalina.users.GenericUser")
-                // removed in 10.0.26
-                .or(hasClassesNamed("org.apache.catalina.webresources.Cache$EvictionOrder")));
+    return hasClassesNamed(
+            // added in Servlet 5.0 (renamed from javax.servlet)
+            "jakarta.servlet.http.HttpServletRequest",
+            // Tomcat request class
+            "org.apache.coyote.Request")
+        // removed in 10.0
+        .and(not(hasClassesNamed("org.apache.catalina.loader.Constants")));
   }
 
   @Override

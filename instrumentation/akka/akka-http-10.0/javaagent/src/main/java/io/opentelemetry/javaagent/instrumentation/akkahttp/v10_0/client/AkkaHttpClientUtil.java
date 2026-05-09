@@ -30,7 +30,7 @@ public class AkkaHttpClientUtil {
     try {
       return MethodHandles.publicLookup()
           .findVirtual(HttpExt.class, "system", MethodType.methodType(type));
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -43,7 +43,7 @@ public class AkkaHttpClientUtil {
 
     try {
       return (ActorSystem) actorSystemAccessor.invoke(httpExt);
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return null;
     }
   }

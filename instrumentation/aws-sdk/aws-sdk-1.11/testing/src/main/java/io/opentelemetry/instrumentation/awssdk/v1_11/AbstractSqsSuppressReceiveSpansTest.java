@@ -105,7 +105,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "CreateQueue"),
@@ -126,7 +127,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     AWS_SQS_QUEUE_URL,
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "SendMessage"),
@@ -150,7 +152,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     AWS_SQS_QUEUE_URL,
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -202,7 +205,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "CreateQueue"),
@@ -223,7 +227,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     AWS_SQS_QUEUE_URL,
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "SendMessage"),
@@ -247,7 +252,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     AWS_SQS_QUEUE_URL,
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -282,7 +288,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     AWS_SQS_QUEUE_URL,
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "ReceiveMessage"),

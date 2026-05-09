@@ -50,7 +50,7 @@ class TracingCallFactory implements Call.Factory {
       Request.class.getMethod("tag", Class.class);
       Request.Builder.class.getMethod("tag", Class.class, Object.class);
       return true;
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return false;
     }
   }

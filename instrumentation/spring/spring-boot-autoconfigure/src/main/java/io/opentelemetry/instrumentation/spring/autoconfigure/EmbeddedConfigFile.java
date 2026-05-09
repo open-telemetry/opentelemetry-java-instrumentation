@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;

@@ -414,8 +414,10 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
             });
 
     assertThat(hits.get()).isEqualTo(2);
-    assertThat(results.get(0)).isEqualTo(ImmutableMap.of("id", "2", "data", "doc b"));
-    assertThat(results.get(1)).isEqualTo(ImmutableMap.of("id", "1", "data", "doc a"));
+    assertThat(results)
+        .containsExactly(
+            ImmutableMap.of("id", "2", "data", "doc b"),
+            ImmutableMap.of("id", "1", "data", "doc a"));
     assertThat(bucketTags).isEmpty();
 
     testing.waitAndAssertTraces(

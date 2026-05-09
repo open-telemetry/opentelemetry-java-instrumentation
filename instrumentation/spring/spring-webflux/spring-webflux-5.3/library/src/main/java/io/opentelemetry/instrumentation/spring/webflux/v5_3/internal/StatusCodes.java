@@ -68,8 +68,8 @@ final class StatusCodes {
       try {
         Object httpStatusCode = statusCode.invoke(response);
         return (int) value.invoke(httpStatusCode);
-      } catch (Throwable e) {
-        logger.log(FINE, e.getMessage(), e);
+      } catch (Throwable t) {
+        logger.log(FINE, t.getMessage(), t);
         return null;
       }
     };
@@ -91,8 +91,8 @@ final class StatusCodes {
     return response -> {
       try {
         return (int) rawStatusCode.invoke(response);
-      } catch (Throwable e) {
-        logger.log(FINE, e.getMessage(), e);
+      } catch (Throwable t) {
+        logger.log(FINE, t.getMessage(), t);
         return null;
       }
     };
@@ -120,8 +120,8 @@ final class StatusCodes {
       try {
         Object httpStatusCode = statusCode.invoke(response);
         return (int) value.invoke(httpStatusCode);
-      } catch (Throwable e) {
-        logger.log(FINE, e.getMessage(), e);
+      } catch (Throwable t) {
+        logger.log(FINE, t.getMessage(), t);
         return null;
       }
     };

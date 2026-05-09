@@ -33,7 +33,7 @@ public class ApplicationOpenTelemetry156Incubator extends ApplicationOpenTelemet
     return null;
   }
 
-  public ApplicationOpenTelemetry156Incubator(ConfigProvider configProvider) {
+  private ApplicationOpenTelemetry156Incubator(ConfigProvider configProvider) {
     this.configProvider = new ApplicationConfigProvider156Incubator(configProvider);
   }
 
