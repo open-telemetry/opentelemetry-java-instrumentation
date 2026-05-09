@@ -1033,7 +1033,7 @@ jobs:
           # won't be re-picked.
           inflight=$(gh pr list --repo "$GITHUB_REPOSITORY" \
                        --label "module cleanup" --state open \
-                       --json body --jq '.[].body | split("\n")[]' \
+                       --json body --jq '.[] | (.body // "") | split("\n")[]' \
                      | sed -n 's/^<!-- module-cleanup-module: \(.*\) -->$/\1/p' || true)
           export REVIEW_PROGRESS="$(printf '%s\n%s\n' "$processed" "$inflight" \
                                     | grep -v '^$' | sort -u)"
