@@ -29,8 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class ResourceProviderPropertiesCustomizerTest {
 
-  private static final String PROVIDER_CLASS_NAME =
-      "io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider";
+  private static final String PROVIDER_CLASS_NAME = Provider.class.getName();
 
   public static class Provider implements ResourceProvider {
     @Override
