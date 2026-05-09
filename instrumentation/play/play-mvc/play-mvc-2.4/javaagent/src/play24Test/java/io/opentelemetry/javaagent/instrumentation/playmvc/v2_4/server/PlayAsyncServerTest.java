@@ -25,6 +25,11 @@ import scala.collection.JavaConverters;
 class PlayAsyncServerTest extends PlayServerTest {
 
   @Override
+  protected boolean shouldAssertSuccessfulGetTracesAfterEachRequest() {
+    return true;
+  }
+
+  @Override
   protected Server setupServer() {
     RoutingDsl router =
         new RoutingDsl()

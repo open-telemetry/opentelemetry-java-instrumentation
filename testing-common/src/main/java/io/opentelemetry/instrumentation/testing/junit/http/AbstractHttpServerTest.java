@@ -202,6 +202,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     List<AggregatedHttpResponse> responses = new ArrayList<>();
     for (int i = 0; i < count; i++) {
       responses.add(client.execute(request).aggregate().join());
+      if (shouldAssertSuccessfulGetTracesAfterEachRequest()) {
+        assertTheTraces(i + 1, null, null, null, method, SUCCESS);
+      }
     }
 
     for (AggregatedHttpResponse response : responses) {
@@ -210,7 +213,13 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       assertResponseHasCustomizedHeaders(response, SUCCESS, null);
     }
 
-    assertTheTraces(count, null, null, null, method, SUCCESS);
+    if (!shouldAssertSuccessfulGetTracesAfterEachRequest()) {
+      assertTheTraces(count, null, null, null, method, SUCCESS);
+    }
+  }
+
+  protected boolean shouldAssertSuccessfulGetTracesAfterEachRequest() {
+    return false;
   }
 
   @Test
