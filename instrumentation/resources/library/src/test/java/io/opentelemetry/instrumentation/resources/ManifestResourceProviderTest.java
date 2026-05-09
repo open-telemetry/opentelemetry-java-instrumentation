@@ -25,11 +25,7 @@ class ManifestResourceProviderTest {
   @ParameterizedTest(name = "{0}")
   @MethodSource("createResourceCases")
   void createResource(
-      String name,
-      String expectedName,
-      String expectedVersion,
-      Resource input,
-      Resource existing) {
+      String name, String expectedName, String expectedVersion, Resource input, Resource existing) {
     ConfigProperties config = DefaultConfigProperties.createFromMap(emptyMap());
 
     ManifestResourceProvider provider = new ManifestResourceProvider(() -> input);

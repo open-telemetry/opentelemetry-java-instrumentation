@@ -53,8 +53,7 @@ class ManifestResourceExtractorTest {
     return Stream.of(
         arguments("name ok", "demo", "0.0.1-SNAPSHOT", openClasspathResource("MANIFEST.MF")),
         arguments("name - no resource", null, null, null),
-        arguments(
-            "name - empty resource", null, null, openClasspathResource("empty-MANIFEST.MF")));
+        arguments("name - empty resource", null, null, openClasspathResource("empty-MANIFEST.MF")));
   }
 
   private static InputStream openClasspathResource(String resource) {

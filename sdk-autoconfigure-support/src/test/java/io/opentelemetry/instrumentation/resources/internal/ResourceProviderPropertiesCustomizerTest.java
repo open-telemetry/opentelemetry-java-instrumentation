@@ -50,8 +50,7 @@ class ResourceProviderPropertiesCustomizerTest {
       @Nullable Boolean explicitEnabled) {
     Map<String, String> props = new HashMap<>();
     props.put(
-        ResourceProviderPropertiesCustomizer.ENABLED_KEY,
-        Strings.join(enabledProviders).with(","));
+        ResourceProviderPropertiesCustomizer.ENABLED_KEY, Strings.join(enabledProviders).with(","));
     props.put(
         ResourceProviderPropertiesCustomizer.DISABLED_KEY,
         Strings.join(disabledProviders).with(","));
@@ -66,9 +65,7 @@ class ResourceProviderPropertiesCustomizerTest {
 
     Attributes attributes =
         SdkAutoconfigureAccess.getResourceAttributes(
-            AutoConfiguredOpenTelemetrySdk.builder()
-                .addPropertiesSupplier(() -> props)
-                .build());
+            AutoConfiguredOpenTelemetrySdk.builder().addPropertiesSupplier(() -> props).build());
 
     if (expectedEnabled) {
       assertThat(attributes.get(stringKey("key"))).isEqualTo("value");

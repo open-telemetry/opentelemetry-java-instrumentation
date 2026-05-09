@@ -105,14 +105,19 @@ class KubernetesRequestUtilsTest {
     return Stream.of(
         arguments("cluster-scoped list", "/apis/apps/v1/deployments", deploymentsList),
         arguments(
-            "namespaced list", "/apis/apps/v1/namespaces/default/deployments", namespacedDeployments),
+            "namespaced list",
+            "/apis/apps/v1/namespaces/default/deployments",
+            namespacedDeployments),
         arguments(
-            "namespaced named", "/apis/apps/v1/namespaces/default/deployments/foo", namedDeployment),
+            "namespaced named",
+            "/apis/apps/v1/namespaces/default/deployments/foo",
+            namedDeployment),
         arguments(
             "namespaced named subresource",
             "/apis/apps/v1/namespaces/default/deployments/foo/status",
             namedDeploymentStatus),
-        arguments("custom resource cluster-scoped list", "/apis/example.io/v1alpha1/foos", foosList),
+        arguments(
+            "custom resource cluster-scoped list", "/apis/example.io/v1alpha1/foos", foosList),
         arguments(
             "custom resource namespaced list",
             "/apis/example.io/v1alpha1/namespaces/default/foos",
@@ -139,6 +144,8 @@ class KubernetesRequestUtilsTest {
         arguments("namespaced list", "/api/v1/namespaces/default/pods", namespacedPods),
         arguments("namespaced named", "/api/v1/namespaces/default/pods/foo", namedPod),
         arguments(
-            "namespaced named subresource", "/api/v1/namespaces/default/pods/foo/exec", namedPodExec));
+            "namespaced named subresource",
+            "/api/v1/namespaces/default/pods/foo/exec",
+            namedPodExec));
   }
 }
