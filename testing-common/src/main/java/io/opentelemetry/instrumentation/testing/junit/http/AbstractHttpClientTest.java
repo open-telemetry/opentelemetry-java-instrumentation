@@ -1270,12 +1270,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       equalTo(EXCEPTION_TYPE, exceptionType),
                       satisfies(
                           EXCEPTION_MESSAGE,
-                          message -> {
+                          val -> {
                             if (exception.getMessage() != null) {
-                              message.isEqualTo(exception.getMessage());
+                              val.isEqualTo(exception.getMessage());
                             }
                           }),
-                      satisfies(EXCEPTION_STACKTRACE, stacktrace -> stacktrace.isNotNull()));
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
             });
   }
 
@@ -1296,12 +1296,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       equalTo(EXCEPTION_TYPE, exceptionType),
                       satisfies(
                           EXCEPTION_MESSAGE,
-                          message -> {
+                          val -> {
                             if (exception.getMessage() != null) {
-                              message.isEqualTo(exception.getMessage());
+                              val.isEqualTo(exception.getMessage());
                             }
                           }),
-                      satisfies(EXCEPTION_STACKTRACE, stacktrace -> stacktrace.isNotNull()));
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
             });
   }
 

@@ -96,7 +96,7 @@ tasks {
     jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled," +
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
         "otel.semconv.exception.signal.opt-in=logs"
     )
   }

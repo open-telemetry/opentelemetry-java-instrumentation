@@ -1061,12 +1061,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                       equalTo(EXCEPTION_TYPE, expectedException.getClass().getName()),
                       satisfies(
                           EXCEPTION_MESSAGE,
-                          message -> {
+                          val -> {
                             if (expectedException.getMessage() != null) {
-                              message.isEqualTo(expectedException.getMessage());
+                              val.isEqualTo(expectedException.getMessage());
                             }
                           }),
-                      satisfies(EXCEPTION_STACKTRACE, stacktrace -> stacktrace.isNotNull()));
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
             });
   }
 
