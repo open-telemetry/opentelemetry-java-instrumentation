@@ -122,11 +122,7 @@ jobs:
           MEMORY_BRANCH: memory/module-cleanup
         run: |
           set -euo pipefail
-          # processed.txt lives at the root of the memory branch. The
-          # finalize job appends each attempted module to processed.txt
-          # before doing anything else, so this is the sole source of
-          # truth for what's already been picked - including modules
-          # currently sitting on the wip branch or in inflight batch PRs.
+          # processed.txt lives at the root of the memory branch.
           processed=""
           if git fetch origin "$MEMORY_BRANCH" --depth=1 2>/dev/null; then
             processed=$(git show "origin/$MEMORY_BRANCH:processed.txt" 2>/dev/null || true)
