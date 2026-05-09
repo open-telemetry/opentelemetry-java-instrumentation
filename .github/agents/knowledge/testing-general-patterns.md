@@ -77,6 +77,34 @@
 - If the test intentionally closes the resource mid-test or asserts behavior around explicit
   close, keep the direct close or try-with-resources in the test body.
 
+## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
+
+When an abstract test base is shared across multiple concrete subclasses run in the same
+JVM fork, treat per-class fixture state (containers, clients, connections, host/port, the
+`AutoCleanupExtension` itself, etc.) as **instance state on a `@TestInstance(PER_CLASS)`
+class**, not as `static` fields.
+
+- Annotate the base with `@TestInstance(TestInstance.Lifecycle.PER_CLASS)`. JUnit then creates
+  one instance per concrete subclass and reuses it for every `@Test` in that class, so
+  instance fields give the same once-per-class lifecycle that `static` fields used to provide,
+  without leaking across subclasses.
+- Make `redisServer` / `kafkaContainer` / `client` / `host` / `port` / etc. instance fields
+  (`protected`, not `protected static`). Each concrete subclass then gets its own container
+  and client, freshly configured by its own `@BeforeAll`.
+- Make `@RegisterExtension AutoCleanupExtension cleanup` an **instance** field, not `static`.
+  A shared `static` `AutoCleanupExtension` only runs `deferAfterAll(...)` callbacks for the
+  first subclass JUnit invokes — its `rootContext` is set on first `beforeAll` and never
+  reset — so subsequent subclasses leak deferred resources (containers, clients, connections).
+- Helpers that read instance fields (e.g. `spanName(String)` reading `host`/`port`) must
+  also be instance methods, not `static`.
+- This is also the right shape when a subclass needs to mutate the container's builder
+  configuration (e.g. `withCommand("--requirepass password")`). With shared `static` state the
+  earlier subclass may have already started the container, so `withCommand` on the running
+  instance has no effect; with per-instance state each subclass mutates and starts its own
+  fresh container.
+- Reserve `static` for true JVM-wide constants (`DB_INDEX`, loggers, `*_HASH_MAP` literals,
+  pure helpers like `addExtraAttributes(...)` / `assertCommandEncodeEvents(...)`).
+
 ## Span Attribute Assertions
 
 - Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for
