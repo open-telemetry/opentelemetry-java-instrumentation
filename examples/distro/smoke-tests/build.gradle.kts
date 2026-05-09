@@ -1,5 +1,5 @@
 plugins {
-  id "java"
+  id("otel.java-conventions")
 }
 
 dependencies {
@@ -15,15 +15,12 @@ dependencies {
 }
 
 tasks.test {
-  useJUnitPlatform()
-
   testLogging.showStandardStreams = true
 
-  def shadowTask = project(":agent").tasks.shadowJar
-  dependsOn(shadowTask)
-  inputs.files(layout.files(shadowTask))
+  val agentJar = project(":agent").tasks.named<Jar>("shadowJar").flatMap { it.archiveFile }
+  inputs.file(agentJar)
 
   doFirst {
-    jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get()}")
+    jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${agentJar.get().asFile}")
   }
 }

@@ -4,12 +4,9 @@ description: |
   findings as a single GitHub review (event: COMMENT — non-approving,
   non-blocking).
 
-  Triggers:
-  - `pull_request_target` ready_for_review: auto-review when a PR leaves
-    draft. Drafts are not auto-reviewed.
-  - `issue_comment` matching `/review` or `/review <model>`: re-review on
-    demand. Allowed only when the commenter has write access to the repo.
-    Drafts are allowed for this trigger.
+  Trigger: `issue_comment` matching `/review` or `/review <model>`.
+  Allowed only when the commenter has write access to the repo. Drafts are
+  allowed.
 
   The dispatch job verifies eligibility (not closed/merged; commenter has
   write permission for `/review`), reacts to the triggering comment with
@@ -19,14 +16,11 @@ description: |
   PR head) and hands it to Copilot. The finalize job validates the agent's
   findings JSON against the diff hunks and posts the review.
 
-  Safety: this workflow uses `pull_request_target`, but it never checks out
-  PR head code. PR-modified file contents are read via the GitHub contents
-  API at the recorded head OID and bundled as plain data. The runner only
-  ever has the PR's base commit checked out.
+  Safety: this workflow never checks out PR head code. PR-modified file
+  contents are read via the GitHub contents API at the recorded head OID and
+  bundled as plain data.
 
 on:
-  pull_request_target:
-    types: [ready_for_review]
   issue_comment:
     types: [created]
 
@@ -83,7 +77,6 @@ jobs:
       model: ${{ steps.gate.outputs.model }}
       model_warning: ${{ steps.gate.outputs.model_warning }}
       triggered_by: ${{ steps.gate.outputs.triggered_by }}
-      base_ref_oid: ${{ steps.gate.outputs.base_ref_oid }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -94,9 +87,10 @@ jobs:
         if: github.event_name == 'issue_comment'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           gh api -X POST \
-            "repos/${GITHUB_REPOSITORY}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            "repos/${GITHUB_REPOSITORY}/issues/comments/${COMMENT_ID}/reactions" \
             -f content=eyes >/dev/null || true
 
       - name: Resolve trigger and gate
@@ -106,7 +100,6 @@ jobs:
           DEFAULT_MODEL: ${{ vars.PR_REVIEW_MODEL || 'gpt-5' }}
           ALLOWED_MODELS: ${{ vars.PR_REVIEW_ALLOWED_MODELS || 'gpt-5,gpt-5.5,claude-sonnet-4.5' }}
           EVENT_NAME: ${{ github.event_name }}
-          PR_FROM_PR_EVENT: ${{ github.event.pull_request.number }}
           PR_FROM_COMMENT: ${{ github.event.issue.number }}
           COMMENT_BODY: ${{ github.event.comment.body }}
           COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
@@ -173,11 +166,6 @@ jobs:
 if: ${{ needs.dispatch.outputs.should_run == 'true' }}
 
 steps:
-  - uses: actions/checkout@v5
-    with:
-      ref: ${{ needs.dispatch.outputs.base_ref_oid }}
-      fetch-depth: 1
-      persist-credentials: false
 
   - name: Build review bundle
     env:

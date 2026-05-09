@@ -32,7 +32,8 @@ on:
   schedule:
     - cron: "every 1h"
 
-permissions: read-all
+permissions:
+  contents: read
 
 concurrency:
   group: module-cleanup
@@ -65,17 +66,41 @@ tools:
   edit:
   bash: [":*"]
 
-# No safe-outputs: the finalize job owns PR creation directly via `gh`,
-# and memory-branch state is managed by plain git pushes from the finalize
-# script. This keeps all post-LLM logic in shell where it can run reliably
-# regardless of how the agent session ends.
+# The finalize job owns PR creation directly via `gh`, and memory-branch
+# state is managed by plain git pushes from the finalize script. This
+# keeps all post-LLM logic in shell where it can run reliably regardless
+# of how the agent session ends.
+#
+# The `safe-outputs.jobs.suppress_default_create_issue` placeholder below
+# exists solely to opt out of gh-aw's default behavior, which auto-injects
+# a `create-issue` safe output whenever no non-builtin safe output is
+# configured (see https://github.github.io/gh-aw/reference/safe-outputs/
+# under "System Types"). Without this opt-out, every successful run posts
+# the agent's narration as a separate `[module-cleanup]` issue, which is
+# noise on top of the batch PR the finalize job already opens.
+#
+# The placeholder safe-job is intentionally never invoked by the agent
+# (see "What you must NOT do" in the persona). gh-aw only emits the job
+# when the corresponding MCP tool is called, so leaving it uninvoked
+# costs nothing at runtime.
+
+safe-outputs:
+  # Threat detection requires the AWF agent sandbox, which we disable
+  # below. The placeholder safe-job below carries no untrusted output,
+  # so threat detection is unnecessary.
+  threat-detection: false
+  jobs:
+    suppress_default_create_issue:
+      runs-on: ubuntu-latest
+      steps:
+        - run: 'true'
 
 imports:
   - .github/agents/module-cleanup.agent.md
 
 jobs:
   dispatch:
-    if: github.repository == 'trask/opentelemetry-java-instrumentation'
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -126,10 +151,16 @@ jobs:
       pull-requests: write
       actions: write
     steps:
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: true
+          token: ${{ steps.otelbot-token.outputs.token }}
       - name: Configure git author
         run: .github/scripts/use-cla-approved-bot.sh
       - name: Download agent artifact
@@ -140,7 +171,8 @@ jobs:
         continue-on-error: true
       - name: Finalize
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
           SHORT_NAME: ${{ needs.dispatch.outputs.short_name }}
           AGENT_RESULT: ${{ needs.agent.result }}
           QUEUE_REMAINING: ${{ needs.dispatch.outputs.queue_remaining }}
@@ -228,3 +260,8 @@ instructions imported into this prompt are yours; execute them yourself.
   persona is loaded into this session; execute it inline.
 - Do not modify files outside `$MODULE_DIR` unless the persona's
   out-of-module-edit allowance applies to your specific change.
+- Do not invoke the `suppress_default_create_issue` MCP tool. It is a
+  placeholder that exists only to disable gh-aw's default
+  create-issue auto-injection; calling it would launch a needless
+  no-op job. Use `noop` (already enabled) if you need to record a
+  completion message.

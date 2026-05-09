@@ -1,4 +1,6 @@
-ext.relocatePackages = { shadowJar ->
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+fun relocatePackages(shadowJar: ShadowJar) {
   // rewrite dependencies calling Logger.getLogger
   shadowJar.relocate("java.util.logging.Logger", "io.opentelemetry.javaagent.bootstrap.PatchLogger")
 

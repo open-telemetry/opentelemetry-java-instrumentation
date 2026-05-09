@@ -9,8 +9,6 @@ should run, and writes outputs to $GITHUB_OUTPUT:
   model          - resolved Copilot model (default if override invalid)
   model_warning  - human-readable warning if the requested model was rejected
   triggered_by   - short string for the review-body footer
-  base_ref_oid   - PR base commit SHA, used by the agent's checkout step
-
 Required env: GH_TOKEN, EVENT_NAME, DEFAULT_MODEL, ALLOWED_MODELS, plus the
 trigger-specific variables documented inline.
 """
@@ -51,7 +49,6 @@ def skip(reason: str) -> int:
             "model": "",
             "model_warning": "",
             "triggered_by": "",
-            "base_ref_oid": "",
         }
     )
     return 0
@@ -95,13 +92,6 @@ def resolve_trigger(env: dict[str, str]) -> tuple[str, str, str, str]:
     allowed_models = env.get("ALLOWED_MODELS", "")
     repo = env.get("GITHUB_REPOSITORY", "")
 
-    if event == "pull_request_target":
-        pr = env.get("PR_FROM_PR_EVENT", "")
-        if not pr:
-            raise SkipRun("no PR number on pull_request_target event")
-        model, warning = resolve_model("", default_model, allowed_models)
-        return pr, model, warning, "ready_for_review"
-
     if event == "issue_comment":
         pr = env.get("PR_FROM_COMMENT", "")
         if not pr:
@@ -123,7 +113,7 @@ def resolve_trigger(env: dict[str, str]) -> tuple[str, str, str, str]:
 def pr_state(repo: str, pr: str) -> dict | None:
     try:
         return gh_json(
-            ["pr", "view", pr, "--repo", repo, "--json", "state,baseRefOid,isDraft,number"],
+            ["pr", "view", pr, "--repo", repo, "--json", "state,number"],
         )
     except Exception:
         return None
@@ -140,9 +130,6 @@ def main() -> int:
             raise SkipRun(f"PR #{pr} not found")
         if info.get("state") != "OPEN":
             raise SkipRun(f"PR #{pr} is not open (state={info.get('state')})")
-        if info.get("isDraft") and env.get("EVENT_NAME") != "issue_comment":
-            raise SkipRun(f"PR #{pr} is a draft and trigger is {env.get('EVENT_NAME')}")
-        base_ref_oid = info.get("baseRefOid", "")
     except SkipRun as e:
         return skip(str(e))
 
@@ -154,7 +141,6 @@ def main() -> int:
             "model": model,
             "model_warning": warning,
             "triggered_by": triggered_by,
-            "base_ref_oid": base_ref_oid,
         }
     )
     return 0
