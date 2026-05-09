@@ -1027,7 +1027,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
     testing.waitAndAssertTraces(assertions);
 
-    if (endpoint == EXCEPTION && emitExceptionAsLogs()) {
+    if (endpoint == EXCEPTION
+        && emitExceptionAsLogs()
+        && options.hasExceptionOnServerSpan.test(endpoint)) {
       assertExceptionLogs(options.expectedException, "http.server.request.exception");
     }
   }
