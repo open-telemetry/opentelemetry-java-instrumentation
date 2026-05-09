@@ -1253,31 +1253,34 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   private void assertParentExceptionLog(Throwable exception) {
+    String exceptionType = exceptionType(exception);
     Awaitility.await()
         .untilAsserted(
             () -> {
               List<LogRecordData> logs =
                   testing.getExportedLogRecords().stream()
                       .filter(log -> "exception".equals(log.getEventName()))
-                      .filter(
-                          log ->
-                              exception
-                                  .getClass()
-                                  .getName()
-                                  .equals(log.getAttributes().get(EXCEPTION_TYPE)))
+                      .filter(log -> exceptionType.equals(log.getAttributes().get(EXCEPTION_TYPE)))
                       .collect(toList());
 
               assertThat(logs).hasSize(1);
               assertThat(logs.get(0))
                   .hasSeverity(Severity.WARN)
                   .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
-                      equalTo(EXCEPTION_MESSAGE, exception.getMessage()),
+                      equalTo(EXCEPTION_TYPE, exceptionType),
+                      satisfies(
+                          EXCEPTION_MESSAGE,
+                          message -> {
+                            if (exception.getMessage() != null) {
+                              message.isEqualTo(exception.getMessage());
+                            }
+                          }),
                       satisfies(EXCEPTION_STACKTRACE, stacktrace -> stacktrace.isNotNull()));
             });
   }
 
   private void assertClientExceptionLog(Throwable exception, String eventName) {
+    String exceptionType = exceptionType(exception);
     Awaitility.await()
         .untilAsserted(
             () -> {
@@ -1290,9 +1293,20 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               assertThat(logs.get(0))
                   .hasSeverity(Severity.WARN)
                   .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
-                      equalTo(EXCEPTION_MESSAGE, exception.getMessage()),
+                      equalTo(EXCEPTION_TYPE, exceptionType),
+                      satisfies(
+                          EXCEPTION_MESSAGE,
+                          message -> {
+                            if (exception.getMessage() != null) {
+                              message.isEqualTo(exception.getMessage());
+                            }
+                          }),
                       satisfies(EXCEPTION_STACKTRACE, stacktrace -> stacktrace.isNotNull()));
             });
+  }
+
+  private static String exceptionType(Throwable exception) {
+    String canonicalName = exception.getClass().getCanonicalName();
+    return canonicalName != null ? canonicalName : exception.getClass().getName();
   }
 }

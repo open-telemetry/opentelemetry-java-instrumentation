@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.server;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -30,11 +33,14 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
@@ -47,6 +53,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +69,8 @@ import server.TestController;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSpringWebfluxTest {
+
+    private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.0";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -401,16 +410,22 @@ public abstract class AbstractSpringWebfluxTest {
                             equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/**")),
-                span ->
+                span -> {
                     span.hasName("ResourceWebHandler.handle")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(AbstractSpringWebfluxTest::resource404Exception)
-                        .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(
-                                "org.springframework.web.reactive.resource.ResourceWebHandler",
-                                "handle"))));
+                        .hasStatus(StatusData.error());
+                    if (emitExceptionAsSpanEvents()) {
+                      span.hasEventsSatisfyingExactly(AbstractSpringWebfluxTest::resource404Exception);
+                    }
+                    span.hasAttributesSatisfyingExactly(
+                        codeFunctionAssertions(
+                            "org.springframework.web.reactive.resource.ResourceWebHandler",
+                            "handle"));
+                  }));
+        if (emitExceptionAsLogs()) {
+            assertResource404ExceptionLog();
+        }
   }
 
   private static void resource404Exception(EventDataAssert event) {
@@ -438,6 +453,24 @@ public abstract class AbstractSpringWebfluxTest {
               satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
     }
   }
+
+    private static void assertResource404ExceptionLog() {
+        if (testLatestDeps()) {
+            assertHandlerExceptionLog(
+                    type ->
+                            type.isEqualTo(
+                                    "org.springframework.web.reactive.resource.NoResourceFoundException"),
+                    message -> message.isInstanceOf(String.class));
+        } else {
+            assertHandlerExceptionLog(
+                    type ->
+                            type.isIn(
+                                    "org.springframework.web.server.ResponseStatusException",
+                                    // Changed in spring 7+
+                                    "org.springframework.web.reactive.resource.NoResourceFoundException"),
+                    message -> message.contains("404"));
+    }
+    }
 
   @Test
   void basicPostTest() {
@@ -516,19 +549,51 @@ public abstract class AbstractSpringWebfluxTest {
                   }
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
-                      .hasStatus(StatusData.error())
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName("exception")
-                                  .hasAttributesSatisfyingExactly(
-                                      equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
-                                      equalTo(EXCEPTION_MESSAGE, "bad things happen"),
-                                      satisfies(
-                                          EXCEPTION_STACKTRACE,
-                                          val -> val.isInstanceOf(String.class))))
-                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
+                      .hasStatus(StatusData.error());
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("exception")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+                                    equalTo(EXCEPTION_MESSAGE, "bad things happen"),
+                                    satisfies(
+                                        EXCEPTION_STACKTRACE,
+                                        val -> val.isInstanceOf(String.class))));
+                  }
+                  span.hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 }));
+    if (emitExceptionAsLogs()) {
+      assertHandlerExceptionLog(
+          type -> type.isEqualTo("java.lang.IllegalStateException"),
+          message -> message.isEqualTo("bad things happen"));
+    }
+  }
+
+  private static void assertHandlerExceptionLog(
+      StringAssertConsumer exceptionTypeAssertion, StringAssertConsumer exceptionMessageAssertion) {
+    Awaitility.await()
+        .untilAsserted(
+            () -> {
+              List<LogRecordData> logs =
+                  testing.logRecords().stream()
+                      .filter(log -> "exception".equals(log.getEventName()))
+                      .filter(
+                          log ->
+                              INSTRUMENTATION_NAME.equals(
+                                  log.getInstrumentationScopeInfo().getName()))
+                      .collect(toList());
+
+              assertThat(logs).hasSize(1);
+              assertThat(logs.get(0))
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("exception")
+                  .hasAttributesSatisfyingExactly(
+                      satisfies(EXCEPTION_TYPE, exceptionTypeAssertion),
+                      satisfies(EXCEPTION_MESSAGE, exceptionMessageAssertion),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
+            });
   }
 
   private static Stream<Arguments> provideBadEndpointParameters() {
