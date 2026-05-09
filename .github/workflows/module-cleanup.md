@@ -131,10 +131,13 @@ jobs:
           # bodies list the modules under "## Modules in this batch" as
           # "- " followed by the short wrapped in backticks). Once a PR
           # merges, those shorts also exist in processed.txt so they won't
-          # be re-picked.
+          # be re-picked. Only scan the "Modules in this batch" section
+          # (terminated by `---`) so an unrelated backticked line elsewhere
+          # in the body cannot poison the processed-set.
           inflight=$(gh pr list --repo "$GITHUB_REPOSITORY" \
                        --label "module cleanup" --state open \
                        --json body --jq '.[].body' \
+                     | awk '/^## Modules in this batch/{f=1; next} /^---/{f=0} f' \
                      | sed -n 's/^- `\([^`]*\)`$/\1/p' || true)
           export REVIEW_PROGRESS="$(printf '%s\n%s\n' "$processed" "$inflight" \
                                     | grep -v '^$' | sort -u)"
@@ -157,7 +160,11 @@ jobs:
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 1
+          # Full history is required: finalize computes
+          # `origin/main..origin/module-cleanup-wip` to build the PR body and
+          # decide whether to flush. With a shallow `origin/main`, main's own
+          # ancestors leak into that range and corrupt both outputs.
+          fetch-depth: 0
           persist-credentials: true
           token: ${{ steps.otelbot-token.outputs.token }}
       - name: Configure git author

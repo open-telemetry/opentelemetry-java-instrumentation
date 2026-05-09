@@ -49,9 +49,12 @@ SHORT="${SHORT_NAME:?SHORT_NAME required}"
 AGENT_RESULT="${AGENT_RESULT:-failure}"
 ARTIFACT_DIR="${ARTIFACT_DIR:-./agent-artifact}"
 
-git fetch origin main --depth=1
-git fetch origin "$MEMORY_BRANCH" --depth=1 2>/dev/null || true
-git fetch origin "$WIP_BRANCH"    --depth=1 2>/dev/null || true
+# Full history is required for `origin/main..origin/$WIP_BRANCH` log/diff
+# below. The finalize job's checkout uses `fetch-depth: 0`, so don't
+# re-shallow any of these refs with `--depth`.
+git fetch origin main
+git fetch origin "$MEMORY_BRANCH" 2>/dev/null || true
+git fetch origin "$WIP_BRANCH"    2>/dev/null || true
 
 # ---- 1. Update processed.txt (and failed.txt on failure) ----
 
@@ -133,7 +136,7 @@ if [ -n "$PATCH_SRC" ]; then
     )
 fi
 
-git fetch origin "$WIP_BRANCH" --depth=50 2>/dev/null || true
+git fetch origin "$WIP_BRANCH" 2>/dev/null || true
 
 # ---- 3. Decide flush ----
 
