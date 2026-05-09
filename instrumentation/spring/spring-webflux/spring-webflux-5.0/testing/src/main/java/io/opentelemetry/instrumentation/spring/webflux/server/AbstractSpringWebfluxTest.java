@@ -418,6 +418,8 @@ public abstract class AbstractSpringWebfluxTest {
                   if (emitExceptionAsSpanEvents()) {
                     span.hasEventsSatisfyingExactly(
                         AbstractSpringWebfluxTest::resource404Exception);
+                  } else {
+                    span.hasEventsSatisfyingExactly();
                   }
                   span.hasAttributesSatisfyingExactly(
                       codeFunctionAssertions(
@@ -561,6 +563,8 @@ public abstract class AbstractSpringWebfluxTest {
                                     satisfies(
                                         EXCEPTION_STACKTRACE,
                                         val -> val.isInstanceOf(String.class))));
+                  } else {
+                    span.hasEventsSatisfyingExactly();
                   }
                   span.hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 }));

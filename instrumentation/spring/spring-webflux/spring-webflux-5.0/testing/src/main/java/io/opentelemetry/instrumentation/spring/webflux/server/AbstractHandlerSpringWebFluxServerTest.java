@@ -45,6 +45,8 @@ public abstract class AbstractHandlerSpringWebFluxServerTest
                         equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
                         equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
                         satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+      } else {
+        span.hasEventsSatisfyingExactly();
       }
     } else if (endpoint == NOT_FOUND) {
       span.hasStatus(StatusData.error());
@@ -77,6 +79,8 @@ public abstract class AbstractHandlerSpringWebFluxServerTest
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)),
                           satisfies(EXCEPTION_MESSAGE, val -> val.contains("404"))));
         }
+      } else {
+        span.hasEventsSatisfyingExactly();
       }
       if (emitExceptionAsLogs()) {
         if (testLatestDeps()) {
