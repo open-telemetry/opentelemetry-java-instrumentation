@@ -183,6 +183,12 @@ jobs:
           ref: otelbot/flaky-test-remediation-progress
           path: progress
 
+      - name: Use CLA approved bot
+        if: steps.changes.outputs.committed == 'true'
+        working-directory: progress
+        # This is a separate checkout with its own local git config.
+        run: ../.github/scripts/use-cla-approved-bot.sh
+
       - name: Record attempt
         if: steps.changes.outputs.committed == 'true'
         working-directory: progress
