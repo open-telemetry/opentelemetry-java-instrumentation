@@ -32,6 +32,8 @@ concurrency:
 
 timeout-minutes: 30
 
+environment: protected
+
 strict: false
 
 engine:
