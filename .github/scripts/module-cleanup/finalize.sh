@@ -15,9 +15,9 @@
 #      module-cleanup-batch-<run_id> branch and open the PR. The wip
 #      branch ceases to exist on remote until the next run recreates
 #      it from main.
-#   4. Self-dispatch the workflow unless the queue is empty. The chain
-#      stops on its own once MAX_OPEN_PRS is reached (matrix script
-#      returns has_work=false and finalize is skipped).
+#   4. Leave self-dispatch to the workflow step that follows this script,
+#      so PR creation can use the app token while workflow dispatch uses
+#      the normal GitHub Actions token.
 #
 # No rebase-retry loops on push: the workflow uses
 # concurrency.group=module-cleanup with cancel-in-progress=false, so this
@@ -25,8 +25,7 @@
 # workflow runs.
 #
 # Required env:
-#   GH_TOKEN          - token with contents:write, pull-requests:write,
-#                       and actions:write
+#   GH_TOKEN          - token with contents:write and pull-requests:write
 #   GITHUB_REPOSITORY - owner/repo
 #   SHORT_NAME        - the module short_name processed this run
 #   AGENT_RESULT      - github.needs.agent.result ('success'|'failure'|...)
@@ -36,7 +35,6 @@
 #
 # Optional env:
 #   FLUSH_THRESHOLD   - file count that triggers a PR (default 10)
-#   WORKFLOW_FILE     - workflow file name for self-dispatch
 #   MEMORY_BRANCH     - default: memory/module-cleanup
 #   WIP_BRANCH        - default: module-cleanup-wip
 
@@ -47,7 +45,6 @@ WIP_BRANCH="${WIP_BRANCH:-module-cleanup-wip}"
 THRESHOLD="${FLUSH_THRESHOLD:-10}"
 QUEUE_REMAINING="${QUEUE_REMAINING:-0}"
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
-WORKFLOW_FILE="${WORKFLOW_FILE:-module-cleanup.lock.yml}"
 SHORT="${SHORT_NAME:?SHORT_NAME required}"
 AGENT_RESULT="${AGENT_RESULT:-failure}"
 ARTIFACT_DIR="${ARTIFACT_DIR:-./agent-artifact}"
@@ -208,22 +205,6 @@ if [ "$SHOULD_FLUSH" = "true" ]; then
         --label "module cleanup"
 
     OPENED_PR=true
-fi
-
-# ---- 4. Self-dispatch ----
-
-# Always self-dispatch when there's more queued work. The next run will
-# pick up wherever wip is: if we just flushed, wip is gone and the run
-# starts a fresh wip from main; otherwise it appends to the same wip.
-# The chain stops on its own when build-cleanup-matrix.py sees
-# MAX_OPEN_PRS reached and returns has_work=false (no agent, no
-# finalize, no self-dispatch). Cron picks back up later.
-
-if [ "$QUEUE_REMAINING" -le 0 ]; then
-    echo "Queue empty; nothing to dispatch."
-else
-    echo "Self-dispatching workflow for next module."
-    gh workflow run "$WORKFLOW_FILE" --repo "$REPO" --ref main
 fi
 
 git worktree remove --force "$MEM_WT" 2>/dev/null || true

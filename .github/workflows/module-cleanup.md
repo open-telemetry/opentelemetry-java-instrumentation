@@ -51,9 +51,9 @@ engine:
   model: ${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}
 
 # Disable the AWF sandbox so copilot-cli connects directly to
-# api.githubcopilot.com. The AWF api-proxy in v0.25.40 collapses Copilot
-# traffic to a single endpoint, which prevents the CLI from negotiating
-# /responses-API routing and blocks newer models like gpt-5.5.
+# api.githubcopilot.com. In sandboxed Copilot workflows, gh-aw enables
+# Copilot BYOK/offline mode but does not set responses wire-API routing
+# for GPT-5-family models yet. See https://github.com/github/gh-aw/issues/31241.
 sandbox:
   agent: false
 
@@ -86,8 +86,8 @@ tools:
 
 safe-outputs:
   # Threat detection requires the AWF agent sandbox, which we disable
-  # below. The placeholder safe-job below carries no untrusted output,
-  # so threat detection is unnecessary.
+  # because of https://github.com/github/gh-aw/issues/31241. The placeholder
+  # safe-job below carries no untrusted output, so threat detection is unnecessary.
   threat-detection: false
   jobs:
     suppress_default_create_issue:
@@ -147,9 +147,8 @@ jobs:
     if: always() && needs.dispatch.outputs.has_work == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
-      actions: write
+      contents: read
+      actions: write # to trigger next iteration
     steps:
       - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: otelbot-token
@@ -171,14 +170,20 @@ jobs:
         continue-on-error: true
       - name: Finalize
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # Use the app token for pushes and PR creation so the PR runs workflows.
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
           SHORT_NAME: ${{ needs.dispatch.outputs.short_name }}
           AGENT_RESULT: ${{ needs.agent.result }}
           QUEUE_REMAINING: ${{ needs.dispatch.outputs.queue_remaining }}
           ARTIFACT_DIR: ./agent-artifact
-          WORKFLOW_FILE: module-cleanup.lock.yml
         run: bash .github/scripts/module-cleanup/finalize.sh
+      - name: Trigger next workflow
+        if: needs.dispatch.outputs.queue_remaining != '0'
+        env:
+          # Use the normal GitHub Actions token for workflow_dispatch.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_FILE: module-cleanup.lock.yml
+        run: gh workflow run "$WORKFLOW_FILE" --repo "$GITHUB_REPOSITORY"
 
 if: ${{ needs.dispatch.outputs.has_work == 'true' }}
 
