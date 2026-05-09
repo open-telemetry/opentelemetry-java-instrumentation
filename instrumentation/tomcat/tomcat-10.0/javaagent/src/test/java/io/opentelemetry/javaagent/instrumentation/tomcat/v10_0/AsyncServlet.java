@@ -60,6 +60,12 @@ class AsyncServlet extends HttpServlet {
                     resp.getWriter().print(endpoint.getBody());
                   } else if (endpoint.equals(EXCEPTION)) {
                     resp.setStatus(endpoint.getStatus());
+                    if (!testLatestDeps()) {
+                      // Set Content-Length so the response is self-delimiting; combined with
+                      // the writer.close() below, this lets the client read a complete 500
+                      // response on older Tomcat before the post-throw connection reset.
+                      resp.setContentLength(endpoint.getBody().length());
+                    }
                     PrintWriter writer = resp.getWriter();
                     writer.print(endpoint.getBody());
                     if (!testLatestDeps()) {

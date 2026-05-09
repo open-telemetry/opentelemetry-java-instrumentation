@@ -156,6 +156,9 @@ public class TestServlet5 {
                     } else if (EXCEPTION.equals(endpoint)) {
                       resp.setStatus(endpoint.getStatus());
                       if (isOldTomcat(req)) {
+                        // Set Content-Length so the response is self-delimiting; combined with
+                        // the writer.close() below, this lets the client read a complete 500
+                        // response on older Tomcat before the post-throw connection reset.
                         resp.setContentLength(endpoint.getBody().length());
                       }
                       PrintWriter writer = resp.getWriter();
@@ -240,6 +243,9 @@ public class TestServlet5 {
               } else if (EXCEPTION.equals(endpoint)) {
                 resp.setStatus(endpoint.getStatus());
                 if (isOldTomcat(req)) {
+                  // Set Content-Length so the response is self-delimiting; combined with the
+                  // writer.close() below, this lets the client read a complete 500 response on
+                  // older Tomcat before the post-throw connection reset.
                   resp.setContentLength(endpoint.getBody().length());
                 }
                 PrintWriter writer = resp.getWriter();
