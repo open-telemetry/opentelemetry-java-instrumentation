@@ -252,7 +252,7 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  SpanDataAssert publishSpan(SpanDataAssert span, String queueUrl, String rcpMethod) {
+  SpanDataAssert publishSpan(SpanDataAssert span, String queueUrl, String rpcMethod) {
     return span.hasName("testSdkSqs publish")
         .hasKind(SpanKind.PRODUCER)
         .hasNoParent()
@@ -264,7 +264,7 @@ public abstract class AbstractAws2SqsBaseTest {
                 val -> val.matches("\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "Sqs"),
-            equalTo(RPC_METHOD, rcpMethod),
+            equalTo(RPC_METHOD, rpcMethod),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
