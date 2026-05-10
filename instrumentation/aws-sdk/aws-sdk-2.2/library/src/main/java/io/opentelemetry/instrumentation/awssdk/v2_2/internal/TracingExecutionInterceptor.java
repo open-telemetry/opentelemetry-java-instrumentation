@@ -119,7 +119,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter,
       Logger eventLogger,
       boolean captureExperimentalSpanAttributes,
-      TextMapPropagator messagingPropagator,
+      @Nullable TextMapPropagator messagingPropagator,
       boolean useXrayPropagator,
       boolean recordIndividualHttpError,
       boolean genAiCaptureMessageContent) {

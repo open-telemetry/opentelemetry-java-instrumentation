@@ -12,11 +12,10 @@ import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 
 class Aws2ClientNotRecordHttpErrorTest extends AbstractAws2ClientRecordHttpErrorTest {
   @RegisterExtension
-  public static final LibraryInstrumentationExtension testing =
-      LibraryInstrumentationExtension.create();
+  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
-  public ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
+  protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder()
         .addExecutionInterceptor(
             AwsSdkTelemetry.builder(testing.getOpenTelemetry())
@@ -27,7 +26,7 @@ class Aws2ClientNotRecordHttpErrorTest extends AbstractAws2ClientRecordHttpError
   }
 
   @Override
-  public boolean isRecordIndividualHttpErrorEnabled() {
+  protected boolean isRecordIndividualHttpErrorEnabled() {
     return false;
   }
 
