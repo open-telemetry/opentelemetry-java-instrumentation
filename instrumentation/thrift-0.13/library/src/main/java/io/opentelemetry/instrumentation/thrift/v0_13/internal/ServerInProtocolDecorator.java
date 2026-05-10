@@ -100,11 +100,12 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
   }
 
   public void endSpan(@Nullable Throwable throwable, boolean failed) {
-    if (currentScope == null || currentContext == null || currentRequest == null) {
+    if (currentContext == null || currentRequest == null) {
       return;
     }
-    currentScope.close();
-
+    if (currentScope != null) {
+      currentScope.close();
+    }
     instrumenter.end(
         currentContext, currentRequest, failed ? ThriftResponse.FAILED : null, throwable);
   }
