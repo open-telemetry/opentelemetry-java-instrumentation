@@ -79,31 +79,33 @@
 
 ## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
 
-When an abstract test base is shared across multiple concrete subclasses run in the same
-JVM fork, treat per-class fixture state (containers, clients, connections, host/port, the
-`AutoCleanupExtension` itself, etc.) as **instance state on a `@TestInstance(PER_CLASS)`
-class**, not as `static` fields.
+When an abstract test base is shared by multiple concrete subclasses run in the same JVM
+fork, `static` fixture fields become JVM-wide state the subclasses fight over. Annotate
+the base with `@TestInstance(Lifecycle.PER_CLASS)` and make per-class fixtures
+**instance** fields. JUnit creates one base instance per concrete subclass and reuses it
+for every `@Test`, giving the same once-per-class lifecycle as `static` without leaking
+across subclasses.
 
-- Annotate the base with `@TestInstance(TestInstance.Lifecycle.PER_CLASS)`. JUnit then creates
-  one instance per concrete subclass and reuses it for every `@Test` in that class, so
-  instance fields give the same once-per-class lifecycle that `static` fields used to provide,
-  without leaking across subclasses.
-- Make `redisServer` / `kafkaContainer` / `client` / `host` / `port` / etc. instance fields
-  (`protected`, not `protected static`). Each concrete subclass then gets its own container
-  and client, freshly configured by its own `@BeforeAll`.
-- Make `@RegisterExtension AutoCleanupExtension cleanup` an **instance** field, not `static`.
-  A shared `static` `AutoCleanupExtension` only runs `deferAfterAll(...)` callbacks for the
-  first subclass JUnit invokes — its `rootContext` is set on first `beforeAll` and never
-  reset — so subsequent subclasses leak deferred resources (containers, clients, connections).
-- Helpers that read instance fields (e.g. `spanName(String)` reading `host`/`port`) must
-  also be instance methods, not `static`.
-- This is also the right shape when a subclass needs to mutate the container's builder
-  configuration (e.g. `withCommand("--requirepass password")`). With shared `static` state the
-  earlier subclass may have already started the container, so `withCommand` on the running
-  instance has no effect; with per-instance state each subclass mutates and starts its own
-  fresh container.
-- Reserve `static` for true JVM-wide constants (`DB_INDEX`, loggers, `*_HASH_MAP` literals,
-  pure helpers like `addExtraAttributes(...)` / `assertCommandEncodeEvents(...)`).
+What goes where:
+
+- **Instance** (`protected`, not `protected static`): containers, clients, connections,
+  `host` / `port` / URI fields, and any helper method that reads them (e.g.
+  `spanName(String)` reading `host`/`port`).
+- **Instance** `@RegisterExtension AutoCleanupExtension cleanup`: a shared `static`
+  `AutoCleanupExtension` latches `rootContext` on the first subclass's `beforeAll` and
+  never resets it, so `deferAfterAll(...)` callbacks registered by later subclasses
+  silently leak.
+- **`static`** for true JVM-wide constants only: `DB_INDEX`, loggers, `*_HASH_MAP`
+  literals, pure helpers (`addExtraAttributes(...)`, `assertCommandEncodeEvents(...)`),
+  and `@RegisterExtension InstrumentationExtension testing` — the agent/SDK extension
+  must be `static final` because JUnit only invokes `BeforeAllCallback` /
+  `AfterAllCallback` for class-level (static) `@RegisterExtension` fields.
+
+This shape is also required when a subclass needs to mutate the container's builder
+(e.g. `withCommand("--requirepass password")`): with shared `static` state an earlier
+subclass may have already started the container, so `withCommand` on the running
+instance is a no-op; with per-instance state each subclass mutates and starts its own
+fresh container.
 
 ## Span Attribute Assertions
 
