@@ -236,8 +236,10 @@ public abstract class AbstractThriftTest {
 
   protected CustomService.AsyncIface createAsyncClient(int port) throws Exception {
     TNonblockingTransport transport = new TNonblockingSocket("localhost", port);
+    cleanup.deferCleanup(transport);
     TProtocolFactory protocolFactory = configure(new TBinaryProtocol.Factory());
     TAsyncClientManager clientManager = new TAsyncClientManager();
+    cleanup.deferCleanup(clientManager::stop);
     return configure(new CustomService.AsyncClient(protocolFactory, clientManager, transport));
   }
 
