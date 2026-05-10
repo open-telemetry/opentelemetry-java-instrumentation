@@ -22,3 +22,4 @@ apache-httpclient-5.2:library
 apache-shenyu-2.4:javaagent
 armeria-1.3:javaagent
 armeria-1.3:library
+armeria-1.3:testing
