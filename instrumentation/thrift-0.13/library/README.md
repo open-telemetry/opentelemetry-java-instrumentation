@@ -43,7 +43,7 @@ TProtocol configureClient(OpenTelemetry openTelemetry, TProtocol protocol) {
   return thriftTelemetry.wrapClientProtocol(protocol);
 }
 
-CustomService.Iface configureClient(CustomService.Client client) {
+CustomService.Iface configureClient(OpenTelemetry openTelemetry, CustomService.Client client) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
   return thriftTelemetry.wrapClient(client, CustomService.Iface.class);
 }
@@ -54,7 +54,7 @@ TProtocolFactory configureClient(OpenTelemetry openTelemetry, TProtocolFactory p
   return thriftTelemetry.wrapClientProtocolFactory(protocolFactory);
 }
 
-CustomService.AsyncIface configureClient(CustomService.AsyncClient asyncClient) {
+CustomService.AsyncIface configureClient(OpenTelemetry openTelemetry, CustomService.AsyncClient asyncClient) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
   return thriftTelemetry.wrapAsyncClient(asyncClient, CustomService.AsyncIface.class);
 }
