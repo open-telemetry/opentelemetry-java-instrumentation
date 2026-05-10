@@ -81,6 +81,9 @@ public final class ThriftTelemetry {
             client.getClass().getClassLoader(),
             new Class<?>[] {clientInterface},
             (proxy, method, args) -> {
+              if (method.getDeclaringClass() == Object.class) {
+                return method.invoke(client, args);
+              }
               Throwable error = null;
               ClientCallContext clientContext =
                   ClientCallContext.start(
@@ -121,6 +124,9 @@ public final class ThriftTelemetry {
             client.getClass().getClassLoader(),
             new Class<?>[] {clientInterface},
             (proxy, method, args) -> {
+              if (method.getDeclaringClass() == Object.class) {
+                return method.invoke(client, args);
+              }
               Throwable error = null;
               boolean hasAsyncCallback = false;
               ClientCallContext clientContext =
