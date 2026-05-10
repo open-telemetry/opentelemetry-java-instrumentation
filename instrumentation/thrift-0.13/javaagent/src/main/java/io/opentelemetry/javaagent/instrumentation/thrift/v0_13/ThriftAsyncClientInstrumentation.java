@@ -29,7 +29,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.thrift.async.AsyncMethodCallback;
 import org.apache.thrift.async.TAsyncClient;
 import org.apache.thrift.protocol.TProtocolFactory;
-import org.apache.thrift.transport.TNonblockingTransport;
 
 class ThriftAsyncClientInstrumentation implements TypeInstrumentation {
 
@@ -69,9 +68,7 @@ class ThriftAsyncClientInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static TProtocolFactory onEnter(
-        @Advice.Argument(0) TProtocolFactory protocolFactory,
-        @Advice.Argument(2) TNonblockingTransport transport) {
+    public static TProtocolFactory onEnter(@Advice.Argument(0) TProtocolFactory protocolFactory) {
       return new ClientProtocolDecorator.Factory(protocolFactory, getPropagators());
     }
   }
