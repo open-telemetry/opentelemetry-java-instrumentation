@@ -25,6 +25,7 @@ class SqsProcessRequestAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getDestination(SqsProcessRequest request) {
     Object originalRequest = request.getRequest().getOriginalRequest();
     String queueUrl = RequestAccess.getQueueUrl(originalRequest);

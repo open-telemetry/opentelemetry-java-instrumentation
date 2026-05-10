@@ -25,6 +25,7 @@ class SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respo
   }
 
   @Override
+  @Nullable
   public String getDestination(Request<?> request) {
     Object originalRequest = request.getOriginalRequest();
     String queueUrl = RequestAccess.getQueueUrl(originalRequest);
