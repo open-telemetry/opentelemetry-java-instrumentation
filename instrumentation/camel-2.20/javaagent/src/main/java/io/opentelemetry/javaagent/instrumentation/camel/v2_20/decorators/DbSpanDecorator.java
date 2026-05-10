@@ -46,6 +46,7 @@ import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class DbSpanDecorator extends BaseSpanDecorator {
 
   private static final SqlQueryAnalyzer analyzer =
@@ -128,7 +129,6 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void pre(
       AttributesBuilder attributes,
@@ -155,7 +155,6 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
