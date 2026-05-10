@@ -44,7 +44,6 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -325,20 +324,20 @@ public abstract class AbstractCassandraTest {
   }
 
   protected static class Parameter {
-    @Nullable public final String keyspace;
+    public final String keyspace;
     public final String queryText;
     public final String expectedQueryText;
     public final String spanName;
     public final String operation;
-    @Nullable public final String table;
+    public final String table;
 
     public Parameter(
-        @Nullable String keyspace,
+        String keyspace,
         String queryText,
         String expectedQueryText,
         String spanName,
         String operation,
-        @Nullable String table) {
+        String table) {
       this.keyspace = keyspace;
       this.queryText = queryText;
       this.expectedQueryText = expectedQueryText;
@@ -348,7 +347,7 @@ public abstract class AbstractCassandraTest {
     }
   }
 
-  protected CqlSession getSession(@Nullable String keyspace) {
+  protected CqlSession getSession(String keyspace) {
     DriverConfigLoader configLoader =
         DefaultDriverConfigLoader.builder()
             .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
