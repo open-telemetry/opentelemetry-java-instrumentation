@@ -37,14 +37,11 @@ public abstract class AbstractSystemMetricsTest {
                             .hasUnit("By")
                             .hasLongSumSatisfying(
                                 sum -> {
-                                  sum
-                                      .hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfying(
-                                                  equalTo(STATE, "used")),
-                                          point ->
-                                              point.hasAttributesSatisfying(
-                                                  equalTo(STATE, "free")));
+                                  sum.hasPointsSatisfying(
+                                      point ->
+                                          point.hasAttributesSatisfying(equalTo(STATE, "used")),
+                                      point ->
+                                          point.hasAttributesSatisfying(equalTo(STATE, "free")));
                                   assertThat(metric.getLongSumData().getPoints())
                                       .anySatisfy(
                                           point -> assertThat(point.getValue()).isPositive());
