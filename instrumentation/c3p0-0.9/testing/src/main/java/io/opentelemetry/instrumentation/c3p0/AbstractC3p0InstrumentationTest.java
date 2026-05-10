@@ -76,8 +76,7 @@ public abstract class AbstractC3p0InstrumentationTest {
 
     assertThat(dataSourceName).isNotEmpty();
 
-    DbConnectionPoolMetricsAssertions.create(
-            testing(), INSTRUMENTATION_NAME, dataSource.getDataSourceName())
+    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, dataSourceName)
         .disableMinIdleConnections()
         .disableMaxIdleConnections()
         .disableMaxConnections()
