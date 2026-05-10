@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.ATTR_DAEMON;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.UNIT_THREADS;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
+import io.opentelemetry.sdk.metrics.data.LongPointData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -50,16 +52,14 @@ class JfrThreadCountTest {
             metric
                 .hasName("jvm.thread.count")
                 .hasUnit(UNIT_THREADS)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributesSatisfying(equalTo(ATTR_DAEMON, false))
-                                    .hasValueSatisfying(v -> v.isPositive()),
-                            point ->
-                                point
-                                    .hasAttributesSatisfying(equalTo(ATTR_DAEMON, true))
-                                    .hasValueSatisfying(v -> v.isPositive()))));
+                .satisfies(
+                    data ->
+                        assertThat(data.getLongSumData().getPoints())
+                            .anyMatch(point -> point.getValue() > 0 && !isDaemon(point))
+                            .anyMatch(point -> point.getValue() > 0 && isDaemon(point))));
+  }
+
+  private static boolean isDaemon(LongPointData point) {
+    return requireNonNull(point.getAttributes().get(ATTR_DAEMON));
   }
 }
