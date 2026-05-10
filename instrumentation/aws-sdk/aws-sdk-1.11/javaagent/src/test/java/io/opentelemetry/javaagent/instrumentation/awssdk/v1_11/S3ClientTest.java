@@ -84,7 +84,6 @@ class S3ClientTest extends AbstractS3ClientTest {
 
   @ParameterizedTest
   @MethodSource("provideS3Arguments")
-  @SuppressWarnings("deprecation") // AmazonS3Client constructor is deprecated
   void testRequestHandlerIsHookedUpWithConstructor(boolean addHandler, int size)
       throws ReflectiveOperationException {
     BasicAWSCredentials credentials = new BasicAWSCredentials("asdf", "qwerty");
@@ -102,7 +101,6 @@ class S3ClientTest extends AbstractS3ClientTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // AmazonS3Client constructor is deprecated
   void testNaughtyRequestHandlerDoesntBreakTheTrace() {
     AmazonS3Client client = new AmazonS3Client(credentialsProvider);
     client.addRequestHandler(
