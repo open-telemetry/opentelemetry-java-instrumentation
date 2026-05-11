@@ -4,7 +4,7 @@ description: |
   module per run. Each successful run's commit is appended to the fixed
   `otelbot/module-cleanup-wip` branch. When that branch reaches FILE_THRESHOLD
   modified files (or when the unprocessed-module queue empties), the
-  finalize job atomically renames wip to `module-cleanup-batch-<run_id>`
+  finalize job atomically renames wip to `otelbot/module-cleanup-batch-<run_id>`
   and opens a PR against main. The next run, finding no wip on remote,
   starts a fresh wip from main.
 

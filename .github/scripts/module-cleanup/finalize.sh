@@ -12,7 +12,7 @@
 #      otelbot/module-cleanup-wip branch and push.
 #   3. If wip diff vs origin/main has reached FLUSH_THRESHOLD files OR
 #      the queue is empty, atomically rename wip to a
-#      module-cleanup-batch-<run_id> branch and open the PR. The wip
+#      otelbot/module-cleanup-batch-<run_id> branch and open the PR. The wip
 #      branch ceases to exist on remote until the next run recreates
 #      it from main.
 #   4. Leave self-dispatch to the workflow step that follows this script,
@@ -166,7 +166,7 @@ fi
 OPENED_PR=false
 if [ "$SHOULD_FLUSH" = "true" ]; then
     RUN_ID="${GITHUB_RUN_ID:-$(date -u +%Y%m%d%H%M%S)}"
-    BATCH_BRANCH="module-cleanup-batch-$RUN_ID"
+    BATCH_BRANCH="otelbot/module-cleanup-batch-$RUN_ID"
 
     MODULE_COUNT=$(git -C "$WIP_WT" rev-list --count "origin/main..origin/$WIP_BRANCH")
 
