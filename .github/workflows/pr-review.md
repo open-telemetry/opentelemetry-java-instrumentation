@@ -192,7 +192,7 @@ steps:
       echo "REVIEW_FINDINGS_PATH=/tmp/gh-aw/agent/findings.json" >> "$GITHUB_ENV"
 ---
 
-# PR Review — Single Run
+# PR Review
 
 Read the persona section above for the role, the bundle layout, the JSON
 output contract, and the hard rules. Those apply unchanged to this run.

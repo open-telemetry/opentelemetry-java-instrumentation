@@ -67,7 +67,7 @@
 #   - ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959
 #   - node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
 
-name: "PR Review — Single Run"
+name: "PR Review"
 "on":
   issue_comment:
     types:
@@ -79,7 +79,7 @@ concurrency:
   cancel-in-progress: true
   group: pr-review-${{ github.event.pull_request.number || github.event.issue.number }}
 
-run-name: "PR Review — Single Run"
+run-name: "PR Review"
 
 jobs:
   activation:
@@ -109,7 +109,7 @@ jobs:
           job-name: ${{ github.job }}
           trace-id: ${{ needs.pre_activation.outputs.setup-trace-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "PR Review — Single Run"
+          GH_AW_SETUP_WORKFLOW_NAME: "PR Review"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/pr-review.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.40"
       - name: Generate agentic run info
@@ -121,7 +121,7 @@ jobs:
           GH_AW_INFO_VERSION: "1.0.40"
           GH_AW_INFO_AGENT_VERSION: "1.0.40"
           GH_AW_INFO_CLI_VERSION: "v0.71.5"
-          GH_AW_INFO_WORKFLOW_NAME: "PR Review — Single Run"
+          GH_AW_INFO_WORKFLOW_NAME: "PR Review"
           GH_AW_INFO_EXPERIMENTAL: "false"
           GH_AW_INFO_SUPPORTS_TOOLS_ALLOWLIST: "true"
           GH_AW_INFO_STAGED: "false"
@@ -375,7 +375,7 @@ jobs:
           job-name: ${{ github.job }}
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "PR Review — Single Run"
+          GH_AW_SETUP_WORKFLOW_NAME: "PR Review"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/pr-review.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.40"
       - name: Set runtime paths
@@ -880,7 +880,7 @@ jobs:
           job-name: ${{ github.job }}
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "PR Review — Single Run"
+          GH_AW_SETUP_WORKFLOW_NAME: "PR Review"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/pr-review.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.40"
       - name: Download agent output artifact
@@ -903,7 +903,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "PR Review — Single Run"
+          GH_AW_WORKFLOW_NAME: "PR Review"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_WORKFLOW_ID: "pr-review"
@@ -1057,7 +1057,7 @@ jobs:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "PR Review — Single Run"
+          GH_AW_SETUP_WORKFLOW_NAME: "PR Review"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/pr-review.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.40"
       - name: Check team membership for workflow
@@ -1091,7 +1091,7 @@ jobs:
       GH_AW_ENGINE_MODEL: "${{ needs.dispatch.outputs.model }}"
       GH_AW_ENGINE_VERSION: "1.0.40"
       GH_AW_WORKFLOW_ID: "pr-review"
-      GH_AW_WORKFLOW_NAME: "PR Review — Single Run"
+      GH_AW_WORKFLOW_NAME: "PR Review"
     outputs:
       code_push_failure_count: ${{ steps.process_safe_outputs.outputs.code_push_failure_count }}
       code_push_failure_errors: ${{ steps.process_safe_outputs.outputs.code_push_failure_errors }}
@@ -1110,7 +1110,7 @@ jobs:
           job-name: ${{ github.job }}
           trace-id: ${{ needs.activation.outputs.setup-trace-id }}
         env:
-          GH_AW_SETUP_WORKFLOW_NAME: "PR Review — Single Run"
+          GH_AW_SETUP_WORKFLOW_NAME: "PR Review"
           GH_AW_CURRENT_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/pr-review.lock.yml@${{ github.ref }}
           GH_AW_INFO_VERSION: "1.0.40"
       - name: Download agent output artifact
