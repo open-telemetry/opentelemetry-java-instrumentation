@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.sofarpc.v5_4.SofaRpcTelemetry;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.internal.SofaRpcClientNetworkAttributesGetter;
 
-public final class SofaRpcSingletons {
+public class SofaRpcSingletons {
   private static final Filter clientFilter;
   private static final Filter serverFilter;
 
