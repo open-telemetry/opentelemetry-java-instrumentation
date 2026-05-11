@@ -61,12 +61,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       Map<String, String> headers = ContextPropagationUtil.readHeaders(protocol);
       super.readFieldEnd();
 
-      Socket socket = SocketAccessor.getSocket(super.getTransport());
-      if (socket == null) {
-        // for non-blocking server, the socket may not be available through super.getTransport()
-        socket = SocketAccessor.getSocket(ServerCallContext.getTransport());
-      }
-      ThriftRequest request = new ThriftRequest(methodName, serviceName, socket, headers);
+      ThriftRequest request = new ThriftRequest(methodName, serviceName, getSocket(), headers);
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
         // proceed to the next field
@@ -86,9 +81,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     super.readMessageEnd();
     // message didn't include context propagation field
     if (currentContext == null) {
-      // for non-blocking server, the socket may not be available through super.getTransport()
-      Socket socket = SocketAccessor.getSocket(super.getTransport());
-      ThriftRequest request = new ThriftRequest(this.methodName, this.serviceName, socket);
+      ThriftRequest request = new ThriftRequest(this.methodName, this.serviceName, getSocket());
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
         return;
@@ -97,6 +90,16 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       currentContext = instrumenter.start(parentContext, request);
     }
     currentScope = currentContext.makeCurrent();
+  }
+
+  @Nullable
+  private Socket getSocket() {
+    Socket socket = SocketAccessor.getSocket(super.getTransport());
+    if (socket == null) {
+      // for non-blocking server, the socket may not be available through super.getTransport()
+      socket = SocketAccessor.getSocket(ServerCallContext.getTransport());
+    }
+    return socket;
   }
 
   public void endSpan(@Nullable Throwable throwable, boolean failed) {
