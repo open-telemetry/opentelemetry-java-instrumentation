@@ -95,8 +95,8 @@ jobs:
 
       - name: Install Copilot CLI
         run: |
-          curl -fsSL https://gh.io/copilot-install | bash
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          npm ci --prefix .github/scripts/copilot-cli
+          echo "$GITHUB_WORKSPACE/.github/scripts/copilot-cli/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh

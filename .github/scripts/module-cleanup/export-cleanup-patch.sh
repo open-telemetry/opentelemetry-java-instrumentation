@@ -2,7 +2,7 @@
 # Final action invoked by the LLM agent: format-patch the cleanup commit
 # range into /tmp/gh-aw/agent/cleanup.patch so gh-aw's auto-uploader
 # includes it in the `agent` workflow artifact. The finalize job then
-# downloads that artifact and applies the patch onto module-cleanup-wip.
+# downloads that artifact and applies the patch onto otelbot/module-cleanup-wip.
 #
 # Idempotent and write-only to /tmp. Does NOT push anything.
 #

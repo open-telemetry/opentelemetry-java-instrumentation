@@ -2,9 +2,9 @@
 description: |
   Walks instrumentation modules one-at-a-time, processing exactly one
   module per run. Each successful run's commit is appended to the fixed
-  `module-cleanup-wip` branch. When that branch reaches FILE_THRESHOLD
+  `otelbot/module-cleanup-wip` branch. When that branch reaches FILE_THRESHOLD
   modified files (or when the unprocessed-module queue empties), the
-  finalize job atomically renames wip to `module-cleanup-batch-<run_id>`
+  finalize job atomically renames wip to `otelbot/module-cleanup-batch-<run_id>`
   and opens a PR against main. The next run, finding no wip on remote,
   starts a fresh wip from main.
 
@@ -22,8 +22,8 @@ description: |
     - `memory/module-cleanup` branch holds `processed.txt` (modules already
       attempted; never re-picked automatically) and `failed.txt` (a
       diagnostic log of timeouts and patch-conflict failures).
-    - `module-cleanup-wip` branch holds not-yet-PR'd commits. Exists only
-      while there is uncommitted work; deleted when promoted to a batch.
+    - `otelbot/module-cleanup-wip` branch holds not-yet-PR'd commits. Exists
+      only while there is uncommitted work; deleted when promoted to a batch.
     - Open PRs labeled `module cleanup` count toward MAX_OPEN_PRS; while at
       cap, dispatch exits and waits for cron to retry.
 
@@ -51,9 +51,9 @@ engine:
   model: ${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}
 
 # Disable the AWF sandbox so copilot-cli connects directly to
-# api.githubcopilot.com. The AWF api-proxy in v0.25.40 collapses Copilot
-# traffic to a single endpoint, which prevents the CLI from negotiating
-# /responses-API routing and blocks newer models like gpt-5.5.
+# api.githubcopilot.com. In sandboxed Copilot workflows, gh-aw enables
+# Copilot BYOK/offline mode but does not set responses wire-API routing
+# for GPT-5-family models yet. See https://github.com/github/gh-aw/issues/31241.
 sandbox:
   agent: false
 
@@ -86,8 +86,8 @@ tools:
 
 safe-outputs:
   # Threat detection requires the AWF agent sandbox, which we disable
-  # below. The placeholder safe-job below carries no untrusted output,
-  # so threat detection is unnecessary.
+  # because of https://github.com/github/gh-aw/issues/31241. The placeholder
+  # safe-job below carries no untrusted output, so threat detection is unnecessary.
   threat-detection: false
   jobs:
     suppress_default_create_issue:
@@ -127,17 +127,7 @@ jobs:
           if git fetch origin "$MEMORY_BRANCH" --depth=1 2>/dev/null; then
             processed=$(git show "origin/$MEMORY_BRANCH:processed.txt" 2>/dev/null || true)
           fi
-          # Also exclude shorts already in inflight module-cleanup PRs (their
-          # bodies list the modules under "## Modules in this batch" as
-          # "- " followed by the short wrapped in backticks). Once a PR
-          # merges, those shorts also exist in processed.txt so they won't
-          # be re-picked.
-          inflight=$(gh pr list --repo "$GITHUB_REPOSITORY" \
-                       --label "module cleanup" --state open \
-                       --json body --jq '.[].body' \
-                     | sed -n 's/^- `\([^`]*\)`$/\1/p' || true)
-          export REVIEW_PROGRESS="$(printf '%s\n%s\n' "$processed" "$inflight" \
-                                    | grep -v '^$' | sort -u)"
+          export REVIEW_PROGRESS="$(printf '%s\n' "$processed" | grep -v '^$' | sort -u)"
           python .github/scripts/module-cleanup/build-cleanup-matrix.py
 
   finalize:
@@ -147,9 +137,8 @@ jobs:
     if: always() && needs.dispatch.outputs.has_work == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
-      actions: write
+      contents: read
+      actions: write # to trigger next iteration
     steps:
       - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: otelbot-token
@@ -158,7 +147,11 @@ jobs:
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 1
+          # Full history is required: finalize computes
+          # `origin/main..origin/otelbot/module-cleanup-wip` to build the PR
+          # body and decide whether to flush. With a shallow `origin/main`,
+          # main's own ancestors leak into that range and corrupt both outputs.
+          fetch-depth: 0
           persist-credentials: true
           token: ${{ steps.otelbot-token.outputs.token }}
       - name: Configure git author
@@ -171,14 +164,20 @@ jobs:
         continue-on-error: true
       - name: Finalize
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # Use the app token for pushes and PR creation so the PR runs workflows.
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
           SHORT_NAME: ${{ needs.dispatch.outputs.short_name }}
           AGENT_RESULT: ${{ needs.agent.result }}
           QUEUE_REMAINING: ${{ needs.dispatch.outputs.queue_remaining }}
           ARTIFACT_DIR: ./agent-artifact
-          WORKFLOW_FILE: module-cleanup.lock.yml
         run: bash .github/scripts/module-cleanup/finalize.sh
+      - name: Trigger next workflow
+        if: needs.dispatch.outputs.queue_remaining != '0'
+        env:
+          # Use the normal GitHub Actions token for workflow_dispatch.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_FILE: module-cleanup.lock.yml
+        run: gh workflow run "$WORKFLOW_FILE" --repo "$GITHUB_REPOSITORY"
 
 if: ${{ needs.dispatch.outputs.has_work == 'true' }}
 
@@ -245,7 +244,7 @@ instructions imported into this prompt are yours; execute them yourself.
    This writes `/tmp/gh-aw/agent/cleanup.patch` (a `git format-patch` of
    your commit range) so gh-aw's auto-uploader includes it in the
    workflow's `agent` artifact. The finalize job downloads that artifact
-   and applies the patch to the `module-cleanup-wip` branch. The script
+   and applies the patch to the `otelbot/module-cleanup-wip` branch. The script
    is idempotent and exits cleanly with no patch if you produced no
    commit. **Run it exactly once as your last action.** If you do not run
    it, your work is lost.
