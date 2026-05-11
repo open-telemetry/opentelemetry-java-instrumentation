@@ -71,8 +71,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: write  # for reactions on the triggering comment
+      pull-requests: write  # for reactions on the triggering PR comment
+      issues: read
     outputs:
       should_run: ${{ steps.gate.outputs.should_run }}
       pr_number: ${{ steps.gate.outputs.pr_number }}

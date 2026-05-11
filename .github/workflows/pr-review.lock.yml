@@ -938,8 +938,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: write
-      pull-requests: read
+      issues: read
+      pull-requests: write
 
     outputs:
       model: ${{ steps.gate.outputs.model }}
