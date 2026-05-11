@@ -59,9 +59,9 @@ final class TracingFilter extends Filter {
         ASYNC_CONTEXT.set(request, context);
         ASYNC_REQUEST.set(request, sofaRpcRequest);
       }
-    } catch (Throwable e) {
-      instrumenter.end(context, sofaRpcRequest, null, e);
-      throw e;
+    } catch (Throwable t) {
+      instrumenter.end(context, sofaRpcRequest, null, t);
+      throw t;
     }
 
     if (isSynchronous) {
