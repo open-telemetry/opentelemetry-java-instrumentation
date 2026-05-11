@@ -15,7 +15,7 @@ import com.alipay.sofa.rpc.filter.FilterInvoker;
 
 @Extension(value = "openTelemetryServer", order = -25000)
 @AutoActive(providerSide = true)
-public final class OpenTelemetryServerFilter extends Filter {
+public class OpenTelemetryServerFilter extends Filter {
 
   private final Filter delegate;
 
