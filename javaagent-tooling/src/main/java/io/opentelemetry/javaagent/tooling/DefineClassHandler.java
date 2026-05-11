@@ -23,7 +23,7 @@ public class DefineClassHandler implements Handler {
 
   private DefineClassHandler() {}
 
-  public static void setIgnoredClassLoadersPredicate(Predicate<ClassLoader> predicate) {
+  static void setIgnoredClassLoadersPredicate(Predicate<ClassLoader> predicate) {
     ignoredClassLoaders = predicate;
   }
 
