@@ -290,9 +290,13 @@ Auto-fix boundaries:
 - Never change:
   - literal type suffixes (e.g., `200` → `200L` or vice-versa) — Java widens
     automatically; both forms compile identically and the change is noise
-  - non-capturing lambdas or method references as allocation issues; do not flag,
-    fix, or justify changes to these as per-call allocations. On HotSpot /
-    OpenJDK 8+, these are cached at the call site.
+  - non-capturing lambdas or method references: never hoist an inline
+    non-capturing lambda or method reference into a `private static final` field,
+    regardless of justification (allocation, "pattern consistency", matching a
+    singletons style, or otherwise). On HotSpot / OpenJDK 8+, these are cached
+    at the `invokedynamic` call site, so the hoist is pure noise. The singleton
+    accessor pattern applies to stored singleton fields (e.g. `Instrumenter`),
+    not to arbitrary lambda expressions.
 
 Output content rules:
 
