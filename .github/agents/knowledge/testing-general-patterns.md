@@ -19,55 +19,26 @@
   duplicate the same setup.
 - Prefer `@MethodSource` with a private static `Stream<Arguments>` provider for multi-field cases.
   Keep the provider close to the test that uses it.
-- Prefer a human-readable case name in each row, either as a standalone first parameter or as part
-  of a named test-case object, so failures identify the scenario without reading the whole row.
+- Prefer a human-readable case name as the first parameter so failures identify the scenario
+  without reading the whole row.
 - Each `Arguments.of(...)` entry should describe one coherent scenario. Prefer one expected outcome
   per row instead of packing several unrelated expectations into a single parameterized case.
 - In the test body, keep the setup and assertion flow the same for every row. If different rows need
   materially different control flow, split them into separate tests instead of forcing everything
   into one parameterized method.
-- For more complex parameterized tests, prefer a small test DTO / test-case type instead of a long
-  positional argument list. Include a `name` field and the scenario inputs/expected outputs needed
-  by the test.
-- When the test-case shape becomes large or deeply nested, prefer a small builder or factory helpers
-  for constructing cases so each row stays readable. The goal is the structure: named scenario,
-  explicit inputs, and explicit expected result, rather than a wide `Arguments.of(...)` tuple.
+- Avoid introducing a dedicated `TestCase` wrapper type for parameterized rows. Prefer a readable
+  case name plus plain arguments, and extract a shared expected-value object only when it makes the
+  assertions materially clearer.
+- If a row gets too wide, first look for ways to simplify the assertion shape (for example, compare
+  against one structured expected value) instead of adding another wrapper layer around the row.
 
 Example shape:
 
 ```java
-record TestCase(String name, Input input, Output expected) {}
-
 @ParameterizedTest(name = "{0}")
 @MethodSource("testCases")
-void test(String name, TestCase testCase) {
-  assertThat(run(testCase.input())).isEqualTo(testCase.expected());
-}
-```
-
-In modules that still target a Java version below 16 (most javaagent
-instrumentation modules use `minJavaVersionSupported = 8`), records are not
-available in test sources because `--release` is shared with main sources. Use
-a `static final class` with explicit fields and a constructor, and override
-`toString()` to return the case name so `@ParameterizedTest(name = "{0}")`
-prints a readable scenario:
-
-```java
-static final class TestCase {
-  final String name;
-  final Input input;
-  final Output expected;
-
-  TestCase(String name, Input input, Output expected) {
-    this.name = name;
-    this.input = input;
-    this.expected = expected;
-  }
-
-  @Override
-  public String toString() {
-    return name;
-  }
+void test(String name, Input input, Output expected) {
+  assertThat(run(input)).isEqualTo(expected);
 }
 ```
 
