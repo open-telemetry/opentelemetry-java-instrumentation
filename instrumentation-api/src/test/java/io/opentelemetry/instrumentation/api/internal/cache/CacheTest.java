@@ -98,6 +98,7 @@ class CacheTest {
         Object key = new Object();
         final WeakReference<Object> keyRef = new WeakReference<>(key);
       }
+
       // add a bunch of entries to cache1, later we'll let GC clear them so that there would be
       // stale elements to expunge from the cache
       List<State> state = new ArrayList<>();
