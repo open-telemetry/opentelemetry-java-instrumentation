@@ -22,13 +22,13 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 
 final class TracingFilter extends Filter {
 
-  private final Instrumenter<SofaRpcRequest, SofaResponse> instrumenter;
-  private final boolean isClientSide;
-
   private static final VirtualField<SofaRequest, Context> ASYNC_CONTEXT =
       VirtualField.find(SofaRequest.class, Context.class);
   private static final VirtualField<SofaRequest, SofaRpcRequest> ASYNC_REQUEST =
       VirtualField.find(SofaRequest.class, SofaRpcRequest.class);
+
+  private final Instrumenter<SofaRpcRequest, SofaResponse> instrumenter;
+  private final boolean isClientSide;
 
   TracingFilter(Instrumenter<SofaRpcRequest, SofaResponse> instrumenter, boolean isClientSide) {
     this.instrumenter = instrumenter;
