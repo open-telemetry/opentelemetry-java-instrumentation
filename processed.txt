@@ -78,3 +78,4 @@ couchbase-3.4:javaagent
 couchbase-3.4:tracing-opentelemetry-shaded
 couchbase-common-2.0:javaagent
 couchbase-common-2.0:javaagent-unit-tests
+couchbase-common:testing
