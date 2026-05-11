@@ -35,6 +35,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -188,8 +189,9 @@ class VertxReactivePropagationTest {
     }
 
     latch.countDown();
+    long deadlineNanos = System.nanoTime() + SECONDS.toNanos(30);
     for (Future<?> future : futures) {
-      future.get(30, SECONDS);
+      future.get(Math.max(deadlineNanos - System.nanoTime(), 0), NANOSECONDS);
     }
 
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
