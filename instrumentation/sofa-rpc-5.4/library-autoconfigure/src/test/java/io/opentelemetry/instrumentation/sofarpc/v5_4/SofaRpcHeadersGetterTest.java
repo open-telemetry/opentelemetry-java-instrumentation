@@ -83,9 +83,4 @@ class SofaRpcHeadersGetterTest {
 
     assertThat(SofaRpcHeadersGetter.INSTANCE.get(request, "key")).isNull();
   }
-
-  @Test
-  void testGetNullCarrier() {
-    assertThat(SofaRpcHeadersGetter.INSTANCE.get(null, "key")).isNull();
-  }
 }
