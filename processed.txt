@@ -64,3 +64,4 @@ cassandra-4.4:library
 cassandra-4.4:testing
 cassandra-common-4.0:testing
 clickhouse-client-common-0.5:javaagent
+clickhouse-client-v1-0.5:javaagent
