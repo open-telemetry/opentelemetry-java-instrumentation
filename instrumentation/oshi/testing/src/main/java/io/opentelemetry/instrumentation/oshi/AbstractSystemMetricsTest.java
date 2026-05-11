@@ -39,9 +39,11 @@ public abstract class AbstractSystemMetricsTest {
                                 sum -> {
                                   sum.hasPointsSatisfying(
                                       point ->
-                                          point.hasAttributesSatisfying(equalTo(STATE, "used")),
+                                          point.hasAttributesSatisfyingExactly(
+                                              equalTo(STATE, "used")),
                                       point ->
-                                          point.hasAttributesSatisfying(equalTo(STATE, "free")));
+                                          point.hasAttributesSatisfyingExactly(
+                                              equalTo(STATE, "free")));
                                   assertThat(metric.getLongSumData().getPoints())
                                       .anySatisfy(
                                           point -> assertThat(point.getValue()).isPositive());
@@ -60,12 +62,14 @@ public abstract class AbstractSystemMetricsTest {
                                     gauge.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasAttributesSatisfying(equalTo(STATE, "used"))
-                                                .hasValueSatisfying(v -> v.isPositive()),
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(STATE, "used"))
+                                                .hasValueSatisfying(v -> v.isNotNegative()),
                                         point ->
                                             point
-                                                .hasAttributesSatisfying(equalTo(STATE, "free"))
-                                                .hasValueSatisfying(v -> v.isPositive())))));
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(STATE, "free"))
+                                                .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",

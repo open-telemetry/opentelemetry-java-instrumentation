@@ -40,12 +40,12 @@ public abstract class AbstractProcessMetricsTest {
                                     sum.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("type"), "rss"))
                                                 .hasValueSatisfying(v -> v.isPositive()),
                                         point ->
                                             point
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("type"), "vms"))
                                                 .hasValueSatisfying(v -> v.isPositive())))));
     testing()
@@ -62,12 +62,12 @@ public abstract class AbstractProcessMetricsTest {
                                     gauge.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("type"), "user"))
                                                 .hasValueSatisfying(v -> v.isNotNegative()),
                                         point ->
                                             point
-                                                .hasAttributesSatisfying(
+                                                .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey("type"), "system"))
                                                 .hasValueSatisfying(v -> v.isNotNegative())))));
   }
