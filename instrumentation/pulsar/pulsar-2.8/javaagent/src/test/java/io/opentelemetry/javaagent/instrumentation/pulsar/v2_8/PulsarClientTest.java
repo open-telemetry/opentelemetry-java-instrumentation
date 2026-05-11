@@ -685,8 +685,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 point ->
                                     point
                                         .hasValueSatisfying(v -> v.isEqualTo(receivedMsg.size()))
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "receive"),
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost)))));
