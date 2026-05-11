@@ -119,7 +119,6 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @BeforeAll
-  @SuppressWarnings("unchecked")
   void setUp() {
     sqs = SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
     Http.ServerBinding server = sqs.waitUntilStarted();
@@ -138,7 +137,8 @@ public abstract class AbstractAws2SqsBaseTest {
             .queueUrl(queueUrl)
             .messageBody("{\"type\": \"hello\"}")
             .build();
-    sendMessageBatchRequest =
+    @SuppressWarnings("unchecked")
+    SendMessageBatchRequest batch =
         SendMessageBatchRequest.builder()
             .queueUrl(queueUrl)
             .entries(
@@ -148,6 +148,7 @@ public abstract class AbstractAws2SqsBaseTest {
                 // 10 attributes, injection with custom propagator never possible
                 e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(10)))
             .build();
+    sendMessageBatchRequest = batch;
   }
 
   @AfterAll
