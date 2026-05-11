@@ -227,7 +227,8 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(RPC_METHOD, "$invoke"),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
-                                                      SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                                      SERVER_PORT,
+                                                      val -> val.isInstanceOf(Long.class)),
                                                   satisfies(
                                                       NETWORK_TYPE,
                                                       AbstractSofaRpcTest::assertNetworkType))))));
@@ -401,7 +402,8 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(RPC_METHOD, "$invoke"),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
-                                                      SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                                      SERVER_PORT,
+                                                      val -> val.isInstanceOf(Long.class)),
                                                   satisfies(
                                                       NETWORK_TYPE,
                                                       AbstractSofaRpcTest::assertNetworkType))))));
@@ -602,7 +604,8 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(RPC_METHOD, "throwException"),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
-                                                      SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                                      SERVER_PORT,
+                                                      val -> val.isInstanceOf(Long.class)),
                                                   satisfies(
                                                       NETWORK_TYPE,
                                                       AbstractSofaRpcTest::assertNetworkType))))));
