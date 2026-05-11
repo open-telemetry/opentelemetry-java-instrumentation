@@ -27,7 +27,10 @@ enum SofaRpcHeadersGetter implements TextMapGetter<SofaRpcRequest> {
 
   @Override
   @Nullable
-  public String get(SofaRpcRequest request, String key) {
+  public String get(@Nullable SofaRpcRequest request, String key) {
+    if (request == null) {
+      return null;
+    }
     SofaRequest sofaRequest = request.request();
     Object value = sofaRequest.getRequestProp(key);
     // Only return String values, ignore other types
