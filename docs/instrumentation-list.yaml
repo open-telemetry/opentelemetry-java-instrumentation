@@ -11786,6 +11786,11 @@ libraries:
     description: Enables the creation of experimental controller spans.
     type: boolean
     default: false
+  telemetry:
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+    spans:
+    - span_kind: INTERNAL
+      attributes: []
 - name: play-ws-1.0
   display_name: Play WS
   description: This instrumentation enables HTTP client spans and HTTP client metrics
