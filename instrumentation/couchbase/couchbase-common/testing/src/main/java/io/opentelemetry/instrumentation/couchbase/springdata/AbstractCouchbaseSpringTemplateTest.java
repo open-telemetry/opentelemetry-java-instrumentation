@@ -38,7 +38,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.couchbase.core.CouchbaseTemplate;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
   @RegisterExtension

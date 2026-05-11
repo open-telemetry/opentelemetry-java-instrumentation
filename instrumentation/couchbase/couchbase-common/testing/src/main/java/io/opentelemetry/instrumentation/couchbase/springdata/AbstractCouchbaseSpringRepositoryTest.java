@@ -36,7 +36,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
 
   @RegisterExtension
