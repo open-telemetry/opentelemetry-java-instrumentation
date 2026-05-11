@@ -27,6 +27,8 @@ final class TracingFilter extends Filter {
 
   private static final VirtualField<SofaRequest, Context> ASYNC_CONTEXT =
       VirtualField.find(SofaRequest.class, Context.class);
+  private static final VirtualField<SofaRequest, SofaRpcRequest> ASYNC_REQUEST =
+      VirtualField.find(SofaRequest.class, SofaRpcRequest.class);
 
   TracingFilter(Instrumenter<SofaRpcRequest, SofaResponse> instrumenter, boolean isClientSide) {
     this.instrumenter = instrumenter;
@@ -55,6 +57,7 @@ final class TracingFilter extends Filter {
       if (isClientSide && request.isAsync()) {
         isSynchronous = false;
         ASYNC_CONTEXT.set(request, context);
+        ASYNC_REQUEST.set(request, sofaRpcRequest);
       }
     } catch (Throwable e) {
       instrumenter.end(context, sofaRpcRequest, null, e);
@@ -127,8 +130,13 @@ final class TracingFilter extends Filter {
     if (context == null) {
       return;
     }
+    SofaRpcRequest sofaRpcRequest = ASYNC_REQUEST.get(request);
+    if (sofaRpcRequest == null) {
+      sofaRpcRequest = SofaRpcRequest.create(request);
+    }
     Throwable error = exception != null ? exception : extractException(response);
     ASYNC_CONTEXT.set(request, null);
-    instrumenter.end(context, SofaRpcRequest.create(request), response, error);
+    ASYNC_REQUEST.set(request, null);
+    instrumenter.end(context, sofaRpcRequest, response, error);
   }
 }
