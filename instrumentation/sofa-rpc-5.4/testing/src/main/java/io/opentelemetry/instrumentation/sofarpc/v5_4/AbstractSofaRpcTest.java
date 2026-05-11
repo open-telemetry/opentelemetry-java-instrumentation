@@ -22,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.alipay.sofa.rpc.api.GenericService;
@@ -31,8 +32,14 @@ import com.alipay.sofa.rpc.config.ApplicationConfig;
 import com.alipay.sofa.rpc.config.ConsumerConfig;
 import com.alipay.sofa.rpc.config.ProviderConfig;
 import com.alipay.sofa.rpc.config.ServerConfig;
+import com.alipay.sofa.rpc.context.RpcInternalContext;
+import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.exception.SofaRpcRuntimeException;
 import com.alipay.sofa.rpc.core.exception.SofaTimeOutException;
+import com.alipay.sofa.rpc.core.request.SofaRequest;
+import com.alipay.sofa.rpc.core.response.SofaResponse;
+import com.alipay.sofa.rpc.filter.Filter;
+import com.alipay.sofa.rpc.filter.FilterInvoker;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService;
@@ -289,6 +296,7 @@ public abstract class AbstractSofaRpcTest {
 
     ConsumerConfig<GenericService> consumerConfig = configureGenericClient(port);
     consumerConfig.setInvokeType(RpcConstants.INVOKER_TYPE_FUTURE);
+    consumerConfig.setFilterRef(singletonList(new ClearRpcInternalContextFilter()));
     cleanup.deferCleanup(consumerConfig::unRefer);
     GenericService genericService = consumerConfig.refer();
 
@@ -473,6 +481,23 @@ public abstract class AbstractSofaRpcTest {
   static void assertNetworkPeerPort(AbstractAssert<?, ?> assertion) {
     assertion.satisfiesAnyOf(
         val -> assertThat(val).isNull(), val -> assertThat(val).isInstanceOf(Long.class));
+  }
+
+  private static class ClearRpcInternalContextFilter extends Filter {
+
+    @Override
+    @SuppressWarnings("ThrowsUncheckedException")
+    public SofaResponse invoke(FilterInvoker invoker, SofaRequest request) throws SofaRpcException {
+      return invoker.invoke(request);
+    }
+
+    @Override
+    // Suppress rawtypes warning: SOFARPC Filter interface uses raw ConsumerConfig type
+    @SuppressWarnings("rawtypes")
+    public void onAsyncResponse(
+        ConsumerConfig config, SofaRequest request, SofaResponse response, Throwable exception) {
+      RpcInternalContext.removeContext();
+    }
   }
 
   @Test
