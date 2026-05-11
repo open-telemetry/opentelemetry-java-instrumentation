@@ -36,18 +36,18 @@ public abstract class AbstractSystemMetricsTest {
                         assertThat(metric)
                             .hasUnit("By")
                             .hasLongSumSatisfying(
-                                sum -> {
-                                  sum.hasPointsSatisfying(
-                                      point ->
-                                          point.hasAttributesSatisfyingExactly(
-                                              equalTo(STATE, "used")),
-                                      point ->
-                                          point.hasAttributesSatisfyingExactly(
-                                              equalTo(STATE, "free")));
-                                  assertThat(metric.getLongSumData().getPoints())
-                                      .anySatisfy(
-                                          point -> assertThat(point.getValue()).isPositive());
-                                })));
+                                sum ->
+                                    sum.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(STATE, "used"))
+                                                .hasValueSatisfying(v -> v.isNotNegative()),
+                                        point ->
+                                            point
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(STATE, "free"))
+                                                .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
