@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v7_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
@@ -116,7 +115,7 @@ class SessionTest extends AbstractHibernateTest {
                       span,
                       trace.getSpan(0),
                       "Transaction.commit",
-                      trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id"))));
+                      trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)));
 
           trace.hasSpansSatisfyingExactly(assertions);
         });
@@ -154,7 +153,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id"))),
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
                 span -> assertClientSpan(span, trace.getSpan(3))));
   }
 
@@ -194,7 +193,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id")))));
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -228,7 +227,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id"))),
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
                 span -> assertClientSpan(span, trace.getSpan(2))));
   }
 
@@ -278,7 +277,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id")))));
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
   }
 
   @Test
@@ -316,16 +315,14 @@ class SessionTest extends AbstractHibernateTest {
                       span,
                       trace.getSpan(0),
                       "Session.merge io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value");
-                  sessionId1.set(
-                      trace.getSpan(1).getAttributes().get(stringKey("hibernate.session_id")));
+                  sessionId1.set(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID));
                 },
                 span -> {
                   assertSessionSpan(
                       span,
                       trace.getSpan(0),
                       "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value");
-                  sessionId2.set(
-                      trace.getSpan(2).getAttributes().get(stringKey("hibernate.session_id")));
+                  sessionId2.set(trace.getSpan(2).getAttributes().get(HIBERNATE_SESSION_ID));
                 },
                 span -> assertClientSpan(span, trace.getSpan(2), "INSERT"),
                 span -> {
@@ -333,8 +330,7 @@ class SessionTest extends AbstractHibernateTest {
                       span,
                       trace.getSpan(0),
                       "Session.merge io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value");
-                  sessionId3.set(
-                      trace.getSpan(4).getAttributes().get(stringKey("hibernate.session_id")));
+                  sessionId3.set(trace.getSpan(4).getAttributes().get(HIBERNATE_SESSION_ID));
                 },
                 span ->
                     assertSpanWithSessionId(
