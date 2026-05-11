@@ -8,12 +8,14 @@ muzzle {
     group.set("com.twitter")
     module.set("finagle-http_2.12")
     versions.set("[23.11.0,]")
+    assertInverse.set(true)
   }
 
   pass {
     group.set("com.twitter")
     module.set("finagle-http_2.13")
     versions.set("[23.11.0,]")
+    assertInverse.set(true)
   }
 }
 
@@ -51,11 +53,6 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
     jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
-  }
-
-  test {
-    jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
-    jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
     jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
 
     // force the netty event loop into constrained territory
@@ -64,7 +61,9 @@ tasks {
     systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
     // ensure concurrent tests are competing for offload pool workers
     systemProperty("com.twitter.finagle.offload.numWorkers", "2")
+  }
 
+  test {
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
@@ -76,14 +75,6 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
-
-    // force the netty event loop into constrained territory
-    systemProperty("io.netty.eventLoopThreads", "2")
-    // ensure concurrent tests are competing for netty workers
-    systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
-    // ensure concurrent tests are competing for offload pool workers
-    systemProperty("com.twitter.finagle.offload.numWorkers", "2")
 
     systemProperty(
       "metadataConfig",
