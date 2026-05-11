@@ -650,6 +650,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             processAttributes(topic2, msgId2.toString(), false))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumePartitionedTopicUsingBatchReceive() throws Exception {
     String topic = "persistent://public/default/testConsumePartitionedTopicUsingBatchReceive";
