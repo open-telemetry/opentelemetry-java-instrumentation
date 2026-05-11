@@ -5,17 +5,15 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 public abstract class AbstractProcessMetricsTest {
-
-  private static final AttributeKey<String> TYPE = AttributeKey.stringKey("type");
 
   protected abstract void registerMetrics();
 
@@ -42,11 +40,13 @@ public abstract class AbstractProcessMetricsTest {
                                     sum.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasAttributesSatisfying(equalTo(TYPE, "rss"))
+                                                .hasAttributesSatisfying(
+                                                    equalTo(stringKey("type"), "rss"))
                                                 .hasValueSatisfying(v -> v.isPositive()),
                                         point ->
                                             point
-                                                .hasAttributesSatisfying(equalTo(TYPE, "vms"))
+                                                .hasAttributesSatisfying(
+                                                    equalTo(stringKey("type"), "vms"))
                                                 .hasValueSatisfying(v -> v.isPositive())))));
     testing()
         .waitAndAssertMetrics(
@@ -62,11 +62,13 @@ public abstract class AbstractProcessMetricsTest {
                                     gauge.hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasAttributesSatisfying(equalTo(TYPE, "user"))
+                                                .hasAttributesSatisfying(
+                                                    equalTo(stringKey("type"), "user"))
                                                 .hasValueSatisfying(v -> v.isNotNegative()),
                                         point ->
                                             point
-                                                .hasAttributesSatisfying(equalTo(TYPE, "system"))
+                                                .hasAttributesSatisfying(
+                                                    equalTo(stringKey("type"), "system"))
                                                 .hasValueSatisfying(v -> v.isNotNegative())))));
   }
 }
