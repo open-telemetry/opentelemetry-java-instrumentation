@@ -60,17 +60,19 @@ class AsyncServlet extends HttpServlet {
                     resp.getWriter().print(endpoint.getBody());
                   } else if (endpoint.equals(EXCEPTION)) {
                     resp.setStatus(endpoint.getStatus());
+                    // Workaround for a sporadic bug in older Tomcat versions: when the servlet
+                    // throws after writing the async response body, the connection is sometimes
+                    // reset before the response is flushed, which surfaces on the client as
+                    // ClosedSessionException. Other servlet containers (and current Tomcat)
+                    // handle the basic write-then-throw pattern fine, so this workaround is
+                    // scoped to old Tomcat only: set Content-Length so the response is
+                    // self-delimiting, and close the writer to force the flush before the throw.
                     if (!testLatestDeps()) {
-                      // Set Content-Length so the response is self-delimiting; combined with
-                      // the writer.close() below, this lets the client read a complete 500
-                      // response on older Tomcat before the post-throw connection reset.
                       resp.setContentLength(endpoint.getBody().length());
                     }
                     PrintWriter writer = resp.getWriter();
                     writer.print(endpoint.getBody());
                     if (!testLatestDeps()) {
-                      // Older Tomcat versions may close the connection before sending an async
-                      // response when the servlet throws after writing the response body.
                       writer.close();
                     }
                     throw new IllegalStateException(endpoint.getBody());
