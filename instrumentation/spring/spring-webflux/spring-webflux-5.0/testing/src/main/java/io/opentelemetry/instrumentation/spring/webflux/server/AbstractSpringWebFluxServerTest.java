@@ -13,7 +13,6 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;

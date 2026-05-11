@@ -30,7 +30,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.logs.Severity;
