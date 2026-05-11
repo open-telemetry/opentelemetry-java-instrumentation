@@ -126,10 +126,14 @@ public class HelperInjector implements Transformer {
       String requestingName,
       List<String> helperClassNames,
       List<HelperResource> helperResources,
-      ClassLoader helpersSource,
+      @Nullable ClassLoader helpersSource,
       @Nullable Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
+    if (!helperClassNames.isEmpty()) {
+      requireNonNull(
+          helpersSource, "helpersSource must not be null when helperClassNames is non-empty");
+    }
     List<HelperClassDefinition> helpers =
         helperClassNames.stream()
             .distinct()
