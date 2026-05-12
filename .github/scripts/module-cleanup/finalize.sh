@@ -140,8 +140,12 @@ git fetch origin "$WIP_BRANCH" 2>/dev/null || true
 
 # ---- 3. Decide flush ----
 
+# Count files touched by wip's own commits only. Diffing against
+# `origin/main` directly would also count files that have moved forward
+# on main since the wip branch was created.
 if git rev-parse --verify "origin/$WIP_BRANCH" >/dev/null 2>&1; then
-    FILE_COUNT=$(git diff --name-only origin/main "origin/$WIP_BRANCH" | wc -l)
+    WIP_BASE=$(git merge-base origin/main "origin/$WIP_BRANCH")
+    FILE_COUNT=$(git diff --name-only "$WIP_BASE" "origin/$WIP_BRANCH" | wc -l)
     AHEAD=$(git rev-list --count "origin/main..origin/$WIP_BRANCH")
 else
     FILE_COUNT=0
