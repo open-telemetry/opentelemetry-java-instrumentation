@@ -14,6 +14,7 @@ muzzle {
     module.set("spring-boot")
     // pre-1.2.0 versions don't have the Slf4JLoggingSystem
     versions.set("[1.2.0,)")
+    assertInverse.set(true)
     extraDependency("org.springframework.boot:spring-boot-starter-logging")
   }
 }
