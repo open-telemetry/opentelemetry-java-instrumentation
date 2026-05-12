@@ -76,10 +76,10 @@ def list_jobs_for_run(owner: str, repo: str, run_id: int) -> list[dict]:
     while True:
         response = gh_get(
             f"/repos/{owner}/{repo}/actions/runs/{run_id}/jobs",
-            {"filter": "latest", "per_page": "100", "page": str(page)},
+            {"filter": "latest", "per_page": "30", "page": str(page)},
         )
         jobs.extend(response["jobs"])
-        if len(response["jobs"]) < 100:
+        if len(response["jobs"]) < 30:
             return jobs
         page += 1
 

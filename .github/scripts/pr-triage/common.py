@@ -25,6 +25,15 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 COPILOT_MODEL = os.environ.get("PR_AGENT_COPILOT_MODEL", "gpt-5.5")
 
 
+# Force UTF-8 on parent stdout/stderr so unicode characters in subprocess
+# output (e.g. arrows in Copilot's token-summary footer) don't crash the
+# default cp1252 codec on Windows.
+for _stream in (sys.stdout, sys.stderr):
+    reconfigure = getattr(_stream, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(encoding="utf-8", errors="replace")
+
+
 class WorkflowError(RuntimeError):
     """A user-facing workflow failure."""
 
@@ -176,8 +185,17 @@ def restore_original_branch(summary: Summary) -> None:
         return
     try:
         branch = current_branch()
-    except WorkflowError as e:
-        summary.restoration_note = str(e)
+    except WorkflowError:
+        if merge_in_progress():
+            summary.restoration_note = "not restored because a merge is in progress"
+            return
+        if status_porcelain().strip():
+            summary.restoration_note = "not restored because the working tree has uncommitted changes"
+            return
+        progress(f"Restoring original branch from detached HEAD: {summary.original_branch}")
+        git(["checkout", summary.original_branch], summary)
+        summary.restored_branch = summary.original_branch
+        summary.restoration_note = "restored from detached HEAD"
         return
     if branch == summary.original_branch:
         summary.restored_branch = branch
@@ -240,14 +258,21 @@ def checkout_pr_no_push_check(pr: int, summary: Summary) -> None:
     remember_pr_url(pr_view(pr, summary), summary)
 
 
-def run_pr_workflow(pr: int, body: Callable[[Summary], int], *, push_required: bool = True) -> int:
+def run_pr_workflow(
+    pr: int,
+    body: Callable[[Summary], int],
+    *,
+    push_required: bool = True,
+    checkout_required: bool = True,
+) -> int:
+    assert checkout_required or not push_required, "push workflows require checking out the PR branch"
     summary = Summary(pr=pr)
     try:
         require_clean_worktree(summary)
         summary.original_branch = current_branch(summary)
         if push_required:
             checkout_pr(pr, summary)
-        else:
+        elif checkout_required:
             checkout_pr_no_push_check(pr, summary)
         return body(summary)
     except Exception as e:
@@ -328,33 +353,194 @@ def extract_job_id(check: dict[str, Any]) -> int | None:
     return int(value) if isinstance(value, int) else None
 
 
-def invoke_copilot(prompt: str, summary: Summary) -> str:
-    cmd = ["copilot", "-p", prompt, "--allow-all-tools", "--model", COPILOT_MODEL]
-    progress(f"Handing off to Copilot CLI using {COPILOT_MODEL}; streaming output below")
-    proc = subprocess.Popen(
-        cmd,
-        cwd=REPO_ROOT,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        bufsize=1,
-    )
+def _pwsh_quote(value: str) -> str:
+    """Quote a string for use as a PowerShell single-quoted literal."""
+    return "'" + value.replace("'", "''") + "'"
+
+
+def _run_copilot_via_pwsh(cmd: list[str]) -> tuple[int, list[str]]:
+    """Run copilot through a pwsh.exe wrapper to work around copilot-cli #3188.
+
+    On Windows, copilot 1.0.44-0 calls FlushFileBuffers on stdout at exit and
+    treats the failure as fatal when stdout is a pipe or regular file, so any
+    subprocess.Popen invocation exits 1 with empty streams. PowerShell's native
+    `>` redirect produces a stdout handle the CLI accepts, so we wrap the call
+    in a generated .ps1 script that redirects all output to a temp file and
+    propagates $LASTEXITCODE. Live streaming is sacrificed; output is read
+    after the process exits.
+    """
+    prompt_idx = cmd.index("-p") + 1
+    with tempfile.TemporaryDirectory(prefix="otel-copilot-pwsh-") as tmp:
+        tmp_path = Path(tmp)
+        prompt_file = tmp_path / "prompt.txt"
+        out_file = tmp_path / "copilot.out"
+        script_file = tmp_path / "run.ps1"
+        prompt_file.write_text(cmd[prompt_idx], encoding="utf-8")
+        parts = [
+            "$prompt" if i == prompt_idx else _pwsh_quote(arg)
+            for i, arg in enumerate(cmd)
+        ]
+        script_file.write_text(
+            "$ErrorActionPreference = 'Stop'\n"
+            "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n"
+            "$OutputEncoding = [System.Text.Encoding]::UTF8\n"
+            f"$prompt = Get-Content -Raw -Encoding utf8 {_pwsh_quote(str(prompt_file))}\n"
+            f"& {' '.join(parts)} *> {_pwsh_quote(str(out_file))}\n"
+            "exit $LASTEXITCODE\n",
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            ["pwsh.exe", "-NoProfile", "-NonInteractive", "-File", str(script_file)],
+            cwd=REPO_ROOT,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+        lines = (
+            out_file.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+            if out_file.exists()
+            else []
+        )
+        if result.stderr:
+            for line in result.stderr.splitlines():
+                print(f"[pwsh] {line}", file=sys.stderr, flush=True)
+        return result.returncode, lines
+
+
+def invoke_copilot(
+    prompt: str,
+    summary: Summary,
+    event_log_path: Path | None = None,
+    tool_usage_path: Path | None = None,
+    *,
+    allow_all_tools: bool = True,
+    extra_args: list[str] | None = None,
+) -> str:
+    cmd = ["copilot", "-p", prompt, "--model", COPILOT_MODEL]
+    if allow_all_tools:
+        cmd.append("--allow-all-tools")
+    if extra_args is not None:
+        cmd.extend(extra_args)
+    json_output = event_log_path is not None or tool_usage_path is not None
+    if json_output:
+        cmd.extend(["--output-format", "json"])
+    use_pwsh_wrapper = sys.platform == "win32"
+    if json_output:
+        progress(
+            f"Handing off to Copilot CLI using {COPILOT_MODEL}; streaming assistant messages below "
+            "(tool activity logged to stderr)"
+        )
+    else:
+        progress(f"Handing off to Copilot CLI using {COPILOT_MODEL}; streaming output below")
+    if use_pwsh_wrapper:
+        progress(
+            "On Windows, output is buffered until completion to work around "
+            "https://github.com/github/copilot-cli/issues/3188"
+        )
+        returncode, line_iter = _run_copilot_via_pwsh(cmd)
+        proc = None
+    else:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=REPO_ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            bufsize=1,
+        )
+        returncode = None
+        line_iter = proc.stdout
     output_parts: list[str] = []
-    if proc.stdout is not None:
-        for line in proc.stdout:
-            print(line, end="", flush=True)
-            output_parts.append(line)
-    returncode = proc.wait()
-    output = "".join(output_parts)
+    message_parts: list[str] = []
+    tool_uses: list[dict[str, Any]] = []
+    tool_names_by_call_id: dict[str, str] = {}
+    event_log = event_log_path.open("w", encoding="utf-8") if event_log_path is not None else None
+    if line_iter is not None:
+        try:
+            for line in line_iter:
+                if json_output:
+                    if event_log is not None:
+                        event_log.write(line)
+                        event_log.flush()
+                    output_parts.append(line)
+                    try:
+                        event = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    event_type = event.get("type")
+                    data = event.get("data") or {}
+                    if event_type == "assistant.message":
+                        content = data.get("content")
+                        if isinstance(content, str) and content:
+                            print(content, flush=True)
+                            message_parts.append(content)
+                    elif event_type == "tool.execution_start":
+                        tool_name = data.get("toolName")
+                        call_id = data.get("toolCallId")
+                        if isinstance(tool_name, str):
+                            tool_uses.append({"tool": tool_name, "arguments": data.get("arguments")})
+                            if isinstance(call_id, str):
+                                tool_names_by_call_id[call_id] = tool_name
+                            print(f"[copilot] tool start: {tool_name}", file=sys.stderr, flush=True)
+                    elif event_type == "tool.execution_complete":
+                        call_id = data.get("toolCallId")
+                        tool_name = tool_names_by_call_id.get(call_id) if isinstance(call_id, str) else None
+                        if tool_name is not None:
+                            success = data.get("success")
+                            suffix = "" if success is None else f" ({'ok' if success else 'failed'})"
+                            print(f"[copilot] tool end: {tool_name}{suffix}", file=sys.stderr, flush=True)
+                    elif event_type == "error":
+                        message = data.get("message")
+                        if isinstance(message, str) and message:
+                            print(f"[copilot] error: {message}", file=sys.stderr, flush=True)
+                    continue
+                print(line, end="", flush=True)
+                output_parts.append(line)
+        finally:
+            if event_log is not None:
+                event_log.close()
+    if proc is not None:
+        returncode = proc.wait()
+    assert returncode is not None
+    output = "\n".join(message_parts) if json_output else "".join(output_parts)
     if returncode != 0:
         raise subprocess.CalledProcessError(
             returncode,
-            ["copilot", "-p", "<generated prompt>", "--allow-all-tools", "--model", COPILOT_MODEL],
-            output,
+            ["copilot", "-p", "<generated prompt>", "--model", COPILOT_MODEL],
+            "".join(output_parts),
             "",
         )
+    if tool_usage_path is not None:
+        counts: dict[str, int] = {}
+        for tool_use in tool_uses:
+            tool = tool_use["tool"]
+            counts[tool] = counts.get(tool, 0) + 1
+        tool_usage_path.write_text(
+            json.dumps(
+                {
+                    "tools": [{"tool": tool, "count": count} for tool, count in sorted(counts.items())],
+                    "tool_uses": tool_uses,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        summary.notes.append(f"Copilot tool usage summary: {display_path(str(tool_usage_path))}")
+        if counts:
+            tools = ", ".join(f"{tool} ({count})" for tool, count in sorted(counts.items()))
+            summary.notes.append(f"Copilot tools used: {tools}")
+        else:
+            summary.notes.append("Copilot tools used: none")
+    if event_log_path is not None:
+        summary.notes.append(f"Copilot event log: {display_path(str(event_log_path))}")
     progress("Copilot CLI handoff completed")
     return output.strip()
 

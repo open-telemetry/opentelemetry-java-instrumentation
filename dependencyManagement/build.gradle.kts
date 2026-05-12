@@ -5,12 +5,12 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.61.0"
+val otelSdkVersion = "1.62.0"
 val otelContribVersion = "1.56.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.31"
+val groovyVersion = "4.0.32"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -43,7 +43,7 @@ val asmVersion = "9.9.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
-val semConvVersion = "1.41.0"
+val semConvVersion = "1.41.1"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(

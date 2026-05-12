@@ -384,7 +384,7 @@ def fetch_pr_raw(
     pr_summary: dict[str, Any],
 ) -> dict[str, Any]:
     number = pr_summary["number"]
-    with ThreadPoolExecutor(max_workers=7) as pool:
+    with ThreadPoolExecutor(max_workers=8) as pool:
         f_pr = pool.submit(gh_pr_view, repo, number)
         f_issue = pool.submit(
             gh_api,
@@ -406,6 +406,11 @@ def fetch_pr_raw(
             f"/repos/{owner}/{repo_name}/pulls/{number}/commits?per_page=100",
             True,
         )
+        f_timeline = pool.submit(
+            gh_api,
+            f"/repos/{owner}/{repo_name}/issues/{number}/timeline?per_page=100",
+            True,
+        )
         f_checks = pool.submit(gh_pr_checks, repo, number)
         f_threads = pool.submit(fetch_review_threads, owner, repo_name, number)
         return {
@@ -415,6 +420,7 @@ def fetch_pr_raw(
             "review_comments": f_revcom.result() or [],
             "reviews": f_reviews.result() or [],
             "commits": f_commits.result() or [],
+            "timeline": f_timeline.result() or [],
             "checks": f_checks.result() or [],
             "review_threads": f_threads.result() or [],
         }
@@ -494,6 +500,21 @@ def normalize_events(raw: dict[str, Any], author: str, reviewers: set[str]) -> l
             "sha": None,
             "is_merge_from_base_by_non_author": False,
         })
+    for t in raw["timeline"]:
+        if t.get("event") != "ready_for_review":
+            continue
+        login = actor_login(t.get("actor") or {})
+        events.append({
+            "kind": "ready-for-review",
+            "timestamp": t.get("created_at") or "",
+            "actor": login,
+            "actor_role": "author",
+            "body": "",
+            "state": None,
+            "path": None,
+            "sha": None,
+            "is_merge_from_base_by_non_author": False,
+        })
     events = [e for e in events if e["timestamp"]]
     events.sort(key=lambda e: e["timestamp"])
     return events
@@ -504,6 +525,8 @@ def is_substantive_activity(event: dict[str, Any]) -> bool:
         return False
     if event.get("actor_role") == "bot":
         return False
+    if event["kind"] == "ready-for-review":
+        return True
     if event["kind"] == "review-state" and event.get("state") != "COMMENTED":
         return True
     return bool((event.get("body") or "").strip())
@@ -533,6 +556,21 @@ def ts_text(ts: datetime | None) -> str:
     return ts.isoformat() if ts else ""
 
 
+def is_copilot_review(review: dict[str, Any]) -> bool:
+    login = actor_login(review.get("user") or {}).lower()
+    return login == "copilot-pull-request-reviewer[bot]"
+
+
+def latest_copilot_review_clean(reviews: list[dict[str, Any]], review_comments: list[dict[str, Any]]) -> tuple[bool, bool]:
+    candidates = [r for r in reviews if is_copilot_review(r) and r.get("submitted_at")]
+    if not candidates:
+        return False, False
+    latest = max(candidates, key=lambda r: r.get("submitted_at") or "")
+    review_id = latest.get("id")
+    has_comments = any(c.get("pull_request_review_id") == review_id for c in review_comments)
+    return True, not has_comments
+
+
 def compute_facts(raw: dict[str, Any], author: str, events: list[dict[str, Any]]) -> dict[str, Any]:
     pr = raw["pr"]
     checks = raw["checks"]
@@ -544,6 +582,9 @@ def compute_facts(raw: dict[str, Any], author: str, events: list[dict[str, Any]]
     approver_activity_ts = latest_substantive_activity(events, {"approver"})
     external_activity_ts = latest_substantive_activity(events, {"outsider"})
     api_author = actor_login(pr.get("author") or {})
+    copilot_reviewed, copilot_review_clean = latest_copilot_review_clean(
+        raw["reviews"], raw["review_comments"]
+    )
     return {
         "author": author,
         "is_otelbot_author": api_author.lower() == "app/otelbot",
@@ -552,6 +593,8 @@ def compute_facts(raw: dict[str, Any], author: str, events: list[dict[str, Any]]
         "ci_failing_count": len(failing),
         "ci_pending_count": len(pending),
         "conflicts": compute_conflicts(pr),
+        "copilot_reviewed": copilot_reviewed,
+        "copilot_review_clean": copilot_review_clean,
         "created_at": ts_text(created_ts),
         "last_activity_at": ts_text(last_activity_ts),
         "last_author_activity_at": ts_text(author_activity_ts),
@@ -1021,6 +1064,12 @@ def approved_cell(facts: dict[str, Any]) -> str:
     return "✅" if facts.get("approved") else " "
 
 
+def copilot_cell(facts: dict[str, Any]) -> str:
+    if facts.get("copilot_reviewed") and facts.get("copilot_review_clean"):
+        return "✅"
+    return " "
+
+
 def age_seconds(facts: dict[str, Any]) -> int | None:
     value = facts.get("seconds_since_waiting")
     if isinstance(value, int):
@@ -1101,8 +1150,8 @@ def render_markdown_compact(
         rows.sort(key=row_sort_key, reverse=True)
         out.append(f"## {SIDE_LABELS.get(side, side)}")
         out.append("")
-        out.append("| PR | Author | CI | Conflicts | Age |")
-        out.append("|---|---|:---:|:---:|:---:|")
+        out.append("| PR | Author | CI | Conflicts | Copilot | Age |")
+        out.append("|---|---|:---:|:---:|:---:|:---:|")
         for pr in rows:
             number = pr["number"]
             title = _md_escape(pr.get("title", ""))
@@ -1116,7 +1165,7 @@ def render_markdown_compact(
                 pr_cell += " ✅"
             out.append(
                 f"| {pr_cell} | {author} | {ci_cell(facts)} | "
-                f"{conflicts_cell(facts)} | {activity_cell} |"
+                f"{conflicts_cell(facts)} | {copilot_cell(facts)} | {activity_cell} |"
             )
         out.append("")
 

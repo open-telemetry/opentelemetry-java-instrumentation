@@ -203,6 +203,10 @@ affect end users.
 Prefer AssertJ assertions over JUnit assertions (assertEquals, assertTrue, etc.) for better
 error messages.
 
+In test files that use `io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat`,
+do not also statically import `org.assertj.core.api.Assertions.assertThat` — `OpenTelemetryAssertions`
+extends `Assertions`, so all AssertJ `assertThat` overloads are already in scope via inheritance.
+
 ### JUnit
 
 Test classes and test methods should generally be package-protected (no explicit visibility

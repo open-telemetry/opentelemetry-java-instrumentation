@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
@@ -33,12 +35,19 @@ public abstract class AbstractProcessMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("By")
-                            // TODO: Provide fuzzy value matching
                             .hasLongSumSatisfying(
                                 sum ->
-                                    assertThat(metric.getLongSumData().getPoints())
-                                        .anySatisfy(
-                                            point -> assertThat(point.getValue()).isPositive()))));
+                                    sum.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("type"), "rss"))
+                                                .hasValueSatisfying(v -> v.isPositive()),
+                                        point ->
+                                            point
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("type"), "vms"))
+                                                .hasValueSatisfying(v -> v.isPositive())))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
@@ -48,11 +57,18 @@ public abstract class AbstractProcessMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("ms")
-                            // TODO: Provide fuzzy value matching
                             .hasLongGaugeSatisfying(
                                 gauge ->
-                                    assertThat(metric.getLongGaugeData().getPoints())
-                                        .anySatisfy(
-                                            point -> assertThat(point.getValue()).isPositive()))));
+                                    gauge.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("type"), "user"))
+                                                .hasValueSatisfying(v -> v.isNotNegative()),
+                                        point ->
+                                            point
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey("type"), "system"))
+                                                .hasValueSatisfying(v -> v.isNotNegative())))));
   }
 }
