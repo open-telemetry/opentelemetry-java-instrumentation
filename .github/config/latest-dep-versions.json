@@ -543,7 +543,7 @@
     "redis.clients:jedis#+": "7.5.0",
     "redis.clients:jedis#2.+": "2.10.2",
     "redis.clients:jedis#3.+": "3.10.0",
-    "software.amazon.awssdk.crt:aws-crt#+": "0.45.3",
+    "software.amazon.awssdk.crt:aws-crt#+": "0.45.4",
     "software.amazon.awssdk:aws-core#+": "2.44.4",
     "software.amazon.awssdk:aws-json-protocol#+": "2.44.4",
     "software.amazon.awssdk:bedrockruntime#+": "2.44.4",
