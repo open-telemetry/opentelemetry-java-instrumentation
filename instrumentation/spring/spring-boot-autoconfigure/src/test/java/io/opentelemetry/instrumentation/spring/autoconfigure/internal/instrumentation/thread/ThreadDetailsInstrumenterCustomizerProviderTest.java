@@ -14,7 +14,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import java.io.ByteArrayInputStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -45,16 +44,13 @@ class ThreadDetailsInstrumenterCustomizerProviderTest {
   void configureDeclarativeConfigReadsFromModel() {
     String yaml =
         "file_format: \"1.0\"\n"
-            + "instrumentation/development:\n"
-            + "  java:\n"
-            + "    spring_starter:\n"
-            + "      thread_details:\n"
-            + "        enabled: true\n";
+            + "distribution:\n"
+            + "  spring_starter:\n"
+            + "    thread_details_enabled: true\n";
     OpenTelemetryConfigurationModel model =
         DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
 
-    ThreadDetailsInstrumenterCustomizerProvider.configureDeclarativeConfig(
-        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model)));
+    ThreadDetailsInstrumenterCustomizerProvider.configureDeclarativeConfig(model);
 
     InstrumenterCustomizer customizer = mock(InstrumenterCustomizer.class);
     new ThreadDetailsInstrumenterCustomizerProvider().customize(customizer);
