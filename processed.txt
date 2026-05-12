@@ -191,3 +191,4 @@ jaxws:jaxws-2.0-arquillian-testing
 jaxws-2.0-axis2-1.6:javaagent
 jaxws:jaxws-2.0-common-testing
 jaxws-2.0-cxf-3.0:javaagent
+jaxws-2.0-cxf-3.0:javaagent-unit-tests
