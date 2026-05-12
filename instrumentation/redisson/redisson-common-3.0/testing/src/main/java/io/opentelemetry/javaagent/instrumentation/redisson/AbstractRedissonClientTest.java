@@ -46,8 +46,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.redisson.Redisson;
 import org.redisson.api.BatchOptions;
@@ -68,6 +71,7 @@ import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public abstract class AbstractRedissonClientTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractRedissonClientTest.class);
@@ -115,6 +119,9 @@ public abstract class AbstractRedissonClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
+    // When verifying the stringCommandLazyConnection test case, simulate reconnection during Redis
+    // command execution.
+    singleServerConfig.setConnectionMinimumIdleSize(0);
     try {
       // disable connection ping if it exists
       singleServerConfig
@@ -133,6 +140,43 @@ public abstract class AbstractRedissonClientTest {
     if (redisson != null) {
       redisson.shutdown();
     }
+  }
+
+  @Test
+  @Order(1)
+  void stringCommandLazyConnection() {
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          RBucket<String> keyObject = redisson.getBucket("foo");
+          keyObject.set("bar");
+          keyObject.get();
+        });
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent", "SET", "GET"),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SET")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "GET foo"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   @Test
