@@ -17,4 +17,9 @@ class CouchbaseSpringTemplate26Test extends AbstractCouchbaseSpringTemplateTest 
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
     return Couchbase26Util.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
   }
+
+  @Override
+  protected boolean includesNetworkAttributes() {
+    return true;
+  }
 }

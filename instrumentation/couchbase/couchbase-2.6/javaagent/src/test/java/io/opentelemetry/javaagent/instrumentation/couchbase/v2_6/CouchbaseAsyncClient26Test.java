@@ -16,4 +16,9 @@ class CouchbaseAsyncClient26Test extends AbstractCouchbaseAsyncClientTest {
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
     return Couchbase26Util.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
   }
+
+  @Override
+  protected boolean includesNetworkAttributes() {
+    return true;
+  }
 }

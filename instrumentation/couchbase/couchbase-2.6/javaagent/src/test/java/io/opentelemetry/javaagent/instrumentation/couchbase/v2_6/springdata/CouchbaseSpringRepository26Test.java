@@ -21,6 +21,11 @@ class CouchbaseSpringRepository26Test extends AbstractCouchbaseSpringRepositoryT
   }
 
   @Override
+  protected boolean includesNetworkAttributes() {
+    return true;
+  }
+
+  @Override
   protected TestDocument findById(TestRepository repository, String id) {
     return repository.findById(id).get();
   }

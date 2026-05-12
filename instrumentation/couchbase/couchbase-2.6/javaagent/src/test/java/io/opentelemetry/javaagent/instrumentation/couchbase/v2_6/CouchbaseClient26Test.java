@@ -27,6 +27,11 @@ class CouchbaseClient26Test extends AbstractCouchbaseClientTest {
     return Couchbase26Util.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
   }
 
+  @Override
+  protected boolean includesNetworkAttributes() {
+    return true;
+  }
+
   @Test
   void hasDurationMetric() {
     CouchbaseCluster cluster = prepareCluster(bucketCouchbase);
