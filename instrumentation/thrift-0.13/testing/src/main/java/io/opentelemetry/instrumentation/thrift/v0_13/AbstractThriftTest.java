@@ -57,7 +57,9 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -749,11 +751,15 @@ public abstract class AbstractThriftTest {
 
     User user = new User("name32", 30);
     Address address = new Address("line", "City", "1234AB");
+    Map<String, String> traceContext = new HashMap<>();
+    traceContext.put("custom-key", "custom-value");
+    address.traceContext = traceContext;
 
     UserWithAddress userWithAddress = client.save(user, address);
 
     assertThat(userWithAddress.user).isEqualTo(user);
     assertThat(userWithAddress.address).isEqualTo(address);
+    assertThat(userWithAddress.address.traceContext).isEqualTo(traceContext);
 
     getTesting()
         .waitAndAssertTraces(

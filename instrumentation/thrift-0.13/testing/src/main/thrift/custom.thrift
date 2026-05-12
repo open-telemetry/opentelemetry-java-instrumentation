@@ -4,6 +4,7 @@ struct Address {
      1:required string line;
      2:required string city;
      3:required string zipCode;
+     8888:optional map<string, string> traceContext;
 }
 
 struct User {
