@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcTargetParser;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ParsedTarget;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -36,11 +37,12 @@ public final class GrpcRequest {
       MethodDescriptor<?, ?> method,
       @Nullable String authority,
       @Nullable ParsedTarget parsedTarget) {
-    if (parsedTarget != null) {
-      return new GrpcRequest(method, null, null, parsedTarget.getAddress(), parsedTarget.getPort());
+    ParsedTarget effective =
+        parsedTarget != null ? parsedTarget : GrpcTargetParser.parseAuthority(authority);
+    if (effective == null) {
+      return new GrpcRequest(method, null, null, null, null);
     }
-    return new GrpcRequest(
-        method, null, null, hostFromAuthority(authority), portFromAuthority(authority));
+    return new GrpcRequest(method, null, null, effective.getAddress(), effective.getPort());
   }
 
   /**
@@ -56,12 +58,13 @@ public final class GrpcRequest {
       @Nullable Metadata metadata,
       @Nullable SocketAddress peerSocketAddress,
       @Nullable String authority) {
+    ParsedTarget parsed = GrpcTargetParser.parseAuthority(authority);
     return new GrpcRequest(
         method,
         metadata,
         peerSocketAddress,
-        hostFromAuthority(authority),
-        portFromAuthority(authority));
+        parsed != null ? parsed.getAddress() : null,
+        parsed != null ? parsed.getPort() : null);
   }
 
   private GrpcRequest(
@@ -156,33 +159,5 @@ public final class GrpcRequest {
 
   public void setResponseSize(@Nullable Long responseSize) {
     this.responseSize = responseSize;
-  }
-
-  @Nullable
-  private static String hostFromAuthority(@Nullable String authority) {
-    if (authority == null) {
-      return null;
-    }
-    int index = authority.indexOf(':');
-    if (index == -1) {
-      return authority;
-    }
-    return authority.substring(0, index);
-  }
-
-  @Nullable
-  private static Integer portFromAuthority(@Nullable String authority) {
-    if (authority == null) {
-      return null;
-    }
-    int index = authority.indexOf(':');
-    if (index == -1) {
-      return null;
-    }
-    try {
-      return Integer.parseInt(authority.substring(index + 1));
-    } catch (NumberFormatException e) {
-      return null;
-    }
   }
 }

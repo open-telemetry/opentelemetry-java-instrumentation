@@ -63,6 +63,18 @@ public final class GrpcTargetParser {
     return new ParsedTarget(target, null);
   }
 
+  /**
+   * Parses an HTTP/2 authority of the form {@code host}, {@code host:port}, or {@code
+   * [ipv6]:port} into address and port. Returns {@code null} for {@code null}/empty input.
+   */
+  @Nullable
+  public static ParsedTarget parseAuthority(@Nullable String authority) {
+    if (authority == null || authority.isEmpty()) {
+      return null;
+    }
+    return parseHostPort(authority);
+  }
+
   private static ParsedTarget parseSingleColonScheme(String scheme, String rest) {
     if ("dns".equals(scheme)) {
       return parseHostPort(rest);
