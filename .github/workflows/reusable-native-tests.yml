@@ -3,9 +3,6 @@ name: Reusable - Native tests
 on:
   workflow_call:
     inputs:
-      skip-native-tests:
-        type: boolean
-        required: false
       test-latest-deps:
         type: boolean
         required: false
@@ -15,7 +12,6 @@ permissions:
 
 jobs:
   graalvm-native-tests:
-    if: "!inputs.skip-native-tests"
     runs-on: ubuntu-latest
     strategy:
       matrix:
