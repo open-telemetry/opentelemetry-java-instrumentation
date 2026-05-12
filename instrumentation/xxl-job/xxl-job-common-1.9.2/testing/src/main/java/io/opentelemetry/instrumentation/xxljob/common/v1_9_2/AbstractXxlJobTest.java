@@ -60,13 +60,16 @@ public abstract class AbstractXxlJobTest {
   void testGlueJob() {
     JobThread jobThread = new JobThread(1, getGlueJobHandler());
     trigger(jobThread);
-    checkXxlJob(
-        "CustomizedGroovyHandler.execute",
-        StatusData.unset(),
-        GlueTypeEnum.GLUE_GROOVY,
-        "CustomizedGroovyHandler",
-        "execute");
-    jobThread.toStop("Test finish");
+    try {
+      checkXxlJob(
+          "CustomizedGroovyHandler.execute",
+          StatusData.unset(),
+          GlueTypeEnum.GLUE_GROOVY,
+          "CustomizedGroovyHandler",
+          "execute");
+    } finally {
+      jobThread.toStop("Test finish");
+    }
   }
 
   @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Shell scripts require /bin/sh")
@@ -74,21 +77,28 @@ public abstract class AbstractXxlJobTest {
   void testScriptJob() {
     JobThread jobThread = new JobThread(2, getScriptJobHandler());
     trigger(jobThread, "");
-    checkXxlJobWithoutCodeAttributes("GLUE(Shell)", StatusData.unset(), GlueTypeEnum.GLUE_SHELL, 2);
-    jobThread.toStop("Test finish");
+    try {
+      checkXxlJobWithoutCodeAttributes(
+          "GLUE(Shell)", StatusData.unset(), GlueTypeEnum.GLUE_SHELL, 2);
+    } finally {
+      jobThread.toStop("Test finish");
+    }
   }
 
   @Test
   void testSimpleJob() {
     JobThread jobThread = new JobThread(3, getCustomizeHandler());
     trigger(jobThread);
-    checkXxlJob(
-        "SimpleCustomizedHandler.execute",
-        StatusData.unset(),
-        GlueTypeEnum.BEAN,
-        getPackageName() + ".SimpleCustomizedHandler",
-        "execute");
-    jobThread.toStop("Test finish");
+    try {
+      checkXxlJob(
+          "SimpleCustomizedHandler.execute",
+          StatusData.unset(),
+          GlueTypeEnum.BEAN,
+          getPackageName() + ".SimpleCustomizedHandler",
+          "execute");
+    } finally {
+      jobThread.toStop("Test finish");
+    }
   }
 
   protected Class<?> getReflectObjectClass() {
@@ -103,26 +113,32 @@ public abstract class AbstractXxlJobTest {
 
     JobThread jobThread = new JobThread(4, methodHandler);
     trigger(jobThread);
-    checkXxlJob(
-        "ReflectObject.echo",
-        StatusData.unset(),
-        GlueTypeEnum.BEAN,
-        getReflectObjectClass().getName(),
-        "echo");
-    jobThread.toStop("Test finish");
+    try {
+      checkXxlJob(
+          "ReflectObject.echo",
+          StatusData.unset(),
+          GlueTypeEnum.BEAN,
+          getReflectObjectClass().getName(),
+          "echo");
+    } finally {
+      jobThread.toStop("Test finish");
+    }
   }
 
   @Test
   void testFailedJob() {
     JobThread jobThread = new JobThread(5, getCustomizeFailedHandler());
     trigger(jobThread);
-    checkXxlJob(
-        "CustomizedFailedHandler.execute",
-        StatusData.error(),
-        GlueTypeEnum.BEAN,
-        getPackageName() + ".CustomizedFailedHandler",
-        "execute");
-    jobThread.toStop("Test finish");
+    try {
+      checkXxlJob(
+          "CustomizedFailedHandler.execute",
+          StatusData.error(),
+          GlueTypeEnum.BEAN,
+          getPackageName() + ".CustomizedFailedHandler",
+          "execute");
+    } finally {
+      jobThread.toStop("Test finish");
+    }
   }
 
   protected abstract IJobHandler getGlueJobHandler();

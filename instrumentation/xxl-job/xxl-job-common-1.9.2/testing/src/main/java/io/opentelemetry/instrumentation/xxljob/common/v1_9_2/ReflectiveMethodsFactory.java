@@ -21,7 +21,7 @@ class ReflectiveMethodsFactory {
   static Method getMethod() {
     try {
       return ReflectObject.class.getMethod("echo", String.class);
-    } catch (Throwable ignored) {
+    } catch (NoSuchMethodException | LinkageError ignored) {
       return null;
     }
   }
@@ -30,7 +30,7 @@ class ReflectiveMethodsFactory {
   static Method getInitMethod() {
     try {
       return ReflectObject.class.getMethod("initMethod");
-    } catch (Throwable ignored) {
+    } catch (NoSuchMethodException | LinkageError ignored) {
       return null;
     }
   }
@@ -39,7 +39,7 @@ class ReflectiveMethodsFactory {
   static Method getDestroyMethod() {
     try {
       return ReflectObject.class.getMethod("destroyMethod");
-    } catch (Throwable ignored) {
+    } catch (NoSuchMethodException | LinkageError ignored) {
       return null;
     }
   }

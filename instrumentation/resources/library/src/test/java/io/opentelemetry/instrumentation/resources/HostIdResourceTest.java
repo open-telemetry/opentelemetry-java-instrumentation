@@ -11,93 +11,63 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.assertj.core.api.MapAssert;
-import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class HostIdResourceTest {
 
-  private static class LinuxTestCase {
-    private final String name;
-    private final String expectedValue;
-    private final Function<Path, List<String>> pathReader;
-
-    private LinuxTestCase(
-        String name, String expectedValue, Function<Path, List<String>> pathReader) {
-      this.name = name;
-      this.expectedValue = expectedValue;
-      this.pathReader = pathReader;
-    }
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("createResourceLinuxCases")
+  void createResourceLinux(
+      String name, String expectedValue, Function<Path, List<String>> pathReader) {
+    HostIdResource hostIdResource = new HostIdResource(() -> "linux", pathReader, null);
+    assertHostId(expectedValue, hostIdResource);
   }
 
-  private static class WindowsTestCase {
-    private final String name;
-    private final String expectedValue;
-    private final Supplier<List<String>> queryWindowsRegistry;
-
-    private WindowsTestCase(
-        String name, String expectedValue, Supplier<List<String>> queryWindowsRegistry) {
-      this.name = name;
-      this.expectedValue = expectedValue;
-      this.queryWindowsRegistry = queryWindowsRegistry;
-    }
-  }
-
-  @TestFactory
-  Collection<DynamicTest> createResourceLinux() {
+  private static Stream<Arguments> createResourceLinuxCases() {
     return Stream.of(
-            new LinuxTestCase("default", "test", path -> singletonList("test")),
-            new LinuxTestCase("empty file or error reading", null, path -> emptyList()))
-        .map(
-            testCase ->
-                DynamicTest.dynamicTest(
-                    testCase.name,
-                    () -> {
-                      HostIdResource hostIdResource =
-                          new HostIdResource(() -> "linux", testCase.pathReader, null);
-
-                      assertHostId(testCase.expectedValue, hostIdResource);
-                    }))
-        .collect(toList());
+        arguments("default", "test", (Function<Path, List<String>>) path -> singletonList("test")),
+        arguments(
+            "empty file or error reading",
+            null,
+            (Function<Path, List<String>>) path -> emptyList()));
   }
 
-  @TestFactory
-  Collection<DynamicTest> createResourceWindows() {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("createResourceWindowsCases")
+  void createResourceWindows(
+      String name, String expectedValue, Supplier<List<String>> queryWindowsRegistry) {
+    HostIdResource hostIdResource =
+        new HostIdResource(() -> "Windows 95", null, queryWindowsRegistry);
+    assertHostId(expectedValue, hostIdResource);
+  }
+
+  private static Stream<Arguments> createResourceWindowsCases() {
     return Stream.of(
-            new WindowsTestCase(
-                "default",
-                "test",
+        arguments(
+            "default",
+            "test",
+            (Supplier<List<String>>)
                 () ->
                     asList(
                         "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography",
                         "    MachineGuid    REG_SZ    test")),
-            new WindowsTestCase("short output", null, Collections::emptyList))
-        .map(
-            testCase ->
-                DynamicTest.dynamicTest(
-                    testCase.name,
-                    () -> {
-                      HostIdResource hostIdResource =
-                          new HostIdResource(
-                              () -> "Windows 95", null, testCase.queryWindowsRegistry);
-
-                      assertHostId(testCase.expectedValue, hostIdResource);
-                    }))
-        .collect(toList());
+        arguments("short output", null, (Supplier<List<String>>) Collections::emptyList));
   }
 
   private static void assertHostId(String expectedValue, HostIdResource hostIdResource) {

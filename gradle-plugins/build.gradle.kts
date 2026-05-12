@@ -32,7 +32,7 @@ dependencies {
   implementation("com.google.guava:guava:33.6.0-jre")
   // we need to use byte buddy variant that does not shade asm
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
-    exclude(group = "net.bytebuddy", module = "byte-buddy")
+    exclude("net.bytebuddy", "byte-buddy")
   }
   implementation("net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}")
 
@@ -43,8 +43,8 @@ dependencies {
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.1") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
     // causing "No XmlService implementation found" in Gradle's classloader
-    exclude(group = "org.codehaus.plexus", module = "plexus-utils")
-    exclude(group = "org.codehaus.plexus", module = "plexus-xml")
+    exclude("org.codehaus.plexus", "plexus-utils")
+    exclude("org.codehaus.plexus", "plexus-xml")
   }
 
   testImplementation("org.assertj:assertj-core:3.27.7")

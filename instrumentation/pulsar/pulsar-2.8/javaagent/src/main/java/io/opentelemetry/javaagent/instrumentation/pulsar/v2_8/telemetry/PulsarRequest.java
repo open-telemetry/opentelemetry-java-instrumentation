@@ -23,7 +23,7 @@ public class PulsarRequest extends BasePulsarRequest {
     return new PulsarRequest(message, message.getTopicName(), parseUrl(url));
   }
 
-  public static PulsarRequest create(Message<?> message, UrlData urlData) {
+  public static PulsarRequest create(Message<?> message, @Nullable UrlData urlData) {
     return new PulsarRequest(message, message.getTopicName(), urlData);
   }
 

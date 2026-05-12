@@ -437,7 +437,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<Message> onExit(
         @Advice.Return @Nullable CompletableFuture<Message> originalResult,
         @Advice.Enter Object[] enterResult) {

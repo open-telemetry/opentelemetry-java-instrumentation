@@ -38,7 +38,7 @@ testing {
     // extracted to the output directory are not available during tests
     val testAzure by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (otelProps.testLatestDeps) "1.35.0" else "1.19.0"
+        val version = baseVersion("1.19.0").orLatest("1.35.0")
         implementation("com.azure:azure-core:$version")
       }
     }
