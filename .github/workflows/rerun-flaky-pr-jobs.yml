@@ -4,6 +4,7 @@ on:
   workflow_run:
     workflows:
       - "Build pull request"
+      - "PR build Servlet images for smoke tests"
     types:
       - completed
 
