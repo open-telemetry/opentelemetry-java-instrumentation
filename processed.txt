@@ -144,3 +144,4 @@ iceberg-1.8:testing
 influxdb-2.4:javaagent
 internal-application-logger:bootstrap
 internal-application-logger:javaagent
+internal-class-loader:compile-stub
