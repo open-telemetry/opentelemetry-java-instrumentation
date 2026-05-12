@@ -8,8 +8,8 @@ group = "io.opentelemetry.instrumentation"
 
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  // DefaultInstrumentationConfigApplier exposes incubator model types in the public API.
-  api("io.opentelemetry:opentelemetry-sdk-extension-incubator")
+  // DefaultInstrumentationConfigApplier exposes declarative config model types in the public API.
+  api("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   implementation("io.opentelemetry:opentelemetry-api-incubator")
 

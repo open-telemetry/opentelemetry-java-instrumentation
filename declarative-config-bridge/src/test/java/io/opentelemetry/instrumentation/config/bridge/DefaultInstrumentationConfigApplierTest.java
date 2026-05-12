@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.config.bridge;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfigurationModel;
 import org.junit.jupiter.api.Test;
 
 class DefaultInstrumentationConfigApplierTest {
