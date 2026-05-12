@@ -19,14 +19,13 @@ import java.net.HttpURLConnection;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public class HttpMethodAttributeExtractor<
-        REQUEST extends HttpURLConnection, RESPONSE extends Integer>
+class HttpMethodAttributeExtractor<REQUEST extends HttpURLConnection, RESPONSE extends Integer>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private final Set<String> knownMethods;
   private final boolean emitExperimentalHttpClientTelemetry;
 
-  public static AttributesExtractor<? super HttpURLConnection, ? super Integer> create(
+  static AttributesExtractor<? super HttpURLConnection, ? super Integer> create(
       Set<String> knownMethods) {
     return new HttpMethodAttributeExtractor<>(knownMethods);
   }
