@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.extannotations;
+package io.opentelemetry.javaagent.instrumentation.external.annotations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

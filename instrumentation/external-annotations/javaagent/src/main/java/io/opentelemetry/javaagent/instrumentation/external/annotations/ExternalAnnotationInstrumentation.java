@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.extannotations;
+package io.opentelemetry.javaagent.instrumentation.external.annotations;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.external.annotations.ExternalAnnotationSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.logging.Level.WARNING;
