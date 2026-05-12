@@ -48,6 +48,8 @@ public class CallMethodHelper {
     if (requestAndContext == null) {
       return;
     }
+    virtualField.set(call, null);
+
     Context context = requestAndContext.getContext();
     HbaseRequest request = requestAndContext.getRequest();
     if (context == null || request == null) {

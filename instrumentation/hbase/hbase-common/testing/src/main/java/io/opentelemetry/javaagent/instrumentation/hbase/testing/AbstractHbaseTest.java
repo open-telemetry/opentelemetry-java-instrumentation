@@ -139,8 +139,14 @@ public abstract class AbstractHbaseTest {
 
   @AfterAll
   static void cleanupSpec() throws IOException {
-    hbaseContainer.stop();
-    connection.close();
+    try {
+      if (connection != null) {
+        connection.close();
+      }
+    } finally {
+      connection = null;
+      hbaseContainer.stop();
+    }
   }
 
   @BeforeEach
@@ -215,6 +221,7 @@ public abstract class AbstractHbaseTest {
   }
 
   @Test
+  @Order(4)
   public void testListTable() {
     Exception error = null;
     boolean tableExists = false;
@@ -238,7 +245,7 @@ public abstract class AbstractHbaseTest {
   }
 
   @Test
-  @Order(4)
+  @Order(5)
   public void testPut() {
     Integer id = 1;
     Exception error = null;
@@ -447,31 +454,36 @@ public abstract class AbstractHbaseTest {
   @Order(400)
   public void testCheckAndMutateSuccess() {
     Exception error = null;
-    boolean success = false;
     try (Table table = connection.getTable(TABLE_NAME)) {
       byte[] rowKey = Bytes.toBytes("row1");
       Put put = new Put(Bytes.toBytes("row3"));
-      put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col4"), Bytes.toBytes("new_value"));
-      put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col5"), Bytes.toBytes("new_value"));
+      put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col4"), Bytes.toBytes("new_value1"));
+      put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col5"), Bytes.toBytes("new_value2"));
 
       RowMutations rowMutations = new RowMutations(Bytes.toBytes("row3"));
       rowMutations.add(put);
       Delete delete = new Delete(Bytes.toBytes("row3"));
-      delete.addColumns(COLUMN_FAMILY, Bytes.toBytes("col2"));
+      delete.addColumns(COLUMN_FAMILY, Bytes.toBytes("col1"));
       rowMutations.add(delete);
 
-      success =
-          table
-              .checkAndMutate(rowKey, COLUMN_FAMILY)
-              .qualifier(Bytes.toBytes("col1"))
-              .ifMatches(CompareOperator.EQUAL, Bytes.toBytes("col1_val_1"))
-              .thenMutate(rowMutations);
+      table
+          .checkAndMutate(rowKey, COLUMN_FAMILY)
+          .qualifier(Bytes.toBytes("col1"))
+          .ifMatches(CompareOperator.EQUAL, Bytes.toBytes("col1_val_1"))
+          .thenMutate(rowMutations);
+
+      Result result = table.get(new Get(Bytes.toBytes("row3")));
+      assertEquals("new_value1", Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col4"))));
+      assertEquals("new_value2", Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col5"))));
+      assertNull(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col1")));
     } catch (Exception e) {
       error = e;
     }
     assertNull(error);
-    assertTrue(success);
-    testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
+    testing()
+        .waitAndAssertTraces(
+            traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true),
+            traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
   }
 
   @Test

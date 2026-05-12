@@ -1,7 +1,10 @@
-import org.gradle.kotlin.dsl.latestDepTestLibrary
-
 plugins {
   id("otel.javaagent-instrumentation")
+}
+
+otelJava {
+  // HBase 2.0.x test stack is not reliable on JDK 25+.
+  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
 }
 
 muzzle {
@@ -18,10 +21,9 @@ dependencies {
 
   library("org.apache.hbase:hbase-client:2.0.0")
   testLibrary("org.apache.hbase:hbase-client:2.3.7")
-  latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+")
+  latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // documented limitation
   testImplementation("com.google.code.findbugs:annotations:3.0.1")
   testImplementation(project(":instrumentation:hbase:hbase-common:testing"))
-  latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+")
 }
 
 tasks {
@@ -34,6 +36,9 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
+    // HBase test container binds fixed host ports, so do not run it alongside the default test task.
+    mustRunAfter(named("test"))
+
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
