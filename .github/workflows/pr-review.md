@@ -93,7 +93,7 @@ jobs:
       model_warning: ${{ steps.gate.outputs.model_warning }}
       triggered_by: ${{ steps.gate.outputs.triggered_by }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.0.1
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -130,7 +130,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5.0.1
         with:
           fetch-depth: 1
           persist-credentials: false

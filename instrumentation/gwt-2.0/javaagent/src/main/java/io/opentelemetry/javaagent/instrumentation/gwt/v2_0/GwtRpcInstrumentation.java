@@ -97,9 +97,9 @@ class GwtRpcInstrumentation implements TypeInstrumentation {
     }
   }
 
-  @SuppressWarnings("unused")
   public static class EncodeResponseForFailureAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) @Nullable Throwable throwable) {
       if (throwable == null) {

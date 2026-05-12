@@ -12,21 +12,23 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractNatsTest {
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private static GenericContainer<?> natsContainer;
-  static Connection connection;
+  private GenericContainer<?> natsContainer;
+  Connection connection;
 
   protected abstract InstrumentationExtension testing();
 
   @BeforeAll
-  static void beforeAll() throws IOException, InterruptedException {
+  void beforeAll() throws IOException, InterruptedException {
     DockerImageName natsImage = DockerImageName.parse("nats:2.11.2-alpine3.21");
 
     natsContainer = new GenericContainer<>(natsImage).withExposedPorts(4222);

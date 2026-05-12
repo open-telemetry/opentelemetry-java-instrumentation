@@ -246,7 +246,7 @@ class SessionTest extends AbstractHibernateTest {
                                     trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
   }
 
-  private static Stream<Arguments> provideArgumentsHibernateActionStateless() {
+  private Stream<Arguments> provideArgumentsHibernateActionStateless() {
     return Stream.of(
         Arguments.of(named("refresh", new Parameter("refresh", null, StatelessSession::refresh))),
         Arguments.of(
@@ -586,7 +586,7 @@ class SessionTest extends AbstractHibernateTest {
                                 emitStableDatabaseSemconv() ? null : "Value"))));
   }
 
-  private static Stream<Arguments> provideArgumentsHibernateCommitAction() {
+  private Stream<Arguments> provideArgumentsHibernateCommitAction() {
     return Stream.of(
         Arguments.of(
             named(

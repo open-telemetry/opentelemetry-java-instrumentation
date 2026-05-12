@@ -1,6 +1,6 @@
 {
   "private": true,
   "dependencies": {
-    "@github/copilot": "1.0.43"
+    "@github/copilot": "1.0.44"
   }
 }

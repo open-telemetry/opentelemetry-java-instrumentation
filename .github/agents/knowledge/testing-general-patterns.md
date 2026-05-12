@@ -77,6 +77,36 @@
 - If the test intentionally closes the resource mid-test or asserts behavior around explicit
   close, keep the direct close or try-with-resources in the test body.
 
+## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
+
+When an abstract test base is shared by multiple concrete subclasses run in the same JVM
+fork, `static` fixture fields become JVM-wide state the subclasses fight over. Annotate
+the base with `@TestInstance(Lifecycle.PER_CLASS)` and make per-class fixtures
+**instance** fields. JUnit creates one base instance per concrete subclass and reuses it
+for every `@Test`, giving the same once-per-class lifecycle as `static` without leaking
+across subclasses.
+
+What goes where:
+
+- **Instance** (`protected`, not `protected static`): containers, clients, connections,
+  `host` / `port` / URI fields, and any helper method that reads them (e.g.
+  `spanName(String)` reading `host`/`port`).
+- **Instance** `@RegisterExtension AutoCleanupExtension cleanup`: a shared `static`
+  `AutoCleanupExtension` latches `rootContext` on the first subclass's `beforeAll` and
+  never resets it, so `deferAfterAll(...)` callbacks registered by later subclasses
+  silently leak.
+- **`static`** for true JVM-wide constants only: `DB_INDEX`, loggers, `*_HASH_MAP`
+  literals, pure helpers (`addExtraAttributes(...)`, `assertCommandEncodeEvents(...)`),
+  and `@RegisterExtension InstrumentationExtension testing` — the agent/SDK extension
+  must be `static final` because JUnit only invokes `BeforeAllCallback` /
+  `AfterAllCallback` for class-level (static) `@RegisterExtension` fields.
+
+This shape is also required when a subclass needs to mutate the container's builder
+(e.g. `withCommand("--requirepass password")`): with shared `static` state an earlier
+subclass may have already started the container, so `withCommand` on the running
+instance is a no-op; with per-instance state each subclass mutates and starts its own
+fresh container.
+
 ## Span Attribute Assertions
 
 - Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for
