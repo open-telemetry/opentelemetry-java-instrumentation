@@ -50,7 +50,9 @@ class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("target") String target) {
       if (!Boolean.TRUE.equals(MANAGED_CHANNEL_BUILDER_INSTRUMENTED.get(builder))) {
         ClientInterceptor interceptor =
-            emitStableRpcSemconv() ? GrpcSingletons.createClientInterceptor(target) : clientInterceptor();
+            emitStableRpcSemconv()
+                ? GrpcSingletons.createClientInterceptor(target)
+                : clientInterceptor();
         interceptors.add(0, interceptor);
         MANAGED_CHANNEL_BUILDER_INSTRUMENTED.set(builder, true);
       }

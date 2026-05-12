@@ -64,8 +64,8 @@ public final class GrpcTargetParser {
   }
 
   /**
-   * Parses an HTTP/2 authority of the form {@code host}, {@code host:port}, or {@code
-   * [ipv6]:port} into address and port. Returns {@code null} for {@code null}/empty input.
+   * Parses an HTTP/2 authority of the form {@code host}, {@code host:port}, or {@code [ipv6]:port}
+   * into address and port. Returns {@code null} for {@code null}/empty input.
    */
   @Nullable
   public static ParsedTarget parseAuthority(@Nullable String authority) {
