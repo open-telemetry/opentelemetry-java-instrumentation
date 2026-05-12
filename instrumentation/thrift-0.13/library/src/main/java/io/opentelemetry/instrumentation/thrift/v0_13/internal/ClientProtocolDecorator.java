@@ -9,10 +9,13 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import org.apache.thrift.TException;
+import org.apache.thrift.protocol.TMessage;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolDecorator;
 import org.apache.thrift.protocol.TProtocolFactory;
+import org.apache.thrift.protocol.TStruct;
 import org.apache.thrift.transport.TTransport;
 
 /**
@@ -24,6 +27,9 @@ public final class ClientProtocolDecorator extends TProtocolDecorator {
   private final TProtocol protocol;
   private final ContextPropagators propagators;
   private final Supplier<ClientCallContext> callContextSupplier;
+  @Nullable private String currentMessageName;
+  private int structDepth;
+  private boolean writingRequestArgsStruct;
 
   public ClientProtocolDecorator(TProtocol protocol, ContextPropagators propagators) {
     this(protocol, propagators, ClientCallContext::get);
@@ -40,9 +46,52 @@ public final class ClientProtocolDecorator extends TProtocolDecorator {
   }
 
   @Override
+  public void writeMessageBegin(TMessage message) throws TException {
+    super.writeMessageBegin(message);
+    currentMessageName = message.name;
+    structDepth = 0;
+    writingRequestArgsStruct = false;
+  }
+
+  @Override
+  public void writeStructBegin(TStruct struct) throws TException {
+    super.writeStructBegin(struct);
+    if (structDepth == 0) {
+      writingRequestArgsStruct = isRequestArgsStruct(struct.name);
+    }
+    structDepth++;
+  }
+
+  @Override
+  public void writeStructEnd() throws TException {
+    try {
+      super.writeStructEnd();
+    } finally {
+      structDepth--;
+      if (structDepth == 0) {
+        writingRequestArgsStruct = false;
+      }
+    }
+  }
+
+  @Override
+  public void writeMessageEnd() throws TException {
+    try {
+      super.writeMessageEnd();
+    } finally {
+      currentMessageName = null;
+      structDepth = 0;
+      writingRequestArgsStruct = false;
+    }
+  }
+
+  @Override
   public void writeFieldStop() throws TException {
     ClientCallContext callContext = callContextSupplier.get();
-    if (callContext != null && !callContext.contextPropagated && callContext.context != null) {
+    if (isTopLevelRequestArgsStruct()
+        && callContext != null
+        && !callContext.contextPropagated
+        && callContext.context != null) {
       Map<String, String> headers = new HashMap<>();
       propagators
           .getTextMapPropagator()
@@ -59,6 +108,14 @@ public final class ClientProtocolDecorator extends TProtocolDecorator {
     }
 
     super.writeFieldStop();
+  }
+
+  private boolean isTopLevelRequestArgsStruct() {
+    return structDepth == 1 && writingRequestArgsStruct;
+  }
+
+  private boolean isRequestArgsStruct(String structName) {
+    return currentMessageName != null && (currentMessageName + "_args").equals(structName);
   }
 
   /**

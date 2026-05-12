@@ -18,6 +18,7 @@ import org.apache.thrift.protocol.TField;
 import org.apache.thrift.protocol.TMessage;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolDecorator;
+import org.apache.thrift.protocol.TStruct;
 import org.apache.thrift.protocol.TType;
 
 /**
@@ -34,6 +35,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
   @Nullable private ThriftRequest currentRequest;
   @Nullable private Context currentContext;
   @Nullable private Scope currentScope;
+  private int structDepth;
 
   public ServerInProtocolDecorator(
       TProtocol protocol,
@@ -49,7 +51,24 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
   public TMessage readMessageBegin() throws TException {
     TMessage message = super.readMessageBegin();
     this.methodName = message.name;
+    structDepth = 0;
     return message;
+  }
+
+  @Override
+  public TStruct readStructBegin() throws TException {
+    TStruct struct = super.readStructBegin();
+    structDepth++;
+    return struct;
+  }
+
+  @Override
+  public void readStructEnd() throws TException {
+    try {
+      super.readStructEnd();
+    } finally {
+      structDepth--;
+    }
   }
 
   @Override
@@ -57,7 +76,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     TField field = super.readFieldBegin();
     // start span when context propagation field is read, if the message doesn't include context
     // propagation field, span will be started in readMessageEnd()
-    if (field.id == ContextPropagationUtil.TRACE_CONTEXT_FIELD_ID && field.type == TType.MAP) {
+    if (isContextPropagationField(field)) {
       Map<String, String> headers = ContextPropagationUtil.readHeaders(protocol);
       super.readFieldEnd();
 
@@ -90,6 +109,8 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       currentContext = instrumenter.start(parentContext, request);
     }
     currentScope = currentContext.makeCurrent();
+    methodName = null;
+    structDepth = 0;
   }
 
   @Nullable
@@ -111,5 +132,11 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     }
     instrumenter.end(
         currentContext, currentRequest, failed ? ThriftResponse.FAILED : null, throwable);
+  }
+
+  private boolean isContextPropagationField(TField field) {
+    return structDepth == 1
+        && field.id == ContextPropagationUtil.TRACE_CONTEXT_FIELD_ID
+        && field.type == TType.MAP;
   }
 }
