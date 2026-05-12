@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.extensionkotlin.v1_0;
+package io.opentelemetry.javaagent.instrumentation.opentelemetry.extension.kotlin.v1_0;
 
 import static java.util.Collections.singletonList;
 
