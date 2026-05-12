@@ -42,8 +42,7 @@ class ThreadDetailsInstrumenterCustomizerProviderTest {
     Map<String, Object> model =
         singletonMap(
             "distribution",
-            singletonMap(
-                "spring_starter", singletonMap("thread_details_enabled", "true")));
+            singletonMap("spring_starter", singletonMap("thread_details_enabled", "true")));
 
     ThreadDetailsInstrumenterCustomizerProvider.configureDeclarativeConfig(model);
 
