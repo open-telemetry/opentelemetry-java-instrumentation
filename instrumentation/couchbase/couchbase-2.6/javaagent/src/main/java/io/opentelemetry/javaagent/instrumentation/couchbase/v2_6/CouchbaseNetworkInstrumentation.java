@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
@@ -50,6 +51,12 @@ class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) CouchbaseRequest request) {
 
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
+      if (requestInfo == null) {
+        requestInfo = CouchbaseRequestInfo.get(Java8BytecodeBridge.currentContext());
+        if (requestInfo != null) {
+          COUCHBASE_REQUEST_INFO.set(request, requestInfo);
+        }
+      }
       if (requestInfo != null) {
         requestInfo.setPeerAddress(channelHandlerContext.channel().remoteAddress());
         requestInfo.setLocalAddress(localSocket);
