@@ -31,7 +31,7 @@ SqsAsyncClientBuilder sqsAsyncClientBuilder = SqsAsyncClient.builder();
 SqsAsyncClient sqsAsyncClient = telemetry.wrap(sqsAsyncClientBuilder.build());
 ```
 
-For bedrock async client use
+For the Bedrock Runtime async client, an additional step is also needed:
 
 ```java
 BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClient.builder();
