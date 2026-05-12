@@ -195,8 +195,11 @@ class ArmeriaGrpcTest {
     assertThatThrownBy(() -> client.sayHello(request)).isInstanceOf(StatusRuntimeException.class);
 
     // Armeria uses exact-route binding for gRPC services, so calling an unregistered service
-    // results in an HTTP-level response rather than gRPC UNIMPLEMENTED. The armeria HTTP
-    // instrumentation captures this as an HTTP server span.
+    // results in an HTTP 404 rather than the gRPC service layer producing an UNIMPLEMENTED
+    // response. The gRPC client maps the HTTP 404 to Status.UNIMPLEMENTED (asserted on the
+    // client span below), and the armeria HTTP instrumentation captures the request as an
+    // HTTP server span -- there is no gRPC server span because the gRPC service layer is
+    // never invoked.
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
