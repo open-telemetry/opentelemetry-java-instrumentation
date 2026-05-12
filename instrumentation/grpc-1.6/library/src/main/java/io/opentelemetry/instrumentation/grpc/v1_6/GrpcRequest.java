@@ -33,7 +33,7 @@ public final class GrpcRequest {
    *     io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcTargetParser#parse}), or {@code
    *     null} if unavailable
    */
-  public static GrpcRequest createClientRequest(
+  static GrpcRequest createClientRequest(
       MethodDescriptor<?, ?> method,
       @Nullable String authority,
       @Nullable ParsedTarget parsedTarget) {
@@ -53,7 +53,7 @@ public final class GrpcRequest {
    * @param peerSocketAddress the peer socket address
    * @param authority the request authority
    */
-  public static GrpcRequest createServerRequest(
+  static GrpcRequest createServerRequest(
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
       @Nullable SocketAddress peerSocketAddress,
