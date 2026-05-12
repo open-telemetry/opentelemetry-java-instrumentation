@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hibernate.v4_3;
+package io.opentelemetry.javaagent.instrumentation.hibernate.procedure.call.v4_3;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_3.Hibernate43Singletons.PROCEDURE_CALL_SESSION_INFO;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.v4_3.Hibernate43Singletons.SHARED_SESSION_CONTRACT_SESSION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.procedure.call.v4_3.Hibernate43Singletons.PROCEDURE_CALL_SESSION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.procedure.call.v4_3.Hibernate43Singletons.SHARED_SESSION_CONTRACT_SESSION_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
