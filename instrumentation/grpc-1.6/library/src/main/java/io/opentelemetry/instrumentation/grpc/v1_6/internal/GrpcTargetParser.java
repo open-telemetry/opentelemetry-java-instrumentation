@@ -75,6 +75,7 @@ public final class GrpcTargetParser {
     return parseHostPort(authority);
   }
 
+  @Nullable
   private static ParsedTarget parseSingleColonScheme(String scheme, String rest) {
     if ("dns".equals(scheme)) {
       return parseHostPort(rest);
@@ -88,6 +89,7 @@ public final class GrpcTargetParser {
     return new ParsedTarget(scheme + ":" + rest, null);
   }
 
+  @Nullable
   private static ParsedTarget parseDnsScheme(String rest) {
     int slashIndex = rest.indexOf('/');
     String endpoint;
@@ -99,9 +101,10 @@ public final class GrpcTargetParser {
     return parseHostPort(endpoint);
   }
 
+  @Nullable
   private static ParsedTarget parseHostPort(String hostPort) {
     if (hostPort.isEmpty()) {
-      return new ParsedTarget(hostPort, null);
+      return null;
     }
 
     // Handle IPv6 in brackets: [::1]:8080

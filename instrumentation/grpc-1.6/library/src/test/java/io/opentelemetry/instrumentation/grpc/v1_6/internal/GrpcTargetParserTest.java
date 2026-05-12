@@ -12,6 +12,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class GrpcTargetParserTest {
 
@@ -65,6 +66,14 @@ class GrpcTargetParserTest {
   @ParameterizedTest
   @NullAndEmptySource
   void parseNullOrEmpty(String target) {
+    assertThat(GrpcTargetParser.parse(target)).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"dns:", "dns:///"})
+  void parseEmptyEndpointReturnsNull(String target) {
+    // "dns:" -> empty after single-colon scheme
+    // "dns:///" -> empty endpoint after authority slash
     assertThat(GrpcTargetParser.parse(target)).isNull();
   }
 }
