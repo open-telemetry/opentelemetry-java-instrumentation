@@ -80,7 +80,7 @@ jobs:
       model_warning: ${{ steps.gate.outputs.model_warning }}
       triggered_by: ${{ steps.gate.outputs.triggered_by }}
     steps:
-      - uses: actions/checkout@v5.0.1
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -117,20 +117,20 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5.0.1
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
 
       - name: Download agent artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8.0.1
         with:
           name: agent
           path: ./agent-artifact
         continue-on-error: true
 
       - name: Download review bundle artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8.0.1
         with:
           name: review-bundle
           path: ./review-bundle
