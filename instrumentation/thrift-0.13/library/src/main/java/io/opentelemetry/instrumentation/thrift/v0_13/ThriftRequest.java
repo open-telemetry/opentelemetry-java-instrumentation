@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.thrift.v0_13;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -46,7 +47,7 @@ public final class ThriftRequest {
       Map<String, String> headers) {
     this.methodName = methodName;
     this.serviceName = serviceName;
-    this.headers = headers;
+    this.headers = requireNonNull(headers);
     this.localAddress = localAddress;
     this.remoteAddress = remoteAddress;
   }
