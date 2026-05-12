@@ -13,6 +13,6 @@ dependencies {
   testImplementation(project(":instrumentation:java-http-server:testing"))
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }
