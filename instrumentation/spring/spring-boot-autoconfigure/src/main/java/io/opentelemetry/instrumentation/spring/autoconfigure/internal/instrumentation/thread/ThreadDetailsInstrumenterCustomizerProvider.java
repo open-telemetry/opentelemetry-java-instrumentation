@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.incubator.thread.ThreadDetailsAttributesExtractor;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.Map;
 import org.springframework.core.env.Environment;
 
@@ -31,7 +30,7 @@ public class ThreadDetailsInstrumenterCustomizerProvider implements Instrumenter
   private static volatile boolean enabled;
 
   /** Called from OpenTelemetryAutoConfiguration for declarative config. */
-  public static void configureDeclarativeConfig(OpenTelemetryConfigurationModel model) {
+  public static void configureDeclarativeConfig(Object model) {
     enabled = isEnabled(model);
   }
 
@@ -48,7 +47,7 @@ public class ThreadDetailsInstrumenterCustomizerProvider implements Instrumenter
   }
 
   @SuppressWarnings("unchecked") // distribution and spring_starter nodes are nested maps
-  private static boolean isEnabled(OpenTelemetryConfigurationModel model) {
+  private static boolean isEnabled(Object model) {
     Map<String, Object> config =
         mapper.convertValue(model, new TypeReference<Map<String, Object>>() {});
     Object distribution = config.get("distribution");
