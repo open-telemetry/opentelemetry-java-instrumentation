@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.TaskQueueInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -35,6 +36,7 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
     return asList(
         new ConnectionManagerInstrumentation(),
         new HttpClientConnectionInstrumentation(),
-        new HttpRequestInstrumentation());
+        new HttpRequestInstrumentation(),
+        new TaskQueueInstrumentation());
   }
 }
