@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 @SuppressWarnings("deprecation")
 public final class SemconvExceptionSignal {
 
-  private static final String CONFIG_PROPERTY = "otel.semconv.exception.signal.opt-in";
+  private static final String CONFIG_PROPERTY = "otel.semconv.exception.signal.preview";
 
   private static final Logger logger = Logger.getLogger(SemconvExceptionSignal.class.getName());
 
@@ -30,10 +30,10 @@ public final class SemconvExceptionSignal {
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
-    String optInValue = resolveOptInValue(openTelemetry);
+    String previewValue = resolvePreviewValue(openTelemetry);
 
-    emitExceptionAsSpanEvents = shouldEmitSpanEvents(optInValue);
-    emitExceptionAsLogs = shouldEmitLogs(optInValue);
+    emitExceptionAsSpanEvents = shouldEmitSpanEvents(previewValue);
+    emitExceptionAsLogs = shouldEmitLogs(previewValue);
   }
 
   public static boolean emitExceptionAsSpanEvents() {
@@ -65,13 +65,13 @@ public final class SemconvExceptionSignal {
   }
 
   @Nullable
-  private static String resolveOptInValue(OpenTelemetry openTelemetry) {
+  private static String resolvePreviewValue(OpenTelemetry openTelemetry) {
     // Try declarative config via GlobalOpenTelemetry first
     String value =
         getGeneralInstrumentationConfig(openTelemetry)
             .get("semconv_exception")
             .get("signal")
-            .getString("opt_in");
+            .getString("preview");
     if (value != null) {
       return value;
     }

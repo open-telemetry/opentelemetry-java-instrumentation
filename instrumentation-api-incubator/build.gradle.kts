@@ -105,14 +105,14 @@ tasks {
   val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     inputs.dir(jflexOutputDir)
   }
 
   val testExceptionSignalLogsDup by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs/dup")
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
     inputs.dir(jflexOutputDir)
   }
 

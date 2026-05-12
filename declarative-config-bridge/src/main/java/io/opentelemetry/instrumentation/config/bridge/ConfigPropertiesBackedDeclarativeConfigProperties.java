@@ -52,7 +52,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
         "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
     SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put(
-        "general.semconv_exception.signal.opt_in", "otel.semconv.exception.signal.opt-in");
+        "general.semconv_exception.signal.preview", "otel.semconv.exception.signal.preview");
     // moving common http, database, messaging, and gen_ai configs under common
     SPECIAL_MAPPINGS.put(
         "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
