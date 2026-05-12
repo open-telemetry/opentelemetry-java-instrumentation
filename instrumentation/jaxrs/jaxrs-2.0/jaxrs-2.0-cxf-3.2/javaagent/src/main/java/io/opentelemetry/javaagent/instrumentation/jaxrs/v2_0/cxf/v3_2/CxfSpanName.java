@@ -23,6 +23,7 @@ public class CxfSpanName implements HttpServerRouteGetter<String> {
 
   public static final CxfSpanName INSTANCE = new CxfSpanName();
 
+  @Nullable
   public Context updateServerSpanName(Exchange exchange) {
     Context context = Context.current();
     String jaxrsName = calculateJaxrsName(context, exchange);
