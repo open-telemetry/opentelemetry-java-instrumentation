@@ -133,10 +133,7 @@ public final class GrpcTargetParser {
 
     String host = hostPort.substring(0, lastColon);
     Integer port = parsePort(hostPort.substring(lastColon + 1));
-    if (port != null) {
-      return new ParsedTarget(host, port);
-    }
-    return new ParsedTarget(hostPort, null);
+    return new ParsedTarget(host, port);
   }
 
   @Nullable

@@ -60,7 +60,13 @@ class GrpcTargetParserTest {
         Arguments.of("::1", "::1", null),
 
         // unknown scheme with ://
-        Arguments.of("xds:///myservice", "xds:///myservice", null));
+        Arguments.of("xds:///myservice", "xds:///myservice", null),
+
+        // host with missing/invalid port — host preserved, port omitted
+        Arguments.of("myhost:", "myhost", null),
+        Arguments.of("myhost:abc", "myhost", null),
+        Arguments.of("dns:myhost:abc", "myhost", null),
+        Arguments.of("dns:///myhost:", "myhost", null));
   }
 
   @ParameterizedTest
