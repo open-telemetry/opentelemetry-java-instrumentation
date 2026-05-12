@@ -236,13 +236,10 @@ public class AgentDistributionConfig {
           configProperties.getList("otel.javaagent.exclude-classes"),
           configProperties.getList("otel.javaagent.exclude-class-loaders"),
           configProperties.getBoolean(
-              "otel.javaagent.add-thread-details", !isV3Preview(configProperties)),
+              "otel.javaagent.add-thread-details",
+              !configProperties.getBoolean("otel.instrumentation.common.v3-preview", false)),
           null);
       this.configProperties = configProperties;
-    }
-
-    private static boolean isV3Preview(ConfigProperties configProperties) {
-      return configProperties.getBoolean("otel.instrumentation.common.v3-preview", false);
     }
 
     @Override
