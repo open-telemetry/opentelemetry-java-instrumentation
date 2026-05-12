@@ -18,6 +18,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistri
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -50,6 +51,19 @@ class ThreadDetailsInstrumenterCustomizerProviderTest {
         Arguments.of(false, (Consumer<SpanDataAssert>) span -> span.hasAttributes(empty())));
   }
 
+  public static Stream<Arguments> implicitDefaultValues() {
+    return Stream.of(
+        Arguments.of(
+            false,
+            (Consumer<SpanDataAssert>)
+                span ->
+                    span.hasAttributesSatisfying(
+                        satisfies(THREAD_ID, n -> n.isEqualTo(Thread.currentThread().getId())),
+                        satisfies(
+                            THREAD_NAME, n -> n.isEqualTo(Thread.currentThread().getName())))),
+        Arguments.of(true, (Consumer<SpanDataAssert>) span -> span.hasAttributes(empty())));
+  }
+
   @ParameterizedTest(name = "enabled={0}")
   @MethodSource("allEnabledAndDisabledValues")
   void enabled(boolean enabled, Consumer<SpanDataAssert> spanAttributesConsumer) {
@@ -57,7 +71,23 @@ class ThreadDetailsInstrumenterCustomizerProviderTest {
         AgentDistributionConfig.fromConfigProperties(
             DefaultConfigProperties.createFromMap(
                 singletonMap("otel.javaagent.add-thread-details", String.valueOf(enabled)))));
+    assertInstrumenterAttributes(spanAttributesConsumer);
+  }
 
+  @ParameterizedTest(name = "v3Preview={0}")
+  @MethodSource("implicitDefaultValues")
+  void implicitDefault(boolean v3Preview, Consumer<SpanDataAssert> spanAttributesConsumer) {
+    Map<String, String> config = new HashMap<>();
+    config.put("otel.instrumentation.common.v3-preview", String.valueOf(v3Preview));
+    AgentDistributionConfig.set(
+        AgentDistributionConfig.fromConfigProperties(
+            DefaultConfigProperties.createFromMap(config)));
+
+    assertInstrumenterAttributes(spanAttributesConsumer);
+  }
+
+  private static void assertInstrumenterAttributes(
+      Consumer<SpanDataAssert> spanAttributesConsumer) {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", name -> "span")

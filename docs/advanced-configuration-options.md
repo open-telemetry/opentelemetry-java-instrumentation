@@ -55,3 +55,18 @@ We plan to integrate OpenTelemetry's own client-side monitoring solution by defa
 - The snippet is injected only into HTML responses that contain a `<head>` tag
 - The agent will attempt to preserve the original character encoding of the response
 - If the response already has a `Content-Length` header, it will be updated to reflect the additional content
+
+## Thread details span attributes
+
+This option controls whether the javaagent adds the experimental `thread.id` and `thread.name`
+span attributes.
+
+| System property                 | Environment variable            | Purpose                                                                                                                         |
+|---------------------------------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| otel.javaagent.add-thread-details | OTEL_JAVAAGENT_ADD_THREAD_DETAILS | Enable capture of experimental `thread.id` and `thread.name` span attributes on spans created by the javaagent and manual spans. |
+
+**Important notes:**
+
+- The default is `true`
+- When `otel.instrumentation.common.v3-preview=true`, the default becomes `false`
+- An explicit value for `otel.javaagent.add-thread-details` overrides that preview-based default
