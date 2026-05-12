@@ -50,7 +50,7 @@ public class TaskQueueInstrumentation implements TypeInstrumentation {
       };
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter Object[] enterArguments) {
       Scope scope = (Scope) enterArguments[1];
       if (scope != null) {
