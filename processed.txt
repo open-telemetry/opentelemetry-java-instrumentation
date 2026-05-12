@@ -142,3 +142,4 @@ hystrix-1.4:javaagent
 iceberg-1.8:library
 iceberg-1.8:testing
 influxdb-2.4:javaagent
+internal-application-logger:bootstrap
