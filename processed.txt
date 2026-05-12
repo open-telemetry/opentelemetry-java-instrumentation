@@ -188,3 +188,4 @@ jaxrs-common:bootstrap
 jaxrs-common:javaagent
 jaxrs-common:testing
 jaxws:jaxws-2.0-arquillian-testing
+jaxws-2.0-axis2-1.6:javaagent
