@@ -40,9 +40,9 @@ public class TaskQueueInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(@Advice.Argument(0) Runnable task) {
       // Attach context to the task being executed and prevent further context propagation in this
-      // method. This method places the task into queue and executes a runnable that starts consuming
-      // tasks from the queue. Since we already attached context to the task, we don't want to
-      // propagate context into the runnable that consumes tasks from the queue.
+      // method. This method places the task into queue and executes a runnable that starts
+      // consuming tasks from the queue. Since we already attached context to the task, we don't
+      // want to propagate context into the runnable that consumes tasks from the queue.
       Context context = Java8BytecodeBridge.currentContext();
       return new Object[] {
         ContextPropagatingRunnable.propagateContext(task, context),
