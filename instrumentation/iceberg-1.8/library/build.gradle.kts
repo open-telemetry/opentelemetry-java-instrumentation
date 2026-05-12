@@ -13,6 +13,6 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }

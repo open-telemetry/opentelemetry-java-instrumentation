@@ -21,6 +21,6 @@ dependencies {
   testImplementation(project(":instrumentation:helidon-4.3:testing"))
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }
