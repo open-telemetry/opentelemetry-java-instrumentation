@@ -40,6 +40,11 @@ Example shape:
 void test(String name, Input input, Output expected) {
   assertThat(run(input)).isEqualTo(expected);
 }
+
+private static Stream<Arguments> testCases() {
+  return Stream.of(
+      Arguments.of("valid input", new Input("input"), new Output("expected")));
+}
 ```
 
 ## Test Method Throws Clauses
