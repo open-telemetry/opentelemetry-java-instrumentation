@@ -31,6 +31,14 @@ SqsAsyncClientBuilder sqsAsyncClientBuilder = SqsAsyncClient.builder();
 SqsAsyncClient sqsAsyncClient = telemetry.wrap(sqsAsyncClientBuilder.build());
 ```
 
+For bedrock async client use
+
+```java
+BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClient.builder();
+...
+BedrockRuntimeAsyncClient bedrockClient = telemetry.wrapBedrockRuntimeClient(bedrockClientBuilder.build());
+```
+
 ## Trace propagation
 
 The AWS SDK instrumentation always injects the trace header into the request
