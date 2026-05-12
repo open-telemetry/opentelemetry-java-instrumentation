@@ -27,6 +27,10 @@ public final class GrpcTargetParser {
 
     int schemeEnd = target.indexOf("://");
     if (schemeEnd == -1) {
+      // Bracketed IPv6 like "[::1]" or "[::1]:8080"
+      if (target.startsWith("[")) {
+        return parseHostPort(target);
+      }
       // Check for single-colon scheme like "dns:endpoint" or "unix:/path"
       int colonIndex = target.indexOf(':');
       if (colonIndex == -1) {
@@ -112,6 +116,9 @@ public final class GrpcTargetParser {
       int closeBracket = hostPort.indexOf(']');
       if (closeBracket != -1) {
         String host = hostPort.substring(1, closeBracket);
+        if (host.isEmpty()) {
+          return null;
+        }
         if (closeBracket + 1 < hostPort.length() && hostPort.charAt(closeBracket + 1) == ':') {
           Integer port = parsePort(hostPort.substring(closeBracket + 2));
           return new ParsedTarget(host, port);
@@ -132,6 +139,9 @@ public final class GrpcTargetParser {
     }
 
     String host = hostPort.substring(0, lastColon);
+    if (host.isEmpty()) {
+      return null;
+    }
     Integer port = parsePort(hostPort.substring(lastColon + 1));
     return new ParsedTarget(host, port);
   }
