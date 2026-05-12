@@ -12,6 +12,41 @@
 - Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
   Prefer direct assertions whose failure output shows the unexpected values.
 
+## Parameterized Tests
+
+- When the same test logic is repeated for multiple input/output cases, prefer
+  `@ParameterizedTest` over one large test with many unrelated assertions or many small tests that
+  duplicate the same setup.
+- Prefer `@MethodSource` with a private static `Stream<Arguments>` provider for multi-field cases.
+  Keep the provider close to the test that uses it.
+- Prefer a human-readable case name as the first parameter so failures identify the scenario
+  without reading the whole row.
+- Each `Arguments.of(...)` entry should describe one coherent scenario. Prefer one expected outcome
+  per row instead of packing several unrelated expectations into a single parameterized case.
+- In the test body, keep the setup and assertion flow the same for every row. If different rows need
+  materially different control flow, split them into separate tests instead of forcing everything
+  into one parameterized method.
+- Avoid introducing a dedicated `TestCase` wrapper type for parameterized rows. Prefer a readable
+  case name plus plain arguments, and extract a shared expected-value object only when it makes the
+  assertions materially clearer.
+- If a row gets too wide, first look for ways to simplify the assertion shape (for example, compare
+  against one structured expected value) instead of adding another wrapper layer around the row.
+
+Example shape:
+
+```java
+@ParameterizedTest(name = "{0}")
+@MethodSource("testCases")
+void test(String name, Input input, Output expected) {
+  assertThat(run(input)).isEqualTo(expected);
+}
+
+private static Stream<Arguments> testCases() {
+  return Stream.of(
+      Arguments.of("valid input", new Input("input"), new Output("expected")));
+}
+```
+
 ## Test Method Throws Clauses
 
 - On methods annotated with `@Test`, keep the `throws` clause to a single exception type.

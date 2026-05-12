@@ -473,7 +473,7 @@ Do not begin Phase 5 until Phase 4 is fully closed out.
    ```
    Cleanup for alibaba-druid-1.0 javaagent
 
-   - Move collectMetadata system property to withType<Test>().configureEach
+   - Narrow test method throws clause to IOException
    ```
 
    Create exactly one commit for all fixes — do not commit incrementally.

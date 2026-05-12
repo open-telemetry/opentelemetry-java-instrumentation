@@ -48,6 +48,7 @@ network:
     - defaults
 
 tools:
+  edit:
   bash:
     - "cat:*"
     - "ls:*"
@@ -58,6 +59,18 @@ tools:
     - "find:*"
     - "rg:*"
     - "grep:*"
+
+# The finalize job owns review posting directly via `.github/scripts/pr-review/post.py`.
+# This placeholder opts out of gh-aw's default `create_issue` safe output,
+# which would otherwise turn an agent narration or fallback into a separate
+# `[pr-review]` issue instead of the intended findings artifact.
+safe-outputs:
+  threat-detection: false
+  jobs:
+    suppress_default_create_issue:
+      runs-on: ubuntu-latest
+      steps:
+        - run: 'true'
 
 imports:
   - .github/agents/pr-review.agent.md
@@ -139,16 +152,20 @@ jobs:
         if: needs.agent.result == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODEL: ${{ needs.dispatch.outputs.model }}
+          MODEL_WARNING: ${{ needs.dispatch.outputs.model_warning }}
+          PR_NUMBER: ${{ needs.dispatch.outputs.pr_number }}
+          TRIGGERED_BY: ${{ needs.dispatch.outputs.triggered_by }}
         run: |
           set -euo pipefail
           python .github/scripts/pr-review/post.py \
-            "${{ needs.dispatch.outputs.pr_number }}" \
+            "$PR_NUMBER" \
             --bundle-dir ./review-bundle \
             --findings ./agent-artifact/findings.json \
             --event COMMENT \
-            --triggered-by "${{ needs.dispatch.outputs.triggered_by }}" \
-            --model "${{ needs.dispatch.outputs.model }}" \
-            --model-warning "${{ needs.dispatch.outputs.model_warning }}"
+            --triggered-by "$TRIGGERED_BY" \
+            --model "$MODEL" \
+            --model-warning "$MODEL_WARNING"
 
       - name: Comment on PR when agent failed
         if: needs.agent.result != 'success'
@@ -218,3 +235,7 @@ a GitHub review.
 If you produce no comments (clean review), still write the JSON file with an
 empty `comments` array and a one-line `body` summary. The finalize job
 treats a missing file as an agent failure.
+
+Do not invoke the `suppress_default_create_issue` MCP tool. It is a
+placeholder that exists only to disable gh-aw's default create-issue
+auto-injection; calling it would launch a needless no-op job.
