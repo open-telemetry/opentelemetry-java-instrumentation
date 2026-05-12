@@ -95,18 +95,7 @@ public final class GrpcTelemetry {
   public void addClientInterceptor(ManagedChannelBuilder<?> builder) {
     if (interceptWithTargetMethod != null && interceptorFactoryClass != null) {
       try {
-        Object factory =
-            Proxy.newProxyInstance(
-                ManagedChannelBuilder.class.getClassLoader(),
-                new Class<?>[] {interceptorFactoryClass},
-                (proxy, method, args) -> {
-                  if ("newInterceptor".equals(method.getName())) {
-                    String target = (String) args[0];
-                    return newTracingClientInterceptor(target);
-                  }
-                  return method.invoke(builder, args);
-                });
-        interceptWithTargetMethod.invoke(null, builder, factory);
+        interceptWithTargetMethod.invoke(null, builder, newInterceptorFactory());
         return;
       } catch (Exception e) {
         logger.log(FINE, "Failed to use interceptWithTarget, falling back", e);
@@ -115,6 +104,30 @@ public final class GrpcTelemetry {
 
     // Fallback for gRPC < 1.64.0: add interceptor without target info
     builder.intercept(newTracingClientInterceptor(null));
+  }
+
+  private Object newInterceptorFactory() {
+    // Proxies InternalManagedChannelBuilder$InternalInterceptorFactory, whose only declared
+    // method is newInterceptor(String target). Object methods get identity semantics — we have
+    // no natural delegate to forward them to.
+    return Proxy.newProxyInstance(
+        ManagedChannelBuilder.class.getClassLoader(),
+        new Class<?>[] {interceptorFactoryClass},
+        (proxy, method, args) -> {
+          if ("newInterceptor".equals(method.getName())) {
+            return newTracingClientInterceptor((String) args[0]);
+          }
+          switch (method.getName()) {
+            case "equals":
+              return proxy == args[0];
+            case "hashCode":
+              return System.identityHashCode(proxy);
+            case "toString":
+              return "GrpcInterceptorFactory";
+            default:
+              throw new UnsupportedOperationException(method.toString());
+          }
+        });
   }
 
   /**
