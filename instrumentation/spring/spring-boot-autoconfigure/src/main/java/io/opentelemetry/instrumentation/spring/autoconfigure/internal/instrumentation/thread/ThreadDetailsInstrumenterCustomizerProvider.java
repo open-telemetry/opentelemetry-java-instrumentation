@@ -59,6 +59,8 @@ public class ThreadDetailsInstrumenterCustomizerProvider implements Instrumenter
       return false;
     }
     Object enabled = ((Map<String, Object>) springStarter).get("thread_details_enabled");
-    return Boolean.TRUE.equals(enabled);
+    return enabled instanceof Boolean
+        ? (Boolean) enabled
+        : enabled instanceof String && Boolean.parseBoolean((String) enabled);
   }
 }

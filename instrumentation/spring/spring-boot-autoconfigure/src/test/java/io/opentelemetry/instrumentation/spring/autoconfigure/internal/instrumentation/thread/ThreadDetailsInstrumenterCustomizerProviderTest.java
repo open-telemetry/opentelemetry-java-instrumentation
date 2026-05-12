@@ -5,16 +5,14 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonMap;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizer;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import java.io.ByteArrayInputStream;
+import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
@@ -40,15 +38,12 @@ class ThreadDetailsInstrumenterCustomizerProviderTest {
   }
 
   @Test
-  @SuppressWarnings("StringConcatToTextBlock")
   void configureDeclarativeConfigReadsFromModel() {
-    String yaml =
-        "file_format: \"1.0\"\n"
-            + "distribution:\n"
-            + "  spring_starter:\n"
-            + "    thread_details_enabled: true\n";
-    OpenTelemetryConfigurationModel model =
-        DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
+    Map<String, Object> model =
+        singletonMap(
+            "distribution",
+            singletonMap(
+                "spring_starter", singletonMap("thread_details_enabled", "true")));
 
     ThreadDetailsInstrumenterCustomizerProvider.configureDeclarativeConfig(model);
 
