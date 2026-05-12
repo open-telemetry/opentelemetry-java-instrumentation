@@ -3,8 +3,8 @@ plugins {
 }
 
 muzzle {
-  // Cant assert fails because muzzle assumes all instrumentations will fail
-  // Instrumentations in jaxrs-2.0-common will pass
+  // Can't assert inverse because muzzle assumes all instrumentations will fail.
+  // Instrumentations in jaxrs-2.0-common will pass.
   pass {
     group.set("org.apache.cxf")
     module.set("cxf-rt-frontend-jaxrs")
@@ -54,10 +54,10 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {

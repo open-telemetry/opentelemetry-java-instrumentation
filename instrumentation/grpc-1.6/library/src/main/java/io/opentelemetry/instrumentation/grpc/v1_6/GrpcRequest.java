@@ -20,8 +20,8 @@ public final class GrpcRequest {
   @Nullable private final Integer serverPort;
   @Nullable private volatile SocketAddress peerSocketAddress;
 
-  private Long requestSize;
-  private Long responseSize;
+  @Nullable private volatile Long requestSize;
+  @Nullable private volatile Long responseSize;
 
   /**
    * Creates a client-side gRPC request.
@@ -136,23 +136,25 @@ public final class GrpcRequest {
     return peerSocketAddress;
   }
 
-  void setPeerSocketAddress(SocketAddress peerSocketAddress) {
+  void setPeerSocketAddress(@Nullable SocketAddress peerSocketAddress) {
     this.peerSocketAddress = peerSocketAddress;
   }
 
+  @Nullable
   public Long getRequestSize() {
     return requestSize;
   }
 
-  public void setRequestSize(Long requestSize) {
+  public void setRequestSize(@Nullable Long requestSize) {
     this.requestSize = requestSize;
   }
 
+  @Nullable
   public Long getResponseSize() {
     return responseSize;
   }
 
-  public void setResponseSize(Long responseSize) {
+  public void setResponseSize(@Nullable Long responseSize) {
     this.responseSize = responseSize;
   }
 

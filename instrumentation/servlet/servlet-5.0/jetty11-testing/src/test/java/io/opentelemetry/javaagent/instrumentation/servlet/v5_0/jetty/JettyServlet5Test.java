@@ -23,7 +23,7 @@ public abstract class JettyServlet5Test
     extends AbstractServlet5Test<Server, ServletContextHandler> {
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing =
+  private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
   @Override

@@ -1,79 +1,73 @@
 name: Build pull request
 
+# Optional test variants (openj9, windows) are gated by `test openj9` /
+# `test windows` labels on the PR, read from the event payload. We
+# deliberately do NOT subscribe to `pull_request: [labeled]` — see
+# https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18446
+# for the history of why every previous attempt to use that trigger failed.
+#
+# Practical consequence: adding a `test openj9` / `test windows` label
+# doesn't retrigger the build. Push another commit or close/reopen the
+# PR to pick it up. `comment-on-test-label.yml` posts a reminder when
+# one of those labels is added.
+#
+# `test native` is detected automatically from the PR's changed paths
+# (the `resolve-native` job below). The manual `test native` label is
+# still honored as a force-enable.
+
 on:
   pull_request:
     types:
       - opened
       - synchronize
       - reopened
-  # called from rebuild-pull-request-on-label.yml
-  workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: build-pull-request-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  common:
-    uses: ./.github/workflows/build-common.yml
+  # Run native tests automatically when the PR touches a library
+  # instrumentation module with native support (logback-appender, jdbc,
+  # spring), the native smoke test harness, or the top-level build config
+  # that affects them.
+  resolve-native:
+    runs-on: ubuntu-latest
+    outputs:
+      run-native-tests: ${{ steps.filter.outputs.native }}
+    steps:
+      - name: Detect native-relevant changes
+        id: filter
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # `|| true` so an empty result from `grep -v` (everything filtered)
+          # doesn't fail the step under pipefail.
+          files=$(
+            gh api --paginate "/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
+              --jq '.[].filename' |
+              grep -Ev '^instrumentation/spring/.+/javaagent/' || true
+          )
+          include='^instrumentation/logback/logback-appender-1\.0/library/'
+          include+='|^instrumentation/jdbc/library/'
+          include+='|^instrumentation/spring/'
+          include+='|^smoke-tests-otel-starter/'
+          include+='|^dependencyManagement/build\.gradle\.kts$'
+          include+='|^settings\.gradle\.kts$'
+          if grep -Eq "$include" <<<"$files"; then
+            echo "native=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "native=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: [resolve-native]
+    uses: ./.github/workflows/reusable-pr-build.yml
     with:
-      # it's rare for only the openj9 tests or the windows smoke tests to break
+      skip-native-tests: ${{ !(needs.resolve-native.outputs.run-native-tests == 'true' || contains(github.event.pull_request.labels.*.name, 'test native')) }}
       skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
-      cache-read-only: true
-
-  test-latest-deps:
-    uses: ./.github/workflows/reusable-test-latest-deps.yml
-    with:
-      cache-read-only: true
-
-  test-native:
-    uses: ./.github/workflows/reusable-native-tests.yml
-    with:
-      skip-native-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test native') }}
-
-  muzzle:
-    uses: ./.github/workflows/reusable-muzzle.yml
-    with:
-      cache-read-only: true
-
-  # this is not a required check to avoid blocking pull requests if external links break
-  markdown-check:
-    # release branches are excluded because the README.md javaagent download link has to be updated
-    # on release branches before the release download has been published
-    if: "!startsWith(github.ref_name, 'release/') && !startsWith(github.base_ref, 'release/')"
-    uses: ./.github/workflows/reusable-link-check.yml
-
-  markdown-lint-check:
-    uses: ./.github/workflows/reusable-markdown-lint-check.yml
-
-  required-status-check:
-    # test-latest-deps is not included in the required status checks
-    # because any time a new library version is released to maven central
-    # it can fail due to test code incompatibility with the new library version,
-    # or due to slight changes in emitted telemetry
-    # (muzzle can also fail when a new library version is released to maven central
-    # but that happens much less often)
-    #
-    # only the "common" checks are required for release branch PRs in order to avoid any unnecessary
-    # release branch maintenance (especially for patches)
-    needs:
-      - common
-      - muzzle
-      - markdown-lint-check
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - if: |
-          needs.common.result != 'success' ||
-          (
-            !startsWith(github.base_ref, 'release/') &&
-            (
-              needs.muzzle.result != 'success' ||
-              needs.markdown-lint-check.result != 'success'
-            )
-          )
-        run: exit 1 # fail

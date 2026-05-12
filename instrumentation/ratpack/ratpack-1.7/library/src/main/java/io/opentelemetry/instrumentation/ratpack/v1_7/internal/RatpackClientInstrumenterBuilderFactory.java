@@ -23,7 +23,7 @@ public final class RatpackClientInstrumenterBuilderFactory {
     return DefaultHttpClientInstrumenterBuilder.create(
         instrumentationName,
         openTelemetry,
-        RatpackHttpClientAttributesGetter.INSTANCE,
-        RequestHeaderSetter.INSTANCE);
+        new RatpackHttpClientAttributesGetter(),
+        new RequestHeaderSetter());
   }
 }

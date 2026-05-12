@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 
-public class HandlerData {
+class HandlerData {
 
   private static final ClassValue<Map<Method, String>> serverSpanNames =
       new ClassValue<Map<Method, String>>() {
@@ -26,16 +26,16 @@ public class HandlerData {
   private final Class<?> target;
   private final Method method;
 
-  public HandlerData(Class<?> target, Method method) {
+  HandlerData(Class<?> target, Method method) {
     this.target = target;
     this.method = method;
   }
 
-  public Class<?> codeClass() {
+  Class<?> codeClass() {
     return target;
   }
 
-  public String methodName() {
+  String methodName() {
     return method.getName();
   }
 

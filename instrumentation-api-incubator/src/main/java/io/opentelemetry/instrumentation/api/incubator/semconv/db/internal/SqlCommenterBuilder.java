@@ -45,9 +45,9 @@ public final class SqlCommenterBuilder {
   /**
    * Prepend the sqlcommenter comment to the query instead of appending it. Default is to append.
    *
-   * @param prepend a predicate that receives the database connection. Connection may be a jdbc
-   *     Connection, R2DBC Connection, or any other connection type used by the data access
-   *     framework performing the operation.
+   * @param prepend a predicate that receives the database connection if available. Connection may
+   *     be a JDBC Connection, R2DBC Connection, or any other connection type used by the data
+   *     access framework performing the operation. The connection can be null.
    */
   @CanIgnoreReturnValue
   public SqlCommenterBuilder setPrepend(Predicate<Object> prepend) {
@@ -69,12 +69,13 @@ public final class SqlCommenterBuilder {
    * Set the propagator used to inject tracing context into sql comments. Default is W3C Trace
    * Context propagator.
    *
-   * @param propagator a function that receives the database connection and whether the query is
-   *     executed only once or could be reused. Connection may be a JDBC connection, R2DBC
+   * @param propagator a function that receives the database connection if available and whether the
+   *     query is executed only once or could be reused. Connection may be a JDBC connection, R2DBC
    *     connection, or any other connection type used by the data access framework performing the
-   *     operation. If the second argument to the function is true, the query is executed only once
-   *     (e.g. JDBC {@link Statement#execute(String)}) immediately after processing. If false, the
-   *     query could be reused (e.g. JDBC {@link Connection#prepareStatement(String)}).
+   *     operation, and can be null. If the second argument to the function is true, the query is
+   *     executed only once (e.g. JDBC {@link Statement#execute(String)}) immediately after
+   *     processing. If false, the query could be reused (e.g. JDBC {@link
+   *     Connection#prepareStatement(String)}).
    */
   @CanIgnoreReturnValue
   public SqlCommenterBuilder setPropagator(

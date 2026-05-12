@@ -19,6 +19,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -55,6 +56,7 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
     return false;
   }
 
+  @Nullable
   protected String defaultServerRoute() {
     return null;
   }
@@ -71,7 +73,7 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
             "/test3/hi/bob", false, false, "/test3/hi/{name}", "Test3.hello", "Test3 bob!"),
         // Resteasy and Jersey give different resource class names for just the below case
         // Resteasy returns "SubResource.class"
-        // Jersey returns "Test1.class
+        // Jersey returns "Test1.class"
         // Arguments.of("/test/hello/bob", true, false, "/test/hello/{name}", "Test1.hello",
         // "Aborted"),
         Arguments.of(
@@ -106,7 +108,7 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
       String resource,
       boolean abortNormal,
       boolean abortPrematch,
-      String route,
+      @Nullable String route,
       String controllerName,
       String expectedResponse)
       throws Exception {

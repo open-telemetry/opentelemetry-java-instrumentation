@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.tomcat.jdbc.pool.DataSourceProxy;
 
-public final class TomcatConnectionPoolMetrics {
+public class TomcatConnectionPoolMetrics {
 
   private static final OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tomcat-jdbc";

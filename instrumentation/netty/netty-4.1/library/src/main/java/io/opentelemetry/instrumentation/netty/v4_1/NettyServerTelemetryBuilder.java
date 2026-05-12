@@ -44,7 +44,7 @@ public final class NettyServerTelemetryBuilder {
             "io.opentelemetry.netty-4.1",
             openTelemetry,
             new NettyHttpServerAttributesGetter(),
-            HttpRequestHeadersGetter.INSTANCE);
+            new HttpRequestHeadersGetter());
   }
 
   /**

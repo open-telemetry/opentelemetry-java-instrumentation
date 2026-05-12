@@ -37,8 +37,8 @@ class SparkJavaBasedTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static int port;
-  static WebClient client;
+  private static int port;
+  private static WebClient client;
 
   @BeforeAll
   static void setup() {

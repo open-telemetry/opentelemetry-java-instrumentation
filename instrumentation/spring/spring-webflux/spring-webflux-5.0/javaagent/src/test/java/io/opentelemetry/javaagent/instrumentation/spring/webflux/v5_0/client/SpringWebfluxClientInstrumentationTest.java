@@ -25,6 +25,11 @@ class SpringWebfluxClientInstrumentationTest
   }
 
   @Override
+  protected boolean hasServicePeerName() {
+    return true;
+  }
+
+  @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
 

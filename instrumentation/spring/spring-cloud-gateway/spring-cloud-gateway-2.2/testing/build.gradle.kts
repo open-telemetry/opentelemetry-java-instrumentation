@@ -17,9 +17,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // see spring-cloud-gateway-4.3* module
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.spring-cloud-gateway.experimental-span-attributes=true")
 
   // required on jdk17
@@ -28,10 +26,10 @@ tasks.withType<Test>().configureEach {
 
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-  systemProperty("testLatestDeps", latestDepTest)
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   // spring 6 requires java 17
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)

@@ -26,6 +26,7 @@ public class PekkoHttpServerInstrumentationModule extends InstrumentationModule
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // in GraphInterpreterInstrumentation we instrument a class that belongs to pekko-streams, make
     // sure this runs only when pekko-http is present to avoid muzzle failures
+    // added in 1.0.0
     return hasClassesNamed("org.apache.pekko.http.scaladsl.HttpExt");
   }
 
@@ -41,10 +42,5 @@ public class PekkoHttpServerInstrumentationModule extends InstrumentationModule
         new HttpServerBluePrintInstrumentation(),
         new GraphInterpreterInstrumentation(),
         new PekkoHttpServerSourceInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

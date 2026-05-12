@@ -65,11 +65,11 @@ class AsyncServlet extends HttpServlet {
                   }
                   return null;
                 });
-          } catch (Exception exception) {
-            if (exception instanceof RuntimeException) {
-              throw (RuntimeException) exception;
+          } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+              throw (RuntimeException) e;
             }
-            throw new IllegalStateException(exception);
+            throw new IllegalStateException(e);
           } finally {
             // complete at the end so the server span will end after the controller span
             if (endpoint != EXCEPTION) {

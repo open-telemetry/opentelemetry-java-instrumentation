@@ -16,6 +16,7 @@ muzzle {
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core-jvm")
     versions.set("[1.3.9,)")
+    assertInverse.set(true)
   }
 }
 

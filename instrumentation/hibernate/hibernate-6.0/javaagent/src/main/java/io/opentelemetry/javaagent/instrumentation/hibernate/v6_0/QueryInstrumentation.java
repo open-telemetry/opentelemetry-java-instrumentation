@@ -7,20 +7,20 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getOperationNameForQuery;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.OperationNameUtil.getOperationNameForQuery;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.COMMON_QUERY_CONTRACT_SESSION_INFO;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
-import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperationScope;
-import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperation;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperationScope;
+import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.SessionInfo;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -28,7 +28,7 @@ import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.SqmQuery;
 
-public class QueryInstrumentation implements TypeInstrumentation {
+class QueryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -43,27 +43,26 @@ public class QueryInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(
-                // not instrumenting getSingleResult as it calls list that is instrumented and
-                // we don't want to record the NoResultException that it throws
-                namedOneOf(
-                    "list",
-                    "getResultList",
-                    "stream",
-                    "getResultStream",
-                    "uniqueResult",
-                    "getSingleResultOrNull",
-                    "uniqueResultOptional",
-                    "executeUpdate",
-                    "scroll")),
-        QueryInstrumentation.class.getName() + "$QueryMethodAdvice");
+        // not instrumenting getSingleResult as it calls list that is instrumented and
+        // we don't want to record the NoResultException that it throws
+        namedOneOf(
+            "list",
+            "getResultList",
+            "stream",
+            "getResultStream",
+            "uniqueResult",
+            "getSingleResultOrNull",
+            "uniqueResultOptional",
+            "executeUpdate",
+            "scroll"),
+        getClass().getName() + "$QueryMethodAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class QueryMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static HibernateOperationScope startMethod(@Advice.This CommonQueryContract query) {
 
       if (HibernateOperationScope.enterDepthSkipCheck()) {
@@ -77,14 +76,12 @@ public class QueryInstrumentation implements TypeInstrumentation {
       if (query instanceof SqmQuery) {
         try {
           queryString = ((SqmQuery) query).getSqmStatement().toHqlString();
-        } catch (RuntimeException exception) {
+        } catch (RuntimeException ignored) {
           // ignore
         }
       }
 
-      VirtualField<CommonQueryContract, SessionInfo> queryVirtualField =
-          VirtualField.find(CommonQueryContract.class, SessionInfo.class);
-      SessionInfo sessionInfo = queryVirtualField.get(query);
+      SessionInfo sessionInfo = COMMON_QUERY_CONTRACT_SESSION_INFO.get(query);
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       HibernateOperation hibernateOperation =
@@ -93,9 +90,10 @@ public class QueryInstrumentation implements TypeInstrumentation {
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope scope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable HibernateOperationScope scope) {
 
       HibernateOperationScope.end(scope, throwable);
     }

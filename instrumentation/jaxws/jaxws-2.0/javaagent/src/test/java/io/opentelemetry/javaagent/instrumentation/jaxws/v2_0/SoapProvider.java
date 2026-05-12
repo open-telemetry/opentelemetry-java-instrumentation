@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
 import javax.xml.ws.Provider;
 
-public class SoapProvider implements Provider<SoapProvider.Message> {
+class SoapProvider implements Provider<SoapProvider.Message> {
 
   @Override
   public Message invoke(Message message) {
     return message;
   }
 
-  public static class Message {}
+  static class Message {}
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.netty.v4_1.internal;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.Context;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -15,7 +16,10 @@ import io.opentelemetry.context.Context;
  */
 public interface ProtocolEventHandler {
   void handle(
-      ProtocolSpecificEvent event, Context context, HttpRequest request, HttpResponse response);
+      ProtocolSpecificEvent event,
+      Context context,
+      @Nullable HttpRequest request,
+      HttpResponse response);
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -26,7 +30,10 @@ public interface ProtocolEventHandler {
 
     @Override
     public void handle(
-        ProtocolSpecificEvent event, Context context, HttpRequest request, HttpResponse response) {}
+        ProtocolSpecificEvent event,
+        Context context,
+        @Nullable HttpRequest request,
+        HttpResponse response) {}
   }
 
   /**
@@ -38,7 +45,10 @@ public interface ProtocolEventHandler {
 
     @Override
     public void handle(
-        ProtocolSpecificEvent event, Context context, HttpRequest request, HttpResponse response) {
+        ProtocolSpecificEvent event,
+        Context context,
+        @Nullable HttpRequest request,
+        HttpResponse response) {
       event.addEvent(context, request, response);
     }
   }

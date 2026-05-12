@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import javax.annotation.Nullable;
+
 class MeasurementRecorderUtil {
 
-  static void runInThreadContextClassLoader(ClassLoader loader, Runnable runnable) {
+  static void runInThreadContextClassLoader(@Nullable ClassLoader loader, Runnable runnable) {
     ClassLoader prior = Thread.currentThread().getContextClassLoader();
     Thread.currentThread().setContextClassLoader(loader);
     try {

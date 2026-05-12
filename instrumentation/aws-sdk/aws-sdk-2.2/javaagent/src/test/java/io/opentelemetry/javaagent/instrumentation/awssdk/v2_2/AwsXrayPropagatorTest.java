@@ -37,12 +37,10 @@ class AwsXrayPropagatorTest {
             singletonMap(
                 "X-Amzn-Trace-Id",
                 "Root=1-35a77be2-beae321878f706079d392ac3;Parent=df79f9d51134dc0b;Sampled=1"),
-            StringMapGetter.INSTANCE);
+            new StringMapGetter());
   }
 
-  private enum StringMapGetter implements TextMapGetter<Map<String, String>> {
-    INSTANCE;
-
+  private static class StringMapGetter implements TextMapGetter<Map<String, String>> {
     @Override
     public Iterable<String> keys(Map<String, String> map) {
       return map.keySet();

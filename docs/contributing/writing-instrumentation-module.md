@@ -146,7 +146,7 @@ on the instrumented library, they might only make sense in conjunction with othe
 instrumentations, grouped together in a module.
 
 ```java
-public class MyTypeInstrumentation implements TypeInstrumentation {
+class MyTypeInstrumentation implements TypeInstrumentation {
   // ...
 }
 ```

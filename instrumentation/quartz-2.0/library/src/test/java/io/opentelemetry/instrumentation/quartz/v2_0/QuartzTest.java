@@ -13,12 +13,12 @@ import org.quartz.Scheduler;
 class QuartzTest extends AbstractQuartzTest {
 
   @RegisterExtension
-  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   protected void configureScheduler(Scheduler scheduler) {
     QuartzTelemetry.builder(testing.getOpenTelemetry())
-        .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES_ENABLED)
+        .setCaptureExperimentalSpanAttributes(EXPERIMENTAL_ATTRIBUTES)
         .build()
         .configure(scheduler);
   }

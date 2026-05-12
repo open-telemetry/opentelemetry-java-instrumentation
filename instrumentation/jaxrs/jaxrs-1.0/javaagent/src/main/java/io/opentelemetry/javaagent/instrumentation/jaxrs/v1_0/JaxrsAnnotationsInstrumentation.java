@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxrsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxrsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -31,7 +32,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
+class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -61,7 +62,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
                             "javax.ws.rs.OPTIONS",
                             "javax.ws.rs.POST",
                             "javax.ws.rs.PUT")))),
-        JaxrsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
+        getClass().getName() + "$JaxRsAnnotationsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -86,10 +87,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         handlerData = new HandlerData(type, method);
 
         HttpServerRoute.update(
-            parentContext,
-            HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.SERVER_SPAN_NAME,
-            handlerData);
+            parentContext, HttpServerRouteSource.CONTROLLER, serverSpanName(), handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
           scope = null;
@@ -110,12 +108,12 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope nameSpan(@Advice.This Object target, @Advice.Origin Method method) {
       return new AdviceScope(CallDepth.forClass(Path.class), target.getClass(), method);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       adviceScope.exit(throwable);

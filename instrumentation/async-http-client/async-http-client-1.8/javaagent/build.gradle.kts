@@ -12,12 +12,9 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:async-http-client:async-http-client-1-common:javaagent"))
+  implementation(project(":instrumentation:async-http-client:async-http-client-common-1.8:javaagent"))
 
   library("com.ning:async-http-client:1.8.0")
-
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
 
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.9:javaagent"))
@@ -32,9 +29,9 @@ tasks {
     jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -55,7 +52,7 @@ configurations.configureEach {
   if (!name.contains("muzzle")) {
     resolutionStrategy {
       eachDependency {
-        // specifying a fixed version for all libraries with io.netty' group
+        // specify a fixed version for all libraries in the io.netty group
         if (requested.group == "io.netty" && requested.name != "netty-bom") {
           useVersion("3.9.0.Final")
         }

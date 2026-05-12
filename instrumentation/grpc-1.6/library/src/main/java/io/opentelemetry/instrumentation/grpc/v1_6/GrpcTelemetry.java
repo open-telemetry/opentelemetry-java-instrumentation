@@ -22,6 +22,11 @@ import javax.annotation.Nullable;
 
 /** Entrypoint for instrumenting gRPC servers or clients. */
 public final class GrpcTelemetry {
+  private final Instrumenter<GrpcRequest, Status> serverInstrumenter;
+  private final Instrumenter<GrpcRequest, Status> clientInstrumenter;
+  private final ContextPropagators propagators;
+  private final boolean captureExperimentalSpanAttributes;
+  private final boolean emitMessageEvents;
 
   private static final Logger logger = Logger.getLogger(GrpcTelemetry.class.getName());
 
@@ -60,12 +65,6 @@ public final class GrpcTelemetry {
   public static GrpcTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new GrpcTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<GrpcRequest, Status> serverInstrumenter;
-  private final Instrumenter<GrpcRequest, Status> clientInstrumenter;
-  private final ContextPropagators propagators;
-  private final boolean captureExperimentalSpanAttributes;
-  private final boolean emitMessageEvents;
 
   GrpcTelemetry(
       Instrumenter<GrpcRequest, Status> serverInstrumenter,

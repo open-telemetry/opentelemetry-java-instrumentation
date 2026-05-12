@@ -36,7 +36,7 @@ import java.security.KeyStore;
 import java.time.Duration;
 import javax.net.ssl.KeyManagerFactory;
 
-public final class HttpClientTestServer extends ServerExtension {
+public class HttpClientTestServer extends ServerExtension {
 
   private final OpenTelemetry openTelemetry;
   private final Tracer tracer;

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -20,18 +20,33 @@ import org.eclipse.jetty.client.api.Response;
  * any time.
  */
 public final class JettyClientWrapUtil {
-  private static final Class<?>[] listenerInterfaces = {
-    Response.CompleteListener.class,
-    Response.FailureListener.class,
-    Response.SuccessListener.class,
-    Response.AsyncContentListener.class,
-    Response.ContentListener.class,
-    Response.HeadersListener.class,
-    Response.HeaderListener.class,
-    Response.BeginListener.class
-  };
 
-  private JettyClientWrapUtil() {}
+  private static final Class<?>[] LISTENER_INTERFACES = buildListenerInterfaces();
+
+  private static Class<?>[] buildListenerInterfaces() {
+    List<Class<?>> interfaces =
+        new ArrayList<>(
+            asList(
+                Response.CompleteListener.class,
+                Response.FailureListener.class,
+                Response.SuccessListener.class,
+                Response.AsyncContentListener.class,
+                Response.ContentListener.class,
+                Response.HeadersListener.class,
+                Response.HeaderListener.class,
+                Response.BeginListener.class));
+    // Response.DemandedContentListener was added in Jetty 9.4.24. In versions 9.4.24–9.4.43,
+    // AsyncContentListener and ContentListener do NOT extend DemandedContentListener, but Jetty's
+    // HttpReceiver.ContentListeners filters via instanceof DemandedContentListener. Without
+    // explicitly including it, the proxy fails the instanceof check and content is never delivered.
+    try {
+      interfaces.add(
+          Class.forName("org.eclipse.jetty.client.api.Response$DemandedContentListener"));
+    } catch (ClassNotFoundException ignored) {
+      // ignored
+    }
+    return interfaces.toArray(new Class<?>[0]);
+  }
 
   /**
    * Utility to wrap the response listeners only, this includes the important CompleteListener.
@@ -42,10 +57,11 @@ public final class JettyClientWrapUtil {
    */
   public static List<Response.ResponseListener> wrapResponseListeners(
       Context parentContext, List<Response.ResponseListener> listeners) {
-
-    return listeners.stream()
-        .map(listener -> wrapTheListener(listener, parentContext))
-        .collect(toList());
+    List<Response.ResponseListener> wrappedListeners = new ArrayList<>(listeners.size());
+    for (Response.ResponseListener listener : listeners) {
+      wrappedListeners.add(wrapTheListener(listener, parentContext));
+    }
+    return wrappedListeners;
   }
 
   private static Response.ResponseListener wrapTheListener(
@@ -55,8 +71,8 @@ public final class JettyClientWrapUtil {
     }
 
     Class<?> listenerClass = listener.getClass();
-    List<Class<?>> interfaces = new ArrayList<>();
-    for (Class<?> type : listenerInterfaces) {
+    List<Class<?>> interfaces = new ArrayList<>(LISTENER_INTERFACES.length);
+    for (Class<?> type : LISTENER_INTERFACES) {
       if (type.isInstance(listener)) {
         interfaces.add(type);
       }
@@ -72,9 +88,11 @@ public final class JettyClientWrapUtil {
             (proxy, method, args) -> {
               try (Scope ignored = context.makeCurrent()) {
                 return method.invoke(listener, args);
-              } catch (InvocationTargetException exception) {
-                throw exception.getCause();
+              } catch (InvocationTargetException e) {
+                throw e.getCause();
               }
             });
   }
+
+  private JettyClientWrapUtil() {}
 }

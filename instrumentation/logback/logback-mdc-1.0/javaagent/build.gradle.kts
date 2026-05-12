@@ -36,14 +36,12 @@ testing {
 
     withType(JvmTestSuite::class) {
       dependencies {
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("ch.qos.logback:logback-classic:latest.release")
-        } else {
-          implementation("ch.qos.logback:logback-classic") {
-            version {
-              strictly("1.0.0")
-            }
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly(baseVersion("1.0.0").orLatest())
           }
+        }
+        if (!otelProps.testLatestDeps) {
           implementation("org.slf4j:slf4j-api") {
             version {
               strictly("1.6.4")

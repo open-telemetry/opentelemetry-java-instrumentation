@@ -15,13 +15,13 @@ public final class SqsProcessRequest extends AbstractSqsRequest {
   private final ExecutionAttributes request;
   private final SqsMessage message;
 
+  public static SqsProcessRequest create(ExecutionAttributes request, SqsMessage message) {
+    return new SqsProcessRequest(request, message);
+  }
+
   private SqsProcessRequest(ExecutionAttributes request, SqsMessage message) {
     this.request = request;
     this.message = message;
-  }
-
-  public static SqsProcessRequest create(ExecutionAttributes request, SqsMessage message) {
-    return new SqsProcessRequest(request, message);
   }
 
   @Override

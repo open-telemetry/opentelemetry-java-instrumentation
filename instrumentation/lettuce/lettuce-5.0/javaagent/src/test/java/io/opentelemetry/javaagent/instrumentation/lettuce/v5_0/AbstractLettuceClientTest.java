@@ -36,10 +36,10 @@ abstract class AbstractLettuceClientTest {
   protected static final ClientOptions CLIENT_OPTIONS =
       ClientOptions.builder().autoReconnect(false).build();
 
-  static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
+  static final DockerImageName CONTAINER_IMAGE = DockerImageName.parse("redis:6.2.3-alpine");
 
   protected static final GenericContainer<?> redisServer =
-      new GenericContainer<>(containerImage)
+      new GenericContainer<>(CONTAINER_IMAGE)
           .withExposedPorts(6379)
           .withLogConsumer(new Slf4jLogConsumer(logger))
           .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
@@ -58,7 +58,7 @@ abstract class AbstractLettuceClientTest {
 
   protected static StatefulRedisConnection<String, String> newContainerConnection() {
     GenericContainer<?> server =
-        new GenericContainer<>(containerImage)
+        new GenericContainer<>(CONTAINER_IMAGE)
             .withExposedPorts(6379)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
@@ -86,9 +86,9 @@ abstract class AbstractLettuceClientTest {
     // client that can cause the shutdown to hang
     try {
       redisClient.shutdownAsync(0, 15, SECONDS).get(15, SECONDS);
-    } catch (InterruptedException exception) {
+    } catch (InterruptedException ignored) {
       Thread.currentThread().interrupt();
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       // ignore
     }
   }

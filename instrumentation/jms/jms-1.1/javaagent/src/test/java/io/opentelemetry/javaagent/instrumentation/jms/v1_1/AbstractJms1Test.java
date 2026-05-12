@@ -37,7 +37,6 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.assertj.core.api.AbstractAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -50,45 +49,32 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 abstract class AbstractJms1Test {
-  static final Logger logger = LoggerFactory.getLogger(AbstractJms1Test.class);
+  private static final Logger logger = LoggerFactory.getLogger(AbstractJms1Test.class);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static GenericContainer<?> broker;
-  static ActiveMQConnectionFactory connectionFactory;
-  static Connection connection;
   static Session session;
 
   @BeforeAll
   static void setUp() throws JMSException {
-    broker =
-        new GenericContainer<>("rmohr/activemq:latest")
+    GenericContainer<?> broker =
+        new GenericContainer<>("apache/activemq-classic:5.19.2")
             .withExposedPorts(61616, 8161)
             .withLogConsumer(new Slf4jLogConsumer(logger));
     broker.start();
+    cleanup.deferAfterAll(broker);
 
-    connectionFactory =
+    ActiveMQConnectionFactory connectionFactory =
         new ActiveMQConnectionFactory(
             "tcp://" + broker.getHost() + ":" + broker.getMappedPort(61616));
     Connection connection = connectionFactory.createConnection();
     connection.start();
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-  }
-
-  @AfterAll
-  static void tearDown() throws JMSException {
-    if (session != null) {
-      session.close();
-    }
-    if (connection != null) {
-      connection.close();
-    }
-    if (broker != null) {
-      broker.close();
-    }
+    cleanup.deferAfterAll(connection::close);
+    cleanup.deferAfterAll(session::close);
   }
 
   @ParameterizedTest
@@ -178,6 +164,7 @@ abstract class AbstractJms1Test {
     Destination destination = destinationFactory.create(session);
     TextMessage sentMessage = session.createTextMessage("a message");
     sentMessage.setStringProperty("Test_Message_Header", "test");
+    sentMessage.setStringProperty("Uncaptured_Header", "password");
     sentMessage.setIntProperty("Test_Message_Int_Header", 1234);
 
     MessageProducer producer = session.createProducer(destination);
@@ -243,7 +230,7 @@ abstract class AbstractJms1Test {
   @MethodSource("destinationArguments")
   void shouldFailWhenSendingReadOnlyMessage(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
-      throws Exception {
+      throws JMSException {
 
     // given
     Destination destination = destinationFactory.create(session);

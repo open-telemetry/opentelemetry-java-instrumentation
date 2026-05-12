@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Helper class for closing context storage with retry in case there are strict context check
  * failures.
  */
-public final class ContextStorageCloser {
+public class ContextStorageCloser {
 
   private ContextStorageCloser() {}
 
@@ -57,10 +57,13 @@ public final class ContextStorageCloser {
       try {
         target.close();
         return true;
-      } catch (Throwable throwable) {
+      } catch (Throwable t) {
         restore();
-        if (throwable instanceof AssertionError) {
-          System.err.println();
+        if (t instanceof AssertionError) {
+          System.err.println("AssertionError " + t);
+          for (StackTraceElement stackTraceElement : t.getStackTrace()) {
+            System.err.println("\t" + stackTraceElement);
+          }
           for (Map.Entry<Thread, StackTraceElement[]> threadEntry :
               Thread.getAllStackTraces().entrySet()) {
             System.err.println("Thread " + threadEntry.getKey());
@@ -69,9 +72,9 @@ public final class ContextStorageCloser {
             }
             System.err.println();
           }
-          throw (AssertionError) throwable;
+          throw (AssertionError) t;
         }
-        throw new IllegalStateException(throwable);
+        throw new IllegalStateException(t);
       }
     }
 
@@ -132,7 +135,7 @@ public final class ContextStorageCloser {
                 "io.opentelemetry.javaagent.shaded.io.opentelemetry.context.ContextStorage");
         Method method = contextStorageClass.getDeclaredMethod("get");
         return method.invoke(null);
-      } catch (Exception exception) {
+      } catch (Exception ignored) {
         return null;
       }
     }

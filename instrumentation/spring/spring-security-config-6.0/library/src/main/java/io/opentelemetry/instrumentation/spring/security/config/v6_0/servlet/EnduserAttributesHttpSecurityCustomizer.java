@@ -18,7 +18,7 @@ import org.springframework.security.web.access.intercept.AuthorizationFilter;
  * org.springframework.security.core.context.SecurityContext} in the {@link
  * org.springframework.security.core.context.SecurityContextHolder}.
  */
-public class EnduserAttributesHttpSecurityCustomizer implements Customizer<HttpSecurity> {
+public final class EnduserAttributesHttpSecurityCustomizer implements Customizer<HttpSecurity> {
 
   private final EnduserAttributesCapturer capturer;
 

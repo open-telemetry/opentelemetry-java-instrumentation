@@ -6,8 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.jersey.spi.container.servlet.ServletContainer;
@@ -34,16 +45,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 class JerseyTest extends AbstractHttpServerUsingTest<Server> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @BeforeAll
-  protected void setUp() {
+  void setUp() {
     startServer();
   }
 
   @AfterAll
-  protected void cleanUp() {
+  void cleanUp() {
     cleanupServer();
   }
 
@@ -114,9 +124,19 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
                     span.hasName("POST " + getContextPath() + expectedRoute)
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(HTTP_ROUTE, getContextPath() + expectedRoute)),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(HTTP_ROUTE, getContextPath() + expectedRoute),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(URL_PATH, getContextPath() + "/" + resource),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT)),
                 span ->
                     span.hasName(controllerName)
                         .hasParent(trace.getSpan(0))

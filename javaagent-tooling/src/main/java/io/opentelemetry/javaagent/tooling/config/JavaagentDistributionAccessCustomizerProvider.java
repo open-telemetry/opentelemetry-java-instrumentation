@@ -15,10 +15,10 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionModel;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionPropertyModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.DistributionModel;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.DistributionPropertyModel;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -33,7 +33,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
   private static final Logger logger =
       Logger.getLogger(JavaagentDistributionAccessCustomizerProvider.class.getName());
 
-  private static final ObjectMapper MAPPER =
+  private static final ObjectMapper mapper =
       new ObjectMapper()
           .addHandler(
               new DeserializationProblemHandler() {
@@ -65,7 +65,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
       DistributionPropertyModel javaagent = distribution.getAdditionalProperties().get("javaagent");
       if (javaagent != null) {
         try {
-          return MAPPER.convertValue(javaagent, AgentDistributionConfig.class);
+          return mapper.convertValue(javaagent, AgentDistributionConfig.class);
         } catch (IllegalArgumentException e) {
           logger.log(WARNING, "Failed to parse distribution.javaagent configuration", e);
         }

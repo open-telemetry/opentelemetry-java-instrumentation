@@ -5,34 +5,57 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_1.internal;
 
+import static java.util.Collections.emptyIterator;
+import static java.util.Collections.emptySet;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
+import javax.annotation.Nullable;
 import org.restlet.data.Form;
 import org.restlet.data.Message;
 import org.restlet.data.Parameter;
 import org.restlet.data.Request;
 
-enum RestletHeadersGetter implements TextMapGetter<Request> {
-  INSTANCE;
+final class RestletHeadersGetter implements TextMapGetter<Request> {
 
   @Override
   public Iterable<String> keys(Request carrier) {
-    return getHeaders(carrier).getNames();
+    Form headers = getHeaders(carrier);
+    return headers == null ? emptySet() : headers.getNames();
   }
 
   @Override
-  public String get(Request carrier, String key) {
+  @Nullable
+  public String get(@Nullable Request carrier, String key) {
     Form headers = getHeaders(carrier);
-    return headers.getFirstValue(key, true);
+    return headers == null ? null : headers.getFirstValue(key, true);
   }
 
   @Override
-  public Iterator<String> getAll(Request carrier, String key) {
+  public Iterator<String> getAll(@Nullable Request carrier, String key) {
     Form headers = getHeaders(carrier);
-    return headers.subList(key, true).stream().map(Parameter::getValue).iterator();
+    if (headers == null) {
+      return emptyIterator();
+    }
+    Iterator<Parameter> iterator = headers.subList(key, true).iterator();
+    return new Iterator<String>() {
+      @Override
+      public boolean hasNext() {
+        return iterator.hasNext();
+      }
+
+      @Override
+      public String next() {
+        return iterator.next().getValue();
+      }
+    };
   }
 
-  static Form getHeaders(Message carrier) {
+  @Nullable
+  static Form getHeaders(@Nullable Message carrier) {
+    if (carrier == null) {
+      return null;
+    }
     return (Form) carrier.getAttributes().get("org.restlet.http.headers");
   }
 }

@@ -5,14 +5,17 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.Map;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -21,13 +24,15 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.protocol.BasicHttpContext;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractApacheHttpClientTest {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension testing();
 
@@ -39,13 +44,9 @@ public abstract class AbstractApacheHttpClientTest {
   @BeforeAll
   void setUp() {
     client = createClient(false);
+    cleanup.deferAfterAll(client);
     clientWithReadTimeout = createClient(true);
-  }
-
-  @AfterAll
-  void tearDown() throws Exception {
-    client.close();
-    clientWithReadTimeout.close();
+    cleanup.deferAfterAll(clientWithReadTimeout);
   }
 
   CloseableHttpClient getClient(URI uri) {
@@ -53,6 +54,57 @@ public abstract class AbstractApacheHttpClientTest {
       return clientWithReadTimeout;
     }
     return client;
+  }
+
+  static <T extends HttpRequest> T configureRequest(T request, Map<String, String> headers) {
+    request.addHeader("user-agent", "apachehttpclient");
+    headers.forEach((key, value) -> request.setHeader(new BasicHeader(key, value)));
+    return request;
+  }
+
+  static int getResponseCode(HttpResponse response) {
+    try {
+      HttpEntity entity = response.getEntity();
+      if (entity != null) {
+        InputStream content = entity.getContent();
+        if (content != null) {
+          content.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+    return response.getStatusLine().getStatusCode();
+  }
+
+  static ResponseHandler<HttpResponse> responseCallback(HttpClientResult httpClientResult) {
+    return response -> {
+      try {
+        httpClientResult.complete(getResponseCode(response));
+      } catch (Throwable t) {
+        httpClientResult.complete(t);
+        return response;
+      }
+      return response;
+    };
+  }
+
+  static String fullPathFromUri(URI uri) {
+    StringBuilder builder = new StringBuilder();
+    if (uri.getPath() != null) {
+      builder.append(uri.getPath());
+    }
+
+    if (uri.getQuery() != null) {
+      builder.append('?');
+      builder.append(uri.getQuery());
+    }
+
+    if (uri.getFragment() != null) {
+      builder.append('#');
+      builder.append(uri.getFragment());
+    }
+    return builder.toString();
   }
 
   abstract static class ApacheHttpClientTest<T> extends AbstractHttpClientTest<T> {
@@ -277,52 +329,5 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-  }
-
-  static <T extends HttpRequest> T configureRequest(T request, Map<String, String> headers) {
-    request.addHeader("user-agent", "apachehttpclient");
-    headers.forEach((key, value) -> request.setHeader(new BasicHeader(key, value)));
-    return request;
-  }
-
-  static int getResponseCode(HttpResponse response) {
-    try {
-      if (response.getEntity() != null && response.getEntity().getContent() != null) {
-        response.getEntity().getContent().close();
-      }
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-    return response.getStatusLine().getStatusCode();
-  }
-
-  static ResponseHandler<HttpResponse> responseCallback(HttpClientResult httpClientResult) {
-    return response -> {
-      try {
-        httpClientResult.complete(getResponseCode(response));
-      } catch (Throwable t) {
-        httpClientResult.complete(t);
-        return response;
-      }
-      return response;
-    };
-  }
-
-  static String fullPathFromUri(URI uri) {
-    StringBuilder builder = new StringBuilder();
-    if (uri.getPath() != null) {
-      builder.append(uri.getPath());
-    }
-
-    if (uri.getQuery() != null) {
-      builder.append('?');
-      builder.append(uri.getQuery());
-    }
-
-    if (uri.getFragment() != null) {
-      builder.append('#');
-      builder.append(uri.getFragment());
-    }
-    return builder.toString();
   }
 }

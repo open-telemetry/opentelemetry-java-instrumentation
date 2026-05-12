@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.executors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.Callable;
@@ -21,6 +22,8 @@ class StructuredTaskScopeTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @SuppressWarnings({
     "unchecked",
     "rawtypes"
@@ -31,7 +34,7 @@ class StructuredTaskScopeTest {
     try {
       // since jdk 25-ea+24
       tmp = (StructuredTaskScope) StructuredTaskScope.class.getMethod("open").invoke(null);
-    } catch (NoSuchMethodException exception) {
+    } catch (NoSuchMethodException ignored) {
       tmp =
           Class.forName("java.util.concurrent.StructuredTaskScope$ShutdownOnFailure")
               .asSubclass(StructuredTaskScope.class)
@@ -39,6 +42,7 @@ class StructuredTaskScopeTest {
               .newInstance();
     }
     StructuredTaskScope taskScope = tmp;
+    cleanup.deferCleanup(taskScope);
 
     Callable<String> callable1 =
         () -> {
@@ -72,7 +76,5 @@ class StructuredTaskScopeTest {
                     span.hasName("task1").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("task2").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
-
-    taskScope.close();
   }
 }

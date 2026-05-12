@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public final class RocketMqInstrumentationModule extends InstrumentationModule {
+public class RocketMqInstrumentationModule extends InstrumentationModule {
   public RocketMqInstrumentationModule() {
     super("rocketmq-client", "rocketmq-client-5.0");
   }

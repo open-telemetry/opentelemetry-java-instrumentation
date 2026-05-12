@@ -15,8 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-enum TransactionAttributeExtractor implements AttributesExtractor<DbRequest, Void> {
-  INSTANCE;
+final class TransactionAttributeExtractor implements AttributesExtractor<DbRequest, Void> {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");

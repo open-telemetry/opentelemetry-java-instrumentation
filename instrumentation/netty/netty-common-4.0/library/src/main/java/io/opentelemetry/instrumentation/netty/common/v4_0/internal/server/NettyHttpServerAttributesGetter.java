@@ -58,6 +58,7 @@ public final class NettyHttpServerAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getUrlQuery(NettyCommonRequest requestAndChannel) {
     String fullPath = requestAndChannel.getRequest().getUri();
     int separatorPos = fullPath.indexOf('?');

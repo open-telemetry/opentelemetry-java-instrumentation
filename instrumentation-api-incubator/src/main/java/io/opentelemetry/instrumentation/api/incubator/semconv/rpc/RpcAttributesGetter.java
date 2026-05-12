@@ -41,7 +41,7 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
   /**
    * @deprecated Use {@link #getRpcMethod(REQUEST)} for stable semconv.
    */
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   String getMethod(REQUEST request);
 

@@ -25,13 +25,13 @@ class Helper {
       Method method;
       try {
         method = LoggerContext.class.getDeclaredMethod("syncRemoteView");
-      } catch (NoSuchMethodException noSuchMethodException) {
+      } catch (NoSuchMethodException ignored) {
         method = LoggerContext.class.getDeclaredMethod("updateLoggerContextVO");
       }
       method.setAccessible(true);
       method.invoke(loggerContext);
-    } catch (Exception exception) {
-      throw new IllegalStateException("Failed to reset logger context", exception);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to reset logger context", e);
     }
   }
 

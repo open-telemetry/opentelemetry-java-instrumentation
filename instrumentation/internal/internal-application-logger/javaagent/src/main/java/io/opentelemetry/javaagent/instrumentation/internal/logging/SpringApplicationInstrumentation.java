@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SpringApplicationInstrumentation implements TypeInstrumentation {
+class SpringApplicationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -24,14 +24,13 @@ public class SpringApplicationInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isTypeInitializer(), this.getClass().getName() + "$TypeInitAdvice");
+    transformer.applyAdviceToMethod(isTypeInitializer(), getClass().getName() + "$TypeInitAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class TypeInitAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter() {
       // mark the instrumented application as spring boot app
       ApplicationLoggerFlags.setSpringBootApp();

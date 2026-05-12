@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 import javax.jws.WebService;
 
 @WebService
-public class WebServiceClass {
+class WebServiceClass {
   public void doSomethingPublic() {}
 
   protected void doSomethingProtected() {}

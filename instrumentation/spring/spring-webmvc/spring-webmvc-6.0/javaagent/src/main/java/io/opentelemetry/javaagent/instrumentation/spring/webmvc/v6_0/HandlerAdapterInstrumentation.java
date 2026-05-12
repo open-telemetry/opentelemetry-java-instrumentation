@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcSingletons.handlerInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -22,14 +22,14 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.spring.webmvc.IsGrailsHandler;
+import io.opentelemetry.javaagent.instrumentation.spring.webmvc.common.IsGrailsHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HandlerAdapterInstrumentation implements TypeInstrumentation {
+class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -44,12 +44,11 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(nameStartsWith("handle"))
             .and(takesArgument(0, named("jakarta.servlet.http.HttpServletRequest")))
             .and(takesArguments(3)),
-        HandlerAdapterInstrumentation.class.getName() + "$ControllerAdvice");
+        getClass().getName() + "$ControllerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -65,7 +64,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope enter(HttpServletRequest request, Object handler) {
+      public static AdviceScope start(HttpServletRequest request, Object handler) {
         // TODO (trask) should there be a way to customize Instrumenter.shouldStart()?
         if (IsGrailsHandler.isGrailsHandler(handler)) {
           // skip creating handler span for grails, grails instrumentation will take care of it
@@ -80,8 +79,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         }
 
         // Name the parent span based on the matching pattern
-        HttpServerRoute.update(
-            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME, request);
+        HttpServerRoute.update(parentContext, CONTROLLER, serverSpanName(), request);
 
         if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
           return null;
@@ -92,26 +90,26 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent());
       }
 
-      public void exit(Object handler, @Nullable Throwable throwable) {
+      public void end(Object handler, @Nullable Throwable throwable) {
         scope.close();
         handlerInstrumenter().end(context, handler, null, throwable);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope nameResourceAndStartSpan(
         @Advice.Argument(0) HttpServletRequest request, @Advice.Argument(2) Object handler) {
-      return AdviceScope.enter(request, handler);
+      return AdviceScope.start(request, handler);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Argument(2) Object handler,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(handler, throwable);
+        adviceScope.end(handler, throwable);
       }
     }
   }

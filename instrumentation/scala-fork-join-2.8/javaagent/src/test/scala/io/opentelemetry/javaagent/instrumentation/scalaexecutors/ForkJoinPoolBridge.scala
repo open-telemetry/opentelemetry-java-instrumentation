@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.scalaexecutors
 import java.util.concurrent._
 import scala.concurrent.forkjoin.{ForkJoinPool, ForkJoinTask}
 
-class ForkJoinPoolBridge(delegate: ForkJoinPool) extends ExecutorService {
+class ForkJoinPoolBridge(delegate: ForkJoinPool)
+    extends AbstractExecutorService {
 
   override def shutdown(): Unit = delegate.shutdown()
 
@@ -33,22 +34,8 @@ class ForkJoinPoolBridge(delegate: ForkJoinPool) extends ExecutorService {
   ): java.util.List[Future[T]] =
     delegate.invokeAll(tasks)
 
-  override def invokeAll[T](
-      tasks: java.util.Collection[_ <: Callable[T]],
-      timeout: Long,
-      unit: TimeUnit
-  ): java.util.List[Future[T]] =
-    delegate.invokeAll(tasks)
-
   override def invokeAny[T](tasks: java.util.Collection[_ <: Callable[T]]): T =
-    delegate.submit(tasks.iterator().next()).get()
-
-  override def invokeAny[T](
-      tasks: java.util.Collection[_ <: Callable[T]],
-      timeout: Long,
-      unit: TimeUnit
-  ): T =
-    delegate.submit(tasks.iterator().next()).get()
+    super.invokeAny(tasks)
 
   def invoke[T](task: ForkJoinTask[T]): T = delegate.invoke(task)
 

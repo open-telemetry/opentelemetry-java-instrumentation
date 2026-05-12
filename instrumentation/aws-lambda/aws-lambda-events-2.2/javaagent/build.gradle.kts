@@ -7,14 +7,13 @@ muzzle {
     group.set("com.amazonaws")
     module.set("aws-lambda-java-core")
     versions.set("[1.0.0,)")
+    assertInverse.set(true)
     extraDependency("com.amazonaws:aws-lambda-java-events:2.2.1")
     extraDependency("com.amazonaws.serverless:aws-serverless-java-container-core:1.5.2")
   }
 }
 
 dependencies {
-  compileOnly(project(":javaagent-bootstrap"))
-
   implementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:library"))
 
   implementation(project(":instrumentation:aws-lambda:aws-lambda-events-common-2.2:library")) {
@@ -35,6 +34,6 @@ dependencies {
 
 tasks {
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }

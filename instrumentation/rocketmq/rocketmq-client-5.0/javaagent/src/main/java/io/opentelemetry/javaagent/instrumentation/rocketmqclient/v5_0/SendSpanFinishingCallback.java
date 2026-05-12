@@ -11,7 +11,7 @@ import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.FutureCallback;
 
-public final class SendSpanFinishingCallback implements FutureCallback<SendReceiptImpl> {
+public class SendSpanFinishingCallback implements FutureCallback<SendReceiptImpl> {
   private final Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter;
   private final Context context;
   private final PublishingMessageImpl message;

@@ -19,6 +19,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
+  @Nullable
   public String getDbNamespace(JedisRequest request) {
     return null;
   }
@@ -34,6 +35,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
+  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       JedisRequest request, @Nullable Void unused) {
     SocketAddress address = request.getRemoteSocketAddress();

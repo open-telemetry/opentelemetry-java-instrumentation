@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v6_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -54,8 +55,7 @@ class WebMvcHttpServerTest extends AbstractHttpServerTest<ConfigurableApplicatio
           return expectedHttpRoute(endpoint, method);
         });
 
-    options.setResponseCodeOnNonStandardHttpMethod(
-        Boolean.getBoolean("testLatestDeps") ? 200 : 501);
+    options.setResponseCodeOnNonStandardHttpMethod(testLatestDeps() ? 200 : 501);
   }
 
   @Test

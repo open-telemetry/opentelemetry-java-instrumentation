@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 import java.net.URI;
 import org.apache.http.client.methods.HttpRequestBase;
 
-final class HttpUriRequest extends HttpRequestBase {
+class HttpUriRequest extends HttpRequestBase {
 
   private final String methodName;
 

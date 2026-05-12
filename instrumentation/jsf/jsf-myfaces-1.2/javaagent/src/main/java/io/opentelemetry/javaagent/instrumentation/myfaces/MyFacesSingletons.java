@@ -8,24 +8,24 @@ package io.opentelemetry.javaagent.instrumentation.myfaces;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.instrumentation.jsf.javax.JsfRequest;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.JsfRequest;
 
-public class MyFacesSingletons {
+final class MyFacesSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jsf-myfaces-1.2";
 
-  private static final Instrumenter<JsfRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<JsfRequest, Void> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<JsfRequest, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::spanName)
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JsfRequest::getSpanName)
             .setErrorCauseExtractor(new MyFacesErrorCauseExtractor())
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .buildInstrumenter();
   }
 
   public static Instrumenter<JsfRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private MyFacesSingletons() {}

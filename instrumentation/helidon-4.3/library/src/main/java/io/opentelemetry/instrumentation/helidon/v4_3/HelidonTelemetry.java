@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /** Entrypoint for instrumenting Helidon services. */
 public final class HelidonTelemetry {
+  private final Instrumenter<ServerRequest, ServerResponse> instrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static HelidonTelemetry create(OpenTelemetry openTelemetry) {
@@ -23,8 +24,6 @@ public final class HelidonTelemetry {
   public static HelidonTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new HelidonTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<ServerRequest, ServerResponse> instrumenter;
 
   HelidonTelemetry(Instrumenter<ServerRequest, ServerResponse> instrumenter) {
     this.instrumenter = instrumenter;

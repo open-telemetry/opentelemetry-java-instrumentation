@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.function.BiConsumer;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -30,7 +31,7 @@ public class ResponseConsumer implements BiConsumer<HttpResponse<?>, Throwable> 
   }
 
   @Override
-  public void accept(HttpResponse<?> httpResponse, Throwable throwable) {
+  public void accept(@Nullable HttpResponse<?> httpResponse, @Nullable Throwable throwable) {
     instrumenter.end(context, httpRequest, httpResponse, throwable);
   }
 }

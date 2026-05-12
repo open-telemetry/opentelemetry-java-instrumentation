@@ -94,13 +94,6 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
 
   // TODO: make this required to implement
   @Nullable
-  @Deprecated
-  default String getDbResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
-    return null;
-  }
-
-  // TODO: make this required to implement
-  @Nullable
   default Long getDbOperationBatchSize(REQUEST request) {
     return null;
   }

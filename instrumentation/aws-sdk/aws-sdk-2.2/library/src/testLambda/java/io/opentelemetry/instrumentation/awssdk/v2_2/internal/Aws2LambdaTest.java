@@ -63,7 +63,7 @@ class Aws2LambdaTest extends AbstractAws2LambdaTest {
 
     String newClientContext = newRequest.clientContext();
     newClientContext = new String(Base64.getDecoder().decode(newClientContext), UTF_8);
-    assertThat(newClientContext.contains("traceparent")).isTrue();
+    assertThat(newClientContext).contains("traceparent");
   }
 
   @Test
@@ -78,9 +78,9 @@ class Aws2LambdaTest extends AbstractAws2LambdaTest {
 
     String newClientContext = newRequest.clientContext();
     newClientContext = new String(Base64.getDecoder().decode(newClientContext), UTF_8);
-    assertThat(newClientContext.contains("traceparent")).isTrue();
-    assertThat(newClientContext.contains("preExisting")).isTrue();
-    assertThat(newClientContext.contains("otherStuff")).isTrue();
+    assertThat(newClientContext).contains("traceparent");
+    assertThat(newClientContext).contains("preExisting");
+    assertThat(newClientContext).contains("otherStuff");
   }
 
   @Test
@@ -98,7 +98,7 @@ class Aws2LambdaTest extends AbstractAws2LambdaTest {
     }
 
     InvokeRequest request = InvokeRequest.builder().clientContext(long64edClientContext).build();
-    assertThat(request.clientContext().equals(long64edClientContext)).isTrue();
+    assertThat(request.clientContext()).isEqualTo(long64edClientContext);
 
     InvokeRequest newRequest =
         (InvokeRequest) LambdaImpl.modifyOrAddCustomContextHeader(request, context);

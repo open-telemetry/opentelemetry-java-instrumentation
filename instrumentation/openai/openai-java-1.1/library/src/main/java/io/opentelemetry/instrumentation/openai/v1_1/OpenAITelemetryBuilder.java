@@ -47,22 +47,23 @@ public final class OpenAITelemetryBuilder {
    * Returns a new {@link OpenAITelemetry} with the settings of this {@link OpenAITelemetryBuilder}.
    */
   public OpenAITelemetry build() {
+    ChatAttributesGetter chatAttributesGetter = new ChatAttributesGetter();
     Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter =
         Instrumenter.<ChatCompletionCreateParams, ChatCompletion>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                GenAiSpanNameExtractor.create(ChatAttributesGetter.INSTANCE))
-            .addAttributesExtractor(GenAiAttributesExtractor.create(ChatAttributesGetter.INSTANCE))
+                GenAiSpanNameExtractor.create(chatAttributesGetter))
+            .addAttributesExtractor(GenAiAttributesExtractor.create(chatAttributesGetter))
             .addOperationMetrics(GenAiClientMetrics.get())
             .buildInstrumenter();
 
+    EmbeddingAttributesGetter embeddingAttributesGetter = new EmbeddingAttributesGetter();
     Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter =
         Instrumenter.<EmbeddingCreateParams, CreateEmbeddingResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                GenAiSpanNameExtractor.create(EmbeddingAttributesGetter.INSTANCE))
-            .addAttributesExtractor(
-                GenAiAttributesExtractor.create(EmbeddingAttributesGetter.INSTANCE))
+                GenAiSpanNameExtractor.create(embeddingAttributesGetter))
+            .addAttributesExtractor(GenAiAttributesExtractor.create(embeddingAttributesGetter))
             .addOperationMetrics(GenAiClientMetrics.get())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 

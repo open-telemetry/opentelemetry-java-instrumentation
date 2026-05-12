@@ -25,7 +25,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DataSourceInstrumentation implements TypeInstrumentation {
+class DataSourceInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,7 +36,7 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getConnection").and(returns(implementsInterface(named("java.sql.Connection")))),
-        DataSourceInstrumentation.class.getName() + "$GetConnectionAdvice");
+        getClass().getName() + "$GetConnectionAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -44,10 +44,10 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
-      private AdviceScope(CallDepth callDepth, Context context, Scope scope) {
+      private AdviceScope(CallDepth callDepth, @Nullable Context context, @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.context = context;
         this.scope = scope;
@@ -75,7 +75,8 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         return new AdviceScope(callDepth, context, context.makeCurrent());
       }
 
-      public void end(@Nullable Throwable throwable, DataSource ds, Connection connection) {
+      public void end(
+          @Nullable Throwable throwable, DataSource ds, @Nullable Connection connection) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
@@ -92,12 +93,12 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope start(@Advice.This DataSource ds) {
       return AdviceScope.start(ds);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.This DataSource ds,
         @Advice.Return @Nullable Connection connection,

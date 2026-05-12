@@ -19,7 +19,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.ibatis.binding.MapperMethod.SqlCommand;
 
-public class MapperMethodInstrumentation implements TypeInstrumentation {
+class MapperMethodInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,8 +28,7 @@ public class MapperMethodInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("execute"), MapperMethodInstrumentation.class.getName() + "$ExecuteAdvice");
+    transformer.applyAdviceToMethod(named("execute"), getClass().getName() + "$ExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -70,12 +69,12 @@ public class MapperMethodInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope getMapperInfo(@Advice.FieldValue("command") SqlCommand command) {
       return AdviceScope.start(command);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

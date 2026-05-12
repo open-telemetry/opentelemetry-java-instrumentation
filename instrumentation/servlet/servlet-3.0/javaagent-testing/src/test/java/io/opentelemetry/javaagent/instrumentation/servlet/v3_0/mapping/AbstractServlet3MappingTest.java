@@ -45,7 +45,7 @@ abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
     cleanupServer();
   }
 
-  public abstract void addServlet(CONTEXT context, String path, Class<? extends Servlet> servlet)
+  protected abstract void addServlet(CONTEXT context, String path, Class<? extends Servlet> servlet)
       throws Exception;
 
   protected void setupServlets(CONTEXT context) throws Exception {

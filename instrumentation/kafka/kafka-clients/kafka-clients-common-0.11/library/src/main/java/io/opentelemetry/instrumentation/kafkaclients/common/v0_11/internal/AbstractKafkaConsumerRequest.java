@@ -12,7 +12,7 @@ abstract class AbstractKafkaConsumerRequest {
   @Nullable private final String consumerGroup;
   @Nullable private final String clientId;
 
-  AbstractKafkaConsumerRequest(String consumerGroup, String clientId) {
+  AbstractKafkaConsumerRequest(@Nullable String consumerGroup, @Nullable String clientId) {
     this.consumerGroup = consumerGroup;
     this.clientId = clientId;
   }

@@ -30,12 +30,12 @@ import io.opentelemetry.instrumentation.testing.AgentTestRunner;
  * <p>Note that {@link AgentInstrumentationExtension} will not work by itself, you have to run the
  * tests process with the {@code agent-for-testing} javaagent.
  */
-public final class AgentInstrumentationExtension extends InstrumentationExtension {
-  private AgentInstrumentationExtension() {
-    super(AgentTestRunner.instance());
-  }
-
+public class AgentInstrumentationExtension extends InstrumentationExtension {
   public static AgentInstrumentationExtension create() {
     return new AgentInstrumentationExtension();
+  }
+
+  private AgentInstrumentationExtension() {
+    super(AgentTestRunner.instance());
   }
 }

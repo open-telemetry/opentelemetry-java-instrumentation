@@ -30,10 +30,22 @@ dependencies {
 
   library("com.typesafe.akka:akka-actor_2.11:2.5.0")
 
+  // akka's ForkJoinPool was removed in 2.6, replaced with the normal java.util.concurrent version
+  latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:2.5.+") // no longer applicable
+
   testImplementation(project(":instrumentation:executors:testing"))
 }
 
-if (findProperty("denyUnsafe") as Boolean) {
+if (otelProps.testLatestDeps) {
+  configurations {
+    // akka artifact name is different for regular and latest tests
+    testImplementation {
+      exclude("com.typesafe.akka", "akka-actor_2.11")
+    }
+  }
+}
+
+if (otelProps.denyUnsafe) {
   tasks.withType<Test>().configureEach {
     enabled = false
   }

@@ -54,17 +54,17 @@ class TraceProvidersTest {
     Sleuth((sayTracedHello) -> sayTracedHello.sleuth()),
     Tracelytics((sayTracedHello) -> sayTracedHello.tracelytics());
 
-    final Consumer<SayTracedHello> test;
+    private final Consumer<SayTracedHello> test;
 
     TraceProvider(Consumer<SayTracedHello> test) {
       this.test = test;
     }
 
-    void test() {
+    private void test() {
       test.accept(new SayTracedHello());
     }
 
-    String testMethodName() {
+    private String testMethodName() {
       return name().toLowerCase(Locale.ROOT);
     }
   }

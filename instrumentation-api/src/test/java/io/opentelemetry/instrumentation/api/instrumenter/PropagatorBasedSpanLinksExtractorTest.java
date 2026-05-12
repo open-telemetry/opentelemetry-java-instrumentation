@@ -52,7 +52,7 @@ class PropagatorBasedSpanLinksExtractorTest {
                 TRACE_ID, SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()));
   }
 
-  static final class MapGetter implements TextMapGetter<Map<String, String>> {
+  static class MapGetter implements TextMapGetter<Map<String, String>> {
 
     @Override
     public Iterable<String> keys(Map<String, String> carrier) {

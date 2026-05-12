@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 // Holds singleton references.
-public final class GrpcSingletons {
+public class GrpcSingletons {
 
   public static final VirtualField<ManagedChannelBuilder<?>, Boolean>
       MANAGED_CHANNEL_BUILDER_INSTRUMENTED =
@@ -33,11 +33,13 @@ public final class GrpcSingletons {
   public static final VirtualField<ServerBuilder<?>, Boolean> SERVER_BUILDER_INSTRUMENTED =
       VirtualField.find(ServerBuilder.class, Boolean.class);
 
-  private static final GrpcTelemetry TELEMETRY;
+  private static final GrpcTelemetry telemetry;
 
-  public static final ServerInterceptor SERVER_INTERCEPTOR;
+  private static final ClientInterceptor clientInterceptor;
 
-  private static final AtomicReference<Context.Storage> STORAGE_REFERENCE = new AtomicReference<>();
+  private static final ServerInterceptor serverInterceptor;
+
+  private static final AtomicReference<Context.Storage> storageReference = new AtomicReference<>();
 
   static {
     DeclarativeConfigProperties config =
@@ -58,7 +60,7 @@ public final class GrpcSingletons {
             .get("server")
             .getScalarList("request", String.class, emptyList());
 
-    GrpcTelemetry telemetry =
+    GrpcTelemetry configuredTelemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
             .setEmitMessageEvents(emitMessageEvents)
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
@@ -66,21 +68,31 @@ public final class GrpcSingletons {
             .setCapturedServerRequestMetadata(serverRequestMetadata)
             .build();
 
-    TELEMETRY = telemetry;
-    SERVER_INTERCEPTOR = telemetry.createServerInterceptor();
+    telemetry = configuredTelemetry;
+    clientInterceptor = Internal.createClientInterceptor(configuredTelemetry, null);
+    serverInterceptor = configuredTelemetry.createServerInterceptor();
+  }
+
+  public static ClientInterceptor clientInterceptor() {
+    return clientInterceptor;
+  }
+
+  public static ServerInterceptor serverInterceptor() {
+    return serverInterceptor;
+  }
+
+  @Nullable
+  public static Context.Storage storage() {
+    return storageReference.get();
   }
 
   public static ClientInterceptor createClientInterceptor(@Nullable String target) {
-    return Internal.createClientInterceptor(TELEMETRY, target);
-  }
-
-  public static Context.Storage getStorage() {
-    return STORAGE_REFERENCE.get();
+    return Internal.createClientInterceptor(telemetry, target);
   }
 
   public static Context.Storage setStorage(Context.Storage storage) {
-    STORAGE_REFERENCE.compareAndSet(null, new ContextStorageBridge(storage));
-    return getStorage();
+    storageReference.compareAndSet(null, new ContextStorageBridge(storage));
+    return storage();
   }
 
   private GrpcSingletons() {}

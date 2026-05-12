@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
 import org.junit.jupiter.api.Test;
@@ -85,8 +85,8 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
                             // earliest tested and latest version behave differently
-                            .hasParent(trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 0 : 1))
-                            .hasAttributes(Attributes.empty())));
+                            .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
+                            .hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -116,7 +116,7 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                         span.hasName("parent")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributes(Attributes.empty()),
+                            .hasTotalAttributeCount(0),
                     span ->
                         span.hasName("TracedWithSpan.mono")
                             .hasKind(SpanKind.INTERNAL)
@@ -126,8 +126,8 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 0 : 1))
-                            .hasAttributes(Attributes.empty())));
+                            .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
+                            .hasTotalAttributeCount(0)));
   }
 
   // Because we test on the Mono API but need to be able to complete the processor, we

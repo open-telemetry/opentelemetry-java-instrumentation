@@ -4,8 +4,7 @@ plugins {
 
 description = "smoke-tests-otel-starter-spring-boot-2"
 
-val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
-val springBootVersion = if (testLatestDeps) "2.+" else "2.6.15"
+val springBootVersion = if (otelProps.testLatestDeps) "2.+" else "2.6.15"
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")

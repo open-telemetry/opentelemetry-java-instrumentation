@@ -40,7 +40,7 @@ class Aws2SqsSuppressReceiveSpansDefaultPropagatorTest extends Aws2SqsSuppressRe
     client.sendMessage(sendMessageRequest);
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
 
     assertSqsTraces(false, false);

@@ -22,7 +22,7 @@ class AsyncHttpClientCompletableFutureTest extends AsyncHttpClientTest {
 
   @Override
   public int sendRequest(Request request, String method, URI uri, Map<String, String> headers) {
-    throw new IllegalStateException("this test only tests requests with callback");
+    throw new IllegalStateException("this test only tests requests with CompletableFuture");
   }
 
   @Override

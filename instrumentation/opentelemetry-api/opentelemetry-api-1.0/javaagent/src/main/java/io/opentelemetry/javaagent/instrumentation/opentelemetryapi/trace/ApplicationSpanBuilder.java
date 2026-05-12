@@ -11,6 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import java.util.concurrent.TimeUnit;
 
@@ -86,12 +87,19 @@ public class ApplicationSpanBuilder implements application.io.opentelemetry.api.
 
   @Override
   @CanIgnoreReturnValue
+  // unchecked: toAgent returns raw AttributeKey, VALUE bridging requires casting to Object key
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public <T> application.io.opentelemetry.api.trace.SpanBuilder setAttribute(
       application.io.opentelemetry.api.common.AttributeKey<T> applicationKey, T value) {
     @SuppressWarnings("unchecked") // toAgent uses raw AttributeKey
     AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
     if (agentKey != null) {
-      agentBuilder.setAttribute(agentKey, value);
+      // For VALUE type attributes, need to bridge the Value object as well
+      if (applicationKey.getType().name().equals("VALUE")) {
+        agentBuilder.setAttribute((AttributeKey) agentKey, ValueBridging.toAgent(value));
+      } else {
+        agentBuilder.setAttribute(agentKey, value);
+      }
     }
     return this;
   }

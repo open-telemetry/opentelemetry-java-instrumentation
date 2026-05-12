@@ -14,17 +14,14 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
-enum RocketMqProducerAttributeGetter
+class RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<PublishingMessageImpl, SendReceiptImpl> {
-  INSTANCE;
 
-  @Nullable
   @Override
   public String getSystem(PublishingMessageImpl message) {
     return "rocketmq";
   }
 
-  @Nullable
   @Override
   public String getDestination(PublishingMessageImpl message) {
     return message.getTopic();
@@ -63,7 +60,6 @@ enum RocketMqProducerAttributeGetter
     return null;
   }
 
-  @Nullable
   @Override
   public String getMessageId(PublishingMessageImpl message, @Nullable SendReceiptImpl sendReceipt) {
     return message.getMessageId().toString();

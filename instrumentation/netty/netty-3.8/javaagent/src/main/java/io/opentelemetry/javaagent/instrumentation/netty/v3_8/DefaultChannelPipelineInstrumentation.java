@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -17,7 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DefaultChannelPipelineInstrumentation implements TypeInstrumentation {
+class DefaultChannelPipelineInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -27,16 +26,14 @@ public class DefaultChannelPipelineInstrumentation implements TypeInstrumentatio
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("notifyHandlerException"))
-            .and(takesArgument(1, named(Throwable.class.getName()))),
-        DefaultChannelPipelineInstrumentation.class.getName() + "$NotifyHandlerExceptionAdvice");
+        named("notifyHandlerException").and(takesArgument(1, named(Throwable.class.getName()))),
+        getClass().getName() + "$NotifyHandlerExceptionAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class NotifyHandlerExceptionAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) Throwable throwable) {
       if (throwable != null) {
         NettyErrorHolder.set(Java8BytecodeBridge.currentContext(), throwable);

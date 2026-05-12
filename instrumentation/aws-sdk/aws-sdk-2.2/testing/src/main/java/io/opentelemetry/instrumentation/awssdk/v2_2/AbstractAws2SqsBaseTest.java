@@ -30,7 +30,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.pekko.http.scaladsl.Http;
@@ -115,17 +114,17 @@ public abstract class AbstractAws2SqsBaseTest {
     return true;
   }
 
-  protected void configureSdkClient(SqsClientBuilder builder) throws URISyntaxException {
+  protected void configureSdkClient(SqsClientBuilder builder) {
     builder
         .overrideConfiguration(createOverrideConfigurationBuilder().build())
-        .endpointOverride(new URI("http://localhost:" + sqsPort));
+        .endpointOverride(URI.create("http://localhost:" + sqsPort));
     builder.region(Region.AP_NORTHEAST_1).credentialsProvider(CREDENTIALS_PROVIDER);
   }
 
-  protected void configureSdkClient(SqsAsyncClientBuilder builder) throws URISyntaxException {
+  protected void configureSdkClient(SqsAsyncClientBuilder builder) {
     builder
         .overrideConfiguration(createOverrideConfigurationBuilder().build())
-        .endpointOverride(new URI("http://localhost:" + sqsPort));
+        .endpointOverride(URI.create("http://localhost:" + sqsPort));
     builder.region(Region.AP_NORTHEAST_1).credentialsProvider(CREDENTIALS_PROVIDER);
   }
 
@@ -150,7 +149,7 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @Test
-  void testSimpleSqsProducerConsumerServicesSync() throws URISyntaxException {
+  void testSimpleSqsProducerConsumerServicesSync() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -160,14 +159,14 @@ public abstract class AbstractAws2SqsBaseTest {
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, false);
   }
 
   @Test
-  void testSimpleSqsProducerConsumerServicesWithParentSync() throws URISyntaxException {
+  void testSimpleSqsProducerConsumerServicesWithParentSync() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -178,25 +177,24 @@ public abstract class AbstractAws2SqsBaseTest {
     ReceiveMessageResponse response =
         getTesting().runWithSpan("parent", () -> client.receiveMessage(receiveMessageRequest));
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(true, false);
   }
 
-  @SuppressWarnings("InterruptedExceptionSwallowed")
   @Test
-  void testSimpleSqsProducerConsumerServicesAsync() throws Exception {
+  void testSimpleSqsProducerConsumerServicesAsync() {
     SqsAsyncClientBuilder builder = SqsAsyncClient.builder();
     configureSdkClient(builder);
     SqsAsyncClient client = configureSqsClient(builder.build());
 
-    client.createQueue(createQueueRequest).get();
-    client.sendMessage(sendMessageRequest).get();
+    client.createQueue(createQueueRequest).join();
+    client.sendMessage(sendMessageRequest).join();
 
-    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest).get();
+    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest).join();
 
-    assertThat(response.messages().size()).isEqualTo(1);
+    assertThat(response.messages()).hasSize(1);
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, false);
@@ -217,7 +215,7 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(RPC_METHOD, "CreateQueue"),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+            satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort));
   }
@@ -235,13 +233,13 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(RPC_METHOD, "ReceiveMessage"),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+            satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
             equalTo(MESSAGING_OPERATION, "process"),
-            satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -260,7 +258,7 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(RPC_METHOD, rcpMethod),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+            satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),

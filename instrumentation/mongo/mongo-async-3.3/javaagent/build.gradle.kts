@@ -7,8 +7,8 @@ muzzle {
     group.set("org.mongodb")
     module.set("mongodb-driver-async")
     versions.set("[3.3,)")
-    extraDependency("org.mongodb:mongo-java-driver")
     assertInverse.set(true)
+    extraDependency("org.mongodb:mongo-java-driver")
   }
 }
 
@@ -27,7 +27,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

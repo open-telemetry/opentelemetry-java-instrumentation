@@ -13,8 +13,8 @@ muzzle {
     group.set("io.netty")
     module.set("netty-all")
     versions.set("[4.0.0.Final,4.1.0.Final)")
-    excludeDependency("io.netty:netty-tcnative")
     assertInverse.set(true)
+    excludeDependency("io.netty:netty-tcnative")
   }
   fail {
     group.set("io.netty")
@@ -36,6 +36,10 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testConnectionSpan by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -46,11 +50,10 @@ tasks {
     include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.netty.connection-telemetry.enabled=true,otel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-
     filter {
       excludeTestsMatching("Netty40ConnectionSpanTest")
       excludeTestsMatching("Netty40ClientSslTest")
@@ -74,7 +77,7 @@ tasks {
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!otelProps.testLatestDeps) {
   configurations.configureEach {
     if (!name.contains("muzzle")) {
       resolutionStrategy {

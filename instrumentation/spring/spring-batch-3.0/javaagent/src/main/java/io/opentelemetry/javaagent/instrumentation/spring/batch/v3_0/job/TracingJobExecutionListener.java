@@ -16,7 +16,7 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.core.Ordered;
 
-public final class TracingJobExecutionListener implements JobExecutionListener, Ordered {
+public class TracingJobExecutionListener implements JobExecutionListener, Ordered {
   private static final VirtualField<JobExecution, ContextAndScope> CONTEXT_AND_SCOPE =
       VirtualField.find(JobExecution.class, ContextAndScope.class);
 

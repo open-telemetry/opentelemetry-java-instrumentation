@@ -44,6 +44,10 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testConnectionSpan by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -54,12 +58,13 @@ tasks {
     include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.reactor-netty.connection-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.netty.ssl-telemetry.enabled=true,otel.instrumentation.reactor-netty.connection-telemetry.enabled=true",
+    )
   }
 
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
       excludeTestsMatching("ReactorNettyClientSslTest")

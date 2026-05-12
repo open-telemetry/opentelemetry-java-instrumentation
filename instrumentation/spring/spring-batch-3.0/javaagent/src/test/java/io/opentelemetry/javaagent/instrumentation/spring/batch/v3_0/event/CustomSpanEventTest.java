@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.event;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 
@@ -21,8 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class CustomSpanEventTest {
-
-  private static final boolean VERSION_GREATER_THAN_4_0 = Boolean.getBoolean("testLatestDeps");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -59,7 +58,7 @@ abstract class CustomSpanEventTest {
                                     // times because of that a custom ChunkListener will always see
                                     // a Step span when using spring-batch versions [3, 4)
                                     // that bug was fixed in 4.0
-                                    if (VERSION_GREATER_THAN_4_0) {
+                                    if (testLatestDeps()) {
                                       assertThat(spanData)
                                           .hasEventsSatisfyingExactly(
                                               event -> event.hasName("step.before"),
@@ -85,7 +84,7 @@ abstract class CustomSpanEventTest {
                                     // times because of that a custom ChunkListener will always see
                                     // a Step span when using spring-batch versions [3, 4)
                                     // that bug was fixed in 4.0
-                                    if (VERSION_GREATER_THAN_4_0) {
+                                    if (testLatestDeps()) {
                                       assertThat(spanData)
                                           .hasEventsSatisfyingExactly(
                                               event -> event.hasName("chunk.before"),

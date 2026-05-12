@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.field;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration.fieldInjectionEnabled;
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getFieldAccessorInterfaceName;
 import static java.util.logging.Level.FINEST;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -176,7 +175,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   public AgentBuilder.Identified.Extendable injectFields(
       AgentBuilder.Identified.Extendable builder) {
 
-    if (fieldInjectionEnabled) {
+    if (FieldBackedImplementationConfiguration.isFieldInjectionEnabled()) {
       for (Map.Entry<String, String> entry : virtualFieldMappings.entrySet()) {
         /*
          * For each virtual field defined in a current instrumentation we create an agent builder

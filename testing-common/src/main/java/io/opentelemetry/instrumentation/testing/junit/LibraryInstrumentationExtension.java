@@ -27,12 +27,12 @@ import io.opentelemetry.instrumentation.testing.LibraryTestRunner;
  *   }
  * </pre>
  */
-public final class LibraryInstrumentationExtension extends InstrumentationExtension {
-  private LibraryInstrumentationExtension() {
-    super(LibraryTestRunner.instance());
-  }
-
+public class LibraryInstrumentationExtension extends InstrumentationExtension {
   public static LibraryInstrumentationExtension create() {
     return new LibraryInstrumentationExtension();
+  }
+
+  private LibraryInstrumentationExtension() {
+    super(LibraryTestRunner.instance());
   }
 }

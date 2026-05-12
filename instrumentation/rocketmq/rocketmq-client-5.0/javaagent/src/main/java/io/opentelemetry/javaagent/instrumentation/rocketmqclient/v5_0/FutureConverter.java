@@ -12,7 +12,7 @@ import org.apache.rocketmq.shaded.com.google.common.util.concurrent.Futures;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.MoreExecutors;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.SettableFuture;
 
-/** Future converter, which covert future of list into list of future. */
+/** Future converter, which converts a future of a list into a list of futures. */
 public class FutureConverter {
   private FutureConverter() {}
 
@@ -27,10 +27,10 @@ public class FutureConverter {
     return futures;
   }
 
-  public static class ListFutureCallback<T> implements FutureCallback<List<T>> {
+  private static class ListFutureCallback<T> implements FutureCallback<List<T>> {
     private final List<SettableFuture<T>> futures;
 
-    public ListFutureCallback(List<SettableFuture<T>> futures) {
+    private ListFutureCallback(List<SettableFuture<T>> futures) {
       this.futures = futures;
     }
 

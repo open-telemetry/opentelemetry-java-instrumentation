@@ -7,12 +7,13 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.ServerCall;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 
 /**
  * In case a {@link ServerCall} implementation does not implement {@link ServerCall#getAuthority()}
  * like armeria, this utility class should be used to provide the authority instead
  */
-public class GrpcAuthorityStorage {
+public final class GrpcAuthorityStorage {
 
   private static final VirtualField<ServerCall<?, ?>, String> AUTHORITY_FIELD =
       VirtualField.find(ServerCall.class, String.class);
@@ -23,6 +24,7 @@ public class GrpcAuthorityStorage {
     AUTHORITY_FIELD.set(call, authority);
   }
 
+  @Nullable
   static String getAuthority(ServerCall<?, ?> call) {
     return AUTHORITY_FIELD.get(call);
   }

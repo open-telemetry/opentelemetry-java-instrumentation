@@ -5,6 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.myfaces.v3_0;
 
-import io.opentelemetry.javaagent.instrumentation.jsf.jakarta.BaseJsfTest;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta.BaseJsfTest;
 
 class Myfaces3Test extends BaseJsfTest {}

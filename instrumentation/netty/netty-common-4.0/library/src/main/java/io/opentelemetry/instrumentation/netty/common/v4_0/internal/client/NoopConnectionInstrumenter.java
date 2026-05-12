@@ -11,8 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import javax.annotation.Nullable;
 
-enum NoopConnectionInstrumenter implements NettyConnectionInstrumenter {
-  INSTANCE;
+final class NoopConnectionInstrumenter implements NettyConnectionInstrumenter {
 
   @Override
   public boolean shouldStart(Context parentContext, NettyConnectionRequest request) {
@@ -29,6 +28,6 @@ enum NoopConnectionInstrumenter implements NettyConnectionInstrumenter {
   public void end(
       Context context,
       NettyConnectionRequest request,
-      Channel channel,
+      @Nullable Channel channel,
       @Nullable Throwable error) {}
 }

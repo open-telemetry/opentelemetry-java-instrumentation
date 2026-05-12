@@ -82,7 +82,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
   }
 
   @Override
-  public final void sendRequestWithCallback(
+  public void sendRequestWithCallback(
       HttpRequest request,
       String method,
       URI uri,

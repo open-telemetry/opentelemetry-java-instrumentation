@@ -10,6 +10,32 @@ import java.lang.reflect.Method;
 
 class ReflectiveMethodsFactory {
 
+  private static final Object singletonObject = new ReflectObject();
+
+  static Object getTarget() {
+    return singletonObject;
+  }
+
+  static Method getMethod() {
+    return getRequiredMethod("echo", String.class);
+  }
+
+  static Method getInitMethod() {
+    return getRequiredMethod("initMethod");
+  }
+
+  static Method getDestroyMethod() {
+    return getRequiredMethod("destroyMethod");
+  }
+
+  private static Method getRequiredMethod(String name, Class<?>... parameterTypes) {
+    try {
+      return singletonObject.getClass().getMethod(name, parameterTypes);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Failed to resolve reflective method: " + name, e);
+    }
+  }
+
   private ReflectiveMethodsFactory() {}
 
   public static class ReflectObject {
@@ -25,38 +51,5 @@ class ReflectiveMethodsFactory {
       result.setData("echo: " + param);
       return result;
     }
-  }
-
-  private static final Object SINGLETON_OBJECT = new ReflectObject();
-
-  static Object getTarget() {
-    return SINGLETON_OBJECT;
-  }
-
-  static Method getMethod() {
-    try {
-      return SINGLETON_OBJECT.getClass().getMethod("echo", String.class);
-    } catch (Throwable t) {
-      // Ignore
-    }
-    return null;
-  }
-
-  static Method getInitMethod() {
-    try {
-      return SINGLETON_OBJECT.getClass().getMethod("initMethod");
-    } catch (Throwable t) {
-      // Ignore
-    }
-    return null;
-  }
-
-  static Method getDestroyMethod() {
-    try {
-      return SINGLETON_OBJECT.getClass().getMethod("destroyMethod");
-    } catch (Throwable t) {
-      // Ignore
-    }
-    return null;
   }
 }

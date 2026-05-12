@@ -49,18 +49,6 @@ final class HttpRouteSupport {
     }
   }
 
-  // we can't retrieve the handler mappings from the DispatcherServlet in the onRefresh listener,
-  // because it loads them just after the application context refreshed event is processed
-  // to work around this, we're setting a boolean flag that'll cause this filter to load the
-  // mappings the next time it attempts to set the http.route
-  final class WebContextRefreshListener implements ApplicationListener<ContextRefreshedEvent> {
-
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-      contextRefreshTriggered.set(true);
-    }
-  }
-
   boolean hasMappings() {
     if (contextRefreshTriggered.compareAndSet(true, false)) {
       // reload the handler mappings only if the web app context was recently refreshed
@@ -155,5 +143,17 @@ final class HttpRouteSupport {
       return route;
     }
     return contextPath + (route.startsWith("/") ? route : ("/" + route));
+  }
+
+  // we can't retrieve the handler mappings from the DispatcherServlet in the onRefresh listener,
+  // because it loads them just after the application context refreshed event is processed
+  // to work around this, we're setting a boolean flag that'll cause this filter to load the
+  // mappings the next time it attempts to set the http.route
+  final class WebContextRefreshListener implements ApplicationListener<ContextRefreshedEvent> {
+
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+      contextRefreshTriggered.set(true);
+    }
   }
 }

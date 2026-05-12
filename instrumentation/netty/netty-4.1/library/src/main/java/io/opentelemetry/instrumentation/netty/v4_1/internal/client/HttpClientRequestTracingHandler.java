@@ -63,10 +63,10 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     try (Scope ignored = context.makeCurrent()) {
       super.write(ctx, msg, prm);
-    } catch (Throwable throwable) {
-      instrumenter.end(contextAttr.getAndSet(null), requestAttr.getAndSet(null), null, throwable);
+    } catch (Throwable t) {
+      instrumenter.end(contextAttr.getAndSet(null), requestAttr.getAndSet(null), null, t);
       parentContextAttr.set(null);
-      throw throwable;
+      throw t;
     }
     // span is ended normally in HttpClientResponseTracingHandler
   }

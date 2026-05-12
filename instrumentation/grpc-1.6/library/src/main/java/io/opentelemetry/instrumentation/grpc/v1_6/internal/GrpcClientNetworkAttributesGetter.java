@@ -27,6 +27,7 @@ public final class GrpcClientNetworkAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(GrpcRequest grpcRequest) {
     return grpcRequest.getServerPort();
   }

@@ -315,7 +315,7 @@ public abstract class AbstractAws2ClientCoreTest {
                   asyncClientClass.getMethod(method.getName(), method.getParameterTypes());
               CompletableFuture<?> future =
                   (CompletableFuture<?>) asyncMethod.invoke(asyncClient, args);
-              return future.get();
+              return future.join();
             });
   }
 

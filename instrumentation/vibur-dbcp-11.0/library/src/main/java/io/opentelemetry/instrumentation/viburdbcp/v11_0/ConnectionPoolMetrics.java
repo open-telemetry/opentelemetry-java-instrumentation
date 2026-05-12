@@ -23,7 +23,7 @@ final class ConnectionPoolMetrics {
   private static final Map<ViburDBCPDataSource, BatchCallback> dataSourceMetrics =
       new ConcurrentHashMap<>();
 
-  public static void registerMetrics(OpenTelemetry openTelemetry, ViburDBCPDataSource dataSource) {
+  static void registerMetrics(OpenTelemetry openTelemetry, ViburDBCPDataSource dataSource) {
     dataSourceMetrics.computeIfAbsent(
         dataSource, (unused) -> createMeters(openTelemetry, dataSource));
   }
@@ -50,7 +50,7 @@ final class ConnectionPoolMetrics {
         maxConnections);
   }
 
-  public static void unregisterMetrics(ViburDBCPDataSource dataSource) {
+  static void unregisterMetrics(ViburDBCPDataSource dataSource) {
     BatchCallback callback = dataSourceMetrics.remove(dataSource);
     if (callback != null) {
       callback.close();

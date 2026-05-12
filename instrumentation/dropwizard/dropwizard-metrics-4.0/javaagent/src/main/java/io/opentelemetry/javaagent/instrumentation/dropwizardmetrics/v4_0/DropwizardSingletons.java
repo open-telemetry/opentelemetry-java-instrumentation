@@ -1,0 +1,20 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+
+public class DropwizardSingletons {
+
+  private static final DropwizardMetricsAdapter metrics =
+      new DropwizardMetricsAdapter(GlobalOpenTelemetry.get());
+
+  public static DropwizardMetricsAdapter metrics() {
+    return metrics;
+  }
+
+  private DropwizardSingletons() {}
+}

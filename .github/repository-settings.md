@@ -4,20 +4,24 @@ This document describes any changes that have been made to the
 settings in this repository outside the settings tracked in the
 private admin repo.
 
-## Secrets and variables > Actions
+## Environments
 
-### Repository secrets
+### `protected` environment
 
-- `FLAKY_TEST_REPORTER_ACCESS_KEY` - owned by [@laurit](https://github.com/laurit)
+Deployment branches: `main`, `release/*`
+
+Secrets:
+
+- `COPILOT_GITHUB_TOKEN` - owned by [@trask](https://github.com/trask)
 - `GPG_PASSWORD` - stored in OpenTelemetry-Java 1Password
 - `GPG_PRIVATE_KEY` - stored in OpenTelemetry-Java 1Password
 - `GRADLE_PUBLISH_KEY` - owned by [@trask](https://github.com/trask)
 - `GRADLE_PUBLISH_SECRET` - owned by [@trask](https://github.com/trask)
-- `NVD_API_KEY` - stored in OpenTelemetry-Java 1Password
-  - Generated at <https://nvd.nist.gov/developers/request-an-api-key>
-  - Key is associated with [@trask](https://github.com/trask)'s gmail address
+- `SONATYPE_GUIDE_PAT` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_KEY` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_USER` - owned by [@trask](https://github.com/trask)
+
+## Secrets and variables > Actions
 
 ### Organization secrets
 

@@ -5,14 +5,19 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.util.ContextInitializer;
 import ch.qos.logback.core.spi.ContextAware;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -23,6 +28,8 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @BeforeEach
   void setup() throws Exception {
@@ -46,7 +53,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
       configuratorClass
           .getMethod("configure", LoggerContext.class)
           .invoke(configurator, loggerContext);
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       // logback versions prior to 1.3.0
       ContextInitializer ci = new ContextInitializer(loggerContext);
       URL url = LogReplayOpenTelemetryAppenderTest.class.getResource("/logback-test.xml");
@@ -59,16 +66,24 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
   @Override
   void executeAfterLogsExecution() {
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
+    cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
   }
 
   @Test
   void twoLogs() {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.addAll(codeFunctionAssertions(LogReplayOpenTelemetryAppenderTest.class, "twoLogs"));
+    assertions.addAll(
+        codeFileAndLineAssertions(
+            LogReplayOpenTelemetryAppenderTest.class.getSimpleName() + ".java"));
+
     logger.info("log message 1");
     logger.info(
         "log message 2"); // Won't be instrumented because cache size is 1 (see logback-test.xml
     // file)
 
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
+    cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
 
     testing.waitAndAssertLogRecords(
         logRecord ->
@@ -76,6 +91,6 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(codeAttributesLogCount()));
+                .hasAttributesSatisfyingExactly(assertions));
   }
 }

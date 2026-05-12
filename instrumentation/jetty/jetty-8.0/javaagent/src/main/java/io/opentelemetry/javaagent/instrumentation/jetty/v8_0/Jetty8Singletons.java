@@ -17,7 +17,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrument
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public final class Jetty8Singletons {
+public class Jetty8Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-8.0";
 
   public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
@@ -25,18 +25,18 @@ public final class Jetty8Singletons {
 
   private static final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
-      INSTRUMENTER =
+      instrumenter =
           AgentServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
               .addContextCustomizer(
                   (context, request, attributes) -> new AppServerBridge.Builder().init(context))
               .propagateOperationListenersToOnEnd()
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
-  private static final JettyHelper<HttpServletRequest, HttpServletResponse> HELPER =
-      new JettyHelper<>(INSTRUMENTER, Servlet3Accessor.INSTANCE);
+  private static final JettyHelper<HttpServletRequest, HttpServletResponse> helper =
+      new JettyHelper<>(instrumenter, Servlet3Accessor.INSTANCE);
 
   public static JettyHelper<HttpServletRequest, HttpServletResponse> helper() {
-    return HELPER;
+    return helper;
   }
 
   private Jetty8Singletons() {}

@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
@@ -29,6 +30,8 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<HttpServer> {
@@ -135,7 +138,21 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     contexts.add(context);
     context =
         server.createContext(
-            "/captureHeaders",
+            INDEXED_CHILD_FROM_REQUEST_BODY.getPath(),
+            ctx ->
+                testing()
+                    .runWithSpan(
+                        "controller",
+                        () -> {
+                          String requestBody = readRequestBody(ctx.getRequestBody());
+                          bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
+                          sendResponse(
+                              ctx, INDEXED_CHILD_FROM_REQUEST_BODY.getStatus(), requestBody);
+                        }));
+    contexts.add(context);
+    context =
+        server.createContext(
+            CAPTURE_HEADERS.getPath(),
             ctx ->
                 testing()
                     .runWithSpan(
@@ -174,7 +191,11 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
 
   @Override
   protected void stopServer(HttpServer server) {
+    Executor executor = server.getExecutor();
     server.stop(0);
+    if (executor instanceof ExecutorService) {
+      ((ExecutorService) executor).shutdown();
+    }
   }
 
   @Override
@@ -182,6 +203,8 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     // filter isn't called for non-standard method
     options.disableTestNonStandardHttpMethod();
     options.setTestHttpPipelining(
+        Double.parseDouble(System.getProperty("java.specification.version")) >= 21);
+    options.setTestHttpBodyPipelining(
         Double.parseDouble(System.getProperty("java.specification.version")) >= 21);
     options.setExpectedHttpRoute(
         (endpoint, method) -> {

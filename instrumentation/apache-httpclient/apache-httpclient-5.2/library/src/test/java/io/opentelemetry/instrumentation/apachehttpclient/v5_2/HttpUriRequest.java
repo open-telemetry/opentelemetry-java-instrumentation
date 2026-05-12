@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 import java.net.URI;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 
-final class HttpUriRequest extends HttpUriRequestBase {
+class HttpUriRequest extends HttpUriRequestBase {
 
   private static final long serialVersionUID = 1L;
 

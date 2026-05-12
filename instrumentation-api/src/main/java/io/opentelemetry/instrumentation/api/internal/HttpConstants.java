@@ -10,6 +10,7 @@ import static java.util.Collections.unmodifiableSet;
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,7 +24,38 @@ public final class HttpConstants {
               asList(
                   "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE")));
 
+  public static final Set<String> SENSITIVE_QUERY_PARAMETERS =
+      unmodifiableSet(
+          new HashSet<>(asList("AWSAccessKeyId", "Signature", "sig", "X-Goog-Signature")));
+
   public static final String _OTHER = "_OTHER";
+
+  @Nullable
+  public static Integer portOrDefaultFromScheme(@Nullable Integer port, @Nullable String scheme) {
+    if (port != null && port > 0) {
+      return port;
+    }
+    return defaultPortForScheme(scheme);
+  }
+
+  @Nullable
+  public static Integer portOrDefaultFromScheme(int port, @Nullable String scheme) {
+    if (port > 0) {
+      return port;
+    }
+    return defaultPortForScheme(scheme);
+  }
+
+  @Nullable
+  private static Integer defaultPortForScheme(@Nullable String scheme) {
+    if ("http".equals(scheme)) {
+      return 80;
+    }
+    if ("https".equals(scheme)) {
+      return 443;
+    }
+    return null;
+  }
 
   private HttpConstants() {}
 }

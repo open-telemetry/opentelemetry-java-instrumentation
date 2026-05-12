@@ -56,8 +56,8 @@ class PekkoActors {
       howdyGreeter ! WhoToGreet("Pekko")
       howdyGreeter ! Greet
     } finally {
-      parentSpan.end()
       parentScope.close()
+      parentSpan.end()
     }
   }
 
@@ -69,8 +69,8 @@ class PekkoActors {
       howdyGreeter ! WhoToGreet("Pekko")
       howdyGreeter ? Greet
     } finally {
-      parentSpan.end()
       parentScope.close()
+      parentSpan.end()
     }
   }
 
@@ -82,8 +82,8 @@ class PekkoActors {
       helloGreeter ! WhoToGreet("Pekko")
       helloGreeter ? Greet
     } finally {
-      parentSpan.end()
       parentScope.close()
+      parentSpan.end()
     }
   }
 }
@@ -92,7 +92,7 @@ object Greeter {
   def props(message: String, receiverActor: ActorRef): Props =
     Props(new Greeter(message, receiverActor))
 
-  final case class WhoToGreet(who: String)
+  case class WhoToGreet(who: String)
 
   case object Greet
 
@@ -116,7 +116,7 @@ class Greeter(message: String, receiverActor: ActorRef) extends Actor {
 object Receiver {
   def props: Props = Props[Receiver]()
 
-  final case class Greeting(greeting: String)
+  case class Greeting(greeting: String)
 
 }
 

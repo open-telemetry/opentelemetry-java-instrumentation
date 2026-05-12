@@ -16,9 +16,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum ArmeriaHttpClientAttributesGetter
+final class ArmeriaHttpClientAttributesGetter
     implements HttpClientAttributesGetter<ClientRequestContext, RequestLog> {
-  INSTANCE;
 
   private static final ClassValue<Method> authorityMethodCache =
       new ClassValue<Method>() {
@@ -27,7 +26,7 @@ enum ArmeriaHttpClientAttributesGetter
         protected Method computeValue(Class<?> type) {
           try {
             return type.getMethod("authority");
-          } catch (NoSuchMethodException e) {
+          } catch (NoSuchMethodException ignored) {
             return null;
           }
         }
@@ -115,11 +114,11 @@ enum ArmeriaHttpClientAttributesGetter
     }
     int separatorPos = authority.indexOf(':');
     if (separatorPos == -1) {
-      return null;
+      return defaultPortForProtocol(ctx.sessionProtocol());
     }
     try {
       return Integer.parseInt(authority.substring(separatorPos + 1));
-    } catch (NumberFormatException e) {
+    } catch (NumberFormatException ignored) {
       return null;
     }
   }
@@ -132,6 +131,17 @@ enum ArmeriaHttpClientAttributesGetter
   }
 
   @Nullable
+  private static Integer defaultPortForProtocol(SessionProtocol protocol) {
+    if (protocol == SessionProtocol.HTTP) {
+      return 80;
+    }
+    if (protocol == SessionProtocol.HTTPS) {
+      return 443;
+    }
+    return null;
+  }
+
+  @Nullable
   private static String authority(ClientRequestContext ctx) {
     // newer armeria versions expose authority through DefaultClientRequestContext#authority
     // we are using this method as it provides default values based on endpoint
@@ -141,7 +151,7 @@ enum ArmeriaHttpClientAttributesGetter
     if (method != null) {
       try {
         return (String) method.invoke(ctx);
-      } catch (Exception e) {
+      } catch (Exception ignored) {
         return null;
       }
     }

@@ -13,17 +13,17 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.springframework.amqp.core.Message;
 
-public final class SpringRabbitSingletons {
+public class SpringRabbitSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-rabbit-1.0";
 
-  private static final Instrumenter<Message, Void> INSTRUMENTER;
+  private static final Instrumenter<Message, Void> instrumenter;
 
   static {
-    SpringRabbitMessageAttributesGetter getter = SpringRabbitMessageAttributesGetter.INSTANCE;
+    SpringRabbitMessageAttributesGetter getter = new SpringRabbitMessageAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<Message, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -32,11 +32,11 @@ public final class SpringRabbitSingletons {
                 MessagingAttributesExtractor.builder(getter, operation)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
-            .buildConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
+            .buildConsumerInstrumenter(new MessageHeaderGetter());
   }
 
   public static Instrumenter<Message, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private SpringRabbitSingletons() {}

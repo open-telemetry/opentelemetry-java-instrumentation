@@ -19,8 +19,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.reactive.function.server.ServerResponse.BodyBuilder;
 import reactor.core.publisher.Mono;
 
-public abstract class ServerTestRouteFactory {
-  public RouterFunction<ServerResponse> createRoutes() {
+abstract class ServerTestRouteFactory {
+  RouterFunction<ServerResponse> createRoutes() {
     return route(
             GET("/success"),
             request -> {

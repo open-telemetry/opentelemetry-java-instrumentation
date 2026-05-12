@@ -31,7 +31,7 @@ class TracingRequestWrapperStandardEventsTest {
   private final Context context = mock(Context.class);
   private TracingRequestWrapper wrapper;
 
-  static final class EventInfo {
+  static class EventInfo {
     final Class<?> eventType;
     final String eventBody;
 

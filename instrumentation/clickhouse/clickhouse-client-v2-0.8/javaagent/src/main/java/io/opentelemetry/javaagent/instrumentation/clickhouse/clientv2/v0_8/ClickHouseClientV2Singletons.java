@@ -11,16 +11,19 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlPa
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseDbRequest;
-import io.opentelemetry.javaagent.instrumentation.clickhouse.common.ClickHouseInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
+import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
+import javax.annotation.Nullable;
 
-public final class ClickHouseClientV2Singletons {
+public class ClickHouseClientV2Singletons {
 
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v2-0.8";
-  private static final Instrumenter<ClickHouseDbRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
+  private static final VirtualField<Client, AddressAndPort> ADDRESS_AND_PORT =
+      VirtualField.find(Client.class, AddressAndPort.class);
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         ClickHouseInstrumenterFactory.createInstrumenter(
             INSTRUMENTER_NAME,
             error -> {
@@ -32,17 +35,15 @@ public final class ClickHouseClientV2Singletons {
   }
 
   public static Instrumenter<ClickHouseDbRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
-  private static final VirtualField<Client, AddressAndPort> ADDRESS_AND_PORT =
-      VirtualField.find(Client.class, AddressAndPort.class);
-
+  @Nullable
   public static AddressAndPort getAddressAndPort(Client client) {
     return ADDRESS_AND_PORT.get(client);
   }
 
-  public static AddressAndPort setAddressAndPort(Client client, String endpoint) {
+  public static AddressAndPort setAddressAndPort(Client client, @Nullable String endpoint) {
     AddressAndPort addressAndPort = new AddressAndPort();
 
     if (endpoint != null) {

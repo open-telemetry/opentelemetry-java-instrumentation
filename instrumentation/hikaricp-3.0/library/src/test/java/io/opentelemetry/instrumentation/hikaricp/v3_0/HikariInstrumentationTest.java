@@ -10,7 +10,6 @@ import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import io.opentelemetry.instrumentation.hikaricp.AbstractHikariInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
@@ -24,7 +23,7 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
   }
 
   @Override
-  protected void configure(HikariConfig poolConfig, @Nullable MetricsTrackerFactory userTracker) {
+  protected void configure(HikariConfig poolConfig, MetricsTrackerFactory userTracker) {
     poolConfig.setMetricsTrackerFactory(
         HikariTelemetry.create(testing().getOpenTelemetry())
             .createMetricsTrackerFactory(userTracker));

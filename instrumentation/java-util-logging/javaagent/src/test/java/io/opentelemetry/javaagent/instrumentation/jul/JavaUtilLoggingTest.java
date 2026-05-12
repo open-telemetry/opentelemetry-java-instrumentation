@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.testing.internal.armeria.common.annotation.Nullable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -33,7 +32,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JavaUtilLoggingTest {
-  private static final boolean isExperimentalAttributesEnabled =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.java-util-logging.experimental-log-attributes");
 
   private static final Logger logger = Logger.getLogger("abc");
@@ -55,7 +54,7 @@ class JavaUtilLoggingTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean withParam, boolean logException, boolean withParent)
+  void test(boolean withParam, boolean logException, boolean withParent)
       throws InterruptedException {
     test(FINE, Logger::fine, withParam, logException, withParent, null, null, null);
     testing.clearData();
@@ -122,7 +121,8 @@ class JavaUtilLoggingTest {
                 equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                 equalTo(EXCEPTION_MESSAGE, "hello"),
                 satisfies(
-                    EXCEPTION_STACKTRACE, v -> v.contains(JavaUtilLoggingTest.class.getName())));
+                    EXCEPTION_STACKTRACE,
+                    val -> val.contains(JavaUtilLoggingTest.class.getName())));
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
@@ -161,21 +161,19 @@ class JavaUtilLoggingTest {
   }
 
   @FunctionalInterface
-  interface LoggerMethod {
+  private interface LoggerMethod {
     void call(Logger logger, String msg);
   }
 
-  @Nullable
-  public static String experimental(String value) {
-    if (isExperimentalAttributesEnabled) {
+  private static String experimental(String value) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return value;
     }
     return null;
   }
 
-  @Nullable
-  public static Long experimental(long value) {
-    if (isExperimentalAttributesEnabled) {
+  private static Long experimental(long value) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return value;
     }
     return null;

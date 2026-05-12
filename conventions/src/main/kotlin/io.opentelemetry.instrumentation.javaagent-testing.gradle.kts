@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+
 plugins {
   `java-library`
 
@@ -14,8 +16,7 @@ val testIndyProperty = providers.gradleProperty("testIndy")
   .map { it == "true" }
   .orElse(false)
 
-val denyUnsafe = gradle.startParameter.projectProperties["denyUnsafe"] == "true"
-extra["denyUnsafe"] = denyUnsafe
+val otelProps = the<OtelPropsExtension>()
 
 dependencies {
   /*
@@ -35,11 +36,11 @@ dependencies {
   // Apply common dependencies for instrumentation.
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api") {
     // OpenTelemetry SDK is not needed for compilation
-    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
+    exclude("io.opentelemetry", "opentelemetry-sdk")
   }
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling") {
     // OpenTelemetry SDK is not needed for compilation
-    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk")
+    exclude("io.opentelemetry", "opentelemetry-sdk")
   }
 
   // Used by byte-buddy but not brought in as a transitive dependency
@@ -149,7 +150,7 @@ afterEvaluate {
         shadowJar.archiveFile.get().asFile,
         failOnContextLeakOverride,
         testIndyEnabled,
-        denyUnsafe
+        otelProps.denyUnsafe
       )
     )
 

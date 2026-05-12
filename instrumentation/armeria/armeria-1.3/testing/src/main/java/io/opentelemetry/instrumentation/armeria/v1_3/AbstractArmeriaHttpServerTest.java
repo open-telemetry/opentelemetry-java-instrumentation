@@ -172,7 +172,7 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
 
   @Override
   protected void stopServer(Server server) {
-    server.stop();
+    server.stop().join();
   }
 
   @Override

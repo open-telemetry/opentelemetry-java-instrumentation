@@ -27,9 +27,9 @@ import org.springframework.util.ClassUtils;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.client.SoapFaultClientException;
 
-public class AbstractJaxWs3Test extends AbstractHttpServerUsingTest<Server> {
+public abstract class AbstractJaxWs3Test extends AbstractHttpServerUsingTest<Server> {
   @RegisterExtension
-  public static final InstrumentationExtension testing =
+  protected static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
   private final Jaxb2Marshaller marshaller = new Jaxb2Marshaller();

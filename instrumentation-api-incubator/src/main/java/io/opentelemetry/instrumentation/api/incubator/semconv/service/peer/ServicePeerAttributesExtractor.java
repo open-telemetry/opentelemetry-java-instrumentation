@@ -24,13 +24,6 @@ public final class ServicePeerAttributesExtractor<REQUEST, RESPONSE>
   private final ServerAttributesGetter<REQUEST> attributesGetter;
   private final ServicePeerResolver servicePeerResolver;
 
-  // visible for tests
-  ServicePeerAttributesExtractor(
-      ServerAttributesGetter<REQUEST> attributesGetter, ServicePeerResolver servicePeerResolver) {
-    this.attributesGetter = attributesGetter;
-    this.servicePeerResolver = servicePeerResolver;
-  }
-
   /**
    * Returns a new {@link ServicePeerAttributesExtractor} that will use the passed {@code
    * attributesGetter} instance to determine the value of the {@code service.peer.name} attribute.
@@ -47,6 +40,13 @@ public final class ServicePeerAttributesExtractor<REQUEST, RESPONSE>
       return new EmptyAttributesExtractor<>();
     }
     return new ServicePeerAttributesExtractor<>(attributesGetter, servicePeerResolver);
+  }
+
+  // visible for tests
+  ServicePeerAttributesExtractor(
+      ServerAttributesGetter<REQUEST> attributesGetter, ServicePeerResolver servicePeerResolver) {
+    this.attributesGetter = attributesGetter;
+    this.servicePeerResolver = servicePeerResolver;
   }
 
   @Override

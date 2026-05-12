@@ -21,7 +21,7 @@ class ServerMetricsTest : AbstractKtorServerMetricsTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    val testing: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
+    private val testing: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
   }
 
   override fun serverInstall(application: io.ktor.server.application.Application) {

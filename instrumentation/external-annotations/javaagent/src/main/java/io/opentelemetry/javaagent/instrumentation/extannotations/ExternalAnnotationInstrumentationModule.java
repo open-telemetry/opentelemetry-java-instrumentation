@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ExternalAnnotationInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ExternalAnnotationInstrumentationModule extends InstrumentationModule {
 
   public ExternalAnnotationInstrumentationModule() {
     super("external-annotations");
@@ -24,10 +22,5 @@ public class ExternalAnnotationInstrumentationModule extends InstrumentationModu
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ExternalAnnotationInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

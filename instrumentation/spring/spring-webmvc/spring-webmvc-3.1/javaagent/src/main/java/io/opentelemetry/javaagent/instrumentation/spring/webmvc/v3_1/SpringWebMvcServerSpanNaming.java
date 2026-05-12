@@ -12,7 +12,7 @@ import org.springframework.web.servlet.HandlerMapping;
 
 public class SpringWebMvcServerSpanNaming {
 
-  public static final HttpServerRouteGetter<HttpServletRequest> SERVER_SPAN_NAME =
+  private static final HttpServerRouteGetter<HttpServletRequest> serverSpanName =
       (context, request) -> {
         if (request == null) {
           return null;
@@ -24,6 +24,10 @@ public class SpringWebMvcServerSpanNaming {
         }
         return null;
       };
+
+  public static HttpServerRouteGetter<HttpServletRequest> serverSpanName() {
+    return serverSpanName;
+  }
 
   private SpringWebMvcServerSpanNaming() {}
 }

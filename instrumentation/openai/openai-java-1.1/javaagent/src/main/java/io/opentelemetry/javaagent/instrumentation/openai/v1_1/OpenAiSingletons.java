@@ -9,14 +9,18 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.openai.v1_1.OpenAITelemetry;
 
-public final class OpenAiSingletons {
-  public static final OpenAITelemetry TELEMETRY =
+public class OpenAiSingletons {
+  private static final OpenAITelemetry telemetry =
       OpenAITelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureMessageContent(
               DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
                   .get("gen_ai")
                   .getBoolean("capture_message_content", false))
           .build();
+
+  public static OpenAITelemetry telemetry() {
+    return telemetry;
+  }
 
   private OpenAiSingletons() {}
 }

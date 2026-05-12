@@ -15,9 +15,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum ArmeriaHttpServerAttributesGetter
+final class ArmeriaHttpServerAttributesGetter
     implements HttpServerAttributesGetter<ServiceRequestContext, RequestLog> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(ServiceRequestContext ctx) {

@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD_FROM_REQUEST_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
@@ -77,6 +78,7 @@ class JettyHandlerTest extends AbstractHttpServerTest<Server> {
     options.setHttpAttributes(unused -> DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE);
     options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == ERROR);
     options.setHasResponseCustomizer(endpoint -> true);
+    options.setTestHttpBodyPipelining(true);
   }
 
   @Override
@@ -133,6 +135,11 @@ class JettyHandlerTest extends AbstractHttpServerTest<Server> {
       INDEXED_CHILD.collectSpanAttributes(name -> request.getParameter(name));
       response.setStatus(endpoint.getStatus());
       response.getWriter().print(endpoint.getBody());
+    } else if (INDEXED_CHILD_FROM_REQUEST_BODY.equals(endpoint)) {
+      String requestBody = readRequestBody(request.getInputStream());
+      bodyConsumer(endpoint, requestBody);
+      response.setStatus(endpoint.getStatus());
+      response.getWriter().print(requestBody);
     } else {
       response.setStatus(NOT_FOUND.getStatus());
       response.getWriter().print(NOT_FOUND.getBody());

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.logs;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.LogRecordBuilder;
@@ -12,6 +13,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.Ap
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
     implements application.io.opentelemetry.api.logs.LogRecordBuilder {
@@ -24,13 +26,16 @@ public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.logs.LogRecordBuilder setBody(
-      application.io.opentelemetry.api.common.Value<?> body) {
+      @Nullable application.io.opentelemetry.api.common.Value<?> body) {
     agentLogRecordBuilder.setBody(convertValue(body));
     return this;
   }
 
-  protected static Value<?> convertValue(application.io.opentelemetry.api.common.Value<?> value) {
+  @Nullable
+  protected static Value<?> convertValue(
+      @Nullable application.io.opentelemetry.api.common.Value<?> value) {
     if (value == null) {
       return null;
     }
@@ -68,7 +73,7 @@ public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
         ByteBuffer byteBuffer = (ByteBuffer) value.getValue();
         byte[] bytes = new byte[byteBuffer.remaining()];
         byteBuffer.get(bytes);
-        break;
+        return Value.of(bytes);
     }
 
     throw new IllegalStateException("Unhandled value type: " + value.getType());

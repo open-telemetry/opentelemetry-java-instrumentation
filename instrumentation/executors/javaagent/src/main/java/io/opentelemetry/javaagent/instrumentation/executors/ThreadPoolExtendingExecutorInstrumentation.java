@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ThreadPoolExtendingExecutorInstrumentation implements TypeInstrumentation {
+class ThreadPoolExtendingExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -30,17 +30,17 @@ public class ThreadPoolExtendingExecutorInstrumentation implements TypeInstrumen
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("beforeExecute").and(takesArgument(1, Runnable.class)),
-        this.getClass().getName() + "$BeforeExecuteAdvice");
+        getClass().getName() + "$BeforeExecuteAdvice");
     transformer.applyAdviceToMethod(
         named("afterExecute").and(takesArgument(0, Runnable.class)),
-        this.getClass().getName() + "$AfterExecuteAdvice");
+        getClass().getName() + "$AfterExecuteAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class BeforeExecuteAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Runnable onEnter(@Advice.Argument(1) Runnable runnable) {
       if (runnable instanceof ContextPropagatingRunnable) {
         return ((ContextPropagatingRunnable) runnable).unwrap();
@@ -53,7 +53,7 @@ public class ThreadPoolExtendingExecutorInstrumentation implements TypeInstrumen
   public static class AfterExecuteAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Runnable onEnter(@Advice.Argument(0) Runnable runnable) {
       if (runnable instanceof ContextPropagatingRunnable) {
         return ((ContextPropagatingRunnable) runnable).unwrap();

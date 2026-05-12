@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 class TracingList extends SdkInternalList<Message> {
   private static final long serialVersionUID = 1L;
@@ -22,7 +23,7 @@ class TracingList extends SdkInternalList<Message> {
   private final transient Instrumenter<SqsProcessRequest, Response<?>> instrumenter;
   private final transient Request<?> request;
   private final transient Response<?> response;
-  private final transient Context receiveContext;
+  @Nullable private final transient Context receiveContext;
   private boolean firstIterator = true;
 
   private TracingList(
@@ -30,7 +31,7 @@ class TracingList extends SdkInternalList<Message> {
       Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,
       Response<?> response,
-      Context receiveContext) {
+      @Nullable Context receiveContext) {
     super(list);
     this.instrumenter = instrumenter;
     this.request = request;
@@ -38,12 +39,12 @@ class TracingList extends SdkInternalList<Message> {
     this.receiveContext = receiveContext;
   }
 
-  public static SdkInternalList<Message> wrap(
+  static SdkInternalList<Message> wrap(
       List<Message> list,
       Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,
       Response<?> response,
-      Context receiveContext) {
+      @Nullable Context receiveContext) {
     return new TracingList(list, instrumenter, request, response, receiveContext);
   }
 

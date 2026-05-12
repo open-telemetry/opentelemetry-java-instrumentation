@@ -5,16 +5,19 @@ semantic_conventions:
   - MESSAGING_SPANS
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: >
       Enables experimental receive telemetry, which will cause consumers to start a new trace, with
       only a span link connecting it to the producer trace.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.capture-headers
+    declarative_name: java.common.messaging.capture_headers/development
     description: A comma-separated list of header names to capture as span attributes.
     type: list
     default: ''
   - name: otel.instrumentation.pulsar.experimental-span-attributes
+    declarative_name: java.pulsar.experimental_span_attributes/development
     description: >
       Enables capturing experimental span attribute `messaging.pulsar.message.type` on PRODUCER spans.
     type: boolean

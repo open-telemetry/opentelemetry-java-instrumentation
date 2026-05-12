@@ -28,7 +28,7 @@ import io.reactivex.rxjava3.core.SingleObserver;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.internal.disposables.DisposableHelper;
 
-public class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
+public final class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
 
   private final SingleObserver<T> actual;
   private final Context context;
@@ -44,7 +44,7 @@ public class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
     if (!DisposableHelper.validate(disposable, d)) {
       return;
     }
-    this.disposable = d;
+    disposable = d;
     actual.onSubscribe(this);
   }
 

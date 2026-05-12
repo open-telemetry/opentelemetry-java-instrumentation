@@ -36,8 +36,7 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // We don't actually transform it but want to make sure we only apply the instrumentation when
-    // our key dependency is present.
+    // added in 2.2.0
     return hasClassesNamed("software.amazon.awssdk.core.interceptor.ExecutionInterceptor");
   }
 
@@ -46,15 +45,10 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
     return singletonList(new ResourceInjectingTypeInstrumentation());
   }
 
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
-
   abstract void doTransform(TypeTransformer transformer);
 
   // A type instrumentation is needed to trigger resource injection.
-  public class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
+  class ResourceInjectingTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       // This is essentially the entry point of the AWS SDK, all clients implement it. We can ensure

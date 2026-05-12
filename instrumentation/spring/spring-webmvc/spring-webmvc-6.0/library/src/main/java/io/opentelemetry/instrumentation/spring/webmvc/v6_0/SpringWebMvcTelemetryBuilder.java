@@ -22,8 +22,6 @@ import java.util.function.UnaryOperator;
 public final class SpringWebMvcTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-6.0";
-  private final DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>
-      builder;
 
   static {
     SpringMvcBuilderUtil.setBuilderExtractor(builder -> builder.builder);
@@ -31,13 +29,16 @@ public final class SpringWebMvcTelemetryBuilder {
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
   }
 
+  private final DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>
+      builder;
+
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         DefaultHttpServerInstrumenterBuilder.create(
             INSTRUMENTATION_NAME,
             openTelemetry,
-            SpringWebMvcHttpAttributesGetter.INSTANCE,
-            JakartaHttpServletRequestGetter.INSTANCE);
+            new SpringWebMvcHttpAttributesGetter(),
+            new JakartaHttpServletRequestGetter());
   }
 
   /**

@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +34,7 @@ class IncludeTest {
     when(config.getString("include")).thenReturn(value);
 
     assertThat(ExternalAnnotationInstrumentation.configureAdditionalTraceAnnotations(config))
-        .isEqualTo(new HashSet<>(expected));
+        .containsExactlyInAnyOrderElementsOf(expected);
   }
 
   private static Stream<Arguments> provideArguments() {

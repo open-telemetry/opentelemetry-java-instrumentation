@@ -24,6 +24,10 @@ import java.util.List;
  */
 public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
+  private final DefaultHttpServerInstrumenterBuilder<
+          ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+      builder;
+  private final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
 
@@ -32,10 +36,15 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private boolean captureEnduserId;
   private List<String> captureRequestParameters = new ArrayList<>();
 
-  private final DefaultHttpServerInstrumenterBuilder<
-          ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-      builder;
-  private final ServletAccessor<REQUEST, RESPONSE> accessor;
+  public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create(
+      String instrumentationName,
+      OpenTelemetry openTelemetry,
+      HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+          httpAttributesGetter,
+      ServletAccessor<REQUEST, RESPONSE> accessor) {
+    return new ServletInstrumenterBuilder<>(
+        instrumentationName, openTelemetry, httpAttributesGetter, accessor);
+  }
 
   private ServletInstrumenterBuilder(
       String instrumentationName,
@@ -50,16 +59,6 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
             openTelemetry,
             httpAttributesGetter,
             new ServletRequestGetter<>(accessor));
-  }
-
-  public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create(
-      String instrumentationName,
-      OpenTelemetry openTelemetry,
-      HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-          httpAttributesGetter,
-      ServletAccessor<REQUEST, RESPONSE> accessor) {
-    return new ServletInstrumenterBuilder<>(
-        instrumentationName, openTelemetry, httpAttributesGetter, accessor);
   }
 
   public DefaultHttpServerInstrumenterBuilder<

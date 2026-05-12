@@ -20,8 +20,7 @@ import org.restlet.data.Request;
 import org.restlet.data.Response;
 import org.restlet.util.Series;
 
-enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
-  INSTANCE;
+final class RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
   @Override
   public String getHttpRequestMethod(Request request) {
@@ -86,7 +85,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   @Override
   public String getNetworkProtocolName(Request request, @Nullable Response response) {
     String protocol = getProtocolString(request);
-    if (protocol.startsWith("HTTP/")) {
+    if (protocol != null && protocol.startsWith("HTTP/")) {
       return "http";
     }
     return null;
@@ -96,12 +95,13 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   @Override
   public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
     String protocol = getProtocolString(request);
-    if (protocol.startsWith("HTTP/")) {
+    if (protocol != null && protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());
     }
     return null;
   }
 
+  @Nullable
   private static String getProtocolString(Request request) {
     return (String) request.getAttributes().get("org.restlet.http.version");
   }

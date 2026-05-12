@@ -236,6 +236,13 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
 
   /** Cleans all unused references. */
   public static void expungeStaleEntries() {
+    // Skip expunging stale entries if we are running on a virtual thread.
+    // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/17847
+    // Stale entries are also expunged from the background thread, see the runCleanup method below.
+    if (ThreadUtil.isVirtualThread(Thread.currentThread())) {
+      return;
+    }
+
     Reference<?> reference;
     while ((reference = REFERENCE_QUEUE.poll()) != null) {
       removeWeakKey((WeakKey<?>) reference);

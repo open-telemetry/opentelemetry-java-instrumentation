@@ -21,7 +21,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.List;
 
-public final class AgentTestingExporterAccess {
+public class AgentTestingExporterAccess {
 
   private static final MethodHandle getSpanExportRequests;
   private static final MethodHandle getMetricExportRequests;

@@ -33,7 +33,7 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
   }
 }

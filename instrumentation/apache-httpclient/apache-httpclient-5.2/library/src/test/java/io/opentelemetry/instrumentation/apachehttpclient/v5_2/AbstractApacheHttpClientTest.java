@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
@@ -21,13 +22,15 @@ import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.hc.core5.http.protocol.BasicHttpContext;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractApacheHttpClientTest {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension testing();
 
@@ -40,12 +43,8 @@ abstract class AbstractApacheHttpClientTest {
   void setUp() {
     client = createClient(false);
     clientWithReadTimeout = createClient(true);
-  }
-
-  @AfterAll
-  void tearDown() throws Exception {
-    client.close();
-    clientWithReadTimeout.close();
+    cleanup.deferAfterAll(client);
+    cleanup.deferAfterAll(clientWithReadTimeout);
   }
 
   CloseableHttpClient getClient(URI uri) {
@@ -316,7 +315,6 @@ abstract class AbstractApacheHttpClientTest {
       HttpClientResult httpClientResult) {
     return response -> {
       try {
-        response.close();
         httpClientResult.complete(getResponseCode(response));
       } catch (Throwable t) {
         httpClientResult.complete(t);

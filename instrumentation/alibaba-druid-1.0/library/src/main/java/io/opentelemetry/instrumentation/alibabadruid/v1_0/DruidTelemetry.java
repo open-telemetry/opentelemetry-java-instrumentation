@@ -9,12 +9,11 @@ import com.alibaba.druid.pool.DruidDataSourceMBean;
 import io.opentelemetry.api.OpenTelemetry;
 
 public final class DruidTelemetry {
+  private final OpenTelemetry openTelemetry;
 
   public static DruidTelemetry create(OpenTelemetry openTelemetry) {
     return new DruidTelemetry(openTelemetry);
   }
-
-  private final OpenTelemetry openTelemetry;
 
   private DruidTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

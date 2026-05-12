@@ -35,7 +35,7 @@ public final class Experimental {
    * replacing the default W3C Trace Context propagator with a propagator that only adds static
    * values, such as service name.
    */
-  public static void setEnableSqlCommenter(
+  public static void setSqlCommenterEnabled(
       JdbcTelemetryBuilder builder, boolean sqlCommenterEnabled) {
     if (sqlCommenterBuilder != null) {
       sqlCommenterBuilder.apply(builder).setEnabled(sqlCommenterEnabled);

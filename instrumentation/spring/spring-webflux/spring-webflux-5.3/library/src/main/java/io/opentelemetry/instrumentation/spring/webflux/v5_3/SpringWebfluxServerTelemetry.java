@@ -13,6 +13,9 @@ import org.springframework.web.server.WebFilter;
 
 /** Entrypoint for instrumenting Spring Webflux HTTP services. */
 public final class SpringWebfluxServerTelemetry {
+  // We use ServerWebExchange (which holds both the request and response)
+  // because we need it to get the HTTP route while instrumenting.
+  private final Instrumenter<ServerWebExchange, ServerWebExchange> serverInstrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static SpringWebfluxServerTelemetry create(OpenTelemetry openTelemetry) {
@@ -23,10 +26,6 @@ public final class SpringWebfluxServerTelemetry {
   public static SpringWebfluxServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringWebfluxServerTelemetryBuilder(openTelemetry);
   }
-
-  // We use ServerWebExchange (which holds both the request and response)
-  // because we need it to get the HTTP route while instrumenting.
-  private final Instrumenter<ServerWebExchange, ServerWebExchange> serverInstrumenter;
 
   SpringWebfluxServerTelemetry(
       Instrumenter<ServerWebExchange, ServerWebExchange> serverInstrumenter) {

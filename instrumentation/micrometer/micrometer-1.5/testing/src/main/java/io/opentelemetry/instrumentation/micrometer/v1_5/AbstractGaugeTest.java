@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
@@ -40,20 +41,19 @@ public abstract class AbstractGaugeTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testGauge",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test gauge")
-                            .hasUnit("items")
-                            .hasDoubleGaugeSatisfying(
-                                doubleGauge ->
-                                    doubleGauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(42)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+            metric ->
+                metric
+                    .hasName("testGauge")
+                    .hasDescription("This is a test gauge")
+                    .hasUnit("items")
+                    .hasDoubleGaugeSatisfying(
+                        doubleGauge ->
+                            doubleGauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(42)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(gauge);
@@ -93,20 +93,19 @@ public abstract class AbstractGaugeTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testGauge",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test gauge")
-                            .hasUnit("items")
-                            .hasDoubleGaugeSatisfying(
-                                doubleGauge ->
-                                    doubleGauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(42)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+            metric ->
+                metric
+                    .hasName("testGauge")
+                    .hasDescription("This is a test gauge")
+                    .hasUnit("items")
+                    .hasDoubleGaugeSatisfying(
+                        doubleGauge ->
+                            doubleGauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(42)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(gauge);
@@ -135,24 +134,24 @@ public abstract class AbstractGaugeTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testGaugeWithTags",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("First description wins")
-                            .hasUnit("items")
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(12)
-                                                .hasAttributes(attributeEntry("tag", "1")),
-                                        point ->
-                                            point
-                                                .hasValue(42)
-                                                .hasAttributes(attributeEntry("tag", "2"))))));
+            metric ->
+                metric
+                    .hasName("testGaugeWithTags")
+                    .hasDescription("First description wins")
+                    .hasUnit("items")
+                    .hasDoubleGaugeSatisfying(
+                        gauge ->
+                            gauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "1")),
+                                point ->
+                                    point
+                                        .hasValue(42)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "2")))));
   }
 
   @Test
@@ -167,13 +166,11 @@ public abstract class AbstractGaugeTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testWeakRefGauge",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGaugeSatisfying(
-                                gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42)))));
+            metric ->
+                metric
+                    .hasName("testWeakRefGauge")
+                    .hasDoubleGaugeSatisfying(
+                        gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
 
     // when
     WeakReference<AtomicLong> numWeakRef = new WeakReference<>(num);

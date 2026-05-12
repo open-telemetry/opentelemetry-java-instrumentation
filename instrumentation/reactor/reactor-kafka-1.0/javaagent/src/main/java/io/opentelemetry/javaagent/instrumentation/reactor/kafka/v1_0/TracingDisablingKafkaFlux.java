@@ -14,7 +14,7 @@ import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Operators;
 import reactor.util.context.Context;
 
-public final class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
+public class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
   public TracingDisablingKafkaFlux(Flux<? extends T> source) {
     super(source);
@@ -51,11 +51,11 @@ public final class TracingDisablingKafkaFlux<T> extends FluxOperator<T, T> {
 
     @Override
     public void onNext(T record) {
-      boolean previous = KafkaClientsConsumerProcessTracing.setEnabled(false);
+      boolean previous = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
       try {
         actual.onNext(record);
       } finally {
-        KafkaClientsConsumerProcessTracing.setEnabled(previous);
+        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previous);
       }
     }
 

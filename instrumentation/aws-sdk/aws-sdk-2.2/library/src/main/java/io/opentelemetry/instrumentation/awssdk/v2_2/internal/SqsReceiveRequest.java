@@ -16,13 +16,13 @@ public final class SqsReceiveRequest extends AbstractSqsRequest {
   private final ExecutionAttributes request;
   private final List<SqsMessage> messages;
 
+  public static SqsReceiveRequest create(ExecutionAttributes request, List<SqsMessage> messages) {
+    return new SqsReceiveRequest(request, messages);
+  }
+
   private SqsReceiveRequest(ExecutionAttributes request, List<SqsMessage> messages) {
     this.request = request;
     this.messages = messages;
-  }
-
-  public static SqsReceiveRequest create(ExecutionAttributes request, List<SqsMessage> messages) {
-    return new SqsReceiveRequest(request, messages);
   }
 
   @Override

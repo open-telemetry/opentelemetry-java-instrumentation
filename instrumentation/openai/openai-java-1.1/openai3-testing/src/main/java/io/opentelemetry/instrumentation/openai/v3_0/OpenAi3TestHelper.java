@@ -33,7 +33,7 @@ public class OpenAi3TestHelper implements TestHelper {
   @Override
   public MessageToolCallBuilder messageToolCallBuilder() {
     return new MessageToolCallBuilder() {
-      final ChatCompletionMessageFunctionToolCall.Builder builder =
+      private final ChatCompletionMessageFunctionToolCall.Builder builder =
           ChatCompletionMessageFunctionToolCall.builder();
 
       @Override
@@ -45,7 +45,7 @@ public class OpenAi3TestHelper implements TestHelper {
       @Override
       public MessageToolCallBuilder function(FunctionBuilder functionBuilder) {
         builder.function(((FunctionBuilderImpl) functionBuilder).builder.build());
-        return null;
+        return this;
       }
 
       @Override
@@ -61,7 +61,7 @@ public class OpenAi3TestHelper implements TestHelper {
   }
 
   private static class FunctionBuilderImpl implements FunctionBuilder {
-    final ChatCompletionMessageFunctionToolCall.Function.Builder builder =
+    private final ChatCompletionMessageFunctionToolCall.Function.Builder builder =
         ChatCompletionMessageFunctionToolCall.Function.builder();
 
     @Override

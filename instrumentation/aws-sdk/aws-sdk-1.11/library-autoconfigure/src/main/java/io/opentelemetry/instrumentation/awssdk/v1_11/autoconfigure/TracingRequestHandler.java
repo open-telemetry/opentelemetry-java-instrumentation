@@ -21,9 +21,9 @@ import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 /**
  * A {@link RequestHandler2} for use as an SPI by the AWS SDK to automatically trace all requests.
  */
-public class TracingRequestHandler extends RequestHandler2 {
+public final class TracingRequestHandler extends RequestHandler2 {
 
-  private static final RequestHandler2 DELEGATE = buildDelegate(GlobalOpenTelemetry.get());
+  private static final RequestHandler2 delegate = buildDelegate(GlobalOpenTelemetry.get());
 
   @SuppressWarnings("deprecation") // using deprecated config property
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
@@ -56,21 +56,21 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void beforeRequest(Request<?> request) {
-    DELEGATE.beforeRequest(request);
+    delegate.beforeRequest(request);
   }
 
   @Override
   public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
-    return DELEGATE.beforeMarshalling(request);
+    return delegate.beforeMarshalling(request);
   }
 
   @Override
   public void afterResponse(Request<?> request, Response<?> response) {
-    DELEGATE.afterResponse(request, response);
+    delegate.afterResponse(request, response);
   }
 
   @Override
   public void afterError(Request<?> request, Response<?> response, Exception e) {
-    DELEGATE.afterError(request, response, e);
+    delegate.afterError(request, response, e);
   }
 }

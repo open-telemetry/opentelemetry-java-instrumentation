@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.JETTY_CLIENT_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -23,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.eclipse.jetty.client.transport.HttpRequest;
 
-public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
+class JettyHttpClient12Instrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,14 +32,12 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("send"))
+        named("send")
             .and(takesArgument(0, named("org.eclipse.jetty.client.Response$CompleteListener"))),
-        JettyHttpClient12Instrumentation.class.getName() + "$JettyHttpClient12SendAdvice");
+        getClass().getName() + "$JettyHttpClient12SendAdvice");
     // For request listeners
     transformer.applyAdviceToMethod(
-        isMethod().and(nameContains("notify")),
-        JettyHttpClient12Instrumentation.class.getName() + "$JettyHttpClient12NotifyAdvice");
+        nameContains("notify"), getClass().getName() + "$JettyHttpClient12NotifyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -57,7 +54,7 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceLocals onEnterSend(@Advice.This HttpRequest request) {
       // start span
       Context parentContext = Context.current();
@@ -66,16 +63,16 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
       if (context == null) {
         return null;
       }
-      // set context for responseListeners
+      // store the parent context for request/response listener callbacks
       request.attribute(JETTY_CLIENT_CONTEXT_KEY, parentContext);
 
       return new AdviceLocals(context, context.makeCurrent());
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExitSend(
         @Advice.This HttpRequest request,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceLocals locals) {
 
       if (locals == null) {
@@ -94,7 +91,7 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
   public static class JettyHttpClient12NotifyAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnterNotify(@Advice.This HttpRequest request) {
       Context context = (Context) request.getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
       if (context == null) {
@@ -103,8 +100,8 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
       return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExitNotify(@Advice.Enter Scope scope) {
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+    public static void onExitNotify(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

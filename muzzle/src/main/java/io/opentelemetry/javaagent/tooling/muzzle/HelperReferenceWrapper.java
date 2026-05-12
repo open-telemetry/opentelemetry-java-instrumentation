@@ -202,24 +202,21 @@ interface HelperReferenceWrapper {
 
       @Override
       public boolean hasSuperTypes() {
-        return hasActualSuperType() || reference.getInterfaceNames().size() > 0;
+        return reference.getSuperClassName() != null || reference.getInterfaceNames().size() > 0;
       }
 
       @Override
       public Stream<HelperReferenceWrapper> getSuperTypes() {
         Stream<HelperReferenceWrapper> superClass = Stream.empty();
-        if (hasActualSuperType()) {
-          superClass = Stream.of(Factory.this.create(reference.getSuperClassName()));
+        String superClassName = reference.getSuperClassName();
+        if (superClassName != null) {
+          superClass = Stream.of(Factory.this.create(superClassName));
         }
 
         Stream<HelperReferenceWrapper> interfaces =
             reference.getInterfaceNames().stream().map(Factory.this::create);
 
         return Stream.concat(superClass, interfaces);
-      }
-
-      private boolean hasActualSuperType() {
-        return reference.getSuperClassName() != null;
       }
 
       @Override

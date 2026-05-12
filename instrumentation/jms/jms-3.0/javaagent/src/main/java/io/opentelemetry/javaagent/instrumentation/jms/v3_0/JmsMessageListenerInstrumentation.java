@@ -16,14 +16,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import jakarta.jms.Message;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
+class JmsMessageListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -39,7 +39,7 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("onMessage").and(takesArgument(0, named("jakarta.jms.Message"))).and(isPublic()),
-        JmsMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
+        getClass().getName() + "$MessageListenerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -78,12 +78,13 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) Message message) {
       return AdviceScope.start(message);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

@@ -30,16 +30,6 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
   private final ServicePeerResolver servicePeerResolver;
 
-  // visible for tests
-  HttpClientServicePeerAttributesExtractor(
-      AddressAndPortExtractor<REQUEST> addressAndPortExtractor,
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      ServicePeerResolver servicePeerResolver) {
-    this.addressAndPortExtractor = addressAndPortExtractor;
-    this.attributesGetter = attributesGetter;
-    this.servicePeerResolver = servicePeerResolver;
-  }
-
   /**
    * Returns a new {@link HttpClientServicePeerAttributesExtractor} that will use the passed {@code
    * attributesGetter} to extract server address and port (with fallback to the HTTP Host header).
@@ -60,6 +50,16 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
             attributesGetter, new HostAddressAndPortExtractor<>(attributesGetter));
     return new HttpClientServicePeerAttributesExtractor<>(
         addressAndPortExtractor, attributesGetter, servicePeerResolver);
+  }
+
+  // visible for tests
+  HttpClientServicePeerAttributesExtractor(
+      AddressAndPortExtractor<REQUEST> addressAndPortExtractor,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      ServicePeerResolver servicePeerResolver) {
+    this.addressAndPortExtractor = addressAndPortExtractor;
+    this.attributesGetter = attributesGetter;
+    this.servicePeerResolver = servicePeerResolver;
   }
 
   @Override

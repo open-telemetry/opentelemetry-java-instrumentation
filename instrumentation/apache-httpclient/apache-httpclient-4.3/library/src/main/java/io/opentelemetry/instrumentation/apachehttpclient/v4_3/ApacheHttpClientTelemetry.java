@@ -14,6 +14,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 /** Entrypoint for instrumenting Apache HTTP Client. */
 public final class ApacheHttpClientTelemetry {
+  private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
+  private final ContextPropagators propagators;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static ApacheHttpClientTelemetry create(OpenTelemetry openTelemetry) {
@@ -24,9 +26,6 @@ public final class ApacheHttpClientTelemetry {
   public static ApacheHttpClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new ApacheHttpClientTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
-  private final ContextPropagators propagators;
 
   ApacheHttpClientTelemetry(
       Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter,

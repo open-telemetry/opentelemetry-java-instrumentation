@@ -30,7 +30,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -101,14 +100,14 @@ class S3TracingTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                            satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
+                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                             equalTo(RPC_METHOD, "ReceiveMessage"),
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "AmazonSQS"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             satisfies(URL_FULL, val -> val.startsWith("http://")),
-                            satisfies(SERVER_ADDRESS, v -> v.isInstanceOf(String.class)),
+                            satisfies(SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             satisfies(
                                 SERVER_PORT,
@@ -119,11 +118,11 @@ class S3TracingTest {
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_DESTINATION_NAME, "s3ToSqsTestQueue"),
                             equalTo(MESSAGING_OPERATION, "process"),
-                            satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))),
+                            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("process child")
                         .hasParent(trace.getSpan(1))
-                        .hasAttributes(Attributes.empty())),
+                        .hasTotalAttributeCount(0)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> s3(span, bucketName, "ListObjects", "GET", 200)),
@@ -193,14 +192,14 @@ class S3TracingTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                            satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
+                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                             equalTo(RPC_METHOD, "ReceiveMessage"),
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "AmazonSQS"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             satisfies(URL_FULL, val -> val.startsWith("http://")),
-                            satisfies(SERVER_ADDRESS, v -> v.isInstanceOf(String.class)),
+                            satisfies(SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             satisfies(
                                 SERVER_PORT,
@@ -211,11 +210,11 @@ class S3TracingTest {
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_DESTINATION_NAME, "s3ToSnsToSqsTestQueue"),
                             equalTo(MESSAGING_OPERATION, "process"),
-                            satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))),
+                            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("process child")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributes(Attributes.empty())),
+                        .hasTotalAttributeCount(0)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> s3(span, bucketName, "ListObjects", "GET", 200)),

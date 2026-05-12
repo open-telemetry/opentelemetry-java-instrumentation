@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 
-public class WebServiceFromInterface implements WebServiceDefinitionInterface {
+class WebServiceFromInterface implements WebServiceDefinitionInterface {
   @Override
   public void partOfPublicInterface() {}
 

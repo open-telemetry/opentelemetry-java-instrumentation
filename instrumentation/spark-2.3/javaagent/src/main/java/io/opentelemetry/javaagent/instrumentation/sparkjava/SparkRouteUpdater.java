@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import javax.annotation.Nullable;
 import spark.routematch.RouteMatch;
 
-public final class SparkRouteUpdater {
+public class SparkRouteUpdater {
 
   public static void updateHttpRoute(@Nullable RouteMatch routeMatch) {
     if (routeMatch != null) {

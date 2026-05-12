@@ -12,21 +12,21 @@ final class SqsReceiveRequest extends AbstractSqsRequest {
   private final Request<?> request;
   private final List<SqsMessage> messages;
 
+  static SqsReceiveRequest create(Request<?> request, List<SqsMessage> messages) {
+    return new SqsReceiveRequest(request, messages);
+  }
+
   private SqsReceiveRequest(Request<?> request, List<SqsMessage> messages) {
     this.request = request;
     this.messages = messages;
   }
 
-  public static SqsReceiveRequest create(Request<?> request, List<SqsMessage> messages) {
-    return new SqsReceiveRequest(request, messages);
-  }
-
   @Override
-  public Request<?> getRequest() {
+  Request<?> getRequest() {
     return request;
   }
 
-  public List<SqsMessage> getMessages() {
+  List<SqsMessage> getMessages() {
     return messages;
   }
 }

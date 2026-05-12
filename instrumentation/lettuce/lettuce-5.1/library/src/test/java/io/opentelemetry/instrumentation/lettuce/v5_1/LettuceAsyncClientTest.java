@@ -13,10 +13,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
   @RegisterExtension
-  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
-  public InstrumentationExtension testing() {
+  protected InstrumentationExtension testing() {
     return testing;
   }
 

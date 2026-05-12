@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
 import java.util.Iterator;
@@ -270,9 +271,27 @@ class LogbackAppenderInstaller {
       Iterator<Appender<ILoggingEvent>> appenderIterator = logger.iteratorForAppenders();
       while (appenderIterator.hasNext()) {
         Appender<ILoggingEvent> appender = appenderIterator.next();
-        if (appenderClass.isInstance(appender)) {
-          T openTelemetryAppender = appenderClass.cast(appender);
-          return Optional.of(openTelemetryAppender);
+        Optional<T> result = findAppender(appenderClass, appender);
+        if (result.isPresent()) {
+          return result;
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
+  private static <T> Optional<T> findAppender(Class<T> appenderClass, Appender<?> appender) {
+    if (appenderClass.isInstance(appender)) {
+      T openTelemetryAppender = appenderClass.cast(appender);
+      return Optional.of(openTelemetryAppender);
+    } else if (appender instanceof AppenderAttachable) {
+      for (Iterator<? extends Appender<?>> iterator =
+              ((AppenderAttachable<?>) appender).iteratorForAppenders();
+          iterator.hasNext(); ) {
+        Appender<?> childAppender = iterator.next();
+        Optional<T> result = findAppender(appenderClass, childAppender);
+        if (result.isPresent()) {
+          return result;
         }
       }
     }

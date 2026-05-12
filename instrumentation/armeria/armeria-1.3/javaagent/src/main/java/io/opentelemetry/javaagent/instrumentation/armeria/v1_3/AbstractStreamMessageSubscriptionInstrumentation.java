@@ -20,7 +20,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.reactivestreams.Subscriber;
 
-public class AbstractStreamMessageSubscriptionInstrumentation implements TypeInstrumentation {
+class AbstractStreamMessageSubscriptionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
@@ -40,22 +40,21 @@ public class AbstractStreamMessageSubscriptionInstrumentation implements TypeIns
                         "com.linecorp.armeria.common.stream.AbstractStreamMessage",
                         "com.linecorp.armeria.common.stream.CancellableStreamMessage")))
             .and(takesArgument(1, named("org.reactivestreams.Subscriber"))),
-        AbstractStreamMessageSubscriptionInstrumentation.class.getName() + "$WrapSubscriberAdvice");
+        getClass().getName() + "$WrapSubscriberAdvice");
     // from 1.9.0 to 1.9.2
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(
                 takesArgument(0, named("com.linecorp.armeria.common.stream.AbstractStreamMessage")))
             .and(takesArgument(4, named("java.util.concurrent.CompletableFuture"))),
-        AbstractStreamMessageSubscriptionInstrumentation.class.getName()
-            + "$WrapCompletableFutureAdvice");
+        getClass().getName() + "$WrapCompletableFutureAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class WrapSubscriberAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Subscriber<?> wrapSubscriber(@Advice.Argument(1) Subscriber<?> subscriber) {
       return SubscriberWrapper.wrap(subscriber);
     }
@@ -65,7 +64,7 @@ public class AbstractStreamMessageSubscriptionInstrumentation implements TypeIns
   public static class WrapCompletableFutureAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(4))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CompletableFuture<?> wrapCompletableFuture(
         @Advice.Argument(4) CompletableFuture<?> future) {
       return CompletableFutureWrapper.wrap(future);

@@ -19,7 +19,7 @@ class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
       AgentInstrumentationExtension.create();
 
   @Override
-  protected final AgentInstrumentationExtension getTesting() {
+  protected AgentInstrumentationExtension getTesting() {
     return testing;
   }
 

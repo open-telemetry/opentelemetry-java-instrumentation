@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,11 +17,12 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
+class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -29,21 +31,20 @@ public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), LettuceAsyncCommandInstrumentation.class.getName() + "$SaveContextAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SaveContextAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "completeExceptionally", "cancel"),
-        LettuceAsyncCommandInstrumentation.class.getName() + "$RestoreContextAdvice");
+        getClass().getName() + "$RestoreContextAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class SaveContextAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void saveContext(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
       Context context = Java8BytecodeBridge.currentContext();
       // get the context that submitted this command and attach it, it will be used to run callbacks
-      context = context.get(LettuceSingletons.COMMAND_CONTEXT_KEY);
+      context = context.get(COMMAND_CONTEXT_KEY);
       CONTEXT.set(asyncCommand, context);
     }
   }
@@ -51,15 +52,21 @@ public class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RestoreContextAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Scope onEnter(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
       Context context = CONTEXT.get(asyncCommand);
+      if (context == null) {
+        return null;
+      }
       return context.makeCurrent();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Scope scope) {
-      scope.close();
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }

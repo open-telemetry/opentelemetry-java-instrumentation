@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 
-public final class JaxrsConfig {
+public class JaxrsConfig {
 
   public static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jaxrs")

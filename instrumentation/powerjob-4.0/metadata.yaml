@@ -3,6 +3,7 @@ display_name: PowerJob
 library_link: https://github.com/PowerJob/PowerJob
 configurations:
   - name: otel.instrumentation.powerjob.experimental-span-attributes
+    declarative_name: java.powerjob.experimental_span_attributes/development
     description: >
       Enables experimental span attributes `job.system`, `scheduling.powerjob.job.id`,
       `scheduling.powerjob.job.param`, `scheduling.powerjob.job.instance.param`, and

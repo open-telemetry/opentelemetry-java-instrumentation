@@ -1,56 +1,87 @@
 # OpenTelemetry Java Instrumentation
 
-## Testing
+First-pass PR review rules. A deep review with full knowledge files runs
+separately later in the PR lifecycle. **Prefer silence over uncertainty.** Only
+flag substantive issues on changed lines. Skip stylistic preferences not listed
+below. Do not nitpick.
 
-Tests use AssertJ for assertions and JUnit 5 as the testing framework
+Do not flag anything CI will catch. This includes compilation errors (missing
+imports, unbalanced braces, type errors, unresolved symbols), Spotless-covered
+formatting (indentation, wrapping, alignment, brace placement, import
+ordering/grouping, whitespace), Checkstyle/ErrorProne/NullAway findings, and
+test failures. Do not ask authors to run the formatter. CI surfaces these
+directly, so review comments on them are noise.
 
-Test classes and methods should not be public
+Use category tags like `[Style]`, `[Naming]`, `[Testing]`, `[General]`.
 
-When registering tests in gradle configurations, if using `val testName by registering(Test::class) {`...
-then you need to include `testClassesDirs` and `classpath` like so:
+Java-specific style and test rules live in path-specific files (loaded in
+addition to this one when reviewing Java changes):
 
+- `.github/instructions/java-style.instructions.md`
+- `.github/instructions/java-tests.instructions.md`
+
+## [Style] `@SuppressWarnings` Scoping
+
+Place `@SuppressWarnings` on the single member that needs it. Use class-level
+only when two or more members would need the same suppression.
+
+## [Naming] Catch Variable Names
+
+In **catch clauses only** (not method/lambda parameters or fields):
+
+- Used exception → `e` (or `error` for a specific `*Error` subtype).
+- Used exception in nested catch where outer already uses `e` → `f`.
+- Used `Throwable` → `t`.
+- Intentionally unused → `ignored` (or `ignore` if `ignored` would shadow an
+  outer catch).
+
+## [Naming] Public API Getters
+
+Public API getters use `get*` (or `is*` for booleans).
+
+## [Style] No Redundant Null Guards on Attribute Puts
+
+`AttributesBuilder.put`, `Span.setAttribute`, `SpanBuilder.setAttribute`, and
+`LogRecordBuilder.setAttribute` are no-ops when the value is `null`. Do not wrap
+calls in `if (value != null)` when the value can be passed straight through:
+
+```java
+// BAD
+String v = getSomething();
+if (v != null) {
+  attributes.put(SOME_KEY, v);
+}
+// GOOD
+attributes.put(SOME_KEY, getSomething());
 ```
-val testExperimental by registering(Test::class) {
-  testClassesDirs = sourceSets.test.get().output.classesDirs
-  classpath = sourceSets.test.get().runtimeClasspath
-  ...
+
+Do **not** flag when the guard protects a dereference or derived computation
+(e.g. `view.getClass().getName()`). When in doubt, stay silent.
+
+## [Javaagent] Singleton Accessor Naming
+
+In `*Singletons`, `*SpanNaming`, and similar holder classes, zero-arg accessor
+methods that **directly return a stored singleton field** must match the field
+name with no `get` prefix:
+
+```java
+private static final Instrumenter<Request, Response> instrumenter = ...;
+
+public static Instrumenter<Request, Response> instrumenter() {
+  return instrumenter;
 }
 ```
 
-## General Java guidelines
+- Methods that take arguments or compute a value are not singleton accessors —
+  keep their normal names (including `get*` when appropriate). Do not flag
+  `getAddressAndPort(client)` on this basis.
+- Uppercase constant-like fields (e.g. `VirtualField`, `ContextKey`) may be
+  exposed as `public static final` directly with no accessor.
+- Caller sites should static-import the accessor / constant and call it
+  unqualified.
 
-* Always import classes when possible (i.e. don't use fully qualified class names in code).
+## [General] Engineering Correctness
 
-## Gradle CLI
-
-Never use the `--rerun-tasks` flag unless explicitly asked to use this option.
-
-Gradle automatically detects changes and re-runs tasks automatically when needed. Using `--rerun-tasks`
-is wasteful and slows down builds unnecessarily.
-
-Builds and tests in this repository genuinely take a long time (often several minutes).
-When running Gradle commands, use a timeout of 0 (no timeout) and wait for them to complete.
-Do not assume a build has hung or failed just because it takes a while.
-
-## Throwing exceptions
-
-When writing instrumentation, you have to be really careful about throwing exceptions. For library
-instrumentations it might be acceptable, but in javaagent code you shouldn't throw exceptions
-(keep in mind that javaagent instrumentations sometimes use library instrumentations).
-
-In javaagent instrumentations we try not to break applications. If there are changes in the instrumented
-library that are not compatible with the instrumentation we disable the instrumentation instead of letting
-it fail. This is handled by muzzle. In javaagent instrumentations you should not fail if the methods
-that you need don't exist.
-
-## Javaagent Instrumentation
-
-### Java8BytecodeBridge
-
-When to use `Java8BytecodeBridge.currentContext()` vs `Context.current()` ?
-
-Using `Context.current()` is preferred. `Java8BytecodeBridge.currentContext()` is for using inside
-advice. We need this method because advice code is inlined in the instrumented method as it is.
-Since `Context.current()` is a static interface method it will cause a bytecode verification error
-when it is inserted into a pre 8 class. `Java8BytecodeBridge.currentContext()` is a regular class
-static method and can be used in any class version.
+Flag real defects on changed lines: logic errors, concurrency hazards, resource
+leaks, copy/paste mistakes, incorrect comments, unsafe error handling, dead
+code, security regressions. Skip stylistic preferences not listed above.

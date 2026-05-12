@@ -1,0 +1,190 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.gwt.v2_0;
+
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.time.Duration;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.openqa.selenium.By;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.Testcontainers;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.selenium.BrowserWebDriverContainer;
+
+class GwtTest {
+
+  @RegisterExtension
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  private static final Logger logger = LoggerFactory.getLogger(GwtTest.class);
+  private static int port;
+  private static Server server;
+  private static BrowserWebDriverContainer browser;
+  private static URI address;
+
+  private static void startServer() throws Exception {
+    port = PortUtils.findOpenPort();
+    server = new Server(port);
+    for (Connector connector : server.getConnectors()) {
+      ((ServerConnector) connector).setHost("localhost");
+    }
+
+    WebAppContext webAppContext = new WebAppContext();
+    webAppContext.setContextPath(getContextPath());
+    webAppContext.setBaseResource(Resource.newResource(new File("build/testapp/web")));
+
+    server.setHandler(webAppContext);
+    server.start();
+  }
+
+  private static void stopServer() throws Exception {
+    server.stop();
+    server.destroy();
+  }
+
+  @BeforeAll
+  static void setup() throws Exception {
+    startServer();
+    cleanup.deferAfterAll(GwtTest::stopServer);
+
+    Testcontainers.exposeHostPorts(port);
+
+    browser =
+        new BrowserWebDriverContainer("selenium/standalone-chrome:4.43.0")
+            .withLogConsumer(new Slf4jLogConsumer(logger));
+    cleanup.deferAfterAll(browser::stop);
+    browser.start();
+
+    address = new URI("http://host.testcontainers.internal:" + port + getContextPath() + "/");
+  }
+
+  private static String getContextPath() {
+    return "/xyz";
+  }
+
+  private static RemoteWebDriver getDriver() {
+    RemoteWebDriver driver =
+        new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions(), false);
+    driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
+    return driver;
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  void testGwt() {
+    RemoteWebDriver driver = getDriver();
+    cleanup.deferCleanup(driver::close);
+
+    // fetch the test page
+    driver.get(address.resolve("greeting.html").toString());
+
+    driver.findElement(By.className("greeting.button"));
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("GET " + getContextPath() + "/*", "GET"),
+        trace -> {
+          // /xyz/greeting.html
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("GET " + getContextPath() + "/*")
+                      .hasKind(SpanKind.SERVER)
+                      .hasNoParent());
+        },
+        trace -> {
+          // /xyz/greeting/greeting.nocache.js
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("GET " + getContextPath() + "/*")
+                      .hasKind(SpanKind.SERVER)
+                      .hasNoParent());
+        },
+        trace -> {
+          // /xyz/greeting/1B105441581A8F41E49D5DF3FB5B55BA.cache.html
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("GET " + getContextPath() + "/*")
+                      .hasKind(SpanKind.SERVER)
+                      .hasNoParent());
+        },
+        trace -> {
+          // /favicon.ico
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("GET").hasKind(SpanKind.SERVER).hasNoParent());
+        });
+
+    testing.clearData();
+
+    // click a button to trigger calling java code
+    driver.findElement(By.className("greeting.button")).click();
+    assertThat(driver.findElement(By.className("message.received")).getText())
+        .isEqualTo("Hello, Otel");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("POST " + getContextPath() + "/greeting/greet")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("test.gwt.shared.MessageService/sendMessage")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "gwt"),
+                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
+                            equalTo(RPC_METHOD, "sendMessage"))));
+
+    testing.clearData();
+
+    // click a button to trigger calling java code
+    driver.findElement(By.className("error.button")).click();
+    assertThat(driver.findElement(By.className("error.received")).getText()).isEqualTo("Error");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("POST " + getContextPath() + "/greeting/greet")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("test.gwt.shared.MessageService/sendMessage")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(0))
+                        .hasException(new IOException())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "gwt"),
+                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
+                            equalTo(RPC_METHOD, "sendMessage"))));
+  }
+}

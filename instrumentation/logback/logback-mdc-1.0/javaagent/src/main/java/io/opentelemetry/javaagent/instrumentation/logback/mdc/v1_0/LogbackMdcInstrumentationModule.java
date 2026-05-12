@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class LogbackMdcInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class LogbackMdcInstrumentationModule extends InstrumentationModule {
   public LogbackMdcInstrumentationModule() {
     super("logback-mdc", "logback-mdc-1.0");
   }
@@ -23,10 +21,5 @@ public class LogbackMdcInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new LoggerInstrumentation(), new LoggingEventInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

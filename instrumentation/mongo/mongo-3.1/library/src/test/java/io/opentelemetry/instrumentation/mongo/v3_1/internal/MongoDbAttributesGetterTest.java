@@ -91,11 +91,12 @@ class MongoDbAttributesGetterTest {
         .isIn("{\"cmd\": \"c\", \"f1\": [\"?\", \"?", "{\"cmd\": \"c\", \"f1\": [\"?\",");
   }
 
-  static String sanitizeQueryAcrossVersions(MongoDbAttributesGetter extractor, BsonDocument query) {
+  private static String sanitizeQueryAcrossVersions(
+      MongoDbAttributesGetter extractor, BsonDocument query) {
     return sanitizeAcrossVersions(extractor.sanitizeQuery(query));
   }
 
-  static String sanitizeAcrossVersions(String json) {
+  private static String sanitizeAcrossVersions(String json) {
     json = json.replaceAll("\\{ ", "{");
     json = json.replaceAll(" }", "}");
     json = json.replaceAll(" :", ":");

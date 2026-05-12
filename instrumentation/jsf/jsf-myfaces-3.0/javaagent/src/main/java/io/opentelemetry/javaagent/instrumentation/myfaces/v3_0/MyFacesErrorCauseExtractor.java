@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.myfaces.v3_0;
 
-import io.opentelemetry.javaagent.instrumentation.jsf.jakarta.JsfErrorCauseExtractor;
+import io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta.JsfErrorCauseExtractor;
 import jakarta.el.ELException;
 
-public class MyFacesErrorCauseExtractor extends JsfErrorCauseExtractor {
+class MyFacesErrorCauseExtractor extends JsfErrorCauseExtractor {
 
   @Override
   public Throwable extract(Throwable error) {

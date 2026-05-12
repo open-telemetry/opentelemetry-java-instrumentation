@@ -13,7 +13,7 @@ class SpringCloudStreamProducerTest extends AbstractSpringCloudStreamProducerTes
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  public SpringCloudStreamProducerTest() {
+  SpringCloudStreamProducerTest() {
     super(testing, GlobalInterceptorWithProducerSpanSpringConfig.class);
   }
 }

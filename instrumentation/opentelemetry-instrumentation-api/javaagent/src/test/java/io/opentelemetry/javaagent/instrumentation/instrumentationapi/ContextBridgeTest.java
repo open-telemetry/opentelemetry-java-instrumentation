@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting;
@@ -31,6 +32,8 @@ class ContextBridgeTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void testLocalRootSpanBridge() {
@@ -84,7 +87,8 @@ class ContextBridgeTest {
   @Test
   void testSpanKeyBridge_UnbridgedSpan() {
     OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder().build();
-    // span is bridged only when it is created though a bridged OpenTelemetry instance obtained
+    cleanup.deferCleanup(openTelemetry);
+    // span is bridged only when it is created through a bridged OpenTelemetry instance obtained
     // from GlobalOpenTelemetry
     Span span = openTelemetry.getTracer("test").spanBuilder("test").startSpan();
 

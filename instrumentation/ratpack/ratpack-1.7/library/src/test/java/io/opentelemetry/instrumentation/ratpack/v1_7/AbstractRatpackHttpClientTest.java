@@ -84,7 +84,7 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
   }
 
   @Override
-  public final void sendRequestWithCallback(
+  public void sendRequestWithCallback(
       Void request,
       String method,
       URI uri,

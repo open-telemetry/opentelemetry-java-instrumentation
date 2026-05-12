@@ -14,53 +14,63 @@ import org.restlet.Request;
 
 final class ServerCallAccess {
 
-  private static final Class<?> HTTP_REQUEST_CLASS;
-  private static final MethodHandle GET_HTTP_CALL;
-  private static final MethodHandle GET_SERVER_ADDRESS;
+  private static final Class<?> HTTP_REQUEST_CLASS = findHttpRequestClass();
+  private static final Class<?> SERVER_CALL_CLASS = findServerCallClass();
+  private static final MethodHandle GET_HTTP_CALL = findGetHttpCall();
+  private static final MethodHandle GET_SERVER_ADDRESS = findGetServerAddress();
 
-  static {
-    Class<?> httpRequestClass = null;
-    Class<?> serverCallClass = null;
-    MethodHandle getHttpCall = null;
-    MethodHandle getServerAddress = null;
-
+  @Nullable
+  private static Class<?> findHttpRequestClass() {
     try {
-      httpRequestClass = Class.forName("org.restlet.engine.http.HttpRequest");
-    } catch (ClassNotFoundException e) {
+      return Class.forName("org.restlet.engine.http.HttpRequest");
+    } catch (ClassNotFoundException ignored) {
       // moved to another package in version 2.4
       try {
-        httpRequestClass = Class.forName("org.restlet.engine.adapter.HttpRequest");
-      } catch (ClassNotFoundException ex) {
-        // ignored
+        return Class.forName("org.restlet.engine.adapter.HttpRequest");
+      } catch (ClassNotFoundException ignore) {
+        return null;
       }
     }
+  }
 
+  @Nullable
+  private static Class<?> findServerCallClass() {
     try {
-      serverCallClass = Class.forName("org.restlet.engine.http.ServerCall");
-    } catch (ClassNotFoundException e) {
+      return Class.forName("org.restlet.engine.http.ServerCall");
+    } catch (ClassNotFoundException ignored) {
       // moved to another package in version 2.4
       try {
-        serverCallClass = Class.forName("org.restlet.engine.adapter.ServerCall");
-      } catch (ClassNotFoundException ex) {
-        // ignored
+        return Class.forName("org.restlet.engine.adapter.ServerCall");
+      } catch (ClassNotFoundException ignore) {
+        return null;
       }
     }
+  }
 
-    if (httpRequestClass != null && serverCallClass != null) {
-      try {
-        MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-        getHttpCall =
-            lookup.findVirtual(httpRequestClass, "getHttpCall", methodType(serverCallClass));
-        getServerAddress =
-            lookup.findVirtual(serverCallClass, "getServerAddress", methodType(String.class));
-      } catch (NoSuchMethodException | IllegalAccessException e) {
-        // ignored
-      }
+  @Nullable
+  private static MethodHandle findGetHttpCall() {
+    if (HTTP_REQUEST_CLASS == null || SERVER_CALL_CLASS == null) {
+      return null;
     }
+    try {
+      return MethodHandles.publicLookup()
+          .findVirtual(HTTP_REQUEST_CLASS, "getHttpCall", methodType(SERVER_CALL_CLASS));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      return null;
+    }
+  }
 
-    HTTP_REQUEST_CLASS = httpRequestClass;
-    GET_HTTP_CALL = getHttpCall;
-    GET_SERVER_ADDRESS = getServerAddress;
+  @Nullable
+  private static MethodHandle findGetServerAddress() {
+    if (SERVER_CALL_CLASS == null) {
+      return null;
+    }
+    try {
+      return MethodHandles.publicLookup()
+          .findVirtual(SERVER_CALL_CLASS, "getServerAddress", methodType(String.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      return null;
+    }
   }
 
   @Nullable
@@ -74,7 +84,7 @@ final class ServerCallAccess {
     }
     try {
       return (String) GET_SERVER_ADDRESS.invoke(call);
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -87,7 +97,7 @@ final class ServerCallAccess {
     if (HTTP_REQUEST_CLASS.isInstance(request)) {
       try {
         return GET_HTTP_CALL.invoke(request);
-      } catch (Throwable e) {
+      } catch (Throwable ignored) {
         return null;
       }
     }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JaxrsAnnotationsSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
@@ -12,7 +13,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -21,13 +21,13 @@ import net.bytebuddy.asm.Advice;
 /**
  * Default context instrumentation.
  *
- * <p>JAX-RS does not define a way to get the matched resource method from the <code>
- * ContainerRequestContext</code>
+ * <p>JAX-RS does not define a way to get the matched resource method from the {@code
+ * ContainerRequestContext}
  *
  * <p>This default instrumentation uses the class name of the filter to create the span. More
  * specific instrumentations may override this value.
  */
-public class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
+class DefaultRequestContextInstrumentation extends AbstractRequestContextInstrumentation {
   @Override
   protected String abortAdviceName() {
     return getClass().getName() + "$ContainerRequestContextAdvice";
@@ -48,16 +48,13 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       }
 
       @Nullable
-      public static AdviceScope enter(Class<?> filterClass, Method method) {
+      public static AdviceScope start(Class<?> filterClass, Method method) {
 
         Context parentContext = Context.current();
         Jaxrs2HandlerData handlerData = new Jaxrs2HandlerData(filterClass, method);
 
         HttpServerRoute.update(
-            parentContext,
-            HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.SERVER_SPAN_NAME,
-            handlerData);
+            parentContext, HttpServerRouteSource.CONTROLLER, serverSpanName(), handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
           return null;
@@ -66,17 +63,14 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         return new AdviceScope(context, context.makeCurrent(), handlerData);
       }
 
-      public void exit(Throwable throwable) {
-        if (scope == null) {
-          return;
-        }
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope createGenericSpan(
         @Advice.This ContainerRequestContext requestContext) {
 
@@ -93,7 +87,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       Method method = null;
       try {
         method = filterClass.getMethod("filter", ContainerRequestContext.class);
-      } catch (NoSuchMethodException e) {
+      } catch (NoSuchMethodException ignored) {
         // Unable to find the filter method.  This should not be reachable because the context
         // can only be aborted inside the filter method
       }
@@ -101,16 +95,16 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       if (method == null) {
         return null;
       }
-      return AdviceScope.enter(filterClass, method);
+      return AdviceScope.start(filterClass, method);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope != null) {
-        adviceScope.exit(throwable);
+        adviceScope.end(throwable);
       }
     }
   }

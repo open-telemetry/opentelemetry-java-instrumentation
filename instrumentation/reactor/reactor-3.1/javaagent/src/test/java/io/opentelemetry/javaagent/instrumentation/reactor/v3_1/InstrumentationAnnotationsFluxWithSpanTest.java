@@ -19,7 +19,7 @@ class InstrumentationAnnotationsFluxWithSpanTest extends BaseFluxWithSpanTest {
 
   @Override
   TracedWithSpan newTracedWithSpan() {
-    return new ExtensionAnnotationsTracedWithSpan();
+    return new InstrumentationAnnotationsTracedWithSpan();
   }
 
   static class Traced extends AbstractTraced<Flux<String>, Flux<String>> {

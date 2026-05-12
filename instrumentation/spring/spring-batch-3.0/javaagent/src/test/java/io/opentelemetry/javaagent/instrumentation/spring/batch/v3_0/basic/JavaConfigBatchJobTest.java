@@ -17,7 +17,7 @@ class JavaConfigBatchJobTest extends SpringBatchTest {
       new ApplicationConfigRunner(
           () -> new AnnotationConfigApplicationContext(SpringBatchApplication.class));
 
-  public JavaConfigBatchJobTest() {
+  JavaConfigBatchJobTest() {
     super(runner);
   }
 }

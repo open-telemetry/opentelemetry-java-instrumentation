@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
-public final class KafkaSingletons {
+public class KafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
 
   private static final boolean PRODUCER_PROPAGATION_ENABLED =
@@ -23,9 +23,9 @@ public final class KafkaSingletons {
           .get("producer_propagation")
           .getBoolean("enabled", true);
 
-  private static final Instrumenter<KafkaProducerRequest, RecordMetadata> PRODUCER_INSTRUMENTER;
-  private static final Instrumenter<KafkaReceiveRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER;
-  private static final Instrumenter<KafkaProcessRequest, Void> CONSUMER_PROCESS_INSTRUMENTER;
+  private static final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
+  private static final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
+  private static final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
 
   static {
     KafkaInstrumenterFactory instrumenterFactory =
@@ -36,9 +36,9 @@ public final class KafkaSingletons {
                     .getBoolean("experimental_span_attributes/development", false))
             .setMessagingReceiveTelemetryEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
-    PRODUCER_INSTRUMENTER = instrumenterFactory.createProducerInstrumenter();
-    CONSUMER_RECEIVE_INSTRUMENTER = instrumenterFactory.createConsumerReceiveInstrumenter();
-    CONSUMER_PROCESS_INSTRUMENTER = instrumenterFactory.createConsumerProcessInstrumenter();
+    producerInstrumenter = instrumenterFactory.createProducerInstrumenter();
+    consumerReceiveInstrumenter = instrumenterFactory.createConsumerReceiveInstrumenter();
+    consumerProcessInstrumenter = instrumenterFactory.createConsumerProcessInstrumenter();
   }
 
   public static boolean isProducerPropagationEnabled() {
@@ -46,15 +46,15 @@ public final class KafkaSingletons {
   }
 
   public static Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter() {
-    return PRODUCER_INSTRUMENTER;
+    return producerInstrumenter;
   }
 
   public static Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter() {
-    return CONSUMER_RECEIVE_INSTRUMENTER;
+    return consumerReceiveInstrumenter;
   }
 
   public static Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter() {
-    return CONSUMER_PROCESS_INSTRUMENTER;
+    return consumerProcessInstrumenter;
   }
 
   private KafkaSingletons() {}

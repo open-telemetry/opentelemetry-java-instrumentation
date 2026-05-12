@@ -65,8 +65,8 @@ class AsyncServlet extends HttpServlet {
                     throw new IllegalStateException(endpoint.getBody());
                   }
                 });
-          } catch (IOException exception) {
-            throw new IllegalStateException(exception);
+          } catch (IOException e) {
+            throw new IllegalStateException(e);
           } finally {
             // complete at the end so the server span will end after the controller span
             if (endpoint != EXCEPTION) {
@@ -78,6 +78,7 @@ class AsyncServlet extends HttpServlet {
     try {
       latch.await();
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       throw new RuntimeException(e);
     }
   }

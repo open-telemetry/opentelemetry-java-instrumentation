@@ -14,7 +14,7 @@ import net.bytebuddy.asm.Advice;
 @SuppressWarnings("unused")
 public class JakartaServletInitAdvice {
 
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static void servletInit(
       @Advice.This Servlet servlet, @Advice.Argument(0) ServletConfig servletConfig) {
     if (servletConfig == null) {

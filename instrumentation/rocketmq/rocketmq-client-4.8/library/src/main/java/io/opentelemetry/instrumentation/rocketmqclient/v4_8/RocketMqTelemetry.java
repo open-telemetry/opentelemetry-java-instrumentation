@@ -14,6 +14,8 @@ import org.apache.rocketmq.client.hook.SendMessageHook;
 
 /** Entrypoint for instrumenting RocketMq producers or consumers. */
 public final class RocketMqTelemetry {
+  private final RocketMqConsumerInstrumenter rocketMqConsumerInstrumenter;
+  private final Instrumenter<SendMessageContext, Void> rocketMqProducerInstrumenter;
 
   /** Returns a new {@link RocketMqTelemetry} configured with the given {@link OpenTelemetry}. */
   public static RocketMqTelemetry create(OpenTelemetry openTelemetry) {
@@ -26,9 +28,6 @@ public final class RocketMqTelemetry {
   public static RocketMqTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new RocketMqTelemetryBuilder(openTelemetry);
   }
-
-  private final RocketMqConsumerInstrumenter rocketMqConsumerInstrumenter;
-  private final Instrumenter<SendMessageContext, Void> rocketMqProducerInstrumenter;
 
   RocketMqTelemetry(
       OpenTelemetry openTelemetry,

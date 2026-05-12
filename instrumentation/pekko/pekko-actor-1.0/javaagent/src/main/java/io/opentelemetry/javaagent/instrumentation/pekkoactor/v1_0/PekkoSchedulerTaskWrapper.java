@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0;
 import io.opentelemetry.context.Context;
 import org.apache.pekko.actor.Scheduler;
 
-public final class PekkoSchedulerTaskWrapper {
+public class PekkoSchedulerTaskWrapper {
 
   public static Runnable wrap(Runnable runnable) {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13066

@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-public final class SpanKeyBridging {
+public class SpanKeyBridging {
 
   private static final Map<
           application.io.opentelemetry.instrumentation.api.internal.SpanKey, SpanKey>

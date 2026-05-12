@@ -12,13 +12,14 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.kafka.listener.RecordInterceptor;
 
-public class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
+class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -36,16 +37,16 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
         named("getRecordInterceptor")
             .and(takesArguments(0))
             .and(returns(named("org.springframework.kafka.listener.RecordInterceptor"))),
-        this.getClass().getName() + "$GetRecordInterceptorAdvice");
+        getClass().getName() + "$GetRecordInterceptorAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetRecordInterceptorAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V> RecordInterceptor<K, V> onExit(
-        @Advice.Return RecordInterceptor<K, V> originalInterceptor) {
+        @Advice.Return @Nullable RecordInterceptor<K, V> originalInterceptor) {
       RecordInterceptor<K, V> interceptor = originalInterceptor;
 
       if (interceptor == null

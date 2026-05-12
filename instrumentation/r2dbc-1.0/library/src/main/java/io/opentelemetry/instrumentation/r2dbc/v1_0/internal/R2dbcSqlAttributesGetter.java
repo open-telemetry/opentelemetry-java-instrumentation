@@ -18,8 +18,8 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExecution, Void> {
-  INSTANCE;
+public final class R2dbcSqlAttributesGetter
+    implements SqlClientAttributesGetter<DbExecution, Void> {
 
   @Override
   public String getDbSystemName(DbExecution request) {
@@ -58,7 +58,6 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Deprecated // to be removed in 3.0
   @Override
-  @Nullable
   public String getConnectionString(DbExecution request) {
     return request.getConnectionString();
   }

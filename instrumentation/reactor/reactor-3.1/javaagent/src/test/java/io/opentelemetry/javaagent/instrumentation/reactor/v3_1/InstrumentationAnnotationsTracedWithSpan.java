@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class InstrumentationAnnotationsTracedWithSpan implements TracedWithSpan {
+class InstrumentationAnnotationsTracedWithSpan implements TracedWithSpan {
 
   @Override
   @WithSpan("TracedWithSpan.mono")

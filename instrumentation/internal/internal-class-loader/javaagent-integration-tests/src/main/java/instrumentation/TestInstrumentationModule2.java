@@ -36,7 +36,7 @@ public class TestInstrumentationModule2 extends InstrumentationModule {
     return className.equals("instrumentation.TestFailableCallable");
   }
 
-  public static class TestTypeInstrumentation implements TypeInstrumentation {
+  private static class TestTypeInstrumentation implements TypeInstrumentation {
     @Override
     public ElementMatcher<ClassLoader> classLoaderOptimization() {
       return hasClassesNamed("org.apache.commons.lang3.function.FailableCallable");
@@ -49,16 +49,15 @@ public class TestInstrumentationModule2 extends InstrumentationModule {
 
     @Override
     public void transform(TypeTransformer transformer) {
-      transformer.applyAdviceToMethod(
-          none(), TestInstrumentationModule2.class.getName() + "$TestAdvice");
+      transformer.applyAdviceToMethod(none(), getClass().getName() + "$TestAdvice");
     }
-  }
 
-  @SuppressWarnings("unused")
-  public static class TestAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static String onEnter() {
-      return TestFailableCallable.class.getName();
+    @SuppressWarnings("unused")
+    static class TestAdvice {
+      @Advice.OnMethodEnter(inline = false)
+      public static String onEnter() {
+        return TestFailableCallable.class.getName();
+      }
     }
   }
 }

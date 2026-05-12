@@ -9,8 +9,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 import org.apache.http.client.methods.HttpRequestWrapper;
 
-enum HttpHeaderSetter implements TextMapSetter<HttpRequestWrapper> {
-  INSTANCE;
+class HttpHeaderSetter implements TextMapSetter<HttpRequestWrapper> {
 
   @Override
   public void set(@Nullable HttpRequestWrapper carrier, String key, String value) {

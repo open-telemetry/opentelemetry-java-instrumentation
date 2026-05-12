@@ -10,7 +10,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeoutException;
 
-public final class GcUtils {
+public class GcUtils {
 
   private static final StringBuilder garbage = new StringBuilder();
 

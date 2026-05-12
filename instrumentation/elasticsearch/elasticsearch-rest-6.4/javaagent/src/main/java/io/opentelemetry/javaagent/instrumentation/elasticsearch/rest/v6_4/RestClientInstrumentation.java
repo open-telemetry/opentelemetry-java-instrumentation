@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4.ElasticsearchRest6Singletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -27,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.ResponseListener;
 
-public class RestClientInstrumentation implements TypeInstrumentation {
+class RestClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.elasticsearch.client.RestClient");
@@ -36,12 +35,11 @@ public class RestClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("performRequestAsyncNoCatch"))
+        named("performRequestAsyncNoCatch")
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.elasticsearch.client.Request")))
             .and(takesArgument(1, named("org.elasticsearch.client.ResponseListener"))),
-        this.getClass().getName() + "$PerformRequestAsyncAdvice");
+        getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -85,7 +83,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) ResponseListener originalResponseListener) {
@@ -101,9 +99,13 @@ public class RestClientInstrumentation implements TypeInstrumentation {
       return new Object[] {adviceScope, responseListener};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable Object[] enterResult) {
+      if (enterResult == null) {
+        return;
+      }
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
       if (adviceScope != null) {
         adviceScope.end(throwable);

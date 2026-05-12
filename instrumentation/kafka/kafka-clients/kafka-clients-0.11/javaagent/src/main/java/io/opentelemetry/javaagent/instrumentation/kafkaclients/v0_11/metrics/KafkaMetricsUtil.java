@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.kafka.clients.CommonClientConfigs;
 
-public final class KafkaMetricsUtil {
+public class KafkaMetricsUtil {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
 
   @SuppressWarnings("unchecked")

@@ -25,6 +25,7 @@ public class ContextPropagationOperatorInstrumentationModule extends Instrumenta
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 1.0.0
     return hasClassesNamed("application.io.opentelemetry.context.Context");
   }
 
@@ -37,10 +38,5 @@ public class ContextPropagationOperatorInstrumentationModule extends Instrumenta
   public String getModuleGroup() {
     // This module uses the api context bridge helpers, therefore must be in the same classloader
     return "opentelemetry-api-bridge";
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

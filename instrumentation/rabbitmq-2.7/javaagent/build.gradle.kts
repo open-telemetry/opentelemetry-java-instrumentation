@@ -28,8 +28,8 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
 

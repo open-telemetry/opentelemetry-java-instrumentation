@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.servlet;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 
-public class ExperimentalSnippetHolder {
+public final class ExperimentalSnippetHolder {
 
   private static volatile String snippet = getSnippetSetting();
 

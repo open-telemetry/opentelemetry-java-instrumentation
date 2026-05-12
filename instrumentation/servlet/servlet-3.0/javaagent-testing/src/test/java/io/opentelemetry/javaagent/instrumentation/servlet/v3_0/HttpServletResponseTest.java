@@ -97,7 +97,7 @@ class HttpServletResponseTest {
   }
 
   @Test
-  void testSendWithException() throws ServletException, IOException {
+  void testSendWithException() throws Exception {
     TestResponse response =
         new TestResponse() {
           @Override
@@ -132,7 +132,8 @@ class HttpServletResponseTest {
   }
 
   /** Tests deprecated methods */
-  public static class TestResponse implements HttpServletResponse {
+  @SuppressWarnings({"deprecation", "ReturnsNullCollection"})
+  static class TestResponse implements HttpServletResponse {
     @Override
     public void addCookie(Cookie cookie) {}
 
@@ -151,15 +152,11 @@ class HttpServletResponseTest {
       return null;
     }
 
-    // test deprecated methods
-    @SuppressWarnings("deprecation")
     @Override
     public String encodeUrl(String s) {
       return null;
     }
 
-    // test deprecated methods
-    @SuppressWarnings("deprecation")
     @Override
     public String encodeRedirectUrl(String s) {
       return null;
@@ -195,8 +192,6 @@ class HttpServletResponseTest {
     @Override
     public void setStatus(int i) {}
 
-    // test deprecated methods
-    @SuppressWarnings("deprecation")
     @Override
     public void setStatus(int i, String s) {}
 
@@ -210,13 +205,11 @@ class HttpServletResponseTest {
       return null;
     }
 
-    @SuppressWarnings("ReturnsNullCollection")
     @Override
     public Collection<String> getHeaders(String s) {
       return null;
     }
 
-    @SuppressWarnings("ReturnsNullCollection")
     @Override
     public Collection<String> getHeaderNames() {
       return null;

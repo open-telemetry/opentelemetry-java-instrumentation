@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.azure.core.util.Context;
 import com.azure.core.util.tracing.Tracer;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -24,11 +23,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class AzureSdkTestOld {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void testHelperClassesInjected() {
-    com.azure.core.util.tracing.Tracer azTracer = createAzTracer();
+    Tracer azTracer = createAzTracer();
     assertThat(azTracer.isEnabled()).isTrue();
 
     assertThat(azTracer.getClass().getName())
@@ -39,7 +38,7 @@ class AzureSdkTestOld {
 
   @Test
   void testSpan() {
-    com.azure.core.util.tracing.Tracer azTracer = createAzTracer();
+    Tracer azTracer = createAzTracer();
     Context context = azTracer.start("hello", Context.NONE);
     azTracer.end(null, null, context);
 
@@ -50,13 +49,13 @@ class AzureSdkTestOld {
                     span.hasName("hello")
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.unset())
-                        .hasAttributes(Attributes.empty())));
+                        .hasTotalAttributeCount(0)));
   }
 
-  private static com.azure.core.util.tracing.Tracer createAzTracer() {
-    Iterable<com.azure.core.util.tracing.Tracer> tracers =
-        ServiceLoader.load(com.azure.core.util.tracing.Tracer.class);
+  private static Tracer createAzTracer() {
+    Iterable<Tracer> tracers = ServiceLoader.load(Tracer.class);
     Iterator<Tracer> it = tracers.iterator();
-    return it.hasNext() ? it.next() : null;
+    assertThat(it).hasNext();
+    return it.next();
   }
 }

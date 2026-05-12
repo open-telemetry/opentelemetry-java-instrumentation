@@ -11,13 +11,11 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringJmsInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class SpringJmsInstrumentationModule extends InstrumentationModule {
 
   public SpringJmsInstrumentationModule() {
     super("spring-jms", "spring-jms-2.0");
@@ -25,7 +23,7 @@ public class SpringJmsInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // introduced in 2.0, removed in 6.0
+    // added in 2.0, removed in 6.0
     return hasClassesNamed("org.springframework.jms.remoting.JmsInvokerProxyFactoryBean");
   }
 
@@ -35,10 +33,5 @@ public class SpringJmsInstrumentationModule extends InstrumentationModule
         new SpringJmsMessageListenerInstrumentation(),
         new JmsDestinationAccessorInstrumentation(),
         new AbstractPollingMessageListenerContainerInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

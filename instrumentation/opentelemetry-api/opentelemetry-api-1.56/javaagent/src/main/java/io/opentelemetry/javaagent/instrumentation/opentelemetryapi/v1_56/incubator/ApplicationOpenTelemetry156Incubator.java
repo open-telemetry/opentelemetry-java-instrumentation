@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.Applica
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config.ApplicationConfigProvider156Incubator;
 import javax.annotation.Nullable;
 
-public final class ApplicationOpenTelemetry156Incubator extends ApplicationOpenTelemetry127
+public class ApplicationOpenTelemetry156Incubator extends ApplicationOpenTelemetry127
     implements application.io.opentelemetry.api.incubator.ExtendedOpenTelemetry {
 
   // Accessed with reflection
@@ -33,7 +33,7 @@ public final class ApplicationOpenTelemetry156Incubator extends ApplicationOpenT
     return null;
   }
 
-  public ApplicationOpenTelemetry156Incubator(ConfigProvider configProvider) {
+  private ApplicationOpenTelemetry156Incubator(ConfigProvider configProvider) {
     this.configProvider = new ApplicationConfigProvider156Incubator(configProvider);
   }
 

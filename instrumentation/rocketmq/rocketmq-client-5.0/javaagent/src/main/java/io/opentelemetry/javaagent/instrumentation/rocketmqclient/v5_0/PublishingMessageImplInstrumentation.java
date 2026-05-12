@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -45,10 +44,9 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
                 takesArgument(
                     1, named("org.apache.rocketmq.client.java.impl.producer.PublishingSettings")))
             .and(takesArgument(2, boolean.class)),
-        PublishingMessageImplInstrumentation.class.getName() + "$ConstructorAdvice");
+        getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("getProperties")).and(isPublic()),
-        PublishingMessageImplInstrumentation.class.getName() + "$GetPropertiesAdvice");
+        named("getProperties").and(isPublic()), getClass().getName() + "$GetPropertiesAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -59,7 +57,7 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
      * Producer#send(Message, Transaction)}. Store the {@link Context} here and fetch it in {@link
      * ProducerImplInstrumentation}.
      */
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This PublishingMessageImpl message) {
       VirtualFieldStore.setContextByMessage(message, Context.current());
     }
@@ -69,7 +67,7 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
   public static class GetPropertiesAdvice {
     /** Update the message properties to propagate context recorded by {@link MessageMapSetter}. */
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Map<String, String> onExit(
         @Advice.This MessageImpl messageImpl, @Advice.Return Map<String, String> properties) {
       if (!(messageImpl instanceof PublishingMessageImpl)) {

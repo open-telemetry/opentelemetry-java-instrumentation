@@ -14,7 +14,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-final class StreamUtils {
+class StreamUtils {
   static List<String> readLines(InputStream stream) throws IOException {
     List<String> lines = new ArrayList<>();
     BufferedReader reader = new BufferedReader(new InputStreamReader(stream, UTF_8));

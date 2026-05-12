@@ -34,7 +34,10 @@ final class NettyErrorOnlyConnectionInstrumenter implements NettyConnectionInstr
 
   @Override
   public void end(
-      Context context, NettyConnectionRequest request, Channel channel, @Nullable Throwable error) {
+      Context context,
+      NettyConnectionRequest request,
+      @Nullable Channel channel,
+      @Nullable Throwable error) {
     if (error != null && instrumenter.shouldStart(context, request)) {
       Timer timer = Timer.get(context);
       InstrumenterUtil.startAndEnd(

@@ -31,8 +31,8 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
       "opentelemetry.kafka-consumer-telemetry.supplier";
 
   @Nullable private KafkaConsumerTelemetry consumerTelemetry;
-  private String consumerGroup;
-  private String clientId;
+  @Nullable private String consumerGroup;
+  @Nullable private String clientId;
 
   @Override
   @CanIgnoreReturnValue

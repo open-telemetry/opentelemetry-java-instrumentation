@@ -9,12 +9,12 @@ import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.api.OpenTelemetry;
 
 public final class C3p0Telemetry {
+  private final OpenTelemetry openTelemetry;
+
   /** Returns a new {@link C3p0Telemetry} configured with the given {@link OpenTelemetry}. */
   public static C3p0Telemetry create(OpenTelemetry openTelemetry) {
     return new C3p0Telemetry(openTelemetry);
   }
-
-  private final OpenTelemetry openTelemetry;
 
   private C3p0Telemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

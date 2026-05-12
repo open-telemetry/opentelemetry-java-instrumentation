@@ -7,7 +7,6 @@ muzzle {
     group.set("com.oracle.database.jdbc")
     module.set("ucp")
     versions.set("[,)")
-    assertInverse.set(true)
   }
 }
 
@@ -20,12 +19,10 @@ dependencies {
   testImplementation(project(":instrumentation:oracle-ucp-11.2:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

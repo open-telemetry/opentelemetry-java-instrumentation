@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.restlet.v1_1;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.restlet.v1_1.RestletSingletons.serverSpanName;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -19,9 +18,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.restlet.Route;
-import org.restlet.data.Request;
 
-public class RouteInstrumentation implements TypeInstrumentation {
+class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.restlet.Route");
@@ -30,18 +28,17 @@ public class RouteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("beforeHandle"))
+        named("beforeHandle")
             .and(takesArgument(0, named("org.restlet.data.Request")))
             .and(takesArgument(1, named("org.restlet.data.Response"))),
-        this.getClass().getName() + "$RouteBeforeHandleAdvice");
+        getClass().getName() + "$RouteBeforeHandleAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RouteBeforeHandleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void getRouteInfo(@Advice.This Route route, @Advice.Argument(0) Request request) {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void getRouteInfo(@Advice.This Route route) {
       String pattern = route.getTemplate().getPattern();
 
       HttpServerRoute.update(currentContext(), CONTROLLER, serverSpanName(), pattern);

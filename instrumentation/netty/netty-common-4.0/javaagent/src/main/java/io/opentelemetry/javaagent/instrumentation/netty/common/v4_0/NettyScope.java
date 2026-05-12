@@ -11,6 +11,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.ConnectionCompleteListener;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumenter;
+import javax.annotation.Nullable;
 
 /** Container used to carry state between enter and exit advices */
 public class NettyScope {
@@ -34,10 +35,10 @@ public class NettyScope {
   }
 
   public static void end(
-      NettyScope nettyScope,
+      @Nullable NettyScope nettyScope,
       NettyConnectionInstrumenter instrumenter,
       ChannelPromise channelPromise,
-      Throwable throwable) {
+      @Nullable Throwable throwable) {
 
     if (nettyScope == null) {
       return;

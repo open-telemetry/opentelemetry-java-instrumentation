@@ -173,7 +173,6 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    // Needs to be lenient because not called during this test under old semconv mode
     if (emitStableDatabaseSemconv()) {
       when(dbAttributesGetter.getDbQuerySummary(dbRequest)).thenReturn("SELECT users");
     }

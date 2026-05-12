@@ -25,6 +25,7 @@ muzzle {
     group.set("com.typesafe.play")
     module.set("play-ahc-ws-standalone_2.13")
     versions.set("[2.0.6,2.1.0)")
+    assertInverse.set(true)
   }
 }
 
@@ -33,9 +34,9 @@ val scalaVersion = "2.12"
 dependencies {
   library("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:2.0.0")
 
-  implementation(project(":instrumentation:play:play-ws:play-ws-common:javaagent"))
+  implementation(project(":instrumentation:play:play-ws:play-ws-common-1.0:javaagent"))
 
-  testImplementation(project(":instrumentation:play:play-ws:play-ws-common:testing"))
+  testImplementation(project(":instrumentation:play:play-ws:play-ws-common-1.0:testing"))
 
   // These are to ensure cross compatibility
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
@@ -48,10 +49,10 @@ dependencies {
 
 tasks {
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

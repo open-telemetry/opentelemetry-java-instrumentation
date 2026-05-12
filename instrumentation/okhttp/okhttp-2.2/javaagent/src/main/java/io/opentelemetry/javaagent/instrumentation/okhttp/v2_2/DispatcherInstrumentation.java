@@ -5,21 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
+import static io.opentelemetry.javaagent.instrumentation.okhttp.v2_2.OkHttp2Singletons.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DispatcherInstrumentation implements TypeInstrumentation {
+class DispatcherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.squareup.okhttp.Dispatcher");
@@ -35,25 +36,23 @@ public class DispatcherInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AttachStateAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static PropagatedContext onEnter(@Advice.Argument(0) Runnable call) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, call)) {
-        VirtualField<Runnable, PropagatedContext> virtualField =
-            VirtualField.find(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, call);
+        return ExecutorAdviceHelper.attachContextToTask(context, PROPAGATED_CONTEXT, call);
       }
       return null;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Runnable call,
-        @Advice.Enter PropagatedContext propagatedContext,
-        @Advice.Thrown Throwable throwable) {
-      VirtualField<Runnable, PropagatedContext> virtualField =
-          VirtualField.find(Runnable.class, PropagatedContext.class);
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, call);
+        @Advice.Enter @Nullable PropagatedContext propagatedContext,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      ExecutorAdviceHelper.cleanUpAfterSubmit(
+          propagatedContext, throwable, PROPAGATED_CONTEXT, call);
     }
   }
 }

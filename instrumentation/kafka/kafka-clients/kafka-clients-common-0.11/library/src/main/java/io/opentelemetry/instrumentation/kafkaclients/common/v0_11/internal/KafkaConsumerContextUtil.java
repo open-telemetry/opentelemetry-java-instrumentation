@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -51,17 +52,16 @@ public final class KafkaConsumerContextUtil {
     return create(receiveContext, consumerGroup, clientId);
   }
 
-  public static KafkaConsumerContext create(Context context, Consumer<?, ?> consumer) {
+  public static KafkaConsumerContext create(@Nullable Context context, Consumer<?, ?> consumer) {
     return create(context, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
   }
 
   public static KafkaConsumerContext create(
-      Context context, String consumerGroup, String clientId) {
+      @Nullable Context context, @Nullable String consumerGroup, @Nullable String clientId) {
     return KafkaConsumerContext.create(context, consumerGroup, clientId);
   }
 
   public static void set(ConsumerRecord<?, ?> record, Context context, Consumer<?, ?> consumer) {
-    recordContextField.set(record, context);
     String consumerGroup = KafkaUtil.getConsumerGroup(consumer);
     String clientId = KafkaUtil.getClientId(consumer);
     set(record, context, consumerGroup, clientId);
@@ -76,7 +76,10 @@ public final class KafkaConsumerContextUtil {
   }
 
   public static void set(
-      ConsumerRecord<?, ?> record, Context context, String consumerGroup, String clientId) {
+      ConsumerRecord<?, ?> record,
+      @Nullable Context context,
+      @Nullable String consumerGroup,
+      @Nullable String clientId) {
     recordContextField.set(record, context);
     recordConsumerInfoField.set(record, new String[] {consumerGroup, clientId});
   }
@@ -88,7 +91,10 @@ public final class KafkaConsumerContextUtil {
   }
 
   public static void set(
-      ConsumerRecords<?, ?> records, Context context, String consumerGroup, String clientId) {
+      ConsumerRecords<?, ?> records,
+      @Nullable Context context,
+      @Nullable String consumerGroup,
+      @Nullable String clientId) {
     recordsContextField.set(records, context);
     recordsConsumerInfoField.set(records, new String[] {consumerGroup, clientId});
   }

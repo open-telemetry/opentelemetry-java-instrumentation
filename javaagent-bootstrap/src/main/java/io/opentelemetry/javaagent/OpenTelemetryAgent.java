@@ -57,10 +57,10 @@ public final class OpenTelemetryAgent {
       InstrumentationHolder.setInstrumentation(inst);
       JavaagentFileHolder.setJavaagentFile(javaagentFile);
       AgentInitializer.initialize(inst, javaagentFile, fromPremain, agentArgs);
-    } catch (Throwable ex) {
+    } catch (Throwable t) {
       // Don't rethrow.  We don't have a log manager here, so just print.
       System.err.println("ERROR " + OpenTelemetryAgent.class.getName());
-      ex.printStackTrace();
+      t.printStackTrace();
     }
   }
 

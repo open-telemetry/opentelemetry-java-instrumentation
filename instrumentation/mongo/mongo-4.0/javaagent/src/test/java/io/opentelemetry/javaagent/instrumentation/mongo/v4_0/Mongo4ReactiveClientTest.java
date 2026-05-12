@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.jupiter.api.Assumptions.abort;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
@@ -28,10 +29,8 @@ import java.util.function.Consumer;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.opentest4j.TestAbortedException;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
@@ -47,13 +46,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   @BeforeAll
   void setup() {
     client = MongoClients.create("mongodb://" + host + ":" + port);
-  }
-
-  @AfterAll
-  void cleanup() {
-    if (client != null) {
-      client.close();
-    }
+    cleanup.deferAfterAll(client);
   }
 
   @Override
@@ -62,7 +55,8 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public void createCollection(String dbName, String collectionName) throws InterruptedException {
+  protected void createCollection(String dbName, String collectionName)
+      throws InterruptedException {
     MongoDatabase db = client.getDatabase(dbName);
     CountDownLatch latch = new CountDownLatch(1);
     db.createCollection(collectionName).subscribe(toSubscriber(o -> latch.countDown()));
@@ -70,7 +64,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public void createCollectionNoDescription(String dbName, String collectionName)
+  protected void createCollectionNoDescription(String dbName, String collectionName)
       throws InterruptedException {
     MongoClient tmpClient = MongoClients.create("mongodb://" + host + ":" + port);
     cleanup.deferCleanup(tmpClient);
@@ -81,12 +75,13 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public void createCollectionWithAlreadyBuiltClientOptions(String dbName, String collectionName) {
-    throw new TestAbortedException("not tested on 4.0");
+  protected void createCollectionWithAlreadyBuiltClientOptions(
+      String dbName, String collectionName) {
+    abort("not tested on 4.0");
   }
 
   @Override
-  public void createCollectionCallingBuildTwice(String dbName, String collectionName)
+  protected void createCollectionCallingBuildTwice(String dbName, String collectionName)
       throws InterruptedException {
     MongoClientSettings.Builder settings =
         MongoClientSettings.builder()
@@ -102,7 +97,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public long getCollection(String dbName, String collectionName)
+  protected long getCollection(String dbName, String collectionName)
       throws ExecutionException, InterruptedException, TimeoutException {
     MongoDatabase db = client.getDatabase(dbName);
     CompletableFuture<Long> count = new CompletableFuture<>();
@@ -113,7 +108,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public MongoCollection<Document> setupInsert(String dbName, String collectionName)
+  protected MongoCollection<Document> setupInsert(String dbName, String collectionName)
       throws InterruptedException {
     MongoCollection<Document> collection =
         testing()
@@ -132,7 +127,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public long insert(MongoCollection<Document> collection) throws Exception {
+  protected long insert(MongoCollection<Document> collection) throws Exception {
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection
         .insertOne(new Document("password", "SECRET"))
@@ -146,7 +141,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public MongoCollection<Document> setupUpdate(String dbName, String collectionName)
+  protected MongoCollection<Document> setupUpdate(String dbName, String collectionName)
       throws InterruptedException {
     MongoCollection<Document> collection =
         testing()
@@ -170,7 +165,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public long update(MongoCollection<Document> collection) throws Exception {
+  protected long update(MongoCollection<Document> collection) throws Exception {
     CompletableFuture<UpdateResult> result = new CompletableFuture<>();
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection
@@ -189,7 +184,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public MongoCollection<Document> setupDelete(String dbName, String collectionName)
+  protected MongoCollection<Document> setupDelete(String dbName, String collectionName)
       throws InterruptedException {
     MongoCollection<Document> collection =
         testing()
@@ -213,7 +208,7 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public long delete(MongoCollection<Document> collection)
+  protected long delete(MongoCollection<Document> collection)
       throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<DeleteResult> result = new CompletableFuture<>();
     CompletableFuture<Long> count = new CompletableFuture<>();
@@ -231,17 +226,17 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
-  public MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
-    throw new TestAbortedException("not tested on reactive");
+  protected MongoCollection<Document> setupGetMore(String dbName, String collectionName) {
+    return abort("not tested on reactive");
   }
 
   @Override
-  public void getMore(MongoCollection<Document> collection) {
-    throw new TestAbortedException("not tested on reactive");
+  protected void getMore(MongoCollection<Document> collection) {
+    abort("not tested on reactive");
   }
 
   @Override
-  public void error(String dbName, String collectionName) throws Throwable {
+  protected void error(String dbName, String collectionName) throws Throwable {
     MongoCollection<Document> collection =
         testing()
             .runWithSpan(

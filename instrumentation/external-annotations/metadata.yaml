@@ -1,3 +1,4 @@
+display_name: External Annotations
 classification: custom
 description: >
   The external-annotations instrumentation acts as a "shim" that automatically instruments methods
@@ -9,11 +10,18 @@ description: >
   the configuration property "otel.instrumentation.external-annotations.include".
 configurations:
   - name: otel.instrumentation.external-annotations.include
-    description: Configuration for trace annotations, in the form of a pattern that matches
-      `'package.Annotation$Name;*'`.
-    type: string
+    declarative_name: java.external_annotations.include
+    description: Semicolon-separated list of annotation class names to instrument.
+    type: list
     default: ""
+    examples:
+      - "com.example.Trace"
+      - "com.example.Trace;com.example.OtherTrace"
   - name: otel.instrumentation.external-annotations.exclude-methods
+    declarative_name: java.external_annotations.exclude_methods
     description: All methods to be excluded from auto-instrumentation by annotation-based advices.
     type: string
     default: ""
+    examples:
+      - "com.example.MyClass[method1,method2]"
+      - "com.example.MyClass[method1];com.example.OtherClass[method2]"

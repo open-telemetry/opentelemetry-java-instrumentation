@@ -5,16 +5,17 @@
 
 package io.opentelemetry.instrumentation.javahttpclient.internal;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum JavaHttpClientAttributesGetter
+final class JavaHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse<?>> {
-  INSTANCE;
 
   @Override
   public String getHttpRequestMethod(HttpRequest httpRequest) {
@@ -43,7 +44,6 @@ enum JavaHttpClientAttributesGetter
     return httpResponse.headers().allValues(name);
   }
 
-  @Nullable
   @Override
   public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse<?> response) {
     return "http";
@@ -77,7 +77,9 @@ enum JavaHttpClientAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(HttpRequest request) {
-    return request.uri().getPort();
+    URI uri = request.uri();
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 }

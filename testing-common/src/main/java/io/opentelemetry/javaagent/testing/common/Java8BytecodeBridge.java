@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
  * so they cannot access methods that rely on new Java 8 bytecode features such as calling a static
  * interface methods.
  */
-public final class Java8BytecodeBridge {
+public class Java8BytecodeBridge {
 
   /** Calls {@link Context#current()}. */
   public static Context currentContext() {

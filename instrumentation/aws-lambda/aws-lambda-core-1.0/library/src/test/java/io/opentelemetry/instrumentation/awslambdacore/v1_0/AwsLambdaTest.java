@@ -27,7 +27,7 @@ class AwsLambdaTest extends AbstractAwsLambdaTest {
     return testing;
   }
 
-  private static final class TestRequestHandler extends TracingRequestHandler<String, String> {
+  private static class TestRequestHandler extends TracingRequestHandler<String, String> {
 
     TestRequestHandler(OpenTelemetrySdk openTelemetrySdk) {
       super(openTelemetrySdk);

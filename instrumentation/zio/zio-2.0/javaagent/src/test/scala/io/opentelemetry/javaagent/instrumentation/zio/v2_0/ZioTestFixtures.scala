@@ -13,6 +13,22 @@ import java.util.concurrent.Executors
 
 object ZioTestFixtures {
 
+  def runYieldingFiberAfterParentScopeCloses(): Unit =
+    run {
+      for {
+        continue <- Promise.make[Nothing, Unit]
+        child <- childSpan("parent") {
+          (continue.await *>
+            ZIO.yieldNow *>
+            childSpan("child") {
+              ZIO.unit
+            }).fork
+        }
+        _ <- continue.succeed(())
+        _ <- child.join
+      } yield ()
+    }
+
   def runNestedFibers(): Unit =
     run {
       childSpan("fiber_1_span_1") {
@@ -124,7 +140,7 @@ object ZioTestFixtures {
 
   private val tracer: Tracer = GlobalOpenTelemetry.getTracer("test")
 
-  private def childSpan(opName: String)(op: UIO[Unit]): UIO[Unit] =
+  private def childSpan[A](opName: String)(op: UIO[A]): UIO[A] =
     ZIO.scoped {
       for {
         scope <- ZIO.scope
@@ -132,8 +148,8 @@ object ZioTestFixtures {
         otelScope <- ZIO.succeed(otelSpan.makeCurrent())
         _ <- scope.addFinalizer(ZIO.succeed(otelSpan.end()))
         _ <- scope.addFinalizer(ZIO.succeed(otelScope.close()))
-        _ <- op
-      } yield ()
+        result <- op
+      } yield result
     }
 
   private def run[A](zio: ZIO[Any, Nothing, A]): Unit = {

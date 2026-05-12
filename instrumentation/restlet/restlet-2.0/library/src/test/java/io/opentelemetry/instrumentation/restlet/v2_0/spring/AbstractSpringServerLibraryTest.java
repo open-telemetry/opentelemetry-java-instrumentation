@@ -93,8 +93,8 @@ abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest 
 
       router.setRoutes(new RouteList(routes));
       host.attach(router);
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
     }
   }
 }

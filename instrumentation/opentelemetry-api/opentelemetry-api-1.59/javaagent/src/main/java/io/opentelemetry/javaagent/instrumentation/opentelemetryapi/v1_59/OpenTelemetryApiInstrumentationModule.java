@@ -25,7 +25,7 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Empty class was introduced in 1.59.0 along with AttributeType.VALUE
+    // added in 1.59.0
     return hasClassesNamed("application.io.opentelemetry.api.common.Empty");
   }
 

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common.async;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -37,7 +36,6 @@ public class AsyncContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("dispatch")), adviceClassName);
+    transformer.applyAdviceToMethod(named("dispatch").and(isPublic()), adviceClassName);
   }
 }

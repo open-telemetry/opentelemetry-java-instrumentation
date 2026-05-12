@@ -9,17 +9,17 @@ import static com.xxl.job.core.context.XxlJobContext.HANDLE_COCE_SUCCESS;
 
 import com.xxl.job.core.context.XxlJobContext;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobHelper;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobHelper;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobProcessRequest;
 
-public final class XxlJobSingletons {
+public class XxlJobSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.xxl-job-2.3.0";
-  private static final Instrumenter<XxlJobProcessRequest, Void> INSTRUMENTER =
+  private static final Instrumenter<XxlJobProcessRequest, Void> instrumenter =
       XxlJobInstrumenterFactory.create(INSTRUMENTATION_NAME);
-  private static final XxlJobHelper HELPER =
+  private static final XxlJobHelper helper =
       XxlJobHelper.create(
-          INSTRUMENTER,
+          instrumenter,
           unused -> {
             // From 2.3.0, XxlJobContext is used to store the result of the job execution.
             XxlJobContext xxlJobContext = XxlJobContext.getXxlJobContext();
@@ -31,7 +31,7 @@ public final class XxlJobSingletons {
           });
 
   public static XxlJobHelper helper() {
-    return HELPER;
+    return helper;
   }
 
   private XxlJobSingletons() {}

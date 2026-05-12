@@ -20,6 +20,11 @@ public class SmokeInlinedInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isHelperClass(String className) {
+    return className.endsWith("VirtualFieldHelper");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new SmokeInlinedInstrumentation());
   }

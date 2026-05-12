@@ -59,7 +59,7 @@ final class SqlCommenterUtil {
           stringBuilder.append(", ");
         }
       }
-    } catch (UnsupportedEncodingException exception) {
+    } catch (UnsupportedEncodingException ignored) {
       // this exception should never happen as UTF-8 encoding is always available
     }
     stringBuilder.append("*/");

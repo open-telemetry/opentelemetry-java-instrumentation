@@ -20,18 +20,19 @@ import org.apache.http.HttpResponse;
 public final class ApacheHttpClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-4.3";
-  private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder;
-  private final OpenTelemetry openTelemetry;
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
   }
 
+  private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder;
+  private final OpenTelemetry openTelemetry;
+
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         DefaultHttpClientInstrumenterBuilder.create(
-            INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClientHttpAttributesGetter.INSTANCE);
+            INSTRUMENTATION_NAME, openTelemetry, new ApacheHttpClientHttpAttributesGetter());
     this.openTelemetry = openTelemetry;
   }
 

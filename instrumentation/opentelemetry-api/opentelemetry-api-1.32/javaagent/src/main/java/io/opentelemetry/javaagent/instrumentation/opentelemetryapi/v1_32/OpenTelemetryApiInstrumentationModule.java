@@ -27,7 +27,9 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // skip instrumentation when opentelemetry-extension-incubator is present, instrumentation is
     // handled by OpenTelemetryApiIncubatorInstrumentationModule
+    // added in 1.32
     return hasClassesNamed("application.io.opentelemetry.api.logs.LoggerBuilder")
+        // added in 1.31
         .and(
             not(
                 hasClassesNamed(
@@ -42,10 +44,5 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   @Override
   public String getModuleGroup() {
     return "opentelemetry-api-bridge";
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

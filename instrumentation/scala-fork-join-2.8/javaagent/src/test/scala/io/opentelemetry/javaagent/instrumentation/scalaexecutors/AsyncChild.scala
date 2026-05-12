@@ -13,7 +13,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.forkjoin.ForkJoinTask
 
-final class AsyncChild(doTraceableWork: Boolean, blockThread: Boolean)
+class AsyncChild(doTraceableWork: Boolean, blockThread: Boolean)
     extends ForkJoinTask[AnyRef]
     with TestTask {
   private val tracer: Tracer = GlobalOpenTelemetry.getTracer("test")

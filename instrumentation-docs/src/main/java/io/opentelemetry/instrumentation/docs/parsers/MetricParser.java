@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * This class is responsible for parsing metric files from the `.telemetry` directory of an
@@ -119,6 +120,7 @@ public class MetricParser {
                             metric.getName(),
                             metric.getDescription(),
                             metric.getType(),
+                            metric.getIsMonotonic(),
                             metric.getUnit()));
             if (metric.getAttributes() != null) {
               for (TelemetryAttribute attr : metric.getAttributes()) {
@@ -150,6 +152,7 @@ public class MetricParser {
                   .name(aggInfo.name)
                   .description(aggInfo.description)
                   .type(aggInfo.type)
+                  .isMonotonic(aggInfo.isMonotonic)
                   .unit(aggInfo.unit)
                   .attributes(new ArrayList<>(aggInfo.attributes))
                   .build());
@@ -163,13 +166,20 @@ public class MetricParser {
       final String name;
       final String description;
       final String type;
+      @Nullable final Boolean isMonotonic;
       final String unit;
       final Set<TelemetryAttribute> attributes = new HashSet<>();
 
-      AggregatedMetricInfo(String name, String description, String type, String unit) {
+      AggregatedMetricInfo(
+          String name,
+          String description,
+          String type,
+          @Nullable Boolean isMonotonic,
+          String unit) {
         this.name = name;
         this.description = description;
         this.type = type;
+        this.isMonotonic = isMonotonic;
         this.unit = unit;
       }
     }

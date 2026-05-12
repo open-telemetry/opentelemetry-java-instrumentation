@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
 import static java.util.Collections.emptyIterator;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.netty.util.AsciiString;
@@ -15,17 +13,11 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
-enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
-  INSTANCE;
+final class RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
 
   @Override
-  public Iterable<String> keys(@Nullable ServiceRequestContext carrier) {
-    if (carrier == null) {
-      return emptyList();
-    }
-    return carrier.request().headers().names().stream()
-        .map(AsciiString::toString)
-        .collect(toList());
+  public Iterable<String> keys(ServiceRequestContext carrier) {
+    return () -> new HeaderNamesIterator(carrier.request().headers().names().iterator());
   }
 
   @Override
@@ -43,5 +35,24 @@ enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
       return emptyIterator();
     }
     return carrier.request().headers().valueIterator(key);
+  }
+
+  private static final class HeaderNamesIterator implements Iterator<String> {
+
+    private final Iterator<AsciiString> delegate;
+
+    HeaderNamesIterator(Iterator<AsciiString> delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return delegate.hasNext();
+    }
+
+    @Override
+    public String next() {
+      return delegate.next().toString();
+    }
   }
 }

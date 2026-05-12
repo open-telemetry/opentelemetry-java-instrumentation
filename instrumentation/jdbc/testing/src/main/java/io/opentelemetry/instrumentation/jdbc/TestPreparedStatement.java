@@ -31,7 +31,7 @@ import java.util.Map;
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
   private boolean hasResultSet = true;
-  Map<String, String> parameters;
+  private final Map<String, String> parameters;
 
   TestPreparedStatement(Connection connection) {
     super(connection);

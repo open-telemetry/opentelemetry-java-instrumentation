@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.BiFunction;
+import javax.annotation.Nullable;
 
 public class CompletionStageFinishCallback<T> implements BiFunction<T, Throwable, T> {
   private final Instrumenter<HandlerData, Void> instrumenter;
@@ -24,7 +25,8 @@ public class CompletionStageFinishCallback<T> implements BiFunction<T, Throwable
 
   @Override
   @CanIgnoreReturnValue
-  public T apply(T result, Throwable throwable) {
+  @Nullable
+  public T apply(@Nullable T result, @Nullable Throwable throwable) {
     instrumenter.end(context, handlerData, null, throwable);
     return result;
   }

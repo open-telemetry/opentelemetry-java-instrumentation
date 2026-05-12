@@ -12,13 +12,21 @@ dependencies {
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent"))
 
   testImplementation("io.opentelemetry:opentelemetry-api-incubator")
 }
 
-tasks.withType<Test>().configureEach {
+configurations.configureEach {
+  if (name.endsWith("testRuntimeClasspath", true) || name.endsWith("testCompileClasspath", true)) {
+    resolutionStrategy {
+      force("io.opentelemetry:opentelemetry-api:1.56.0")
+      force("io.opentelemetry:opentelemetry-api-incubator:1.56.0-alpha")
+    }
+  }
+}
+
+tasks.test {
   jvmArgs(
-    "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config.yaml"
+    "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
   )
 }

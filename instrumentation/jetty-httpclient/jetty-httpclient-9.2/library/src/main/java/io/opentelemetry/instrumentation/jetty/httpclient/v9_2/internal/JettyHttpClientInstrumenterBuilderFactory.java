@@ -17,14 +17,14 @@ import org.eclipse.jetty.client.api.Response;
 public class JettyHttpClientInstrumenterBuilderFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-httpclient-9.2";
 
-  private JettyHttpClientInstrumenterBuilderFactory() {}
-
   public static DefaultHttpClientInstrumenterBuilder<Request, Response> create(
       OpenTelemetry openTelemetry) {
     return DefaultHttpClientInstrumenterBuilder.create(
         INSTRUMENTATION_NAME,
         openTelemetry,
-        JettyClientHttpAttributesGetter.INSTANCE,
-        HttpHeaderSetter.INSTANCE);
+        new JettyClientHttpAttributesGetter(),
+        new HttpHeaderSetter());
   }
+
+  private JettyHttpClientInstrumenterBuilderFactory() {}
 }

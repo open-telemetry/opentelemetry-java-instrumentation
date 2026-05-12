@@ -25,7 +25,7 @@ public class AnnotationReflectionHelper {
       ClassLoader classLoader, String className) {
     try {
       return Class.forName(className, true, classLoader).asSubclass(Annotation.class);
-    } catch (ClassNotFoundException | ClassCastException exception) {
+    } catch (ClassNotFoundException | ClassCastException ignored) {
       return null;
     }
   }

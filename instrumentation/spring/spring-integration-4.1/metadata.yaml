@@ -3,6 +3,7 @@ description: This instrumentation enables producer and consumer messaging spans 
 library_link: https://spring.io/projects/spring-integration
 configurations:
   - name: otel.instrumentation.spring-integration.producer.enabled
+    declarative_name: java.spring_integration.producer.enabled
     type: boolean
     description: >
       Create producer spans when messages are sent to an output channel. Enable when you're using
@@ -10,11 +11,12 @@ configurations:
       Note that the detection of output channels only works for Spring Cloud Stream `DirectWithAttributesChannel`.
     default: false
   - name: otel.instrumentation.spring-integration.global-channel-interceptor-patterns
+    declarative_name: java.spring_integration.global_channel_interceptor_patterns
     type: list
     description: A list of Spring channel name patterns that will be intercepted.
     default: "*"
   - name: otel.instrumentation.messaging.experimental.capture-headers
+    declarative_name: java.common.messaging.capture_headers/development
     type: list
     description: A comma-separated list of header names to capture as span attributes.
     default: ''
-

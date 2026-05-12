@@ -20,13 +20,20 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ResteasyProxyClientTest extends AbstractHttpClientTest<ResteasyProxyResource> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static ResteasyClient client = new ResteasyClientBuilder().connectionPoolSize(4).build();
+  private static final ResteasyClient client =
+      new ResteasyClientBuilder().connectionPoolSize(4).build();
+
+  @AfterAll
+  static void closeClient() {
+    client.close();
+  }
 
   @Override
   public ResteasyProxyResource buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -52,15 +59,15 @@ class ResteasyProxyClientTest extends AbstractHttpClientTest<ResteasyProxyResour
 
     Response response;
     if (proxyMethodName.equals("get_success")) {
-      response = proxy.get_success(param, isTestServer, requestId);
+      response = proxy.getSuccess(param, isTestServer, requestId);
     } else if (proxyMethodName.equals("post_success")) {
-      response = proxy.post_success(param, isTestServer, requestId);
+      response = proxy.postSuccess(param, isTestServer, requestId);
     } else if (proxyMethodName.equals("put_success")) {
-      response = proxy.put_success(param, isTestServer, requestId);
+      response = proxy.putSuccess(param, isTestServer, requestId);
     } else if (proxyMethodName.equals("get_error")) {
-      response = proxy.get_error(param, isTestServer, requestId);
+      response = proxy.getError(param, isTestServer, requestId);
     } else if (proxyMethodName.equals("get_client_error")) {
-      response = proxy.get_client_error(param, isTestServer, requestId);
+      response = proxy.getClientError(param, isTestServer, requestId);
     } else {
       throw new IllegalArgumentException("Unknown method: " + proxyMethodName);
     }

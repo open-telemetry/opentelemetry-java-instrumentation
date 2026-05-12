@@ -12,7 +12,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
 
 class CapturingMessageHandler implements MessageHandler {
-  final CompletableFuture<Message<?>> captured = new CompletableFuture<>();
+  private final CompletableFuture<Message<?>> captured = new CompletableFuture<>();
 
   @Override
   public void handleMessage(Message<?> message) {

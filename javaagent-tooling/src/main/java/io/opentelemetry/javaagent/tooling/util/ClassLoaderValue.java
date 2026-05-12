@@ -19,7 +19,7 @@ public final class ClassLoaderValue<T> {
   private final Injector classInjector;
 
   public ClassLoaderValue() {
-    this(ClassLoaderMap.defaultInjector);
+    this(ClassLoaderMap.defaultInjector());
   }
 
   // visible for testing

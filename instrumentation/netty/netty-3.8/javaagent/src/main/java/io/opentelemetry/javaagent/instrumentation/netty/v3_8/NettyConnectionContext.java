@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
 public class NettyConnectionContext {
-  private Context connectionContext;
+  @Nullable private Context connectionContext;
 
   public NettyConnectionContext(Context connectionContext) {
     this.connectionContext = connectionContext;

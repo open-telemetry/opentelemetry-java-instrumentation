@@ -22,7 +22,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -49,8 +48,8 @@ import ratpack.server.RatpackServerSpec;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractRatpackRoutesTest {
 
-  private static RatpackServer app;
-  private static WebClient client;
+  private RatpackServer app;
+  private WebClient client;
 
   protected abstract InstrumentationExtension testing();
 
@@ -136,12 +135,6 @@ public abstract class AbstractRatpackRoutesTest {
                               equalTo(NETWORK_PEER_ADDRESS, hasHandlerSpan() ? "127.0.0.1" : null),
                               satisfies(
                                   NETWORK_PEER_PORT,
-                                  port ->
-                                      port.satisfiesAnyOf(
-                                          val -> assertThat(val).isInstanceOf(Long.class),
-                                          val -> assertThat(val).isNull())),
-                              satisfies(
-                                  NETWORK_PEER_PORT,
                                   val -> {
                                     if (hasHandlerSpan()) {
                                       val.isInstanceOf(Long.class);
@@ -162,7 +155,7 @@ public abstract class AbstractRatpackRoutesTest {
                         span.hasName("/" + route)
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributes(Attributes.empty()));
+                            .hasTotalAttributeCount(0));
               }
 
               trace.hasSpansSatisfyingExactly(assertions);

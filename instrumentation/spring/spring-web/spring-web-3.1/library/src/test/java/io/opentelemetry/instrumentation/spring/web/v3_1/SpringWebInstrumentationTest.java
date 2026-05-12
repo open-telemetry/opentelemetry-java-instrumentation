@@ -68,8 +68,8 @@ class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<Str
           .exchange(uri, HttpMethod.valueOf(method), request, String.class)
           .getStatusCode()
           .value();
-    } catch (ResourceAccessException exception) {
-      throw (Exception) exception.getCause();
+    } catch (ResourceAccessException e) {
+      throw (Exception) e.getCause();
     }
   }
 
@@ -89,8 +89,8 @@ class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<Str
             httpClientResult.complete(response.getStatusCode().value());
             return null;
           });
-    } catch (ResourceAccessException exception) {
-      httpClientResult.complete(exception.getCause());
+    } catch (ResourceAccessException e) {
+      httpClientResult.complete(e.getCause());
     }
   }
 

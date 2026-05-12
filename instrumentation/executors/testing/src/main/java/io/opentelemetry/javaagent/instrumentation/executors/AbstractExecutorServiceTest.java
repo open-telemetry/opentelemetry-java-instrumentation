@@ -110,7 +110,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
     executeAndCancelTasks(task -> executor.submit((Callable<?>) task));
   }
 
-  protected final void executeTwoTasks(ThrowingConsumer<U> task) {
+  protected void executeTwoTasks(ThrowingConsumer<U> task) {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -137,7 +137,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
                         .hasParent(trace.getSpan(0))));
   }
 
-  protected final void executeAndCancelTasks(Function<U, Future<?>> task) {
+  protected void executeAndCancelTasks(Function<U, Future<?>> task) {
     List<U> children = new ArrayList<>();
     List<Future<?>> jobFutures = new ArrayList<>();
 
@@ -145,7 +145,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
         "parent",
         () -> {
           for (int i = 0; i < 20; i++) {
-            // Our current instrumentation instrumentation does not behave very well
+            // Our current instrumentation does not behave very well
             // if we try to reuse Callable/Runnable. Namely we would be getting 'orphaned'
             // child traces sometimes since state can contain only one parent span - and
             // we do not really have a good way for attributing work to correct parent span

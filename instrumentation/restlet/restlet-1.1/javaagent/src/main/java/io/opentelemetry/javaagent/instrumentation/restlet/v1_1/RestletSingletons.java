@@ -14,18 +14,18 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
-public final class RestletSingletons {
+public class RestletSingletons {
 
-  private static final Instrumenter<Request, Response> INSTRUMENTER;
+  private static final Instrumenter<Request, Response> instrumenter;
 
   static {
-    INSTRUMENTER =
+    instrumenter =
         JavaagentHttpServerInstrumenters.create(
             RestletTelemetryBuilderFactory.create(GlobalOpenTelemetry.get()));
   }
 
   public static Instrumenter<Request, Response> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   public static HttpServerRouteGetter<String> serverSpanName() {

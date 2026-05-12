@@ -19,10 +19,6 @@ public final class RpcSizeAttributesExtractor<REQUEST, RESPONSE>
 
   private final RpcAttributesGetter<REQUEST, RESPONSE> getter;
 
-  RpcSizeAttributesExtractor(RpcAttributesGetter<REQUEST, RESPONSE> getter) {
-    this.getter = getter;
-  }
-
   /**
    * Returns a new {@link RpcSizeAttributesExtractor} that will use the passed {@code
    * attributesGetter} instance to determine the request and response size.
@@ -30,6 +26,10 @@ public final class RpcSizeAttributesExtractor<REQUEST, RESPONSE>
   public static <REQUEST, RESPONSE> RpcSizeAttributesExtractor<REQUEST, RESPONSE> create(
       RpcAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
     return new RpcSizeAttributesExtractor<>(attributesGetter);
+  }
+
+  RpcSizeAttributesExtractor(RpcAttributesGetter<REQUEST, RESPONSE> getter) {
+    this.getter = getter;
   }
 
   @Override

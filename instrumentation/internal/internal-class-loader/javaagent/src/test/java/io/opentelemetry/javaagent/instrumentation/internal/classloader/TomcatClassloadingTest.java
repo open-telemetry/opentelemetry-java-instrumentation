@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Enumeration;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.WebResource;
@@ -59,6 +60,7 @@ class TomcatClassloadingTest {
     classloader.setResources(resources);
     classloader.init();
     classloader.start();
+    cleanup.deferAfterAll(classloader);
   }
 
   @Test
@@ -71,7 +73,7 @@ class TomcatClassloadingTest {
   @Test
   void testResourceInjection() throws IOException {
     Path tmpFile = Files.createTempFile("hello", "tmp");
-    tmpFile.toFile().deleteOnExit();
+    cleanup.deferCleanup(() -> Files.deleteIfExists(tmpFile));
 
     Files.write(tmpFile, "hello".getBytes(UTF_8));
     URL url = tmpFile.toUri().toURL();
@@ -82,12 +84,11 @@ class TomcatClassloadingTest {
     Enumeration<URL> resources = classloader.getResources("hello.txt");
 
     assertThat(resources).isNotNull();
-    assertThat(resources.hasMoreElements()).isTrue();
+    assertThat(Collections.list(resources)).isNotEmpty();
 
     InputStream inputStream = classloader.getResourceAsStream("hello.txt");
-    cleanup.deferCleanup(inputStream);
-
     assertThat(inputStream).isNotNull();
+    cleanup.deferCleanup(inputStream);
 
     String text =
         new BufferedReader(new InputStreamReader(inputStream, UTF_8))

@@ -28,6 +28,10 @@ dependencies {
     // we use byte-buddy-dep
     exclude("net.bytebuddy", "byte-buddy")
   }
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config") {
+    // we use byte-buddy-dep
+    exclude("net.bytebuddy", "byte-buddy")
+  }
 
   // Exporters with dependencies
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
@@ -121,7 +125,7 @@ testing {
         all {
           testTask.configure {
             jvmArgs(
-              "-Dotel.experimental.config.file=$projectDir/src/testDistributionConfig/resources/distribution-config.yaml"
+              "-Dotel.config.file=$projectDir/src/testDistributionConfig/resources/distribution-config.yaml"
             )
           }
         }
