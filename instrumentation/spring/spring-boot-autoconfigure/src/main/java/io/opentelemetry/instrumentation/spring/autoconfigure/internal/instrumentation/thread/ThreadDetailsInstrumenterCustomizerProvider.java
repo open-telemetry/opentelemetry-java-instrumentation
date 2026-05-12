@@ -49,7 +49,8 @@ public class ThreadDetailsInstrumenterCustomizerProvider implements Instrumenter
 
   @SuppressWarnings("unchecked") // distribution and spring_starter nodes are nested maps
   private static boolean isEnabled(OpenTelemetryConfigurationModel model) {
-    Map<String, Object> config = mapper.convertValue(model, new TypeReference<Map<String, Object>>() {});
+    Map<String, Object> config =
+        mapper.convertValue(model, new TypeReference<Map<String, Object>>() {});
     Object distribution = config.get("distribution");
     if (!(distribution instanceof Map)) {
       return false;
