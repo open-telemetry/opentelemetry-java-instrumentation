@@ -299,3 +299,4 @@ mongo-3.1:testing
 mongo-3.7:javaagent
 mongo-4.0:javaagent
 mongo-async-3.3:javaagent
+mongo-common:testing
