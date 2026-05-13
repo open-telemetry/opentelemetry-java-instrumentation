@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 
-@SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
 enum DistributionStatisticConfigModifier {
   DISABLE_HISTOGRAM_GAUGES {
     @Override
+    @SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
     DistributionStatisticConfig modify(DistributionStatisticConfig config) {
       return DistributionStatisticConfig.builder()
           // disable all percentile and slo related options
