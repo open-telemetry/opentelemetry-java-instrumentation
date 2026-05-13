@@ -33,7 +33,6 @@ import java.net.UnknownHostException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceClientTest {
 
   @BeforeAll
@@ -53,6 +52,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testAuthCommand() throws ReflectiveOperationException {
     Class<?> commandsClass = RedisCommands.class;
     Method authMethod;
