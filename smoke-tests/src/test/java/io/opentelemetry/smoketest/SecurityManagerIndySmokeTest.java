@@ -5,6 +5,9 @@
 
 package io.opentelemetry.smoketest;
 
+import org.junit.jupiter.api.condition.DisabledIf;
+
+@DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SecurityManagerIndySmokeTest extends SecurityManagerSmokeTest {
 
   @Override

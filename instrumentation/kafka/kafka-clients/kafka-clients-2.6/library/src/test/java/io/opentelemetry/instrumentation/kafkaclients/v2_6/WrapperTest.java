@@ -40,6 +40,7 @@ import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class WrapperTest extends AbstractWrapperTest {
 
   @Override
@@ -93,7 +94,6 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(1))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(
       boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
@@ -119,7 +119,6 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> processAttributes(
       String greeting, boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
@@ -145,7 +144,6 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -165,7 +163,6 @@ class WrapperTest extends AbstractWrapperTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void testConsumerError() {
     KafkaTelemetryBuilder telemetryBuilder = KafkaTelemetry.builder(testing.getOpenTelemetry());
     configure(telemetryBuilder);
