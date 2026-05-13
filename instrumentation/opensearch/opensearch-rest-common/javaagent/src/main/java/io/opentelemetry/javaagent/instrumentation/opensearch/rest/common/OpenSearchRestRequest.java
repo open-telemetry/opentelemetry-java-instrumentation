@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
+package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common;
 
 import com.google.auto.value.AutoValue;
 
