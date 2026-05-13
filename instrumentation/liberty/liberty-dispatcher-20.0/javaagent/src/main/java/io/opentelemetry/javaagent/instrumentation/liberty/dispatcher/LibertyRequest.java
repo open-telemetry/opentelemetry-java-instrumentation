@@ -74,6 +74,7 @@ final class LibertyRequest {
     return stringHeaders;
   }
 
+  @Nullable
   String getProtocol() {
     return httpRequestMessage.getVersion();
   }
