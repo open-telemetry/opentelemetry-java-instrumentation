@@ -232,3 +232,4 @@ jms-common-1.1:javaagent-unit-tests
 jmx-metrics:javaagent
 jmx-metrics:library
 testing-apps:camel-testing-app
+testing-apps:testing-webapp
