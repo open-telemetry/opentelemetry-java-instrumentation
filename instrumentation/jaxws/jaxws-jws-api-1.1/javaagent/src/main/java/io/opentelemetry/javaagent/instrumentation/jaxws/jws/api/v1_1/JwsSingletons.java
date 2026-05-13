@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
+package io.opentelemetry.javaagent.instrumentation.jaxws.jws.api.v1_1;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.jaxws.common.v2_0.JaxWsInstrumenterFactory;
