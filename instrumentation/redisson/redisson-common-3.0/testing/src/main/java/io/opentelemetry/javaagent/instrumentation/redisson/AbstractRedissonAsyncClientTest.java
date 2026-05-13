@@ -42,11 +42,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.redisson.Redisson;
 import org.redisson.api.BatchOptions;
@@ -63,7 +61,6 @@ import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public abstract class AbstractRedissonAsyncClientTest {
 
   @RegisterExtension
@@ -95,7 +92,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @BeforeEach
-  void setup() throws InvocationTargetException, IllegalAccessException {
+  void setup(TestInfo testInfo) throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
       // Newer versions of redisson require scheme, older versions forbid it
@@ -105,9 +102,11 @@ public abstract class AbstractRedissonAsyncClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
-    // When verifying the futureWhenCompleteLazyConnection test case, simulate reconnection during
-    // Redis command execution.
-    singleServerConfig.setConnectionMinimumIdleSize(0);
+    if (testInfo.getTestMethod().get().getName().equals("futureWhenComplete")) {
+      // When verifying the futureWhenComplete test case, simulate reconnection during Redis command
+      // execution.
+      singleServerConfig.setConnectionMinimumIdleSize(0);
+    }
     try {
       // disable connection ping if it exists
       singleServerConfig
@@ -126,42 +125,6 @@ public abstract class AbstractRedissonAsyncClientTest {
     if (redisson != null) {
       redisson.shutdown();
     }
-  }
-
-  @Test
-  @Order(1)
-  void futureWhenCompleteLazyConnection() {
-    RSet<String> set = redisson.getSet("set1");
-    CompletionStage<Boolean> result =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              RFuture<Boolean> future = set.addAsync("s1");
-              return future.whenComplete(
-                  (res, throwable) -> {
-                    assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    testing.runWithSpan("callback", () -> {});
-                  });
-            });
-    assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
-
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", "SADD", "callback"),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("SADD")
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SADD"))
-                        .hasParent(trace.getSpan(0)),
-                span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test

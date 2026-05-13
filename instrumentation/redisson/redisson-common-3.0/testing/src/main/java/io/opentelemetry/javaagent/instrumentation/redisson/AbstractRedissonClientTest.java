@@ -46,11 +46,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.redisson.Redisson;
 import org.redisson.api.BatchOptions;
@@ -71,7 +69,6 @@ import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public abstract class AbstractRedissonClientTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractRedissonClientTest.class);
@@ -102,7 +99,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @BeforeEach
-  void setup() throws InvocationTargetException, IllegalAccessException {
+  void setup(TestInfo testInfo) throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
       // Newer versions of redisson require scheme, older versions forbid it
@@ -119,9 +116,12 @@ public abstract class AbstractRedissonClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
-    // When verifying the stringCommandLazyConnection test case, simulate reconnection during Redis
-    // command execution.
-    singleServerConfig.setConnectionMinimumIdleSize(0);
+    if (testInfo.getTestMethod().get().getName().equals("stringCommandLazyConnection")) {
+      // When verifying the stringCommandLazyConnection test case, simulate reconnection during
+      // Redis
+      // command execution.
+      singleServerConfig.setConnectionMinimumIdleSize(0);
+    }
     try {
       // disable connection ping if it exists
       singleServerConfig
@@ -143,7 +143,6 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  @Order(1)
   void stringCommandLazyConnection() {
     testing.runWithSpan(
         "parent",
@@ -160,6 +159,7 @@ public abstract class AbstractRedissonClientTest {
                 span ->
                     span.hasName("SET")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
