@@ -66,8 +66,9 @@ public final class EmbeddedInstrumentationProperties {
   private static final Pattern NORMALIZE_VERSION = Pattern.compile("([0-9]+)\\.([0-9]+)");
   private static final Pattern EXTRACT_VERSION = Pattern.compile(".*?([0-9.]*)$");
 
+  // visible for testing
   @Nullable
-  private static String loadVersionFromClass(String instrumentationName) {
+  static String loadVersionFromClass(String instrumentationName) {
     // The same logic is duplicated in otel.instrumentation-version
     // Strip trailing version suffix and remove dashes
     String moduleName =
@@ -90,8 +91,9 @@ public final class EmbeddedInstrumentationProperties {
     }
   }
 
+  // visible for testing
   @Nullable
-  private static String loadVersionFromProperties(String instrumentationName) {
+  static String loadVersionFromProperties(String instrumentationName) {
     String path =
         "META-INF/io/opentelemetry/instrumentation/" + instrumentationName + ".properties";
     try (InputStream in = loader.getResourceAsStream(path)) {
