@@ -69,6 +69,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
             });
 
     KafkaStreams streams = streamBuilder.createStreams(values, config, STREAM_PROCESSED);
+    cleanup.deferCleanup(() -> streams.close());
     streams.start();
 
     String greeting = "TESTING TESTING 123!";

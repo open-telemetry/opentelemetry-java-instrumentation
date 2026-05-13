@@ -82,6 +82,18 @@ directly is still fine.
 `settings.gradle.kts` is the exception: it cannot use project extensions like `otelProps`, so
 direct `gradle.startParameter.projectProperties[...]` access is expected there.
 
+### `testLatestDeps` Test JVM Property
+
+Do not add `systemProperty("testLatestDeps", otelProps.testLatestDeps)` solely because a module
+has `latestDepTestLibrary(...)` declarations or sibling modules set the property. Add it only when
+the module's test JVM actually needs to read the flag, for example when an in-scope test source or
+shared testing source used by that module calls `TestLatestDeps.testLatestDeps()` / `testLatestDeps()`
+or checks the `testLatestDeps` system property directly.
+
+`latestDepTestLibrary(...)` already affects Gradle dependency resolution when
+`-PtestLatestDeps=true` is set; the system property is only for runtime test code that branches on
+that mode.
+
 ## `testInstrumentation` Dependencies
 
 The `testInstrumentation` configuration declares which other javaagent instrumentation modules

@@ -12,6 +12,7 @@ import io.opentelemetry.api.metrics.Meter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import oshi.SystemInfo;
 import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
@@ -22,13 +23,14 @@ public final class ProcessMetrics {
 
   // getResidentSetSize() was deprecated in oshi 6.11.0 and removed in 7.0.0; the replacement
   // getResidentMemory() was added in 6.11.0.
-  private static final Method RESIDENT_MEMORY_METHOD = findResidentMemoryMethod();
+  @Nullable private static final Method RESIDENT_MEMORY_METHOD = findResidentMemoryMethod();
 
+  @Nullable
   private static Method findResidentMemoryMethod() {
     for (String name : new String[] {"getResidentMemory", "getResidentSetSize"}) {
       try {
         return OSProcess.class.getMethod(name);
-      } catch (NoSuchMethodException e) {
+      } catch (NoSuchMethodException ignored) {
         // try next
       }
     }
@@ -41,7 +43,7 @@ public final class ProcessMetrics {
     }
     try {
       return (long) RESIDENT_MEMORY_METHOD.invoke(process);
-    } catch (ReflectiveOperationException e) {
+    } catch (ReflectiveOperationException ignored) {
       return 0;
     }
   }

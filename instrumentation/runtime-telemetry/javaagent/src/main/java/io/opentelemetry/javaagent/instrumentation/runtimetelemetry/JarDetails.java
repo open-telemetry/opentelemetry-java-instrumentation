@@ -43,7 +43,7 @@ class JarDetails {
               collectingAndThen(
                   toMap(ext -> ('.' + ext + "!/"), identity()),
                   Collections::<String, String>unmodifiableMap));
-  private static final ThreadLocal<MessageDigest> SHA1 =
+  private static final ThreadLocal<MessageDigest> sha1 =
       ThreadLocal.withInitial(
           () -> {
             try {
@@ -88,14 +88,14 @@ class JarDetails {
                 url,
                 getPom(jarFile, jarEntry),
                 getManifest(jarFile, jarEntry),
-                computeDigest(jarFile, jarEntry, SHA1.get()));
+                computeDigest(jarFile, jarEntry, sha1.get()));
           }
         }
       }
     }
     try (JarFile jarFile = new JarFile(UrlPaths.toFile(url))) {
       return new JarDetails(
-          url, getPom(jarFile), getManifest(jarFile), computeDigest(url, SHA1.get()));
+          url, getPom(jarFile), getManifest(jarFile), computeDigest(url, sha1.get()));
     }
   }
 

@@ -116,7 +116,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
     public static void addDbInfo(
         @Advice.Return @Nullable PreparedStatement statement,
         @Advice.Enter Object[] enterResult,
-        @Advice.Thrown Throwable error) {
+        @Advice.Thrown @Nullable Throwable error) {
       Context context = Java8BytecodeBridge.currentContext();
       PrepareContext prepareContext = PrepareContext.get(context);
       Scope scope = (Scope) enterResult[1];

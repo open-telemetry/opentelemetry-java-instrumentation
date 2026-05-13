@@ -49,8 +49,8 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractGraphqlTest {
 
-  private static final String DATA_FETCHER_PROPERTY =
-      "otel.instrumentation.graphql.data-fetcher.enabled";
+  private static final boolean DATA_FETCHER_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.graphql.data-fetcher.enabled");
 
   private final List<Map<String, String>> books = new ArrayList<>();
   private final List<Map<String, String>> authors = new ArrayList<>();
@@ -67,7 +67,7 @@ public abstract class AbstractGraphqlTest {
   }
 
   private boolean includeDataFetcher() {
-    return Boolean.getBoolean(DATA_FETCHER_PROPERTY) && hasDataFetcherSpans();
+    return DATA_FETCHER_ENABLED && hasDataFetcherSpans();
   }
 
   @BeforeAll

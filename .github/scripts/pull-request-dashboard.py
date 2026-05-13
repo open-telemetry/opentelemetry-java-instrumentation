@@ -30,6 +30,8 @@ from typing import Any
 DEFAULT_OUTPUT = "pull-request-dashboard.md"
 DEFAULT_JOBS = 4
 DEFAULT_MODEL = "gpt-5.4-mini"
+GH_RETRY_ATTEMPTS = 4
+GH_RETRY_DELAY_SECONDS = 1.5
 PER_THREAD_TIMEOUT = 180
 PR_COMMENT_WINDOW = 20
 MAX_BODY_CHARS = 1200
@@ -55,23 +57,22 @@ Use these labels:
   - unclear: the thread does not contain enough information to decide
 
 Guidance:
-  - A reviewer saying "this works", "sounds good", or answering the author's
-    question may still leave the next implementation step with the author.
-  - An author saying "fixed", pushing a commit after feedback, or answering a
-    reviewer question usually puts the thread back in the reviewer court.
-  - If the author's latest comment asks the reviewer a question or requests
-    reviewer input, classify the thread as reviewer.
-    - If thread_facts.same_actor_approved_after_thread is true, use that only as
-        supporting evidence that an optional suggestion or informational comment is
-        non-blocking. Do not classify required follow-up as none just because the
-        same actor later approved.
-    - A reviewer sharing a reference, example, optional suggestion, or "for ideas"
-        link without an explicit requested change is informational; classify it as
-        none.
-  - If the thread is merely informational and does not require action, classify
-    it as none.
-  - If the thread is purely social, for example "thanks", "LGTM", or "nice work",
-    with no follow-up requested or implied, classify it as none.
+  - Default heuristic: whoever commented last has passed the ball to the other
+    side. If the latest comment is from a reviewer/approver, the author owes a
+    response (classify as author). If the latest comment is from the author,
+    the reviewer owes a response (classify as reviewer).
+  - This applies even to optional suggestions, "for ideas" links, references,
+    or links to a reviewer's own pull request / patch with proposed changes.
+    The author still needs to acknowledge, accept, or push back.
+  - Exceptions that map to none:
+    - Purely social comments ("thanks", "LGTM", "nice work") with no follow-up
+      requested or implied.
+    - The reviewer's last comment is a clear acknowledgement of the author's
+      previous reply ("sounds good", "ok thanks") that closes the thread.
+  - Exception that keeps the ball with the author: if the author's latest
+    comment is a self-deferral ("still working on it", "WIP", "I'll get to
+    this", "will fix") rather than a question or completed reply, classify as
+    author — they have not yet handed the ball back.
 
 Respond with a single JSON object and nothing else:
 {{"thread_action": "author" | "reviewer" | "external" | "none" | "unclear", "reason": "short explanation grounded in this thread"}}
@@ -89,20 +90,49 @@ Respond with a single JSON object and nothing else:
 # ---------------------------------------------------------------- gh helpers
 
 
+class TransientGhError(RuntimeError):
+    pass
+
+
+def is_retryable_gh_error(stderr: str) -> bool:
+    text = stderr.lower()
+    return (
+        "http 5" in text
+        or "gateway timeout" in text
+        or "timeout" in text
+        or "temporarily unavailable" in text
+        or "connection reset" in text
+        or "connection refused" in text
+    )
+
+
+def gh_retry_delay(attempt: int) -> None:
+    time.sleep(GH_RETRY_DELAY_SECONDS * (attempt + 1))
+
+
 def run_gh_json(cmd: list[str], token: str | None = None) -> Any:
     env = {**os.environ, "GH_TOKEN": token} if token else None
-    proc = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        check=False,
-        encoding="utf-8",
-        errors="replace",
-        env=env,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError(f"{' '.join(cmd)} failed: {proc.stderr.strip()}")
-    return json.loads(proc.stdout or "null")
+    last_stderr = ""
+    for attempt in range(GH_RETRY_ATTEMPTS):
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=False,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
+        )
+        if proc.returncode == 0:
+            return json.loads(proc.stdout or "null")
+        last_stderr = proc.stderr.strip()
+        if attempt == GH_RETRY_ATTEMPTS - 1 or not is_retryable_gh_error(last_stderr):
+            break
+        gh_retry_delay(attempt)
+    message = f"{' '.join(cmd)} failed: {last_stderr}"
+    if is_retryable_gh_error(last_stderr):
+        raise TransientGhError(message)
+    raise RuntimeError(message)
 
 
 def gh_api(path: str, paginate: bool = False, token: str | None = None) -> Any:
@@ -140,7 +170,8 @@ def gh_pr_view(repo: str, number: int) -> dict[str, Any]:
         "headRefOid", "body",
     ])
     last: dict[str, Any] = {}
-    for attempt in range(4):
+    last_stderr = ""
+    for attempt in range(GH_RETRY_ATTEMPTS):
         proc = subprocess.run(
             ["gh", "pr", "view", str(number), "--repo", repo, "--json", fields],
             capture_output=True,
@@ -150,12 +181,19 @@ def gh_pr_view(repo: str, number: int) -> dict[str, Any]:
             errors="replace",
         )
         if proc.returncode != 0:
-            raise RuntimeError(f"gh pr view {number} failed: {proc.stderr.strip()}")
+            last_stderr = proc.stderr.strip()
+            if attempt == GH_RETRY_ATTEMPTS - 1 or not is_retryable_gh_error(last_stderr):
+                message = f"gh pr view {number} failed: {last_stderr}"
+                if is_retryable_gh_error(last_stderr):
+                    raise TransientGhError(message)
+                raise RuntimeError(message)
+            gh_retry_delay(attempt)
+            continue
         last = json.loads(proc.stdout or "{}")
         if last.get("mergeable") not in (None, "", "UNKNOWN"):
             return last
-        if attempt < 3:
-            time.sleep(1.5)
+        if attempt < GH_RETRY_ATTEMPTS - 1:
+            gh_retry_delay(attempt)
     return last
 
 
@@ -274,10 +312,25 @@ def parse_ts(s: str | None) -> datetime | None:
     return datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
-def days_since(ts: datetime | None) -> int | None:
+def seconds_since(ts: datetime | None) -> int | None:
     if ts is None:
         return None
-    return max(0, (datetime.now(timezone.utc) - ts).days)
+    return max(0, int((datetime.now(timezone.utc) - ts).total_seconds()))
+
+
+def activity_age(ts: datetime | None) -> str:
+    seconds = seconds_since(ts)
+    if seconds is None:
+        return "?"
+    minutes = seconds // 60
+    if minutes < 1:
+        return "<1m"
+    if minutes < 60:
+        return f"{minutes}m"
+    hours = minutes // 60
+    if hours < 24:
+        return f"{hours}h"
+    return f"{hours // 24}d"
 
 
 def truncate(s: str, n: int = MAX_BODY_CHARS) -> str:
@@ -331,7 +384,7 @@ def fetch_pr_raw(
     pr_summary: dict[str, Any],
 ) -> dict[str, Any]:
     number = pr_summary["number"]
-    with ThreadPoolExecutor(max_workers=7) as pool:
+    with ThreadPoolExecutor(max_workers=8) as pool:
         f_pr = pool.submit(gh_pr_view, repo, number)
         f_issue = pool.submit(
             gh_api,
@@ -353,6 +406,11 @@ def fetch_pr_raw(
             f"/repos/{owner}/{repo_name}/pulls/{number}/commits?per_page=100",
             True,
         )
+        f_timeline = pool.submit(
+            gh_api,
+            f"/repos/{owner}/{repo_name}/issues/{number}/timeline?per_page=100",
+            True,
+        )
         f_checks = pool.submit(gh_pr_checks, repo, number)
         f_threads = pool.submit(fetch_review_threads, owner, repo_name, number)
         return {
@@ -362,6 +420,7 @@ def fetch_pr_raw(
             "review_comments": f_revcom.result() or [],
             "reviews": f_reviews.result() or [],
             "commits": f_commits.result() or [],
+            "timeline": f_timeline.result() or [],
             "checks": f_checks.result() or [],
             "review_threads": f_threads.result() or [],
         }
@@ -441,6 +500,21 @@ def normalize_events(raw: dict[str, Any], author: str, reviewers: set[str]) -> l
             "sha": None,
             "is_merge_from_base_by_non_author": False,
         })
+    for t in raw["timeline"]:
+        if t.get("event") != "ready_for_review":
+            continue
+        login = actor_login(t.get("actor") or {})
+        events.append({
+            "kind": "ready-for-review",
+            "timestamp": t.get("created_at") or "",
+            "actor": login,
+            "actor_role": "author",
+            "body": "",
+            "state": None,
+            "path": None,
+            "sha": None,
+            "is_merge_from_base_by_non_author": False,
+        })
     events = [e for e in events if e["timestamp"]]
     events.sort(key=lambda e: e["timestamp"])
     return events
@@ -451,6 +525,8 @@ def is_substantive_activity(event: dict[str, Any]) -> bool:
         return False
     if event.get("actor_role") == "bot":
         return False
+    if event["kind"] == "ready-for-review":
+        return True
     if event["kind"] == "review-state" and event.get("state") != "COMMENTED":
         return True
     return bool((event.get("body") or "").strip())
@@ -466,14 +542,49 @@ def compute_conflicts(pr: dict[str, Any]) -> str:
     return "no"
 
 
-def compute_facts(raw: dict[str, Any], events: list[dict[str, Any]], author: str) -> dict[str, Any]:
+def latest_substantive_activity(events: list[dict[str, Any]], actor_roles: set[str]) -> datetime | None:
+    timestamps = [
+        parse_ts(e["timestamp"])
+        for e in events
+        if e.get("actor_role") in actor_roles and is_substantive_activity(e)
+    ]
+    timestamps = [ts for ts in timestamps if ts is not None]
+    return max(timestamps) if timestamps else None
+
+
+def ts_text(ts: datetime | None) -> str:
+    return ts.isoformat() if ts else ""
+
+
+def is_copilot_review(review: dict[str, Any]) -> bool:
+    login = actor_login(review.get("user") or {}).lower()
+    return login == "copilot-pull-request-reviewer[bot]"
+
+
+def latest_copilot_review_clean(reviews: list[dict[str, Any]], review_comments: list[dict[str, Any]]) -> tuple[bool, bool]:
+    candidates = [r for r in reviews if is_copilot_review(r) and r.get("submitted_at")]
+    if not candidates:
+        return False, False
+    latest = max(candidates, key=lambda r: r.get("submitted_at") or "")
+    review_id = latest.get("id")
+    has_comments = any(c.get("pull_request_review_id") == review_id for c in review_comments)
+    return True, not has_comments
+
+
+def compute_facts(raw: dict[str, Any], author: str, events: list[dict[str, Any]]) -> dict[str, Any]:
     pr = raw["pr"]
     checks = raw["checks"]
     failing = [c for c in checks if (c.get("state") or "").upper() in ("FAILURE", "ERROR")]
     pending = [c for c in checks if (c.get("state") or "").upper() in ("PENDING", "QUEUED", "IN_PROGRESS")]
-    substantive = [e for e in events if is_substantive_activity(e)]
-    last_activity_ts = parse_ts((substantive[-1] or {}).get("timestamp")) if substantive else None
+    last_activity_ts = parse_ts(pr["updatedAt"])
+    created_ts = parse_ts(pr["createdAt"])
+    author_activity_ts = latest_substantive_activity(events, {"author"})
+    approver_activity_ts = latest_substantive_activity(events, {"approver"})
+    external_activity_ts = latest_substantive_activity(events, {"outsider"})
     api_author = actor_login(pr.get("author") or {})
+    copilot_reviewed, copilot_review_clean = latest_copilot_review_clean(
+        raw["reviews"], raw["review_comments"]
+    )
     return {
         "author": author,
         "is_otelbot_author": api_author.lower() == "app/otelbot",
@@ -482,7 +593,15 @@ def compute_facts(raw: dict[str, Any], events: list[dict[str, Any]], author: str
         "ci_failing_count": len(failing),
         "ci_pending_count": len(pending),
         "conflicts": compute_conflicts(pr),
-        "days_since_last_activity": days_since(last_activity_ts),
+        "copilot_reviewed": copilot_reviewed,
+        "copilot_review_clean": copilot_review_clean,
+        "created_at": ts_text(created_ts),
+        "last_activity_at": ts_text(last_activity_ts),
+        "last_author_activity_at": ts_text(author_activity_ts),
+        "last_approver_activity_at": ts_text(approver_activity_ts),
+        "last_external_activity_at": ts_text(external_activity_ts),
+        "seconds_since_last_activity": seconds_since(last_activity_ts),
+        "last_activity_age": activity_age(last_activity_ts),
     }
 
 
@@ -495,35 +614,13 @@ def thread_comment(timestamp: str, actor: str, author: str, reviewers: set[str],
     }
 
 
-def approver_approved_after_thread(raw: dict[str, Any], comments: list[dict[str, Any]]) -> bool:
-    last_comment_ts = comments[-1]["timestamp"]
-    thread_approvers = {
-        c["actor"].lower()
-        for c in comments
-        if c["actor_role"] == "approver" and c.get("actor")
-    }
-    if not thread_approvers:
-        return False
-    for review in raw["reviews"]:
-        reviewer = actor_login(review.get("user") or {}).lower()
-        if reviewer not in thread_approvers:
-            continue
-        if review.get("state") != "APPROVED":
-            continue
-        if (review.get("submitted_at") or "") > last_comment_ts:
-            return True
-    return False
-
-
 def add_thread_facts(
-    raw: dict[str, Any],
     thread: dict[str, Any],
     comments: list[dict[str, Any]],
     facts: dict[str, Any],
 ) -> dict[str, Any]:
     thread["thread_facts"] = {
         "latest_comment_role": comments[-1].get("actor_role"),
-        "same_actor_approved_after_thread": approver_approved_after_thread(raw, comments),
         "current_conflicts": facts.get("conflicts"),
     }
     return thread
@@ -547,7 +644,7 @@ def group_review_threads(
         comments.sort(key=lambda c: c["timestamp"])
         if not comments:
             continue
-        threads.append(add_thread_facts(raw, {
+        threads.append(add_thread_facts({
             "thread_id": thread.get("id") or f"review-thread-{len(threads) + 1}",
             "thread_kind": "review-comment-thread",
             "path": thread.get("path"),
@@ -603,7 +700,7 @@ def group_pr_conversation(
     selected = selected[-PR_COMMENT_WINDOW:]
     if not selected:
         return []
-    return [add_thread_facts(raw, {
+    return [add_thread_facts({
         "thread_id": "pr-conversation",
         "thread_kind": "pr-conversation",
         "path": None,
@@ -782,13 +879,20 @@ def classify_threads(
 
 
 SIDE_LABELS = {
-    "maintainer": "Waiting on maintainer (approved)",
+    "maintainer": "Waiting on maintainers",
     "approver": "Waiting on approvers",
     "author": "Waiting on authors",
     "external": "Waiting on external",
+    "transient-failure": "Transient GitHub failure retrieving PR data",
     "unknown": "Unknown",
 }
-SIDE_ORDER = ["maintainer", "approver", "author", "external", "unknown"]
+SIDE_ORDER = ["maintainer", "approver", "author", "external", "transient-failure", "unknown"]
+SIDE_THREAD_ACTIONS = {
+    "author": "author",
+    "approver": "reviewer",
+    "maintainer": "reviewer",
+    "external": "external",
+}
 
 
 def action_counts(classifications: list[dict[str, Any]]) -> dict[str, int]:
@@ -814,6 +918,61 @@ def route_pr(facts: dict[str, Any], classifications: list[dict[str, Any]]) -> st
     if facts.get("approved"):
         return "maintainer"
     return "approver"
+
+
+def thread_by_id(threads: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return {t["thread_id"]: t for t in threads}
+
+
+def thread_latest_comment_ts(thread: dict[str, Any] | None) -> datetime | None:
+    comments = (thread or {}).get("comments") or []
+    if not comments:
+        return None
+    return parse_ts(comments[-1].get("timestamp") or "")
+
+
+def oldest_thread_wait_ts(
+    threads: list[dict[str, Any]],
+    classifications: list[dict[str, Any]],
+    action: str,
+) -> datetime | None:
+    threads_by_id = thread_by_id(threads)
+    timestamps = [
+        thread_latest_comment_ts(threads_by_id.get(c.get("thread_id") or ""))
+        for c in classifications
+        if valid_thread_action((c.get("decision") or {}).get("thread_action") or "") == action
+    ]
+    timestamps = [ts for ts in timestamps if ts is not None]
+    return min(timestamps) if timestamps else None
+
+
+def fallback_wait_ts(side: str, facts: dict[str, Any]) -> tuple[datetime | None, str]:
+    if side in ("approver", "maintainer"):
+        return parse_ts(facts.get("last_author_activity_at") or ""), "last_author_activity"
+    if side == "author":
+        return parse_ts(facts.get("last_approver_activity_at") or ""), "last_approver_activity"
+    if side == "external":
+        return parse_ts(facts.get("last_external_activity_at") or ""), "last_external_activity"
+    return parse_ts(facts.get("last_activity_at") or ""), "last_activity"
+
+
+def add_wait_age_facts(
+    facts: dict[str, Any],
+    side: str,
+    threads: list[dict[str, Any]],
+    classifications: list[dict[str, Any]],
+) -> None:
+    action = SIDE_THREAD_ACTIONS.get(side)
+    wait_ts = oldest_thread_wait_ts(threads, classifications, action) if action else None
+    basis = "oldest_pending_thread" if wait_ts else ""
+    if wait_ts is None:
+        wait_ts, basis = fallback_wait_ts(side, facts)
+    if wait_ts is None:
+        wait_ts = parse_ts(facts.get("created_at") or "")
+        basis = "created"
+    facts["seconds_since_waiting"] = seconds_since(wait_ts)
+    facts["waiting_age"] = activity_age(wait_ts)
+    facts["waiting_age_basis"] = basis
 
 
 def _md_escape(s: str) -> str:
@@ -861,7 +1020,28 @@ def render_workflow_failure_section(issues: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def render_draft_pr_section(prs: list[dict[str, Any]]) -> list[str]:
+    drafts = [p for p in prs if p.get("isDraft")]
+    if not drafts:
+        return []
+    drafts.sort(key=lambda p: p.get("updatedAt") or "")
+    lines = ["## Draft pull requests", ""]
+    lines.append("| PR | Author | Updated |")
+    lines.append("|---|---|:---:|")
+    for pr in drafts:
+        number = pr["number"]
+        title = _md_escape(pr.get("title", ""))
+        url = pr.get("url", "")
+        author = actor_login(pr.get("author") or {})
+        updated = activity_age(parse_ts(pr.get("updatedAt") or ""))
+        lines.append(f"| [{title} (#{number})]({url}) | {author} | {updated} |")
+    lines.append("")
+    return lines
+
+
 def ci_cell(facts: dict[str, Any]) -> str:
+    if "ci_failing_count" not in facts and "ci_pending_count" not in facts:
+        return "?"
     if facts.get("ci_failing_count", 0) > 0:
         return "❌"
     if facts.get("ci_pending_count", 0) > 0:
@@ -878,6 +1058,30 @@ def conflicts_cell(facts: dict[str, Any]) -> str:
     return "?"
 
 
+def approved_cell(facts: dict[str, Any]) -> str:
+    if "approved" not in facts:
+        return "?"
+    return "✅" if facts.get("approved") else " "
+
+
+def copilot_cell(facts: dict[str, Any]) -> str:
+    if facts.get("copilot_reviewed") and facts.get("copilot_review_clean"):
+        return "✅"
+    return " "
+
+
+def age_seconds(facts: dict[str, Any]) -> int | None:
+    value = facts.get("seconds_since_waiting")
+    if isinstance(value, int):
+        return value
+    fallback = facts.get("seconds_since_last_activity")
+    return fallback if isinstance(fallback, int) else None
+
+
+def age_cell(facts: dict[str, Any]) -> str:
+    return facts.get("waiting_age") or facts.get("last_activity_age") or "?"
+
+
 def _html_escape(s: str) -> str:
     return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -891,7 +1095,9 @@ def render_diagnostics_section(results: dict[int, dict[str, Any]]) -> list[str]:
         lines.append(f"PR #{number}")
         lines.append(
             f"facts: approved={facts.get('approved')} conflicts={facts.get('conflicts')} "
-            f"days_since_last_activity={facts.get('days_since_last_activity')}"
+            f"age={age_cell(facts)} "
+            f"age_basis={facts.get('waiting_age_basis')} "
+            f"last_activity_age={facts.get('last_activity_age')}"
         )
         lines.append("threads: " + " ".join(f"{k}={v}" for k, v in counts.items()))
         for c in result.get("classifications") or []:
@@ -909,14 +1115,18 @@ def render_diagnostics_section(results: dict[int, dict[str, Any]]) -> list[str]:
 def render_markdown_compact(
     prs: list[dict[str, Any]],
     results: dict[int, dict[str, Any]],
+    repo: str,
     workflow_issues: list[dict[str, Any]] | None = None,
 ) -> str:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    source_url = f"https://github.com/{repo}/blob/main/.github/scripts/pull-request-dashboard.py"
+    refresh_url = f"https://github.com/{repo}/actions/workflows/pr-review-dashboard.yml"
     out: list[str] = [
         "> [!NOTE]",
-        "> Open PRs are grouped by deterministic routing over per-thread LLM classifications. "
-        "CI, conflicts, and activity age are computed deterministically and are shown as facts, "
-        "not used as standalone routing reasons.",
+        "> Open non-draft PRs grouped by who is expected to act next. Draft PRs are "
+        "listed separately. The grouping is "
+        f"partly performed by an LLM ([source]({source_url})) and could contain mistakes. "
+        f"Refreshed about every hour. Last refresh: {now}.",
         "",
     ]
 
@@ -927,15 +1137,21 @@ def render_markdown_compact(
         res = results.get(pr["number"]) or {"side": "unknown"}
         by_side.setdefault(res.get("side") or "unknown", []).append(pr)
 
+    def row_sort_key(pr: dict[str, Any]) -> tuple[int, int]:
+        res = results.get(pr["number"]) or {}
+        facts = res.get("facts") or {}
+        activity = age_seconds(facts)
+        return (activity if isinstance(activity, int) else -1, pr["number"])
+
     for side in SIDE_ORDER:
         rows = by_side.get(side) or []
         if not rows:
             continue
-        rows.sort(key=lambda p: -p["number"])
+        rows.sort(key=row_sort_key, reverse=True)
         out.append(f"## {SIDE_LABELS.get(side, side)}")
         out.append("")
-        out.append("| PR | Author | CI | Conflicts | Activity |")
-        out.append("|---|---|---|---|---|")
+        out.append("| PR | Author | CI | Conflicts | Copilot | Age |")
+        out.append("|---|---|:---:|:---:|:---:|:---:|")
         for pr in rows:
             number = pr["number"]
             title = _md_escape(pr.get("title", ""))
@@ -943,17 +1159,20 @@ def render_markdown_compact(
             res = results.get(number) or {}
             facts = res.get("facts") or {}
             author = facts.get("author") or actor_login(pr.get("author") or {})
-            activity = facts.get("days_since_last_activity")
-            activity_cell = "?" if activity is None else f"{activity}d"
+            activity_cell = age_cell(facts)
+            pr_cell = f"[{title} (#{number})]({url})"
+            if facts.get("approved"):
+                pr_cell += " ✅"
             out.append(
-                f"| [{title}]({url}) | {author} | {ci_cell(facts)} | "
-                f"{conflicts_cell(facts)} | {activity_cell} |"
+                f"| {pr_cell} | {author} | {ci_cell(facts)} | "
+                f"{conflicts_cell(facts)} | {copilot_cell(facts)} | {activity_cell} |"
             )
         out.append("")
 
     out.extend(render_workflow_failure_section(workflow_issues or []))
+    out.extend(render_draft_pr_section(prs))
     out.extend(render_diagnostics_section(results))
-    out.append(f"_Generated {now}_")
+    out.append(f"_Approvers may [force a refresh]({refresh_url})._")
     out.append("")
     return "\n".join(out) + "\n"
 
@@ -974,10 +1193,11 @@ def build_pr_result(
         raw = fetch_pr_raw(repo, owner, repo_name, pr_summary)
         author, delegator = effective_author(raw)
         events = normalize_events(raw, author, reviewers)
-        facts = compute_facts(raw, events, author)
+        facts = compute_facts(raw, author, events)
         threads = group_discussion_threads(raw, events, author, reviewers, facts)
         classifications = classify_threads(repo, number, raw["pr"], facts, threads, model)
         side = route_pr(facts, classifications)
+        add_wait_age_facts(facts, side, threads, classifications)
         return {
             "pr": number,
             "returncode": 0,
@@ -987,6 +1207,16 @@ def build_pr_result(
             "threads": threads,
             "classifications": classifications,
             "side": side,
+        }
+    except TransientGhError as e:
+        return {
+            "pr": number,
+            "returncode": -1,
+            "facts": {},
+            "threads": [],
+            "classifications": [],
+            "side": "transient-failure",
+            "raw_stderr": repr(e),
         }
     except Exception as e:
         return {
@@ -1042,7 +1272,7 @@ def main() -> int:
             )
 
     workflow_issues = fetch_workflow_failure_issues(repo)
-    md = render_markdown_compact(prs, results, workflow_issues)
+    md = render_markdown_compact(prs, results, repo, workflow_issues)
     Path(args.output).write_text(md, encoding="utf-8")
     print(f"wrote {args.output}", file=sys.stderr)
     return 0

@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constan
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.BYTES;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.METRIC_DESCRIPTION_COMMITTED;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.METRIC_NAME_COMMITTED;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import org.junit.jupiter.api.Test;
@@ -35,10 +34,10 @@ class MetaspaceMemoryCommittedMetricTest {
                 .hasName(METRIC_NAME_COMMITTED)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_COMMITTED)
-                .satisfies(
-                    data ->
-                        assertThat(data.getLongSumData().getPoints())
-                            .anyMatch(p -> p.getAttributes().equals(ATTR_COMPRESSED_CLASS_SPACE))
-                            .anyMatch(p -> p.getAttributes().equals(ATTR_METASPACE))));
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.containsPointsSatisfying(
+                            point -> point.hasAttributes(ATTR_COMPRESSED_CLASS_SPACE),
+                            point -> point.hasAttributes(ATTR_METASPACE))));
   }
 }

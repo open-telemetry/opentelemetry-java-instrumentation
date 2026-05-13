@@ -51,8 +51,8 @@ import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"InterruptedExceptionSwallowed", "deprecation"}) // using deprecated semconv
 public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClientTest {
-  private static String dbUriNonExistent;
-  private static int incorrectPort;
+  private String dbUriNonExistent;
+  private int incorrectPort;
 
   private static final ImmutableMap<String, String> TEST_HASH_MAP =
       ImmutableMap.of(
@@ -60,7 +60,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
           "lastname", "Doe",
           "age", "53");
 
-  private static RedisAsyncCommands<String, String> asyncCommands;
+  private RedisAsyncCommands<String, String> asyncCommands;
 
   @BeforeAll
   void setUp() throws UnknownHostException {

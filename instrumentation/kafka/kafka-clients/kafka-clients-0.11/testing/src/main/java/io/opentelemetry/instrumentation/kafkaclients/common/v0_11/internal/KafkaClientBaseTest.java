@@ -85,8 +85,8 @@ public abstract class KafkaClientBaseTest {
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
-  public static final int partition = 0;
-  public static final TopicPartition topicPartition = new TopicPartition(SHARED_TOPIC, partition);
+  public static final int PARTITION = 0;
+  public static final TopicPartition TOPIC_PARTITION = new TopicPartition(SHARED_TOPIC, PARTITION);
 
   @BeforeAll
   void setupClass() throws ExecutionException, InterruptedException, TimeoutException {

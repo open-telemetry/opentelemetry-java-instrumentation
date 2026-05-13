@@ -27,7 +27,7 @@ final class InstrumentationApiContextBridging {
               "io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan",
               Bridging::toApplication,
               Bridging::toAgentOrNull));
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       // no instrumentation-api on classpath
     }
 
@@ -42,7 +42,7 @@ final class InstrumentationApiContextBridging {
               "KEY",
               Bridging::toApplication,
               Bridging::toAgentOrNull));
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       // no old instrumentation-api on classpath
     }
 
@@ -218,7 +218,7 @@ final class InstrumentationApiContextBridging {
           return create.invoke(method, route, updatedBySourceOrder, span);
         }
         return create.invoke(method, route, updatedBySourceOrder);
-      } catch (Throwable e) {
+      } catch (Throwable ignored) {
         return null;
       }
     };

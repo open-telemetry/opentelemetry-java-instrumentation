@@ -12,6 +12,41 @@
 - Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
   Prefer direct assertions whose failure output shows the unexpected values.
 
+## Parameterized Tests
+
+- When the same test logic is repeated for multiple input/output cases, prefer
+  `@ParameterizedTest` over one large test with many unrelated assertions or many small tests that
+  duplicate the same setup.
+- Prefer `@MethodSource` with a private static `Stream<Arguments>` provider for multi-field cases.
+  Keep the provider close to the test that uses it.
+- Prefer a human-readable case name as the first parameter so failures identify the scenario
+  without reading the whole row.
+- Each `Arguments.of(...)` entry should describe one coherent scenario. Prefer one expected outcome
+  per row instead of packing several unrelated expectations into a single parameterized case.
+- In the test body, keep the setup and assertion flow the same for every row. If different rows need
+  materially different control flow, split them into separate tests instead of forcing everything
+  into one parameterized method.
+- Avoid introducing a dedicated `TestCase` wrapper type for parameterized rows. Prefer a readable
+  case name plus plain arguments, and extract a shared expected-value object only when it makes the
+  assertions materially clearer.
+- If a row gets too wide, first look for ways to simplify the assertion shape (for example, compare
+  against one structured expected value) instead of adding another wrapper layer around the row.
+
+Example shape:
+
+```java
+@ParameterizedTest(name = "{0}")
+@MethodSource("testCases")
+void test(String name, Input input, Output expected) {
+  assertThat(run(input)).isEqualTo(expected);
+}
+
+private static Stream<Arguments> testCases() {
+  return Stream.of(
+      Arguments.of("valid input", new Input("input"), new Output("expected")));
+}
+```
+
 ## Test Method Throws Clauses
 
 - On methods annotated with `@Test`, keep the `throws` clause to a single exception type.
@@ -76,6 +111,36 @@
   use `deferAfterAll(...)` instead of `deferCleanup(...)`.
 - If the test intentionally closes the resource mid-test or asserts behavior around explicit
   close, keep the direct close or try-with-resources in the test body.
+
+## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
+
+When an abstract test base is shared by multiple concrete subclasses run in the same JVM
+fork, `static` fixture fields become JVM-wide state the subclasses fight over. Annotate
+the base with `@TestInstance(Lifecycle.PER_CLASS)` and make per-class fixtures
+**instance** fields. JUnit creates one base instance per concrete subclass and reuses it
+for every `@Test`, giving the same once-per-class lifecycle as `static` without leaking
+across subclasses.
+
+What goes where:
+
+- **Instance** (`protected`, not `protected static`): containers, clients, connections,
+  `host` / `port` / URI fields, and any helper method that reads them (e.g.
+  `spanName(String)` reading `host`/`port`).
+- **Instance** `@RegisterExtension AutoCleanupExtension cleanup`: a shared `static`
+  `AutoCleanupExtension` latches `rootContext` on the first subclass's `beforeAll` and
+  never resets it, so `deferAfterAll(...)` callbacks registered by later subclasses
+  silently leak.
+- **`static`** for true JVM-wide constants only: `DB_INDEX`, loggers, `*_HASH_MAP`
+  literals, pure helpers (`addExtraAttributes(...)`, `assertCommandEncodeEvents(...)`),
+  and `@RegisterExtension InstrumentationExtension testing` — the agent/SDK extension
+  must be `static final` because JUnit only invokes `BeforeAllCallback` /
+  `AfterAllCallback` for class-level (static) `@RegisterExtension` fields.
+
+This shape is also required when a subclass needs to mutate the container's builder
+(e.g. `withCommand("--requirepass password")`): with shared `static` state an earlier
+subclass may have already started the container, so `withCommand` on the running
+instance is a no-op; with per-instance state each subclass mutates and starts its own
+fresh container.
 
 ## Span Attribute Assertions
 

@@ -15,13 +15,13 @@ import javax.annotation.Nullable;
 public class RouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<RouteHolder> KEY = named("opentelemetry-vertx-route");
 
-  private String route;
+  @Nullable private String route;
 
-  private RouteHolder(String route) {
+  private RouteHolder(@Nullable String route) {
     this.route = route;
   }
 
-  static Context init(Context context, String route) {
+  static Context init(Context context, @Nullable String route) {
     if (context.get(KEY) != null) {
       return context;
     }

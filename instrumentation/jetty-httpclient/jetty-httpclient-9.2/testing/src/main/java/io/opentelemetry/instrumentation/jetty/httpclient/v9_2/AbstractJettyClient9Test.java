@@ -31,6 +31,10 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
   private HttpClient client;
   private HttpClient httpsClient;
 
+  protected abstract HttpClient createStandardClient();
+
+  protected abstract HttpClient createHttpsClient(SslContextFactory sslContextFactory);
+
   @BeforeEach
   void before() throws Exception {
     // Start the main Jetty HttpClient and a https client
@@ -107,8 +111,4 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
       this.failure = failure;
     }
   }
-
-  protected abstract HttpClient createStandardClient();
-
-  protected abstract HttpClient createHttpsClient(SslContextFactory sslContextFactory);
 }

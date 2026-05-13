@@ -85,7 +85,7 @@ class TwilioSyncInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent(), spanName);
       }
 
-      public void end(Throwable throwable, Object response) {
+      public void end(@Nullable Throwable throwable, @Nullable Object response) {
         scope.close();
         instrumenter().end(context, spanName, response, throwable);
       }

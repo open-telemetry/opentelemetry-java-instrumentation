@@ -28,6 +28,8 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("rxjava.canceled");
 
+  private final boolean captureExperimentalSpanAttributes;
+
   public static RxJava3AsyncOperationEndStrategy create() {
     return builder().build();
   }
@@ -35,8 +37,6 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
   public static RxJava3AsyncOperationEndStrategyBuilder builder() {
     return new RxJava3AsyncOperationEndStrategyBuilder();
   }
-
-  private final boolean captureExperimentalSpanAttributes;
 
   RxJava3AsyncOperationEndStrategy(boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;

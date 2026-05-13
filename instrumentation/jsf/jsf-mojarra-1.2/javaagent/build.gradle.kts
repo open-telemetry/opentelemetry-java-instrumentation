@@ -13,8 +13,8 @@ muzzle {
     group.set("org.glassfish")
     module.set("javax.faces")
     versions.set("[2.0.7,3)")
-    extraDependency("javax.el:el-api:2.2")
     assertInverse.set(true)
+    extraDependency("javax.el:el-api:2.2")
   }
   pass {
     group.set("com.sun.faces")
@@ -34,9 +34,9 @@ muzzle {
     group.set("javax.faces")
     module.set("jsf-impl")
     versions.set("[1.2,2)")
+    assertInverse.set(true)
     extraDependency("javax.faces:jsf-api:1.2")
     extraDependency("javax.el:el-api:1.0")
-    assertInverse.set(true)
   }
   fail {
     group.set("org.glassfish")
