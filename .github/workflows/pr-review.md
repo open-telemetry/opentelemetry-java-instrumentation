@@ -161,7 +161,7 @@ jobs:
           python .github/scripts/pr-review/post.py \
             "$PR_NUMBER" \
             --bundle-dir ./review-bundle \
-            --findings ./agent-artifact/findings.json \
+            --findings ./agent-artifact/agent/findings.json \
             --event COMMENT \
             --triggered-by "$TRIGGERED_BY" \
             --model "$MODEL" \
