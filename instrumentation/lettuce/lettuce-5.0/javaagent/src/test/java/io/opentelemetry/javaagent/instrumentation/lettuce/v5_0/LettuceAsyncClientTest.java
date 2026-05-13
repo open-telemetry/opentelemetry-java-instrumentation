@@ -107,14 +107,14 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   @SuppressWarnings("deprecation") // RedisURI constructor
   @Test
-  void testConnectUsingGetOnConnectionFuture() throws ExecutionException, InterruptedException {
+  void testConnectUsingGetOnConnectionFuture() {
     RedisClient testConnectionClient = RedisClient.create(embeddedDbUri);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
 
     ConnectionFuture<StatefulRedisConnection<String, String>> connectionFuture =
         testConnectionClient.connectAsync(
             new Utf8StringCodec(), new RedisURI(host, port, 3, SECONDS));
-    StatefulRedisConnection<String, String> connection1 = connectionFuture.get();
+    StatefulRedisConnection<String, String> connection1 = connectionFuture.join();
     cleanup.deferCleanup(() -> shutdown(testConnectionClient));
     cleanup.deferCleanup(connection1);
 
