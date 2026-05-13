@@ -273,3 +273,4 @@ lettuce-5.1:testing
 lettuce-common:library
 liberty:compile-stub
 liberty-20.0:javaagent
+liberty-dispatcher-20.0:javaagent
