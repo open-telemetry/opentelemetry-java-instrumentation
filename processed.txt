@@ -314,3 +314,4 @@ netty-common-4.0:library
 netty-common:library
 okhttp-2.2:javaagent
 okhttp-3.0:javaagent
+okhttp-3.0:library
