@@ -102,7 +102,7 @@ class MessageWithDestinationTest {
     assertMessage(expectedDestinationName, expectedTemporary, result);
   }
 
-  static Stream<Arguments> destinations() {
+  private static Stream<Arguments> destinations() {
     return Stream.of(
         Arguments.of("destination", false, "destination", false),
         Arguments.of(null, false, "unknown", false),
