@@ -28,6 +28,7 @@ class OkHttpClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
     @SuppressWarnings("unused")
