@@ -60,6 +60,10 @@ Advice classes should also have **no instance fields** — they are never instan
 
 ## Use `suppress = Throwable.class` by Default
 
+Before applying this rule, trace how the advice class is registered in `transform()`. Advice
+registered with a `none()` method matcher is a helper-injection-only pattern and never runs; see
+the exception below.
+
 Both `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` should include
 `suppress = Throwable.class`:
 
@@ -151,7 +155,8 @@ methods. Equally, **do not flag the absence of `suppress`** on these methods as 
 ### Helper-injection-only advice (`none()` selector) — `suppress` is meaningless
 
 Some instrumentations use a "dummy" advice class solely to force helper class injection.
-The `transform()` call uses `none()` as the method matcher, so the advice **never runs**:
+The `transform()` call uses `none()` as the method matcher, so the advice **never runs**. Check
+for this registration pattern before adding or flagging missing `suppress = Throwable.class`:
 
 ```java
 @Override
@@ -172,7 +177,8 @@ public static class InitAdvice {
 
 Because `none()` matches no methods, ByteBuddy never inlines this advice into anything.
 `suppress = Throwable.class` on such a method is entirely meaningless — **do not add it**,
-and **do not flag its absence** during review.
+**remove it when found**, and **do not flag its absence** during review, even if the advice body
+contains a helper call.
 
 ## AdviceScope Patterns
 
@@ -279,7 +285,7 @@ the instrumentation automatically rather than letting it fail at runtime.
 - **Advice class missing `@SuppressWarnings("unused")`** — ByteBuddy invokes it reflectively; IDEs will flag it as dead code without the annotation. Always place the annotation **at the class level**, never moved down to individual methods.
 - **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` method is not `static`** — advice methods must be static.
 - **Advice class has instance fields** — advice classes are never instantiated; state must not be stored on them.
-- **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` missing `suppress = Throwable.class`** when the method has a non-trivial body (library calls, collection iteration, reflection). Exceptions: `instrumentation/internal/` infrastructure code, test sources, and methods whose bodies provably cannot throw (e.g., `return true;`, returning a literal or a single constant). Do not add or flag `suppress` on provably throw-free bodies.
+- **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` missing `suppress = Throwable.class`** when the method has a non-trivial body (library calls, collection iteration, reflection). Exceptions: helper-injection-only advice registered with `none()`, `instrumentation/internal/` infrastructure code, test sources, and methods whose bodies provably cannot throw (e.g., `return true;`, returning a literal or a single constant). Do not add or flag `suppress` on these exceptions.
 - **Exception thrown in advice code or a helper called from advice** — javaagent code must never throw; use `suppress = Throwable.class` as the safety net.
 - **`@Advice.OnMethodExit` method named `onEnter`** (or vice versa) — the method name should match the annotation. A mismatch is a copy-paste bug that compiles but confuses readers and may mask intent errors.
 - **Advice referenced in `transform()` using anything other than `getClass().getName() + "$InnerAdvice"`** — see `javaagent-module-patterns.md` for the canonical pattern. Flag `this.getClass().getName() + "$InnerAdvice"` as a redundant qualifier, and flag both `InnerAdvice.class.getName()` and `OuterInstrumentation.class.getName() + "$InnerAdvice"` because any `.class` literal in a `transform()` method triggers unwanted class loading.
