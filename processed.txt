@@ -324,3 +324,4 @@ opencensus-shim:testing
 opensearch-java-3.0:javaagent
 opensearch-rest-1.0:javaagent
 opensearch-rest-3.0:javaagent
+opensearch-rest-common:javaagent
