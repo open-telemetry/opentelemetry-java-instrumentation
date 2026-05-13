@@ -243,3 +243,4 @@ jsf-mojarra-1.2:javaagent
 jsf-mojarra-3.0:javaagent
 jsf-myfaces-1.2:javaagent
 jsf-myfaces-3.0:javaagent
+jsp-2.3:javaagent
