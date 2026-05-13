@@ -26,8 +26,8 @@ public class Elasticsearch6TransportClientInstrumentationModule extends Instrume
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 5.3
-    return hasClassesNamed("org.elasticsearch.action.DocWriteRequest");
+    // added in 6.0
+    return hasClassesNamed("org.elasticsearch.common.document.DocumentField");
   }
 
   @Override
