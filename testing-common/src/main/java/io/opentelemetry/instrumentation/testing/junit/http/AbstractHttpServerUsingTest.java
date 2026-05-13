@@ -100,6 +100,13 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
     return url;
   }
 
+  protected String resolveAddress(String path, String protocolPrefix) {
+    String url = address.resolve(path).toString();
+    // Force HTTP/1 via h1c so upgrade requests don't show up as traces
+    url = url.replace("http://", protocolPrefix);
+    return url;
+  }
+
   void setTesting(InstrumentationTestRunner testing, WebClient client, int port) {
     setTesting(testing, client, port, null);
   }
