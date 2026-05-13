@@ -473,8 +473,10 @@ public abstract class AbstractHbaseTest {
           .thenMutate(rowMutations);
 
       Result result = table.get(new Get(Bytes.toBytes("row3")));
-      assertEquals("new_value1", Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col4"))));
-      assertEquals("new_value2", Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col5"))));
+      assertEquals(
+          "new_value1", Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col4"))));
+      assertEquals(
+          "new_value2", Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col5"))));
       assertNull(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col1")));
     } catch (Exception e) {
       error = e;
