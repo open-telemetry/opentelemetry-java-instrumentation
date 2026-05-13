@@ -17,7 +17,9 @@ tasks {
     outputs.dir(propertiesDir)
 
     doLast {
-      File(propertiesDir.get().asFile, "$name.properties").writeText("version=$version")
+      val outputDir = propertiesDir.get().asFile
+      outputDir.mkdirs()
+      File(outputDir, "$name.properties").writeText("version=$version")
     }
   }
 
@@ -45,7 +47,9 @@ tasks {
     outputs.dir(classDir)
 
     doLast {
-      File(classDir.get().asFile, "InstrumentationVersion.java").writeText("""
+      val outputDir = classDir.get().asFile
+      outputDir.mkdirs()
+      File(outputDir, "InstrumentationVersion.java").writeText("""
         package $packageName.internal;
 
         import javax.annotation.Generated;

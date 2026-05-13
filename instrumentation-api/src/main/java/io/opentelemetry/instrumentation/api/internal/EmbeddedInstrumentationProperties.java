@@ -84,7 +84,8 @@ public final class EmbeddedInstrumentationProperties {
     String packageName = moduleName + (baseVersion.isEmpty() ? "" : ".v" + baseVersion);
 
     try {
-      Class<?> clazz = Class.forName(packageName + ".internal.InstrumentationVersion");
+      Class<?> clazz =
+          Class.forName(packageName + ".internal.InstrumentationVersion", false, loader);
       return clazz.getField("VERSION").get(null).toString();
     } catch (ReflectiveOperationException e) {
       return null;
