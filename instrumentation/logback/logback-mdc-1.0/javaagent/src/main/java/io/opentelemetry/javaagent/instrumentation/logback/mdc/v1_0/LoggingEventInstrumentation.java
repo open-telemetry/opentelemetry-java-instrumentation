@@ -53,8 +53,8 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$GetMdcAdvice");
   }
 
-  @SuppressWarnings("unused")
   public static class GetMdcAdvice {
+    @SuppressWarnings("unused")
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Map<String, String> onExit(
