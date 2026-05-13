@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.common;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
 
 public class CallMethodHelper {
@@ -38,23 +36,5 @@ public class CallMethodHelper {
       instrumenter.end(
           requestAndContext.getContext(), requestAndContext.getRequest(), null, throwable);
     }
-  }
-
-  public static void finishSpan(
-      Throwable throwable, Object call, Instrumenter<HbaseRequest, Void> instrumenter) {
-    VirtualField<Object, RequestAndContext> virtualField =
-        VirtualField.find(Object.class, RequestAndContext.class);
-    RequestAndContext requestAndContext = virtualField.get(call);
-    if (requestAndContext == null) {
-      return;
-    }
-    virtualField.set(call, null);
-
-    Context context = requestAndContext.getContext();
-    HbaseRequest request = requestAndContext.getRequest();
-    if (context == null || request == null) {
-      return;
-    }
-    instrumenter.end(context, request, null, throwable);
   }
 }
