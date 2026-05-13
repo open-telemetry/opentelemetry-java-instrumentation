@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -22,7 +23,9 @@ public class TaskQueueInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.vertx.core.impl.TaskQueue");
+    return namedOneOf(
+        "io.vertx.core.impl.TaskQueue",
+        "io.vertx.core.impl.OrderedExecutorFactory$OrderedExecutor");
   }
 
   @Override
