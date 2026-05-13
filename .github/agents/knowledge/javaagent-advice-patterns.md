@@ -38,6 +38,9 @@ direct Java calls, so IDEs may flag them as unused.
 **Always place `@SuppressWarnings("unused")` at the class level, not on individual methods.**
 Moving it to method level is not an improvement — the entire class is effectively unused from
 the IDE's perspective, and per-method placement is inconsistent with the rest of the codebase.
+This advice-specific rule intentionally overrides the generic Java cleanup rule to scope
+`@SuppressWarnings` as narrowly as possible. Do not "minimize" advice-class `unused`
+suppressions to a single advice method.
 
 ## Advice Methods Must Be Static
 
@@ -282,7 +285,7 @@ the instrumentation automatically rather than letting it fail at runtime.
 ## What to Flag in Review
 
 - **Advice class is a top-level file** instead of a static nested class inside the `TypeInstrumentation` — move it inside.
-- **Advice class missing `@SuppressWarnings("unused")`** — ByteBuddy invokes it reflectively; IDEs will flag it as dead code without the annotation. Always place the annotation **at the class level**, never moved down to individual methods.
+- **Advice class missing `@SuppressWarnings("unused")`** — ByteBuddy invokes it reflectively; IDEs will flag it as dead code without the annotation. Always place the annotation **at the class level**, never moved down to individual methods. If cleanup moved it from the advice class to an advice method, move it back; the generic narrow-suppression rule does not apply here.
 - **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` method is not `static`** — advice methods must be static.
 - **Advice class has instance fields** — advice classes are never instantiated; state must not be stored on them.
 - **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` missing `suppress = Throwable.class`** when the method has a non-trivial body (library calls, collection iteration, reflection). Exceptions: helper-injection-only advice registered with `none()`, `instrumentation/internal/` infrastructure code, test sources, and methods whose bodies provably cannot throw (e.g., `return true;`, returning a literal or a single constant). Do not add or flag `suppress` on these exceptions.
