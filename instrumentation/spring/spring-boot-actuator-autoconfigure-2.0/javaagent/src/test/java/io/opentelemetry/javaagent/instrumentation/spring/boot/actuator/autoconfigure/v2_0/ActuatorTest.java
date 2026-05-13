@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.v2_0;
+package io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.autoconfigure.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -14,7 +14,7 @@ import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.v2_0.SpringApp.TestBean;
+import io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.autoconfigure.v2_0.SpringApp.TestBean;
 import java.util.ArrayList;
 import java.util.Set;
 import org.junit.jupiter.api.Test;

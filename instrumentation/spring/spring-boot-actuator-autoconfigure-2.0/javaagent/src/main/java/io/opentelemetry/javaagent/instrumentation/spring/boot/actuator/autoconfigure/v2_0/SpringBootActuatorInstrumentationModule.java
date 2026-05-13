@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.v2_0;
+package io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.autoconfigure.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
@@ -42,13 +42,13 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     // classloaders, so that the bean class loader (different from the instrumented class loader)
     // can load it
     helperResourceBuilder.registerForAllClassLoaders(
-        "io/opentelemetry/javaagent/instrumentation/spring/boot/actuator/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
+      "io/opentelemetry/javaagent/instrumentation/spring/boot/actuator/autoconfigure/v2_0/OpenTelemetryMeterRegistryAutoConfiguration.class");
   }
 
   @Override
   public List<String> exposedClassNames() {
     return singletonList(
-        "io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.v2_0.OpenTelemetryMeterRegistryAutoConfiguration");
+        "io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.autoconfigure.v2_0.OpenTelemetryMeterRegistryAutoConfiguration");
   }
 
   @Override

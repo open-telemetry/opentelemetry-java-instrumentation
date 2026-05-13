@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.v2_0;
+package io.opentelemetry.javaagent.instrumentation.spring.boot.actuator.autoconfigure.v2_0;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
