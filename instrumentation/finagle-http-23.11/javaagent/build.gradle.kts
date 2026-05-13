@@ -7,19 +7,13 @@ muzzle {
   pass {
     group.set("com.twitter")
     module.set("finagle-http_2.12")
-    versions.set("[19.10.0,]")
-    assertInverse.set(true)
-    excludeInstrumentationName("netty")
-    excludeInstrumentationName("twitter-util-core")
+    versions.set("[23.11.0,]")
   }
 
   pass {
     group.set("com.twitter")
     module.set("finagle-http_2.13")
-    versions.set("[20.1.0,]")
-    assertInverse.set(true)
-    excludeInstrumentationName("netty")
-    excludeInstrumentationName("twitter-util-core")
+    versions.set("[23.11.0,]")
   }
 }
 
