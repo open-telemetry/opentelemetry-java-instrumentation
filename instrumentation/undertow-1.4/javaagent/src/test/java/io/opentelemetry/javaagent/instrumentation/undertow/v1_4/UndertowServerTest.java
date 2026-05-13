@@ -198,7 +198,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
   @DisplayName("test send response")
   @Test
   void testSendResponse() {
-    URI uri = address.resolve("sendResponse");
+    URI uri = h1Address.resolve("sendResponse");
     AggregatedHttpResponse response = client.get(uri.toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
@@ -235,7 +235,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
   @Test
   @DisplayName("test send response with exception")
   void testSendResponseWithException() {
-    URI uri = address.resolve("sendResponseWithException");
+    URI uri = h1Address.resolve("sendResponseWithException");
     AggregatedHttpResponse response = client.get(uri.toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);

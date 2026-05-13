@@ -75,7 +75,7 @@ class JerseyFilterTest extends JaxRsFilterTest<Server> {
   @Override
   protected TestResponse makeRequest(String url) {
     AggregatedHttpResponse response =
-        client.post(resolveAddress(url, "h1c://"), "").aggregate().join();
+        client.post(h1Address.resolve(url).toString(), "").aggregate().join();
     return new TestResponse(response.contentUtf8(), response.status().code());
   }
 

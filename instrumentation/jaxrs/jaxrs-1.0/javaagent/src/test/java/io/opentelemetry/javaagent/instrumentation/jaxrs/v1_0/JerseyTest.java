@@ -111,7 +111,7 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
       String methodName,
       String expectedResponse) {
     AggregatedHttpResponse response =
-        client.post(resolveAddress(resource, "h1c://"), "bob").aggregate().join();
+        client.post(h1Address.resolve(resource).toString(), "bob").aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo(expectedResponse);
 

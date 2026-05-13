@@ -58,7 +58,7 @@ class TapestryTest extends AbstractHttpServerUsingTest<Server> {
   @BeforeAll
   void setup() {
     startServer();
-    client = WebClient.builder(address).followRedirects().build();
+    client = WebClient.builder(h1Address).followRedirects().build();
   }
 
   @Test
