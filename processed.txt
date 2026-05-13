@@ -240,3 +240,4 @@ jsf-common-jakarta:testing
 jsf-common-javax:javaagent
 jsf-common-javax:testing
 jsf-mojarra-1.2:javaagent
+jsf-mojarra-3.0:javaagent
