@@ -99,6 +99,17 @@ private static Stream<Arguments> testCases() {
   closeable fields are assigned — JUnit still runs the teardown in that case,
   and an unguarded close on a null field NPEs and skips cleanup of resources
   initialized earlier (e.g. a still-running test container).
+- In abstract test bases that are inherited by multiple concrete test classes,
+  use `@TestInstance(Lifecycle.PER_CLASS)`, instance fixture fields, and an
+  instance `@RegisterExtension AutoCleanupExtension cleanup`. Register
+  `deferAfterAll(...)` callbacks in each `@BeforeAll` immediately after the
+  resource is created. When subclasses also declare instance fields or instance
+  `@BeforeAll` methods, repeat `@TestInstance(Lifecycle.PER_CLASS)` on those
+  subclasses so the lifecycle is visible where the non-static setup appears. Do
+  not use a `static AutoCleanupExtension` inherited from an abstract test base:
+  the shared extension instance records the first concrete class's root context,
+  so `deferAfterAll(...)` callbacks registered by later concrete subclasses can
+  be skipped.
 - Reuse an existing `cleanup` extension when one is already in scope.
   Otherwise, add a `@RegisterExtension` field when the deferred-cleanup pattern improves
   clarity or avoids wrapping most of the test body.

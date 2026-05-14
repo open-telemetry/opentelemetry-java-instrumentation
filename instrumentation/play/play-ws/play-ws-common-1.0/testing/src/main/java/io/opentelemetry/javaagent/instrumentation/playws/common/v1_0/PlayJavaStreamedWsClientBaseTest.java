@@ -6,34 +6,30 @@
 package io.opentelemetry.javaagent.instrumentation.playws.common.v1_0;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import play.libs.ws.StandaloneWSClient;
 import play.libs.ws.StandaloneWSRequest;
 import play.libs.ws.StandaloneWSResponse;
 import play.libs.ws.ahc.StandaloneAhcWSClient;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
 
-  private static StandaloneWSClient wsClient;
-  private static StandaloneWSClient wsClientWithReadTimeout;
+  private StandaloneWSClient wsClient;
+  private StandaloneWSClient wsClientWithReadTimeout;
 
   @BeforeAll
-  static void setup() {
+  void setup() {
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer);
+    cleanup.deferAfterAll(wsClient);
     wsClientWithReadTimeout =
         new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer);
-  }
-
-  @AfterAll
-  static void cleanup() throws IOException {
-    wsClient.close();
-    wsClientWithReadTimeout.close();
+    cleanup.deferAfterAll(wsClientWithReadTimeout);
   }
 
   @Override
@@ -70,8 +66,7 @@ public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stand
             });
   }
 
-  private static CompletionStage<StandaloneWSResponse> internalSendRequest(
-      StandaloneWSRequest request) {
+  private CompletionStage<StandaloneWSResponse> internalSendRequest(StandaloneWSRequest request) {
     CompletionStage<? extends StandaloneWSResponse> stream = request.stream();
     // The status can be ready before the body, so explicitly wait for the body to be ready.
     return stream
@@ -80,7 +75,7 @@ public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stand
         .thenCombine(stream, (body, response) -> response);
   }
 
-  private static StandaloneWSClient getClient(URI uri) {
+  private StandaloneWSClient getClient(URI uri) {
     if (uri.toString().contains("/read-timeout")) {
       return wsClientWithReadTimeout;
     }

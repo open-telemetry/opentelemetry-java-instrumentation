@@ -8,12 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.playws.common.v1_0;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Map;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import play.api.libs.ws.StandaloneWSClient;
 import play.api.libs.ws.StandaloneWSRequest;
 import play.api.libs.ws.StandaloneWSResponse;
@@ -25,22 +24,19 @@ import scala.concurrent.ExecutionContext;
 import scala.concurrent.duration.Duration;
 import scala.util.Try;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PlayScalaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
 
-  private static StandaloneWSClient wsClient;
-  private static StandaloneWSClient wsClientWithReadTimeout;
+  private StandaloneWSClient wsClient;
+  private StandaloneWSClient wsClientWithReadTimeout;
 
   @BeforeAll
-  static void setup() {
+  void setup() {
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer);
+    cleanup.deferAfterAll(wsClient);
     wsClientWithReadTimeout =
         new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer);
-  }
-
-  @AfterAll
-  static void cleanup() throws IOException {
-    wsClient.close();
-    wsClientWithReadTimeout.close();
+    cleanup.deferAfterAll(wsClientWithReadTimeout);
   }
 
   @Override
@@ -84,7 +80,7 @@ public class PlayScalaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWS
             ExecutionContext.global());
   }
 
-  private static StandaloneWSClient getClient(URI uri) {
+  private StandaloneWSClient getClient(URI uri) {
     if (uri.toString().contains("/read-timeout")) {
       return wsClientWithReadTimeout;
     }
