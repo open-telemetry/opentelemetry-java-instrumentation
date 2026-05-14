@@ -18,12 +18,10 @@ import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.util.StringUtils;
 
 public abstract class AbstractRouteMappingTest {
   @RegisterExtension
@@ -120,11 +118,9 @@ public abstract class AbstractRouteMappingTest {
   }
 
   protected List<AttributeAssertion> buildAttributeAssertions(
-      @Nullable String routeId, String uri, int order, int filterSize) {
+      String routeId, String uri, int order, int filterSize) {
     List<AttributeAssertion> assertions = new ArrayList<>();
-    if (!StringUtils.isEmpty(routeId)) {
-      assertions.add(equalTo(stringKey("spring-cloud-gateway.route.id"), routeId));
-    }
+    assertions.add(equalTo(stringKey("spring-cloud-gateway.route.id"), routeId));
     assertions.add(equalTo(stringKey("spring-cloud-gateway.route.uri"), uri));
     assertions.add(equalTo(longKey("spring-cloud-gateway.route.order"), order));
     assertions.add(equalTo(longKey("spring-cloud-gateway.route.filter.size"), filterSize));
@@ -133,6 +129,10 @@ public abstract class AbstractRouteMappingTest {
 
   protected List<AttributeAssertion> buildAttributeAssertions(
       String uri, int order, int filterSize) {
-    return buildAttributeAssertions(null, uri, order, filterSize);
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.add(equalTo(stringKey("spring-cloud-gateway.route.uri"), uri));
+    assertions.add(equalTo(longKey("spring-cloud-gateway.route.order"), order));
+    assertions.add(equalTo(longKey("spring-cloud-gateway.route.filter.size"), filterSize));
+    return assertions;
   }
 }
