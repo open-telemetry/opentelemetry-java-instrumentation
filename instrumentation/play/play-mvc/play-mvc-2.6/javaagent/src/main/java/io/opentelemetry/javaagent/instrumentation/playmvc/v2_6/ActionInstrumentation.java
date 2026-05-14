@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.playmvc.v2_6.Play26Singletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.playmvc.v2_6.Play26Singletons.updateSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -76,7 +75,7 @@ class ActionInstrumentation implements TypeInstrumentation {
           Action<?> thisAction,
           Request<?> req) {
         scope.close();
-        updateSpan(context, req);
+        Play26Singletons.updateSpan(context, req);
 
         // If the action threw, or didn't return a future to hook into, end the span now.
         if (throwable != null || responseFuture == null) {
