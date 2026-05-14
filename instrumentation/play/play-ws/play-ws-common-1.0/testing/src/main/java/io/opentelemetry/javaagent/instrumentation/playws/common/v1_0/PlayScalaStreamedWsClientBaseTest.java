@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import java.net.URI;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import play.api.libs.ws.StandaloneWSClient;
 import play.api.libs.ws.StandaloneWSRequest;
 import play.api.libs.ws.StandaloneWSResponse;
@@ -23,13 +24,14 @@ import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import scala.util.Try;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
 
-  private static StandaloneWSClient wsClient;
-  private static StandaloneWSClient wsClientWithReadTimeout;
+  private StandaloneWSClient wsClient;
+  private StandaloneWSClient wsClientWithReadTimeout;
 
   @BeforeAll
-  static void setup() {
+  void setup() {
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer);
     cleanup.deferAfterAll(wsClient);
     wsClientWithReadTimeout =
@@ -77,7 +79,7 @@ public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stan
             ExecutionContext.global());
   }
 
-  private static Future<StandaloneWSResponse> internalSendRequest(StandaloneWSRequest request) {
+  private Future<StandaloneWSResponse> internalSendRequest(StandaloneWSRequest request) {
     Future<StandaloneWSResponse> futureResponse = request.stream();
     // The status can be ready before the body, so explicitly wait for the body to be ready.
     Future<String> bodyResponse =
@@ -99,7 +101,7 @@ public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stan
         ExecutionContext.global());
   }
 
-  private static StandaloneWSClient getClient(URI uri) {
+  private StandaloneWSClient getClient(URI uri) {
     if (uri.toString().contains("/read-timeout")) {
       return wsClientWithReadTimeout;
     }

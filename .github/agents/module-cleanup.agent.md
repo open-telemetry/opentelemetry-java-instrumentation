@@ -207,6 +207,16 @@ Auto-fix boundaries:
     `AutoCleanupExtension` with `deferAfterAll(...)` over nested `@AfterAll` cleanup
     chains. Do not introduce or keep `AutoCleanupExtension` solely for a single
     `deferAfterAll(...)` call — use a plain `@AfterAll` instead.
+    When the resources live in an abstract test base that is inherited by multiple
+    concrete test classes, convert the base to `@TestInstance(Lifecycle.PER_CLASS)`,
+    make per-class fixtures instance fields, and use an instance
+    `@RegisterExtension AutoCleanupExtension cleanup` shared by inherited setup
+    methods. Repeat `@TestInstance(Lifecycle.PER_CLASS)` on subclasses that also
+    declare instance fields or instance `@BeforeAll` methods, so the lifecycle is
+    visible where non-static setup appears. Keep `InstrumentationExtension` static.
+    Do not use a shared `static AutoCleanupExtension` inherited from an abstract
+    test base because it can skip `deferAfterAll(...)` cleanup for later concrete
+    subclasses.
   - `hasAttributesSatisfying(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
     variant silently ignores unexpected attributes)

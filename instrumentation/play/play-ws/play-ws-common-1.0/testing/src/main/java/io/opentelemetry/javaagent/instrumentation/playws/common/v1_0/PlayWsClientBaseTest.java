@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import play.shaded.ahc.io.netty.resolver.InetNameResolver;
 import play.shaded.ahc.io.netty.util.concurrent.EventExecutor;
@@ -36,20 +37,21 @@ import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClient;
 import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import play.shaded.ahc.org.asynchttpclient.RequestBuilderBase;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQUEST> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private static ActorSystem system;
-  static AsyncHttpClient asyncHttpClient;
-  static AsyncHttpClient asyncHttpClientWithReadTimeout;
-  static ActorMaterializer materializer;
+  private ActorSystem system;
+  AsyncHttpClient asyncHttpClient;
+  AsyncHttpClient asyncHttpClientWithReadTimeout;
+  ActorMaterializer materializer;
 
   @BeforeAll
-  static void setupHttpClient() {
+  void setupHttpClient() {
     String name = "play-ws";
     system = ActorSystem.create(name);
     cleanup.deferAfterAll(() -> system.terminate());
