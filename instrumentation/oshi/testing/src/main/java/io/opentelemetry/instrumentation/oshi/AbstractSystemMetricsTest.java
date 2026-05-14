@@ -5,16 +5,14 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractSystemMetricsTest {
-
-  private static final AttributeKey<String> STATE = AttributeKey.stringKey("state");
 
   protected abstract void registerMetrics();
 
@@ -41,12 +39,12 @@ public abstract class AbstractSystemMetricsTest {
                                         point ->
                                             point
                                                 .hasAttributesSatisfyingExactly(
-                                                    equalTo(STATE, "used"))
+                                                    equalTo(stringKey("state"), "used"))
                                                 .hasValueSatisfying(v -> v.isNotNegative()),
                                         point ->
                                             point
                                                 .hasAttributesSatisfyingExactly(
-                                                    equalTo(STATE, "free"))
+                                                    equalTo(stringKey("state"), "free"))
                                                 .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
@@ -63,12 +61,12 @@ public abstract class AbstractSystemMetricsTest {
                                         point ->
                                             point
                                                 .hasAttributesSatisfyingExactly(
-                                                    equalTo(STATE, "used"))
+                                                    equalTo(stringKey("state"), "used"))
                                                 .hasValueSatisfying(v -> v.isNotNegative()),
                                         point ->
                                             point
                                                 .hasAttributesSatisfyingExactly(
-                                                    equalTo(STATE, "free"))
+                                                    equalTo(stringKey("state"), "free"))
                                                 .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
