@@ -44,7 +44,7 @@ final class ResteasyReactiveSpanName {
     return existingPath == null || existingPath.isEmpty() ? name : existingPath + name;
   }
 
-  private static String normalize(URITemplate uriTemplate) {
+  private static String normalize(@Nullable URITemplate uriTemplate) {
     if (uriTemplate == null) {
       return "";
     }
