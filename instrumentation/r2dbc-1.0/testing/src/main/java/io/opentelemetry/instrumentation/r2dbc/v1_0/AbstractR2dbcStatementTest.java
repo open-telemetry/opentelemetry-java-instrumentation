@@ -97,8 +97,8 @@ public abstract class AbstractR2dbcStatementTest {
     systems.put(MARIADB.system, MARIADB);
   }
 
-  private static Integer port;
-  private static GenericContainer<?> container;
+  private Integer port;
+  private GenericContainer<?> container;
 
   protected ConnectionFactory createProxyConnectionFactory(
       ConnectionFactoryOptions connectionFactoryOptions) {
