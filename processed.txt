@@ -354,3 +354,4 @@ oracle-ucp-11.2:javaagent
 oracle-ucp-11.2:library
 oracle-ucp-11.2:testing
 oshi:javaagent
+oshi:library
