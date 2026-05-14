@@ -87,9 +87,7 @@ class SqlQueryAnalyzerTest {
             "CREATE USER new_user PASSWORD ?",
             "CREATE USER new_user"),
         Arguments.of(
-            "ALTER USER user PASSWORD Password1",
-            "ALTER USER user PASSWORD ?",
-            "ALTER USER"),
+            "ALTER USER user PASSWORD Password1", "ALTER USER user PASSWORD ?", "ALTER USER"),
         // Other SAP HANA administrative statements can contain unquoted or double-quoted passwords
         // after a PASSWORD keyword.
         Arguments.of(
