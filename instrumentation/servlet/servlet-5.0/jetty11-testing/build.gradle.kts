@@ -22,5 +22,10 @@ otelJava {
 tasks {
   test {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter",
+    )
   }
 }
