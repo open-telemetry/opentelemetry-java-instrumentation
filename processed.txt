@@ -400,3 +400,4 @@ redisson-3.0:javaagent
 redisson-3.17:javaagent
 redisson-common-3.0:javaagent
 redisson-common-3.0:testing
+resources:library
