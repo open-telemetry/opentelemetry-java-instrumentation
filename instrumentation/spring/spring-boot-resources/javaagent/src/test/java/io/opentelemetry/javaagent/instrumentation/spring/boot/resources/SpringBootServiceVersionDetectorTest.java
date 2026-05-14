@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.resources;
+package io.opentelemetry.javaagent.instrumentation.spring.boot.resources;
 
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
