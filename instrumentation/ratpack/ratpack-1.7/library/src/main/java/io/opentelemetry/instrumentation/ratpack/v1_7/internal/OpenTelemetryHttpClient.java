@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
-
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -20,6 +19,9 @@ import ratpack.http.client.RequestSpec;
  * any time.
  */
 public final class OpenTelemetryHttpClient {
+
+  // copied from HttpAttributes
+  private static final AttributeKey<String> HTTP_ROUTE = AttributeKey.stringKey("http.route");
 
   private final Instrumenter<RequestSpec, HttpResponse> instrumenter;
 
