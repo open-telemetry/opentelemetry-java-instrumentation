@@ -7,12 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
 import java.net.HttpURLConnection;
+import javax.annotation.Nullable;
 
-enum RequestPropertySetter implements TextMapSetter<HttpURLConnection> {
-  INSTANCE;
+final class RequestPropertySetter implements TextMapSetter<HttpURLConnection> {
 
   @Override
-  public void set(HttpURLConnection carrier, String key, String value) {
+  public void set(@Nullable HttpURLConnection carrier, String key, String value) {
+    if (carrier == null) {
+      return;
+    }
     carrier.setRequestProperty(key, value);
   }
 }

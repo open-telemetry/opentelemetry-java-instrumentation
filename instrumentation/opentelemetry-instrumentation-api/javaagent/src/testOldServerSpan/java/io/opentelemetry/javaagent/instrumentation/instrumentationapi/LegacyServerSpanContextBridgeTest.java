@@ -20,14 +20,14 @@ class LegacyServerSpanContextBridgeTest {
 
   // cannot use AgentInstrumentationExtension because it'd try to initialize Instrumenters with new
   // SpanKeys
-  static final Tracer tracer = GlobalOpenTelemetry.get().getTracer("test");
+  private static final Tracer tracer = GlobalOpenTelemetry.get().getTracer("test");
 
   @Test
   void shouldBridgeLegacyServerSpanClass() {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
         () -> {
-          assertThat(Span.current()).isNotNull();
+          assertThat(Span.fromContextOrNull(Context.current())).isNotNull();
           assertThat(ServerSpan.fromContextOrNull(Context.current())).isNotNull();
 
           Span internalSpan = tracer.spanBuilder("internal").startSpan();

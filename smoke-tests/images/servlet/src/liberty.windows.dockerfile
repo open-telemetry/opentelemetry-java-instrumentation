@@ -2,11 +2,10 @@ ARG jdkImageName
 ARG jdkImageHash
 
 # Unzip in a separate container so that zip file layer is not part of final image
-FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:a264df8cd8c329eed3fd1e0cafcd4f3dc453e2c72a277f9bb140fd6f10a2eefc as builder
+FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:e000e9a1712065a0218447c20ae19984b447fa741d11cf64696b8a1172fcd7da as builder
 ARG version
-ARG release
 
-ADD https://public.dhe.ibm.com/ibmdl/export/pub/software/openliberty/runtime/release/${release}/openliberty-${version}.zip /server.zip
+ADD https://repo1.maven.org/maven2/io/openliberty/openliberty-runtime/${version}/openliberty-runtime-${version}.zip /server.zip
 RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPath /server"]
 
 FROM ${jdkImageName}@sha256:${jdkImageHash}

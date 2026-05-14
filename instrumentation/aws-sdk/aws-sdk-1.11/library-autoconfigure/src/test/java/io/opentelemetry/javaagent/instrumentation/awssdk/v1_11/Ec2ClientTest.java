@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Ec2ClientTest extends AbstractEc2ClientTest {
   @RegisterExtension
-  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension testing() {

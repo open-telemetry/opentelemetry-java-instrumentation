@@ -55,7 +55,7 @@ class Slf4jToLog4jTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  public void test(boolean logException, boolean withParent) throws InterruptedException {
+  void test(boolean logException, boolean withParent) throws InterruptedException {
     test(Logger::debug, Logger::debug, logException, withParent, null, null, null);
     testing.clearData();
     test(Logger::info, Logger::info, logException, withParent, "abc", Severity.INFO, "INFO");
@@ -115,7 +115,7 @@ class Slf4jToLog4jTest {
                       equalTo(EXCEPTION_MESSAGE, "hello"),
                       satisfies(
                           EXCEPTION_STACKTRACE,
-                          v -> v.contains(Slf4jToLog4jTest.class.getName()))));
+                          val -> val.contains(Slf4jToLog4jTest.class.getName()))));
             }
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
           });
@@ -158,7 +158,7 @@ class Slf4jToLog4jTest {
   }
 
   @Test
-  public void testMarker() {
+  void testMarker() {
     String markerName = "aMarker";
     Marker marker = MarkerFactory.getMarker(markerName);
 

@@ -133,7 +133,7 @@ final class VirtualFieldImplementationsGenerator {
             }
           }
 
-          /**
+          /*
            * Provides implementation for {@code realGet} method that looks like below.
            *
            * <blockquote>
@@ -186,7 +186,7 @@ final class VirtualFieldImplementationsGenerator {
             mv.visitEnd();
           }
 
-          /**
+          /*
            * Provides implementation for {@code realPut} method that looks like below.
            *
            * <blockquote>

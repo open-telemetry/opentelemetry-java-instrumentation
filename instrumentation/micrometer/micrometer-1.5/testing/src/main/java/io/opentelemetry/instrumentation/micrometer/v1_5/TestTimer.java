@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import java.util.concurrent.TimeUnit;
 
 class TestTimer {
-  int count = 0;
-  long totalTimeNanos = 0;
+  private int count = 0;
+  private long totalTimeNanos = 0;
 
   void add(long time, TimeUnit unit) {
     count++;

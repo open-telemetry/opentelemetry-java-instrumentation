@@ -31,17 +31,21 @@ import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
   private static final String MODEL = "text-embedding-3-small";
 
-  protected final CreateEmbeddingResponse doEmbeddings(EmbeddingCreateParams request) {
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  protected CreateEmbeddingResponse doEmbeddings(EmbeddingCreateParams request) {
     return doEmbeddings(request, getClient(), getClientAsync());
   }
 
-  protected final CreateEmbeddingResponse doEmbeddings(
+  protected CreateEmbeddingResponse doEmbeddings(
       EmbeddingCreateParams request, OpenAIClient client, OpenAIClientAsync clientAsync) {
     switch (testType) {
       case SYNC:
@@ -101,12 +105,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     // the user.
                                     satisfies(
                                         GEN_AI_REQUEST_ENCODING_FORMATS,
-                                        val ->
-                                            val.satisfiesAnyOf(
-                                                v -> assertThat(v).isNull(),
-                                                v ->
-                                                    assertThat(v)
-                                                        .isEqualTo(singletonList("base64"))))))));
+                                        val -> val.isIn(singletonList("base64"), null))))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -223,6 +222,8 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                 .apiKey("testing")
                 .maxRetries(0)
                 .build());
+    cleanup.deferCleanup(client::close);
+    cleanup.deferCleanup(clientAsync::close);
 
     EmbeddingCreateParams request =
         EmbeddingCreateParams.builder()
@@ -250,12 +251,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     // the user.
                                     satisfies(
                                         GEN_AI_REQUEST_ENCODING_FORMATS,
-                                        val ->
-                                            val.satisfiesAnyOf(
-                                                v -> assertThat(v).isNull(),
-                                                v ->
-                                                    assertThat(v)
-                                                        .isEqualTo(singletonList("base64"))))))));
+                                        val -> val.isIn(singletonList("base64"), null))))));
 
     getTesting()
         .waitAndAssertMetrics(

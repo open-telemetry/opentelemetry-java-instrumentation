@@ -23,16 +23,27 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-mongodb") // For MongoDBContainer
   testImplementation("org.mongodb:mongodb-driver-sync:4.11.0") // MongoDB Java driver
 
-  // Testcontainers dependencies for integration testing
-  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
   testImplementation("org.testcontainers:testcontainers")
-  testImplementation("org.testcontainers:testcontainers-kafka")
   testImplementation("io.rest-assured:rest-assured:5.5.5")
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 tasks.withType<Test>().configureEach {
   dependsOn(agentShadowJar)
+  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
+}
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

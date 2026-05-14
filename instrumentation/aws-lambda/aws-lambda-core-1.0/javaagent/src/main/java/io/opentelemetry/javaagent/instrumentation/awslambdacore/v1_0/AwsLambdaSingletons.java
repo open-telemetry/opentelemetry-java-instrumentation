@@ -12,11 +12,11 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFun
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrapperConfiguration;
 import java.time.Duration;
 
-public final class AwsLambdaSingletons {
+public class AwsLambdaSingletons {
 
-  private static final AwsLambdaFunctionInstrumenter FUNCTION_INSTRUMENTER =
+  private static final AwsLambdaFunctionInstrumenter functionInstrumenter =
       AwsLambdaFunctionInstrumenterFactory.createInstrumenter(GlobalOpenTelemetry.get());
-  private static final Duration FLUSH_TIMEOUT =
+  public static final Duration FLUSH_TIMEOUT =
       Duration.ofMillis(
           DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_lambda")
               .getLong(
@@ -24,11 +24,7 @@ public final class AwsLambdaSingletons {
                   WrapperConfiguration.OTEL_LAMBDA_FLUSH_TIMEOUT_DEFAULT.toMillis()));
 
   public static AwsLambdaFunctionInstrumenter functionInstrumenter() {
-    return FUNCTION_INSTRUMENTER;
-  }
-
-  public static Duration flushTimeout() {
-    return FLUSH_TIMEOUT;
+    return functionInstrumenter;
   }
 
   private AwsLambdaSingletons() {}

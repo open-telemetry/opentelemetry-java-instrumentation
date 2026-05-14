@@ -25,17 +25,34 @@ class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEven
   private static final AttributeKey<String> DB_MONGODB_COLLECTION =
       AttributeKey.stringKey("db.mongodb.collection");
 
+  private static final Set<String> COMMANDS_WITH_COLLECTION_NAME_AS_VALUE =
+      new HashSet<>(
+          asList(
+              "aggregate",
+              "count",
+              "distinct",
+              "mapReduce",
+              "geoSearch",
+              "delete",
+              "find",
+              "killCursors",
+              "findAndModify",
+              "insert",
+              "update",
+              "create",
+              "drop",
+              "createIndexes",
+              "listIndexes"));
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, CommandStartedEvent event) {
     String collectionName = collectionName(event);
-    if (collectionName != null) {
-      if (emitStableDatabaseSemconv()) {
-        attributes.put(DB_COLLECTION_NAME, collectionName);
-      }
-      if (emitOldDatabaseSemconv()) {
-        attributes.put(DB_MONGODB_COLLECTION, collectionName);
-      }
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(DB_COLLECTION_NAME, collectionName);
+    }
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_MONGODB_COLLECTION, collectionName);
     }
   }
 
@@ -64,23 +81,4 @@ class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEven
     }
     return null;
   }
-
-  private static final Set<String> COMMANDS_WITH_COLLECTION_NAME_AS_VALUE =
-      new HashSet<>(
-          asList(
-              "aggregate",
-              "count",
-              "distinct",
-              "mapReduce",
-              "geoSearch",
-              "delete",
-              "find",
-              "killCursors",
-              "findAndModify",
-              "insert",
-              "update",
-              "create",
-              "drop",
-              "createIndexes",
-              "listIndexes"));
 }

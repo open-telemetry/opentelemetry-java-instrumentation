@@ -20,16 +20,16 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.function.Consumer;
 import org.assertj.core.api.AbstractLongAssert;
 
-public final class HttpSpanDataAssert {
+public class HttpSpanDataAssert {
 
   private final SpanDataAssert span;
 
-  private HttpSpanDataAssert(SpanDataAssert span) {
-    this.span = span;
-  }
-
   public static HttpSpanDataAssert create(SpanDataAssert serverSpan) {
     return new HttpSpanDataAssert(serverSpan);
+  }
+
+  private HttpSpanDataAssert(SpanDataAssert span) {
+    this.span = span;
   }
 
   @CanIgnoreReturnValue

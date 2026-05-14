@@ -20,7 +20,6 @@ import javax.annotation.Nullable;
  * any time.
  */
 public class ArmeriaInstrumenterBuilderUtil {
-  private ArmeriaInstrumenterBuilderUtil() {}
 
   @Nullable
   private static Function<
@@ -65,4 +64,6 @@ public class ArmeriaInstrumenterBuilderUtil {
           serverBuilderExtractor) {
     ArmeriaInstrumenterBuilderUtil.serverBuilderExtractor = serverBuilderExtractor;
   }
+
+  private ArmeriaInstrumenterBuilderUtil() {}
 }

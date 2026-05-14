@@ -75,7 +75,7 @@ class AwsLambdaTest extends AbstractAwsLambdaTest {
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
-  private static final class TestRequestHandler implements RequestHandler<String, String> {
+  private static class TestRequestHandler implements RequestHandler<String, String> {
 
     @Override
     public String handleRequest(String input, Context context) {

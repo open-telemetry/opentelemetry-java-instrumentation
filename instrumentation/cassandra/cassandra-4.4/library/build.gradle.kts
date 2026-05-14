@@ -2,9 +2,8 @@ plugins {
   id("otel.library-instrumentation")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 dependencies {
-  if (latestDepTest) {
+  if (otelProps.testLatestDeps) {
     library("org.apache.cassandra:java-driver-core:4.18.0")
   } else {
     library("com.datastax.oss:java-driver-core:4.4.0")
@@ -19,6 +18,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {

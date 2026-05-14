@@ -14,10 +14,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Arrays;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class SmokeInlinedInstrumentation implements TypeInstrumentation {
+class SmokeInlinedInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -28,77 +30,84 @@ public class SmokeInlinedInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("returnValue").and(takesArgument(0, int.class)),
-        this.getClass().getName() + "$ModifyReturnValueAdvice");
+        getClass().getName() + "$ModifyReturnValueAdvice");
     transformer.applyAdviceToMethod(
         named("methodArguments").and(takesArgument(0, int.class)),
-        this.getClass().getName() + "$ModifyArgumentsAdvice");
+        getClass().getName() + "$ModifyArgumentsAdvice");
     transformer.applyAdviceToMethod(
         named("setVirtualFieldValue")
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, Integer.class)),
-        this.getClass().getName() + "$VirtualFieldSetAdvice");
+        getClass().getName() + "$VirtualFieldSetAdvice");
     transformer.applyAdviceToMethod(
         named("getVirtualFieldValue")
             .and(takesArgument(0, Object.class))
             .and(returns(Integer.class)),
-        this.getClass().getName() + "$VirtualFieldGetAdvice");
+        getClass().getName() + "$VirtualFieldGetAdvice");
     transformer.applyAdviceToMethod(
         named("localValue").and(takesArgument(0, int[].class)).and(returns(int[].class)),
-        this.getClass().getName() + "$LocalVariableAdvice");
+        getClass().getName() + "$LocalVariableAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ModifyReturnValueAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) int returnValue) {
-      returnValue = returnValue + 1;
+    @AssignReturned.ToReturned
+    public static int onExit(@Advice.Return int returnValue) {
+      return returnValue + 1;
     }
   }
 
   @SuppressWarnings("unused")
   public static class ModifyArgumentsAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(value = 0, readOnly = false) int argument) {
-      argument = argument - 1;
+    @AssignReturned.ToArguments(@ToArgument(0))
+    public static int onEnter(@Advice.Argument(0) int argument) {
+      return argument - 1;
     }
   }
 
+  @SuppressWarnings("unused")
   public static class VirtualFieldSetAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(0) Object target, @Advice.Argument(1) Integer value) {
-      VirtualField<Object, Integer> field = VirtualField.find(Object.class, Integer.class);
-      field.set(target, value);
+      VirtualFieldHelper.field.set(target, value);
     }
   }
 
   @SuppressWarnings("unused")
   public static class VirtualFieldGetAdvice {
-    @SuppressWarnings("UnusedVariable")
+
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Argument(0) Object target, @Advice.Return(readOnly = false) Integer returnValue) {
-      VirtualField<Object, Integer> field = VirtualField.find(Object.class, Integer.class);
-      returnValue = field.get(target);
+    @AssignReturned.ToReturned
+    public static Integer onExit(@Advice.Argument(0) Object target) {
+      return VirtualFieldHelper.field.get(target);
     }
   }
 
   @SuppressWarnings("unused")
   public static class LocalVariableAdvice {
 
-    @SuppressWarnings("UnusedVariable")
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) int[] array, @Advice.Local("backup") int[] backupArray) {
-      backupArray = Arrays.copyOf(array, array.length);
+    public static int[] onEnter(@Advice.Argument(0) int[] array) {
+      return Arrays.copyOf(array, array.length);
     }
 
-    @SuppressWarnings("UnusedVariable")
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) int[] array, @Advice.Local("backup") int[] backupArray) {
-      array = Arrays.copyOf(backupArray, backupArray.length);
+    @AssignReturned.ToReturned(index = 0)
+    public static int[][] onExit(@Advice.Enter int[] backupArray) {
+      return new int[][] {Arrays.copyOf(backupArray, backupArray.length)};
     }
+  }
+
+  public static class VirtualFieldHelper {
+    public static final VirtualField<Object, Integer> field =
+        VirtualField.find(Object.class, Integer.class);
+
+    private VirtualFieldHelper() {}
   }
 }

@@ -41,10 +41,9 @@ public class OutputStreamSnippetInjectionHelper {
       return false;
     }
     int endOfHeadTagPosition;
+    int endExclusive = off + length;
     boolean endOfHeadTagFound = false;
-    for (endOfHeadTagPosition = off;
-        endOfHeadTagPosition < length && endOfHeadTagPosition - off < length;
-        endOfHeadTagPosition++) {
+    for (endOfHeadTagPosition = off; endOfHeadTagPosition < endExclusive; endOfHeadTagPosition++) {
       if (state.processByte(original[endOfHeadTagPosition])) {
         endOfHeadTagFound = true;
         break;
@@ -66,9 +65,9 @@ public class OutputStreamSnippetInjectionHelper {
     }
     // updating Content-Length before any further writing in case that writing triggers a flush
     state.getWrapper().updateContentLengthIfPreviouslySet();
-    out.write(original, off, endOfHeadTagPosition + 1);
+    out.write(original, off, endOfHeadTagPosition - off + 1);
     out.write(snippetBytes);
-    out.write(original, endOfHeadTagPosition + 1, length - endOfHeadTagPosition - 1);
+    out.write(original, endOfHeadTagPosition + 1, endExclusive - endOfHeadTagPosition - 1);
     return true;
   }
 

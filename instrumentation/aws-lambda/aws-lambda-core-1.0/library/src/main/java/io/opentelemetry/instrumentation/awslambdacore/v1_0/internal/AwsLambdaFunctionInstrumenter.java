@@ -22,6 +22,8 @@ import javax.annotation.Nullable;
  */
 public class AwsLambdaFunctionInstrumenter {
 
+  private static final MapGetter mapGetter = new MapGetter();
+
   private final OpenTelemetry openTelemetry;
   final Instrumenter<AwsLambdaRequest, Object> instrumenter;
 
@@ -62,11 +64,10 @@ public class AwsLambdaFunctionInstrumenter {
     return openTelemetry
         .getPropagators()
         .getTextMapPropagator()
-        .extract(Context.root(), headers, MapGetter.INSTANCE);
+        .extract(Context.root(), headers, mapGetter);
   }
 
-  private enum MapGetter implements TextMapGetter<Map<String, String>> {
-    INSTANCE;
+  private static class MapGetter implements TextMapGetter<Map<String, String>> {
 
     @Override
     public Iterable<String> keys(Map<String, String> map) {
@@ -74,7 +75,11 @@ public class AwsLambdaFunctionInstrumenter {
     }
 
     @Override
-    public String get(Map<String, String> map, String s) {
+    @Nullable
+    public String get(@Nullable Map<String, String> map, String s) {
+      if (map == null) {
+        return null;
+      }
       return map.get(s.toLowerCase(Locale.ROOT));
     }
   }

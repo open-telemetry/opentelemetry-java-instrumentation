@@ -23,6 +23,7 @@ public class PayaraInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 5.182
     return hasClassesNamed("fish.payara.opentracing.OpenTracingService");
   }
 

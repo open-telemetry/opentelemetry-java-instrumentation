@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6.KafkaConnectSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -22,7 +23,12 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.connect.sink.SinkRecord;
 
-public class SinkTaskInstrumentation implements TypeInstrumentation {
+class SinkTaskInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.apache.kafka.connect.sink.SinkTask");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,7 +39,7 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("put").and(takesArgument(0, Collection.class)).and(isPublic()),
-        SinkTaskInstrumentation.class.getName() + "$SinkTaskPutAdvice");
+        getClass().getName() + "$SinkTaskPutAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -70,12 +76,12 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) Collection<SinkRecord> records) {
       return AdviceScope.start(records);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

@@ -18,7 +18,7 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
 
   KafkaBatchProcessSpanLinksExtractor(TextMapPropagator propagator) {
     this.singleRecordLinkExtractor =
-        new PropagatorBasedSpanLinksExtractor<>(propagator, KafkaConsumerRecordGetter.INSTANCE);
+        new PropagatorBasedSpanLinksExtractor<>(propagator, new KafkaConsumerRecordGetter());
   }
 
   @Override
@@ -26,11 +26,9 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
       SpanLinksBuilder spanLinks, Context parentContext, KafkaReceiveRequest request) {
 
     for (ConsumerRecord<?, ?> record : request.getRecords()) {
-      // explicitly passing root to avoid situation where context propagation is turned off and the
-      // parent (CONSUMER receive) span is linked
       singleRecordLinkExtractor.extract(
           spanLinks,
-          Context.root(),
+          parentContext,
           KafkaProcessRequest.create(record, request.getConsumerGroup(), request.getClientId()));
     }
   }

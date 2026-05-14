@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -127,7 +126,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void excludedMethod() throws Exception {
+  void excludedMethod() throws InterruptedException {
     new TracedWithSpan().ignored();
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
@@ -184,7 +183,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void completingCompletionStage() throws Exception {
+  void completingCompletionStage() throws InterruptedException {
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completionStage(future);
 
@@ -205,7 +204,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void exceptionallyCompletingCompletionStage() throws Exception {
+  void exceptionallyCompletingCompletionStage() throws InterruptedException {
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completionStage(future);
 
@@ -276,7 +275,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void completingCompletableFuture() throws Exception {
+  void completingCompletableFuture() throws InterruptedException {
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completableFuture(future);
 
@@ -297,7 +296,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void exceptionallyCompletingCompletableFuture() throws Exception {
+  void exceptionallyCompletingCompletableFuture() throws InterruptedException {
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completableFuture(future);
 
@@ -334,7 +333,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.withSpanAttributes")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfying(assertions)));
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   // Needs to be public for ByteBuddy
@@ -346,7 +345,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void java6Class() throws Exception {
+  void java6Class() throws ReflectiveOperationException {
     /*
     class GeneratedJava6TestClass implements Runnable {
       @WithSpan
@@ -380,7 +379,7 @@ class WithSpanInstrumentationTest {
                   span.hasName("GeneratedJava6TestClass.run")
                       .hasKind(SpanKind.INTERNAL)
                       .hasNoParent()
-                      .hasAttributesSatisfying(
+                      .hasAttributesSatisfyingExactly(
                           SemconvCodeStabilityUtil.codeFunctionAssertions(
                               "GeneratedJava6TestClass", "run"));
                 },
@@ -388,6 +387,6 @@ class WithSpanInstrumentationTest {
                     span.hasName("intercept")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
-                        .hasAttributes(Attributes.empty())));
+                        .hasTotalAttributeCount(0)));
   }
 }

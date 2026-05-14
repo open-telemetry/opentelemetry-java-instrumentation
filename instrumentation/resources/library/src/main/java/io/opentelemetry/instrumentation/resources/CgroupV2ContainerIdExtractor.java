@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.resources;
 
 import static java.util.Optional.empty;
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,7 +17,6 @@ import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 /** Utility for extracting the container ID from runtimes inside cgroup v2 containers. */
 class CgroupV2ContainerIdExtractor {
@@ -25,7 +25,8 @@ class CgroupV2ContainerIdExtractor {
       Logger.getLogger(CgroupV2ContainerIdExtractor.class.getName());
 
   static final Path V2_CGROUP_PATH = Paths.get("/proc/self/mountinfo");
-  private static final Pattern CONTAINER_ID_RE = Pattern.compile("^[0-9a-f]{64}$");
+  private static final Pattern CONTAINER_ID_RE =
+      Pattern.compile("^\\d+ \\d+ \\d+:\\d+ [^ ]*/containers/[^ ]*?([0-9a-f]{64})");
   private static final Pattern CONTAINERD_CONTAINER_ID_RE =
       Pattern.compile("cri-containerd:[0-9a-f]{64}");
   private static final Pattern CRIO_CONTAINER_ID_RE = Pattern.compile("\\/crio-[0-9a-f]{64}");
@@ -76,12 +77,19 @@ class CgroupV2ContainerIdExtractor {
       return optCid;
     }
 
-    return fileAsList.stream()
-        .filter(line -> line.contains("/containers/"))
-        .flatMap(line -> Stream.of(line.split("/")))
-        .map(CONTAINER_ID_RE::matcher)
-        .filter(Matcher::matches)
-        .reduce((first, second) -> second)
-        .map(matcher -> matcher.group(0));
+    List<String> containerIds =
+        fileAsList.stream()
+            .filter(line -> line.contains("/containers/"))
+            .map(CONTAINER_ID_RE::matcher)
+            .filter(Matcher::find)
+            .map(matcher -> matcher.group(1))
+            .distinct()
+            .collect(toList());
+    if (containerIds.size() > 1) {
+      logger.log(WARNING, "Multiple container ids found in v2 cgroup path: {0}", containerIds);
+    }
+    return containerIds.isEmpty()
+        ? empty()
+        : Optional.of(containerIds.get(containerIds.size() - 1));
   }
 }

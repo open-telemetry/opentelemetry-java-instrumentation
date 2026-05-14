@@ -8,9 +8,6 @@ muzzle {
     module.set("HikariCP")
     versions.set("[3.0.0,)")
     // muzzle does not detect PoolStats method references used - some of these methods were introduced in 3.0 and we can't assertInverse
-
-    // 4.0.0 uses a broken slf4j version: the "${slf4j.version}" placeholder is taken literally
-    skip("4.0.0")
   }
 }
 
@@ -22,20 +19,17 @@ dependencies {
   testImplementation(project(":instrumentation:hikaricp-3.0:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("collectMetadata", collectMetadata)
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  test {
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {

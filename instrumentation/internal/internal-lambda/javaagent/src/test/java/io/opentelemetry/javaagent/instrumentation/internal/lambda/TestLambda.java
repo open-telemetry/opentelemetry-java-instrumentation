@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.lambda;
 
-public class TestLambda {
+class TestLambda {
 
   static Runnable makeRunnable() {
     return () -> {};

@@ -45,7 +45,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 // Mostly the same as
 // https://github.com/wiremock/wiremock/blob/master/src/main/java/com/github/tomakehurst/wiremock/standalone/JsonFileMappingsSource.java
 // replacing Json with Yaml.
-final class YamlFileMappingsSource implements MappingsSource {
+class YamlFileMappingsSource implements MappingsSource {
 
   private static final ObjectMapper yamlMapper =
       new YAMLMapper()

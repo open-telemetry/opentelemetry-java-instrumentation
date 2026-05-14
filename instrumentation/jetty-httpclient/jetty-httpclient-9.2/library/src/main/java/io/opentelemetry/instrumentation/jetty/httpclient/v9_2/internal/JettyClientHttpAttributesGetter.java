@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
@@ -17,9 +18,7 @@ import org.eclipse.jetty.http.HttpVersion;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum JettyClientHttpAttributesGetter
-    implements HttpClientAttributesGetter<Request, Response> {
-  INSTANCE;
+class JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Request, Response> {
 
   @Override
   @Nullable
@@ -49,7 +48,6 @@ public enum JettyClientHttpAttributesGetter
     return response.getHeaders().getValuesList(name);
   }
 
-  @Nullable
   @Override
   public String getNetworkProtocolName(Request request, @Nullable Response response) {
     return "http";
@@ -78,7 +76,8 @@ public enum JettyClientHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(Request request) {
-    return request.getPort();
+    return HttpConstants.portOrDefaultFromScheme(request.getPort(), request.getScheme());
   }
 }

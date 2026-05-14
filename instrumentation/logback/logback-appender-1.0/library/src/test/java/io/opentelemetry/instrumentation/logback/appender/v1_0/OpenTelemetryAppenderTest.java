@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -22,6 +23,11 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   @BeforeEach
   void setup() {
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
+  }
+
+  @AfterEach
+  void cleanup() {
+    OpenTelemetryAppender.resetForTest();
   }
 
   @Override

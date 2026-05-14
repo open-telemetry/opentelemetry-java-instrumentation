@@ -18,10 +18,10 @@ import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.jms.listener.SessionAwareMessageListener;
 
 @EnableJms
-public class ManualListenerConfig extends AbstractConfig {
+class ManualListenerConfig extends AbstractConfig {
 
   @Bean
-  public JmsListenerConfigurer jmsListenerConfigurer(CompletableFuture<String> receivedMessage) {
+  JmsListenerConfigurer jmsListenerConfigurer(CompletableFuture<String> receivedMessage) {
     return registrar ->
         registrar.registerEndpoint(
             new JmsListenerEndpoint() {

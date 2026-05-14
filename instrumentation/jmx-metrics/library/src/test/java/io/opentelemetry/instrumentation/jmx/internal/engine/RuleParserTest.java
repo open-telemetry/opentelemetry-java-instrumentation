@@ -90,9 +90,7 @@ class RuleParserTest {
         .containsEntry("LABEL_KEY1", "param(PARAMETER)")
         .containsEntry("LABEL_KEY2", "beanattr(ATTRIBUTE)");
 
-    assertThat(def1.getDropNegativeValues())
-        .describedAs("dropping negative values should not be set")
-        .isNull();
+    assertThat(def1.getDropNegativeValues()).isNull();
 
     Map<String, Metric> attr = def1.getMapping();
     assertThat(attr)
@@ -106,9 +104,7 @@ class RuleParserTest {
     assertThat(m1.getSourceUnit()).isNull();
     assertThat(m1.getUnit()).isEqualTo("UNIT1");
     assertThat(m1.getMetricAttribute()).containsExactly(entry("LABEL_KEY3", "const(CONSTANT)"));
-    assertThat(m1.getDropNegativeValues())
-        .describedAs("dropping negative values should not be set")
-        .isNull();
+    assertThat(m1.getDropNegativeValues()).isNull();
 
     Metric m2 = attr.get("ATTRIBUTE2");
     assertThat(m2).isNotNull();
@@ -246,15 +242,9 @@ class RuleParserTest {
               assertThat(metricInfo.getDescription()).isNull();
 
               // syntax extension - defining a default unit and type
-              assertThat(metricInfo.getType())
-                  .describedAs("default type should match jmx rule definition")
-                  .isEqualTo(jmxDef.getMetricType());
-              assertThat(metricInfo.getUnit())
-                  .describedAs("default unit should match jmx rule definition")
-                  .isEqualTo(jmxDef.getUnit());
-              assertThat(metricInfo.getSourceUnit())
-                  .describedAs("default sourceUnit should match jmx rule definition")
-                  .isEqualTo(jmxDef.getSourceUnit());
+              assertThat(metricInfo.getType()).isEqualTo(jmxDef.getMetricType());
+              assertThat(metricInfo.getUnit()).isEqualTo(jmxDef.getUnit());
+              assertThat(metricInfo.getSourceUnit()).isEqualTo(jmxDef.getSourceUnit());
             });
   }
 
@@ -283,9 +273,7 @@ class RuleParserTest {
 
     MetricInfo mb1 = m1.getInfo();
     assertThat(mb1.getMetricName()).isEqualTo("ATTRIBUTE");
-    assertThat(mb1.getType())
-        .describedAs("default metric type should be gauge")
-        .isEqualTo(MetricInfo.Type.GAUGE);
+    assertThat(mb1.getType()).isEqualTo(MetricInfo.Type.GAUGE);
     assertThat(mb1.getUnit()).isEmpty();
   }
 
@@ -319,9 +307,7 @@ class RuleParserTest {
         .hasSize(1)
         .satisfiesExactly(a -> checkConstantMetricAttribute(a, "key1", "value2"));
 
-    assertThat(m1.getInfo().getMetricName())
-        .describedAs("metric name should default to JMX attribute name")
-        .isEqualTo("ATTRIBUTE");
+    assertThat(m1.getInfo().getMetricName()).isEqualTo("ATTRIBUTE");
   }
 
   private static final String CONF7 =
@@ -452,9 +438,7 @@ class RuleParserTest {
             me -> {
               assertThat(me.getInfo().getMetricName()).isEqualTo("state_metric");
               assertThat(me.getInfo().getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
-              assertThat(me.getInfo().getUnit())
-                  .describedAs("state metric unit should be 1")
-                  .isEqualTo("1");
+              assertThat(me.getInfo().getUnit()).isEqualTo("1");
 
               assertThat(me.getAttributes()).hasSize(1);
               MetricAttribute stateAttribute = me.getAttributes().get(0);
@@ -464,22 +448,15 @@ class RuleParserTest {
 
               BeanAttributeExtractor attributeExtractor = me.getMetricValueExtractor();
               assertThat(attributeExtractor).isNotNull();
-              assertThat(attributeExtractor.getSampleValue(null, null))
-                  .describedAs("sampled value must be an integer")
-                  .isInstanceOf(Integer.class);
+              assertThat(attributeExtractor.getSampleValue(null, null)).isInstanceOf(Integer.class);
 
               assertThat(attributeExtractor.getAttributeInfo(mockConnection, objectName))
-                  .describedAs("attribute info must be provided as a regular int metric")
                   .isNotNull();
 
               int expectedValue = stateAttributeValue.equals("failed") ? 1 : 0;
               Number extractedValue =
                   attributeExtractor.extractNumericalAttribute(mockConnection, objectName);
-              assertThat(extractedValue)
-                  .describedAs(
-                      "metric value should be %d when '%s' attribute is '%s'",
-                      expectedValue, stateAttribute.getAttributeName(), stateAttributeValue)
-                  .isEqualTo(expectedValue);
+              assertThat(extractedValue).isEqualTo(expectedValue);
             });
   }
 

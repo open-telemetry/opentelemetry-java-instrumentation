@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -37,7 +36,6 @@ public final class ElasticsearchEndpointDefinition {
     this.isSearchEndpoint = isSearchEndpoint;
   }
 
-  @Nullable
   public String getEndpointName() {
     return endpointName;
   }
@@ -136,12 +134,8 @@ public final class ElasticsearchEndpointDefinition {
         pathPartNames = new ArrayList<>();
         Matcher matcher = PATH_PART_NAMES_PATTERN.matcher(route.getName());
         while (matcher.find()) {
-          String groupName = matcher.group(1);
-
-          if (groupName != null) {
-            groupName = groupName.replace("_", UNDERSCORE_REPLACEMENT);
-            pathPartNames.add(groupName);
-          }
+          String groupName = matcher.group(1).replace("_", UNDERSCORE_REPLACEMENT);
+          pathPartNames.add(groupName);
         }
       } else {
         pathPartNames = emptyList();

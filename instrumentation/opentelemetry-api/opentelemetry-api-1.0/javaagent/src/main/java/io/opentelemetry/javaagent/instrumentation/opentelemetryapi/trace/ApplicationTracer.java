@@ -19,4 +19,11 @@ public class ApplicationTracer implements application.io.opentelemetry.api.trace
   public application.io.opentelemetry.api.trace.SpanBuilder spanBuilder(String spanName) {
     return new ApplicationSpanBuilder(agentTracer.spanBuilder(spanName));
   }
+
+  // added in 1.40.0 to incubator api
+  // added in 1.61.0 to stable api
+  @Override
+  public boolean isEnabled() {
+    return agentTracer.isEnabled();
+  }
 }

@@ -1,0 +1,57 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
+import akka.http.scaladsl.model.HttpRequest;
+import akka.http.scaladsl.model.HttpResponse;
+import java.util.List;
+import javax.annotation.Nullable;
+
+public class AkkaHttpUtil {
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.akka-http-10.0";
+
+  public static String instrumentationName() {
+    return INSTRUMENTATION_NAME;
+  }
+
+  public static List<String> requestHeader(HttpRequest httpRequest, String name) {
+    return httpRequest
+        .getHeader(name)
+        .map(httpHeader -> singletonList(httpHeader.value()))
+        .orElse(emptyList());
+  }
+
+  public static List<String> responseHeader(HttpResponse httpResponse, String name) {
+    return httpResponse
+        .getHeader(name)
+        .map(httpHeader -> singletonList(httpHeader.value()))
+        .orElse(emptyList());
+  }
+
+  @Nullable
+  public static String protocolName(HttpRequest request) {
+    String protocol = request.protocol().value();
+    if (protocol.startsWith("HTTP/")) {
+      return "http";
+    }
+    return null;
+  }
+
+  @Nullable
+  public static String protocolVersion(HttpRequest request) {
+    String protocol = request.protocol().value();
+    if (protocol.startsWith("HTTP/")) {
+      return protocol.substring("HTTP/".length());
+    }
+    return null;
+  }
+
+  private AkkaHttpUtil() {}
+}

@@ -17,9 +17,9 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 
-public class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddress> {
+class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddress> {
 
-  public static final CustomNameResolverGroup INSTANCE = new CustomNameResolverGroup();
+  static final CustomNameResolverGroup INSTANCE = new CustomNameResolverGroup();
 
   private CustomNameResolverGroup() {}
 
@@ -39,8 +39,8 @@ public class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddr
     protected void doResolve(String inetHost, Promise<InetAddress> promise) {
       try {
         promise.setSuccess(InetAddress.getByName(inetHost));
-      } catch (UnknownHostException exception) {
-        promise.setFailure(exception);
+      } catch (UnknownHostException e) {
+        promise.setFailure(e);
       }
     }
 
@@ -50,8 +50,8 @@ public class CustomNameResolverGroup extends AddressResolverGroup<InetSocketAddr
       try {
         // default implementation calls InetAddress.getAllByName
         promise.setSuccess(singletonList(InetAddress.getByName(inetHost)));
-      } catch (UnknownHostException exception) {
-        promise.setFailure(exception);
+      } catch (UnknownHostException e) {
+        promise.setFailure(e);
       }
     }
   }

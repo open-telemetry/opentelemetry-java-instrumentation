@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and experimental. Its APIs are unstable and can change at any time. Its
@@ -19,6 +20,10 @@ public final class SqlCommenter {
   private final BiFunction<Object, Boolean, TextMapPropagator> propagator;
   private final Predicate<Object> prepend;
 
+  public static SqlCommenterBuilder builder() {
+    return new SqlCommenterBuilder();
+  }
+
   SqlCommenter(
       boolean enabled,
       BiFunction<Object, Boolean, TextMapPropagator> propagator,
@@ -26,10 +31,6 @@ public final class SqlCommenter {
     this.enabled = enabled;
     this.propagator = propagator;
     this.prepend = prepend;
-  }
-
-  public static SqlCommenterBuilder builder() {
-    return new SqlCommenterBuilder();
   }
 
   public static SqlCommenter noop() {
@@ -40,14 +41,14 @@ public final class SqlCommenter {
    * Augments the given SQL query with comment containing tracing context.
    *
    * @param connection connection object, e.g. JDBC connection or R2DBC connection, that is used to
-   *     execute the query
+   *     execute the query if available
    * @param sql original query
    * @param executed whether the query is immediately executed after being processed, e.g. {@link
    *     java.sql.Statement#execute(String)}, or may be executed later, e.g. {@link
    *     java.sql.Connection#prepareStatement(String)}
    * @return modified query
    */
-  public String processQuery(Object connection, String sql, boolean executed) {
+  public String processQuery(@Nullable Object connection, String sql, boolean executed) {
     if (!enabled) {
       return sql;
     }

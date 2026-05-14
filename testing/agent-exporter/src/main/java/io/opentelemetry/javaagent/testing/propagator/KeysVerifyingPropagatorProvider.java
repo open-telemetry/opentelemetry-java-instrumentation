@@ -13,7 +13,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigurablePropagatorProvider;
 
 /** Provides a composite propagator that includes the default W3C propagators plus verification. */
 @AutoService(ConfigurablePropagatorProvider.class)
-public final class KeysVerifyingPropagatorProvider implements ConfigurablePropagatorProvider {
+public class KeysVerifyingPropagatorProvider implements ConfigurablePropagatorProvider {
   @Override
   public TextMapPropagator getPropagator(ConfigProperties configProperties) {
     return KeysVerifyingPropagator.getInstance();

@@ -19,11 +19,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.Connection;
 import java.util.Properties;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DriverInstrumentation implements TypeInstrumentation {
+class DriverInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -42,23 +43,23 @@ public class DriverInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, Properties.class))
             .and(returns(named("java.sql.Connection"))),
-        DriverInstrumentation.class.getName() + "$DriverAdvice");
+        getClass().getName() + "$DriverAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DriverAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addDbInfo(
         @Advice.Argument(0) String url,
         @Advice.Argument(1) Properties props,
-        @Advice.Return Connection connection) {
+        @Advice.Return @Nullable Connection connection) {
       if (connection == null) {
         // Exception was probably thrown.
         return;
       }
       DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, props);
-      JdbcData.connectionInfo.set(connection, JdbcData.intern(dbInfo));
+      JdbcData.CONNECTION_INFO.set(connection, JdbcData.intern(dbInfo));
     }
   }
 }

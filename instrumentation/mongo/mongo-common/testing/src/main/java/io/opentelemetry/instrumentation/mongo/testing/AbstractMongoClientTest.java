@@ -27,13 +27,13 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -125,8 +125,10 @@ public abstract class AbstractMongoClientTest<T> {
 
   @Test
   @DisplayName("test port open")
-  void testPortOpen() {
-    assertThatNoException().isThrownBy(() -> new Socket(host, port));
+  void testPortOpen() throws IOException {
+    try (Socket socket = new Socket(host, port)) {
+      assertThat(socket.isConnected()).isTrue();
+    }
   }
 
   @Test
@@ -539,13 +541,13 @@ public abstract class AbstractMongoClientTest<T> {
       String operation,
       String collection,
       String dbName,
-      Object parentSpan,
+      SpanData parentSpan,
       List<String> statements) {
     span.hasName(operation + " " + dbName + "." + collection).hasKind(CLIENT);
     if (parentSpan == null) {
       span.hasNoParent();
     } else {
-      span.hasParent((SpanData) parentSpan);
+      span.hasParent(parentSpan);
     }
 
     span.hasAttributesSatisfyingExactly(
@@ -553,9 +555,7 @@ public abstract class AbstractMongoClientTest<T> {
         equalTo(SERVER_PORT, port),
         satisfies(
             maybeStable(DB_STATEMENT),
-            val ->
-                val.satisfies(
-                    statement -> assertThat(statements).contains(statement.replaceAll(" ", "")))),
+            val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", "")))),
         equalTo(maybeStable(DB_SYSTEM), MONGODB),
         equalTo(
             DB_CONNECTION_STRING,

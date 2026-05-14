@@ -20,10 +20,10 @@ final class HeadersFactory {
 
   private static final Logger logger = Logger.getLogger(HeadersFactory.class.getName());
 
-  private static final JsonFactory JSON_FACTORY = new JsonFactory();
+  private static final JsonFactory jsonFactory = new JsonFactory();
 
   static Map<String, String> ofStream(InputStream inputStream) {
-    try (JsonParser parser = JSON_FACTORY.createParser(inputStream)) {
+    try (JsonParser parser = jsonFactory.createParser(inputStream)) {
       parser.nextToken();
 
       if (!parser.isExpectedStartObjectToken()) {
@@ -32,7 +32,7 @@ final class HeadersFactory {
       }
       while (parser.nextToken() != JsonToken.END_OBJECT) {
         parser.nextToken();
-        if (!parser.currentName().equals("headers")) {
+        if (!"headers".equals(parser.currentName())) {
           parser.skipChildren();
           continue;
         }

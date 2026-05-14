@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.helidon.v4_3.internal;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import io.opentelemetry.instrumentation.helidon.v4_3.HelidonTelemetryBuilder;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -17,8 +18,6 @@ import javax.annotation.Nullable;
  * any time.
  */
 public class HelidonInstrumenterBuilderUtil {
-  private HelidonInstrumenterBuilderUtil() {}
-
   @Nullable
   private static Function<
           HelidonTelemetryBuilder,
@@ -33,6 +32,7 @@ public class HelidonInstrumenterBuilderUtil {
     return serverBuilderExtractor;
   }
 
+  @Initializer
   public static void setServerBuilderExtractor(
       Function<
               HelidonTelemetryBuilder,
@@ -40,4 +40,6 @@ public class HelidonInstrumenterBuilderUtil {
           serverBuilderExtractor) {
     HelidonInstrumenterBuilderUtil.serverBuilderExtractor = serverBuilderExtractor;
   }
+
+  private HelidonInstrumenterBuilderUtil() {}
 }

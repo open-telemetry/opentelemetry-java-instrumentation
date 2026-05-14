@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-public final class ReactorContextKeys {
+public class ReactorContextKeys {
 
   public static final String CONTEXTS_HOLDER_KEY =
       ReactorContextKeys.class.getName() + ".contexts-holder";

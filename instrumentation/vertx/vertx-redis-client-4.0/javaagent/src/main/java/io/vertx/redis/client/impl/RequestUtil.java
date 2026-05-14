@@ -10,7 +10,7 @@ import static java.util.Collections.emptyList;
 import io.vertx.redis.client.Request;
 import java.util.List;
 
-public final class RequestUtil {
+public class RequestUtil {
 
   public static List<byte[]> getArgs(Request request) {
     if (request instanceof RequestImpl) {

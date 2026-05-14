@@ -52,7 +52,7 @@ public class VirtualFieldTestInstrumentationModule extends InstrumentationModule
   @SuppressWarnings("unused")
   public static class TestAdvice {
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(inline = false)
     public static boolean onExit() {
       VirtualFieldTestHelper.test();
       return true;

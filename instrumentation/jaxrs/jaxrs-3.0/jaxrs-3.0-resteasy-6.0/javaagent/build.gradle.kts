@@ -30,23 +30,21 @@ dependencies {
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent"))
-
   testImplementation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-common:testing"))
   testImplementation("org.eclipse.jetty:jetty-webapp:11.0.0")
   testLibrary("org.jboss.resteasy:resteasy-undertow:6.0.0.Final") {
     exclude("org.jboss.resteasy", "resteasy-client")
   }
-  testLibrary("io.undertow:undertow-servlet-jakarta:2.2.17.Final")
   testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:6.0.0.Final")
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental by registering(Test::class) {
@@ -54,14 +52,18 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.jaxrs.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
+        "otel.instrumentation.jaxrs.experimental-span-attributes=true"
+    )
   }
 
   check {
     dependsOn(testExperimental)
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }

@@ -18,14 +18,14 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
 
   protected abstract AutoConfigurations autoConfigurations();
 
-  protected final ApplicationContextRunner contextRunner =
+  private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withBean(RestTemplate.class, RestTemplate::new)
           .withConfiguration(autoConfigurations());
 
   /**
-   * Tests that users create {@link RestTemplate} bean is instrumented.
+   * Tests that a user-created {@link RestTemplate} bean is instrumented.
    *
    * <pre>{@code
    * @Bean public RestTemplate restTemplate() {
@@ -45,15 +45,11 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
                           "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class))
                   .isNotNull();
 
-              assertThat(
-                      context.getBean(RestTemplate.class).getInterceptors().stream()
-                          .filter(
-                              rti ->
-                                  rti.getClass()
-                                      .getName()
-                                      .startsWith("io.opentelemetry.instrumentation"))
-                          .count())
-                  .isEqualTo(1);
+              assertThat(context.getBean(RestTemplate.class).getInterceptors())
+                  .filteredOn(
+                      rti ->
+                          rti.getClass().getName().startsWith("io.opentelemetry.instrumentation"))
+                  .hasSize(1);
             });
   }
 
@@ -61,9 +57,7 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
   void instrumentationDisabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=false")
-        .run(
-            context ->
-                assertThat(context.containsBean("otelRestTemplateBeanPostProcessor")).isFalse());
+        .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
   }
 
   @Test
@@ -71,18 +65,14 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=false")
         .withPropertyValues("otel.instrumentation.common.default-enabled=true")
-        .run(
-            context ->
-                assertThat(context.containsBean("otelRestTemplateBeanPostProcessor")).isFalse());
+        .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
   }
 
   @Test
   void allInstrumentationDisabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.common.default-enabled=false")
-        .run(
-            context ->
-                assertThat(context.containsBean("otelRestTemplateBeanPostProcessor")).isFalse());
+        .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
   }
 
   @Test

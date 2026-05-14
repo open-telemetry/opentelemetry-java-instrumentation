@@ -54,7 +54,5 @@ class MicrometerTestingExtension implements AfterEachCallback, BeforeEachCallbac
     return registry;
   }
 
-  MeterRegistry configureMeterRegistry(MeterRegistry registry) {
-    return registry;
-  }
+  void configureMeterRegistry(MeterRegistry registry) {}
 }

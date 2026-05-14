@@ -1,0 +1,6 @@
+display_name: Resource Detectors
+description: >
+  This instrumentation automatically detects and populates OpenTelemetry resource attributes for
+  the host, OS, process, and container environment. It does not emit any telemetry on its own.
+features:
+  - RESOURCE_DETECTOR

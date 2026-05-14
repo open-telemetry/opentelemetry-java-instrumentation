@@ -69,7 +69,7 @@ public class LogbackAppenderApplicationListener implements GenericApplicationLis
     try {
       Class.forName("ch.qos.logback.core.Appender");
       return true;
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return false;
     }
   }

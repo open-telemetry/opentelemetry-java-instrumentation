@@ -14,9 +14,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.playws.HandlerPublisherInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.AsyncHttpClientInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.HandlerPublisherInstrumentation;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -27,8 +26,7 @@ import play.shaded.ahc.org.asynchttpclient.handler.StreamedAsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 
 @AutoService(InstrumentationModule.class)
-public class PlayWsInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class PlayWsInstrumentationModule extends InstrumentationModule {
   public PlayWsInstrumentationModule() {
     super("play-ws", "play-ws-1.0");
   }
@@ -36,14 +34,8 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new AsyncHttpClientInstrumentation(
-            PlayWsInstrumentationModule.class.getName() + "$ClientAdvice"),
+        new AsyncHttpClientInstrumentation(getClass().getName() + "$ClientAdvice"),
         new HandlerPublisherInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 
   @SuppressWarnings("unused")
@@ -92,7 +84,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
     }
 
     @Advice.AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) AsyncHandler<?> originalAsyncHandler) {
@@ -105,11 +97,9 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
       return new Object[] {adviceScope, asyncHandler};
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Argument(0) Request request,
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter Object[] enterResult) {
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
 
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
       if (adviceScope != null) {

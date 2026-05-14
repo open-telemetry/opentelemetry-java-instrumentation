@@ -31,7 +31,7 @@ import net.bytebuddy.matcher.ElementMatcher;
  * ServletResponse, Throwable, Servlet2Advice.AdviceScope)} can get it from context and set required
  * span attribute.
  */
-public class Servlet2HttpServletResponseInstrumentation implements TypeInstrumentation {
+class Servlet2HttpServletResponseInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("javax.servlet.http.HttpServletResponse");
@@ -46,18 +46,15 @@ public class Servlet2HttpServletResponseInstrumentation implements TypeInstrumen
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf("sendError", "setStatus"),
-        Servlet2HttpServletResponseInstrumentation.class.getName()
-            + "$Servlet2ResponseStatusAdvice");
+        getClass().getName() + "$Servlet2ResponseStatusAdvice");
     transformer.applyAdviceToMethod(
-        named("sendRedirect"),
-        Servlet2HttpServletResponseInstrumentation.class.getName()
-            + "$Servlet2ResponseRedirectAdvice");
+        named("sendRedirect"), getClass().getName() + "$Servlet2ResponseRedirectAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class Servlet2ResponseRedirectAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This HttpServletResponse response) {
       RESPONSE_STATUS.set(response, 302);
     }
@@ -66,7 +63,7 @@ public class Servlet2HttpServletResponseInstrumentation implements TypeInstrumen
   @SuppressWarnings("unused")
   public static class Servlet2ResponseStatusAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.This HttpServletResponse response, @Advice.Argument(0) Integer status) {
       RESPONSE_STATUS.set(response, status);

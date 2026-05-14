@@ -13,6 +13,7 @@ muzzle {
     group.set("org.glassfish")
     module.set("javax.faces")
     versions.set("[2.0.7,3)")
+    assertInverse.set(true)
     extraDependency("javax.el:el-api:2.2")
   }
   pass {
@@ -33,6 +34,7 @@ muzzle {
     group.set("javax.faces")
     module.set("jsf-impl")
     versions.set("[1.2,2)")
+    assertInverse.set(true)
     extraDependency("javax.faces:jsf-api:1.2")
     extraDependency("javax.el:el-api:1.0")
   }
@@ -47,31 +49,32 @@ muzzle {
 dependencies {
   compileOnly("javax.faces:jsf-api:1.2")
 
-  implementation(project(":instrumentation:jsf:jsf-javax-common:javaagent"))
+  implementation(project(":instrumentation:jsf:jsf-common-javax:javaagent"))
 
-  testImplementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+  testImplementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
+
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jsf:jsf-mojarra-3.0:javaagent"))
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 testing {
   suites {
     val mojarra12Test by registering(JvmTestSuite::class) {
       dependencies {
-        implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+        implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
         implementation("javax.faces:jsf-api:1.2")
         implementation("com.sun.facelets:jsf-facelets:1.1.14")
 
-        val version = if (latestDepTest) "1.+" else "1.2_04"
+        val version = baseVersion("1.2_04").orLatest("1.+")
         implementation("javax.faces:jsf-impl:$version")
       }
     }
 
     val mojarra2Test by registering(JvmTestSuite::class) {
       dependencies {
-        implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
+        implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
 
-        val version = if (latestDepTest) "2.+" else "2.2.0"
+        val version = baseVersion("2.2.0").orLatest("2.+")
         implementation("org.glassfish:javax.faces:$version")
       }
     }
@@ -82,9 +85,9 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
-}
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
 }

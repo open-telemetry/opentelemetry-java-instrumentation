@@ -15,18 +15,20 @@ final class BodySizeUtil {
   private static final Method serializedSizeMethod =
       messageLiteClass != null ? getSerializedSizeMethod(messageLiteClass) : null;
 
+  @Nullable
   private static Class<?> getMessageLiteClass() {
     try {
       return Class.forName("com.google.protobuf.MessageLite");
-    } catch (Exception ignore) {
+    } catch (Exception ignored) {
       return null;
     }
   }
 
+  @Nullable
   private static Method getSerializedSizeMethod(Class<?> clazz) {
     try {
       return clazz.getMethod("getSerializedSize");
-    } catch (NoSuchMethodException ignore) {
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }
@@ -40,7 +42,7 @@ final class BodySizeUtil {
     }
     try {
       return ((Integer) serializedSizeMethod.invoke(message)).longValue();
-    } catch (Throwable ignore) {
+    } catch (Throwable ignored) {
       return null;
     }
   }

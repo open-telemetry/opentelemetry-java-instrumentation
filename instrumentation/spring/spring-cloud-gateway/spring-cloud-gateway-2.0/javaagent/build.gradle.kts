@@ -16,7 +16,7 @@ muzzle {
   pass {
     group.set("org.springframework.cloud")
     module.set("spring-cloud-starter-gateway-server-webflux")
-    versions.set("[4.3.0,]")
+    versions.set("[4.3.0,)")
     assertInverse.set(true)
   }
 }
@@ -39,7 +39,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.1.+") // see spring-cloud-gateway-2.2:testing module
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.spring-cloud-gateway.experimental-span-attributes=true")
 
   // required on jdk17
@@ -48,7 +48,7 @@ tasks.withType<Test>().configureEach {
 
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
 configurations.testRuntimeClasspath {

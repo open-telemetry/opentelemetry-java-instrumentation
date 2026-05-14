@@ -23,9 +23,6 @@ import javax.annotation.Nullable;
 public final class JdbcTransactionAttributesGetter
     implements SqlClientAttributesGetter<DbRequest, Void> {
 
-  public static final JdbcTransactionAttributesGetter INSTANCE =
-      new JdbcTransactionAttributesGetter();
-
   @Nullable
   @Override
   public String getDbSystemName(DbRequest request) {
@@ -99,5 +96,5 @@ public final class JdbcTransactionAttributesGetter
     return request.getDbInfo().getPort();
   }
 
-  private JdbcTransactionAttributesGetter() {}
+  public JdbcTransactionAttributesGetter() {}
 }

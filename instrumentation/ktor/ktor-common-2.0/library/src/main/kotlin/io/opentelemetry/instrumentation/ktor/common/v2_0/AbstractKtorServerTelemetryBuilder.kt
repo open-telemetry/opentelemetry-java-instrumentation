@@ -19,7 +19,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
 import io.opentelemetry.instrumentation.ktor.common.v2_0.internal.KtorBuilderUtil
-import java.util.function.Function
 import java.util.function.UnaryOperator
 
 abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationName: String) {
@@ -39,7 +38,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
       DefaultHttpServerInstrumenterBuilder.create(
         instrumentationName,
         openTelemetry,
-        KtorHttpServerAttributesGetter.INSTANCE
+        KtorHttpServerAttributesGetter
       )
   }
 
@@ -144,13 +143,9 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   fun knownMethods(methods: Iterable<HttpMethod>) = knownMethods(methods.map { it.value })
 
   fun knownMethods(methods: Iterable<String>) {
-    methods.toSet().apply {
-      builder.setKnownMethods(this)
-    }
+    builder.setKnownMethods(methods.toSet())
   }
 
-  /**
-   * {@link #setOpenTelemetry(OpenTelemetry)} sets the serverBuilder to a non-null value.
-   */
-  fun isOpenTelemetryInitialized(): Boolean = this::builder.isInitialized
+  /** `setOpenTelemetry()` initializes `builder`. */
+  protected fun isOpenTelemetryInitialized(): Boolean = this::builder.isInitialized
 }

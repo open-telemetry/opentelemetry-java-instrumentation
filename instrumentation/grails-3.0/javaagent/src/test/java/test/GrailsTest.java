@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 
@@ -42,8 +43,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
-  static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
-
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -66,7 +65,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
     options.setHasErrorPageSpans(
         endpoint -> endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND);
     options.setTestPathParam(true);
-    options.setResponseCodeOnNonStandardHttpMethod(testLatestDeps ? 200 : 501);
+    options.setResponseCodeOnNonStandardHttpMethod(testLatestDeps() ? 200 : 501);
   }
 
   @SpringBootApplication
@@ -86,7 +85,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
       try {
         ServerProperties.class.getDeclaredMethod("getServlet");
         return "server.servlet.contextPath";
-      } catch (NoSuchMethodException ignore) {
+      } catch (NoSuchMethodException ignored) {
         return "server.context-path";
       }
     }
@@ -102,8 +101,8 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
     private static Class<?> load(String name) {
       try {
         return Class.forName(name);
-      } catch (ClassNotFoundException exception) {
-        throw new IllegalStateException(exception);
+      } catch (ClassNotFoundException e) {
+        throw new IllegalStateException(e);
       }
     }
   }
@@ -111,7 +110,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
   @Override
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     if (HttpConstants._OTHER.equals(method)) {
-      return testLatestDeps
+      return testLatestDeps()
           ? getContextPath() + "/test" + endpoint.getPath()
           : getContextPath() + "/*";
     }

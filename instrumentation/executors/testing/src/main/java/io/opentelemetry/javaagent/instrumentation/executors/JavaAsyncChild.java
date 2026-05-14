@@ -12,7 +12,7 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("serial")
-final class JavaAsyncChild extends ForkJoinTask<Object> implements TestTask {
+class JavaAsyncChild extends ForkJoinTask<Object> implements TestTask {
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   private final AtomicBoolean blockThread;
@@ -65,13 +65,16 @@ final class JavaAsyncChild extends ForkJoinTask<Object> implements TestTask {
   }
 
   private void runImpl() {
-    while (blockThread.get()) {
-      // busy-wait to block thread
+    try {
+      while (blockThread.get()) {
+        // busy-wait to block thread
+      }
+      if (doTraceableWork) {
+        asyncChild();
+      }
+    } finally {
+      latch.countDown();
     }
-    if (doTraceableWork) {
-      asyncChild();
-    }
-    latch.countDown();
   }
 
   private static void asyncChild() {

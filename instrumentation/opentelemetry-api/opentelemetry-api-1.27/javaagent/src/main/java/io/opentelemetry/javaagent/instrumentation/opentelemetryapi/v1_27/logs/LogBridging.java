@@ -32,7 +32,7 @@ public class LogBridging {
         application.io.opentelemetry.api.logs.Severity.values()) {
       try {
         severityMap.put(severity, Severity.valueOf(severity.name()));
-      } catch (IllegalArgumentException e) {
+      } catch (IllegalArgumentException ignored) {
         // No mapping exists for this severity, ignore
       }
     }

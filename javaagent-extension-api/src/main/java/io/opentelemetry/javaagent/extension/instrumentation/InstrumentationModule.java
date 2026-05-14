@@ -16,7 +16,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
@@ -32,7 +31,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  * java.util.ServiceLoader} for more details.
  */
 public abstract class InstrumentationModule implements Ordered {
-  private static final Logger logger = Logger.getLogger(InstrumentationModule.class.getName());
 
   private final Set<String> instrumentationNames;
 
@@ -127,8 +125,9 @@ public abstract class InstrumentationModule implements Ordered {
    * better isolation, best practice code development, avoids shading and enables standard debugging
    * techniques. The non-inlining of advice will be enforced by muzzle (TODO)
    */
+  @Deprecated // to be removed in next release
   public boolean isIndyModule() {
-    return IndyConfigurationHolder.indyEnabled;
+    return false;
   }
 
   /** Register resource names to inject into the user's class loader. */
@@ -165,16 +164,5 @@ public abstract class InstrumentationModule implements Ordered {
    */
   public List<String> getAdditionalHelperClassNames() {
     return emptyList();
-  }
-
-  private static class IndyConfigurationHolder {
-    private static final boolean indyEnabled;
-
-    static {
-      indyEnabled = AgentDistributionConfig.get().isIndyEnabled();
-      if (indyEnabled) {
-        logger.info("Enabled indy for instrumentation modules");
-      }
-    }
   }
 }

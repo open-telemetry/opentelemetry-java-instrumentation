@@ -30,16 +30,12 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 1.10
     return hasClassesNamed("application.io.opentelemetry.api.metrics.LongGaugeBuilder");
   }
 
   @Override
   public String getModuleGroup() {
     return "opentelemetry-api-bridge";
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

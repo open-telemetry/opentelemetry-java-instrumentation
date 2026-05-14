@@ -18,7 +18,7 @@ import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 
 /** System Metrics Utility. */
-public class SystemMetrics {
+public final class SystemMetrics {
   private static final AttributeKey<String> DEVICE_KEY = AttributeKey.stringKey("device");
   private static final AttributeKey<String> DIRECTION_KEY = AttributeKey.stringKey("direction");
 
@@ -26,8 +26,6 @@ public class SystemMetrics {
 
   private static final Attributes ATTRIBUTES_USED = Attributes.of(STATE_KEY, "used");
   private static final Attributes ATTRIBUTES_FREE = Attributes.of(STATE_KEY, "free");
-
-  private SystemMetrics() {}
 
   /** Register observers for system metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
@@ -121,6 +119,7 @@ public class SystemMetrics {
             .buildWithCallback(
                 r -> {
                   for (HWDiskStore diskStore : hal.getDiskStores()) {
+                    diskStore.updateAttributes();
                     long read = diskStore.getReadBytes();
                     long write = diskStore.getWriteBytes();
                     String device = diskStore.getName();
@@ -137,6 +136,7 @@ public class SystemMetrics {
             .buildWithCallback(
                 r -> {
                   for (HWDiskStore diskStore : hal.getDiskStores()) {
+                    diskStore.updateAttributes();
                     long read = diskStore.getReads();
                     long write = diskStore.getWrites();
                     String device = diskStore.getName();
@@ -147,4 +147,6 @@ public class SystemMetrics {
 
     return observables;
   }
+
+  private SystemMetrics() {}
 }

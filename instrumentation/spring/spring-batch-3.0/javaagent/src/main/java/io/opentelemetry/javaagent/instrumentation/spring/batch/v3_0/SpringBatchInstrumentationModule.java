@@ -11,7 +11,6 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk.StepBuilderInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item.ChunkOrientedTaskletInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item.JsrChunkProcessorInstrumentation;
@@ -25,15 +24,14 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringBatchInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class SpringBatchInstrumentationModule extends InstrumentationModule {
   public SpringBatchInstrumentationModule() {
     super("spring-batch", "spring-batch-3.0");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // JSR-352 Batch API
+    // added in 3.0.0.RELEASE (JSR-352 Batch API)
     return hasClassesNamed("org.springframework.batch.core.jsr.launch.JsrJobOperator");
   }
 
@@ -59,10 +57,5 @@ public class SpringBatchInstrumentationModule extends InstrumentationModule
   public boolean defaultEnabled() {
     // TODO: replace this with an experimental flag
     return false;
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

@@ -89,7 +89,6 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
-  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent"))
@@ -171,6 +170,7 @@ tasks {
     exclude("META-INF/LICENSE")
     exclude("META-INF/NOTICE")
     exclude("META-INF/maven/**")
+    exclude("META-INF/versions/*/OSGI-INF/MANIFEST.MF")
 
     archiveFileName.set("baseJavaagentLibs-relocated.jar")
   }
@@ -189,6 +189,7 @@ tasks {
     exclude("META-INF/LICENSE")
     exclude("META-INF/NOTICE")
     exclude("META-INF/maven/**")
+    exclude("META-INF/versions/*/OSGI-INF/MANIFEST.MF")
 
     archiveFileName.set("javaagentLibs-relocated.jar")
   }

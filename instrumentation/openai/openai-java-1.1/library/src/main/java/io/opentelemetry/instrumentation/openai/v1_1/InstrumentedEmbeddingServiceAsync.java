@@ -16,11 +16,11 @@ import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;
 
 final class InstrumentedEmbeddingServiceAsync
-    extends DelegatingInvocationHandler<EmbeddingServiceAsync, InstrumentedEmbeddingServiceAsync> {
+    extends DelegatingInvocationHandler<EmbeddingServiceAsync> {
 
   private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> instrumenter;
 
-  public InstrumentedEmbeddingServiceAsync(
+  InstrumentedEmbeddingServiceAsync(
       EmbeddingServiceAsync delegate,
       Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> instrumenter) {
     super(delegate);

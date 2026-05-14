@@ -150,6 +150,9 @@ public final class HostIdResource {
 
       return output;
     } catch (IOException | InterruptedException e) {
+      if (e instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
       logger.log(FINE, "Failed to read Windows registry", e);
       return emptyList();
     }

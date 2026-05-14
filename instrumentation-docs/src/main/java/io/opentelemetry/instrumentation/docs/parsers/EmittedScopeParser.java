@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,7 @@ public class EmittedScopeParser {
                 item ->
                     item.getName() != null
                         && item.getName().contains(module.getInstrumentationName()))
-            .findFirst()
+            .min(Comparator.comparing(item -> item.getSchemaUrl() == null ? 1 : 0))
             .orElse(null);
     if (scope == null) {
       return null;

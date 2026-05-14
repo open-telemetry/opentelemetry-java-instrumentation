@@ -64,7 +64,8 @@ class OpenTelemetryResultSet implements ResultSet {
    * Wraps a ResultSet for row count tracking only (no deferred span end). Used when captureRowCount
    * is false or when the span has already been ended.
    */
-  public static ResultSet wrap(ResultSet delegate, Statement statement) {
+  @Nullable
+  public static ResultSet wrap(@Nullable ResultSet delegate, Statement statement) {
     if (delegate == null) {
       return null;
     }

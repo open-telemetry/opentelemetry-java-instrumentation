@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -21,6 +22,11 @@ class AsyncEventBusTest {
 
   static final ExecutorService executor = Executors.newSingleThreadExecutor();
   static final AsyncEventBus asyncEventBus = new AsyncEventBus(executor);
+
+  @AfterAll
+  static void shutdown() {
+    executor.shutdown();
+  }
 
   @Test
   void contextPropagation() {

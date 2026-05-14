@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import reactor.core.publisher.Mono;
 
-public final class ConnectionWrapper {
+public class ConnectionWrapper {
 
   private static final VirtualField<ChannelPromise, ConnectionRequestAndContext>
       requestAndContextField =

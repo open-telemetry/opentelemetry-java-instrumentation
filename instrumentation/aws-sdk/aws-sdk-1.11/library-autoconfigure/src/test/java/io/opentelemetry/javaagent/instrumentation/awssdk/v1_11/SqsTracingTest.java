@@ -22,7 +22,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
   }
 
   @Override
-  public AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
+  protected AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client;
   }
 }

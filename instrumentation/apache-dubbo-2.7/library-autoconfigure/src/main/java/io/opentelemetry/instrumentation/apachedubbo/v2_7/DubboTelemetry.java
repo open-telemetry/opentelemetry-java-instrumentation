@@ -12,7 +12,6 @@ import org.apache.dubbo.rpc.Result;
 
 /** Entrypoint for instrumenting Apache Dubbo servers and clients. */
 public final class DubboTelemetry {
-
   private final Instrumenter<DubboRequest, Result> serverInstrumenter;
   private final Instrumenter<DubboRequest, Result> clientInstrumenter;
 

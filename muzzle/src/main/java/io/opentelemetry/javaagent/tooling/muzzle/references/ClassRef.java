@@ -25,16 +25,21 @@ public final class ClassRef {
   private final Set<Source> sources;
   private final Set<Flag> flags;
   private final String className;
-  private final String superClassName;
+  @Nullable private final String superClassName;
   private final Set<String> interfaceNames;
   private final Set<FieldRef> fields;
   private final Set<MethodRef> methods;
+
+  /** Start building a new {@linkplain ClassRef reference}. */
+  public static ClassRefBuilder builder(String className) {
+    return new ClassRefBuilder(className);
+  }
 
   ClassRef(
       Set<Source> sources,
       Set<Flag> flags,
       String className,
-      String superClassName,
+      @Nullable String superClassName,
       Set<String> interfaceNames,
       Set<FieldRef> fields,
       Set<MethodRef> methods) {
@@ -45,11 +50,6 @@ public final class ClassRef {
     this.interfaceNames = interfaceNames;
     this.fields = fields;
     this.methods = methods;
-  }
-
-  /** Start building a new {@linkplain ClassRef reference}. */
-  public static ClassRefBuilder builder(String className) {
-    return new ClassRefBuilder(className);
   }
 
   /** Returns information about code locations where this class was referenced. */
@@ -99,7 +99,7 @@ public final class ClassRef {
       throw new IllegalStateException("illegal merge " + this + " != " + anotherReference);
     }
     String superName =
-        null == this.superClassName ? anotherReference.superClassName : this.superClassName;
+        this.superClassName == null ? anotherReference.superClassName : this.superClassName;
 
     return new ClassRef(
         mergeSet(sources, anotherReference.sources),

@@ -16,19 +16,18 @@ import java.io.IOException;
 
 /** Entrypoint for instrumenting NATS clients. */
 public final class NatsTelemetry {
+  private final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter;
+  private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   /** Returns a new {@link NatsTelemetry} configured with the given {@link OpenTelemetry}. */
   public static NatsTelemetry create(OpenTelemetry openTelemetry) {
-    return new NatsTelemetryBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /** Returns a new {@link NatsTelemetryBuilder} configured with the given {@link OpenTelemetry}. */
   public static NatsTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new NatsTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter;
-  private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   NatsTelemetry(
       Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,

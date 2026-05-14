@@ -12,7 +12,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.support.ParameterDeclarations;
 
-final class ValidRequestMethodsProvider implements ArgumentsProvider {
+class ValidRequestMethodsProvider implements ArgumentsProvider {
 
   @Override
   public Stream<? extends Arguments> provideArguments(

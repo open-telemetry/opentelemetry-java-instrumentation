@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_4.operator;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -23,7 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.util.context.ContextView;
 
-public class ContextPropagationOperator34Instrumentation implements TypeInstrumentation {
+class ContextPropagationOperator34Instrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named(
@@ -33,25 +32,24 @@ public class ContextPropagationOperator34Instrumentation implements TypeInstrume
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(isStatic())
             .and(named("getOpenTelemetryContextFromContextView"))
             .and(takesArgument(0, named("reactor.util.context.ContextView")))
             .and(takesArgument(1, named("application.io.opentelemetry.context.Context")))
             .and(returns(named("application.io.opentelemetry.context.Context"))),
-        ContextPropagationOperator34Instrumentation.class.getName() + "$GetContextViewAdvice");
+        getClass().getName() + "$GetContextViewAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetContextViewAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
     public static boolean methodEnter() {
       return false;
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.context.Context methodExit(
         @Advice.Argument(0) ContextView reactorContext,
         @Advice.Argument(1) application.io.opentelemetry.context.Context defaultContext) {
@@ -60,9 +58,8 @@ public class ContextPropagationOperator34Instrumentation implements TypeInstrume
           ContextPropagationOperator.getOpenTelemetryContextFromContextView(reactorContext, null);
       if (agentContext == null) {
         return defaultContext;
-      } else {
-        return AgentContextStorage.toApplicationContext(agentContext);
       }
+      return AgentContextStorage.toApplicationContext(agentContext);
     }
   }
 }

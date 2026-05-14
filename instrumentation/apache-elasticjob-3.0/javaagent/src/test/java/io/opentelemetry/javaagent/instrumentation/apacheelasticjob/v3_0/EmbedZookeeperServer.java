@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 import java.io.File;
 import org.apache.curator.test.TestingServer;
 
-final class EmbedZookeeperServer {
+class EmbedZookeeperServer {
 
   private static TestingServer testingServer;
 

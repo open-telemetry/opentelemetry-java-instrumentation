@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.exec.ExecInitializer;
 import ratpack.exec.ExecInterceptor;
 
-public class DefaultExecControllerInstrumentation implements TypeInstrumentation {
+class DefaultExecControllerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -34,21 +34,19 @@ public class DefaultExecControllerInstrumentation implements TypeInstrumentation
     transformer.applyAdviceToMethod(
         named("setInitializers")
             .and(takesArgument(0, named("com.google.common.collect.ImmutableList"))),
-        DefaultExecControllerInstrumentation.class.getName() + "$SetInitializersAdvice");
+        getClass().getName() + "$SetInitializersAdvice");
 
     transformer.applyAdviceToMethod(
         named("setInterceptors")
             .and(takesArgument(0, named("com.google.common.collect.ImmutableList"))),
-        DefaultExecControllerInstrumentation.class.getName() + "$SetInterceptorsAdvice");
+        getClass().getName() + "$SetInterceptorsAdvice");
 
-    transformer.applyAdviceToMethod(
-        isConstructor(),
-        DefaultExecControllerInstrumentation.class.getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class SetInitializersAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static ImmutableList<? extends ExecInitializer> enter(
         @Advice.Argument(0) ImmutableList<? extends ExecInitializer> initializers) {
@@ -61,7 +59,7 @@ public class DefaultExecControllerInstrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class SetInterceptorsAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static ImmutableList<? extends ExecInterceptor> enter(
         @Advice.Argument(0) ImmutableList<? extends ExecInterceptor> interceptors) {
@@ -76,7 +74,7 @@ public class DefaultExecControllerInstrumentation implements TypeInstrumentation
   public static class ConstructorAdvice {
 
     @SuppressWarnings("UnusedVariable")
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToFields({
       @ToField(value = "initializers", index = 0),
       @ToField(value = "interceptors", index = 1)

@@ -1154,8 +1154,8 @@ public final class BedrockRuntimeImpl {
       throws Throwable {
     try {
       return method.invoke(target, args);
-    } catch (InvocationTargetException exception) {
-      throw exception.getCause();
+    } catch (InvocationTargetException e) {
+      throw e.getCause();
     }
   }
 

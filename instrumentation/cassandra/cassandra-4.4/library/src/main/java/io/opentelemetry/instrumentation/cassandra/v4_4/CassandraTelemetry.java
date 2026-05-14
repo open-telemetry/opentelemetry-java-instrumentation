@@ -5,13 +5,16 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
+import static java.util.Objects.requireNonNull;
+
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /** Entrypoint for instrumenting cassandra sessions. */
-public class CassandraTelemetry {
+public final class CassandraTelemetry {
+  private final TracingCqlSession tracingCqlSession;
 
   /** Returns a new {@link CassandraTelemetry} configured with the given {@link OpenTelemetry}. */
   public static CassandraTelemetry create(OpenTelemetry openTelemetry) {
@@ -26,19 +29,17 @@ public class CassandraTelemetry {
     return new CassandraTelemetryBuilder(openTelemetry);
   }
 
-  private final TracingCqlSession tracingCqlSession;
-
-  protected CassandraTelemetry(Instrumenter<CassandraRequest, ExecutionInfo> instrumenter) {
+  CassandraTelemetry(Instrumenter<CassandraRequest, ExecutionInfo> instrumenter) {
     this.tracingCqlSession = new TracingCqlSession(instrumenter);
   }
 
   /**
-   * Construct a new tracing-enable CqlSession using the provided {@link CqlSession} instance.
+   * Construct a new tracing-enabled CqlSession using the provided {@link CqlSession} instance.
    *
    * @param session An instance of CqlSession configured as desired.
    * @return a {@link TracingCqlSession}.
    */
   public CqlSession wrap(CqlSession session) {
-    return tracingCqlSession.wrapSession(session);
+    return tracingCqlSession.wrapSession(requireNonNull(session, "session"));
   }
 }

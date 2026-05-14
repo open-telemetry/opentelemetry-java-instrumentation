@@ -21,8 +21,9 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
+import javax.annotation.Nullable;
 
-public final class InstrumentationPoints {
+public class InstrumentationPoints {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
@@ -33,8 +34,8 @@ public final class InstrumentationPoints {
   public static void afterCommand(
       RedisCommand<?, ?, ?> command,
       Context context,
-      Throwable throwable,
-      AsyncCommand<?, ?, ?> asyncCommand) {
+      @Nullable Throwable throwable,
+      @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
     if (throwable != null) {
       instrumenter().end(context, command, null, throwable);
     } else if (expectsResponse(command)) {

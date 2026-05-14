@@ -39,7 +39,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 class LoggerTest {
 
   @RegisterExtension
-  static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final AgentInstrumentationExtension testing =
+      AgentInstrumentationExtension.create();
 
   private String instrumentationName;
   private Logger logger;
@@ -117,8 +118,7 @@ class LoggerTest {
 
   @ParameterizedTest
   @MethodSource("bodyValues")
-  void logBodyValue() {
-    Value<?> value = Value.of(42);
+  void logBodyValue(Value<?> value) {
     logger.logRecordBuilder().setBody(value).emit();
 
     await()

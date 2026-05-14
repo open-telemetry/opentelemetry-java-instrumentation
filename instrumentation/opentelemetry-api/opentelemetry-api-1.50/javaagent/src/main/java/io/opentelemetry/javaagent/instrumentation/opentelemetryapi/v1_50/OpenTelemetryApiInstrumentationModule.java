@@ -25,14 +25,17 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 1.42
     return hasClassesNamed("application.io.opentelemetry.api.common.Value")
         .and(
+            // added in 1.42
             // disable when incubating api is present
             not(hasClassesNamed("application.io.opentelemetry.api.incubator.logs.ExtendedLogger"))
                 // unless the incubating api is at least 1.50, test infra also depends on the
                 // incubating api, and we can't exclude that like we did for older versions
                 .or(
                     hasClassesNamed(
+                        // added in 1.50
                         "application.io.opentelemetry.api.incubator.common.ExtendedAttributes")));
   }
 

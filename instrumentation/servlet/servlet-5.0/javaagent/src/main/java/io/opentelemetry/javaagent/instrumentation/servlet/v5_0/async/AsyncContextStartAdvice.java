@@ -15,7 +15,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 public class AsyncContextStartAdvice {
 
   @AssignReturned.ToArguments(@ToArgument(0))
-  @Advice.OnMethodEnter(suppress = Throwable.class)
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static Runnable start(@Advice.Argument(0) Runnable runnable) {
     return helper().wrapAsyncRunnable(runnable);
   }

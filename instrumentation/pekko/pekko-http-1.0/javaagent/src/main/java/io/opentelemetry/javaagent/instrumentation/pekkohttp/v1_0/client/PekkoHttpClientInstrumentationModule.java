@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class PekkoHttpClientInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class PekkoHttpClientInstrumentationModule extends InstrumentationModule {
   public PekkoHttpClientInstrumentationModule() {
     super("pekko-http", "pekko-http-1.0", "pekko-http-client");
   }
@@ -23,10 +21,5 @@ public class PekkoHttpClientInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new HttpExtClientInstrumentation(), new PoolMasterActorInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

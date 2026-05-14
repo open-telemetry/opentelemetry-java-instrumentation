@@ -9,9 +9,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
 
-enum MessageHeaderGetter implements TextMapGetter<Message<?>> {
-  INSTANCE;
-
+final class MessageHeaderGetter implements TextMapGetter<Message<?>> {
   @Override
   public Iterable<String> keys(Message<?> carrier) {
     return carrier.getProperties().keySet();

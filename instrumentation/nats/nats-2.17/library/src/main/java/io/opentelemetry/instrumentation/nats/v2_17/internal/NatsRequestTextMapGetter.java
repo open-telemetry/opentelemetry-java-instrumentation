@@ -11,8 +11,7 @@ import io.nats.client.impl.Headers;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 
-enum NatsRequestTextMapGetter implements TextMapGetter<NatsRequest> {
-  INSTANCE;
+final class NatsRequestTextMapGetter implements TextMapGetter<NatsRequest> {
 
   @Override
   public Iterable<String> keys(NatsRequest request) {

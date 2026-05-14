@@ -17,7 +17,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jfinal.core.JFinalFilter;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -32,6 +31,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.EnumSet;
 import java.util.Locale;
 import javax.servlet.DispatcherType;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -98,7 +98,8 @@ class JFinalTest extends AbstractHttpServerTest<Server> {
     return span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"))
         .hasParent(serverSpan)
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfying(Attributes::isEmpty);
+        .hasAttributesSatisfyingExactly(
+            SemconvCodeStabilityUtil.codeFunctionAssertions(Response.class, "sendRedirect"));
   }
 
   @Override

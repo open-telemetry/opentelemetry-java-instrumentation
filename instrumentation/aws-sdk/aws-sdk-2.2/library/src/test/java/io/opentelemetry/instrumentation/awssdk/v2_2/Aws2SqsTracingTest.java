@@ -23,7 +23,7 @@ abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
   static AwsSdkTelemetry telemetry;
 
   @Override
-  protected final LibraryInstrumentationExtension getTesting() {
+  protected LibraryInstrumentationExtension getTesting() {
     return testing;
   }
 

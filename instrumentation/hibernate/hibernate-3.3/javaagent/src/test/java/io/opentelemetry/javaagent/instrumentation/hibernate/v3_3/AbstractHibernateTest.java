@@ -37,17 +37,19 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractHibernateTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  protected static SessionFactory sessionFactory;
-  protected static List<Value> prepopulated;
+  protected SessionFactory sessionFactory;
+  protected List<Value> prepopulated;
 
   @BeforeAll
-  static void setUp() {
+  void setUp() {
     sessionFactory = new AnnotationConfiguration().configure().buildSessionFactory();
 
     // Pre-populate the DB, so delete/update can be tested.
@@ -63,7 +65,7 @@ abstract class AbstractHibernateTest {
   }
 
   @AfterAll
-  static void cleanUp() {
+  void cleanUp() {
     if (sessionFactory != null) {
       sessionFactory.close();
     }
@@ -111,8 +113,7 @@ abstract class AbstractHibernateTest {
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
             satisfies(
-                maybeStable(DB_STATEMENT),
-                stringAssert -> stringAssert.startsWith(verb.toLowerCase(Locale.ROOT))),
+                maybeStable(DB_STATEMENT), val -> val.startsWith(verb.toLowerCase(Locale.ROOT))),
             equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? verb + " Value" : null),
             equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : verb),
             equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));

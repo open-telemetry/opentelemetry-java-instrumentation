@@ -47,13 +47,11 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-@Testcontainers
 class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   // MongoDB-specific constants
   private static final String MONGO_NETWORK_ALIAS = "mongodb";
@@ -62,7 +60,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   private static final String CONNECTOR_NAME = "test-mongo-connector";
   private static final String TOPIC_NAME = "test-mongo-topic";
 
-  private static MongoDBContainer mongoDB;
+  private MongoDBContainer mongoDB;
 
   @Override
   protected void setupDatabaseContainer() {
@@ -102,13 +100,13 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  void testSingleMessage() throws Exception {
+  void testSingleMessage() throws IOException {
     String testTopicName = TOPIC_NAME;
     setupMongoSinkConnector(testTopicName);
     awaitForTopicCreation(testTopicName);
 
     Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBootstrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
@@ -171,7 +169,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  void testMultiTopic() throws Exception {
+  void testMultiTopic() throws IOException {
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";
@@ -182,7 +180,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     awaitForTopicCreation(topicName3);
 
     Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBootstrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.BATCH_SIZE_CONFIG, 10); // to send messages in one batch
@@ -290,7 +288,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   // MongoDB-specific helper methods
-  private static void setupMongoSinkConnector(String topicName) throws IOException {
+  private void setupMongoSinkConnector(String topicName) throws IOException {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put("connector.class", "com.mongodb.kafka.connect.MongoSinkConnector");
     configMap.put("tasks.max", "1");
@@ -306,7 +304,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy");
 
     String payload =
-        MAPPER.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
+        mapper.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
     given()
         .log()
         .headers()
@@ -321,7 +319,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         .all();
   }
 
-  private static void setupMongoSinkConnectorMultiTopic(String... topicNames) throws IOException {
+  private void setupMongoSinkConnectorMultiTopic(String... topicNames) throws IOException {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put("connector.class", "com.mongodb.kafka.connect.MongoSinkConnector");
     configMap.put("tasks.max", "1");
@@ -338,7 +336,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy");
 
     String payload =
-        MAPPER.writeValueAsString(
+        mapper.writeValueAsString(
             ImmutableMap.of("name", CONNECTOR_NAME + "-multi", "config", configMap));
     given()
         .log()
@@ -354,7 +352,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         .all();
   }
 
-  private static long getRecordCountFromMongo() {
+  private long getRecordCountFromMongo() {
     try (MongoClient mongoClient = MongoClients.create(mongoDB.getConnectionString())) {
       MongoDatabase database = mongoClient.getDatabase(DATABASE_NAME);
       MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
@@ -362,7 +360,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     }
   }
 
-  private static void clearMongoCollection() {
+  private void clearMongoCollection() {
     try (MongoClient mongoClient = MongoClients.create(mongoDB.getConnectionString())) {
       MongoDatabase database = mongoClient.getDatabase(DATABASE_NAME);
       MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);

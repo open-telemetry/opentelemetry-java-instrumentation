@@ -55,8 +55,8 @@ public abstract class AbstractSpringBootBasedTest
   static final ServerEndpoint DEFERRED_RESULT =
       new ServerEndpoint("DEFERRED_RESULT", "deferred-result", 200, "deferred result");
 
-  private static final String EXPERIMENTAL_SPAN_CONFIG =
-      "otel.instrumentation.spring-webmvc.experimental-span-attributes";
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.spring-webmvc.experimental-span-attributes");
 
   protected abstract ConfigurableApplicationContext context();
 
@@ -252,7 +252,7 @@ public abstract class AbstractSpringBootBasedTest
   }
 
   private static String experimental(String value) {
-    if (!Boolean.getBoolean(EXPERIMENTAL_SPAN_CONFIG)) {
+    if (!EXPERIMENTAL_ATTRIBUTES) {
       return null;
     }
     return value;

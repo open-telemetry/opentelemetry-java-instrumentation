@@ -14,6 +14,7 @@ import java.util.function.Function;
 
 /** Entrypoint for instrumenting Armeria services. */
 public final class ArmeriaServerTelemetry {
+  private final Instrumenter<ServiceRequestContext, RequestLog> instrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static ArmeriaServerTelemetry create(OpenTelemetry openTelemetry) {
@@ -24,8 +25,6 @@ public final class ArmeriaServerTelemetry {
   public static ArmeriaServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new ArmeriaServerTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<ServiceRequestContext, RequestLog> instrumenter;
 
   ArmeriaServerTelemetry(Instrumenter<ServiceRequestContext, RequestLog> instrumenter) {
     this.instrumenter = instrumenter;

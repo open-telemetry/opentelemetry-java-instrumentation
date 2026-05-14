@@ -9,8 +9,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-enum MessageMapGetter implements TextMapGetter<MessageView> {
-  INSTANCE;
+class MessageMapGetter implements TextMapGetter<MessageView> {
 
   @Override
   public Iterable<String> keys(MessageView carrier) {

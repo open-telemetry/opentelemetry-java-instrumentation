@@ -16,15 +16,15 @@ import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.client.ClientA
 import io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server.ServerAttributesGetter;
 import java.lang.reflect.Method;
 
-public final class SpringRmiSingletons {
+public class SpringRmiSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-rmi-4.0";
 
-  private static final Instrumenter<Method, Void> CLIENT_INSTRUMENTER = buildClientInstrumenter();
-  private static final Instrumenter<ClassAndMethod, Void> SERVER_INSTRUMENTER =
+  private static final Instrumenter<Method, Void> clientInstrumenter = buildClientInstrumenter();
+  private static final Instrumenter<ClassAndMethod, Void> serverInstrumenter =
       buildServerInstrumenter();
 
   private static Instrumenter<Method, Void> buildClientInstrumenter() {
-    ClientAttributesGetter rpcAttributesGetter = ClientAttributesGetter.INSTANCE;
+    ClientAttributesGetter rpcAttributesGetter = new ClientAttributesGetter();
 
     return Instrumenter.<Method, Void>builder(
             GlobalOpenTelemetry.get(),
@@ -35,7 +35,7 @@ public final class SpringRmiSingletons {
   }
 
   private static Instrumenter<ClassAndMethod, Void> buildServerInstrumenter() {
-    ServerAttributesGetter rpcAttributesGetter = ServerAttributesGetter.INSTANCE;
+    ServerAttributesGetter rpcAttributesGetter = new ServerAttributesGetter();
 
     return Instrumenter.<ClassAndMethod, Void>builder(
             GlobalOpenTelemetry.get(),
@@ -46,11 +46,11 @@ public final class SpringRmiSingletons {
   }
 
   public static Instrumenter<Method, Void> clientInstrumenter() {
-    return CLIENT_INSTRUMENTER;
+    return clientInstrumenter;
   }
 
   public static Instrumenter<ClassAndMethod, Void> serverInstrumenter() {
-    return SERVER_INSTRUMENTER;
+    return serverInstrumenter;
   }
 
   private SpringRmiSingletons() {}

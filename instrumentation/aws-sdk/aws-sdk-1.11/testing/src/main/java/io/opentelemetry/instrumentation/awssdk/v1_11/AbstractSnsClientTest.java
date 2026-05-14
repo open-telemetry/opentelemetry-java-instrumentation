@@ -27,7 +27,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class AbstractSnsClientTest extends AbstractBaseAwsClientTest {
-  private static final String publishResponseBody =
+  private static final String PUBLISH_RESPONSE_BODY =
       "<PublishResponse xmlns=\"https://sns.amazonaws.com/doc/2010-03-31/\">"
           + "    <PublishResult>"
           + "        <MessageId>567910cd-659e-55d4-8ccb-5aaf14679dc0</MessageId>"
@@ -37,7 +37,7 @@ public abstract class AbstractSnsClientTest extends AbstractBaseAwsClientTest {
           + "    </ResponseMetadata>"
           + "</PublishResponse>";
 
-  private static final String createTopicResponseBody =
+  private static final String CREATE_TOPIC_RESPONSE_BODY =
       "<CreateTopicResponse xmlns=\"https://sns.amazonaws.com/doc/2010-03-31/\">"
           + "    <CreateTopicResult>"
           + "        <TopicArn>arn:aws:sns:us-east-1:123456789012:sns-topic-foo</TopicArn>"
@@ -61,7 +61,7 @@ public abstract class AbstractSnsClientTest extends AbstractBaseAwsClientTest {
       String operation,
       String responseBody,
       List<AttributeAssertion> additionalAttributes)
-      throws Exception {
+      throws ReflectiveOperationException {
     AmazonSNSClientBuilder clientBuilder = AmazonSNSClientBuilder.standard();
     AmazonSNS client =
         configureClient(clientBuilder)
@@ -83,7 +83,7 @@ public abstract class AbstractSnsClientTest extends AbstractBaseAwsClientTest {
                     c.publish(
                         new PublishRequest().withMessage("somemessage").withTopicArn("somearn")),
             "Publish",
-            publishResponseBody,
+            PUBLISH_RESPONSE_BODY,
             asList(
                 equalTo(MESSAGING_DESTINATION_NAME, "somearn"),
                 equalTo(AWS_SNS_TOPIC_ARN, "somearn"))),
@@ -93,13 +93,13 @@ public abstract class AbstractSnsClientTest extends AbstractBaseAwsClientTest {
                     c.publish(
                         new PublishRequest().withMessage("somemessage").withTargetArn("somearn")),
             "Publish",
-            publishResponseBody,
+            PUBLISH_RESPONSE_BODY,
             singletonList(equalTo(MESSAGING_DESTINATION_NAME, "somearn"))),
         Arguments.of(
             (Function<AmazonSNS, Object>)
                 c -> c.createTopic(new CreateTopicRequest().withName("sns-topic-foo")),
             "CreateTopic",
-            createTopicResponseBody,
+            CREATE_TOPIC_RESPONSE_BODY,
             singletonList(
                 equalTo(AWS_SNS_TOPIC_ARN, "arn:aws:sns:us-east-1:123456789012:sns-topic-foo"))));
   }

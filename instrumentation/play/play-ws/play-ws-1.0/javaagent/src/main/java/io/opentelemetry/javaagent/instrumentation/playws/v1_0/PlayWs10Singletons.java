@@ -6,17 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.playws.PlayWsClientInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.PlayWsClientInstrumenterFactory;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
-public final class PlayWs10Singletons {
+public class PlayWs10Singletons {
 
-  private static final Instrumenter<Request, Response> INSTANCE =
+  private static final Instrumenter<Request, Response> instrumenter =
       PlayWsClientInstrumenterFactory.createInstrumenter("io.opentelemetry.play-ws-1.0");
 
   public static Instrumenter<Request, Response> instrumenter() {
-    return INSTANCE;
+    return instrumenter;
   }
 
   private PlayWs10Singletons() {}

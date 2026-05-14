@@ -39,6 +39,22 @@ public class SpringConfigProperties implements ConfigProperties {
   static final String DISABLED_KEY = "otel.java.disabled.resource.providers";
   static final String ENABLED_KEY = "otel.java.enabled.resource.providers";
 
+  // visible for testing
+  public static ConfigProperties create(
+      Environment env,
+      OtlpExporterProperties otlpExporterProperties,
+      OtelResourceProperties resourceProperties,
+      OtelSpringProperties otelSpringProperties,
+      ConfigProperties fallback) {
+    return new SpringConfigProperties(
+        env,
+        new SpelExpressionParser(),
+        otlpExporterProperties,
+        resourceProperties,
+        otelSpringProperties,
+        fallback);
+  }
+
   public SpringConfigProperties(
       Environment environment,
       ExpressionParser parser,
@@ -132,22 +148,6 @@ public class SpringConfigProperties implements ConfigProperties {
     return DefaultConfigProperties.createFromMap(
         new ResourceProviderPropertiesCustomizer()
             .customize(DefaultConfigProperties.createFromMap(map)));
-  }
-
-  // visible for testing
-  public static ConfigProperties create(
-      Environment env,
-      OtlpExporterProperties otlpExporterProperties,
-      OtelResourceProperties resourceProperties,
-      OtelSpringProperties otelSpringProperties,
-      ConfigProperties fallback) {
-    return new SpringConfigProperties(
-        env,
-        new SpelExpressionParser(),
-        otlpExporterProperties,
-        resourceProperties,
-        otelSpringProperties,
-        fallback);
   }
 
   @Nullable

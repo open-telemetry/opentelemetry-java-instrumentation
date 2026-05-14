@@ -78,6 +78,7 @@ public class SpringWebFluxTestApplication {
               try {
                 slowRequestLatch.await(10, SECONDS);
               } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new IllegalStateException(e);
               }
               return Mono.delay(Duration.ofMillis(100))

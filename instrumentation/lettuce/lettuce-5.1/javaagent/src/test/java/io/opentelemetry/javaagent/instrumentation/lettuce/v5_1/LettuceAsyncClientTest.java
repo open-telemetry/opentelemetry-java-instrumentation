@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import io.lettuce.core.RedisClient;
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceAsyncClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -27,6 +29,6 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
 
   @Override
   protected boolean connectHasSpans() {
-    return Boolean.getBoolean("testLatestDeps");
+    return testLatestDeps();
   }
 }

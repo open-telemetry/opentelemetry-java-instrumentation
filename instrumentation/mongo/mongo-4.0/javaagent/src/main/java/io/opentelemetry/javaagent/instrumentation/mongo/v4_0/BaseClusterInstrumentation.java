@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongo.v4_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -30,27 +29,25 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("selectServerAsync"))
             .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
             .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
-        this.getClass().getName() + "$SingleResultCallbackArg1Advice");
+        getClass().getName() + "$SingleResultCallbackArg1Advice");
 
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
+        isPublic()
             .and(named("selectServerAsync"))
             .and(takesArgument(0, named("com.mongodb.selector.ServerSelector")))
             .and(takesArgument(2, named("com.mongodb.internal.async.SingleResultCallback"))),
-        this.getClass().getName() + "$SingleResultCallbackArg2Advice");
+        getClass().getName() + "$SingleResultCallbackArg2Advice");
   }
 
   @SuppressWarnings("unused")
   public static class SingleResultCallbackArg1Advice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static SingleResultCallback<Object> wrapCallback(
         @Advice.Argument(1) SingleResultCallback<Object> callback) {
       return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
@@ -61,7 +58,7 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
   public static class SingleResultCallbackArg2Advice {
 
     @AssignReturned.ToArguments(@ToArgument(2))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static SingleResultCallback<Object> wrapCallback(
         @Advice.Argument(2) SingleResultCallback<Object> callback) {
       return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);

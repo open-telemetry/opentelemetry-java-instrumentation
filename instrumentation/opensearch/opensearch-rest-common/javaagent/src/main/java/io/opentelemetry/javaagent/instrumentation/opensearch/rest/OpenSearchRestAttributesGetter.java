@@ -27,13 +27,11 @@ final class OpenSearchRestAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getDbQueryText(OpenSearchRestRequest request) {
     return request.getMethod() + " " + request.getEndpoint();
   }
 
   @Override
-  @Nullable
   public String getDbOperationName(OpenSearchRestRequest request) {
     return request.getMethod();
   }
@@ -74,8 +72,11 @@ final class OpenSearchRestAttributesGetter
   @Nullable
   public String getNetworkPeerAddress(
       OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
-    if (response != null && response.getAddress() != null) {
-      return response.getAddress().getHostAddress();
+    if (response != null) {
+      InetAddress address = response.getAddress();
+      if (address != null) {
+        return address.getHostAddress();
+      }
     }
     return null;
   }

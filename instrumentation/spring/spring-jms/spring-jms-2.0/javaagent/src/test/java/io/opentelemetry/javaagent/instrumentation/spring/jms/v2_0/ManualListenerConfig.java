@@ -20,7 +20,7 @@ import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.jms.listener.SessionAwareMessageListener;
 
 @EnableJms
-public class ManualListenerConfig extends AbstractConfig implements JmsListenerConfigurer {
+class ManualListenerConfig extends AbstractConfig implements JmsListenerConfigurer {
 
   private static final Logger logger = LoggerFactory.getLogger(ManualListenerConfig.class);
 

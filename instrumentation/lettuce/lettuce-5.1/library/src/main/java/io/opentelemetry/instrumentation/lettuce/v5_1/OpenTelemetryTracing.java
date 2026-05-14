@@ -102,15 +102,15 @@ final class OpenTelemetryTracing implements Tracing {
       this.context = Context.current();
     }
 
-    Context getContext() {
+    private Context getContext() {
       return context;
     }
   }
 
-  static class OpenTelemetryEndpoint implements Endpoint {
-    @Nullable final InetSocketAddress address;
+  private static class OpenTelemetryEndpoint implements Endpoint {
+    private final InetSocketAddress address;
 
-    OpenTelemetryEndpoint(@Nullable InetSocketAddress address) {
+    private OpenTelemetryEndpoint(InetSocketAddress address) {
       this.address = address;
     }
   }
@@ -189,9 +189,7 @@ final class OpenTelemetryTracing implements Tracing {
     public synchronized Tracer.Span remoteEndpoint(Endpoint endpoint) {
       if (endpoint instanceof OpenTelemetryEndpoint) {
         OpenTelemetryEndpoint openTelemetryEndpoint = (OpenTelemetryEndpoint) endpoint;
-        if (openTelemetryEndpoint.address != null) {
-          request.setAddress(openTelemetryEndpoint.address);
-        }
+        request.setAddress(openTelemetryEndpoint.address);
       }
       return this;
     }

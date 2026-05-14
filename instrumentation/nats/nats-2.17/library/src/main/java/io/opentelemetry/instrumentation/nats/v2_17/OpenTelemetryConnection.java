@@ -29,7 +29,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
   private final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
-  public OpenTelemetryConnection(
+  private OpenTelemetryConnection(
       Connection connection,
       Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
       Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
@@ -38,7 +38,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
-  public static Connection wrap(
+  static Connection wrap(
       Connection connection,
       Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
       Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
@@ -81,8 +81,8 @@ final class OpenTelemetryConnection implements InvocationHandler {
   private static Object invokeMethod(Method method, Object target, Object[] args) throws Throwable {
     try {
       return method.invoke(target, args);
-    } catch (InvocationTargetException exception) {
-      throw exception.getCause();
+    } catch (InvocationTargetException e) {
+      throw e.getCause();
     }
   }
 

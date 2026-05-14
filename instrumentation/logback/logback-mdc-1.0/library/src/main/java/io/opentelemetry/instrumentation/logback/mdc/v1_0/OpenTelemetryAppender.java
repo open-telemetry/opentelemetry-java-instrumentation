@@ -21,17 +21,18 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     implements AppenderAttachable<ILoggingEvent> {
-  private static final Field MDC_MAP_FIELD;
+  @Nullable private static final Field MDC_MAP_FIELD;
 
   static {
     Field field;
     try {
       field = LoggingEvent.class.getDeclaredField("mdcPropertyMap");
       field.setAccessible(true);
-    } catch (Exception exception) {
+    } catch (Exception ignored) {
       field = null;
     }
     MDC_MAP_FIELD = field;

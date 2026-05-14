@@ -6,6 +6,7 @@ semantic_conventions:
   - SYSTEM_METRICS
 configurations:
   - name: otel.instrumentation.oshi.experimental-metrics.enabled
+    declarative_name: java.oshi.experimental_metrics/development.enabled
     description: Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time` metrics.
     type: boolean
     default: false

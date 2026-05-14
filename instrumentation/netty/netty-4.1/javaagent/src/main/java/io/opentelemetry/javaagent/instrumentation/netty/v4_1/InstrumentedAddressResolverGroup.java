@@ -17,7 +17,7 @@ import java.net.SocketAddress;
 import java.util.List;
 import java.util.function.Supplier;
 
-public final class InstrumentedAddressResolverGroup<T extends SocketAddress>
+public class InstrumentedAddressResolverGroup<T extends SocketAddress>
     extends AddressResolverGroup<T> {
 
   public static <T extends SocketAddress> AddressResolverGroup<T> wrap(

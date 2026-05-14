@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Metrics;
@@ -45,20 +46,19 @@ public abstract class AbstractFunctionCounterTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionCounter",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test function counter")
-                            .hasUnit("items")
-                            .hasDoubleSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(12)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+            metric ->
+                metric
+                    .hasName("testFunctionCounter")
+                    .hasDescription("This is a test function counter")
+                    .hasUnit("items")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(counter);
@@ -100,20 +100,19 @@ public abstract class AbstractFunctionCounterTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionCounter",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test function counter")
-                            .hasUnit("items")
-                            .hasDoubleSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(12)
-                                                .hasAttributes(attributeEntry("tag", "value"))))));
+            metric ->
+                metric
+                    .hasName("testFunctionCounter")
+                    .hasDescription("This is a test function counter")
+                    .hasUnit("items")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(counter);
@@ -143,24 +142,24 @@ public abstract class AbstractFunctionCounterTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testFunctionCounterWithTags",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("First description")
-                            .hasUnit("items")
-                            .hasDoubleSumSatisfying(
-                                sum ->
-                                    sum.isMonotonic()
-                                        .hasPointsSatisfying(
-                                            point ->
-                                                point
-                                                    .hasValue(12)
-                                                    .hasAttributes(attributeEntry("tag", "1")),
-                                            point ->
-                                                point
-                                                    .hasValue(13)
-                                                    .hasAttributes(attributeEntry("tag", "2"))))));
+            metric ->
+                metric
+                    .hasName("testFunctionCounterWithTags")
+                    .hasDescription("First description")
+                    .hasUnit("items")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.isMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(12)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "1")),
+                                    point ->
+                                        point
+                                            .hasValue(13)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "2")))));
   }
 }

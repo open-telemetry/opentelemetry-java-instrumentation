@@ -48,6 +48,7 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
      * since Spring Security >= 6.0 uses Jakarta EE rather than Java EE,
      * and this instrumentation module uses Jakarta EE.
      */
+    // added in 6.0
     return hasClassesNamed(
         "org.springframework.security.authentication.ObservationAuthenticationManager");
   }

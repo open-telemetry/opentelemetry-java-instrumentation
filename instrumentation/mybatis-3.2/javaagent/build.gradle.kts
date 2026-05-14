@@ -17,9 +17,9 @@ dependencies {
   testImplementation("com.h2database:h2:1.4.191")
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.mybatis.enabled=true")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")

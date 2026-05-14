@@ -42,20 +42,18 @@ public class IgnoredClassLoadersMatcher extends ElementMatcher.Junction.Abstract
       return true;
     }
 
-    return skipCache.computeIfAbsent(
-        cl,
-        c -> {
-          // when ClassloadingInstrumentation is active, checking delegatesToBootstrap() below is
-          // not required, because ClassloadingInstrumentation forces all class loaders to load all
-          // the classes in Constants.BOOTSTRAP_PACKAGE_PREFIXES directly from the bootstrap class
-          // loader
-          //
-          // however, at this time we don't want to introduce the concept of a required
-          // instrumentation, and we don't want to introduce the concept of the tooling code
-          // depending on whether a particular instrumentation is active (mainly because this
-          // particular use case doesn't seem to justify introducing either of these new concepts)
-          return !delegatesToBootstrap(cl);
-        });
+    // Ignore class loader if it doesn't delegate to bootstrap class loader. This could happen when
+    // class loader instrumentation is disabled or the class loader class itself is excluded from
+    // instrumentation.
+    // We are not using skipCache.computeIfAbsent here because computeIfAbsent takes a lock. Calling
+    // loadClass with that lock held can cause deadlocks. See discussion for more details:
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions/17224
+    Boolean result = skipCache.get(cl);
+    if (result == null) {
+      result = !delegatesToBootstrap(cl);
+      skipCache.put(cl, result);
+    }
+    return result;
   }
 
   /**

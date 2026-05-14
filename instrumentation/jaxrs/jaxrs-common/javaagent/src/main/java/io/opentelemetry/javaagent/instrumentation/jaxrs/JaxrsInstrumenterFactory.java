@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameE
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public final class JaxrsInstrumenterFactory {
+public class JaxrsInstrumenterFactory {
 
   public static Instrumenter<HandlerData, Void> createInstrumenter(String instrumentationName) {
     JaxrsCodeAttributesGetter codeAttributesGetter = new JaxrsCodeAttributesGetter();

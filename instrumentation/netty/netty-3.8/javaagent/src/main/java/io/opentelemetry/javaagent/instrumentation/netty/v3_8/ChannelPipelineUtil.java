@@ -25,7 +25,7 @@ import org.jboss.netty.handler.codec.http.HttpServerCodec;
  * handlers. If those handlers are later removed, we may want to remove our handlers. That is not
  * currently implemented.
  */
-public final class ChannelPipelineUtil {
+public class ChannelPipelineUtil {
 
   public static void wrapHandler(ChannelPipeline pipeline, ChannelHandler handler) {
     // Server pipeline handlers
@@ -37,9 +37,7 @@ public final class ChannelPipelineUtil {
     } else if (handler instanceof HttpResponseEncoder) {
       pipeline.addLast(
           HttpServerResponseTracingHandler.class.getName(), new HttpServerResponseTracingHandler());
-    } else
-    // Client pipeline handlers
-    if (handler instanceof HttpClientCodec) {
+    } else if (handler instanceof HttpClientCodec) {
       pipeline.addLast(HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
     } else if (handler instanceof HttpRequestEncoder) {
       pipeline.addLast(

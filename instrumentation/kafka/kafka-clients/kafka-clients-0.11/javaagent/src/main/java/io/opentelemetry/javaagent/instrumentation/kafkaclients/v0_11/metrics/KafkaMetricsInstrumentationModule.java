@@ -6,13 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.metrics;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -28,21 +27,14 @@ public class KafkaMetricsInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public void injectClasses(ClassInjector injector) {
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter")
-        .inject(InjectionMode.CLASS_ONLY);
+  public List<String> exposedClassNames() {
+    return singletonList(
+        "io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new KafkaMetricsProducerInstrumentation(), new KafkaMetricsConsumerInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

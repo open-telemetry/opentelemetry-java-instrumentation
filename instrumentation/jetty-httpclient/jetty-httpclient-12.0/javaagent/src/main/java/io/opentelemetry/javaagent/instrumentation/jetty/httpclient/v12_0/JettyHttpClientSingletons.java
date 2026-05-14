@@ -12,16 +12,16 @@ import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrume
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 
-public final class JettyHttpClientSingletons {
+public class JettyHttpClientSingletons {
 
   static final String JETTY_CLIENT_CONTEXT_KEY = "otel-jetty-client-context";
 
-  private static final Instrumenter<Request, Response> INSTRUMENTER =
+  private static final Instrumenter<Request, Response> instrumenter =
       JavaagentHttpClientInstrumenters.create(
           JettyHttpClientInstrumenterBuilderFactory.create(GlobalOpenTelemetry.get()));
 
   public static Instrumenter<Request, Response> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private JettyHttpClientSingletons() {}

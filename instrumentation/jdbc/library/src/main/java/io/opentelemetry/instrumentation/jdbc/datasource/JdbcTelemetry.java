@@ -15,6 +15,13 @@ import javax.sql.DataSource;
 
 /** Entrypoint for instrumenting a JDBC DataSources. */
 public final class JdbcTelemetry {
+  private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
+  private final Instrumenter<DbRequest, DbResponse> statementInstrumenter;
+  private final Instrumenter<DbRequest, Void> transactionInstrumenter;
+  private final boolean captureQueryParameters;
+  private final SqlCommenter sqlCommenter;
+  private final boolean captureRowCount;
+  private final long rowCountLimit;
 
   /** Returns a new {@link JdbcTelemetry} configured with the given {@link OpenTelemetry}. */
   public static JdbcTelemetry create(OpenTelemetry openTelemetry) {
@@ -25,14 +32,6 @@ public final class JdbcTelemetry {
   public static JdbcTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new JdbcTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
-  private final Instrumenter<DbRequest, DbResponse> statementInstrumenter;
-  private final Instrumenter<DbRequest, Void> transactionInstrumenter;
-  private final boolean captureQueryParameters;
-  private final SqlCommenter sqlCommenter;
-  private final boolean captureRowCount;
-  private final long rowCountLimit;
 
   JdbcTelemetry(
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,

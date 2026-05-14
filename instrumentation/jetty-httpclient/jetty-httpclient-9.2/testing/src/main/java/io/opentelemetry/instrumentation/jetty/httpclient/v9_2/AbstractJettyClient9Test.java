@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -18,33 +19,35 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Request> {
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private HttpClient client;
   private HttpClient httpsClient;
 
+  protected abstract HttpClient createStandardClient();
+
+  protected abstract HttpClient createHttpsClient(SslContextFactory sslContextFactory);
+
   @BeforeEach
-  public void before() throws Exception {
+  void before() throws Exception {
     // Start the main Jetty HttpClient and a https client
     client = createStandardClient();
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
     client.start();
+    cleanup.deferCleanup(client::stop);
 
     SslContextFactory tlsCtx = new SslContextFactory();
     httpsClient = createHttpsClient(tlsCtx);
     httpsClient.setFollowRedirects(false);
     httpsClient.start();
-  }
-
-  @AfterEach
-  public void after() throws Exception {
-    client.stop();
-    httpsClient.stop();
+    cleanup.deferCleanup(httpsClient::stop);
   }
 
   @Override
@@ -55,7 +58,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
 
   @Override
   public Request buildRequest(String method, URI uri, Map<String, String> headers) {
-    HttpClient theClient = uri.getScheme().equalsIgnoreCase("https") ? httpsClient : client;
+    HttpClient theClient = "https".equalsIgnoreCase(uri.getScheme()) ? httpsClient : client;
     Request request = theClient.newRequest(uri).method(method).agent("Jetty");
     headers.forEach(request::header);
 
@@ -84,7 +87,6 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
     JettyClientListener jcl = new JettyClientListener();
     request.onRequestFailure(jcl);
     request.onResponseFailure(jcl);
-    headers.forEach(request::header);
     request.send(
         result -> {
           if (jcl.failure != null) {
@@ -109,8 +111,4 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
       this.failure = failure;
     }
   }
-
-  protected abstract HttpClient createStandardClient();
-
-  protected abstract HttpClient createHttpsClient(SslContextFactory sslContextFactory);
 }

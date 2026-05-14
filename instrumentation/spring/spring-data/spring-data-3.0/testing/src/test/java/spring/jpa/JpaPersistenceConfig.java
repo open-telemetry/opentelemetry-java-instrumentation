@@ -21,14 +21,14 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class JpaPersistenceConfig {
 
   @Bean
-  public PlatformTransactionManager transactionManager() {
+  PlatformTransactionManager transactionManager() {
     JpaTransactionManager transactionManager = new JpaTransactionManager();
     transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
     return transactionManager;
   }
 
   @Bean
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+  LocalContainerEntityManagerFactoryBean entityManagerFactory() {
     HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     vendorAdapter.setDatabase(Database.HSQL);
     vendorAdapter.setGenerateDdl(true);
@@ -43,7 +43,7 @@ public class JpaPersistenceConfig {
   }
 
   @Bean
-  public DataSource dataSource() {
+  DataSource dataSource() {
     DriverManagerDataSource dataSource = new DriverManagerDataSource();
     dataSource.setDriverClassName("org.hsqldb.jdbcDriver");
     dataSource.setUrl("jdbc:hsqldb:mem:test");

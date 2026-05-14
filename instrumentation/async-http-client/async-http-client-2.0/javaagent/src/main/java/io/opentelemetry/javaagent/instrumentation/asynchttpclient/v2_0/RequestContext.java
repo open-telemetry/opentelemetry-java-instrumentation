@@ -6,14 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import io.opentelemetry.context.Context;
+import javax.annotation.Nullable;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.netty.request.NettyRequest;
 
-public final class RequestContext {
+public class RequestContext {
   private final Context parentContext;
   private final Request request;
-  private Context context;
-  private NettyRequest nettyRequest;
+  @Nullable private Context context;
+  @Nullable private NettyRequest nettyRequest;
 
   public RequestContext(Context parentContext, Request request) {
     this.parentContext = parentContext;
@@ -28,6 +29,7 @@ public final class RequestContext {
     return request;
   }
 
+  @Nullable
   public Context getContext() {
     return context;
   }
@@ -36,6 +38,7 @@ public final class RequestContext {
     this.context = context;
   }
 
+  @Nullable
   public NettyRequest getNettyRequest() {
     return nettyRequest;
   }

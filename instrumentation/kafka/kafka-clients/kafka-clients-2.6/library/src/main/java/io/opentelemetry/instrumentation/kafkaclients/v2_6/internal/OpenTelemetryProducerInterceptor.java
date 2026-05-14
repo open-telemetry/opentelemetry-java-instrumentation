@@ -27,12 +27,13 @@ public class OpenTelemetryProducerInterceptor<K, V> implements ProducerIntercept
 
   @Nullable private KafkaProducerTelemetry producerTelemetry;
   @Nullable private String clientId;
+  @Nullable private String bootstrapServers;
 
   @Override
   @CanIgnoreReturnValue
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
     if (producerTelemetry != null) {
-      producerTelemetry.buildAndInjectSpan(producerRecord, clientId);
+      return producerTelemetry.buildAndInjectSpan(producerRecord, clientId, bootstrapServers);
     }
     return producerRecord;
   }
@@ -46,6 +47,7 @@ public class OpenTelemetryProducerInterceptor<K, V> implements ProducerIntercept
   @Override
   public void configure(Map<String, ?> configs) {
     clientId = Objects.toString(configs.get(ProducerConfig.CLIENT_ID_CONFIG), null);
+    bootstrapServers = Objects.toString(configs.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG), null);
 
     KafkaProducerTelemetrySupplier supplier =
         getProperty(

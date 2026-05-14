@@ -21,7 +21,7 @@ public final class FieldBackedImplementationClassFileLocatorProvider
   @Nullable
   @Override
   public ClassFileLocator getClassFileLocator() {
-    if (!FieldBackedImplementationConfiguration.fieldInjectionEnabled) {
+    if (!FieldBackedImplementationConfiguration.isFieldInjectionEnabled()) {
       return null;
     }
 

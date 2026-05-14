@@ -9,7 +9,7 @@ import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageBuilder;
 import io.opentelemetry.api.baggage.BaggageEntryMetadata;
 
-public final class BaggageBridging {
+public class BaggageBridging {
 
   public static application.io.opentelemetry.api.baggage.Baggage toApplication(
       Baggage agentBaggage) {

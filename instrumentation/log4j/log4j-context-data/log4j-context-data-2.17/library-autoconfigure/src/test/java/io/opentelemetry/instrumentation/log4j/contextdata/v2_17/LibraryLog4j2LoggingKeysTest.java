@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class LibraryLog4j2LoggingKeysTest extends Log4j2LoggingKeysTest {
   @RegisterExtension
-  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   public InstrumentationExtension getInstrumentationExtension() {

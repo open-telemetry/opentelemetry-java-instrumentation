@@ -5,6 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v1_0;
 
-import io.opentelemetry.javaagent.instrumentation.playws.PlayJavaWsClientBaseTest;
+import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.PlayJavaWsClientBaseTest;
 
 class PlayJavaWsClientTest extends PlayJavaWsClientBaseTest {}

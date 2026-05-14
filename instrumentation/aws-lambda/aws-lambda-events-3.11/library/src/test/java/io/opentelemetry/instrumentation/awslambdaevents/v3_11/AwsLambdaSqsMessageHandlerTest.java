@@ -148,12 +148,12 @@ class AwsLambdaSqsMessageHandlerTest {
     try {
       Constructor<SQSEvent.SQSMessage> ctor = SQSEvent.SQSMessage.class.getDeclaredConstructor();
       return ctor.newInstance();
-    } catch (Throwable t) {
-      throw new AssertionError(t);
+    } catch (ReflectiveOperationException e) {
+      throw new LinkageError(e.getMessage(), e);
     }
   }
 
-  private static final class TestHandler extends TracingSqsMessageHandler {
+  private static class TestHandler extends TracingSqsMessageHandler {
 
     TestHandler(OpenTelemetrySdk openTelemetrySdk) {
       super(openTelemetrySdk);

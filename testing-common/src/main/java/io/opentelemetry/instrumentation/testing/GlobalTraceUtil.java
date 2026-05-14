@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
  * Can be useful when you need to start a span and {@link
  * io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension} is not available.
  */
-public final class GlobalTraceUtil {
+public class GlobalTraceUtil {
 
   private static final TestInstrumenters testInstrumenters =
       new TestInstrumenters(GlobalOpenTelemetry.get());

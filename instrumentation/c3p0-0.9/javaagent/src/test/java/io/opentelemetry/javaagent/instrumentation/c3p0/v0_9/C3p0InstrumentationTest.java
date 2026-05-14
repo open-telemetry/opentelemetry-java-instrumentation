@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension testing() {

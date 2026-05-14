@@ -91,9 +91,8 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
       // The returned list is never empty ...
       verifyAndAddNameSegment(components, currentSegment);
 
-    } catch (IllegalArgumentException unused) {
-      // Drop the original exception. We have more meaningful context here.
-      throw new IllegalArgumentException("Invalid attribute name '" + rawName + "'");
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid attribute name '" + rawName + "'", e);
     }
 
     return components;
@@ -186,7 +185,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
             new Object[] {baseName, objectName});
       }
 
-    } catch (InstanceNotFoundException e) {
+    } catch (InstanceNotFoundException ignored) {
       // Should not happen. The ObjectName we use has been provided by the MBeanServer we use.
       logger.log(INFO, "The MBeanServer does not find {0}", objectName);
     } catch (Exception e) {

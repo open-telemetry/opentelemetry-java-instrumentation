@@ -12,15 +12,13 @@ import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 /** compatible with dubbo3.x and dubbo 2.7 */
 class DubboTestUtil {
 
-  private DubboTestUtil() {}
-
   static Object newFrameworkModel() {
     try {
       // only present in latest dep
       return Class.forName("org.apache.dubbo.rpc.model.FrameworkModel")
           .getDeclaredConstructor()
           .newInstance();
-    } catch (ReflectiveOperationException exception) {
+    } catch (ReflectiveOperationException ignored) {
       return null;
     }
   }
@@ -46,4 +44,6 @@ class DubboTestUtil {
     constructor.setAccessible(true);
     return constructor.newInstance();
   }
+
+  private DubboTestUtil() {}
 }

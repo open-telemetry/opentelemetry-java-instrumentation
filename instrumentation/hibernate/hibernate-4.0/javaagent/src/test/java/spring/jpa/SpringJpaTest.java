@@ -25,11 +25,11 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.regex.Pattern;
 import org.hibernate.Version;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -39,9 +39,14 @@ class SpringJpaTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  AnnotationConfigApplicationContext context =
+  private final AnnotationConfigApplicationContext context =
       new AnnotationConfigApplicationContext(PersistenceConfig.class);
-  CustomerRepository repo = context.getBean(CustomerRepository.class);
+  private final CustomerRepository repo = context.getBean(CustomerRepository.class);
+
+  @AfterEach
+  void closeContext() {
+    context.close();
+  }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
@@ -55,7 +60,7 @@ class SpringJpaTest {
 
     boolean result = testing.runWithSpan("parent", () -> repo.findAll().iterator().hasNext());
 
-    assertThat(result).isEqualTo(false);
+    assertThat(result).isFalse();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -64,7 +69,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SELECT Customer")
                         .hasKind(INTERNAL)
@@ -132,7 +137,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session.persist spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -188,7 +193,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session.persist spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -280,7 +285,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session.merge spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -371,7 +376,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("SELECT Customer")
                         .hasKind(INTERNAL)
@@ -421,7 +426,7 @@ class SpringJpaTest {
                     span.hasName("parent")
                         .hasKind(INTERNAL)
                         .hasNoParent()
-                        .hasAttributes(Attributes.empty()),
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("Session.merge spring.jpa.Customer")
                         .hasKind(INTERNAL)

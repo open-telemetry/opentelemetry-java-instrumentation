@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ZioHttpInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ZioHttpInstrumentationModule extends InstrumentationModule {
 
   public ZioHttpInstrumentationModule() {
     super("zio-http", "zio-http-3.0", "zio");
@@ -24,10 +22,5 @@ public class ZioHttpInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RoutePatternInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

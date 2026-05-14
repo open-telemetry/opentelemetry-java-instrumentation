@@ -12,9 +12,9 @@ import io.opentelemetry.instrumentation.helidon.v4_3.internal.HelidonInstrumente
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.List;
 
-public final class HelidonSingletons {
+public class HelidonSingletons {
 
-  public static final List<Filter> FILTERS;
+  private static final List<Filter> instrumentationFilters;
 
   static {
     var serverBuilder = HelidonTelemetry.builder(GlobalOpenTelemetry.get());
@@ -23,7 +23,12 @@ public final class HelidonSingletons {
         .configure(AgentCommonConfig.get());
     var serverTelemetry = serverBuilder.build();
 
-    FILTERS = List.of(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
+    instrumentationFilters =
+        List.of(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
+  }
+
+  public static List<Filter> instrumentationFilters() {
+    return instrumentationFilters;
   }
 
   private HelidonSingletons() {}

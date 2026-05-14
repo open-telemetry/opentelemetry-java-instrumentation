@@ -8,7 +8,7 @@ package field;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import library.VirtualFieldTestClass;
 
-public final class VirtualFieldTestHelper {
+public class VirtualFieldTestHelper {
 
   private VirtualFieldTestHelper() {}
 

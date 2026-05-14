@@ -43,9 +43,4 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
     // when they haven't been injected
     return singletonList("io.opentelemetry.javaagent.instrumentation.opentelemetryapi");
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
@@ -79,7 +78,7 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributes(Attributes.empty())));
+                            .hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -109,7 +108,7 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                         span.hasName("parent")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributes(Attributes.empty()),
+                            .hasTotalAttributeCount(0),
                     span ->
                         span.hasName("TracedWithSpan.flux")
                             .hasKind(SpanKind.INTERNAL)
@@ -121,7 +120,7 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributes(Attributes.empty())));
+                            .hasTotalAttributeCount(0)));
   }
 
   // While a UnicastProcessor is a Flux and we'd expect a simpler way to access it to provide

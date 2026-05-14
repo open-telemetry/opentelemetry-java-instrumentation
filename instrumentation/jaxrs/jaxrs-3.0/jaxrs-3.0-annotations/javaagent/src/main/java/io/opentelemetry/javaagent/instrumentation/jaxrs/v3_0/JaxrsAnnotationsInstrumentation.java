@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JaxrsAnnotationsSingletons.RESPONSE_DATA;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JaxrsAnnotationsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -27,7 +27,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.AsyncResponseData;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.CompletionStageFinishCallback;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.container.AsyncResponse;
 import java.lang.reflect.Method;
@@ -39,7 +38,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
+class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -51,8 +50,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(not(isStatic()))
+        not(isStatic())
             .and(
                 hasSuperMethod(
                     isAnnotatedWith(
@@ -65,7 +63,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
                             "jakarta.ws.rs.PATCH",
                             "jakarta.ws.rs.POST",
                             "jakarta.ws.rs.PUT")))),
-        JaxrsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
+        getClass().getName() + "$JaxRsAnnotationsAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -114,10 +112,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         handlerData = new Jaxrs3HandlerData(type, method);
 
         HttpServerRoute.update(
-            parentContext,
-            HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.SERVER_SPAN_NAME,
-            handlerData);
+            parentContext, HttpServerRouteSource.CONTROLLER, serverSpanName(), handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
           context = null;
@@ -162,7 +157,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope nameSpan(
         @Advice.This Object target,
         @Advice.Origin Method method,
@@ -171,7 +166,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
         @Advice.Return(typing = Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,

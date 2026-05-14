@@ -27,7 +27,7 @@ class StringBuilderWriter extends Writer {
   @Override
   public void close() {}
 
-  public StringBuilder getBuilder() {
+  StringBuilder getBuilder() {
     return sb;
   }
 }

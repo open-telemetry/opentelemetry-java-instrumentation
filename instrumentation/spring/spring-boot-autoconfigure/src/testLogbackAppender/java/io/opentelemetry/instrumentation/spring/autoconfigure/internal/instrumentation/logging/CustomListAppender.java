@@ -10,7 +10,7 @@ import ch.qos.logback.core.read.ListAppender;
 
 @SuppressWarnings("OtelInternalJavadoc")
 public class CustomListAppender extends ListAppender<ILoggingEvent> {
-  public static boolean lastLogHadTraceId;
+  static boolean lastLogHadTraceId;
 
   @Override
   protected void append(ILoggingEvent event) {

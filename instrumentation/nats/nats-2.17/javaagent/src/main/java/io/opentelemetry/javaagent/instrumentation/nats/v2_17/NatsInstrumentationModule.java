@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class NatsInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class NatsInstrumentationModule extends InstrumentationModule {
 
   public NatsInstrumentationModule() {
     super("nats", "nats-2.17");
@@ -27,10 +25,5 @@ public class NatsInstrumentationModule extends InstrumentationModule
         new ConnectionPublishInstrumentation(),
         new ConnectionRequestInstrumentation(),
         new MessageHandlerInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

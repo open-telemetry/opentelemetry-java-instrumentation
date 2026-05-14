@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class DataSourceInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class DataSourceInstrumentationModule extends InstrumentationModule {
   public DataSourceInstrumentationModule() {
     super("jdbc-datasource");
   }
@@ -28,10 +26,5 @@ public class DataSourceInstrumentationModule extends InstrumentationModule
   @Override
   public boolean defaultEnabled() {
     return false;
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

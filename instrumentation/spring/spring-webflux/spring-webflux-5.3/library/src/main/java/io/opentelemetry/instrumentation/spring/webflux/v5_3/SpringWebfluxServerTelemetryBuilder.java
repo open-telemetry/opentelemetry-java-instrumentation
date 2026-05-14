@@ -35,7 +35,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
             INSTRUMENTATION_NAME,
             openTelemetry,
             WebfluxServerHttpAttributesGetter.INSTANCE,
-            WebfluxTextMapGetter.INSTANCE);
+            new WebfluxTextMapGetter());
   }
 
   /**

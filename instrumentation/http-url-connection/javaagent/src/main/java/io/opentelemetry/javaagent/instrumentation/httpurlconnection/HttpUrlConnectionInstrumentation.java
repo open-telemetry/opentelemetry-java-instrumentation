@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
+class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")
@@ -48,10 +48,9 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
             .and(namedOneOf("connect", "getOutputStream", "getInputStream"))
             // ibm https url connection does not delegate connect, it calls plainConnect instead
             .or(isProtected().and(named("plainConnect"))),
-        this.getClass().getName() + "$HttpUrlConnectionAdvice");
+        getClass().getName() + "$HttpUrlConnectionAdvice");
     transformer.applyAdviceToMethod(
-        isPublic().and(named("getResponseCode")),
-        this.getClass().getName() + "$GetResponseCodeAdvice");
+        isPublic().and(named("getResponseCode")), getClass().getName() + "$GetResponseCodeAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -147,13 +146,13 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.This HttpURLConnection connection) {
       CallDepth callDepth = CallDepth.forClass(HttpURLConnection.class);
       return AdviceScope.start(callDepth, connection);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("responseCode") int responseCode,
@@ -167,7 +166,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetResponseCodeAdvice {
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This HttpURLConnection connection, @Advice.Return int returnValue) {
 

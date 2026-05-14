@@ -30,8 +30,6 @@ class HeadersFactoryTest {
     // when
     Map<String, String> headers = HeadersFactory.ofStream(inputStream);
     // then
-    assertThat(headers).isNotNull();
-    assertThat(headers.size()).isEqualTo(3);
     assertThat(headers)
         .containsOnly(
             entry("X-B3-TraceId", "4fd0b6131f19f39af59518d127b0cafe"),
@@ -40,12 +38,13 @@ class HeadersFactoryTest {
   }
 
   @Test
-  void shouldReturnNullIfNoHeadersInStream() {
+  void shouldReturnEmptyIfNoHeadersInStream() {
     // given
     String json = "{\"something\" : \"else\"}";
     InputStream inputStream = new ByteArrayInputStream(json.getBytes(Charset.defaultCharset()));
     // when
-    Map<String, String> headers = HeadersFactory.ofStream(inputStream); // then
+    Map<String, String> headers = HeadersFactory.ofStream(inputStream);
+    // then
     assertThat(headers).isEmpty();
   }
 }

@@ -9,7 +9,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import java.lang.reflect.Method;
 
 /**
  * An {@link AgentListener} that enables oshi metrics during agent startup if oshi is present on the
@@ -26,24 +25,15 @@ public class OshiMetricsInstaller implements AgentListener {
     }
 
     try {
-      // Call oshi.SystemInfo.getCurrentPlatformEnum() to activate SystemMetrics.
+      // Instantiate oshi.SystemInfo to activate SystemMetrics.
       // Oshi instrumentation will intercept this call and enable SystemMetrics.
+      // (The static getCurrentPlatformEnum()/getCurrentPlatform() entry points used in older
+      // versions were both removed in oshi 7.0.0.)
       Class<?> oshiSystemInfoClass =
           ClassLoader.getSystemClassLoader().loadClass("oshi.SystemInfo");
-      Method getCurrentPlatformEnumMethod = getCurrentPlatformMethod(oshiSystemInfoClass);
-      getCurrentPlatformEnumMethod.invoke(null);
-    } catch (Throwable ex) {
+      oshiSystemInfoClass.getConstructor().newInstance();
+    } catch (Throwable t) {
       // OK
-    }
-  }
-
-  private static Method getCurrentPlatformMethod(Class<?> oshiSystemInfoClass)
-      throws NoSuchMethodException {
-    try {
-      return oshiSystemInfoClass.getMethod("getCurrentPlatformEnum");
-    } catch (NoSuchMethodException exception) {
-      // renamed in oshi 6.0.0
-      return oshiSystemInfoClass.getMethod("getCurrentPlatform");
     }
   }
 }

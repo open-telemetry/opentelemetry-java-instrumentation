@@ -7,6 +7,7 @@ features:
   - CONTROLLER_SPANS
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    declarative_name: java.common.controller_telemetry/development.enabled
     description: Enables the creation of experimental controller spans.
     type: boolean
     default: false

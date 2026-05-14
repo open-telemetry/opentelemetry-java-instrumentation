@@ -18,8 +18,7 @@ class InstrumentationAnnotationsGuavaWithSpanTest extends BaseGuavaWithSpanTest 
     return new Traced();
   }
 
-  static final class Traced
-      extends AbstractTraced<SettableFuture<String>, ListenableFuture<String>> {
+  static class Traced extends AbstractTraced<SettableFuture<String>, ListenableFuture<String>> {
 
     @Override
     @WithSpan

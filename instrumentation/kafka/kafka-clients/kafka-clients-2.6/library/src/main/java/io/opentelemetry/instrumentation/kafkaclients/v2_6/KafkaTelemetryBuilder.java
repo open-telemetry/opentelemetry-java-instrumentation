@@ -103,7 +103,7 @@ public final class KafkaTelemetryBuilder {
    * connecting it to the producer trace.
    */
   @CanIgnoreReturnValue
-  public KafkaTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
+  public KafkaTelemetryBuilder setMessagingReceiveTelemetryEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     return this;

@@ -14,8 +14,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Response<?>> {
-  INSTANCE;
+class SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Response<?>> {
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws_sqs";
@@ -29,6 +28,9 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respon
   public String getDestination(Request<?> request) {
     Object originalRequest = request.getOriginalRequest();
     String queueUrl = RequestAccess.getQueueUrl(originalRequest);
+    if (queueUrl == null) {
+      return null;
+    }
     int i = queueUrl.lastIndexOf('/');
     return i > 0 ? queueUrl.substring(i + 1) : null;
   }

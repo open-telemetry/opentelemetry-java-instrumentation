@@ -36,7 +36,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ConnectionInstrumentation implements TypeInstrumentation {
+class ConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -55,10 +55,10 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             // Also include CallableStatement, which is a subtype of PreparedStatement
             .and(returns(implementsInterface(named("java.sql.PreparedStatement")))),
-        ConnectionInstrumentation.class.getName() + "$PrepareAdvice");
+        getClass().getName() + "$PrepareAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("commit", "rollback").and(takesNoArguments()).and(isPublic()),
-        ConnectionInstrumentation.class.getName() + "$TransactionAdvice");
+        getClass().getName() + "$TransactionAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -98,7 +98,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 0))
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] processSql(
         @Advice.This Connection connection, @Advice.Argument(0) String sql) {
       Context context = Java8BytecodeBridge.currentContext();
@@ -112,11 +112,11 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void addDbInfo(
-        @Advice.Return PreparedStatement statement,
+        @Advice.Return @Nullable PreparedStatement statement,
         @Advice.Enter Object[] enterResult,
-        @Advice.Thrown Throwable error) {
+        @Advice.Thrown @Nullable Throwable error) {
       Context context = Java8BytecodeBridge.currentContext();
       PrepareContext prepareContext = PrepareContext.get(context);
       Scope scope = (Scope) enterResult[1];
@@ -124,13 +124,14 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
         scope.close();
       }
       if (error != null
+          || statement == null
           || prepareContext == null
           || JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
 
       String originalSql = prepareContext.get();
-      JdbcData.preparedStatement.set(statement, originalSql);
+      JdbcData.PREPARED_STATEMENT.set(statement, originalSql);
     }
   }
 
@@ -170,7 +171,8 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This Connection connection, @Advice.Origin("#m") String methodName) {
       if (JdbcSingletons.isWrapper(connection, Connection.class)) {
@@ -180,7 +182,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(connection, methodName);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

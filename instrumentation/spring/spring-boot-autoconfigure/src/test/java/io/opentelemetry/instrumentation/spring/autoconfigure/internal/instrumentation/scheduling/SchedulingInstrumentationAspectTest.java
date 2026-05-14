@@ -35,7 +35,7 @@ class SchedulingInstrumentationAspectTest {
   private String unproxiedTesterSimpleClassName;
   private String unproxiedTesterClassName;
 
-  SpringSchedulingInstrumentationAspect newAspect(OpenTelemetry openTelemetry) {
+  private static SpringSchedulingInstrumentationAspect newAspect(OpenTelemetry openTelemetry) {
     return new SpringSchedulingInstrumentationAspect(openTelemetry);
   }
 
@@ -55,7 +55,7 @@ class SchedulingInstrumentationAspectTest {
     schedulingTester = factory.getProxy();
   }
 
-  protected List<AttributeAssertion> assertCodeFunction(String method) {
+  private List<AttributeAssertion> assertCodeFunction(String method) {
     return SemconvCodeStabilityUtil.codeFunctionAssertions(unproxiedTesterClassName, method);
   }
 

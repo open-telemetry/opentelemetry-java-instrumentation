@@ -13,7 +13,7 @@ import io.opentelemetry.api.common.AttributeKey;
 
 // until old peer.service attribute is dropped in 3.0
 @SuppressWarnings("deprecation") // using deprecated semconv
-public final class SemconvServiceStabilityUtil {
+public class SemconvServiceStabilityUtil {
 
   /** Returns PEER_SERVICE or SERVICE_PEER_NAME depending on service.peer semconv stability mode. */
   public static AttributeKey<String> maybeStablePeerService() {

@@ -7,7 +7,7 @@ package io.opentelemetry.sdk.autoconfigure;
 
 import io.opentelemetry.api.common.Attributes;
 
-public final class SdkAutoconfigureAccess {
+public class SdkAutoconfigureAccess {
   public static Attributes getResourceAttributes(AutoConfiguredOpenTelemetrySdk sdk) {
     return sdk.getResource().getAttributes();
   }

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 
 import static io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2.JoddHttpSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -31,8 +30,7 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("send")).and(takesArguments(0)),
-        this.getClass().getName() + "$RequestAdvice");
+        named("send").and(takesArguments(0)), getClass().getName() + "$RequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -42,9 +40,9 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context) {
         this.context = context;
-        this.scope = scope;
+        this.scope = context.makeCurrent();
       }
 
       @Nullable
@@ -54,22 +52,23 @@ class JoddHttpInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = instrumenter().start(parentContext, request);
-        return new AdviceScope(context, context.makeCurrent());
+        return new AdviceScope(context);
       }
 
-      public void end(HttpRequest request, HttpResponse response, Throwable throwable) {
+      public void end(
+          HttpRequest request, @Nullable HttpResponse response, @Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, request, response, throwable);
       }
     }
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope methodEnter(@Advice.This HttpRequest request) {
       return AdviceScope.start(request);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.This HttpRequest request,
         @Advice.Return @Nullable HttpResponse response,

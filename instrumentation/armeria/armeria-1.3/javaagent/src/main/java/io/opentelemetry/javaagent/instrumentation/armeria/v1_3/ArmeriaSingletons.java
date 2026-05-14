@@ -19,10 +19,10 @@ import java.util.function.Function;
 
 // Holds singleton references to decorators to match against during suppression.
 // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903
-public final class ArmeriaSingletons {
-  public static final Function<HttpClient, HttpClient> CLIENT_DECORATOR;
+public class ArmeriaSingletons {
+  private static final Function<HttpClient, HttpClient> clientDecorator;
 
-  public static final Function<HttpService, HttpService> SERVER_DECORATOR;
+  private static final Function<HttpService, HttpService> serverDecorator;
 
   static {
     CommonConfig config = AgentCommonConfig.get();
@@ -41,10 +41,18 @@ public final class ArmeriaSingletons {
         .configure(config);
     ArmeriaServerTelemetry serverTelemetry = serverBuilder.build();
 
-    CLIENT_DECORATOR = clientTelemetry.createDecorator();
+    clientDecorator = clientTelemetry.createDecorator();
     Function<HttpService, HttpService> libraryDecorator =
         serverTelemetry.createDecorator().compose(ResponseCustomizingDecorator::new);
-    SERVER_DECORATOR = service -> new ServerDecorator(service, libraryDecorator.apply(service));
+    serverDecorator = service -> new ServerDecorator(service, libraryDecorator.apply(service));
+  }
+
+  public static Function<HttpClient, HttpClient> clientDecorator() {
+    return clientDecorator;
+  }
+
+  public static Function<HttpService, HttpService> serverDecorator() {
+    return serverDecorator;
   }
 
   private ArmeriaSingletons() {}

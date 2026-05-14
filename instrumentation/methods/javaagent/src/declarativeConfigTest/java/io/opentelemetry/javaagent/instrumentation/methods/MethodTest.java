@@ -21,7 +21,6 @@ class MethodTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void methodTraced() {
     assertThat(new ConfigTracedCallable().call()).isEqualTo("Hello!");

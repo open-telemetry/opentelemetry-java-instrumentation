@@ -62,7 +62,7 @@ final class CassandraAttributesExtractor
   private static final AttributeKey<Long> CASSANDRA_SPECULATIVE_EXECUTION_COUNT =
       AttributeKey.longKey("cassandra.speculative_execution.count");
 
-  private static final Field proxyAddressField = getProxyAddressField();
+  private static final Field PROXY_ADDRESS_FIELD = getProxyAddressField();
 
   @Override
   public void onStart(
@@ -83,13 +83,12 @@ final class CassandraAttributesExtractor
     if (coordinator != null) {
       updateServerAddressAndPort(attributes, coordinator);
 
-      if (coordinator.getDatacenter() != null) {
-        if (emitStableDatabaseSemconv()) {
-          attributes.put(CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
-        }
-        if (emitOldDatabaseSemconv()) {
-          attributes.put(DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
-        }
+      String datacenter = coordinator.getDatacenter();
+      if (emitStableDatabaseSemconv()) {
+        attributes.put(CASSANDRA_COORDINATOR_DC, datacenter);
+      }
+      if (emitOldDatabaseSemconv()) {
+        attributes.put(DB_CASSANDRA_COORDINATOR_DC, datacenter);
       }
       if (coordinator.getHostId() != null) {
         if (emitStableDatabaseSemconv()) {
@@ -162,11 +161,11 @@ final class CassandraAttributesExtractor
       InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
       attributes.put(SERVER_ADDRESS, address.getHostString());
       attributes.put(SERVER_PORT, address.getPort());
-    } else if (endPoint instanceof SniEndPoint && proxyAddressField != null) {
+    } else if (endPoint instanceof SniEndPoint && PROXY_ADDRESS_FIELD != null) {
       SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
       Object object = null;
       try {
-        object = proxyAddressField.get(sniEndPoint);
+        object = PROXY_ADDRESS_FIELD.get(sniEndPoint);
       } catch (Exception e) {
         logger.log(
             FINE,
@@ -187,7 +186,7 @@ final class CassandraAttributesExtractor
       Field field = SniEndPoint.class.getDeclaredField("proxyAddress");
       field.setAccessible(true);
       return field;
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       return null;
     }
   }

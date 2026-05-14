@@ -10,7 +10,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 @Path("/ignored")
-public interface Resource {
+interface Resource {
   @Path("ignored")
   String hello(String name);
 

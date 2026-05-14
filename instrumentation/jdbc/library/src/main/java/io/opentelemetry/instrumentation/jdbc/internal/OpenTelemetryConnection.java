@@ -61,35 +61,6 @@ public class OpenTelemetryConnection implements Connection {
   private final boolean captureRowCount;
   private final long rowCountLimit;
 
-  protected OpenTelemetryConnection(
-      Connection delegate,
-      DbInfo dbInfo,
-      Instrumenter<DbRequest, DbResponse> statementInstrumenter,
-      Instrumenter<DbRequest, Void> transactionInstrumenter,
-      boolean captureQueryParameters,
-      SqlCommenter sqlCommenter,
-      boolean captureRowCount,
-      long rowCountLimit) {
-    this.delegate = delegate;
-    this.dbInfo = dbInfo;
-    this.statementInstrumenter = statementInstrumenter;
-    this.transactionInstrumenter = transactionInstrumenter;
-    this.captureQueryParameters = captureQueryParameters;
-    this.sqlCommenter = sqlCommenter;
-    this.captureRowCount = captureRowCount;
-    this.rowCountLimit = rowCountLimit;
-  }
-
-  // visible for testing
-  static boolean hasJdbc43() {
-    try {
-      Class.forName("java.sql.ShardingKey");
-      return true;
-    } catch (ClassNotFoundException exception) {
-      return false;
-    }
-  }
-
   public static Connection create(
       Connection delegate,
       DbInfo dbInfo,
@@ -119,6 +90,35 @@ public class OpenTelemetryConnection implements Connection {
         sqlCommenter,
         captureRowCount,
         rowCountLimit);
+  }
+
+  protected OpenTelemetryConnection(
+      Connection delegate,
+      DbInfo dbInfo,
+      Instrumenter<DbRequest, DbResponse> statementInstrumenter,
+      Instrumenter<DbRequest, Void> transactionInstrumenter,
+      boolean captureQueryParameters,
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
+    this.delegate = delegate;
+    this.dbInfo = dbInfo;
+    this.statementInstrumenter = statementInstrumenter;
+    this.transactionInstrumenter = transactionInstrumenter;
+    this.captureQueryParameters = captureQueryParameters;
+    this.sqlCommenter = sqlCommenter;
+    this.captureRowCount = captureRowCount;
+    this.rowCountLimit = rowCountLimit;
+  }
+
+  // visible for testing
+  static boolean hasJdbc43() {
+    try {
+      Class.forName("java.sql.ShardingKey");
+      return true;
+    } catch (ClassNotFoundException ignored) {
+      return false;
+    }
   }
 
   private String processQuery(String sql) {

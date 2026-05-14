@@ -32,7 +32,7 @@ public abstract class DbRequest {
       PreparedStatement statement, Map<String, String> preparedStatementParameters) {
     return create(
         statement,
-        JdbcData.preparedStatement.get(statement),
+        JdbcData.PREPARED_STATEMENT.get(statement),
         null,
         preparedStatementParameters,
         true);
@@ -63,10 +63,11 @@ public abstract class DbRequest {
         parameterizedQuery);
   }
 
+  @Nullable
   public static DbRequest create(
       Statement statement,
       Collection<String> queryTexts,
-      Long batchSize,
+      @Nullable Long batchSize,
       boolean parameterizedQuery) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
@@ -83,7 +84,7 @@ public abstract class DbRequest {
   public static DbRequest create(
       DbInfo dbInfo,
       String queryText,
-      Long batchSize,
+      @Nullable Long batchSize,
       Map<String, String> preparedStatementParameters,
       boolean parameterizedQuery) {
     return create(
@@ -97,7 +98,7 @@ public abstract class DbRequest {
   public static DbRequest create(
       DbInfo dbInfo,
       Collection<String> queryTexts,
-      Long batchSize,
+      @Nullable Long batchSize,
       Map<String, String> preparedStatementParameters,
       boolean parameterizedQuery) {
     return create(
@@ -107,8 +108,8 @@ public abstract class DbRequest {
   private static DbRequest create(
       DbInfo dbInfo,
       Collection<String> queryTexts,
-      Long batchSize,
-      String operationName,
+      @Nullable Long batchSize,
+      @Nullable String operationName,
       Map<String, String> preparedStatementParameters,
       boolean parameterizedQuery) {
     return new AutoValue_DbRequest(

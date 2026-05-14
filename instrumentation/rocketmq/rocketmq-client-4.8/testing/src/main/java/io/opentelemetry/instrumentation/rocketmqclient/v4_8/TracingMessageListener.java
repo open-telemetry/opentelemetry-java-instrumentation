@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -19,7 +20,7 @@ import org.apache.rocketmq.common.message.MessageExt;
 class TracingMessageListener implements MessageListenerOrderly {
 
   private final AtomicInteger lastBatchSize = new AtomicInteger();
-  private CountDownLatch messageReceived = new CountDownLatch(1);
+  private volatile CountDownLatch messageReceived = new CountDownLatch(1);
 
   @Override
   public ConsumeOrderlyStatus consumeMessage(
@@ -36,7 +37,7 @@ class TracingMessageListener implements MessageListenerOrderly {
   }
 
   void waitForMessages() throws InterruptedException {
-    messageReceived.await(30, SECONDS);
+    assertThat(messageReceived.await(30, SECONDS)).isTrue();
   }
 
   int getLastBatchSize() {

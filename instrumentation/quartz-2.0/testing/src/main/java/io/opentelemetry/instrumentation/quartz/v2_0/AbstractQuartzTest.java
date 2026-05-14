@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.quartz.v2_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Objects.requireNonNull;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
@@ -18,6 +19,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.Properties;
@@ -29,18 +31,19 @@ import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractQuartzTest {
 
-  protected static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+  protected static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.quartz.experimental-span-attributes");
 
-  protected abstract void configureScheduler(Scheduler scheduler);
-
   private Scheduler scheduler;
+
+  protected abstract void configureScheduler(Scheduler scheduler);
 
   protected abstract InstrumentationExtension getTesting();
 
@@ -57,7 +60,7 @@ public abstract class AbstractQuartzTest {
   }
 
   @Test
-  void successfulJob() throws Exception {
+  void successfulJob() throws SchedulerException {
     Trigger trigger = newTrigger().build();
 
     JobDetail jobDetail = newJob().withIdentity("test", "jobs").ofType(SuccessfulJob.class).build();
@@ -65,9 +68,7 @@ public abstract class AbstractQuartzTest {
     scheduler.scheduleJob(jobDetail, trigger);
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(SuccessfulJob.class, "execute");
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-      assertions.add(equalTo(stringKey("job.system"), "quartz"));
-    }
+    assertions.add(equalTo(stringKey("job.system"), EXPERIMENTAL_ATTRIBUTES ? "quartz" : null));
 
     getTesting()
         .waitAndAssertTraces(
@@ -86,7 +87,7 @@ public abstract class AbstractQuartzTest {
   }
 
   @Test
-  void failingJob() throws Exception {
+  void failingJob() throws SchedulerException {
     Trigger trigger = newTrigger().build();
 
     JobDetail jobDetail = newJob().withIdentity("fail", "jobs").ofType(FailingJob.class).build();
@@ -94,9 +95,7 @@ public abstract class AbstractQuartzTest {
     scheduler.scheduleJob(jobDetail, trigger);
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(FailingJob.class, "execute");
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-      assertions.add(equalTo(stringKey("job.system"), "quartz"));
-    }
+    assertions.add(equalTo(stringKey("job.system"), EXPERIMENTAL_ATTRIBUTES ? "quartz" : null));
 
     getTesting()
         .waitAndAssertTraces(
@@ -114,7 +113,10 @@ public abstract class AbstractQuartzTest {
   private static Scheduler createScheduler() throws Exception {
     StdSchedulerFactory factory = new StdSchedulerFactory();
     Properties properties = new Properties();
-    properties.load(AbstractQuartzTest.class.getResourceAsStream("/org/quartz/quartz.properties"));
+    try (InputStream propertiesStream =
+        AbstractQuartzTest.class.getResourceAsStream("/org/quartz/quartz.properties")) {
+      properties.load(requireNonNull(propertiesStream));
+    }
     properties.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "default");
     factory.initialize(properties);
     return factory.getScheduler();
@@ -125,8 +127,8 @@ public abstract class AbstractQuartzTest {
     public void execute(JobExecutionContext context) {
       GlobalOpenTelemetry.getTracer("test").spanBuilder("child").startSpan().end();
       // ensure that JobExecutionContext is serializable
-      try {
-        new ObjectOutputStream(new ByteArrayOutputStream()).writeObject(context);
+      try (ObjectOutputStream outputStream = new ObjectOutputStream(new ByteArrayOutputStream())) {
+        outputStream.writeObject(context);
       } catch (IOException e) {
         throw new IllegalStateException(e);
       }

@@ -7,6 +7,7 @@ muzzle {
     group.set("org.apache.kafka")
     module.set("kafka-streams")
     versions.set("[0.11.0.0,)")
+    assertInverse.set(true)
   }
 }
 
@@ -27,8 +28,8 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
@@ -62,13 +63,12 @@ tasks {
 
   check {
     dependsOn(testReceiveSpansDisabled)
+    dependsOn(testExperimental)
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 // kafka 4.1 requires java 11
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

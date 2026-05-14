@@ -12,13 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class AwsLambdaInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class AwsLambdaInstrumentationModule extends InstrumentationModule {
 
   public AwsLambdaInstrumentationModule() {
     super("aws-lambda-core", "aws-lambda-core-1.0", "aws-lambda");
@@ -26,8 +24,10 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // aws-lambda-events-2.2 is used when SQSEvent is present
-    return not(hasClassesNamed("com.amazonaws.services.lambda.runtime.events.SQSEvent"));
+    // added in 1.0.0
+    return hasClassesNamed("com.amazonaws.services.lambda.runtime.RequestHandler")
+        // added in 2.2.0 (in which case aws-lambda-events-2.2 is used)
+        .and(not(hasClassesNamed("com.amazonaws.services.lambda.runtime.events.SQSEvent")));
   }
 
   @Override
@@ -40,10 +40,5 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule
     return asList(
         new AwsLambdaRequestHandlerInstrumentation(),
         new AwsLambdaRequestStreamHandlerInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

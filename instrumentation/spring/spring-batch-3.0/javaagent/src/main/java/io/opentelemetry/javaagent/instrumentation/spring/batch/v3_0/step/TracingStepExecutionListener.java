@@ -17,7 +17,7 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.core.Ordered;
 
-public final class TracingStepExecutionListener implements StepExecutionListener, Ordered {
+public class TracingStepExecutionListener implements StepExecutionListener, Ordered {
   private static final VirtualField<StepExecution, ContextAndScope> CONTEXT_AND_SCOPE =
       VirtualField.find(StepExecution.class, ContextAndScope.class);
 

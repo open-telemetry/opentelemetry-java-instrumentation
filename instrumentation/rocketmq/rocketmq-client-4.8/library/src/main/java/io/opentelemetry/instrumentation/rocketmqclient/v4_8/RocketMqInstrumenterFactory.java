@@ -38,7 +38,7 @@ class RocketMqInstrumenterFactory {
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes) {
 
-    RocketMqProducerAttributeGetter getter = RocketMqProducerAttributeGetter.INSTANCE;
+    RocketMqProducerAttributeGetter getter = new RocketMqProducerAttributeGetter();
     MessageOperation operation = MessageOperation.PUBLISH;
 
     InstrumenterBuilder<SendMessageContext, Void> instrumenterBuilder =
@@ -50,10 +50,10 @@ class RocketMqInstrumenterFactory {
                 buildMessagingAttributesExtractor(getter, operation, capturedHeaders));
     if (captureExperimentalSpanAttributes) {
       instrumenterBuilder.addAttributesExtractor(
-          RocketMqProducerExperimentalAttributeExtractor.INSTANCE);
+          new RocketMqProducerExperimentalAttributeExtractor());
     }
 
-    return instrumenterBuilder.buildProducerInstrumenter(MapSetter.INSTANCE);
+    return instrumenterBuilder.buildProducerInstrumenter(new MapSetter());
   }
 
   static RocketMqConsumerInstrumenter createConsumerInstrumenter(
@@ -81,7 +81,7 @@ class RocketMqInstrumenterFactory {
       boolean captureExperimentalSpanAttributes,
       boolean batch) {
 
-    RocketMqConsumerAttributeGetter getter = RocketMqConsumerAttributeGetter.INSTANCE;
+    RocketMqConsumerAttributeGetter getter = new RocketMqConsumerAttributeGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
     InstrumenterBuilder<MessageExt, Void> builder =
@@ -93,20 +93,19 @@ class RocketMqInstrumenterFactory {
     builder.addAttributesExtractor(
         buildMessagingAttributesExtractor(getter, operation, capturedHeaders));
     if (captureExperimentalSpanAttributes) {
-      builder.addAttributesExtractor(RocketMqConsumerExperimentalAttributeExtractor.INSTANCE);
+      builder.addAttributesExtractor(new RocketMqConsumerExperimentalAttributeExtractor());
     }
 
     if (batch) {
       SpanLinksExtractor<MessageExt> spanLinksExtractor =
           new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(),
-              TextMapExtractAdapter.INSTANCE);
+              openTelemetry.getPropagators().getTextMapPropagator(), new TextMapExtractAdapter());
 
       return builder
           .addSpanLinksExtractor(spanLinksExtractor)
           .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     } else {
-      return builder.buildConsumerInstrumenter(TextMapExtractAdapter.INSTANCE);
+      return builder.buildConsumerInstrumenter(new TextMapExtractAdapter());
     }
   }
 

@@ -17,4 +17,7 @@ dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
+
+  testInstrumentation(project(":instrumentation:servlet:servlet-2.2:javaagent"))
+  testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
 }

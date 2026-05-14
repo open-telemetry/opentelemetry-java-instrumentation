@@ -1,5 +1,6 @@
 plugins {
   id("otel.java-conventions")
+  id("otel.nullaway-conventions")
   id("otel.publish-conventions")
 }
 
@@ -25,5 +26,5 @@ dependencies {
 
 // Needed by mockito
 configurations.testRuntimeClasspath {
-  exclude(group = "net.bytebuddy", module = "byte-buddy-dep")
+  exclude("net.bytebuddy", "byte-buddy-dep")
 }

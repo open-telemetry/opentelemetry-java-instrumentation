@@ -16,7 +16,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class TestInstrumentation implements TypeInstrumentation {
+class TestInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.opentelemetry.javaagent.instrumentation.opentelemetryapi.TestClass");
@@ -25,14 +25,14 @@ public class TestInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("shouldSuppressInstrumentation"), this.getClass().getName() + "$TestAdvice");
+        named("shouldSuppressInstrumentation"), getClass().getName() + "$TestAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class TestAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static boolean onExit(
         @Advice.Argument(0) application.io.opentelemetry.context.Context context) {
       return InstrumentationUtil.shouldSuppressInstrumentation(

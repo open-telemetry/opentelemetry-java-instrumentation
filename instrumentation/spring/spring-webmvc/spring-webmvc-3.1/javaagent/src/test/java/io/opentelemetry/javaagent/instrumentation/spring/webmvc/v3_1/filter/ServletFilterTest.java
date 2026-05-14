@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.filter;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.instrumentation.spring.webmvc.filter.AbstractServletFilterTest;
 import io.opentelemetry.instrumentation.spring.webmvc.filter.FilteredAppConfig;
@@ -44,7 +46,6 @@ class ServletFilterTest extends AbstractServletFilterTest {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setResponseCodeOnNonStandardHttpMethod(
-        Boolean.getBoolean("testLatestDeps") ? 500 : 200);
+    options.setResponseCodeOnNonStandardHttpMethod(testLatestDeps() ? 500 : 200);
   }
 }

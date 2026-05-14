@@ -34,7 +34,7 @@ final class ReactorNettyHttpClientAttributesGetter
   public List<String> getHttpRequestHeader(HttpClientRequest request, String name) {
     try {
       return request.requestHeaders().getAll(name);
-    } catch (IllegalStateException exception) {
+    } catch (IllegalStateException e) {
       // response not available
       return emptyList();
     }
@@ -46,7 +46,7 @@ final class ReactorNettyHttpClientAttributesGetter
       HttpClientRequest request, HttpClientResponse response, @Nullable Throwable error) {
     try {
       return response.status().code();
-    } catch (IllegalStateException exception) {
+    } catch (IllegalStateException e) {
       // response not available
       return null;
     }
@@ -57,7 +57,7 @@ final class ReactorNettyHttpClientAttributesGetter
       HttpClientRequest request, HttpClientResponse response, String name) {
     try {
       return response.responseHeaders().getAll(name);
-    } catch (IllegalStateException exception) {
+    } catch (IllegalStateException e) {
       // response not available
       return emptyList();
     }
@@ -98,7 +98,20 @@ final class ReactorNettyHttpClientAttributesGetter
   @Override
   public Integer getServerPort(HttpClientRequest request) {
     String resourceUrl = request.resourceUrl();
-    return resourceUrl == null ? null : UrlParser.getPort(resourceUrl);
+    if (resourceUrl == null) {
+      return null;
+    }
+    Integer port = UrlParser.getPort(resourceUrl);
+    if (port != null) {
+      return port;
+    }
+    if (resourceUrl.startsWith("https://")) {
+      return 443;
+    }
+    if (resourceUrl.startsWith("http://")) {
+      return 80;
+    }
+    return null;
   }
 
   @Nullable

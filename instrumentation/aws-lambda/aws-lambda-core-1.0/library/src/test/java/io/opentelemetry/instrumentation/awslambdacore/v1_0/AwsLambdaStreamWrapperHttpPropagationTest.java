@@ -66,7 +66,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
   }
 
   @Test
-  void handlerTraced() throws Exception {
+  void handlerTraced() throws IOException {
     String content =
         "{"
             + "\"headers\" : {"
@@ -135,19 +135,19 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
                             equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
-  public static final class TestRequestHandler implements RequestStreamHandler {
+  public static class TestRequestHandler implements RequestStreamHandler {
 
-    private static final JsonFactory JSON_FACTORY = new JsonFactory();
+    private static final JsonFactory jsonFactory = new JsonFactory();
 
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context)
         throws IOException {
       String body = "";
-      try (JsonParser parser = JSON_FACTORY.createParser(input)) {
+      try (JsonParser parser = jsonFactory.createParser(input)) {
         parser.nextToken();
         while (parser.nextToken() != JsonToken.END_OBJECT) {
           parser.nextToken();
-          if (!parser.currentName().equals("body")) {
+          if (!"body".equals(parser.currentName())) {
             parser.skipChildren();
             continue;
           }
@@ -156,7 +156,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
         }
       }
       BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, UTF_8));
-      if (body.equals("hello")) {
+      if ("hello".equals(body)) {
         writer.write("world");
         writer.flush();
         writer.close();

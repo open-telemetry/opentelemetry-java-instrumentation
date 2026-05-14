@@ -33,11 +33,12 @@ final class NettyHttpClientAttributesGetter
         return getScheme(requestAndChannel) + "://" + hostHeader + target;
       }
       return uri.toString();
-    } catch (URISyntaxException e) {
+    } catch (URISyntaxException ignored) {
       return null;
     }
   }
 
+  @Nullable
   private String getHost(NettyRequest requestAndChannel) {
     List<String> values = getHttpRequestHeader(requestAndChannel, "host");
     return values.isEmpty() ? null : values.get(0);

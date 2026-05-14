@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -13,30 +12,8 @@ import com.couchbase.client.core.metrics.DefaultLatencyMetricsCollectorConfig;
 import com.couchbase.client.core.metrics.DefaultMetricsCollectorConfig;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.List;
 
 public class CouchbaseUtil {
-
-  public static List<AttributeAssertion> couchbaseAttributes() {
-    return couchbaseKvAttributes();
-  }
-
-  public static List<AttributeAssertion> couchbaseKvAttributes() {
-    return emptyList();
-  }
-
-  public static List<AttributeAssertion> couchbaseQueryAttributes() {
-    return emptyList();
-  }
-
-  public static List<AttributeAssertion> couchbaseClusterManagerAttributes() {
-    return emptyList();
-  }
-
-  public static List<AttributeAssertion> couchbaseN1qlAttributes() {
-    return emptyList();
-  }
 
   public static DefaultCouchbaseEnvironment.Builder envBuilder(
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {

@@ -20,9 +20,9 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.annotation.PreDestroy;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
@@ -63,7 +63,12 @@ class DropwizardAsyncTest extends DropwizardTest {
 
   @Path("/")
   public static class AsyncServiceResource {
-    final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    @PreDestroy
+    public void stop() {
+      executor.shutdown();
+    }
 
     @GET
     @Path("success")
@@ -96,19 +101,14 @@ class DropwizardAsyncTest extends DropwizardTest {
     @Path("redirect")
     public void redirect(@Suspended AsyncResponse asyncResponse) {
       executor.execute(
-          () -> {
-            try {
+          () ->
               controller(
                   REDIRECT,
                   () ->
                       asyncResponse.resume(
                           Response.status(REDIRECT.getStatus())
-                              .location(new URI(REDIRECT.getBody()))
-                              .build()));
-            } catch (URISyntaxException e) {
-              throw new RuntimeException(e);
-            }
-          });
+                              .location(URI.create(REDIRECT.getBody()))
+                              .build())));
     }
 
     @GET

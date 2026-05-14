@@ -89,7 +89,6 @@ public abstract class AbstractServletFilterTest
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
       String method, ServerEndpoint endpoint) {

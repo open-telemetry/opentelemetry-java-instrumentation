@@ -13,7 +13,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.function.Consumer;
 
 class ExperimentalTestHelper {
-  private static final boolean isEnabled =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.grpc.experimental-span-attributes");
 
   static final AttributeKey<Long> GRPC_RECEIVED_MESSAGE_COUNT =
@@ -25,7 +25,7 @@ class ExperimentalTestHelper {
     return satisfies(
         key,
         val -> {
-          if (isEnabled) {
+          if (EXPERIMENTAL_ATTRIBUTES) {
             val.satisfies(assertion::accept);
           }
         });

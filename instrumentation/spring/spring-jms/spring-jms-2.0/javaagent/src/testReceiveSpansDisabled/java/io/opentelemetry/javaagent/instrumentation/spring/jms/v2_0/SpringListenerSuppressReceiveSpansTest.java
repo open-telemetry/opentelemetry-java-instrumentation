@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import javax.jms.ConnectionFactory;
@@ -19,10 +20,14 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @Test
   void receivingMessageInSpringListenerGeneratesSpans() {
     AnnotationConfigApplicationContext context =
         new AnnotationConfigApplicationContext(AnnotatedListenerConfig.class);
+    cleanup.deferCleanup(context);
     ConnectionFactory factory = context.getBean(ConnectionFactory.class);
     JmsTemplate template = new JmsTemplate(factory);
 
@@ -40,6 +45,5 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
                         "process",
                         false,
                         null)));
-    context.close();
   }
 }

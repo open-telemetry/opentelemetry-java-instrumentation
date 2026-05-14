@@ -33,7 +33,7 @@ class CustomJodaModule extends SimpleModule {
 
   private static final long serialVersionUID = 1L;
 
-  public CustomJodaModule() {
+  CustomJodaModule() {
     addDeserializer(DateTime.class, new DateTimeDeserialiser());
   }
 
@@ -57,6 +57,7 @@ class CustomJodaModule extends SimpleModule {
         DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
     @Override
+    @Nullable
     public DateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
       if (p.getCurrentTokenId() != JsonTokenId.ID_STRING) {
         throw new IllegalArgumentException("Only stream input is accepted");

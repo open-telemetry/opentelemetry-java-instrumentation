@@ -6,7 +6,7 @@
 package io.opentelemetry.smoketest;
 
 // TODO configure renovate to update these versions
-public final class TestImageVersions {
+public class TestImageVersions {
 
   // smoke-test-spring-boot
   public static final String SPRING_BOOT_VERSION = "20251116.19402383847";
@@ -27,7 +27,7 @@ public final class TestImageVersions {
   public static final String ZULU_OPENJDK_8U31_VERSION = "20251117.19421579350";
 
   // smoke-test-servlet-* (all servlet variants)
-  public static final String SERVLET_VERSION = "20251120.19538040041";
+  public static final String SERVLET_VERSION = "20260502.25257829980";
 
   private TestImageVersions() {}
 }

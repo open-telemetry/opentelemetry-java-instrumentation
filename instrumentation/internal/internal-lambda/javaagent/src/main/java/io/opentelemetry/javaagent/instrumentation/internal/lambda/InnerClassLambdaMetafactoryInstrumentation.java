@@ -28,7 +28,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation {
+class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -69,8 +69,7 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
 
     transformer.applyAdviceToMethod(
         named("spinInnerClass"),
-        InnerClassLambdaMetafactoryInstrumentation.class.getName()
-            + (hasInterfaceClassField() ? "$LambdaJdk17Advice" : "$LambdaAdvice"));
+        getClass().getName() + (hasInterfaceClassField() ? "$LambdaJdk17Advice" : "$LambdaAdvice"));
   }
 
   @SuppressWarnings("ReturnValueIgnored")
@@ -79,10 +78,10 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
       Class<?> clazz = Class.forName("java.lang.invoke.AbstractValidatingLambdaMetafactory");
       clazz.getDeclaredField("interfaceClass");
       return true;
-    } catch (NoSuchFieldException exception) {
+    } catch (NoSuchFieldException ignored) {
       return false;
-    } catch (ClassNotFoundException exception) {
-      throw new IllegalStateException(exception);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -147,13 +146,13 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
   @SuppressWarnings("unused")
   public static class LambdaAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     public static DefineClassContext onEnter(
         @Advice.FieldValue("samBase") Class<?> lambdaInterface) {
       return DefineClassHelper.beforeDefineLambdaClass(lambdaInterface);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter DefineClassContext context) {
       DefineClassHelper.afterDefineClass(context);
     }
@@ -162,13 +161,13 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
   @SuppressWarnings("unused")
   public static class LambdaJdk17Advice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     public static DefineClassContext onEnter(
         @Advice.FieldValue("interfaceClass") Class<?> lambdaInterface) {
       return DefineClassHelper.beforeDefineLambdaClass(lambdaInterface);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter DefineClassContext context) {
       DefineClassHelper.afterDefineClass(context);
     }

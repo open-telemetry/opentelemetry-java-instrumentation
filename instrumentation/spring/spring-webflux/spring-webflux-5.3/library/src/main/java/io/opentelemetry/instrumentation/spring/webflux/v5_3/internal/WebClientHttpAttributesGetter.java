@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import java.net.URI;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -15,10 +17,8 @@ import org.springframework.web.reactive.function.client.ClientResponse;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum WebClientHttpAttributesGetter
+public class WebClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ClientRequest, ClientResponse> {
-  INSTANCE;
-
   @Override
   public String getUrlFull(ClientRequest request) {
     return request.url().toString();
@@ -53,9 +53,11 @@ public enum WebClientHttpAttributesGetter
     return request.url().getHost();
   }
 
+  @Nullable
   @Override
   public Integer getServerPort(ClientRequest request) {
-    return request.url().getPort();
+    URI url = request.url();
+    return HttpConstants.portOrDefaultFromScheme(url.getPort(), url.getScheme());
   }
 
   @Nullable

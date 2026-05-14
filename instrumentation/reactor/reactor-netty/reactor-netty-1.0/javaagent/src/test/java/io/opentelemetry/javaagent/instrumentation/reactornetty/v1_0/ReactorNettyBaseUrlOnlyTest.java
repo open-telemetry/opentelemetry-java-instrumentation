@@ -47,7 +47,7 @@ class ReactorNettyBaseUrlOnlyTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static ServerExtension server;
+  private static ServerExtension server;
 
   @BeforeAll
   static void setUp() {

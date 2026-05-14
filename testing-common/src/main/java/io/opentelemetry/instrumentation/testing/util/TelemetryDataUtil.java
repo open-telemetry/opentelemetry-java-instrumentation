@@ -20,13 +20,15 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
-public final class TelemetryDataUtil {
+public class TelemetryDataUtil {
 
   public static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
     List<SpanKind> list = asList(spanKinds);
@@ -90,21 +92,21 @@ public final class TelemetryDataUtil {
     return completeTraces;
   }
 
-  // TODO: we should probably move that to InstrumentationTestRunner once we get rid of all groovy
   public static void assertScopeVersion(List<List<SpanData>> traces) {
+    Set<String> missingScopeVersionErrors = new LinkedHashSet<>();
     for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
         InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
-        if (!scopeInfo.getName().startsWith("test")) {
-          assertThat(scopeInfo.getVersion())
-              .as(
-                  "Instrumentation version of module %s was empty; make sure that the "
-                      + "instrumentation name matches the gradle module name",
-                  scopeInfo.getName())
-              .isNotNull();
+        if (!scopeInfo.getName().startsWith("test") && scopeInfo.getVersion() == null) {
+          missingScopeVersionErrors.add(
+              "Instrumentation version of module "
+                  + scopeInfo.getName()
+                  + " was empty; make sure that the instrumentation name matches the gradle"
+                  + " module name");
         }
       }
     }
+    assertThat(missingScopeVersionErrors).isEmpty();
   }
 
   private static long elapsedSeconds(long startTime) {

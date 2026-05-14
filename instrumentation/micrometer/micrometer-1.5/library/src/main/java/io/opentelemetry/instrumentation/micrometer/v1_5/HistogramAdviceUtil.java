@@ -37,10 +37,9 @@ final class HistogramAdviceUtil {
       return emptyList();
     }
     // micrometer Timers always specify buckets in nanoseconds, we need to convert them to base unit
-    double timeUnitMultiplier = timeUnit == null ? 1.0 : TimeUtils.nanosToUnit(1, timeUnit);
     List<Double> result = new ArrayList<>(buckets.size());
     for (double b : buckets) {
-      result.add(b * timeUnitMultiplier);
+      result.add(timeUnit == null ? b : TimeUtils.nanosToUnit(b, timeUnit));
     }
     return result;
   }

@@ -14,12 +14,12 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 public class SpringWsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-ws-2.0";
 
-  private static final Instrumenter<SpringWsRequest, Void> INSTRUMENTER;
+  private static final Instrumenter<SpringWsRequest, Void> instrumenter;
 
   static {
     SpringWsCodeAttributesGetter codeAttributesGetter = new SpringWsCodeAttributesGetter();
 
-    INSTRUMENTER =
+    instrumenter =
         Instrumenter.<SpringWsRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -30,7 +30,7 @@ public class SpringWsSingletons {
   }
 
   public static Instrumenter<SpringWsRequest, Void> instrumenter() {
-    return INSTRUMENTER;
+    return instrumenter;
   }
 
   private SpringWsSingletons() {}

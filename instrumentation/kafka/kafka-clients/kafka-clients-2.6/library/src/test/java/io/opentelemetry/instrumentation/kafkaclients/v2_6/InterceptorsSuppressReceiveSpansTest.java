@@ -31,6 +31,11 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
     return kafkaTelemetry;
   }
 
+  @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return false;
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   void assertTraces() {
@@ -46,9 +51,7 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "publish"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("producer"))),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer"))),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
@@ -64,9 +67,7 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                             satisfies(
                                 MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                            satisfies(
-                                MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer")),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                             equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"),
                             equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2")),
                 span ->

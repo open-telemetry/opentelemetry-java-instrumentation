@@ -17,7 +17,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorServerTelemetryBuilder
 import io.opentelemetry.instrumentation.ktor.common.v2_0.ApplicationRequestGetter
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.ContinuationInterceptor
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -25,7 +30,7 @@ import kotlinx.coroutines.withContext
  */
 object KtorServerTelemetryUtil {
 
-  fun PluginBuilder<*>.configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
+  fun configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
     val contextKey = AttributeKey<Context>("OpenTelemetry")
     val errorKey = AttributeKey<Throwable>("OpenTelemetryException")
     val processedKey = AttributeKey<Unit>("OpenTelemetryProcessed")
@@ -40,7 +45,9 @@ object KtorServerTelemetryUtil {
 
       if (context != null) {
         call.attributes.put(contextKey, context)
-        withContext(context.asContextElement()) {
+        val dispatcher = coroutineContext[ContinuationInterceptor] as? CoroutineDispatcher
+        val extra = if (dispatcher != null) EmptyInterceptor(dispatcher) else EmptyCoroutineContext
+        withContext(context.asContextElement() + extra) {
           proceed()
         }
       } else {
@@ -53,10 +60,10 @@ object KtorServerTelemetryUtil {
     application.intercept(errorPhase) {
       try {
         proceed()
-      } catch (err: Throwable) {
+      } catch (t: Throwable) {
         // Stash error for reporting later since need ktor to finish setting up the response
-        call.attributes.put(errorKey, err)
-        throw err
+        call.attributes.put(errorKey, t)
+        throw t
       }
     }
 
@@ -86,4 +93,22 @@ object KtorServerTelemetryUtil {
     ApplicationRequestGetter,
     builder.spanKindExtractor(SpanKindExtractor.alwaysServer())
   )
+
+  // A no-op ContinuationInterceptor. There seems to be a bug in Ktor where when propagate otel
+  // context by using withContext(context.asContextElement()) updateThreadContext, that activates
+  // the otel scope, gets called in
+  // https://github.com/open-telemetry/opentelemetry-java/blob/main/extensions/kotlin/src/main/java/io/opentelemetry/extension/kotlin/KotlinContextElement.java
+  // but the restoreThreadContext is not always called, which causes the otel context to leak across
+  // requests. This issue can be worked around by adding -Dio.ktor.internal.disable.sfg=true to jvm
+  // arguments. Adding this no-op interceptor seems to also work around the issue.
+  // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16430
+  private class EmptyInterceptor(val dispatcher: CoroutineDispatcher) : ContinuationInterceptor {
+    override val key: CoroutineContext.Key<*> = ContinuationInterceptor
+
+    override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = dispatcher.interceptContinuation(continuation)
+
+    override fun releaseInterceptedContinuation(continuation: Continuation<*>) {
+      dispatcher.releaseInterceptedContinuation(continuation)
+    }
+  }
 }

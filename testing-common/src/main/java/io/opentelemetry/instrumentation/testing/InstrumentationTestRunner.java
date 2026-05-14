@@ -91,11 +91,11 @@ public abstract class InstrumentationTestRunner {
   public abstract boolean forceFlushCalled();
 
   /** Return a list of all captured traces, where each trace is a sorted list of spans. */
-  public final List<List<SpanData>> traces() {
+  public List<List<SpanData>> traces() {
     return TelemetryDataUtil.groupTraces(getExportedSpans());
   }
 
-  public final List<List<SpanData>> waitForTraces(int numberOfTraces) {
+  public List<List<SpanData>> waitForTraces(int numberOfTraces) {
     try {
       return TelemetryDataUtil.waitForTraces(this::getExportedSpans, numberOfTraces, 20, SECONDS);
     } catch (TimeoutException | InterruptedException e) {
@@ -110,7 +110,7 @@ public abstract class InstrumentationTestRunner {
     waitAndAssertTraces(traceComparator, asList(assertions), true);
   }
 
-  public final void waitAndAssertSortedTraces(
+  public void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator,
       Iterable<? extends Consumer<TraceAssert>> assertions) {
     waitAndAssertTraces(traceComparator, assertions, true);
@@ -123,8 +123,8 @@ public abstract class InstrumentationTestRunner {
     waitAndAssertTracesWithoutScopeVersionVerification(asList(assertions));
   }
 
-  public final <T extends Consumer<TraceAssert>>
-      void waitAndAssertTracesWithoutScopeVersionVerification(Iterable<T> assertions) {
+  public <T extends Consumer<TraceAssert>> void waitAndAssertTracesWithoutScopeVersionVerification(
+      Iterable<T> assertions) {
     waitAndAssertTraces(null, assertions, false);
   }
 
@@ -134,7 +134,7 @@ public abstract class InstrumentationTestRunner {
     waitAndAssertTraces(asList(assertions));
   }
 
-  public final <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
+  public <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
     waitAndAssertTraces(null, assertions, true);
   }
 
@@ -170,7 +170,7 @@ public abstract class InstrumentationTestRunner {
    * Waits for the assertion applied to all metrics of the given instrumentation and metric name to
    * pass.
    */
-  public final void waitAndAssertMetrics(
+  public void waitAndAssertMetrics(
       String instrumentationName, String metricName, Consumer<ListAssert<MetricData>> assertion) {
 
     awaitUntilAsserted(
@@ -257,7 +257,7 @@ public abstract class InstrumentationTestRunner {
     }
   }
 
-  public final List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
+  public List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
     awaitUntilAsserted(
         () -> assertThat(getExportedLogRecords().size()).isEqualTo(numberOfLogRecords),
         await().timeout(Duration.ofSeconds(20)));
@@ -270,7 +270,7 @@ public abstract class InstrumentationTestRunner {
     waitAndAssertLogRecords(asList(assertions));
   }
 
-  public final void waitAndAssertLogRecords(
+  public void waitAndAssertLogRecords(
       Iterable<? extends Consumer<LogRecordDataAssert>> assertions) {
     List<Consumer<LogRecordDataAssert>> assertionsList = new ArrayList<>();
     assertions.forEach(assertionsList::add);
@@ -292,7 +292,7 @@ public abstract class InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
    * spanName}.
    */
-  public final <E extends Exception> void runWithSpan(String spanName, ThrowingRunnable<E> callback)
+  public <E extends Exception> void runWithSpan(String spanName, ThrowingRunnable<E> callback)
       throws E {
     runWithSpan(
         spanName,
@@ -306,8 +306,8 @@ public abstract class InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
    * spanName}.
    */
-  public final <T, E extends Throwable> T runWithSpan(
-      String spanName, ThrowingSupplier<T, E> callback) throws E {
+  public <T, E extends Throwable> T runWithSpan(String spanName, ThrowingSupplier<T, E> callback)
+      throws E {
     return getTestInstrumenters().runWithSpan(spanName, callback);
   }
 
@@ -315,7 +315,7 @@ public abstract class InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  public final <E extends Throwable> void runWithHttpClientSpan(
+  public <E extends Throwable> void runWithHttpClientSpan(
       String spanName, ThrowingRunnable<E> callback) throws E {
     runWithHttpClientSpan(
         spanName,
@@ -329,7 +329,7 @@ public abstract class InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an HTTP CLIENT span with name {@code
    * spanName}.
    */
-  public final <T, E extends Throwable> T runWithHttpClientSpan(
+  public <T, E extends Throwable> T runWithHttpClientSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
     return getTestInstrumenters().runWithHttpClientSpan(spanName, callback);
   }
@@ -338,8 +338,7 @@ public abstract class InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an HTTP SERVER span with name {@code
    * spanName}.
    */
-  public final <E extends Throwable> void runWithHttpServerSpan(ThrowingRunnable<E> callback)
-      throws E {
+  public <E extends Throwable> void runWithHttpServerSpan(ThrowingRunnable<E> callback) throws E {
     runWithHttpServerSpan(
         () -> {
           callback.run();
@@ -351,13 +350,13 @@ public abstract class InstrumentationTestRunner {
    * Runs the provided {@code callback} inside the scope of an HTTP SERVER span with name {@code
    * spanName}.
    */
-  public final <T, E extends Throwable> T runWithHttpServerSpan(ThrowingSupplier<T, E> callback)
+  public <T, E extends Throwable> T runWithHttpServerSpan(ThrowingSupplier<T, E> callback)
       throws E {
     return getTestInstrumenters().runWithHttpServerSpan(callback);
   }
 
   /** Runs the provided {@code callback} inside the scope of a non-recording span. */
-  public final <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
+  public <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
       throws E {
     return getTestInstrumenters().runWithNonRecordingSpan(callback);
   }

@@ -35,9 +35,4 @@ public class TapirPekkoHttpServerRouteInstrumentationModule extends Instrumentat
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new TapirPathInstrumentation());
   }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
-  }
 }

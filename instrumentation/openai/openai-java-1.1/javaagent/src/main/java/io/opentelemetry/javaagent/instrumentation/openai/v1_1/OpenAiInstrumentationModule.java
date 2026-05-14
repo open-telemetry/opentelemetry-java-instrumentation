@@ -22,6 +22,7 @@ public class OpenAiInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 1.1.0
     return hasClassesNamed("com.openai.client.OpenAIClient");
   }
 

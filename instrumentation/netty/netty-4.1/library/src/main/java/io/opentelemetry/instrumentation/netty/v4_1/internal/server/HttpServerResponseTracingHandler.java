@@ -123,10 +123,10 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
 
     try (Scope ignored = serverContext.context().makeCurrent()) {
       super.write(ctx, msg, writePromise);
-    } catch (Throwable throwable) {
+    } catch (Throwable t) {
       serverContexts.pollFirst();
-      end(serverContext.context(), serverContext.request(), null, throwable);
-      throw throwable;
+      end(serverContext.context(), serverContext.request(), null, t);
+      throw t;
     }
   }
 

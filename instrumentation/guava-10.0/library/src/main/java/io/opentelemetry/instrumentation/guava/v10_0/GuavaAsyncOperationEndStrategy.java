@@ -68,8 +68,8 @@ public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndSt
         try {
           Object response = Uninterruptibles.getUninterruptibly(future);
           instrumenter.end(context, request, tryToGetResponse(responseType, response), null);
-        } catch (Throwable exception) {
-          instrumenter.end(context, request, null, exception);
+        } catch (Throwable t) {
+          instrumenter.end(context, request, null, t);
         }
       }
     } else {

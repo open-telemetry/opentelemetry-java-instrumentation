@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.micrometer.core.instrument.Counter;
@@ -60,17 +60,15 @@ public abstract class AbstractNamingConventionTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedCounter",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedCounter")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
   }
 
   @Test
@@ -85,31 +83,27 @@ public abstract class AbstractNamingConventionTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedSummary",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedSummary")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedSummary.max",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedSummary.max")
+                    .hasDoubleGaugeSatisfying(
+                        gauge ->
+                            gauge.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
   }
 
   @Test
@@ -121,17 +115,15 @@ public abstract class AbstractNamingConventionTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedFunctionCounter",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedFunctionCounter")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
   }
 
   @Test
@@ -150,31 +142,27 @@ public abstract class AbstractNamingConventionTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedFunctionTimer.count",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedFunctionTimer.count")
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedFunctionTimer.sum",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedFunctionTimer.sum")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
   }
 
   @Test
@@ -186,17 +174,15 @@ public abstract class AbstractNamingConventionTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedGauge",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedGauge")
+                    .hasDoubleGaugeSatisfying(
+                        gauge ->
+                            gauge.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
   }
 
   @Test
@@ -211,31 +197,27 @@ public abstract class AbstractNamingConventionTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedLongTaskTimer.active",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedLongTaskTimer.active")
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedLongTaskTimer.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedLongTaskTimer.duration")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
   }
 
   @Test
@@ -250,30 +232,26 @@ public abstract class AbstractNamingConventionTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedTimer",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedTimer")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "test.renamedTimer.max",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributes(
-                                                attributeEntry("test.tag", "test.value"))))));
+            metric ->
+                metric
+                    .hasName("test.renamedTimer.max")
+                    .hasDoubleGaugeSatisfying(
+                        gauge ->
+                            gauge.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test.tag"), "test.value")))));
   }
 }

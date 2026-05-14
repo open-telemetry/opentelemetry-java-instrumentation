@@ -30,7 +30,7 @@ class OpenTelemetryAutoConfigurationTest {
   @TestConfiguration
   static class CustomOtelConfiguration {
     @Bean
-    public OpenTelemetry customOpenTelemetry() {
+    OpenTelemetry customOpenTelemetry() {
       return OpenTelemetry.noop();
     }
   }

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JaxWsAnnotationsTest {
   @RegisterExtension
-  static InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void webServiceProviderSpan() {

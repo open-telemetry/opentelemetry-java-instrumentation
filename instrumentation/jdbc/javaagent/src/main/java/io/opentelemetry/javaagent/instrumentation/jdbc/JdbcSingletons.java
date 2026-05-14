@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFac
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterBuilder;
@@ -22,7 +23,6 @@ import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcTransactionAttributesGetter;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.sql.Connection;
@@ -32,12 +32,13 @@ import java.sql.Statement;
 import java.sql.Wrapper;
 import javax.sql.DataSource;
 
-public final class JdbcSingletons {
-  private static final Instrumenter<DbRequest, DbResponse> STATEMENT_INSTRUMENTER;
-  private static final Instrumenter<DbRequest, Void> TRANSACTION_INSTRUMENTER;
-  public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =
+public class JdbcSingletons {
+  private static final Instrumenter<DbRequest, DbResponse> statementInstrumenter;
+  private static final Instrumenter<DbRequest, Void> transactionInstrumenter;
+  private static final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
-  private static final SqlCommenter SQL_COMMENTER = configureSqlCommenter();
+  private static final SqlCommenter sqlCommenter = configureSqlCommenter();
+  private static final Cache<Class<?>, Boolean> wrapperClassCache = Cache.weak();
   public static final boolean CAPTURE_QUERY_PARAMETERS;
   public static final boolean CAPTURE_ROW_COUNT;
   public static final long ROW_COUNT_LIMIT;
@@ -48,10 +49,10 @@ public final class JdbcSingletons {
   static {
     AttributesExtractor<DbRequest, DbResponse> servicePeerExtractor =
         ServicePeerAttributesExtractor.create(
-            JdbcAttributesGetter.INSTANCE, GlobalOpenTelemetry.get());
+            new JdbcAttributesGetter(), GlobalOpenTelemetry.get());
     AttributesExtractor<DbRequest, Void> transactionServicePeerExtractor =
         ServicePeerAttributesExtractor.create(
-            JdbcTransactionAttributesGetter.INSTANCE, GlobalOpenTelemetry.get());
+            new JdbcTransactionAttributesGetter(), GlobalOpenTelemetry.get());
 
     CAPTURE_QUERY_PARAMETERS =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
@@ -60,17 +61,15 @@ public final class JdbcSingletons {
     CAPTURE_ROW_COUNT = JdbcInstrumenterFactory.captureRowCount(GlobalOpenTelemetry.get());
     ROW_COUNT_LIMIT = JdbcInstrumenterFactory.rowCountLimit(GlobalOpenTelemetry.get());
 
-    STATEMENT_INSTRUMENTER =
+    statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(
             GlobalOpenTelemetry.get(),
             singletonList(servicePeerExtractor),
             true,
-            DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
-                .get("statement_sanitizer")
-                .getBoolean("enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()),
+            DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jdbc"),
             CAPTURE_QUERY_PARAMETERS);
 
-    TRANSACTION_INSTRUMENTER =
+    transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(
             GlobalOpenTelemetry.get(),
             singletonList(transactionServicePeerExtractor),
@@ -80,18 +79,16 @@ public final class JdbcSingletons {
   }
 
   public static Instrumenter<DbRequest, Void> transactionInstrumenter() {
-    return TRANSACTION_INSTRUMENTER;
+    return transactionInstrumenter;
   }
 
   public static Instrumenter<DbRequest, DbResponse> statementInstrumenter() {
-    return STATEMENT_INSTRUMENTER;
+    return statementInstrumenter;
   }
 
   public static Instrumenter<DataSource, DbInfo> dataSourceInstrumenter() {
-    return DATASOURCE_INSTRUMENTER;
+    return dataSourceInstrumenter;
   }
-
-  private static final Cache<Class<?>, Boolean> wrapperClassCache = Cache.weak();
 
   /**
    * Returns true if the given object is a wrapper and shouldn't be instrumented. We'll instrument
@@ -111,7 +108,7 @@ public final class JdbcSingletons {
           return true;
         }
       }
-    } catch (SQLException | AbstractMethodError e) {
+    } catch (SQLException | AbstractMethodError ignored) {
       // ignore
     }
     return false;
@@ -119,10 +116,7 @@ public final class JdbcSingletons {
 
   private static SqlCommenter configureSqlCommenter() {
     SqlCommenterBuilder builder = SqlCommenter.builder();
-    builder.setEnabled(
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
-            .get("sqlcommenter/development")
-            .getBoolean("enabled", AgentCommonConfig.get().isSqlCommenterEnabled()));
+    builder.setEnabled(DbConfig.isSqlCommenterEnabled(GlobalOpenTelemetry.get(), "jdbc"));
     SqlCommenterCustomizerHolder.getCustomizer().customize(builder);
     return builder.build();
   }
@@ -131,7 +125,7 @@ public final class JdbcSingletons {
     Connection connection;
     try {
       connection = statement.getConnection();
-    } catch (SQLException exception) {
+    } catch (SQLException ignored) {
       // connection was already closed
       return sql;
     }
@@ -139,7 +133,7 @@ public final class JdbcSingletons {
   }
 
   public static String processSql(Connection connection, String sql, boolean executed) {
-    return SQL_COMMENTER.processQuery(connection, sql, executed);
+    return sqlCommenter.processQuery(connection, sql, executed);
   }
 
   private JdbcSingletons() {}

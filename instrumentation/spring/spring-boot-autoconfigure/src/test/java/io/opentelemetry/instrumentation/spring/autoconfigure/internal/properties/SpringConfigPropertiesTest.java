@@ -45,7 +45,7 @@ class SpringConfigPropertiesTest {
           .withPropertyValues(
               "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none");
 
-  public static Stream<Arguments> headerKeys() {
+  static Stream<Arguments> headerKeys() {
     return Arrays.stream(
             new String[] {
               "otel.exporter.otlp.traces.headers",
@@ -111,7 +111,7 @@ class SpringConfigPropertiesTest {
                     .containsExactly(entry("a", "1"), entry("b", "2")));
   }
 
-  public static Stream<Arguments> listProperties() {
+  static Stream<Arguments> listProperties() {
     return Stream.of(
         Arguments.of("otel.experimental.resource.disabled.keys", asList("a", "b")),
         Arguments.of("otel.propagators", asList("baggage", "b3")),
@@ -166,7 +166,7 @@ class SpringConfigPropertiesTest {
             });
   }
 
-  public static Stream<Arguments> propertyCachingTestCases() {
+  static Stream<Arguments> propertyCachingTestCases() {
     return Stream.of(
         // property, typeClass, assertion
         Arguments.of(

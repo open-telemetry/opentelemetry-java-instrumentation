@@ -4,7 +4,7 @@ plugins {
 
 muzzle {
   pass {
-    coreJdk()
+    coreJdk.set(true)
   }
 }
 
@@ -43,7 +43,7 @@ tasks {
       includeTestsMatching("ConfiguredTraceAnnotationsTest")
     }
     include("**/ConfiguredTraceAnnotationsTest.*")
-    jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.extannotations.OuterClass\$InterestingMethod")
+    jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.external.annotations.OuterClass\$InterestingMethod")
   }
 
   val testDeclarativeConfigInclude by registering(Test::class) {
@@ -55,7 +55,7 @@ tasks {
     }
     include("**/ConfiguredTraceAnnotationsTest.*")
     jvmArgs(
-      "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config-include.yaml"
+      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config-include.yaml"
     )
   }
 
@@ -68,7 +68,7 @@ tasks {
     }
     include("**/TracedMethodsExclusionTest.*")
     jvmArgs(
-      "-Dotel.instrumentation.external-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.extannotations.TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
+      "-Dotel.instrumentation.external-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.external.annotations.TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
     )
   }
 
@@ -81,7 +81,7 @@ tasks {
     }
     include("**/TracedMethodsExclusionTest.*")
     jvmArgs(
-      "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config-exclude-methods.yaml"
+      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config-exclude-methods.yaml"
     )
   }
 

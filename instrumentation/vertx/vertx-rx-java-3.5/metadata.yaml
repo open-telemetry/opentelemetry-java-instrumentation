@@ -1,0 +1,7 @@
+display_name: Vert.x RxJava
+description: >
+  This instrumentation enables context propagation for Vert.x RxJava 2 reactive streams, it does
+  not emit any telemetry on its own.
+library_link: https://vertx.io/docs/vertx-rx/java/
+features:
+  - CONTEXT_PROPAGATION

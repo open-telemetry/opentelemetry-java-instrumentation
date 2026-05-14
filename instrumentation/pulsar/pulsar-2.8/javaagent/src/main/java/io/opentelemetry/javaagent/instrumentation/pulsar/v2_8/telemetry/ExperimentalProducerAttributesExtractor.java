@@ -15,8 +15,8 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.common.api.proto.MessageMetadata;
 
-enum ExperimentalProducerAttributesExtractor implements AttributesExtractor<PulsarRequest, Void> {
-  INSTANCE;
+final class ExperimentalProducerAttributesExtractor
+    implements AttributesExtractor<PulsarRequest, Void> {
 
   private static final AttributeKey<String> MESSAGE_TYPE =
       AttributeKey.stringKey("messaging.pulsar.message.type");

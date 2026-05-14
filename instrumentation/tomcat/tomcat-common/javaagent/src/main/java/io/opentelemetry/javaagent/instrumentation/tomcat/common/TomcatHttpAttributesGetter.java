@@ -19,7 +19,7 @@ import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.MimeHeaders;
 
-public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
+class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
   @Override
   public String getHttpRequestMethod(Request request) {
@@ -27,7 +27,6 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
   }
 
   @Override
-  @Nullable
   public String getUrlScheme(Request request) {
     MessageBytes schemeMessageBytes = request.scheme();
     return schemeMessageBytes.isNull() ? "http" : messageBytesToString(schemeMessageBytes);
@@ -61,7 +60,6 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
   }
 
   @Override
-  @Nullable
   public Integer getHttpResponseStatusCode(
       Request request, Response response, @Nullable Throwable error) {
     return response.getStatus();
@@ -100,7 +98,6 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
   }
 
   @Override
-  @Nullable
   public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, request);
     return request.getRemotePort();
@@ -113,7 +110,6 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
     return messageBytesToString(request.localAddr());
   }
 
-  @Nullable
   @Override
   public Integer getNetworkLocalPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_LOCALPORT_ATTRIBUTE, request);

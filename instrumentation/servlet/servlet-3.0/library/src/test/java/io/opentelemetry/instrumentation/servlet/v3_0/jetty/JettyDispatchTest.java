@@ -17,8 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JettyDispatchTest extends BaseJettyDispatchTest {
   @RegisterExtension
-  protected static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forLibrary();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
 
   @Override
   protected void configureServer(ServletContextHandler servletContext) {

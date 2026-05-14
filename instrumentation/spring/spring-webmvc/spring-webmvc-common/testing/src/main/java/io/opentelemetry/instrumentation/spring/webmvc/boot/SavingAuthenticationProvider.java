@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 public class SavingAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
 
-  List<TestUserDetails> latestAuthentications = new ArrayList<>();
+  final List<TestUserDetails> latestAuthentications = new ArrayList<>();
 
   @Override
   protected void additionalAuthenticationChecks(

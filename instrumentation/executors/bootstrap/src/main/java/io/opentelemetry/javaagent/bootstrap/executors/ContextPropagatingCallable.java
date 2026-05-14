@@ -13,15 +13,15 @@ import java.util.concurrent.Callable;
 public final class ContextPropagatingCallable<T> implements Callable<T> {
 
   public static <T> boolean shouldDecorateCallable(Callable<T> task) {
-    // We wrap only lambdas' anonymous classes and if given object has not already been wrapped.
-    // Anonymous classes have '/' in class name which is not allowed in 'normal' classes.
-    // note: it is always safe to decorate lambdas since downstream code cannot be expecting a
-    // specific runnable implementation anyways
+    // We wrap only lambda-generated classes that have not already been wrapped.
+    // Lambda class names contain '/' which is not allowed in ordinary class names.
+    // Note: it is always safe to decorate lambdas since downstream code cannot be expecting a
+    // specific callable implementation anyway.
     return task.getClass().getName().contains("/") && !(task instanceof ContextPropagatingCallable);
   }
 
   public static <T> Callable<T> propagateContext(Callable<T> task, Context context) {
-    return new ContextPropagatingCallable<T>(task, context);
+    return new ContextPropagatingCallable<>(task, context);
   }
 
   private final Callable<T> delegate;

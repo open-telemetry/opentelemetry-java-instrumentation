@@ -24,7 +24,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-public class ServerInstrumentation implements TypeInstrumentation {
+class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.opentelemetry.testing.internal.armeria.server.Server");

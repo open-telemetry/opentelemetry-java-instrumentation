@@ -112,7 +112,7 @@ class PortAllocator {
     Closeable bind(int port) {
       try {
         return new ServerSocket(port);
-      } catch (IOException exception) {
+      } catch (IOException ignored) {
         return null;
       }
     }
@@ -120,7 +120,7 @@ class PortAllocator {
     boolean canBind(int port) {
       try (ServerSocket socket = new ServerSocket(port)) {
         return true;
-      } catch (IOException exception) {
+      } catch (IOException ignored) {
         return false;
       }
     }

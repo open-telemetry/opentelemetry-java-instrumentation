@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -101,7 +102,7 @@ public final class DbClientMetrics implements OperationListener {
     // Record returned rows metric if present
     Long rowCount =
         endAttributes.get(
-            io.opentelemetry.api.common.AttributeKey.longKey("db.response.returned_rows"));
+            longKey("db.response.returned_rows"));
     if (rowCount != null) {
       returnedRows.record(rowCount, attributes, context);
     }

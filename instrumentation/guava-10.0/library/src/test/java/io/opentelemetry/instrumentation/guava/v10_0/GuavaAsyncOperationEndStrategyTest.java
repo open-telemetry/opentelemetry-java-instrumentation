@@ -102,6 +102,7 @@ class GuavaAsyncOperationEndStrategyTest {
     strategy.end(instrumenter, context, "request", future, String.class);
     future.cancel(true);
 
+    verify(span).setAttribute(GuavaAsyncOperationEndStrategy.CANCELED_ATTRIBUTE_KEY, true);
     verify(instrumenter).end(context, "request", null, null);
   }
 

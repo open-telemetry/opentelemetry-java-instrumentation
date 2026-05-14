@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -66,15 +67,17 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     setAttributes(request, attributes::put);
   }
 
-  private static AttributeKey<List<String>> parameterAttributeKey(String headerName) {
+  private static AttributeKey<List<String>> parameterAttributeKey(String parameterName) {
     return parameterKeysCache.computeIfAbsent(
-        headerName, ServletRequestParametersExtractor::createKey);
+        parameterName, ServletRequestParametersExtractor::createKey);
   }
 
   private static AttributeKey<List<String>> createKey(String parameterName) {
-    // normalize parameter name similarly as is done with header names when header values are
-    // captured as span attributes
-    parameterName = parameterName.toLowerCase(Locale.ROOT);
+    if (!SemconvStability.v3Preview()) {
+      // normalize parameter name similarly as is done with header names when header values are
+      // captured as span attributes
+      parameterName = parameterName.toLowerCase(Locale.ROOT);
+    }
     String key = "servlet.request.parameter." + parameterName;
     return AttributeKey.stringArrayKey(key);
   }

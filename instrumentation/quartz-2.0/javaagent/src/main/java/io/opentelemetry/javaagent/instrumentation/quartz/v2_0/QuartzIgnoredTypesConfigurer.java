@@ -14,8 +14,8 @@ public class QuartzIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
   public void configure(IgnoredTypesBuilder builder) {
-    // Quartz executes jobs themselves in a synchronous way, there's no reason to propagate context
-    // between its scheduler threads.
+    // Quartz executes jobs synchronously, so there is no reason to propagate context between its
+    // scheduler threads.
     builder.ignoreTaskClass("org.quartz");
   }
 }

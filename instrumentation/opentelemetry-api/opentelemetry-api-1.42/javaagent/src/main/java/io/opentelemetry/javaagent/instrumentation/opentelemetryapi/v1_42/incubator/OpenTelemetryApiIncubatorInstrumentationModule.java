@@ -24,11 +24,13 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // EventLogger was removed in 1.47, including it here prevents the instrumentation from applying
-    // to 1.47
+    // this instrumentation module targets io.opentelemetry:opentelemetry-api-incubator
     return hasClassesNamed(
+        // added in 1.42
         "application.io.opentelemetry.api.common.Value",
+        // added in 1.42
         "application.io.opentelemetry.api.incubator.logs.ExtendedLogger",
+        // removed in 1.47
         "application.io.opentelemetry.api.incubator.events.EventLogger");
   }
 

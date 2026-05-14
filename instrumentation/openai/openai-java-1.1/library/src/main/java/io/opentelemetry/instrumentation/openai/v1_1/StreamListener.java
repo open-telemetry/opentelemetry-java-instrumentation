@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
@@ -97,7 +98,11 @@ final class StreamListener {
             .created(0)
             .model(model)
             .id(responseId)
-            .choices(choiceBuffers.stream().map(StreamedMessageBuffer::toChoice).collect(toList()));
+            .choices(
+                choiceBuffers.stream()
+                    .filter(Objects::nonNull)
+                    .map(StreamedMessageBuffer::toChoice)
+                    .collect(toList()));
 
     if (usage != null) {
       result.usage(usage);

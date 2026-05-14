@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -47,17 +48,19 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
+  @Nullable
   public String getRequestQueryString(HttpServletRequest request) {
     return request.getQueryString();
   }
 
   @Override
+  @Nullable
   public Object getRequestAttribute(HttpServletRequest request, String name) {
     return request.getAttribute(name);
   }
 
   @Override
-  public void setRequestAttribute(HttpServletRequest request, String name, Object value) {
+  public void setRequestAttribute(HttpServletRequest request, String name, @Nullable Object value) {
     request.setAttribute(name, value);
   }
 
@@ -92,6 +95,7 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
+  @Nullable
   public String getRequestHeader(HttpServletRequest request, String name) {
     return request.getHeader(name);
   }
@@ -104,7 +108,8 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
 
   @Override
   public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
-    return Collections.list(httpServletRequest.getHeaderNames());
+    Enumeration<String> names = httpServletRequest.getHeaderNames();
+    return names == null ? emptyList() : Collections.list(names);
   }
 
   @Override
@@ -120,11 +125,13 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
+  @Nullable
   public String getRequestPathInfo(HttpServletRequest request) {
     return request.getPathInfo();
   }
 
   @Override
+  @Nullable
   public Principal getRequestUserPrincipal(HttpServletRequest request) {
     return request.getUserPrincipal();
   }

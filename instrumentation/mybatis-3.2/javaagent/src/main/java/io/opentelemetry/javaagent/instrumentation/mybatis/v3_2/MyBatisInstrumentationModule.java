@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class MyBatisInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class MyBatisInstrumentationModule extends InstrumentationModule {
 
   public MyBatisInstrumentationModule() {
     super("mybatis", "mybatis-3.2");
@@ -29,10 +27,5 @@ public class MyBatisInstrumentationModule extends InstrumentationModule
   @Override
   public boolean defaultEnabled() {
     return false;
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

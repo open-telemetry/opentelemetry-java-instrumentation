@@ -11,24 +11,24 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
 import org.jboss.resteasy.reactive.server.mapping.RuntimeResource;
 import org.jboss.resteasy.reactive.server.mapping.URITemplate;
 
 final class ResteasyReactiveSpanName {
   // remember previous path to handle sub path locators
-  private static final VirtualField<ResteasyReactiveRequestContext, String> pathField =
+  private static final VirtualField<ResteasyReactiveRequestContext, String> PATH_FIELD =
       VirtualField.find(ResteasyReactiveRequestContext.class, String.class);
 
-  public static final ResteasyReactiveSpanName INSTANCE = new ResteasyReactiveSpanName();
-
-  void updateServerSpanName(ResteasyReactiveRequestContext requestContext) {
+  static void updateServerSpanName(ResteasyReactiveRequestContext requestContext) {
     Context context = Context.current();
     String jaxRsName = calculateJaxRsName(requestContext);
     HttpServerRoute.update(context, HttpServerRouteSource.NESTED_CONTROLLER, jaxRsName);
-    pathField.set(requestContext, jaxRsName);
+    PATH_FIELD.set(requestContext, jaxRsName);
   }
 
+  @Nullable
   private static String calculateJaxRsName(ResteasyReactiveRequestContext requestContext) {
     RuntimeResource target = requestContext.getTarget();
     if (target == null) {
@@ -40,7 +40,7 @@ final class ResteasyReactiveSpanName {
     if (name.isEmpty()) {
       return null;
     }
-    String existingPath = pathField.get(requestContext);
+    String existingPath = PATH_FIELD.get(requestContext);
     return existingPath == null || existingPath.isEmpty() ? name : existingPath + name;
   }
 

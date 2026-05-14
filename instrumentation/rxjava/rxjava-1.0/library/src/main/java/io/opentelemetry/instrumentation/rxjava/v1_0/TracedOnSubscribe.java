@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.rxjava.v1_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.concurrent.atomic.AtomicReference;
 import rx.Observable;
 import rx.OpenTelemetryTracingUtil;
 import rx.Subscriber;
@@ -41,8 +42,15 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
      */
 
     Context context = instrumenter.start(parentContext, request);
+    AtomicReference<Context> contextRef = new AtomicReference<>(context);
     try (Scope ignored = context.makeCurrent()) {
-      delegate.call(new TracedSubscriber<>(subscriber, instrumenter, context, request));
+      delegate.call(new TracedSubscriber<>(subscriber, instrumenter, contextRef, request));
+    } catch (Throwable t) {
+      Context spanContext = contextRef.getAndSet(null);
+      if (spanContext != null) {
+        instrumenter.end(spanContext, request, null, t);
+      }
+      throw t;
     }
   }
 }

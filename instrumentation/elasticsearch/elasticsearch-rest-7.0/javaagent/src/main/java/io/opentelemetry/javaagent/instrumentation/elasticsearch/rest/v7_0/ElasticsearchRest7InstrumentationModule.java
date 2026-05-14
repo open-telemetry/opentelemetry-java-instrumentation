@@ -25,12 +25,10 @@ public class ElasticsearchRest7InstrumentationModule extends InstrumentationModu
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Class `org.elasticsearch.client.RestClient$InternalRequest` introduced in 7.0.0.
-    // Since Elasticsearch client version 8.10, the ES client comes with a native OTel
-    // instrumentation that introduced the class
-    // `co.elastic.clients.transport.instrumentation.Instrumentation`.
-    // Disabling agent instrumentation for those cases.
+    // added in 7.0.0
     return hasClassesNamed("org.elasticsearch.client.RestClient$InternalRequest")
+        // artifact presence gate (provides native OTel support)
+        // added in co.elastic.clients:elasticsearch-java 8.10
         .and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
   }
 
@@ -42,10 +40,5 @@ public class ElasticsearchRest7InstrumentationModule extends InstrumentationModu
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RestClientInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

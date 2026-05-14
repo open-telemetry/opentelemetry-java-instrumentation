@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
-public final class ApplicationSpanBuilder140Incubator extends ApplicationSpanBuilder
+public class ApplicationSpanBuilder140Incubator extends ApplicationSpanBuilder
     implements application.io.opentelemetry.api.incubator.trace.ExtendedSpanBuilder {
 
   private final ExtendedSpanBuilder agentBuilder;
@@ -121,6 +121,7 @@ public final class ApplicationSpanBuilder140Incubator extends ApplicationSpanBui
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.trace.ExtendedSpanBuilder setParentFrom(
       application.io.opentelemetry.context.propagation.ContextPropagators contextPropagators,
       Map<String, String> map) {

@@ -20,7 +20,12 @@ import javax.sql.DataSource;
 /** A builder of {@link JdbcTelemetry}. */
 public final class JdbcTelemetryBuilder {
 
+  static {
+    Experimental.internalSetSqlCommenterBuilder(builder -> builder.sqlCommenterBuilder);
+  }
+
   private final OpenTelemetry openTelemetry;
+  private final SqlCommenterBuilder sqlCommenterBuilder = SqlCommenter.builder();
   private boolean dataSourceInstrumenterEnabled = false;
   private boolean statementInstrumenterEnabled = true;
   private boolean querySanitizationEnabled = true;
@@ -28,11 +33,6 @@ public final class JdbcTelemetryBuilder {
   private boolean captureQueryParameters = false;
   private boolean captureRowCount = false;
   private long rowCountLimit = 10000L;
-  private final SqlCommenterBuilder sqlCommenterBuilder = SqlCommenter.builder();
-
-  static {
-    Experimental.internalSetSqlCommenterBuilder(builder -> builder.sqlCommenterBuilder);
-  }
 
   JdbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

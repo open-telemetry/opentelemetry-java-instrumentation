@@ -38,9 +38,10 @@ public record FileManager(String rootDir) {
       return null;
     }
 
+    String normalized = normalizeSeparators(filePath);
     String instrumentationSegment = "/instrumentation/";
-    int startIndex = filePath.indexOf(instrumentationSegment) + instrumentationSegment.length();
-    String[] parts = filePath.substring(startIndex).split("/");
+    int startIndex = normalized.indexOf(instrumentationSegment) + instrumentationSegment.length();
+    String[] parts = normalized.substring(startIndex).split("/");
 
     if (parts.length < 2) {
       return null;
@@ -58,23 +59,28 @@ public record FileManager(String rootDir) {
     if (filePath == null || filePath.isEmpty()) {
       return false;
     }
+    String normalized = normalizeSeparators(filePath);
     String instrumentationSegment = "instrumentation/";
 
-    if (!filePath.contains(instrumentationSegment)) {
+    if (!normalized.contains(instrumentationSegment)) {
       return false;
     }
 
-    int javaagentCount = filePath.split("/javaagent", -1).length - 1;
+    int javaagentCount = normalized.split("/javaagent", -1).length - 1;
     if (javaagentCount > 1) {
       return false;
     }
 
-    if (filePath.matches(
+    if (normalized.matches(
         ".*(/test/|/testing|/build/|-common/|-common-|common-|/compile-stub/|-testing|bootstrap/src).*")) {
       return false;
     }
 
-    return filePath.endsWith("javaagent") || filePath.endsWith("library");
+    return normalized.endsWith("javaagent") || normalized.endsWith("library");
+  }
+
+  private static String normalizeSeparators(String filePath) {
+    return filePath.replace('\\', '/');
   }
 
   public List<String> findBuildGradleFiles(String instrumentationDirectory) {
@@ -85,13 +91,37 @@ public record FileManager(String rootDir) {
           .filter(
               path ->
                   path.getFileName().toString().equals("build.gradle.kts")
-                      && !path.toString().contains("/testing/"))
+                      && !normalizeSeparators(path.toString()).contains("/testing/")
+                      && !isInNestedInstrumentationModule(path, rootPath))
           .map(Path::toString)
           .collect(toList());
     } catch (IOException e) {
       logger.severe("Error traversing directory: " + e.getMessage());
       return new ArrayList<>();
     }
+  }
+
+  /**
+   * Checks if a file path is inside a nested instrumentation module. A nested module is identified
+   * by having a javaagent/ or library/ directory that is NOT at the root level.
+   *
+   * @param filePath The file path to check
+   * @param rootPath The root instrumentation directory path
+   * @return true if the file is in a nested instrumentation module
+   */
+  private static boolean isInNestedInstrumentationModule(Path filePath, Path rootPath) {
+    Path relativePath = rootPath.relativize(filePath);
+
+    // Find the first javaagent or library segment
+    for (int i = 0; i < relativePath.getNameCount(); i++) {
+      String segment = relativePath.getName(i).toString();
+      if (segment.equals("javaagent") || segment.equals("library")) {
+        // If javaagent/library is not the first segment, it's a nested module
+        return i > 0;
+      }
+    }
+
+    return false;
   }
 
   @Nullable

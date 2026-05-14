@@ -21,7 +21,7 @@ public class SubscriberWrapper<T> implements Subscriber<T> {
     // AbortingSubscriber is package private
     try {
       return Class.forName("com.linecorp.armeria.common.stream.AbortingSubscriber");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }
@@ -30,7 +30,7 @@ public class SubscriberWrapper<T> implements Subscriber<T> {
     // NoopSubscriber is package private
     try {
       return Class.forName("com.linecorp.armeria.common.stream.NoopSubscriber");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       return null;
     }
   }

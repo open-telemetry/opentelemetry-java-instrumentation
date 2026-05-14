@@ -32,13 +32,13 @@ public class StepBuilderInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("build").and(isPublic()).and(takesArguments(0)),
-        this.getClass().getName() + "$BuildAdvice");
+        getClass().getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This AbstractTaskletStepBuilder<?> stepBuilder) {
       stepBuilder.listener(new TracingChunkExecutionListener(stepBuilder.getClass()));
     }

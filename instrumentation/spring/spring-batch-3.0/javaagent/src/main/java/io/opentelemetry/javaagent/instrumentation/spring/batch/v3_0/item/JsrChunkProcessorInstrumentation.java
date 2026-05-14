@@ -30,25 +30,25 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isProtected().and(named("doProvide")).and(takesArguments(2)),
-        this.getClass().getName() + "$ProvideAdvice");
+        getClass().getName() + "$ProvideAdvice");
     transformer.applyAdviceToMethod(
         isProtected().and(named("doTransform")).and(takesArguments(1)),
-        this.getClass().getName() + "$TransformAdvice");
+        getClass().getName() + "$TransformAdvice");
     transformer.applyAdviceToMethod(
         isProtected().and(named("doPersist")).and(takesArguments(2)),
-        this.getClass().getName() + "$PersistAdvice");
+        getClass().getName() + "$PersistAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ProvideAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter() {
       return AdviceScope.enter(ITEM_OPERATION_READ);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable thrown,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
@@ -62,12 +62,12 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
   public static class TransformAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter() {
       return AdviceScope.enter(ITEM_OPERATION_PROCESS);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable thrown,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
@@ -81,12 +81,12 @@ public class JsrChunkProcessorInstrumentation implements TypeInstrumentation {
   public static class PersistAdvice {
 
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter() {
       return AdviceScope.enter(ITEM_OPERATION_WRITE);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable thrown,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

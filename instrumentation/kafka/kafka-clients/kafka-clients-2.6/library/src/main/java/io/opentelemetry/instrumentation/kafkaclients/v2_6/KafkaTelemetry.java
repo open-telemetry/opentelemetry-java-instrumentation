@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
@@ -41,11 +42,23 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
+@SuppressWarnings("unchecked") // casting Proxy.newProxyInstance result in wrap methods
 public final class KafkaTelemetry {
-
   private final OpenTelemetry openTelemetry;
   private final KafkaProducerTelemetry producerTelemetry;
   private final KafkaConsumerTelemetry consumerTelemetry;
+
+  /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
+  public static KafkaTelemetry create(OpenTelemetry openTelemetry) {
+    return builder(openTelemetry).build();
+  }
+
+  /**
+   * Returns a new {@link KafkaTelemetryBuilder} configured with the given {@link OpenTelemetry}.
+   */
+  public static KafkaTelemetryBuilder builder(OpenTelemetry openTelemetry) {
+    return new KafkaTelemetryBuilder(openTelemetry);
+  }
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
@@ -63,20 +76,7 @@ public final class KafkaTelemetry {
         new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
   }
 
-  /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
-  public static KafkaTelemetry create(OpenTelemetry openTelemetry) {
-    return builder(openTelemetry).build();
-  }
-
-  /**
-   * Returns a new {@link KafkaTelemetryBuilder} configured with the given {@link OpenTelemetry}.
-   */
-  public static KafkaTelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new KafkaTelemetryBuilder(openTelemetry);
-  }
-
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */
-  @SuppressWarnings("unchecked")
   public <K, V> Producer<K, V> wrap(Producer<K, V> producer) {
     return (Producer<K, V>)
         Proxy.newProxyInstance(
@@ -95,18 +95,21 @@ public final class KafkaTelemetry {
                         ? (Callback) args[1]
                         : null;
                 return producerTelemetry.buildAndInjectSpan(
-                    record, producer, callback, producer::send);
+                    record,
+                    producer,
+                    callback,
+                    producer::send,
+                    KafkaUtil.extractBootstrapServers(producer));
               }
               try {
                 return method.invoke(producer, args);
-              } catch (InvocationTargetException exception) {
-                throw exception.getCause();
+              } catch (InvocationTargetException e) {
+                throw e.getCause();
               }
             });
   }
 
   /** Returns a decorated {@link Consumer} that consumes spans for each received message. */
-  @SuppressWarnings("unchecked")
   public <K, V> Consumer<K, V> wrap(Consumer<K, V> consumer) {
     return (Consumer<K, V>)
         Proxy.newProxyInstance(
@@ -117,8 +120,12 @@ public final class KafkaTelemetry {
               Timer timer = "poll".equals(method.getName()) ? Timer.start() : null;
               try {
                 result = method.invoke(consumer, args);
-              } catch (InvocationTargetException exception) {
-                throw exception.getCause();
+              } catch (InvocationTargetException e) {
+                Throwable error = e.getCause();
+                if ("poll".equals(method.getName())) {
+                  consumerTelemetry.buildAndFinishErrorSpan(consumer, timer, error);
+                }
+                throw error;
               }
               // ConsumerRecords<K, V> poll(long timeout)
               // ConsumerRecords<K, V> poll(Duration duration)

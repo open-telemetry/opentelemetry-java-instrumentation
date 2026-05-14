@@ -38,8 +38,7 @@ class EmbeddingsTest extends AbstractEmbeddingsTest {
   }
 
   @Override
-  protected final List<Consumer<SpanDataAssert>> maybeWithTransportSpan(
-      Consumer<SpanDataAssert> span) {
+  protected List<Consumer<SpanDataAssert>> maybeWithTransportSpan(Consumer<SpanDataAssert> span) {
     List<Consumer<SpanDataAssert>> result = new ArrayList<>();
     result.add(span);
     // Do a very simple assertion since the telemetry is not part of this library.

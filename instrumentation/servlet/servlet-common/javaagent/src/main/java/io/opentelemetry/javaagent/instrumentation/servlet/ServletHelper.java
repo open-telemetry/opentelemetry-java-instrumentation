@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
+import javax.annotation.Nullable;
 
 public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST, RESPONSE> {
   public static final String CONTEXT_ATTRIBUTE = ServletHelper.class.getName() + ".Context";
@@ -26,10 +27,10 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
       ServletRequestContext<REQUEST> requestContext,
       REQUEST request,
       RESPONSE response,
-      Throwable throwable,
+      @Nullable Throwable throwable,
       boolean topLevel,
-      Context context,
-      Scope scope) {
+      @Nullable Context context,
+      @Nullable Scope scope) {
 
     if (scope != null) {
       scope.close();
@@ -120,10 +121,12 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
     ServletAsyncContext.recordAsyncException(context, throwable);
   }
 
+  @Nullable
   public Throwable getAsyncException(Context context) {
     return ServletAsyncContext.getAsyncException(context, null);
   }
 
+  @Nullable
   public Context getAsyncListenerContext(Context context) {
     return ServletAsyncContext.getAsyncListenerContext(context);
   }

@@ -104,7 +104,7 @@ object PekkoHttpTestWebServer {
   private var binding: ServerBinding = null
 
   def start(port: Int): Unit = synchronized {
-    if (null == binding) {
+    if (binding == null) {
       import scala.concurrent.duration._
       binding =
         Await.result(Http().bindAndHandle(route, "localhost", port), 10.seconds)
@@ -112,7 +112,7 @@ object PekkoHttpTestWebServer {
   }
 
   def stop(): Unit = synchronized {
-    if (null != binding) {
+    if (binding != null) {
       binding.unbind()
       system.terminate()
       binding = null

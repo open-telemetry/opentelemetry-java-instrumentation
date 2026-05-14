@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 /** Entrypoint for instrumenting Spring {@link org.springframework.web.client.RestTemplate}. */
 public final class SpringWebTelemetry {
+  private final Instrumenter<HttpRequest, ClientHttpResponse> instrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static SpringWebTelemetry create(OpenTelemetry openTelemetry) {
@@ -24,8 +25,6 @@ public final class SpringWebTelemetry {
   public static SpringWebTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringWebTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<HttpRequest, ClientHttpResponse> instrumenter;
 
   SpringWebTelemetry(Instrumenter<HttpRequest, ClientHttpResponse> instrumenter) {
     this.instrumenter = instrumenter;

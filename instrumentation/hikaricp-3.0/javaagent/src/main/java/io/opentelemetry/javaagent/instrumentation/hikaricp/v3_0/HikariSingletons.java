@@ -10,7 +10,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.hikaricp.v3_0.HikariTelemetry;
 import javax.annotation.Nullable;
 
-public final class HikariSingletons {
+public class HikariSingletons {
 
   private static final HikariTelemetry hikariTelemetry =
       HikariTelemetry.create(GlobalOpenTelemetry.get());

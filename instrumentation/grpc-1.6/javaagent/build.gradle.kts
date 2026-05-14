@@ -28,17 +28,38 @@ dependencies {
   testImplementation(project(":instrumentation:grpc-1.6:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("metadataConfig", "otel.instrumentation.grpc.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
+  }
+
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     // The agent context debug mechanism isn't compatible with the bridge approach which may add a
     // gRPC context to the root.
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.client.request=some-client-key")
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.server.request=some-server-key")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
     // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
@@ -49,49 +70,7 @@ tasks {
       !it.absolutePath.contains("opentelemetry-grpc-1.6")
     }
 
-    systemProperty("collectMetadata", collectMetadata)
-  }
-
-  val testExperimental by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
-    // breaks the tests
-    classpath = classpath.filter {
-      !it.absolutePath.contains("opentelemetry-grpc-1.6")
-    }
-
-    systemProperty("metadataConfig", "otel.instrumentation.grpc.experimental-span-attributes=true")
-    jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
-    // breaks the tests
-    classpath = classpath.filter {
-      !it.absolutePath.contains("opentelemetry-grpc-1.6")
-    }
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
-  }
-
-  val testBothSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
-    // breaks the tests
-    classpath = classpath.filter {
-      !it.absolutePath.contains("opentelemetry-grpc-1.6")
-    }
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   check {
@@ -99,7 +78,7 @@ tasks {
   }
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {
@@ -111,7 +90,7 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
     }
   }
 
-  if (findProperty("denyUnsafe") as Boolean) {
+  if (otelProps.denyUnsafe) {
     tasks.withType<Test>().configureEach {
       enabled = false
     }

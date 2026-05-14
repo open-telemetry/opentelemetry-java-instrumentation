@@ -17,17 +17,15 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 // kafka 4.1 requires java 11
-if (latestDepTest) {
+if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }

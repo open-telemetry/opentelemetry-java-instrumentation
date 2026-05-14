@@ -15,6 +15,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 /** Entrypoint for instrumenting Jetty client. */
 public final class JettyClientTelemetry {
+  private final Instrumenter<Request, Response> instrumenter;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static JettyClientTelemetry create(OpenTelemetry openTelemetry) {
@@ -26,8 +27,6 @@ public final class JettyClientTelemetry {
   public static JettyClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new JettyClientTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<Request, Response> instrumenter;
 
   JettyClientTelemetry(Instrumenter<Request, Response> instrumenter) {
     this.instrumenter = instrumenter;

@@ -79,7 +79,7 @@ class MissingTypeTest {
     try {
       Class.forName("com.google.common.base.Joiner");
       fail("guava should not be available during runtime");
-    } catch (ClassNotFoundException exception) {
+    } catch (ClassNotFoundException ignored) {
       // ignore
     }
   }

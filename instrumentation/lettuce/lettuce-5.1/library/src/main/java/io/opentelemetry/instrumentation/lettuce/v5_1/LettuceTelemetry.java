@@ -12,8 +12,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /** Entrypoint for instrumenting Lettuce or clients. */
 public final class LettuceTelemetry {
-
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.1";
+
+  private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
+  private final RedisCommandSanitizer sanitizer;
+  private final boolean encodingEventsEnabled;
 
   /** Returns a new {@link LettuceTelemetry} configured with the given {@link OpenTelemetry}. */
   public static LettuceTelemetry create(OpenTelemetry openTelemetry) {
@@ -26,10 +29,6 @@ public final class LettuceTelemetry {
   public static LettuceTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new LettuceTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
-  private final RedisCommandSanitizer sanitizer;
-  private final boolean encodingEventsEnabled;
 
   LettuceTelemetry(
       Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
