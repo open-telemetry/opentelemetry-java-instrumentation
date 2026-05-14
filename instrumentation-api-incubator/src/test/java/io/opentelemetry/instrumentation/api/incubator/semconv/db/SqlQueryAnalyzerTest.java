@@ -82,15 +82,58 @@ class SqlQueryAnalyzerTest {
         // SAP HANA CONNECT and CREATE USER statements can contain unquoted password
         // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
         Arguments.of("CONNECT user PASSWORD Password1", "CONNECT ?", null),
-        Arguments.of("CREATE USER new_user PASSWORD Password1", "CREATE USER ?", "CREATE"),
-        Arguments.of("ALTER USER user PASSWORD Password1", "ALTER USER ?", "ALTER"),
+        Arguments.of(
+            "CREATE USER new_user PASSWORD Password1",
+            "CREATE USER new_user PASSWORD ?",
+            "CREATE USER new_user"),
+        Arguments.of(
+            "ALTER USER user PASSWORD Password1",
+            "ALTER USER user PASSWORD ?",
+            "ALTER USER"),
+        // Other SAP HANA administrative statements can contain unquoted or double-quoted passwords
+        // after a PASSWORD keyword.
+        Arguments.of(
+            "VALIDATE USER user PASSWORD Password1", "VALIDATE USER user PASSWORD ?", null),
+        Arguments.of("CHECK USER user PASSWORD \"Password1\"", "CHECK USER user PASSWORD ?", null),
+        Arguments.of(
+            "CREATE DATABASE db SYSTEM USER PASSWORD Password1",
+            "CREATE DATABASE db SYSTEM USER PASSWORD ?",
+            "CREATE DATABASE db"),
+        Arguments.of(
+            "ALTER SYSTEM SET SECURE STORE BACKUP PASSWORD \"Password1\"",
+            "ALTER SYSTEM SET SECURE STORE BACKUP PASSWORD ?",
+            "ALTER SYSTEM"),
+        Arguments.of(
+            "EXPORT table AS BINARY ENCRYPTION PASSWORD Password1",
+            "EXPORT table AS BINARY ENCRYPTION PASSWORD ?",
+            null),
+        Arguments.of(
+            "RECOVER ENCRYPTION ROOT KEYS USING 'backup' PASSWORD Password1",
+            "RECOVER ENCRYPTION ROOT KEYS USING ? PASSWORD ?",
+            null),
         // Oracle CREATE USER statement can contain unquoted password
         // https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_8003.htm
-        Arguments.of("CREATE USER new_user IDENTIFIED BY Password1", "CREATE USER ?", "CREATE"),
         Arguments.of(
-            "ALTER USER user IDENTIFIED BY Password1 REPLACE Password2", "ALTER USER ?", "ALTER"),
-        // field named "connect" does not trigger sanitization
-        Arguments.of("SELECT connect FROM TABLE", "SELECT connect FROM TABLE", "SELECT TABLE"));
+            "CREATE USER new_user IDENTIFIED BY Password1",
+            "CREATE USER new_user IDENTIFIED BY ?",
+            "CREATE USER new_user"),
+        Arguments.of(
+            "ALTER USER user IDENTIFIED BY Password1 REPLACE Password2",
+            "ALTER USER user IDENTIFIED BY ?",
+            "ALTER USER"),
+        Arguments.of(
+            "GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY Password1",
+            "GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY ?",
+            "GRANT"),
+        // field names do not trigger sensitive statement sanitization
+        Arguments.of("SELECT connect FROM TABLE", "SELECT connect FROM TABLE", "SELECT TABLE"),
+        Arguments.of("SELECT password FROM users", "SELECT password FROM users", "SELECT users"),
+        Arguments.of(
+            "SELECT identified_by FROM users", "SELECT identified_by FROM users", "SELECT users"),
+        Arguments.of(
+            "UPDATE users SET password = \"Password1\"",
+            "UPDATE users SET password = ?",
+            "UPDATE users"));
   }
 
   @Test

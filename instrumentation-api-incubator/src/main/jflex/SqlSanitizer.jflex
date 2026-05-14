@@ -127,6 +127,16 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
+  private boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+    return !insideComment
+        && !(operation instanceof Select)
+        && !(operation instanceof Insert)
+        && !(operation instanceof Delete)
+        && !(operation instanceof Update)
+        && !(operation instanceof Merge)
+        && !(operation instanceof Call);
+  }
+
   private static abstract class Operation {
     String mainIdentifier = null;
 
@@ -493,13 +503,23 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "USER" {
+          if (!insideComment && !extractionDone && operation.expectingOperationTarget()) {
+            extractionDone = operation.handleOperationTarget(yytext());
+          }
           appendCurrentFragment();
-          if (!insideComment && (operation instanceof Create || operation instanceof Alter)) {
-            // CREATE USER and ALTER USER statements could contain an unquoted password. We are not
-            // going to try figuring out whether that is the case or not, just sanitize the whole
-            // statement.
-            // https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_8003.htm
-            // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
+          if (isOverLimit()) return YYEOF;
+      }
+  "PASSWORD" {
+          appendCurrentFragment();
+          if (shouldSanitizeRemainderAfterSensitivePhrase()) {
+            builder.append(" ?");
+            return YYEOF;
+          }
+          if (isOverLimit()) return YYEOF;
+      }
+  "IDENTIFIED" {WHITESPACE}+ "BY" {
+          appendCurrentFragment();
+          if (shouldSanitizeRemainderAfterSensitivePhrase()) {
             builder.append(" ?");
             return YYEOF;
           }
