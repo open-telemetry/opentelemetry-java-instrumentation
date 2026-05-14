@@ -417,3 +417,4 @@ runtime-telemetry:javaagent
 runtime-telemetry:jfr-testing
 runtime-telemetry:library
 runtime-telemetry:testing
+rxjava-1.0:library
