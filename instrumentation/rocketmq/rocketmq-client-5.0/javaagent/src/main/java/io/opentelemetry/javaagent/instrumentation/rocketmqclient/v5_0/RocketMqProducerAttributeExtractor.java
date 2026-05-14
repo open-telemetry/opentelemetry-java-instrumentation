@@ -23,6 +23,7 @@ import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 class RocketMqProducerAttributeExtractor
     implements AttributesExtractor<PublishingMessageImpl, SendReceiptImpl> {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, PublishingMessageImpl message) {
