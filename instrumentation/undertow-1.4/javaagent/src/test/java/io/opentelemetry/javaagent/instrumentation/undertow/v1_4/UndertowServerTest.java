@@ -195,10 +195,14 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
     return false;
   }
 
+  private URI requestBaseUri() {
+    return useHttp2() ? address : h1Address;
+  }
+
   @DisplayName("test send response")
   @Test
   void testSendResponse() {
-    URI requestUri = h1Address.resolve("sendResponse");
+    URI requestUri = requestBaseUri().resolve("sendResponse");
     URI uri = address.resolve("sendResponse");
     AggregatedHttpResponse response = client.get(requestUri.toString()).aggregate().join();
 
@@ -236,7 +240,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
   @Test
   @DisplayName("test send response with exception")
   void testSendResponseWithException() {
-    URI requestUri = h1Address.resolve("sendResponseWithException");
+    URI requestUri = requestBaseUri().resolve("sendResponseWithException");
     URI uri = address.resolve("sendResponseWithException");
     AggregatedHttpResponse response = client.get(requestUri.toString()).aggregate().join();
 
