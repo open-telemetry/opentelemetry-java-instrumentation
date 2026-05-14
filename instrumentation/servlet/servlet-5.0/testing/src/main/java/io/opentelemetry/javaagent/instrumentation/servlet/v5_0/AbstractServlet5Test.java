@@ -35,7 +35,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttpServerTest<SERVER> {
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   public static final ServerEndpoint HTML_PRINT_WRITER =
       new ServerEndpoint(
@@ -135,14 +136,14 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
     switch (endpoint.name()) {
       case "REDIRECT":
         SpanDataAssert spanDataAssert =
-            span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendRedirect"))
+            span.satisfies(spanData -> assertThat(spanData.getName()).matches(".*\\.sendRedirect"))
                 .hasKind(SpanKind.INTERNAL);
         if (assertParentOnRedirect()) {
           return spanDataAssert.hasParent(parentSpan);
         }
         return spanDataAssert;
       case "ERROR":
-        return span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
+        return span.satisfies(spanData -> assertThat(spanData.getName()).matches(".*\\.sendError"))
             .hasKind(SpanKind.INTERNAL)
             .hasParent(parentSpan);
       default:
