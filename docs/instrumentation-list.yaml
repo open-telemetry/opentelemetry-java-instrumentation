@@ -7599,6 +7599,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -7729,6 +7730,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
