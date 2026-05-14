@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
-public class PulsarNetClientAttributesGetter implements ServerAttributesGetter<BasePulsarRequest> {
+final class PulsarNetClientAttributesGetter implements ServerAttributesGetter<BasePulsarRequest> {
 
   @Nullable
   @Override
