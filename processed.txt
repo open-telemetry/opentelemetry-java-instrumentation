@@ -357,3 +357,4 @@ oshi:javaagent
 oshi:library
 oshi:testing
 payara:javaagent
+pekko-actor-1.0:javaagent
