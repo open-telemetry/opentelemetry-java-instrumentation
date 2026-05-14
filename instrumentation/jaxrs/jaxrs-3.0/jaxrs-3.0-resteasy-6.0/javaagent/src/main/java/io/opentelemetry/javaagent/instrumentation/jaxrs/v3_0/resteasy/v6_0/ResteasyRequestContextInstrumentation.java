@@ -10,9 +10,9 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.resteasy.v6_
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.AbstractRequestContextInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.Jaxrs3HandlerData;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.Jaxrs3RequestContextHelper;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.common.AbstractRequestContextInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.common.Jaxrs3HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.common.Jaxrs3RequestContextHelper;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
