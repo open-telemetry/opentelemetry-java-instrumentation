@@ -9,7 +9,9 @@
 #      module is recorded as "processed" (so it isn't retried in a loop)
 #      AND logged as a failure for diagnostics.
 #   2. If the agent produced a cleanup patch, apply it onto the fixed
-#      otelbot/module-cleanup-wip branch and push.
+#      otelbot/module-cleanup-wip branch and push. If the agent succeeded
+#      without a cleanup patch, append an empty "Cleanup for <short> (empty)"
+#      commit so the eventual batch PR records the module as reviewed.
 #   3. If wip diff vs origin/main has reached FLUSH_THRESHOLD files OR
 #      the queue is empty, atomically rename wip to a
 #      otelbot/module-cleanup-batch-<run_id> branch and open the PR. The wip
@@ -133,6 +135,14 @@ if [ -n "$PATCH_SRC" ]; then
                 git push origin "$MEMORY_BRANCH" || true
             )
         fi
+    )
+elif [ "$AGENT_RESULT" = "success" ]; then
+    (
+        cd "$WIP_WT"
+        git commit --allow-empty \
+            -m "Cleanup for $SHORT (empty)" \
+            -m "No cleanup changes needed."
+        git push origin "$WIP_BRANCH"
     )
 fi
 
