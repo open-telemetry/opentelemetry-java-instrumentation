@@ -61,7 +61,7 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  private static final LoggingHandler LOGGING_HANDLER =
+  private static final LoggingHandler loggingHandler =
       new LoggingHandler(Netty40ServerTest.class, LogLevel.DEBUG);
 
   @Override
@@ -71,14 +71,14 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
     ServerBootstrap serverBootstrap =
         new ServerBootstrap()
             .group(eventLoopGroup)
-            .handler(LOGGING_HANDLER)
+            .handler(loggingHandler)
             .childHandler(
                 new ChannelInitializer<SocketChannel>() {
                   @Override
                   protected void initChannel(@NotNull SocketChannel socketChannel)
                       throws Exception {
                     ChannelPipeline pipeline = socketChannel.pipeline();
-                    pipeline.addFirst("logger", LOGGING_HANDLER);
+                    pipeline.addFirst("logger", loggingHandler);
                     pipeline.addLast(new HttpRequestDecoder());
                     pipeline.addLast(new HttpResponseEncoder());
                     pipeline.addLast(new HttpObjectAggregator(65536));

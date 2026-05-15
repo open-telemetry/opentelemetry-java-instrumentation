@@ -91,7 +91,6 @@ public class ApplicationSpanBuilder implements application.io.opentelemetry.api.
   @SuppressWarnings({"unchecked", "rawtypes"})
   public <T> application.io.opentelemetry.api.trace.SpanBuilder setAttribute(
       application.io.opentelemetry.api.common.AttributeKey<T> applicationKey, T value) {
-    @SuppressWarnings("unchecked") // toAgent uses raw AttributeKey
     AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
     if (agentKey != null) {
       // For VALUE type attributes, need to bridge the Value object as well
