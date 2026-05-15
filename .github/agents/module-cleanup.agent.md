@@ -464,24 +464,9 @@ Do not begin Phase 5 until Phase 4 is fully closed out.
    (`git checkout -- .`), do not commit or push. If any reverted items were recorded as
   `Needs Manual Fix`, emit the final output with those items. Otherwise report
    "No issues found." and exit.
-2. Commit all changes in a single commit. The subject line must always be
-   `Cleanup for <module>` where `<module>` is the short module name (e.g.,
-   `apache-elasticjob-3.0 javaagent`). The body is a bulleted list of changes:
-
-   ```
-   git add -A && git commit -m "Cleanup for <module>" -m "- <change 1>
-   - <change 2>"
-   ```
-
-   Example:
-
-   ```
-   Cleanup for alibaba-druid-1.0 javaagent
-
-   - Narrow test method throws clause to IOException
-   ```
-
-   Create exactly one commit for all fixes — do not commit incrementally.
+2. Leave all changes uncommitted. Do not run `git commit`, do not pass
+   `--author`, and do not change git `user.name` or `user.email`. The caller
+   exports the working-tree diff and creates the commit after this session.
 3. Produce the final output in the format requested by the caller.
 
 The caller must define the final output format or schema. Follow that request exactly:

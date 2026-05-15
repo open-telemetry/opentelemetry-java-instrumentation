@@ -147,16 +147,21 @@ fi
 if [ -n "$PATCH_SRC" ]; then
     (
         cd "$WIP_WT"
-        if git am --3way "$PATCH_SRC"; then
-            echo "Applied cleanup for $SHORT to $WIP_BRANCH"
-            git push origin "$WIP_BRANCH"
+        if git apply --3way --index "$PATCH_SRC"; then
+            if git diff --cached --quiet; then
+                echo "Patch for $SHORT applied cleanly but produced no changes."
+            else
+                git commit -m "Cleanup for $SHORT"
+                echo "Committed cleanup for $SHORT to $WIP_BRANCH"
+                git push origin "$WIP_BRANCH"
+            fi
         else
-            git am --abort 2>/dev/null || true
-            echo "FAILED to apply cleanup for $SHORT (rebase conflict)."
+            git reset --hard >/dev/null 2>&1 || true
+            echo "FAILED to apply cleanup for $SHORT (patch conflict)."
             ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
             (
                 cd "$MEM_WT"
-                echo -e "$SHORT\t$ts\tgit am failed (rebase conflict)" >> "$FAILED"
+                echo -e "$SHORT\t$ts\tgit apply failed (patch conflict)" >> "$FAILED"
                 git add -A
                 git commit -m "Record $SHORT as patch-conflict failure"
                 git push origin "$MEMORY_BRANCH" || true

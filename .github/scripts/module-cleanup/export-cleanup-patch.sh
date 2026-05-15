@@ -21,14 +21,23 @@ if ! git rev-parse --verify origin/main >/dev/null 2>&1; then
     git fetch origin main --depth=1
 fi
 
-if [ -z "$(git log origin/main..HEAD --oneline)" ]; then
+# The agent should leave changes uncommitted. If it accidentally created local
+# commits anyway, convert them back into working-tree changes before exporting.
+if [ -n "$(git rev-list --max-count=1 origin/main..HEAD)" ]; then
+    echo "Converting local cleanup commit(s) for $SHORT into a working-tree diff."
+    git reset --mixed origin/main >/dev/null
+else
+    git reset --mixed >/dev/null
+fi
+
+# Capture untracked files in the diff without staging their contents.
+git add --intent-to-add .
+
+if git diff --quiet; then
     echo "$SHORT" > "$OUT_DIR/cleanup.noop"
-    echo "No commit produced by agent for $SHORT; wrote $OUT_DIR/cleanup.noop."
+    echo "No changes produced by agent for $SHORT; wrote $OUT_DIR/cleanup.noop."
     exit 0
 fi
 
-# Capture every commit the persona made on top of main. The persona is
-# expected to produce exactly one commit per its Phase 5 contract, but
-# format-patch range-form is robust if it makes more than one.
-git format-patch origin/main..HEAD --stdout > "$OUT_DIR/cleanup.patch"
+git diff --binary > "$OUT_DIR/cleanup.patch"
 echo "Wrote cleanup patch for $SHORT to $OUT_DIR/cleanup.patch"
