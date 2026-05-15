@@ -77,22 +77,23 @@ class SqlQueryAnalyzerTest {
     }
   }
 
-    @Test
-    void sanitizeGrantObjectNamedPassword() {
-        SqlQuery result = ANALYZER.analyze("GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+  @Test
+  void sanitizeGrantObjectNamedPassword() {
+    SqlQuery result =
+        ANALYZER.analyze("GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
 
-        assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
-    }
+    assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
+  }
 
-    @Test
-    void sanitizeGrantObjectNamedPasswordWithSummary() {
-        SqlQuery result =
-                ANALYZER.analyzeWithSummary(
-                        "GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+  @Test
+  void sanitizeGrantObjectNamedPasswordWithSummary() {
+    SqlQuery result =
+        ANALYZER.analyzeWithSummary(
+            "GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
 
-        assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
-        assertThat(result.getQuerySummary()).isEqualTo("GRANT");
-    }
+    assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
+    assertThat(result.getQuerySummary()).isEqualTo("GRANT");
+  }
 
   private static Stream<Arguments> sensitiveArgs() {
     return Stream.of(
@@ -163,7 +164,8 @@ class SqlQueryAnalyzerTest {
             "SELECT identified_by FROM users", "SELECT identified_by FROM users", "SELECT users"),
         Arguments.of(
             "TRUNCATE TABLE password", "TRUNCATE TABLE password", "TRUNCATE TABLE password"),
-        Arguments.of("REPLACE password VALUES (1)", "REPLACE password VALUES (?)", "REPLACE password"),
+        Arguments.of(
+            "REPLACE password VALUES (1)", "REPLACE password VALUES (?)", "REPLACE password"),
         Arguments.of("VALUES (password)", "VALUES (password)", "VALUES"),
         Arguments.of(
             "UPDATE users SET password = \"Password1\"",
