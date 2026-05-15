@@ -143,7 +143,7 @@ WHITESPACE           = [ \t\r\n]+
   private boolean shouldSanitizeRemainderAfterIdentifiedBy() {
     return !insideComment
       && (identifiedBySanitizationEnabled
-        || operation.shouldSanitizeRemainderAfterPassword());
+        || operation.shouldSanitizeRemainderAfterIdentifiedBy());
   }
 
   private static abstract class Operation {
@@ -192,6 +192,10 @@ WHITESPACE           = [ \t\r\n]+
       return false;
     }
 
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return false;
+    }
+
     SqlQuery getResult(String fullStatement) {
       return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
     }
@@ -225,6 +229,10 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     boolean shouldSanitizeRemainderAfterPassword() {
+      return !hasSafeDdlTarget();
+    }
+
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
       return !hasSafeDdlTarget();
     }
 
