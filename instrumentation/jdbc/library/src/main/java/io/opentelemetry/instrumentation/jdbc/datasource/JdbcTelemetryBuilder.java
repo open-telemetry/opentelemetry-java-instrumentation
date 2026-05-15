@@ -80,10 +80,10 @@ public final class JdbcTelemetryBuilder {
   }
 
   /**
-   * Configures whether row counts are captured for JDBC operations. Disabled by default.
+   * Configures whether row counts are captured for JDBC SELECT queries. Disabled by default.
    *
-   * <p>For SELECT queries, counts ResultSet.next() calls. For DML operations, captures the
-   * executeUpdate() return value. May have performance impact for large result sets.
+   * <p>Counts ResultSet.next() calls; DML operations are excluded. May have performance impact for
+   * large result sets.
    */
   @CanIgnoreReturnValue
   public JdbcTelemetryBuilder setCaptureRowCount(boolean enabled) {

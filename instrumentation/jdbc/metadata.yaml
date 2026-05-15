@@ -51,10 +51,10 @@ configurations:
     default: false
   - name: otel.instrumentation.jdbc.experimental.capture-row-count.enabled
     description: >
-      Enables capturing the number of rows returned/affected by database operations as the
+      Enables capturing the number of rows returned by SELECT queries as the
       <code>db.response.returned_rows</code> span attribute and <code>db.client.response.returned_rows</code>
-      histogram metric. For SELECT queries, counts ResultSet.next() calls. For DML operations, captures
-      the executeUpdate() return value. May have performance impact for large result sets.
+      histogram metric. Counts ResultSet.next() calls; DML operations are excluded.
+      May have performance impact for large result sets.
     type: boolean
     default: false
   - name: otel.instrumentation.jdbc.experimental.row-count-limit

@@ -668,7 +668,7 @@ class OpenTelemetryResultSet implements ResultSet {
 
   @Override
   public Statement getStatement() throws SQLException {
-    return statement;
+    return statement != null ? statement : delegate.getStatement();
   }
 
   @Override

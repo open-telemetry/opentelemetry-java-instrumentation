@@ -47,6 +47,9 @@ public class ResultSetInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static ResultSetInfo onEnter(@Advice.This ResultSet resultSet) {
+      if (!JdbcSingletons.CAPTURE_ROW_COUNT) {
+        return null;
+      }
       // Skip wrappers - we only track spans on the underlying driver ResultSet
       if (JdbcSingletons.isWrapper(resultSet, ResultSet.class)) {
         return null;
@@ -68,6 +71,9 @@ public class ResultSetInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.This ResultSet resultSet) {
+      if (!JdbcSingletons.CAPTURE_ROW_COUNT) {
+        return;
+      }
       // Skip wrappers - close() on a wrapper will delegate to the underlying driver ResultSet,
       // which will trigger this advice again on the real instance
       if (JdbcSingletons.isWrapper(resultSet, ResultSet.class)) {
