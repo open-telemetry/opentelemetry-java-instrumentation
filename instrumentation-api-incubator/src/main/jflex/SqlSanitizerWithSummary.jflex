@@ -137,8 +137,12 @@ WHITESPACE           = [ \t\r\n]+
     this.operation = operation;
   }
 
-  private boolean shouldSanitizeRemainderAfterSensitivePhrase() {
-    return !insideComment && operation.shouldSanitizeRemainderAfterSensitivePhrase();
+  private boolean shouldSanitizeRemainderAfterPassword() {
+    return !insideComment && operation.shouldSanitizeRemainderAfterPassword();
+  }
+
+  private boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+    return !insideComment && operation.shouldSanitizeRemainderAfterIdentifiedBy();
   }
 
   /** Push current operation onto stack and reset to none for subquery processing. */
@@ -188,8 +192,11 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingOperationTarget() {
       return false;
     }
-    boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+    boolean shouldSanitizeRemainderAfterPassword() {
       return false;
+    }
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return shouldSanitizeRemainderAfterPassword();
     }
     /** Returns true if open paren should start a subquery context. */
     boolean isEnteringSubquery() {
@@ -225,7 +232,7 @@ WHITESPACE           = [ \t\r\n]+
           || "VIEW".equals(operationTarget);
     }
 
-    boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+    boolean shouldSanitizeRemainderAfterPassword() {
       return !hasSafeDdlTarget();
     }
 
@@ -526,7 +533,7 @@ WHITESPACE           = [ \t\r\n]+
   private class Values extends Operation {}
 
   private class SensitivePhraseOperation extends Operation {
-    boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+    boolean shouldSanitizeRemainderAfterPassword() {
       return true;
     }
   }
@@ -625,7 +632,11 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** GRANT operation - blocks other keywords from being parsed. */
-  private class Grant extends SensitivePhraseOperation {}
+  private class Grant extends Operation {
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return true;
+    }
+  }
 
   /** REVOKE operation - blocks other keywords from being parsed. */
   private class Revoke extends Operation {}
@@ -1046,7 +1057,7 @@ WHITESPACE           = [ \t\r\n]+
             operation.handleIdentifier();
           }
           appendCurrentFragment();
-          if (!insideComment && shouldSanitizeRemainderAfterSensitivePhrase()) {
+          if (!insideComment && shouldSanitizeRemainderAfterPassword()) {
             builder.append(" ?");
             return YYEOF;
           }
@@ -1054,7 +1065,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "IDENTIFIED" {WHITESPACE}+ "BY" {
           appendCurrentFragment();
-          if (!insideComment && shouldSanitizeRemainderAfterSensitivePhrase()) {
+          if (!insideComment && shouldSanitizeRemainderAfterIdentifiedBy()) {
             builder.append(" ?");
             return YYEOF;
           }

@@ -77,6 +77,16 @@ class SqlQueryAnalyzerTest {
     }
   }
 
+    @Test
+    void sanitizeGrantObjectNamedPasswordWithSummary() {
+        SqlQuery result =
+                ANALYZER.analyzeWithSummary(
+                        "GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+        assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
+        assertThat(result.getQuerySummary()).isEqualTo("GRANT");
+    }
+
   private static Stream<Arguments> sensitiveArgs() {
     return Stream.of(
         // SAP HANA CREATE USER statements can contain unquoted password
