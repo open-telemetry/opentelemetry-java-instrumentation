@@ -123,6 +123,10 @@ class SqlQueryAnalyzerTest {
             "GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY Password1",
             "GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY ?",
             "GRANT"),
+        Arguments.of(
+            "GRANT SELECT ON users TO admin; SELECT password FROM users",
+            "GRANT SELECT ON users TO admin; SELECT password FROM users",
+            "GRANT; SELECT users"),
         // field names do not trigger sensitive statement sanitization
         Arguments.of("SELECT connect FROM TABLE", "SELECT connect FROM TABLE", "SELECT TABLE"),
         Arguments.of(

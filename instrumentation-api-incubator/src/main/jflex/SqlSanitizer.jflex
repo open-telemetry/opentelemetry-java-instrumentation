@@ -549,6 +549,13 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  ";" {
+          if (!insideComment) {
+            sensitivePhraseSanitizationAllowed = false;
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   {IDENTIFIER} {
           if (!insideComment && !extractionDone) {
             extractionDone = operation.handleIdentifier();
