@@ -227,12 +227,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get())
             .setSchemaUrl(SchemaUrls.V1_41_0);
-    Experimental.setExceptionEventExtractor(
-        builder,
-        (logRecordBuilder, context, request) -> {
-          logRecordBuilder.setEventName("http.client.request.exception");
-          logRecordBuilder.setSeverity(Severity.WARN);
-        });
+    setHttpClientExceptionEventExtractor(builder);
     if (emitExperimentalHttpClientTelemetry) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
@@ -253,6 +248,16 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return Instrumenter.<BUILDERREQUEST, BUILDERRESPONSE>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
         .setSchemaUrl(SchemaUrls.V1_41_0);
+  }
+
+  public static <REQUEST> void setHttpClientExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder) {
+    Experimental.setExceptionEventExtractor(
+        builder,
+        (logRecordBuilder, context, request) -> {
+          logRecordBuilder.setEventName("http.client.request.exception");
+          logRecordBuilder.setSeverity(Severity.WARN);
+        });
   }
 
   @CanIgnoreReturnValue
