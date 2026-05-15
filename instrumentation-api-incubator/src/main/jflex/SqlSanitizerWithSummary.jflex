@@ -139,12 +139,13 @@ WHITESPACE           = [ \t\r\n]+
 
   private boolean shouldSanitizeRemainderAfterSensitivePhrase() {
     return !insideComment
-        && !(operation instanceof Select)
-        && !(operation instanceof Insert)
-        && !(operation instanceof Delete)
-        && !(operation instanceof Update)
-        && !(operation instanceof Merge)
-        && !(operation instanceof Call);
+        && !(operation instanceof DmlOperation)
+        && !isSafeDdlOperation();
+  }
+
+  private boolean isSafeDdlOperation() {
+    return operation instanceof DdlOperation
+        && ((DdlOperation) operation).hasSafeDdlTarget();
   }
 
   /** Push current operation onto stack and reset to none for subquery processing. */
@@ -220,6 +221,14 @@ WHITESPACE           = [ \t\r\n]+
       appendOperationToSummary(operationTarget);
     }
 
+    /** Returns true for DDL targets where PASSWORD is treated as an identifier, not a secret clause. */
+    boolean hasSafeDdlTarget() {
+      return "TABLE".equals(operationTarget)
+          || "INDEX".equals(operationTarget)
+          || "PROCEDURE".equals(operationTarget)
+          || "VIEW".equals(operationTarget);
+    }
+
     void handleIdentifier() {
       if (!identifierCaptured && !inEmbeddedSelect) {
         appendTargetToSummary();
@@ -243,7 +252,9 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Select extends Operation {
+  private abstract class DmlOperation extends Operation {}
+
+  private class Select extends DmlOperation {
     // Max identifiers in a table reference: "table", "table alias", or "table as alias"
     private static final int TABLE_REF_MAX_IDENTIFIERS = 3;
 
@@ -394,7 +405,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Insert extends Operation {
+  private class Insert extends DmlOperation {
     boolean expectingTableName = false;
 
     void handleInto() {
@@ -414,7 +425,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Delete extends Operation {
+  private class Delete extends DmlOperation {
     boolean expectingTableName = false;
     boolean identifierCaptured = false;
 
@@ -451,7 +462,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Update extends Operation {
+  private class Update extends DmlOperation {
     boolean identifierCaptured = false;
 
     void handleSelect() {
@@ -470,9 +481,18 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Merge extends SimpleOperation {}
+  private class Merge extends DmlOperation {
+    boolean identifierCaptured = false;
 
-  private class Call extends Operation {
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+      }
+    }
+  }
+
+  private class Call extends DmlOperation {
     boolean identifierCaptured = false;
     // Track "NEXT VALUE FOR sequence" pattern - sequence name comes after FOR
     boolean sawNext = false;
@@ -1010,7 +1030,7 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
+  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" | "USER" {
           if (!insideComment) {
             // If we see a reserved word where we expected a subquery, it's a parenthesized name
             cancelPendingSubqueryIfNeeded();
@@ -1023,14 +1043,11 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "USER" {
-          if (!insideComment && operation.expectingOperationTarget()) {
-            operation.handleOperationTarget(yytext());
-          }
-          appendCurrentFragment();
-          if (isOverLimit()) return YYEOF;
-      }
   "PASSWORD" {
+          if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
+          }
           appendCurrentFragment();
           if (shouldSanitizeRemainderAfterSensitivePhrase()) {
             builder.append(" ?");

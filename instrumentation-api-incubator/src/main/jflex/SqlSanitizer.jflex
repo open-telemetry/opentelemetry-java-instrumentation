@@ -129,12 +129,13 @@ WHITESPACE           = [ \t\r\n]+
 
   private boolean shouldSanitizeRemainderAfterSensitivePhrase() {
     return !insideComment
-        && !(operation instanceof Select)
-        && !(operation instanceof Insert)
-        && !(operation instanceof Delete)
-        && !(operation instanceof Update)
-        && !(operation instanceof Merge)
-        && !(operation instanceof Call);
+        && !(operation instanceof DmlOperation)
+        && !isSafeDdlOperation();
+  }
+
+  private boolean isSafeDdlOperation() {
+    return operation instanceof DdlOperation
+        && ((DdlOperation) operation).hasSafeDdlTarget();
   }
 
   private static abstract class Operation {
@@ -203,6 +204,14 @@ WHITESPACE           = [ \t\r\n]+
       return "TABLE".equals(operationTarget);
     }
 
+    /** Returns true for DDL targets where PASSWORD is treated as an identifier, not a secret clause. */
+    boolean hasSafeDdlTarget() {
+      return "TABLE".equals(operationTarget)
+          || "INDEX".equals(operationTarget)
+          || "PROCEDURE".equals(operationTarget)
+          || "VIEW".equals(operationTarget);
+    }
+
     boolean handleIdentifier() {
       if (shouldHandleIdentifier()) {
         mainIdentifier = readIdentifierName();
@@ -226,7 +235,9 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Select extends Operation {
+  private abstract class DmlOperation extends Operation {}
+
+  private class Select extends DmlOperation {
     // you can reference a table in the FROM clause in one of the following ways:
     //   table
     //   table t
@@ -300,7 +311,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Insert extends Operation {
+  private class Insert extends DmlOperation {
     boolean expectingTableName = false;
 
     boolean handleInto() {
@@ -318,7 +329,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Delete extends Operation {
+  private class Delete extends DmlOperation {
     boolean expectingTableName = false;
 
     boolean handleFrom() {
@@ -337,7 +348,7 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** Operation that extracts the first identifier as the main identifier. */
-  private class SimpleOperation extends Operation {
+  private class SimpleOperation extends DmlOperation {
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
       return true;
@@ -491,7 +502,7 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
+  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" | "USER" {
           if (!insideComment && !extractionDone) {
             if (operation.expectingOperationTarget()) {
               extractionDone = operation.handleOperationTarget(yytext());
@@ -502,14 +513,10 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "USER" {
-          if (!insideComment && !extractionDone && operation.expectingOperationTarget()) {
-            extractionDone = operation.handleOperationTarget(yytext());
-          }
-          appendCurrentFragment();
-          if (isOverLimit()) return YYEOF;
-      }
   "PASSWORD" {
+          if (!insideComment && !extractionDone) {
+            extractionDone = operation.handleIdentifier();
+          }
           appendCurrentFragment();
           if (shouldSanitizeRemainderAfterSensitivePhrase()) {
             builder.append(" ?");

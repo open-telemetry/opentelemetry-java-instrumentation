@@ -888,6 +888,7 @@ class SqlQueryAnalyzerTest {
         Arguments.of("SELECT * FROM mytable insert", expect("SELECT", "mytable", "SELECT mytable")),
         Arguments.of(
             "SELECT * FROM mytable AS update", expect("SELECT", "mytable", "SELECT mytable")),
+        Arguments.of("SELECT * FROM user", expect("SELECT", "user", "SELECT user")),
 
         // CTEs (Common Table Expressions) - CTE names are filtered from query summary
         Arguments.of(
@@ -943,7 +944,33 @@ class SqlQueryAnalyzerTest {
                 "ALTER TABLE users ADD COLUMN email VARCHAR(?), DROP COLUMN legacy_id, MODIFY COLUMN status INT",
                 "ALTER TABLE",
                 "users",
-                "ALTER TABLE users")));
+                "ALTER TABLE users")),
+        Arguments.of(
+            "CREATE TABLE users (password VARCHAR(255))",
+            expect(
+                "CREATE TABLE users (password VARCHAR(?))",
+                "CREATE TABLE",
+                "users",
+                "CREATE TABLE users")),
+        Arguments.of(
+            "ALTER TABLE users ADD COLUMN password VARCHAR(255)",
+            expect(
+                "ALTER TABLE users ADD COLUMN password VARCHAR(?)",
+                "ALTER TABLE",
+                "users",
+                "ALTER TABLE users")),
+        Arguments.of(
+            "ALTER TABLE user ADD COLUMN name VARCHAR(255)",
+            expect(
+                "ALTER TABLE user ADD COLUMN name VARCHAR(?)",
+                "ALTER TABLE",
+                "user",
+                "ALTER TABLE user")),
+        Arguments.of(
+            "CREATE TABLE password (id INT)",
+            expect("CREATE TABLE", "password", "CREATE TABLE password")),
+        Arguments.of(
+            "DROP TABLE password", expect("DROP TABLE", "password", "DROP TABLE password")));
   }
 
   @ParameterizedTest
