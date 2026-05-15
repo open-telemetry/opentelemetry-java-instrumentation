@@ -534,3 +534,4 @@ vibur-dbcp-11.0:javaagent
 vibur-dbcp-11.0:library
 vibur-dbcp-11.0:testing
 wicket-8.0:common-testing
+wicket-8.0:javaagent
