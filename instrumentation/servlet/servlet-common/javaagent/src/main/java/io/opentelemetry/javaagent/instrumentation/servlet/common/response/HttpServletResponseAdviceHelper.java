@@ -31,7 +31,7 @@ public class HttpServletResponseAdviceHelper {
     return null;
   }
 
-  public static final class StartResult {
+  public static class StartResult {
     private final ClassAndMethod classAndMethod;
     private final Context context;
     private final Scope scope;

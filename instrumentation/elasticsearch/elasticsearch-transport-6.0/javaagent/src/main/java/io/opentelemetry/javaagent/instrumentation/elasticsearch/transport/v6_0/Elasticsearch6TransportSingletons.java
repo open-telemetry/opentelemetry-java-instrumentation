@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.ElasticTransportRequest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.ElasticsearchTransportInstrumenterFactory;
 import org.elasticsearch.action.ActionResponse;
 
 final class Elasticsearch6TransportSingletons {

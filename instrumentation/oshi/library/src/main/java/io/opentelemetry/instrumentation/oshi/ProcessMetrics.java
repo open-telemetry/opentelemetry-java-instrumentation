@@ -37,17 +37,6 @@ public final class ProcessMetrics {
     return null;
   }
 
-  private static long getResidentMemory(OSProcess process) {
-    if (RESIDENT_MEMORY_METHOD == null) {
-      return 0;
-    }
-    try {
-      return (long) RESIDENT_MEMORY_METHOD.invoke(process);
-    } catch (ReflectiveOperationException ignored) {
-      return 0;
-    }
-  }
-
   /** Register observers for java runtime metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
     Meter meter = openTelemetry.getMeterProvider().get("io.opentelemetry.oshi");
@@ -80,6 +69,17 @@ public final class ProcessMetrics {
                   r.record(processInfo.getKernelTime(), Attributes.of(TYPE_KEY, "system"));
                 }));
     return observables;
+  }
+
+  private static long getResidentMemory(OSProcess process) {
+    if (RESIDENT_MEMORY_METHOD == null) {
+      return 0;
+    }
+    try {
+      return (long) RESIDENT_MEMORY_METHOD.invoke(process);
+    } catch (ReflectiveOperationException ignored) {
+      return 0;
+    }
   }
 
   private ProcessMetrics() {}

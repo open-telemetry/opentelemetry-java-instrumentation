@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static java.util.Collections.singletonMap;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.AbstractElasticsearchTransportClientTest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.AbstractElasticsearchTransportClientTest;
 import java.io.File;
 import java.util.UUID;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;

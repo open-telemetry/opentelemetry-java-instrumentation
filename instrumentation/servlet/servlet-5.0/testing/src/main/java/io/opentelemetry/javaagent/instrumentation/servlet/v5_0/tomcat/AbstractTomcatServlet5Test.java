@@ -75,7 +75,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
     if (NOT_FOUND.equals(endpoint)) {
-      span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
+      span.satisfies(spanData -> assertThat(spanData.getName()).matches(".*\\.sendError"))
           .hasKind(SpanKind.INTERNAL)
           .hasParent(parentSpan);
     }
@@ -196,7 +196,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
     if (errorEndpointUsesSendError()) {
       spanDataAsserts.add(
           (span, trace) ->
-              span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
+              span.satisfies(spanData -> assertThat(spanData.getName()).matches(".*\\.sendError"))
                   .hasKind(SpanKind.INTERNAL)
                   .hasParent(trace.getSpan(1)));
     }

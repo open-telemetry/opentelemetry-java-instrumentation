@@ -112,8 +112,8 @@ jobs:
         id: gate
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEFAULT_MODEL: ${{ vars.PR_REVIEW_MODEL || 'gpt-5' }}
-          ALLOWED_MODELS: ${{ vars.PR_REVIEW_ALLOWED_MODELS || 'gpt-5,gpt-5.5,claude-sonnet-4.5' }}
+          DEFAULT_MODEL: ${{ vars.PR_REVIEW_MODEL || 'gpt-5.5' }}
+          ALLOWED_MODELS: ${{ vars.PR_REVIEW_ALLOWED_MODELS || 'gpt-5.5,claude-sonnet-4.6,claude-opus-4.7' }}
           EVENT_NAME: ${{ github.event_name }}
           PR_FROM_COMMENT: ${{ github.event.issue.number }}
           COMMENT_BODY: ${{ github.event.comment.body }}
