@@ -54,18 +54,19 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
     @Override
     public void transform(TypeTransformer transformer) {
       transformer.applyAdviceToMethod(
-          isConstructor(), getClass().getName() + "$RepositoryFactorySupportAdvice");
+          isConstructor(),
+          SpringDataInstrumentationModule.class.getName() + "$RepositoryFactorySupportAdvice");
     }
+  }
 
-    @SuppressWarnings("unused")
-    static class RepositoryFactorySupportAdvice {
+  @SuppressWarnings("unused")
+  public static class RepositoryFactorySupportAdvice {
 
-      @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-      public static void onConstruction(
-          @Advice.This RepositoryFactorySupport repositoryFactorySupport) {
-        repositoryFactorySupport.addRepositoryProxyPostProcessor(
-            InterceptingRepositoryProxyPostProcessor.INSTANCE);
-      }
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onConstruction(
+        @Advice.This RepositoryFactorySupport repositoryFactorySupport) {
+      repositoryFactorySupport.addRepositoryProxyPostProcessor(
+          InterceptingRepositoryProxyPostProcessor.INSTANCE);
     }
   }
 
