@@ -524,11 +524,13 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "PASSWORD" {
+          boolean passwordTokenIsIdentifier = false;
           if (!insideComment && !extractionDone) {
-            extractionDone = operation.handleIdentifier();
+            passwordTokenIsIdentifier = operation.handleIdentifier();
+            extractionDone = passwordTokenIsIdentifier;
           }
           appendCurrentFragment();
-          if (!insideComment && shouldSanitizeRemainderAfterPassword()) {
+          if (!passwordTokenIsIdentifier && !insideComment && shouldSanitizeRemainderAfterPassword()) {
             builder.append(" ?");
             return YYEOF;
           }

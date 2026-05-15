@@ -86,6 +86,15 @@ class SqlQueryAnalyzerTest {
   }
 
   @Test
+  void sanitizeDdlObjectNamedPassword() {
+    SqlQuery result =
+        ANALYZER.analyze(
+            "CREATE USER password PASSWORD Password1", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText()).isEqualTo("CREATE USER password PASSWORD ?");
+  }
+
+  @Test
   void sanitizeGrantObjectNamedPasswordWithSummary() {
     SqlQuery result =
         ANALYZER.analyzeWithSummary(
