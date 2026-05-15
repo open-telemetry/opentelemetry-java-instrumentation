@@ -196,7 +196,7 @@ echo "queue remaining:   $QUEUE_REMAINING"
 echo "threshold:         $THRESHOLD"
 
 SHOULD_FLUSH=false
-if [ "$AHEAD" -gt 0 ]; then
+if [ "$AHEAD" -gt 0 ] && [ "$FILE_COUNT" -gt 0 ]; then
     if [ "$FILE_COUNT" -ge "$THRESHOLD" ]; then
         SHOULD_FLUSH=true
         echo "Flushing: file count >= threshold."
@@ -204,6 +204,8 @@ if [ "$AHEAD" -gt 0 ]; then
         SHOULD_FLUSH=true
         echo "Flushing: queue exhausted."
     fi
+elif [ "$AHEAD" -gt 0 ]; then
+    echo "Skipping flush: wip branch has no file changes."
 fi
 
 OPENED_PR=false
