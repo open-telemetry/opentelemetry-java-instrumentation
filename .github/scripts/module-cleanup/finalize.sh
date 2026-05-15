@@ -9,7 +9,7 @@
 #      module is recorded as "processed" (so it isn't retried in a loop)
 #      AND logged as a failure for diagnostics.
 #   2. If the agent produced a cleanup patch, apply it onto the fixed
-#      otelbot/module-cleanup-wip branch and push.
+#      otelbot/module-cleanup-wip branch, commit it, and push.
 #   3. If wip diff vs origin/main has reached FLUSH_THRESHOLD files OR
 #      the queue is empty, atomically rename wip to a
 #      otelbot/module-cleanup-batch-<run_id> branch and open the PR. The wip
@@ -118,16 +118,21 @@ fi
 if [ -n "$PATCH_SRC" ]; then
     (
         cd "$WIP_WT"
-        if git am --3way "$PATCH_SRC"; then
-            echo "Applied cleanup for $SHORT to $WIP_BRANCH"
-            git push origin "$WIP_BRANCH"
+        if git apply --3way --index "$PATCH_SRC"; then
+            if git diff --cached --quiet; then
+                echo "Patch for $SHORT applied cleanly but produced no changes."
+            else
+                git commit -m "Cleanup for $SHORT"
+                echo "Committed cleanup for $SHORT to $WIP_BRANCH"
+                git push origin "$WIP_BRANCH"
+            fi
         else
-            git am --abort 2>/dev/null || true
-            echo "FAILED to apply cleanup for $SHORT (rebase conflict)."
+            git reset --hard >/dev/null 2>&1 || true
+            echo "FAILED to apply cleanup for $SHORT (patch conflict)."
             ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
             (
                 cd "$MEM_WT"
-                echo -e "$SHORT\t$ts\tgit am failed (rebase conflict)" >> "$FAILED"
+                echo -e "$SHORT\t$ts\tgit apply failed (patch conflict)" >> "$FAILED"
                 git add -A
                 git commit -m "Record $SHORT as patch-conflict failure"
                 git push origin "$MEMORY_BRANCH" || true
