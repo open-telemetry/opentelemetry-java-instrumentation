@@ -40,8 +40,7 @@ class NacosClientInstrumentationTest {
   private static final AttributeKey<String> NACOS_GROUP = AttributeKey.stringKey("nacos.group");
   private static final AttributeKey<String> NACOS_SERVICE_NAME =
       AttributeKey.stringKey("nacos.service.name");
-  private static final AttributeKey<String> NACOS_DATA_ID =
-      AttributeKey.stringKey("nacos.data.id");
+  private static final AttributeKey<String> NACOS_DATA_ID = AttributeKey.stringKey("nacos.data.id");
   private static final AttributeKey<String> NACOS_TENANT = AttributeKey.stringKey("nacos.tenant");
 
   @Test
@@ -117,7 +116,8 @@ class NacosClientInstrumentationTest {
 
     assertRequest(
         NacosRequestMapper.mapClientRequest(
-            configPublishRequest("app.yaml", "DEFAULT_GROUP", "tenant-a", "content"), "127.0.0.1:8848"),
+            configPublishRequest("app.yaml", "DEFAULT_GROUP", "tenant-a", "content"),
+            "127.0.0.1:8848"),
         ConfigPublishRequest.class,
         "config",
         "publishConfig",
@@ -225,8 +225,7 @@ class NacosClientInstrumentationTest {
     NacosClientRpcAttributesGetter getter = new NacosClientRpcAttributesGetter();
     NacosClientRequest request =
         NacosRequestMapper.mapClientRequest(
-            ConfigQueryRequest.build("app.yaml", "DEFAULT_GROUP", "tenant-a"),
-            "127.0.0.1:8848");
+            ConfigQueryRequest.build("app.yaml", "DEFAULT_GROUP", "tenant-a"), "127.0.0.1:8848");
     TestResponse failedResponse = new TestResponse();
     failedResponse.setErrorInfo(500, "failed");
     TestResponse failedResponseWithoutCode = new TestResponse();
@@ -247,8 +246,7 @@ class NacosClientInstrumentationTest {
     NacosClientNetworkAttributesGetter getter = new NacosClientNetworkAttributesGetter();
     NacosClientRequest request =
         NacosRequestMapper.mapClientRequest(
-            ConfigQueryRequest.build("app.yaml", "DEFAULT_GROUP", "tenant-a"),
-            "127.0.0.1:8848");
+            ConfigQueryRequest.build("app.yaml", "DEFAULT_GROUP", "tenant-a"), "127.0.0.1:8848");
 
     assertThat(getter.getServerAddress(request)).isEqualTo("127.0.0.1");
     assertThat(getter.getServerPort(request)).isEqualTo(8848);
@@ -263,8 +261,7 @@ class NacosClientInstrumentationTest {
     RpcClient rpcClient = new TestRpcClient();
     RpcClientServerInfoAccessor.set(rpcClient, new RpcClient.ServerInfo("127.0.0.1", 9848));
 
-    assertThat(RpcClientServerInfoAccessor.resolvePeer(rpcClient))
-        .isEqualTo("127.0.0.1:9848");
+    assertThat(RpcClientServerInfoAccessor.resolvePeer(rpcClient)).isEqualTo("127.0.0.1:9848");
   }
 
   private static Attributes extractAttributes(NacosClientRequest request) {

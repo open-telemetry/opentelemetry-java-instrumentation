@@ -25,7 +25,8 @@ import javax.annotation.Nullable;
 final class NacosClientAttributesExtractor
     implements AttributesExtractor<NacosClientRequest, Response> {
 
-  private static final AttributeKey<String> NACOS_CATEGORY = AttributeKey.stringKey("nacos.category");
+  private static final AttributeKey<String> NACOS_CATEGORY =
+      AttributeKey.stringKey("nacos.category");
   private static final AttributeKey<String> NACOS_REQUEST_TYPE =
       AttributeKey.stringKey("nacos.request.type");
   private static final AttributeKey<String> NACOS_NAMESPACE =

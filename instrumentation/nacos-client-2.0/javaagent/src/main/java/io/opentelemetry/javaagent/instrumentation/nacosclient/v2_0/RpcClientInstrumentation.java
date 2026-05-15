@@ -41,7 +41,8 @@ class RpcClientInstrumentation implements TypeInstrumentation {
   public static class HandleServerRequestAdvice {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static State onEnter(@Advice.This RpcClient rpcClient, @Advice.Argument(0) Request request) {
+    public static State onEnter(
+        @Advice.This RpcClient rpcClient, @Advice.Argument(0) Request request) {
       String peer = resolvePeer(rpcClient);
       NacosClientRequest nacosRequest = NacosRequestMapper.mapServerRequest(request, peer);
       if (nacosRequest == null) {

@@ -30,7 +30,8 @@ public final class NacosRequestMapper {
   @Nullable
   public static NacosClientRequest mapClientRequest(Request request, String peer) {
     if (request instanceof InstanceRequest) {
-      return createRequest(request, "naming", String.valueOf(((InstanceRequest) request).getType()), peer);
+      return createRequest(
+          request, "naming", String.valueOf(((InstanceRequest) request).getType()), peer);
     }
     if (request instanceof ServiceQueryRequest) {
       return createRequest(request, "naming", "queryService", peer);
@@ -70,7 +71,8 @@ public final class NacosRequestMapper {
     return null;
   }
 
-  private static NacosClientRequest createRequest(Request request, String category, String operation, String peer) {
+  private static NacosClientRequest createRequest(
+      Request request, String category, String operation, String peer) {
     HostPort hostPort = HostPort.parse(peer);
     return new NacosClientRequest(
         request, category, operation, peer, hostPort.host(), hostPort.port());
@@ -101,8 +103,7 @@ public final class NacosRequestMapper {
       }
       if (peer.startsWith("[") && peer.contains("]:")) {
         int separator = peer.lastIndexOf("]:");
-        return new HostPort(
-            peer.substring(1, separator), parsePort(peer.substring(separator + 2)));
+        return new HostPort(peer.substring(1, separator), parsePort(peer.substring(separator + 2)));
       }
       int separator = peer.lastIndexOf(':');
       if (separator > 0 && peer.indexOf(':') == separator) {

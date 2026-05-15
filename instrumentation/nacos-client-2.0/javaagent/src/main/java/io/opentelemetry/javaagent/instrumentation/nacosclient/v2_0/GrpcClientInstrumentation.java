@@ -36,8 +36,7 @@ class GrpcClientInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, int.class))
             .and(
                 takesArgument(
-                    2,
-                    named("com.alibaba.nacos.api.grpc.auto.RequestGrpc$RequestFutureStub"))),
+                    2, named("com.alibaba.nacos.api.grpc.auto.RequestGrpc$RequestFutureStub"))),
         getClass().getName() + "$ServerCheckAdvice");
   }
 
