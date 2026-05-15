@@ -219,7 +219,7 @@ class LogbackAppenderInstaller {
     String traceIdKey =
         applicationEnvironmentPreparedEvent
             .getEnvironment()
-            .getProperty("otel.instrumentation.common.logging.trace-id", String.class);
+            .getProperty("otel.instrumentation.common.logging.trace-id-key", String.class);
     if (traceIdKey != null) {
       openTelemetryAppender.setTraceIdKey(traceIdKey);
     }
@@ -227,7 +227,7 @@ class LogbackAppenderInstaller {
     String spanIdKey =
         applicationEnvironmentPreparedEvent
             .getEnvironment()
-            .getProperty("otel.instrumentation.common.logging.span-id", String.class);
+            .getProperty("otel.instrumentation.common.logging.span-id-key", String.class);
     if (spanIdKey != null) {
       openTelemetryAppender.setSpanIdKey(spanIdKey);
     }
@@ -235,7 +235,7 @@ class LogbackAppenderInstaller {
     String traceFlagsKey =
         applicationEnvironmentPreparedEvent
             .getEnvironment()
-            .getProperty("otel.instrumentation.common.logging.trace-flags", String.class);
+            .getProperty("otel.instrumentation.common.logging.trace-flags-key", String.class);
     if (traceFlagsKey != null) {
       openTelemetryAppender.setTraceFlagsKey(traceFlagsKey);
     }
