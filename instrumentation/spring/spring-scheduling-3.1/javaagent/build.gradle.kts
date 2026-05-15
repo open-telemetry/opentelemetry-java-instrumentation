@@ -37,8 +37,14 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testStableSemconv)
   }
 }
 
