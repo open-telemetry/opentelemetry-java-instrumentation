@@ -129,6 +129,10 @@ class SqlQueryAnalyzerTest {
         Arguments.of(
             "SELECT identified_by FROM users", "SELECT identified_by FROM users", "SELECT users"),
         Arguments.of(
+            "TRUNCATE TABLE password", "TRUNCATE TABLE password", "TRUNCATE TABLE password"),
+        Arguments.of("REPLACE password VALUES (1)", "REPLACE password VALUES (?)", "REPLACE password"),
+        Arguments.of("VALUES (password)", "VALUES (password)", "VALUES"),
+        Arguments.of(
             "UPDATE users SET password = \"Password1\"",
             "UPDATE users SET password = ?",
             "UPDATE users"));

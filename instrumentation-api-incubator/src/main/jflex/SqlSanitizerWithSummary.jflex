@@ -138,14 +138,7 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   private boolean shouldSanitizeRemainderAfterSensitivePhrase() {
-    return !insideComment
-        && !(operation instanceof DmlOperation)
-        && !isSafeDdlOperation();
-  }
-
-  private boolean isSafeDdlOperation() {
-    return operation instanceof DdlOperation
-        && ((DdlOperation) operation).hasSafeDdlTarget();
+    return !insideComment && operation.shouldSanitizeRemainderAfterSensitivePhrase();
   }
 
   /** Push current operation onto stack and reset to none for subquery processing. */
@@ -195,6 +188,9 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingOperationTarget() {
       return false;
     }
+    boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+      return false;
+    }
     /** Returns true if open paren should start a subquery context. */
     boolean isEnteringSubquery() {
       return false;
@@ -227,6 +223,10 @@ WHITESPACE           = [ \t\r\n]+
           || "INDEX".equals(operationTarget)
           || "PROCEDURE".equals(operationTarget)
           || "VIEW".equals(operationTarget);
+    }
+
+    boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+      return !hasSafeDdlTarget();
     }
 
     void handleIdentifier() {
@@ -525,7 +525,13 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** VALUES operation - no table to capture. */
-  private class Values extends Operation {}
+  private class Values extends DmlOperation {}
+
+  private class SensitivePhraseOperation extends Operation {
+    boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+      return true;
+    }
+  }
 
   /** EXECUTE/EXEC operation for stored procedures. */
   private class Execute extends SimpleOperation {
@@ -543,7 +549,7 @@ WHITESPACE           = [ \t\r\n]+
   private class Alter extends DdlOperation {}
 
   /** TRUNCATE operation - captures TABLE keyword and table name. */
-  private class Truncate extends Operation {
+  private class Truncate extends DmlOperation {
     boolean tableCaptured = false;
     boolean identifierCaptured = false;
 
@@ -565,7 +571,7 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** REPLACE operation (MySQL) - like INSERT, captures table name. */
-  private class Replace extends Operation {
+  private class Replace extends DmlOperation {
     boolean expectingTableName = false;
     boolean tableCaptured = false;
 
@@ -583,7 +589,7 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** LOCK operation - captures TABLE/TABLES keyword and table name. */
-  private class Lock extends Operation {
+  private class Lock extends DmlOperation {
     boolean tableCaptured = false;
     boolean identifierCaptured = false;
 
@@ -621,7 +627,7 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** GRANT operation - blocks other keywords from being parsed. */
-  private class Grant extends Operation {}
+  private class Grant extends SensitivePhraseOperation {}
 
   /** REVOKE operation - blocks other keywords from being parsed. */
   private class Revoke extends Operation {}
@@ -917,6 +923,13 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Show());
             appendOperationToSummary("SHOW");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "VALIDATE" | "CHECK" | "EXPORT" | "RECOVER" {
+          if (shouldStartNewOperation()) {
+            setOperation(new SensitivePhraseOperation());
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;

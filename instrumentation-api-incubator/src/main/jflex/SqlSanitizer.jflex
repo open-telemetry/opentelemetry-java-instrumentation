@@ -120,6 +120,7 @@ WHITESPACE           = [ \t\r\n]+
   private Operation operation = NoOp.INSTANCE;
   private boolean extractionDone = false;
   private boolean doubleQuotesAreIdentifiers;
+  private boolean sensitivePhraseSanitizationAllowed = false;
 
   private void setOperation(Operation operation) {
     if (this.operation == NoOp.INSTANCE) {
@@ -129,13 +130,8 @@ WHITESPACE           = [ \t\r\n]+
 
   private boolean shouldSanitizeRemainderAfterSensitivePhrase() {
     return !insideComment
-        && !(operation instanceof DmlOperation)
-        && !isSafeDdlOperation();
-  }
-
-  private boolean isSafeDdlOperation() {
-    return operation instanceof DdlOperation
-        && ((DdlOperation) operation).hasSafeDdlTarget();
+        && (sensitivePhraseSanitizationAllowed
+            || operation.shouldSanitizeRemainderAfterSensitivePhrase());
   }
 
   private static abstract class Operation {
@@ -180,6 +176,10 @@ WHITESPACE           = [ \t\r\n]+
       return false;
     }
 
+    boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+      return false;
+    }
+
     SqlQuery getResult(String fullStatement) {
       return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
     }
@@ -210,6 +210,10 @@ WHITESPACE           = [ \t\r\n]+
           || "INDEX".equals(operationTarget)
           || "PROCEDURE".equals(operationTarget)
           || "VIEW".equals(operationTarget);
+    }
+
+    boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+      return !hasSafeDdlTarget();
     }
 
     boolean handleIdentifier() {
@@ -447,6 +451,13 @@ WHITESPACE           = [ \t\r\n]+
   "ALTER" {
           if (!insideComment) {
             setOperation(new Alter());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "GRANT" | "VALIDATE" | "CHECK" | "EXPORT" | "RECOVER" {
+          if (!insideComment) {
+            sensitivePhraseSanitizationAllowed = true;
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
