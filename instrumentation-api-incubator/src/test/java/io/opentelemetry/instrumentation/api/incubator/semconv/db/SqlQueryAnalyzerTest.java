@@ -86,6 +86,17 @@ class SqlQueryAnalyzerTest {
   }
 
   @Test
+  void sanitizeGrantIdentifiedByAfterPreviousStatement() {
+    SqlQuery result =
+        ANALYZER.analyze(
+            "SELECT 1; GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY Password1",
+            DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText())
+        .isEqualTo("SELECT ?; GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY ?");
+  }
+
+  @Test
   void sanitizeDdlObjectNamedPassword() {
     SqlQuery result =
         ANALYZER.analyze(

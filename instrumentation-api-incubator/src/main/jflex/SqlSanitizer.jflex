@@ -120,6 +120,7 @@ WHITESPACE           = [ \t\r\n]+
   private Operation operation = NoOp.INSTANCE;
   private boolean extractionDone = false;
   private boolean doubleQuotesAreIdentifiers;
+  private boolean statementStart = true;
   private boolean passwordSanitizationEnabled = false;
   private boolean identifiedBySanitizationEnabled = false;
 
@@ -127,6 +128,10 @@ WHITESPACE           = [ \t\r\n]+
     if (this.operation == NoOp.INSTANCE) {
       this.operation = operation;
     }
+  }
+
+  private void markStatementStarted() {
+    statementStart = false;
   }
 
   private boolean shouldSanitizeRemainderAfterPassword() {
@@ -399,6 +404,7 @@ WHITESPACE           = [ \t\r\n]+
 
   "SELECT" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Select());
           }
           appendCurrentFragment();
@@ -406,6 +412,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "INSERT" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Insert());
           }
           appendCurrentFragment();
@@ -413,6 +420,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "DELETE" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Delete());
           }
           appendCurrentFragment();
@@ -420,6 +428,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "UPDATE" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Update());
           }
           appendCurrentFragment();
@@ -427,6 +436,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "CALL" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Call());
           }
           appendCurrentFragment();
@@ -434,6 +444,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "MERGE" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Merge());
           }
           appendCurrentFragment();
@@ -441,6 +452,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "CREATE" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Create());
           }
           appendCurrentFragment();
@@ -448,6 +460,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "DROP" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Drop());
           }
           appendCurrentFragment();
@@ -455,28 +468,36 @@ WHITESPACE           = [ \t\r\n]+
       }
   "ALTER" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Alter());
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "GRANT" {
-          if (!insideComment && operation == NoOp.INSTANCE) {
-            identifiedBySanitizationEnabled = true;
+          if (!insideComment) {
+            if (statementStart) {
+              identifiedBySanitizationEnabled = true;
+            }
+            markStatementStarted();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "CONNECT" | "VALIDATE" | "CHECK" | "EXPORT" | "IMPORT" | "RECOVER" {
-          if (!insideComment && operation == NoOp.INSTANCE) {
-            passwordSanitizationEnabled = true;
-            identifiedBySanitizationEnabled = true;
+          if (!insideComment) {
+            if (statementStart) {
+              passwordSanitizationEnabled = true;
+              identifiedBySanitizationEnabled = true;
+            }
+            markStatementStarted();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "FROM" {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             if (operation == NoOp.INSTANCE) {
               // hql/jpql queries may skip SELECT and start with FROM clause
               // treat such queries as SELECT queries
@@ -489,6 +510,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "INTO" {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             extractionDone = operation.handleInto();
           }
           appendCurrentFragment();
@@ -496,6 +518,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "JOIN" {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             extractionDone = operation.handleJoin();
           }
           appendCurrentFragment();
@@ -503,6 +526,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "NEXT" {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             extractionDone = operation.handleNext();
           }
           appendCurrentFragment();
@@ -514,6 +538,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" | "USER" {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             if (operation.expectingOperationTarget()) {
               extractionDone = operation.handleOperationTarget(yytext());
             } else {
@@ -526,6 +551,7 @@ WHITESPACE           = [ \t\r\n]+
   "PASSWORD" {
           boolean passwordTokenIsIdentifier = false;
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             passwordTokenIsIdentifier = operation.handleIdentifier();
             extractionDone = passwordTokenIsIdentifier;
           }
@@ -537,6 +563,9 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "IDENTIFIED" {WHITESPACE}+ "BY" {
+          if (!insideComment) {
+            markStatementStarted();
+          }
           appendCurrentFragment();
           if (!insideComment && shouldSanitizeRemainderAfterIdentifiedBy()) {
             builder.append(" ?");
@@ -547,6 +576,7 @@ WHITESPACE           = [ \t\r\n]+
 
   {COMMA} {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             extractionDone = operation.handleComma();
           }
           appendCurrentFragment();
@@ -554,6 +584,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   ";" {
           if (!insideComment) {
+            statementStart = true;
             passwordSanitizationEnabled = false;
             identifiedBySanitizationEnabled = false;
           }
@@ -562,6 +593,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   {IDENTIFIER} {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             extractionDone = operation.handleIdentifier();
           }
           appendCurrentFragment();
@@ -570,6 +602,7 @@ WHITESPACE           = [ \t\r\n]+
 
   {OPEN_PAREN}  {
           if (!insideComment) {
+            markStatementStarted();
             parenLevel += 1;
           }
           appendCurrentFragment();
@@ -577,6 +610,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   {CLOSE_PAREN} {
           if (!insideComment) {
+            markStatementStarted();
             parenLevel -= 1;
           }
           appendCurrentFragment();
