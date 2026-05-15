@@ -30,12 +30,16 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 
 public class PulsarSingletons {
+  private static final Logger logger = Logger.getLogger(PulsarSingletons.class.getName());
+
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
   private static final OpenTelemetry telemetry = GlobalOpenTelemetry.get();
@@ -54,6 +58,8 @@ public class PulsarSingletons {
       createConsumerBatchReceiveInstrumenter();
   private static final Instrumenter<PulsarRequest, Void> producerInstrumenter =
       createProducerInstrumenter();
+
+  private static final boolean debug = Boolean.getBoolean("io.opentelemetry.pulsar-2.8.debug");
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
@@ -161,6 +167,9 @@ public class PulsarSingletons {
       @Nullable Throwable throwable) {
     if (message == null) {
       return null;
+    }
+    if (debug && message.getMessageId() == null) {
+      logger.log(Level.FINE, "Null message id: " + message, new Exception());
     }
     String brokerUrl = VirtualFieldStore.extract(consumer);
     PulsarRequest request = PulsarRequest.create(message, brokerUrl);
