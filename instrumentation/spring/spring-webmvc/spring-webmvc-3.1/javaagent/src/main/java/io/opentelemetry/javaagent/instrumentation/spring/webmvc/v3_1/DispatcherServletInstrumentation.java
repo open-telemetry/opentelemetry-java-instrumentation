@@ -51,9 +51,9 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
    * This advice creates a filter that has reference to the handlerMappings from DispatcherServlet
    * which allows the mappings to be evaluated outside of regular request processing.
    */
+  @SuppressWarnings("unused")
   public static class HandlerMappingAdvice {
 
-    @SuppressWarnings("unused")
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void afterRefresh(
         @Advice.Argument(0) ApplicationContext springCtx,
