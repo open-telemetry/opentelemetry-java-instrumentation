@@ -61,7 +61,7 @@ configurations:
     description: >
       Maximum number of rows to count for the <code>db.response.returned_rows</code> attribute.
       When this limit is exceeded, the attribute is omitted. Only applies when row count capture is enabled.
-    type: long
+    type: int
     default: 10000
   - name: otel.instrumentation.jdbc-datasource.enabled
     declarative_name: java.jdbc_datasource.enabled

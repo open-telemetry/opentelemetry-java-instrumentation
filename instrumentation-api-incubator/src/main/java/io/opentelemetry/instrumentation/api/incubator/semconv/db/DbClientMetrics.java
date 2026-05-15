@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -100,9 +100,7 @@ public final class DbClientMetrics implements OperationListener {
     duration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
 
     // Record returned rows metric if present
-    Long rowCount =
-        endAttributes.get(
-            longKey("db.response.returned_rows"));
+    Long rowCount = endAttributes.get(longKey("db.response.returned_rows"));
     if (rowCount != null) {
       returnedRows.record(rowCount, attributes, context);
     }
