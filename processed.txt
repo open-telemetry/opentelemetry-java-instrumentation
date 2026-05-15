@@ -500,3 +500,4 @@ spring-webmvc-common:testing
 spring-ws-2.0:javaagent
 spring-ws-2.0:testing
 starters:spring-boot-starter
+starters:zipkin-spring-boot-starter
