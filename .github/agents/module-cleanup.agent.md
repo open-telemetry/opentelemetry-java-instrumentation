@@ -107,6 +107,11 @@ For each file in scope:
 
 Auto-fix boundaries:
 
+- Not safe to fix automatically:
+  - adding a new `@SuppressWarnings("deprecation")` based only on static inspection, nearby
+    semconv usage, or sibling code that already has a suppression. Only add a new deprecation
+    suppression after observing an `OtelDeprecatedApiUsage` failure without it, or after verifying
+    the exact referenced symbol is deprecated and the suppression is required.
 - Safe to fix:
   - import cleanup or direct style-guide conformance
     **Extra step for shared/common modules**: when the modified file resides in a module

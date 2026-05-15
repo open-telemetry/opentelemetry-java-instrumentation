@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rxjava.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
+import static io.opentelemetry.javaagent.instrumentation.rxjava.v2_0.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,8 +43,7 @@ abstract class BaseRxJava2WithSpanTest {
 
   private static List<AttributeAssertion> assertCancelled(String method) {
     List<AttributeAssertion> assertions = codeFunctionSuffixAssertions("TracedWithSpan", method);
-    assertions.add(
-        equalTo(booleanKey("rxjava.canceled"), ExperimentalTestHelper.experimentalCanceled(true)));
+    assertions.add(equalTo(booleanKey("rxjava.canceled"), experimental(true)));
     return assertions;
   }
 
