@@ -78,6 +78,13 @@ class SqlQueryAnalyzerTest {
   }
 
     @Test
+    void sanitizeGrantObjectNamedPassword() {
+        SqlQuery result = ANALYZER.analyze("GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+        assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
+    }
+
+    @Test
     void sanitizeGrantObjectNamedPasswordWithSummary() {
         SqlQuery result =
                 ANALYZER.analyzeWithSummary(

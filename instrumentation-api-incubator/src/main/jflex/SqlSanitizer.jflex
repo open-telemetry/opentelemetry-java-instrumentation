@@ -120,7 +120,8 @@ WHITESPACE           = [ \t\r\n]+
   private Operation operation = NoOp.INSTANCE;
   private boolean extractionDone = false;
   private boolean doubleQuotesAreIdentifiers;
-  private boolean sensitivePhraseSanitizationAllowed = false;
+  private boolean passwordSanitizationEnabled = false;
+  private boolean identifiedBySanitizationEnabled = false;
 
   private void setOperation(Operation operation) {
     if (this.operation == NoOp.INSTANCE) {
@@ -128,10 +129,16 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+  private boolean shouldSanitizeRemainderAfterPassword() {
     return !insideComment
-        && (sensitivePhraseSanitizationAllowed
-            || operation.shouldSanitizeRemainderAfterSensitivePhrase());
+      && (passwordSanitizationEnabled
+        || operation.shouldSanitizeRemainderAfterPassword());
+  }
+
+  private boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+    return !insideComment
+      && (identifiedBySanitizationEnabled
+        || operation.shouldSanitizeRemainderAfterPassword());
   }
 
   private static abstract class Operation {
@@ -176,7 +183,7 @@ WHITESPACE           = [ \t\r\n]+
       return false;
     }
 
-    boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+    boolean shouldSanitizeRemainderAfterPassword() {
       return false;
     }
 
@@ -212,7 +219,7 @@ WHITESPACE           = [ \t\r\n]+
           || "VIEW".equals(operationTarget);
     }
 
-    boolean shouldSanitizeRemainderAfterSensitivePhrase() {
+    boolean shouldSanitizeRemainderAfterPassword() {
       return !hasSafeDdlTarget();
     }
 
@@ -453,9 +460,17 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "CONNECT" | "GRANT" | "VALIDATE" | "CHECK" | "EXPORT" | "IMPORT" | "RECOVER" {
+  "GRANT" {
           if (!insideComment && operation == NoOp.INSTANCE) {
-            sensitivePhraseSanitizationAllowed = true;
+            identifiedBySanitizationEnabled = true;
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "CONNECT" | "VALIDATE" | "CHECK" | "EXPORT" | "IMPORT" | "RECOVER" {
+          if (!insideComment && operation == NoOp.INSTANCE) {
+            passwordSanitizationEnabled = true;
+            identifiedBySanitizationEnabled = true;
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -513,7 +528,7 @@ WHITESPACE           = [ \t\r\n]+
             extractionDone = operation.handleIdentifier();
           }
           appendCurrentFragment();
-          if (!insideComment && shouldSanitizeRemainderAfterSensitivePhrase()) {
+          if (!insideComment && shouldSanitizeRemainderAfterPassword()) {
             builder.append(" ?");
             return YYEOF;
           }
@@ -521,7 +536,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "IDENTIFIED" {WHITESPACE}+ "BY" {
           appendCurrentFragment();
-          if (!insideComment && shouldSanitizeRemainderAfterSensitivePhrase()) {
+          if (!insideComment && shouldSanitizeRemainderAfterIdentifiedBy()) {
             builder.append(" ?");
             return YYEOF;
           }
@@ -537,7 +552,8 @@ WHITESPACE           = [ \t\r\n]+
       }
   ";" {
           if (!insideComment) {
-            sensitivePhraseSanitizationAllowed = false;
+            passwordSanitizationEnabled = false;
+            identifiedBySanitizationEnabled = false;
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
