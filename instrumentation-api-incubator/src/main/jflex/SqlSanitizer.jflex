@@ -454,7 +454,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "GRANT" | "VALIDATE" | "CHECK" | "EXPORT" | "RECOVER" {
-          if (!insideComment) {
+          if (!insideComment && operation == NoOp.INSTANCE) {
             sensitivePhraseSanitizationAllowed = true;
           }
           appendCurrentFragment();

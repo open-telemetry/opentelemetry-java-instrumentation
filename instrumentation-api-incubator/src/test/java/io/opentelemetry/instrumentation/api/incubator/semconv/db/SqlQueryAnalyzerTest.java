@@ -125,6 +125,10 @@ class SqlQueryAnalyzerTest {
             "GRANT"),
         // field names do not trigger sensitive statement sanitization
         Arguments.of("SELECT connect FROM TABLE", "SELECT connect FROM TABLE", "SELECT TABLE"),
+        Arguments.of(
+            "SELECT grant, password FROM users",
+            "SELECT grant, password FROM users",
+            "SELECT users"),
         Arguments.of("SELECT password FROM users", "SELECT password FROM users", "SELECT users"),
         Arguments.of(
             "SELECT identified_by FROM users", "SELECT identified_by FROM users", "SELECT users"),
