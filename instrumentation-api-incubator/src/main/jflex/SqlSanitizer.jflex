@@ -453,25 +453,11 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "GRANT" | "VALIDATE" | "CHECK" | "EXPORT" | "RECOVER" {
+  "CONNECT" | "GRANT" | "VALIDATE" | "CHECK" | "EXPORT" | "IMPORT" | "RECOVER" {
           if (!insideComment && operation == NoOp.INSTANCE) {
             sensitivePhraseSanitizationAllowed = true;
           }
           appendCurrentFragment();
-          if (isOverLimit()) return YYEOF;
-      }
-  "CONNECT" {
-          appendCurrentFragment();
-          // sanitize SAP HANA CONNECT statement
-          // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
-          // we check that operation is not set to avoid triggering sanitization when a field named
-          // connect is used or CONNECT BY clause is used in a SELECT statement
-          if (!insideComment && operation == NoOp.INSTANCE) {
-            // CONNECT statement could contain an unquoted password. We are not going to try
-            // figuring out whether that is the case or not, just sanitize the whole statement.
-            builder.append(" ?");
-            return YYEOF;
-          }
           if (isOverLimit()) return YYEOF;
       }
   "FROM" {

@@ -79,9 +79,8 @@ class SqlQueryAnalyzerTest {
 
   private static Stream<Arguments> sensitiveArgs() {
     return Stream.of(
-        // SAP HANA CONNECT and CREATE USER statements can contain unquoted password
+        // SAP HANA CREATE USER statements can contain unquoted password
         // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
-        Arguments.of("CONNECT user PASSWORD Password1", "CONNECT ?", null),
         Arguments.of(
             "CREATE USER new_user PASSWORD Password1",
             "CREATE USER new_user PASSWORD ?",
@@ -90,6 +89,7 @@ class SqlQueryAnalyzerTest {
             "ALTER USER user PASSWORD Password1", "ALTER USER user PASSWORD ?", "ALTER USER user"),
         // Other SAP HANA administrative statements can contain unquoted or double-quoted passwords
         // after a PASSWORD keyword.
+        Arguments.of("CONNECT user PASSWORD Password1", "CONNECT user PASSWORD ?", null),
         Arguments.of(
             "VALIDATE USER user PASSWORD Password1", "VALIDATE USER user PASSWORD ?", null),
         Arguments.of("CHECK USER user PASSWORD \"Password1\"", "CHECK USER user PASSWORD ?", null),
@@ -104,6 +104,10 @@ class SqlQueryAnalyzerTest {
         Arguments.of(
             "EXPORT table AS BINARY ENCRYPTION PASSWORD Password1",
             "EXPORT table AS BINARY ENCRYPTION PASSWORD ?",
+            null),
+        Arguments.of(
+            "IMPORT MY_SCHEMA1.T1 FROM '/backup/export_dir' WITH ENCRYPTION PASSWORD Password1",
+            "IMPORT MY_SCHEMA1.T1 FROM ? WITH ENCRYPTION PASSWORD ?",
             null),
         Arguments.of(
             "RECOVER ENCRYPTION ROOT KEYS USING 'backup' PASSWORD Password1",
