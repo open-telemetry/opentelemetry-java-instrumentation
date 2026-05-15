@@ -472,3 +472,4 @@ spring-jms-2.0:testing
 spring-jms-6.0:javaagent
 spring-kafka-2.7:javaagent
 spring-kafka-2.7:library
+spring-kafka-2.7:testing
