@@ -26,15 +26,14 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // this instrumentation module targets io.opentelemetry:opentelemetry-api
-    return hasClassesNamed(
-            // added in 1.38.0
-            "application.io.opentelemetry.api.metrics.LongGauge")
+    // added in 1.38.0
+    return hasClassesNamed("application.io.opentelemetry.api.metrics.LongGauge")
+        // artifact presence gate
+        // added in io.opentelemetry:opentelemetry-api-incubator 1.37.0
+        // (renamed from io.opentelemetry.extension.incubator)
         .and(
             not(
                 hasClassesNamed(
-                    // artifact presence gate
-                    // added in opentelemetry-api-incubator 1.37.0
-                    // (renamed from io.opentelemetry.extension.incubator)
                     "application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder")));
   }
 

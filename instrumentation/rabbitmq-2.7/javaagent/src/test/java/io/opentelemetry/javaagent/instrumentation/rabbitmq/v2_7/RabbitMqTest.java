@@ -618,7 +618,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     span.hasName(spanName);
 
     String rabbitCommand = null;
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       rabbitCommand = trace.getSpan(index).getAttributes().get(stringKey("rabbitmq.command"));
 
       SpanKind spanKind = captureSpanKind(rabbitCommand);
@@ -640,7 +640,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
           satisfies(
               longKey("rabbitmq.record.queue_time_ms"),
               val -> {
-                if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                if (EXPERIMENTAL_ATTRIBUTES) {
                   val.isNotNegative();
                 }
               }));

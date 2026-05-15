@@ -75,17 +75,17 @@ public abstract class AbstractRedissonClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final GenericContainer<?> redisServer =
+  private final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
-  private static String ip;
+  private String ip;
 
-  private static int port;
-  private static String address;
+  private int port;
+  private String address;
   private RedissonClient redisson;
 
   @BeforeAll
-  static void setupAll() throws UnknownHostException {
+  void setupAll() throws UnknownHostException {
     redisServer.start();
     ip = InetAddress.getByName(redisServer.getHost()).getHostAddress();
     port = redisServer.getMappedPort(6379);
@@ -93,7 +93,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @AfterAll
-  static void cleanupAll() {
+  void cleanupAll() {
     redisServer.stop();
   }
 

@@ -34,8 +34,8 @@ public abstract class ServerTestController {
       // Fall back to Spring 5.x signature (HttpStatus enum)
       try {
         method = ServerHttpResponse.class.getMethod("setStatusCode", HttpStatus.class);
-      } catch (NoSuchMethodException f) {
-        throw new IllegalStateException(f);
+      } catch (NoSuchMethodException e) {
+        throw new IllegalStateException(e);
       }
     }
     setStatusCodeMethod = method;
