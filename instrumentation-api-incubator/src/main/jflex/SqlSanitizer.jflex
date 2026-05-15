@@ -239,9 +239,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private abstract class DmlOperation extends Operation {}
-
-  private class Select extends DmlOperation {
+  private class Select extends Operation {
     // you can reference a table in the FROM clause in one of the following ways:
     //   table
     //   table t
@@ -315,7 +313,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Insert extends DmlOperation {
+  private class Insert extends Operation {
     boolean expectingTableName = false;
 
     boolean handleInto() {
@@ -333,7 +331,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Delete extends DmlOperation {
+  private class Delete extends Operation {
     boolean expectingTableName = false;
 
     boolean handleFrom() {
@@ -352,7 +350,7 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** Operation that extracts the first identifier as the main identifier. */
-  private class SimpleOperation extends DmlOperation {
+  private class SimpleOperation extends Operation {
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
       return true;

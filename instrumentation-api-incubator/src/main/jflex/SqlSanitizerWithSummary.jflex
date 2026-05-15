@@ -252,9 +252,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private abstract class DmlOperation extends Operation {}
-
-  private class Select extends DmlOperation {
+  private class Select extends Operation {
     // Max identifiers in a table reference: "table", "table alias", or "table as alias"
     private static final int TABLE_REF_MAX_IDENTIFIERS = 3;
 
@@ -405,7 +403,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Insert extends DmlOperation {
+  private class Insert extends Operation {
     boolean expectingTableName = false;
 
     void handleInto() {
@@ -425,7 +423,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Delete extends DmlOperation {
+  private class Delete extends Operation {
     boolean expectingTableName = false;
     boolean identifierCaptured = false;
 
@@ -462,7 +460,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Update extends DmlOperation {
+  private class Update extends Operation {
     boolean identifierCaptured = false;
 
     void handleSelect() {
@@ -481,7 +479,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Merge extends DmlOperation {
+  private class Merge extends Operation {
     boolean identifierCaptured = false;
 
     void handleIdentifier() {
@@ -492,7 +490,7 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Call extends DmlOperation {
+  private class Call extends Operation {
     boolean identifierCaptured = false;
     // Track "NEXT VALUE FOR sequence" pattern - sequence name comes after FOR
     boolean sawNext = false;
@@ -525,7 +523,7 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** VALUES operation - no table to capture. */
-  private class Values extends DmlOperation {}
+  private class Values extends Operation {}
 
   private class SensitivePhraseOperation extends Operation {
     boolean shouldSanitizeRemainderAfterSensitivePhrase() {
@@ -549,7 +547,7 @@ WHITESPACE           = [ \t\r\n]+
   private class Alter extends DdlOperation {}
 
   /** TRUNCATE operation - captures TABLE keyword and table name. */
-  private class Truncate extends DmlOperation {
+  private class Truncate extends Operation {
     boolean tableCaptured = false;
     boolean identifierCaptured = false;
 
@@ -571,7 +569,7 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** REPLACE operation (MySQL) - like INSERT, captures table name. */
-  private class Replace extends DmlOperation {
+  private class Replace extends Operation {
     boolean expectingTableName = false;
     boolean tableCaptured = false;
 
@@ -589,7 +587,7 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** LOCK operation - captures TABLE/TABLES keyword and table name. */
-  private class Lock extends DmlOperation {
+  private class Lock extends Operation {
     boolean tableCaptured = false;
     boolean identifierCaptured = false;
 
