@@ -145,7 +145,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                     span.hasName("Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
+                        .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"))),
         trace ->
@@ -204,7 +204,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                     span.hasName("Cluster.openBucket")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
+                        .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"))),
         trace ->

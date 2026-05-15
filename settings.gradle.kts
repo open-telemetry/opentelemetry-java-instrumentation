@@ -1,4 +1,9 @@
 pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    mavenCentral()
+  }
+
   plugins {
     id("com.github.jk1.dependency-license-report") version "3.1.2"
     id("com.google.cloud.tools.jib") version "3.5.3"
