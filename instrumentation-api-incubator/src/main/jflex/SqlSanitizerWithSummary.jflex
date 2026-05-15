@@ -192,6 +192,9 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingOperationTarget() {
       return false;
     }
+    boolean isCapturingIdentifier() {
+      return false;
+    }
     boolean shouldSanitizeRemainderAfterPassword() {
       return false;
     }
@@ -222,6 +225,11 @@ WHITESPACE           = [ \t\r\n]+
       operationTarget = target;
       expectingOperationTarget = false;
       appendOperationToSummary(operationTarget);
+    }
+
+    boolean isCapturingIdentifier() {
+      return (!identifierCaptured && !inEmbeddedSelect)
+          || (inEmbeddedSelect && expectingTableName && parenLevel == selectParenLevel);
     }
 
     /** Returns true for DDL targets where PASSWORD is treated as an identifier, not a secret clause. */
@@ -1052,12 +1060,14 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "PASSWORD" {
+          boolean passwordTokenIsIdentifier = false;
           if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
+            passwordTokenIsIdentifier = operation.isCapturingIdentifier();
             operation.handleIdentifier();
           }
           appendCurrentFragment();
-          if (!insideComment && shouldSanitizeRemainderAfterPassword()) {
+          if (!passwordTokenIsIdentifier && !insideComment && shouldSanitizeRemainderAfterPassword()) {
             builder.append(" ?");
             return YYEOF;
           }
