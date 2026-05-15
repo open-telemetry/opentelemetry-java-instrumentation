@@ -505,3 +505,4 @@ spymemcached-2.12:javaagent
 struts-2.3:javaagent
 struts-7.0:javaagent
 tapestry-5.4:javaagent
+tomcat-10.0:javaagent
