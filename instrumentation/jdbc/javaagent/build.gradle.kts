@@ -84,6 +84,8 @@ tasks {
       excludeTestsMatching("SlickTest")
       excludeTestsMatching("SqlCommenterTest")
       excludeTestsMatching("PreparedStatementParametersTest")
+      excludeTestsMatching("JdbcRowCountInstrumentationTest")
+      excludeTestsMatching("JdbcRowCountLimitTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
