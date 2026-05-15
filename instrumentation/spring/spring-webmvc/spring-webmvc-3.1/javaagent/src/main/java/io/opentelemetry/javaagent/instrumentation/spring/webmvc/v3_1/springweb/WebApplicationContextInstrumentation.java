@@ -52,9 +52,9 @@ class WebApplicationContextInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$FilterInjectingAdvice");
   }
 
-  @SuppressWarnings("unused")
   public static class FilterInjectingAdvice {
 
+    @SuppressWarnings("unused")
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {
       if (beanFactory instanceof BeanDefinitionRegistry
