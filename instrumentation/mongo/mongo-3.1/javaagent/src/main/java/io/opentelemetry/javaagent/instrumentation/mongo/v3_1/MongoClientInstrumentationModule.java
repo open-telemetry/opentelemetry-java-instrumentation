@@ -36,7 +36,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     return singletonList(new MongoClientOptionsBuilderInstrumentation());
   }
 
-  private static final class MongoClientOptionsBuilderInstrumentation
+  public static final class MongoClientOptionsBuilderInstrumentation
       implements TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
@@ -58,7 +58,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
     }
 
     @SuppressWarnings("unused")
-    static class MongoClientAdvice {
+    public static class MongoClientAdvice {
 
       @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
       public static void injectTraceListener(
