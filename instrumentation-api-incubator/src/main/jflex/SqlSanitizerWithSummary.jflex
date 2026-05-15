@@ -1046,7 +1046,7 @@ WHITESPACE           = [ \t\r\n]+
             operation.handleIdentifier();
           }
           appendCurrentFragment();
-          if (shouldSanitizeRemainderAfterSensitivePhrase()) {
+          if (!insideComment && shouldSanitizeRemainderAfterSensitivePhrase()) {
             builder.append(" ?");
             return YYEOF;
           }
@@ -1054,7 +1054,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "IDENTIFIED" {WHITESPACE}+ "BY" {
           appendCurrentFragment();
-          if (shouldSanitizeRemainderAfterSensitivePhrase()) {
+          if (!insideComment && shouldSanitizeRemainderAfterSensitivePhrase()) {
             builder.append(" ?");
             return YYEOF;
           }

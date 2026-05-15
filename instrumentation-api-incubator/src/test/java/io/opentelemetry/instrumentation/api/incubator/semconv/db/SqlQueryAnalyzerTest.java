@@ -113,6 +113,10 @@ class SqlQueryAnalyzerTest {
             "RECOVER ENCRYPTION ROOT KEYS USING 'backup' PASSWORD Password1",
             "RECOVER ENCRYPTION ROOT KEYS USING ? PASSWORD ?",
             null),
+        Arguments.of(
+            "GRANT SELECT ON users TO admin /* PASSWORD Password1 */",
+            "GRANT SELECT ON users TO admin /* PASSWORD Password1 */",
+            "GRANT"),
         // Oracle CREATE USER statement can contain unquoted password
         // https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_8003.htm
         Arguments.of(
