@@ -1,8 +1,9 @@
 #!/bin/bash
-# Final action invoked by the LLM agent: export the cleanup working-tree diff
-# to /tmp/gh-aw/agent/cleanup.patch so gh-aw's auto-uploader includes it in
-# the `agent` workflow artifact. The finalize job then downloads that artifact,
-# applies it onto otelbot/module-cleanup-wip, and creates the commit.
+# Final action invoked by the LLM agent: write the cleanup result into
+# /tmp/gh-aw/agent so gh-aw's auto-uploader includes it in the `agent`
+# workflow artifact. The finalize job then downloads that artifact and either
+# applies cleanup.patch onto otelbot/module-cleanup-wip or records cleanup.noop
+# as an explicit no-op.
 #
 # Idempotent and write-only to /tmp. Does NOT push anything.
 #
@@ -14,6 +15,7 @@ set -euo pipefail
 SHORT="${1:?short_name argument required}"
 OUT_DIR="${OUT_DIR:-/tmp/gh-aw/agent}"
 mkdir -p "$OUT_DIR"
+rm -f "$OUT_DIR/cleanup.patch" "$OUT_DIR/cleanup.noop"
 
 if ! git rev-parse --verify origin/main >/dev/null 2>&1; then
     git fetch origin main --depth=1
@@ -32,7 +34,8 @@ fi
 git add --intent-to-add .
 
 if git diff --quiet; then
-    echo "No changes produced by agent for $SHORT; nothing to export."
+    echo "$SHORT" > "$OUT_DIR/cleanup.noop"
+    echo "No changes produced by agent for $SHORT; wrote $OUT_DIR/cleanup.noop."
     exit 0
 fi
 

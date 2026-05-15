@@ -241,12 +241,12 @@ instructions imported into this prompt are yours; execute them yourself.
    ```
 
    This writes `/tmp/gh-aw/agent/cleanup.patch` (a `git diff --binary` of
-   your working-tree changes) so gh-aw's auto-uploader includes it in the
-   workflow's `agent` artifact. The finalize job downloads that artifact
-   and commits the patch to the `otelbot/module-cleanup-wip` branch. The script
-   is idempotent and exits cleanly with no patch if you produced no
-   changes. **Run it exactly once as your last action.** If you do not run
-   it, your work is lost.
+   your working-tree changes) or `/tmp/gh-aw/agent/cleanup.noop` (an explicit
+   no-op marker) so gh-aw's auto-uploader includes the result in the workflow's
+   `agent` artifact. The finalize job downloads that artifact and commits the
+   patch to the `otelbot/module-cleanup-wip` branch or records the no-op. The
+   script is idempotent. **Run it exactly once as your last action.** If you do
+   not run it, your work is lost.
 
 ## What you must NOT do
 

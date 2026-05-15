@@ -21,7 +21,7 @@ import java.util.Map;
 public class RabbitInstrumenterHelper {
   static final AttributeKey<String> RABBITMQ_COMMAND = AttributeKey.stringKey("rabbitmq.command");
 
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+  static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "rabbitmq")
           .getBoolean("experimental_span_attributes/development", false);
 

@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.getCommandContext;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.setCommandContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -62,11 +60,11 @@ class CommandSchedulerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(@Advice.Argument(0) CommandBase<?> command) {
-      Context stored = getCommandContext(command);
+      Context stored = VertxSqlClientSingletons.getCommandContext(command);
       if (stored == null) {
         // First schedule call (query executor → pool or direct connection).
         // The current OpenTelemetry context is correct — store it on the command.
-        setCommandContext(command, Context.current());
+        VertxSqlClientSingletons.setCommandContext(command, Context.current());
         return null;
       }
       // Subsequent schedule call (pool → connection).

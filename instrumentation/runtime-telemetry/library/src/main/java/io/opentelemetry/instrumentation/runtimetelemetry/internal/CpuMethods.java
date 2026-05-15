@@ -87,14 +87,17 @@ public final class CpuMethods {
     }
   }
 
+  @Nullable
   public static Supplier<Long> processCpuTime() {
     return processCpuTime;
   }
 
+  @Nullable
   public static Supplier<Double> processCpuUtilization() {
     return processCpuUtilization;
   }
 
+  @Nullable
   public static Supplier<Double> systemCpuUtilization() {
     return systemCpuUtilization;
   }

@@ -11,8 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.attachConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.resolveAndStoreDbSystem;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -88,7 +86,7 @@ class PoolInstrumentation implements TypeInstrumentation {
 
       if (pool != null) {
         setPoolConnectOptions(pool, sqlConnectOptions);
-        resolveAndStoreDbSystem(pool, sqlConnectOptions);
+        VertxSqlClientSingletons.resolveAndStoreDbSystem(pool, sqlConnectOptions);
       }
       setSqlConnectOptions(null);
     }
@@ -103,7 +101,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       // copy connect options stored on pool to new connection
       SqlConnectOptions sqlConnectOptions = getPoolSqlConnectOptions(pool);
 
-      return wrapContext(attachConnectOptions(future, sqlConnectOptions));
+      return wrapContext(VertxSqlClientSingletons.attachConnectOptions(future, sqlConnectOptions));
     }
   }
 }

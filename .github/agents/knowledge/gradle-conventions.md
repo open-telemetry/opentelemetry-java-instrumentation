@@ -64,16 +64,10 @@ properties that are already modeled there, including:
 - `maxTestRetries`
 - `enableStrictContext`
 
-Examples:
+Example:
 
 ```kotlin
-if (otelProps.testLatestDeps) {
-  // ...
-}
-
-tasks.withType<Test>().configureEach {
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-}
+val springBootVersion = if (otelProps.testLatestDeps) "2.+" else "2.6.15"
 ```
 
 For module-local one-off properties that are not part of `otelProps`, using `findProperty(...)`

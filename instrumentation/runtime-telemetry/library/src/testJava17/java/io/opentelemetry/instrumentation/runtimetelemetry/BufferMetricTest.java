@@ -38,7 +38,7 @@ class BufferMetricTest {
    * be added for those missing pools.
    */
   @Test
-  void shouldHaveJfrLoadedClassesCountEvents() {
+  void shouldHaveJfrBufferMetrics() {
     ByteBuffer buffer = ByteBuffer.allocateDirect(10000);
     buffer.put("test".getBytes(UTF_8));
 
