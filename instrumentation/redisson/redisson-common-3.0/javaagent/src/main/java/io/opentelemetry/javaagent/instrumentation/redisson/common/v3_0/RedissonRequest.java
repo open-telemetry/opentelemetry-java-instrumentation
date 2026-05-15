@@ -35,6 +35,9 @@ public abstract class RedissonRequest {
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "redisson"));
+  // after combined query text length has reached this size we won't append further commands
+  // note that RedisCommandSanitizer already limits the size of sanitized commands
+  private static final int LIMIT = 32 * 1024;
 
   @Nullable
   private static final MethodHandle COMMAND_DATA_GET_PROMISE =
@@ -108,10 +111,16 @@ public abstract class RedissonRequest {
     Object command = getCommand();
     // get command
     if (command instanceof CommandsData) {
+      int length = 0;
       List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
       List<String> normalizedCommands = new ArrayList<>(commands.size());
       for (CommandData<?, ?> singleCommand : commands) {
-        normalizedCommands.add(normalizeSingleCommand(singleCommand));
+        String s = normalizeSingleCommand(singleCommand);
+        length += s.length();
+        normalizedCommands.add(s);
+        if (length > LIMIT) {
+          break;
+        }
       }
       return normalizedCommands;
     } else if (command instanceof CommandData) {

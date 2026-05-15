@@ -39,7 +39,7 @@ public final class RedisCommandSanitizer {
   private static final Map<String, CommandSanitizer> SANITIZERS;
   private static final CommandSanitizer DEFAULT = new CommandAndNumArgs(0);
 
-  // max length of the sanitized command, command loner than that will be truncated to this length
+  // max length of the sanitized command, command longer than that will be truncated to this length
   // visible for testing
   static final int LIMIT = 32 * 1024;
 

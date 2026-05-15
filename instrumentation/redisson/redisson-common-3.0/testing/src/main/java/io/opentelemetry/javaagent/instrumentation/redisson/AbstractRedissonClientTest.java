@@ -207,8 +207,7 @@ public abstract class AbstractRedissonClientTest {
     // Adapt different method signature:
     // `BatchResult<?> execute()` and `List<?> execute()`
     invokeExecute(batch);
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("SET", "GET"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -224,6 +223,38 @@ public abstract class AbstractRedissonClientTest {
 
   private static void invokeExecute(RBatch batch) throws ReflectiveOperationException {
     batch.getClass().getMethod("execute").invoke(batch);
+  }
+
+  @Test
+  void largeBatchCommand() throws ReflectiveOperationException {
+    RBatch batch = createBatch(redisson);
+    assertThat(batch).isNotNull();
+    StringBuilder bucketNameBuilder = new StringBuilder("bucket");
+    for (int i = 0; i < 20_000; i++) {
+      bucketNameBuilder.append("a");
+    }
+    String bucketName = bucketNameBuilder.toString();
+    // run 4 command but only 2 will be added to the query text because of the max length limit
+    for (int i = 0; i < 4; i++) {
+      batch.getBucket(bucketName).setAsync("v" + i);
+    }
+    // Adapt different method signature:
+    // `BatchResult<?> execute()` and `List<?> execute()`
+    invokeExecute(batch);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "SET " + bucketName + " ?;SET " + bucketName + " ?"))));
   }
 
   @Test
