@@ -145,7 +145,7 @@ class NacosClientInstrumentationTest {
 
     assertRequest(
         NacosRequestMapper.mapServerRequest(
-            NotifySubscriberRequest.buildSuccessResponse(serviceInfo), "127.0.0.1:9848"),
+            notifySubscriberRequest(serviceInfo), "127.0.0.1:9848"),
         NotifySubscriberRequest.class,
         "naming",
         "notifySubscribeChange",
@@ -212,7 +212,7 @@ class NacosClientInstrumentationTest {
     Attributes attributes =
         extractAttributes(
             NacosRequestMapper.mapServerRequest(
-                NotifySubscriberRequest.buildSuccessResponse(serviceInfo), "127.0.0.1:9848"));
+                notifySubscriberRequest(serviceInfo), "127.0.0.1:9848"));
 
     assertThat(attributes.get(NACOS_CATEGORY)).isEqualTo("naming");
     assertThat(attributes.get(NACOS_REQUEST_TYPE)).isEqualTo("NotifySubscriberRequest");
@@ -288,6 +288,12 @@ class NacosClientInstrumentationTest {
     request.setGroup(group);
     request.setTenant(tenant);
     request.setContent(content);
+    return request;
+  }
+
+  private static NotifySubscriberRequest notifySubscriberRequest(ServiceInfo serviceInfo) {
+    NotifySubscriberRequest request = new NotifySubscriberRequest();
+    request.setServiceInfo(serviceInfo);
     return request;
   }
 
