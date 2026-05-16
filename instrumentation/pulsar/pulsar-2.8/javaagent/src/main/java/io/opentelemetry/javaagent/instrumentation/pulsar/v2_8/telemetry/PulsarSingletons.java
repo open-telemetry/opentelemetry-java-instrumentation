@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -30,7 +32,6 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
@@ -169,7 +170,7 @@ public class PulsarSingletons {
       return null;
     }
     if (debug && message.getMessageId() == null) {
-      logger.log(Level.FINE, "Null message id: " + message, new Exception());
+      logger.log(FINE, "Null message id: " + message, new Exception());
     }
     String brokerUrl = VirtualFieldStore.extract(consumer);
     PulsarRequest request = PulsarRequest.create(message, brokerUrl);
