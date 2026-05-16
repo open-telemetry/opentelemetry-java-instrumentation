@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.clientInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.getPropagators;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -67,7 +66,7 @@ class ThriftServiceClientInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static TProtocol onEnter(@Advice.Argument(0) TProtocol protocol) {
-      return new ClientProtocolDecorator(protocol, getPropagators());
+      return new ClientProtocolDecorator(protocol, ThriftSingletons.getPropagators());
     }
   }
 
@@ -76,7 +75,7 @@ class ThriftServiceClientInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static TProtocol onEnter(@Advice.Argument(1) TProtocol outProtocol) {
-      return new ClientProtocolDecorator(outProtocol, getPropagators());
+      return new ClientProtocolDecorator(outProtocol, ThriftSingletons.getPropagators());
     }
   }
 
