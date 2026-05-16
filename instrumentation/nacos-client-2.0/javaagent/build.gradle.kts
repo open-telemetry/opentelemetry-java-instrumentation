@@ -13,7 +13,7 @@ muzzle {
 
 dependencies {
   library("com.alibaba.nacos:nacos-client:2.0.0")
-  latestDepTestLibrary("com.alibaba.nacos:nacos-client:2.+") // only supports Nacos 2.x
+  latestDepTestLibrary("com.alibaba.nacos:nacos-client:2.+")
 
   testImplementation(project(":instrumentation-api"))
   testImplementation(project(":instrumentation-api-incubator"))
