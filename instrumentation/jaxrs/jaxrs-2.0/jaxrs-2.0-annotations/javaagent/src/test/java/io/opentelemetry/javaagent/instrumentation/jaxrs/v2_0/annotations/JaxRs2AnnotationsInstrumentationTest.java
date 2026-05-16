@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.annotations;
 
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -16,7 +16,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.JavaInterfaces.Jax;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.annotations.JavaInterfaces.Jax;
 import java.util.stream.Stream;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
