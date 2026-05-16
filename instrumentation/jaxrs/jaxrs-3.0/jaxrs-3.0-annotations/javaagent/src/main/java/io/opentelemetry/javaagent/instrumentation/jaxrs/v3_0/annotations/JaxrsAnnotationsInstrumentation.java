@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.annotations;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming.serverSpanName;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JaxrsAnnotationsSingletons.RESPONSE_DATA;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JaxrsAnnotationsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.annotations.JaxrsAnnotationsSingletons.RESPONSE_DATA;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.annotations.JaxrsAnnotationsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -27,6 +27,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.AsyncResponseData;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.CompletionStageFinishCallback;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.common.Jaxrs3HandlerData;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.container.AsyncResponse;
 import java.lang.reflect.Method;
