@@ -544,3 +544,4 @@ xxl-job-common-1.9.2:javaagent
 xxl-job-common-1.9.2:testing
 zio-2.0:javaagent
 zio-http-3.0:javaagent
+thrift-0.13:javaagent
