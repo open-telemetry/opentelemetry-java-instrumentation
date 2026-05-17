@@ -318,5 +318,6 @@ class NacosClientInstrumentationTest {
       return "unsupported";
     }
   }
+
   private static class TestResponse extends Response {}
 }
