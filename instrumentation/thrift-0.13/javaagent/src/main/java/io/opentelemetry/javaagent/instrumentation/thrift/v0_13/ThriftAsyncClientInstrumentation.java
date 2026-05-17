@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.clientInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.getPropagators;
+import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.propagators;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -69,7 +69,7 @@ class ThriftAsyncClientInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static TProtocolFactory onEnter(@Advice.Argument(0) TProtocolFactory protocolFactory) {
-      return new ClientProtocolDecorator.Factory(protocolFactory, getPropagators());
+      return new ClientProtocolDecorator.Factory(protocolFactory, propagators());
     }
   }
 

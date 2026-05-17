@@ -23,8 +23,8 @@ public final class ClientCallContext {
   private static final ThreadLocal<ClientCallContext> current = new ThreadLocal<>();
 
   private final Instrumenter<ThriftRequest, ThriftResponse> instrumenter;
-  @Nullable public ThriftRequest request;
-  @Nullable public Context context;
+  @Nullable ThriftRequest request;
+  @Nullable Context context;
   boolean contextPropagated;
 
   public static ClientCallContext start(
