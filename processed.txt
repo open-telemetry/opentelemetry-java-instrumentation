@@ -546,3 +546,4 @@ zio-2.0:javaagent
 zio-http-3.0:javaagent
 thrift-0.13:javaagent
 thrift-0.13:library
+thrift-0.13:testing
