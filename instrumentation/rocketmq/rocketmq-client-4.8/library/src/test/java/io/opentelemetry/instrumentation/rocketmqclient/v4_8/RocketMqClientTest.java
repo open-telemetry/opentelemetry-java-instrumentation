@@ -13,6 +13,7 @@ import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // testing instrumentation of deprecated class
 class RocketMqClientTest extends AbstractRocketMqClientTest {
 
   @RegisterExtension
@@ -24,7 +25,6 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
   void configureMqProducer(DefaultMQProducer producer) {
     producer
         .getDefaultMQProducerImpl()
@@ -37,7 +37,6 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
   void configureMqPushConsumer(DefaultMQPushConsumer consumer) {
     consumer
         .getDefaultMQPushConsumerImpl()

@@ -1,7 +1,8 @@
 ---
 description: |
   Walks instrumentation modules one-at-a-time, processing exactly one
-  module per run. Each successful run's commit is appended to the fixed
+  module per run. Each successful run's changes are appended as a commit
+  to the fixed
   `otelbot/module-cleanup-wip` branch. When that branch reaches FILE_THRESHOLD
   modified files (or when the unprocessed-module queue empties), the
   finalize job atomically renames wip to `otelbot/module-cleanup-batch-<run_id>`
@@ -230,24 +231,22 @@ instructions imported into this prompt are yours; execute them yourself.
 1. Confirm the module directory exists:
    `test -d "$MODULE_DIR" || { echo "Module directory missing: $MODULE_DIR"; exit 1; }`
 2. Apply the imported `module-cleanup` persona's full checklist to
-   `$MODULE_DIR`. Reach the persona's commit step. The commit subject must
-   match the persona's format: `Cleanup for $MODULE_SHORT_NAME`. If the
-   persona reports it had to revert all of its changes (no substantive
-   diff remained), proceed to step 3 anyway — "no commit" is a valid
-   outcome and finalize handles it.
+   `$MODULE_DIR`. Leave any changes uncommitted. If the persona reports it
+   had to revert all of its changes (no substantive diff remained), proceed
+   to step 3 anyway — "no changes" is a valid outcome and finalize handles it.
 3. **Final mandatory action** (do not skip even on no-op):
 
    ```
    bash .github/scripts/module-cleanup/export-cleanup-patch.sh "$MODULE_SHORT_NAME"
    ```
 
-   This writes `/tmp/gh-aw/agent/cleanup.patch` (a `git format-patch` of
-   your commit range) so gh-aw's auto-uploader includes it in the
-   workflow's `agent` artifact. The finalize job downloads that artifact
-   and applies the patch to the `otelbot/module-cleanup-wip` branch. The script
-   is idempotent and exits cleanly with no patch if you produced no
-   commit. **Run it exactly once as your last action.** If you do not run
-   it, your work is lost.
+   This writes `/tmp/gh-aw/agent/cleanup.patch` (a `git diff --binary` of
+   your working-tree changes) or `/tmp/gh-aw/agent/cleanup.noop` (an explicit
+   no-op marker) so gh-aw's auto-uploader includes the result in the workflow's
+   `agent` artifact. The finalize job downloads that artifact and commits the
+   patch to the `otelbot/module-cleanup-wip` branch or records the no-op. The
+   script is idempotent. **Run it exactly once as your last action.** If you do
+   not run it, your work is lost.
 
 ## What you must NOT do
 

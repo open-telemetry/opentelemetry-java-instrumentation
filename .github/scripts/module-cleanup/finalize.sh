@@ -9,7 +9,11 @@
 #      module is recorded as "processed" (so it isn't retried in a loop)
 #      AND logged as a failure for diagnostics.
 #   2. If the agent produced a cleanup patch, apply it onto the fixed
-#      otelbot/module-cleanup-wip branch and push.
+#      otelbot/module-cleanup-wip branch and push. If the agent succeeded
+#      and explicitly wrote a cleanup.noop marker, append an empty "Cleanup for
+#      <short> (empty)" commit so the eventual batch PR records the module as
+#      reviewed. If neither cleanup.patch nor cleanup.noop is present, record a
+#      failure instead of treating it as a no-op.
 #   3. If wip diff vs origin/main has reached FLUSH_THRESHOLD files OR
 #      the queue is empty, atomically rename wip to a
 #      otelbot/module-cleanup-batch-<run_id> branch and open the PR. The wip
@@ -30,7 +34,7 @@
 #   SHORT_NAME        - the module short_name processed this run
 #   AGENT_RESULT      - github.needs.agent.result ('success'|'failure'|...)
 #   ARTIFACT_DIR      - directory of the downloaded `agent` artifact
-#                       (may or may not contain cleanup.patch)
+#                       (may or may not contain cleanup.patch / cleanup.noop)
 #   QUEUE_REMAINING   - count of unprocessed modules left after this one
 #
 # Optional env:
@@ -48,6 +52,42 @@ REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY required}"
 SHORT="${SHORT_NAME:?SHORT_NAME required}"
 AGENT_RESULT="${AGENT_RESULT:-failure}"
 ARTIFACT_DIR="${ARTIFACT_DIR:-./agent-artifact}"
+
+PATCH_SRC=""
+for candidate in \
+    "$ARTIFACT_DIR/agent/cleanup.patch" \
+    "$ARTIFACT_DIR/tmp/gh-aw/agent/cleanup.patch" \
+    "$ARTIFACT_DIR/cleanup.patch"; do
+    if [ -f "$candidate" ]; then
+        # Absolute path so the value survives the cd into $WIP_WT below.
+        PATCH_SRC="$(realpath "$candidate")"
+        echo "Found cleanup patch at $PATCH_SRC"
+        break
+    fi
+done
+
+NOOP_SRC=""
+if [ -z "$PATCH_SRC" ]; then
+    for candidate in \
+        "$ARTIFACT_DIR/agent/cleanup.noop" \
+        "$ARTIFACT_DIR/tmp/gh-aw/agent/cleanup.noop" \
+        "$ARTIFACT_DIR/cleanup.noop"; do
+        if [ -f "$candidate" ]; then
+            NOOP_SRC="$(realpath "$candidate")"
+            echo "Found cleanup no-op marker at $NOOP_SRC"
+            break
+        fi
+    done
+fi
+
+if [ -z "$PATCH_SRC" ] && [ -z "$NOOP_SRC" ]; then
+    echo "No cleanup.patch or cleanup.noop marker (missing artifact or agent failed before export)."
+fi
+
+ARTIFACT_FAILURE_REASON=""
+if [ "$AGENT_RESULT" = "success" ] && [ -z "$PATCH_SRC" ] && [ -z "$NOOP_SRC" ]; then
+    ARTIFACT_FAILURE_REASON="agent artifact missing cleanup.patch/cleanup.noop"
+fi
 
 # Full history is required for `origin/main..origin/$WIP_BRANCH` log/diff
 # below. The finalize job's checkout uses `fetch-depth: 0`, so don't
@@ -75,37 +115,26 @@ if ! grep -Fxq "$SHORT" "$PROCESSED"; then
     echo "$SHORT" >> "$PROCESSED"
 fi
 
-if [ "$AGENT_RESULT" != "success" ]; then
+MEMORY_REASON="agent_result=$AGENT_RESULT"
+if [ -n "$ARTIFACT_FAILURE_REASON" ]; then
+    MEMORY_REASON="$ARTIFACT_FAILURE_REASON"
+fi
+
+if [ "$AGENT_RESULT" != "success" ] || [ -n "$ARTIFACT_FAILURE_REASON" ]; then
     ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-    echo -e "$SHORT\t$ts\tagent_result=$AGENT_RESULT" >> "$FAILED"
+    echo -e "$SHORT\t$ts\t$MEMORY_REASON" >> "$FAILED"
 fi
 
 (
     cd "$MEM_WT"
     git add -A
     if ! git diff --cached --quiet; then
-        git commit -m "Mark $SHORT processed (agent_result=$AGENT_RESULT)"
+        git commit -m "Mark $SHORT processed ($MEMORY_REASON)"
         git push origin "$MEMORY_BRANCH"
     fi
 )
 
 # ---- 2. Apply cleanup patch (if any) onto wip ----
-
-PATCH_SRC=""
-for candidate in \
-    "$ARTIFACT_DIR/agent/cleanup.patch" \
-    "$ARTIFACT_DIR/tmp/gh-aw/agent/cleanup.patch" \
-    "$ARTIFACT_DIR/cleanup.patch"; do
-    if [ -f "$candidate" ]; then
-        # Absolute path so the value survives the cd into $WIP_WT below.
-        PATCH_SRC="$(realpath "$candidate")"
-        echo "Found cleanup patch at $PATCH_SRC"
-        break
-    fi
-done
-if [ -z "$PATCH_SRC" ]; then
-    echo "No cleanup.patch (no-op or agent failed before commit)."
-fi
 
 WIP_WT=/tmp/wip-wt
 rm -rf "$WIP_WT"
@@ -118,22 +147,37 @@ fi
 if [ -n "$PATCH_SRC" ]; then
     (
         cd "$WIP_WT"
-        if git am --3way "$PATCH_SRC"; then
-            echo "Applied cleanup for $SHORT to $WIP_BRANCH"
-            git push origin "$WIP_BRANCH"
+        if git apply --3way --index "$PATCH_SRC"; then
+            if git diff --cached --quiet; then
+                echo "Patch for $SHORT applied cleanly but produced no changes."
+            else
+                git commit -m "Cleanup for $SHORT"
+                echo "Committed cleanup for $SHORT to $WIP_BRANCH"
+                git push origin "$WIP_BRANCH"
+            fi
         else
-            git am --abort 2>/dev/null || true
-            echo "FAILED to apply cleanup for $SHORT (rebase conflict)."
+            git reset --hard >/dev/null 2>&1 || true
+            echo "FAILED to apply cleanup for $SHORT (patch conflict)."
             ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
             (
                 cd "$MEM_WT"
-                echo -e "$SHORT\t$ts\tgit am failed (rebase conflict)" >> "$FAILED"
+                echo -e "$SHORT\t$ts\tgit apply failed (patch conflict)" >> "$FAILED"
                 git add -A
                 git commit -m "Record $SHORT as patch-conflict failure"
                 git push origin "$MEMORY_BRANCH" || true
             )
         fi
     )
+elif [ "$AGENT_RESULT" = "success" ] && [ -n "$NOOP_SRC" ]; then
+    (
+        cd "$WIP_WT"
+        git commit --allow-empty \
+            -m "Cleanup for $SHORT (empty)" \
+            -m "No cleanup changes needed."
+        git push origin "$WIP_BRANCH"
+    )
+elif [ -n "$ARTIFACT_FAILURE_REASON" ]; then
+    echo "Skipping empty cleanup commit: $ARTIFACT_FAILURE_REASON."
 fi
 
 git fetch origin "$WIP_BRANCH" 2>/dev/null || true
@@ -157,7 +201,7 @@ echo "queue remaining:   $QUEUE_REMAINING"
 echo "threshold:         $THRESHOLD"
 
 SHOULD_FLUSH=false
-if [ "$AHEAD" -gt 0 ]; then
+if [ "$AHEAD" -gt 0 ] && [ "$FILE_COUNT" -gt 0 ]; then
     if [ "$FILE_COUNT" -ge "$THRESHOLD" ]; then
         SHOULD_FLUSH=true
         echo "Flushing: file count >= threshold."
@@ -165,6 +209,8 @@ if [ "$AHEAD" -gt 0 ]; then
         SHOULD_FLUSH=true
         echo "Flushing: queue exhausted."
     fi
+elif [ "$AHEAD" -gt 0 ]; then
+    echo "Skipping flush: wip branch has no file changes."
 fi
 
 OPENED_PR=false
