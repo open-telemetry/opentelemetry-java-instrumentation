@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nacosclient.v2_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import com.alibaba.nacos.api.config.remote.request.ConfigChangeNotifyRequest;
 import com.alibaba.nacos.api.config.remote.request.ConfigPublishRequest;
@@ -20,8 +21,6 @@ import com.alibaba.nacos.api.naming.remote.request.ServiceQueryRequest;
 import com.alibaba.nacos.api.naming.remote.request.SubscribeServiceRequest;
 import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.api.remote.response.Response;
-import com.alibaba.nacos.common.remote.ConnectionType;
-import com.alibaba.nacos.common.remote.client.Connection;
 import com.alibaba.nacos.common.remote.client.RpcClient;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -258,7 +257,7 @@ class NacosClientInstrumentationTest {
 
   @Test
   void prefersVirtualFieldServerInfoWhenResolvingPeer() {
-    RpcClient rpcClient = new TestRpcClient();
+    RpcClient rpcClient = mock(RpcClient.class);
     RpcClientServerInfoAccessor.set(rpcClient, new RpcClient.ServerInfo("127.0.0.1", 9848));
 
     assertThat(RpcClientServerInfoAccessor.resolvePeer(rpcClient)).isEqualTo("127.0.0.1:9848");
@@ -320,28 +319,5 @@ class NacosClientInstrumentationTest {
       return "unsupported";
     }
   }
-
-  private static class TestRpcClient extends RpcClient {
-
-    private TestRpcClient() {
-      super("test");
-    }
-
-    @Override
-    public ConnectionType getConnectionType() {
-      return ConnectionType.GRPC;
-    }
-
-    @Override
-    public int rpcPortOffset() {
-      return 1000;
-    }
-
-    @Override
-    public Connection connectToServer(RpcClient.ServerInfo serverInfo) {
-      return null;
-    }
-  }
-
   private static class TestResponse extends Response {}
 }
