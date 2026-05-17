@@ -143,8 +143,7 @@ class NacosClientInstrumentationTest {
     serviceInfo.setGroupName("DEFAULT_GROUP");
 
     assertRequest(
-        NacosRequestMapper.mapServerRequest(
-            notifySubscriberRequest(serviceInfo), "127.0.0.1:9848"),
+        NacosRequestMapper.mapServerRequest(notifySubscriberRequest(serviceInfo), "127.0.0.1:9848"),
         NotifySubscriberRequest.class,
         "naming",
         "notifySubscribeChange",
