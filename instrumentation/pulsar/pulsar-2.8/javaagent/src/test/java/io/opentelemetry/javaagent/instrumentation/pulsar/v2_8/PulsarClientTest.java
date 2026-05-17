@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -648,6 +649,81 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic2, msgId2.toString(), false))));
+  }
+
+  @Test
+  void testReceiveMultiTopics() throws Exception {
+    String topicNamePrefix = "persistent://public/default/testReceiveMulti_";
+    String topic1 = topicNamePrefix + "1";
+    String topic2 = topicNamePrefix + "2";
+    producer = client.newProducer(Schema.STRING).topic(topic1).enableBatching(false).create();
+    producer2 = client.newProducer(Schema.STRING).topic(topic2).enableBatching(false).create();
+
+    MessageId msgId1 = testing.runWithSpan("parent1", () -> producer.send("test1"));
+    MessageId msgId2 = testing.runWithSpan("parent2", () -> producer2.send("test2"));
+
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .topic(topic2, topic1)
+            .subscriptionName("test_sub")
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+
+    Message<String> received1 = consumer.receive(1, MINUTES);
+    Message<String> received2 = consumer.receive(1, MINUTES);
+    consumer.acknowledge(received1);
+    consumer.acknowledge(received2);
+
+    assertThat(asList(received1.getMessageId().toString(), received2.getMessageId().toString()))
+        .containsExactlyInAnyOrder(msgId1.toString(), msgId2.toString());
+
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    AtomicReference<SpanData> producerSpan2 = new AtomicReference<>();
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent1", topic1 + " receive", "parent2", topic2 + " receive"),
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName(topic1 + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(topic1, msgId1.toString(), false)));
+
+          producerSpan.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(topic1 + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic1, msgId1.toString(), false))),
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName(topic2 + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(topic2, msgId2.toString(), false)));
+
+          producerSpan2.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(topic2 + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic2, msgId2.toString(), false))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
