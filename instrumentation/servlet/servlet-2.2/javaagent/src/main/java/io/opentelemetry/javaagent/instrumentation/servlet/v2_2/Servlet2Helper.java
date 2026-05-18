@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
-import io.opentelemetry.javaagent.instrumentation.servlet.BaseServletHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.BaseServletHelper;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
