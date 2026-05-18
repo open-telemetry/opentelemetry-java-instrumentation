@@ -49,7 +49,7 @@ class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
             serverSpanName(),
             (IPageClassRequestHandler) handler);
       }
-      if (v3Preview() && handler instanceof ResourceReferenceRequestHandler) {
+      if (handler instanceof ResourceReferenceRequestHandler && v3Preview()) {
         HttpServerRoute.update(
             Java8BytecodeBridge.currentContext(),
             CONTROLLER,
