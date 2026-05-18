@@ -4,8 +4,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Delete the internal `ClassInjector`/`ProxyInjectionBuilder` API, so extension modules can no
-  longer inject helper proxies through `injectClasses(...)`.
+- Removed the obsolete internal `ClassInjector`/`ProxyInjectionBuilder` API used by the old
+  `ExperimentalInstrumentationModule.injectClasses(ClassInjector)` path; use
+  `ExperimentalInstrumentationModule.exposedClassNames()` instead.
   ([#18112](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18112))
 - Removed previously deprecated non-stable API methods and the deprecated
   `opentelemetry-runtime-telemetry-java8` and `opentelemetry-runtime-telemetry-java17` library
@@ -43,25 +44,36 @@
 - Add Apache Thrift 0.13 instrumentation for RPC client and server spans and metrics.
   ([#18405](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18405))
 
+### 🌟 New library instrumentation
+
+- Add Apache Thrift 0.13 library instrumentation for RPC client and server spans and metrics.
+  ([#18405](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18405))
+
 ### 📈 Enhancements
 
-- Use the stable semconv instrumentation scope name for Couchbase 3.1 when
-  `otel.instrumentation.common.v3-preview` is enabled.
+- Couchbase 3.1 javaagent instrumentation now emits the more conventional instrumentation
+  scope name `io.opentelemetry.couchbase-3.1` instead of
+  `io.opentelemetry.javaagent.couchbase-3.1` when `otel.instrumentation.common.v3-preview`
+  is enabled.
   ([#18426](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18426))
+- Decide whether javaagent helper classes are injected into the application class loader or
+  isolated based on the advice classes used by an instrumentation.
+  ([#17815](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17815))
+- Improve cgroup v2 container ID detection for Podman by supporting additional `mountinfo`
+  layouts and warning when multiple candidate IDs are found.
+  ([#18272](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18272))
 
 ### 🛠️ Bug fixes
 
-- Pekko HTTP and Tapir server spans now preserve the most specific route name across nested
-  directives, exceptions, and timeouts.
+- Fix Pekko HTTP and Tapir server route tracking so server span names and `http.route` preserve
+  the most specific matched route across nested directives, exceptions, and timeouts; this may
+  change span names and `http.route` values for affected routes.
   ([#16390](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16390))
-- Decide whether helper classes are injected or isolated based on the advice classes used by an
-  instrumentation.
-  ([#17815](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17815))
-- Fixes Finagle HTTP instrumentation so tracing context propagates correctly through Netty and
-  Promise/Future boundaries.
+- Fix context loss in Finagle HTTP instrumentation across Netty-to-Finagle request conversion and
+  `twitter-util` Future/Promise asynchronous boundaries.
   ([#17867](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17867))
-- Skip expunging stale weak-map entries on virtual threads so cache cleanup runs from the background
-  thread instead.
+- Fix virtual-thread pinning caused by weak-map stale-entry cleanup running on virtual threads;
+  cleanup now runs from the background thread instead.
   ([#18113](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18113))
 - Avoid linking batch consumer spans to the ambient consumer span when records or messages have no
   propagation headers.
@@ -71,9 +83,6 @@
   ([#18258](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18258))
 - End spans when RxJava 1.0 subscriptions throw synchronously.
   ([#18265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18265))
-- Make cgroup v2 container ID extraction more permissive so Podman container IDs are detected in
-  additional mountinfo layouts.
-  ([#18272](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18272))
 - Fix Spring Boot service version auto-detection so `META-INF/build-info.properties` is read from
   the jar root instead of `BOOT-INF/classes/`.
   ([#18292](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18292))
@@ -85,27 +94,20 @@
 - Fix a `NullPointerException` when converting an agent context without an associated application
   context to an application context.
   ([#18444](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18444))
-- Fix Ktor server telemetry so OpenTelemetry context does not leak across requests.
+- Fix Ktor server instrumentation to prevent OpenTelemetry context leaks caused by incomplete
+  coroutine context restoration.
   ([#18456](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18456))
-- Fix Vert.x sub-router `http.route` attributes so mounted routes include the sub-router path.
+- Fix Vert.x sub-router `http.route` attributes by prepending the mount point to the relative
+  route path; this may change server span names and `http.route` values for mounted sub-routes.
   ([#18462](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18462))
 - Fix oshi metrics startup and RSS memory reporting with `oshi` 7.0.0.
   ([#18478](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18478))
-- Improve the Tomcat 10 classloader matcher so the agent instruments Tomcat 10 across supported
-  versions.
-  ([#18525](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18525))
-- Fixes the deprecation warning for `otel.instrumentation.<name>.enabled` so it is logged under the
-  correct enablement check.
-  ([#18620](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18620))
 - Fix Play MVC and Play WS instrumentation on Play 3.x applications.
   ([#18624](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18624))
 - Record an error receive span when a wrapped Kafka consumer `poll()` fails.
   ([#18625](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18625))
-- Fix muzzle match caching so indy-based instrumentation reuses the correct class loader match
-  result.
-  ([#18627](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18627))
-- Start `WeakConcurrentMapCleaner` before Byte Buddy installation so weak references created during
-  agent startup are cleaned up.
+- Fix weak-map cleanup during agent startup by starting `WeakConcurrentMapCleaner` before Byte
+  Buddy installation.
   ([#18628](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18628))
 - Fix indy instrumentation so it works with the security manager without recursive bootstrap
   failures.
