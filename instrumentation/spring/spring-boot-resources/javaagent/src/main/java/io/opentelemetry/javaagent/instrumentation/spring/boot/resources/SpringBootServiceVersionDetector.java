@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.boot.resources;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static java.util.logging.Level.FINE;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
@@ -23,7 +22,6 @@ import java.util.logging.Logger;
  * Note: The spring starter already includes provider in
  * io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider
  */
-@AutoService(ResourceProvider.class)
 public class SpringBootServiceVersionDetector implements ResourceProvider {
 
   private static final Logger logger =
