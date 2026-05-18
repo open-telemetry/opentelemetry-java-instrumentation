@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.extension.ignore;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
-import javax.annotation.Nullable;
 
 /**
  * An {@link IgnoredTypesConfigurer} can be used to augment built-in instrumentation restrictions:
@@ -33,7 +32,7 @@ public interface IgnoredTypesConfigurer extends Ordered {
    * @deprecated Use {@link #configure(IgnoredTypesBuilder)} instead.
    */
   @Deprecated
-  default void configure(IgnoredTypesBuilder builder, @Nullable ConfigProperties config) {
+  default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
     configure(builder);
   }
 }
