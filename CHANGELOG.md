@@ -28,8 +28,6 @@
   property; use `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled`
   instead.
   ([#18237](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18237))
-- Wicket resource requests now use the resource reference class name in the server span name.
-  ([#18312](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18312))
 - Reshaped the ktor `Experimental` helper from a class with a `companion object` to a top-level
   `object`. Kotlin source callers (`Experimental.emitExperimentalTelemetry(...)`) are unaffected,
   but pre-compiled consumers must be recompiled against the new artifact.
@@ -60,6 +58,10 @@
   `io.opentelemetry.javaagent.couchbase-3.1` when `otel.instrumentation.common.v3-preview`
   is enabled.
   ([#18426](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18426))
+- Wicket resource requests now use the resource reference class name in the server span name when
+  `otel.instrumentation.common.v3-preview` is enabled.
+  ([#18312](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18312),
+  [#18775](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18775))
 - Decide whether javaagent helper classes are injected into the application class loader or
   isolated based on the advice classes used by an instrumentation.
   ([#17815](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17815))
@@ -131,6 +133,9 @@
   ([#18709](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18709))
 - Limit Redisson batch query text length to avoid oversized `db.statement` values for large batches.
   ([#18744](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18744))
+- Fix SQL query sanitization so password clauses in SAP HANA administrative statements are redacted
+  without redacting `password` identifiers.
+  ([#18754](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18754))
 
 ## Version 2.27.0 (2026-04-21)
 
