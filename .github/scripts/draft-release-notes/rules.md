@@ -38,6 +38,11 @@ interface in a non-stable (`-alpha`) module or in `javaagent-extension-api`
 - removal of a `default` method from an internal interface,
 - signature change even when the method never carried `@Deprecated`.
 
+Treat non-private `Experimental*` helpers in published `:library`
+artifacts as incubating public API even when their package name
+contains `.internal`; removals or binary-incompatible reshaping belong
+under Breaking.
+
 Emitted-attribute, attribute-value, or span-name changes are Breaking
 **only** when they ship unconditionally. If the change is gated behind
 `otel.instrumentation.common.v3-preview`,
@@ -110,6 +115,10 @@ to one or more of:
 - renames of internal (not extension-API) fields, packages, or helpers,
 - new package-private, `internal`-package, or test-only methods,
 - `metadata.yaml` documentation (see section above).
+
+Do not use the internal-helper omit rule for non-private `Experimental*`
+classes in published artifacts; classify their
+removal or binary-incompatible reshaping under Breaking.
 
 Trivial omits (renovate bumps, all-test/docs/build paths, post-release
 version bumps) are handled by `classify.py --preclassify-only`.
