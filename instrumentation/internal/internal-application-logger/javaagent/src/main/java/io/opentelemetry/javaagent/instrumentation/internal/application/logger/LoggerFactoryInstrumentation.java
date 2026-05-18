@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.internal.logging;
+package io.opentelemetry.javaagent.instrumentation.internal.application.logger;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerFlags;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -15,30 +15,27 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class LoggingApplicationListenerInstrumentation implements TypeInstrumentation {
+class LoggerFactoryInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf(
-        // spring boot 1.x
-        "org.springframework.boot.logging.LoggingApplicationListener",
-        // spring boot 2.+
-        "org.springframework.boot.context.logging.LoggingApplicationListener");
+    return named("org.slf4j.LoggerFactory");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // the logger is properly initialized once this method exits
+    // once a call to getILoggerFactory() exits we can be certain that slf4j is properly initialized
     transformer.applyAdviceToMethod(
-        named("initialize"), getClass().getName() + "$InitializeAdvice");
+        named("getILoggerFactory").and(takesArguments(0)),
+        getClass().getName() + "$GetLoggerFactoryAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class InitializeAdvice {
+  public static class GetLoggerFactoryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit() {
-      if (ApplicationLoggerFlags.bridgeSpringBootLogging()) {
+      if (ApplicationLoggerFlags.bridgeLoggerFactory()) {
         Slf4jApplicationLoggerBridge.install();
       }
     }
