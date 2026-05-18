@@ -22,6 +22,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
 
+  private static final boolean V3_PREVIEW =
+      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
+
   @RegisterExtension
   private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
@@ -89,8 +92,15 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET " + getContextPath() + "/wicket-test/hello.HelloResource")
+                    span.hasName(expectedResourceSpanName())
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()));
+  }
+
+  private String expectedResourceSpanName() {
+    if (V3_PREVIEW) {
+      return "GET " + getContextPath() + "/wicket-test/hello.HelloResource";
+    }
+    return "GET " + getContextPath() + "/wicket-test/*";
   }
 }
