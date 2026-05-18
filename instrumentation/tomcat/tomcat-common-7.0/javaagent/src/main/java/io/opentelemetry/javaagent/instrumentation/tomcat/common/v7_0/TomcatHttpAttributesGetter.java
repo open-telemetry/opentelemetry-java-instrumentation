@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.tomcat.common;
+package io.opentelemetry.javaagent.instrumentation.tomcat.common.v7_0;
 
-import static io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatHelper.messageBytesToString;
+import static io.opentelemetry.javaagent.instrumentation.tomcat.common.v7_0.TomcatHelper.messageBytesToString;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;

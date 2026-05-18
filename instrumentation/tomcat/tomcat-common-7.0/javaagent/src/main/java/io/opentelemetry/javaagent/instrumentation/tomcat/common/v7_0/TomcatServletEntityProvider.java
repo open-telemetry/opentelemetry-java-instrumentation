@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.tomcat.common;
+package io.opentelemetry.javaagent.instrumentation.tomcat.common.v7_0;
 
 import javax.annotation.Nullable;
 import org.apache.coyote.Request;
