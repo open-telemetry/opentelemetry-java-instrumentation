@@ -27,6 +27,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.within;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -668,6 +669,67 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
+  void testConverseStreamToolCallWithEmptyToolArguments() {
+    BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
+    configureClient(builder);
+    BedrockRuntimeAsyncClient client = configureBedrockRuntimeClient(builder.build());
+
+    String modelId = "amazon.nova-micro-v1:0";
+    List<Message> messages = new ArrayList<>();
+    messages.add(
+        Message.builder()
+            .role(ConversationRole.USER)
+            .content(ContentBlock.fromText("What time is it?"))
+            .build());
+
+    ConverseStreamResponseHandler responseHandler =
+        ConverseStreamResponseHandler.builder()
+            .subscriber(ConverseStreamResponseHandler.Visitor.builder().build())
+            .build();
+
+    assertThatCode(
+            () ->
+                client
+                    .converseStream(
+                        ConverseStreamRequest.builder()
+                            .modelId(modelId)
+                            .messages(messages)
+                            .toolConfig(serverTimeToolConfig())
+                            .build(),
+                        responseHandler)
+                    .join())
+        .doesNotThrowAnyException();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("content", Value.of("What time is it?")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("tool_use")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of(
+                                "toolCalls",
+                                Value.of(
+                                    Value.of(
+                                        KeyValue.of("name", Value.of("get_server_time")),
+                                        KeyValue.of("arguments", Value.of("{}")),
+                                        KeyValue.of("id", Value.of("tooluse_empty_params_test")),
+                                        KeyValue.of("type", Value.of("function"))))),
+                            KeyValue.of("content", Value.of("")))));
+  }
+
+  @Test
   void testConverseToolCallStream() {
     BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
@@ -1065,6 +1127,28 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     "<thinking> The tool has provided the current weather for both locations. Now I will compile the information and present it to the User. </thinking>\n"
                                         + "\n"
                                         + "The current weather in Seattle is 50 degrees and it is raining. In San Francisco, the weather is 70 degrees and sunny.")))));
+  }
+
+  private static ToolConfiguration serverTimeToolConfig() {
+    return ToolConfiguration.builder()
+        .tools(
+            Tool.builder()
+                .toolSpec(
+                    ToolSpecification.builder()
+                        .name("get_server_time")
+                        .description("Get the current server time.")
+                        .inputSchema(
+                            ToolInputSchema.builder()
+                                .json(
+                                    Document.mapBuilder()
+                                        .putString("type", "object")
+                                        .putDocument(
+                                            "properties", Document.mapBuilder().build())
+                                        .build())
+                                .build())
+                        .build())
+                .build())
+        .build();
   }
 
   private static ToolConfiguration currentWeatherToolConfig() {
