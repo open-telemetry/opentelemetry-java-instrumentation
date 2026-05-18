@@ -28,9 +28,6 @@ check_source_set() {
     module_path=${dir%%/$source_set/src/main/java*}
     module_name=${module_path##*/}
 
-    if [[ "$module_name" =~ ^java- ]]; then
-      continue
-    fi
     if [[ "$module_name" == "jmx-metrics" ]]; then
       continue
     fi
@@ -51,6 +48,12 @@ check_source_set() {
       if [[ "$dir" == "instrumentation/servlet/servlet-common/library/src/main/java/io/opentelemetry/instrumentation/servlet/internal" ]]; then
         continue
       fi
+      if [[ "$dir" == instrumentation/java-http-client/library/src/main/java/io/opentelemetry/instrumentation/javahttpclient* ]]; then
+        continue
+      fi
+      if [[ "$dir" == instrumentation/java-http-server/library/src/main/java/io/opentelemetry/instrumentation/javahttpserver* ]]; then
+        continue
+      fi
     fi
 
     if [[ "$source_set" == "javaagent" ]]; then
@@ -60,6 +63,7 @@ check_source_set() {
         instrumentation/finagle-http-23.11/javaagent/src/main/java/com/twitter/finagle*) continue ;;
         instrumentation/finagle-http-23.11/javaagent/src/main/java/io/netty/channel*) continue ;;
         instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client*) continue ;;
+        instrumentation/spring/spring-boot-resources/javaagent/src/main/java/io/opentelemetry/instrumentation/spring/resources) continue ;;
         instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1*) continue ;;
         instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0*) continue ;;
         instrumentation/vertx/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl*) continue ;;
@@ -71,6 +75,9 @@ check_source_set() {
         instrumentation/akka/akka-actor-fork-join-2.5/javaagent/*) continue ;;
         instrumentation/aws-sdk/aws-sdk-1.11/javaagent/src/main/java/io/opentelemetry/instrumentation/awssdk/v1_11) continue ;;
         instrumentation/aws-sdk/aws-sdk-2.2/javaagent/src/main/java/io/opentelemetry/instrumentation/awssdk/v2_2/internal) continue ;;
+        instrumentation/java-http-client/javaagent/*) continue ;;
+        instrumentation/java-http-server/javaagent/*) continue ;;
+        instrumentation/java-util-logging/javaagent/*) continue ;;
         instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations/javaagent/*) continue ;;
         instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-common/javaagent/*) continue ;;
         instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations/javaagent/*) continue ;;
@@ -106,11 +113,9 @@ check_source_set() {
         javaagent:internal-url-class-loader) ;;
         javaagent:jaxrs-common) ;;
         javaagent:jdbc) ;;
-        javaagent:jetty-common) ;;
         javaagent:jsf-common-jakarta) ;;
         javaagent:jsf-common-javax) ;;
         javaagent:methods) ;;
-        javaagent:opensearch-rest-common) ;;
         javaagent:opentelemetry-instrumentation-api) ;;
         javaagent:oshi) ;;
         javaagent:payara) ;;
@@ -121,7 +126,6 @@ check_source_set() {
         javaagent:spring-boot-resources) ;;
         javaagent:spring-cloud-gateway-common) ;;
         javaagent:spring-webmvc-common) ;;
-        javaagent:tomcat-common) ;;
         javaagent:tomcat-jdbc) ;;
         *)
           echo "module name doesn't have a base version: $dir"
@@ -132,12 +136,15 @@ check_source_set() {
 
     # build expected package name by walking the module name's dash-separated tokens:
     # a version token (e.g. "3.0") becomes "/v3_0", any other token becomes "/<token>";
-    # the literal token "java" is elided (e.g. graphql-java-20.0 -> graphql/v20_0).
+    # the literal token "java" is elided except when it is the leading token in java-* modules
+    # where it identifies a JDK instrumentation (e.g. graphql-java-20.0 -> graphql/v20_0,
+    # but java-http-client -> java/http/client).
     # this also handles multi-version modules like jaxrs-2.0-resteasy-3.1 -> jaxrs/v2_0/resteasy/v3_1.
     expected_package_name="$expected_prefix"
     IFS='-' read -ra module_parts <<< "$module_name"
-    for part in "${module_parts[@]}"; do
-      if [[ "$part" == "java" ]]; then
+    for i in "${!module_parts[@]}"; do
+      part=${module_parts[$i]}
+      if [[ "$part" == "java" && "$i" != 0 ]]; then
         continue
       fi
       if [[ "$part" =~ ^[0-9][0-9.]*$ ]]; then
