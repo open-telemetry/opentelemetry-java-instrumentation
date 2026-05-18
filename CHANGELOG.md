@@ -30,6 +30,10 @@
   ([#18237](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18237))
 - Wicket resource requests now use the resource reference class name in the server span name.
   ([#18312](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18312))
+- Reshaped the ktor `Experimental` helper from a class with a `companion object` to a top-level
+  `object`. Kotlin source callers (`Experimental.emitExperimentalTelemetry(...)`) are unaffected,
+  but pre-compiled consumers must be recompiled against the new artifact.
+  ([#18343](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18343))
 
 ### 🚫 Deprecations
 
