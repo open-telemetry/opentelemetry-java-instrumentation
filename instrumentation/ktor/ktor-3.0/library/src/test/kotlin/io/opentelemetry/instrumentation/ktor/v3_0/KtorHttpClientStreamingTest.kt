@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 
 class KtorHttpClientStreamingTest {
@@ -72,6 +73,17 @@ class KtorHttpClientStreamingTest {
               response.bodyAsText()
             }
           }
+        }
+      }
+    }
+
+    val maxSpanDuration = 5.seconds
+    val traces = testing.waitForTraces(3)
+    traces.forEach { trace ->
+      trace.forEach { span ->
+        val spanDuration = (span.endEpochNanos - span.startEpochNanos).nanoseconds
+        assert(spanDuration < maxSpanDuration) {
+          "Span duration $spanDuration exceeded $maxSpanDuration — likely waiting for request timeout"
         }
       }
     }
