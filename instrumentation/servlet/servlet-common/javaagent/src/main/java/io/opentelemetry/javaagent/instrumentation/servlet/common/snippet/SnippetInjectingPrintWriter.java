@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.snippet;
+package io.opentelemetry.javaagent.instrumentation.servlet.common.snippet;
 
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
