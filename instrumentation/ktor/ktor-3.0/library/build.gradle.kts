@@ -24,10 +24,10 @@ dependencies {
   testLibrary("io.ktor:ktor-server-netty:$ktorVersion")
   testLibrary("io.ktor:ktor-client-cio:$ktorVersion")
 
-  latestDepTestLibrary("io.ktor:ktor-client-core:3.+")
-  latestDepTestLibrary("io.ktor:ktor-server-core:3.+")
-  latestDepTestLibrary("io.ktor:ktor-server-netty:3.+")
-  latestDepTestLibrary("io.ktor:ktor-client-cio:3.+")
+  latestDepTestLibrary("io.ktor:ktor-client-core:+")
+  latestDepTestLibrary("io.ktor:ktor-server-core:+")
+  latestDepTestLibrary("io.ktor:ktor-server-netty:+")
+  latestDepTestLibrary("io.ktor:ktor-client-cio:+")
 }
 
 kotlin {
