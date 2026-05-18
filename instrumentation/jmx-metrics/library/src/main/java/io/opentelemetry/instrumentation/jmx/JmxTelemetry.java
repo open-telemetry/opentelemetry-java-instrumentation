@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.jmx.internal.engine.JmxMetricInsight;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import java.util.List;
@@ -18,6 +18,12 @@ import javax.management.MBeanServerFactory;
 public final class JmxTelemetry {
   private final JmxMetricInsight service;
   private final MetricConfiguration metricConfiguration;
+  private final ComponentLoader componentLoader;
+
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
+  public static JmxTelemetry create(OpenTelemetry openTelemetry) {
+    return builder(openTelemetry).build();
+  }
 
   /** Returns a new {@link JmxTelemetryBuilder} configured with the given {@link OpenTelemetry}. */
   public static JmxTelemetryBuilder builder(OpenTelemetry openTelemetry) {
@@ -25,30 +31,26 @@ public final class JmxTelemetry {
   }
 
   JmxTelemetry(
-      OpenTelemetry openTelemetry, long discoveryDelayMs, MetricConfiguration metricConfiguration) {
+      OpenTelemetry openTelemetry,
+      long discoveryDelayMs,
+      MetricConfiguration metricConfiguration,
+      ComponentLoader componentLoader) {
     this.service = JmxMetricInsight.createService(openTelemetry, discoveryDelayMs);
     this.metricConfiguration = metricConfiguration;
+    this.componentLoader = componentLoader;
   }
 
-  /**
-   * Starts JMX metrics collection on current JVM
-   *
-   * @return this
-   */
-  @CanIgnoreReturnValue
-  public JmxTelemetry start() {
-    return this.start(() -> MBeanServerFactory.findMBeanServer(null));
+  /** Starts JMX metrics collection on current JVM */
+  public AutoCloseable start() {
+    return start(() -> MBeanServerFactory.findMBeanServer(null));
   }
 
   /**
    * Starts JMX metrics collection on provided (local or remote) connections
    *
    * @param connections connection provider
-   * @return this
    */
-  @CanIgnoreReturnValue
-  public JmxTelemetry start(Supplier<List<? extends MBeanServerConnection>> connections) {
-    service.start(metricConfiguration, connections);
-    return this;
+  public AutoCloseable start(Supplier<List<? extends MBeanServerConnection>> connections) {
+    return service.start(metricConfiguration, connections, componentLoader);
   }
 }

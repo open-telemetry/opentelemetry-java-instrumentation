@@ -85,11 +85,22 @@ public class RuleParser {
     if (beans != null) {
       beans.forEach(jmxRule::addBean);
     }
+    String handler = (String) ruleYaml.remove("handler");
+    if (handler != null) {
+      jmxRule.addHandler(handler);
+    }
+    List<String> handlers = (List<String>) ruleYaml.remove("handlers");
+    if (handlers != null) {
+      handlers.forEach(jmxRule::addHandler);
+    }
     String prefix = (String) ruleYaml.remove("prefix");
     if (prefix != null) {
       jmxRule.setPrefix(prefix);
     }
-    jmxRule.setMapping(parseMappings((Map<String, Object>) ruleYaml.remove("mapping")));
+    Map<String, Metric> mapping = parseMappings((Map<String, Object>) ruleYaml.remove("mapping"));
+    if (!mapping.isEmpty() || !jmxRule.hasHandlers()) {
+      jmxRule.setMapping(mapping);
+    }
     parseMetricStructure(ruleYaml, jmxRule);
 
     failOnExtraKeys(ruleYaml);
