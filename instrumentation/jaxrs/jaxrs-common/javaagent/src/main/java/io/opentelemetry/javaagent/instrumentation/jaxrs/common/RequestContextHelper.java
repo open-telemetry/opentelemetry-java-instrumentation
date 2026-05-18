@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.common;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming.serverSpanName;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsServerSpanNaming.serverSpanName;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;

@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.v3_1;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.HandlerData;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsInstrumenterFactory;
 
 public class Resteasy31Singletons {
 
