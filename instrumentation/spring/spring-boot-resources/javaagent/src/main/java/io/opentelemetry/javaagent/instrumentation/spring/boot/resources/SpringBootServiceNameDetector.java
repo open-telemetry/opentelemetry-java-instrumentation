@@ -9,10 +9,8 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINER;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.IOException;
@@ -55,7 +53,6 @@ import org.snakeyaml.engine.v2.api.LoadSettings;
  * <p>Note: The spring starter already includes provider in
  * io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider
  */
-@AutoService(ResourceProvider.class)
 public class SpringBootServiceNameDetector implements ConditionalResourceProvider {
 
   private static final Logger logger =
