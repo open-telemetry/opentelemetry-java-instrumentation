@@ -14,15 +14,16 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
@@ -35,7 +36,7 @@ class KtorHttpClientStreamingTest {
     private val testing: InstrumentationExtension = LibraryInstrumentationExtension.create()
 
     private lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
-    private val serverPort = ServerSocket(0).use { it.localPort }
+    private val serverPort = PortUtils.findOpenPort()
 
     @JvmStatic
     @BeforeAll
@@ -82,8 +83,8 @@ class KtorHttpClientStreamingTest {
     traces.forEach { trace ->
       trace.forEach { span ->
         val spanDuration = (span.endEpochNanos - span.startEpochNanos).nanoseconds
-        assert(spanDuration < maxSpanDuration) {
-          "Span duration $spanDuration exceeded $maxSpanDuration — likely waiting for request timeout"
+        assertTrue(spanDuration < maxSpanDuration) {
+          "Span duration $spanDuration exceeded $maxSpanDuration, span end may have waited for request timeout"
         }
       }
     }
