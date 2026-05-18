@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.common;
 
 public class JaxrsConstants {
   public static final String ABORT_FILTER_CLASS =
