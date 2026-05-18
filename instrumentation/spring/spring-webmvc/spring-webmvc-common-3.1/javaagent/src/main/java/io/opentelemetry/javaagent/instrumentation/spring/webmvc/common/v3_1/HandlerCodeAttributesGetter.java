@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webmvc.common;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.common.v3_1;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import java.lang.reflect.Method;
