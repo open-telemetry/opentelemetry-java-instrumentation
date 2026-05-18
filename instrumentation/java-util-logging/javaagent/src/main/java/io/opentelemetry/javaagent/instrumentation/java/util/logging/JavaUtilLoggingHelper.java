@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jul;
+package io.opentelemetry.javaagent.instrumentation.java.util.logging;
 
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
