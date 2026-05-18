@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.net.ServerSocket
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 
 class KtorHttpClientStreamingTest {
@@ -33,50 +34,46 @@ class KtorHttpClientStreamingTest {
     private val testing: InstrumentationExtension = LibraryInstrumentationExtension.create()
 
     private lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
-    private var serverPort: Int = 0
+    private val serverPort = ServerSocket(0).use { it.localPort }
 
     @JvmStatic
     @BeforeAll
     fun setupServer() {
-      serverPort = ServerSocket(0).use { it.localPort }
       server = embeddedServer(Netty, port = serverPort) {
         routing {
           get("/success") {
             call.respondText("ok")
           }
         }
-      }.start(wait = false)
-      Thread.sleep(1000)
+      }.start()
     }
 
     @JvmStatic
     @AfterAll
     fun stopServer() {
-      server.stop(1000, 2000)
+      server.stop(0, 10, TimeUnit.SECONDS)
     }
   }
 
   @Test
   fun `prepareGet execute completes promptly with telemetry installed`() {
-    val client = HttpClient(CIO) {
+    HttpClient(CIO) {
       install(HttpTimeout) {
         requestTimeoutMillis = 30_000
       }
       install(KtorClientTelemetry) {
         setOpenTelemetry(testing.openTelemetry)
       }
-    }
-
-    runBlocking {
-      withTimeout(5.seconds) {
-        repeat(3) {
-          client.prepareGet("http://localhost:$serverPort/success").execute { response ->
-            response.bodyAsText()
+    }.use { client ->
+      runBlocking {
+        withTimeout(5.seconds) {
+          repeat(3) {
+            client.prepareGet("http://localhost:$serverPort/success").execute { response ->
+              response.bodyAsText()
+            }
           }
         }
       }
     }
-
-    client.close()
   }
 }
