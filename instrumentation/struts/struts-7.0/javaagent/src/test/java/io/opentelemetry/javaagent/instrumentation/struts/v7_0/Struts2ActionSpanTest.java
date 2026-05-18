@@ -126,7 +126,7 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
   @Test
   void testDispatchToServlet() {
     AggregatedHttpResponse response =
-        client.get(address.resolve("dispatch").toString()).aggregate().join();
+        client.get(h1Address.resolve("dispatch").toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("greeting");

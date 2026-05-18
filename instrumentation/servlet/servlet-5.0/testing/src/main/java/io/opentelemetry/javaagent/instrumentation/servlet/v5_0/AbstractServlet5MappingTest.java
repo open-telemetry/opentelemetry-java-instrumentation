@@ -64,9 +64,8 @@ public abstract class AbstractServlet5MappingTest<SERVER, CONTEXT>
     "suffix, /*, false",
   })
   void testPath(String path, String route, boolean success) {
-
     AggregatedHttpResponse response =
-        client.get(address.resolve(path).toString()).aggregate().join();
+        client.get(h1Address.resolve(path).toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(success ? 200 : 404);
 
