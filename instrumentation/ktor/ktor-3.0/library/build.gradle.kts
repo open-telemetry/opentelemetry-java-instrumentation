@@ -7,7 +7,7 @@ plugins {
   id("org.jetbrains.kotlin.jvm")
 }
 
-val ktorVersion = "3.0.0"
+val ktorVersion = "3.5.0"
 
 dependencies {
   library("io.ktor:ktor-client-core:$ktorVersion")
