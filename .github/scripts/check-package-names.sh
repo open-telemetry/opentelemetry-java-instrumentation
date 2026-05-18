@@ -71,19 +71,14 @@ check_source_set() {
         instrumentation/akka/akka-actor-fork-join-2.5/javaagent/*) continue ;;
         instrumentation/aws-sdk/aws-sdk-1.11/javaagent/src/main/java/io/opentelemetry/instrumentation/awssdk/v1_11) continue ;;
         instrumentation/aws-sdk/aws-sdk-2.2/javaagent/src/main/java/io/opentelemetry/instrumentation/awssdk/v2_2/internal) continue ;;
-        instrumentation/internal/internal-application-logger/javaagent/*) continue ;;
         instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations/javaagent/*) continue ;;
         instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-common/javaagent/*) continue ;;
         instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations/javaagent/*) continue ;;
         instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-common/javaagent/*) continue ;;
-        instrumentation/jaxrs/jaxrs-common/javaagent/*) continue ;;
         instrumentation/opentelemetry-api/opentelemetry-api-1.0/javaagent/*) continue ;;
         instrumentation/opentelemetry-extension-annotations-1.0/javaagent/*) continue ;;
         instrumentation/opentelemetry-instrumentation-annotations-1.16/javaagent/*) continue ;;
         instrumentation/opentelemetry-instrumentation-api/javaagent/*) continue ;;
-        instrumentation/servlet/servlet-common/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/servlet) continue ;;
-        instrumentation/servlet/servlet-common/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/servlet/snippet) continue ;;
-        instrumentation/spring/spring-boot-resources/javaagent/*) continue ;;
       esac
     fi
 
