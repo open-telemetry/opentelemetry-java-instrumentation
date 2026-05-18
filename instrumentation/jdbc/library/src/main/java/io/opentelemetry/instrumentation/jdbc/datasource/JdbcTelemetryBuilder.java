@@ -89,7 +89,7 @@ public final class JdbcTelemetryBuilder {
             captureQueryParameters);
     Instrumenter<DbRequest, Void> transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(
-            openTelemetry, transactionInstrumenterEnabled);
+            openTelemetry, transactionInstrumenterEnabled, querySanitizationEnabled);
 
     return new JdbcTelemetry(
         dataSourceInstrumenter,
