@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.ServletHelper;
 import javax.annotation.Nullable;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;

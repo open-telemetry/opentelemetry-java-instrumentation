@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
-import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrumenterBuilder;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.AgentServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.ResponseInstrumenterFactory;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
