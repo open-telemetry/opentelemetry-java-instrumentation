@@ -9,7 +9,7 @@ import com.alibaba.nacos.common.remote.client.RpcClient;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 
-public final class RpcClientServerInfoAccessor {
+public class RpcClientServerInfoAccessor {
 
   private static final VirtualField<RpcClient, RpcClient.ServerInfo> SERVER_INFO =
       VirtualField.find(RpcClient.class, RpcClient.ServerInfo.class);

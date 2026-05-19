@@ -27,6 +27,24 @@ tasks.withType<Test>().configureEach {
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 
+val testAgentInstrumentation by tasks.registering(Test::class) {
+  testClassesDirs = sourceSets.test.get().output.classesDirs
+  classpath = sourceSets.test.get().runtimeClasspath
+  include("**/NacosClientAgentInstrumentationTest.class")
+
+  jvmArgs("-Dotel.instrumentation.nacos-client.enabled=true")
+}
+
+tasks {
+  test {
+    exclude("**/NacosClientAgentInstrumentationTest.class")
+  }
+
+  check {
+    dependsOn(testAgentInstrumentation)
+  }
+}
+
 afterEvaluate {
   tasks.withType<Test>().configureEach {
     classpath += sourceSets.main.get().output

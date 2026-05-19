@@ -12,8 +12,7 @@ import javax.annotation.Nullable;
 // RpcAttributesGetter is deprecated in the current instrumentation API, but this module still
 // integrates with that contract until the surrounding RPC semantic-convention wiring is migrated.
 @SuppressWarnings("deprecation")
-final class NacosClientRpcAttributesGetter
-    implements RpcAttributesGetter<NacosClientRequest, Response> {
+class NacosClientRpcAttributesGetter implements RpcAttributesGetter<NacosClientRequest, Response> {
 
   @Override
   public String getSystem(NacosClientRequest request) {

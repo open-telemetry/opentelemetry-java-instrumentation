@@ -1,4 +1,4 @@
 display_name: Nacos Client
-description: This instrumentation provides a template for Nacos client 2.x spans.
+description: This instrumentation generates spans for Nacos client 2.x operations.
 disabled_by_default: true
 library_link: https://github.com/alibaba/nacos

@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGet
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
-final class NacosClientNetworkAttributesGetter
+class NacosClientNetworkAttributesGetter
     implements ServerAttributesGetter<NacosClientRequest>,
         NetworkAttributesGetter<NacosClientRequest, Response> {
 

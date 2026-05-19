@@ -9,6 +9,7 @@ import com.alibaba.nacos.api.remote.response.Response;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -16,13 +17,13 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import javax.annotation.Nullable;
 
-public final class NacosClientSingletons {
+public class NacosClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.nacos-client-2.0";
 
   private static final Instrumenter<NacosClientRequest, Response> clientInstrumenter =
       createClientInstrumenter();
-  private static final Instrumenter<NacosClientRequest, Response> consumerInstrumenter =
-      createConsumerInstrumenter();
+  private static final Instrumenter<NacosClientRequest, Response> serverInstrumenter =
+      createServerInstrumenter();
 
   private NacosClientSingletons() {}
 
@@ -48,16 +49,16 @@ public final class NacosClientSingletons {
         contextAndScope.getContext(), request, response, selectError(response, error));
   }
 
-  public static ContextAndScope startConsumerSpan(NacosClientRequest request) {
+  public static ContextAndScope startServerSpan(NacosClientRequest request) {
     Context parentContext = Context.current();
-    if (!consumerInstrumenter.shouldStart(parentContext, request)) {
+    if (!serverInstrumenter.shouldStart(parentContext, request)) {
       return null;
     }
-    Context context = consumerInstrumenter.start(parentContext, request);
+    Context context = serverInstrumenter.start(parentContext, request);
     return new ContextAndScope(context, context.makeCurrent());
   }
 
-  public static void endConsumerSpan(
+  public static void endServerSpan(
       @Nullable ContextAndScope contextAndScope,
       NacosClientRequest request,
       @Nullable Response response,
@@ -66,7 +67,7 @@ public final class NacosClientSingletons {
       return;
     }
     contextAndScope.closeScope();
-    consumerInstrumenter.end(
+    serverInstrumenter.end(
         contextAndScope.getContext(), request, response, selectError(response, error));
   }
 
@@ -84,12 +85,18 @@ public final class NacosClientSingletons {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  private static Instrumenter<NacosClientRequest, Response> createConsumerInstrumenter() {
+  private static Instrumenter<NacosClientRequest, Response> createServerInstrumenter() {
+    NacosClientRpcAttributesGetter rpcAttributesGetter = new NacosClientRpcAttributesGetter();
+    NacosClientNetworkAttributesGetter networkAttributesGetter =
+        new NacosClientNetworkAttributesGetter();
     InstrumenterBuilder<NacosClientRequest, Response> builder =
         Instrumenter.<NacosClientRequest, Response>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, NacosClientRequest::spanName)
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(networkAttributesGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(networkAttributesGetter))
             .addAttributesExtractor(new NacosClientAttributesExtractor());
-    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   @Nullable

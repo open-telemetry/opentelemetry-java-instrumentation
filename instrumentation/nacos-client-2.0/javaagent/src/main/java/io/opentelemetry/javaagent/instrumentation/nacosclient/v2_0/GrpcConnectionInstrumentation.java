@@ -67,7 +67,7 @@ class GrpcConnectionInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static final class State {
+  public static class State {
     private final NacosClientRequest request;
     private final ContextAndScope contextAndScope;
 

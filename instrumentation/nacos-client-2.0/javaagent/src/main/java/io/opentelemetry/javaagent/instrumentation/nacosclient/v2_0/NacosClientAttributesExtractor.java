@@ -22,8 +22,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-final class NacosClientAttributesExtractor
-    implements AttributesExtractor<NacosClientRequest, Response> {
+class NacosClientAttributesExtractor implements AttributesExtractor<NacosClientRequest, Response> {
 
   private static final AttributeKey<String> NACOS_CATEGORY =
       AttributeKey.stringKey("nacos.category");

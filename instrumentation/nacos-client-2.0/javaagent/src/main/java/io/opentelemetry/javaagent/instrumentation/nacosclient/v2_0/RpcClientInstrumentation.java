@@ -43,12 +43,12 @@ class RpcClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static State onEnter(
         @Advice.This RpcClient rpcClient, @Advice.Argument(0) Request request) {
-      String peer = resolvePeer(rpcClient);
+      String peer = RpcClientServerInfoAccessor.resolvePeer(rpcClient);
       NacosClientRequest nacosRequest = NacosRequestMapper.mapServerRequest(request, peer);
       if (nacosRequest == null) {
         return null;
       }
-      ContextAndScope contextAndScope = NacosClientSingletons.startConsumerSpan(nacosRequest);
+      ContextAndScope contextAndScope = NacosClientSingletons.startServerSpan(nacosRequest);
       return contextAndScope == null ? null : new State(nacosRequest, contextAndScope);
     }
 
@@ -60,16 +60,12 @@ class RpcClientInstrumentation implements TypeInstrumentation {
       if (state == null) {
         return;
       }
-      NacosClientSingletons.endConsumerSpan(
+      NacosClientSingletons.endServerSpan(
           state.contextAndScope(), state.request(), response, throwable);
-    }
-
-    public static String resolvePeer(RpcClient rpcClient) {
-      return RpcClientServerInfoAccessor.resolvePeer(rpcClient);
     }
   }
 
-  public static final class State {
+  public static class State {
     private final NacosClientRequest request;
     private final ContextAndScope contextAndScope;
 

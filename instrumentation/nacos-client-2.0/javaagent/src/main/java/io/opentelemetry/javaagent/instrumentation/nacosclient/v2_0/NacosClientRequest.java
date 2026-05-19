@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.nacosclient.v2_0;
 import com.alibaba.nacos.api.remote.request.Request;
 import javax.annotation.Nullable;
 
-public final class NacosClientRequest {
+public class NacosClientRequest {
   private final Request request;
   private final String category;
   private final String operation;

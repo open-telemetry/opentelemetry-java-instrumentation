@@ -17,7 +17,7 @@ import com.alibaba.nacos.api.naming.remote.request.SubscribeServiceRequest;
 import com.alibaba.nacos.api.remote.request.Request;
 import javax.annotation.Nullable;
 
-public final class NacosRequestMapper {
+public class NacosRequestMapper {
 
   private NacosRequestMapper() {}
 
@@ -78,7 +78,7 @@ public final class NacosRequestMapper {
         request, category, operation, peer, hostPort.host(), hostPort.port());
   }
 
-  private static final class HostPort {
+  private static class HostPort {
     @Nullable private final String host;
     @Nullable private final Integer port;
 
@@ -122,7 +122,7 @@ public final class NacosRequestMapper {
     }
   }
 
-  private static final class ServerCheckRequest extends Request {
+  private static class ServerCheckRequest extends Request {
 
     @Override
     public String getModule() {
