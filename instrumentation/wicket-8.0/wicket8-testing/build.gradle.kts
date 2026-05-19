@@ -21,3 +21,15 @@ if (otelProps.testLatestDeps) {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }
+
+tasks {
+  val testV3Preview by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
+  check {
+    dependsOn(testV3Preview)
+  }
+}

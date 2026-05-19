@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.common;
 
-import io.opentelemetry.javaagent.instrumentation.jaxrs.HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.HandlerData;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.Path;
 import java.lang.annotation.Annotation;
