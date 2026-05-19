@@ -247,7 +247,7 @@ class MetricRegistrar implements AutoCloseable {
       try {
         instrument.close();
       } catch (Exception e) {
-        logger.log(WARNING, "Failed to close metric instrument: {0}", e.getMessage());
+        logger.log(WARNING, "Failed to close metric instrument", e);
       }
     }
   }

@@ -9,6 +9,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.enumeration;
 import static java.util.Collections.singletonList;
 
+import io.github.netmikey.logunit.api.LogCapturer;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.jmx.JmxMetricHandler;
@@ -35,8 +36,24 @@ class HandlerTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  @RegisterExtension
+  LogCapturer logs =
+      LogCapturer.create()
+          .captureForLogger("io.opentelemetry.instrumentation.jmx.internal.engine.BeanFinder");
+
   @Test
-  void testHandler(@TempDir Path tempDir) throws Exception {
+  void testInvalidHandler() {
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    // handler class won't be found since we don't set up the service class loader
+    builder.addRules(getClass().getResourceAsStream("/jmx/rules/handler.yaml"));
+    JmxTelemetry telemetry = builder.build();
+    cleanup.deferCleanup(telemetry.start());
+
+    logs.assertContains("Metric definition references unknown handler");
+  }
+
+  @Test
+  void testHandler(@TempDir Path tempDir) throws IOException {
     Path spiFile = tempDir.resolve(JmxMetricHandler.class.getName());
     Files.write(spiFile, ThreadHandler.class.getName().getBytes(UTF_8));
 

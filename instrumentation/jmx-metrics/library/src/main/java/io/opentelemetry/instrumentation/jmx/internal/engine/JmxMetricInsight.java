@@ -99,8 +99,14 @@ public class JmxMetricInsight {
       finder.discoverBeans(connections);
 
       return () -> {
-        finder.shutdown();
-        registrar.close();
+        try {
+          finder.shutdown();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw e;
+        } finally {
+          registrar.close();
+        }
       };
     }
   }

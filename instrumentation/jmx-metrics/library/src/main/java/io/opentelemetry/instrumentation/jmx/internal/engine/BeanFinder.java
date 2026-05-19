@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,14 +59,12 @@ class BeanFinder {
     this.maxDelay = Math.max(60000, discoveryDelay);
 
     for (MetricDef metricDef : conf.getMetricDefs()) {
-      for (Iterator<String> i = metricDef.getHandlers().iterator(); i.hasNext(); ) {
-        String handlerName = i.next();
+      for (String handlerName : metricDef.getHandlers()) {
         if (!handlers.containsKey(handlerName)) {
           logger.log(
               WARNING,
               "Metric definition references unknown handler {0}, skipping it.",
               new Object[] {handlerName});
-          i.remove();
         }
       }
     }
@@ -195,10 +192,9 @@ class BeanFinder {
       Set<ObjectName> objectNames, MBeanServerConnection connection, MetricDef metricDef) {
     for (String handlerName : metricDef.getHandlers()) {
       JmxMetricHandler handler = handlers.get(handlerName);
-      // we remove rules that reference unknown handlers during construction, so this should never
-      // happen
+      // we print a warning for missing handlers in constructor
       if (handler == null) {
-        throw new IllegalStateException("Unknown handler " + handlerName);
+        continue;
       }
       MetricHandlerHolder holder = new MetricHandlerHolder(handler);
       registrar.enrollHandler(connection, objectNames, holder);
