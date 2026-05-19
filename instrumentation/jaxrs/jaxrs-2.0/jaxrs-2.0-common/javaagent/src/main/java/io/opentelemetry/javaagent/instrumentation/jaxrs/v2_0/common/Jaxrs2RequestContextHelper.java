@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.common;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.HandlerData;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.RequestContextHelper;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsConstants;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.RequestContextHelper;
 import javax.annotation.Nullable;
 import javax.ws.rs.container.ContainerRequestContext;
 

@@ -15593,6 +15593,23 @@ libraries:
     spans:
     - span_kind: INTERNAL
       attributes: []
+- name: thrift-0.13
+  display_name: Apache Thrift
+  description: This instrumentation enables RPC client and RPC server spans and metrics
+    for Apache Thrift.
+  semantic_conventions:
+  - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
+  - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
+  library_link: https://thrift.apache.org
+  source_path: instrumentation/thrift-0.13
+  scope:
+    name: io.opentelemetry.thrift-0.13
+  has_standalone_library: true
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.thrift:libthrift:[0.13.0,)
 - name: tomcat-7.0
   display_name: Apache Tomcat
   description: This instrumentation enables HTTP server spans and HTTP server metrics

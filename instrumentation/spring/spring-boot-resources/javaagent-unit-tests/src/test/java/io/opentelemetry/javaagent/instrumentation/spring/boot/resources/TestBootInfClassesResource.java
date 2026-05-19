@@ -1,0 +1,47 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.spring.boot.resources;
+
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.resources.Resource;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class TestBootInfClassesResource {
+  @Mock ConfigProperties config;
+
+  @Test
+  void testServiceName() {
+    // verify that the test app, that is added as a dependency to this project, has the expected
+    // layout
+    assertThat(getClass().getResource("/application.properties")).isNull();
+    assertThat(getClass().getResource("/BOOT-INF/classes/application.properties")).isNotNull();
+
+    SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector();
+    Resource result = guesser.createResource(config);
+    assertThat(result.getAttribute(SERVICE_NAME)).isEqualTo("otel-spring-test-app");
+  }
+
+  @Test
+  void testServiceVersion() {
+    // verify that the test app, that is added as a dependency to this project, has the expected
+    // layout: build-info.properties lives at the jar root under META-INF/, not under
+    // BOOT-INF/classes/
+    assertThat(getClass().getResource("/META-INF/build-info.properties")).isNotNull();
+    assertThat(getClass().getResource("/BOOT-INF/classes/META-INF/build-info.properties")).isNull();
+
+    SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector();
+    Resource result = guesser.createResource(config);
+    assertThat(result.getAttribute(SERVICE_VERSION)).isEqualTo("1.2.3");
+  }
+}

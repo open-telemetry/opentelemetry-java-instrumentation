@@ -46,7 +46,7 @@ class JexTest {
   static void setup() {
     app = TestJexJavaApplication.initJex();
     port = app.port();
-    client = WebClient.of("http://localhost:" + port);
+    client = WebClient.of("h1c://localhost:" + port);
   }
 
   @AfterAll

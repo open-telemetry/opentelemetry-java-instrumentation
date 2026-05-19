@@ -120,11 +120,30 @@ WHITESPACE           = [ \t\r\n]+
   private Operation operation = NoOp.INSTANCE;
   private boolean extractionDone = false;
   private boolean doubleQuotesAreIdentifiers;
+  private boolean statementStart = true;
+  private boolean passwordSanitizationEnabled = false;
+  private boolean identifiedBySanitizationEnabled = false;
 
   private void setOperation(Operation operation) {
     if (this.operation == NoOp.INSTANCE) {
       this.operation = operation;
     }
+  }
+
+  private void markStatementStarted() {
+    statementStart = false;
+  }
+
+  private boolean shouldSanitizeRemainderAfterPassword() {
+    return !insideComment
+      && (passwordSanitizationEnabled
+        || operation.shouldSanitizeRemainderAfterPassword());
+  }
+
+  private boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+    return !insideComment
+      && (identifiedBySanitizationEnabled
+        || operation.shouldSanitizeRemainderAfterIdentifiedBy());
   }
 
   private static abstract class Operation {
@@ -169,6 +188,14 @@ WHITESPACE           = [ \t\r\n]+
       return false;
     }
 
+    boolean shouldSanitizeRemainderAfterPassword() {
+      return false;
+    }
+
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return false;
+    }
+
     SqlQuery getResult(String fullStatement) {
       return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
     }
@@ -191,6 +218,22 @@ WHITESPACE           = [ \t\r\n]+
     boolean shouldHandleIdentifier() {
       // Return true only if the provided value corresponds to a table, as it will be used to set the attribute `db.sql.table`.
       return "TABLE".equals(operationTarget);
+    }
+
+    /** Returns true for DDL targets where PASSWORD is treated as an identifier, not a secret clause. */
+    boolean hasSafeDdlTarget() {
+      return "TABLE".equals(operationTarget)
+          || "INDEX".equals(operationTarget)
+          || "PROCEDURE".equals(operationTarget)
+          || "VIEW".equals(operationTarget);
+    }
+
+    boolean shouldSanitizeRemainderAfterPassword() {
+      return !hasSafeDdlTarget();
+    }
+
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return !hasSafeDdlTarget();
     }
 
     boolean handleIdentifier() {
@@ -369,6 +412,7 @@ WHITESPACE           = [ \t\r\n]+
 
   "SELECT" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Select());
           }
           appendCurrentFragment();
@@ -376,6 +420,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "INSERT" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Insert());
           }
           appendCurrentFragment();
@@ -383,6 +428,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "DELETE" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Delete());
           }
           appendCurrentFragment();
@@ -390,6 +436,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "UPDATE" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Update());
           }
           appendCurrentFragment();
@@ -397,6 +444,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "CALL" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Call());
           }
           appendCurrentFragment();
@@ -404,6 +452,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "MERGE" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Merge());
           }
           appendCurrentFragment();
@@ -411,6 +460,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "CREATE" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Create());
           }
           appendCurrentFragment();
@@ -418,6 +468,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "DROP" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Drop());
           }
           appendCurrentFragment();
@@ -425,27 +476,36 @@ WHITESPACE           = [ \t\r\n]+
       }
   "ALTER" {
           if (!insideComment) {
+            markStatementStarted();
             setOperation(new Alter());
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "CONNECT" {
-          appendCurrentFragment();
-          // sanitize SAP HANA CONNECT statement
-          // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
-          // we check that operation is not set to avoid triggering sanitization when a field named
-          // connect is used or CONNECT BY clause is used in a SELECT statement
-          if (!insideComment && operation == NoOp.INSTANCE) {
-            // CONNECT statement could contain an unquoted password. We are not going to try
-            // figuring out whether that is the case or not, just sanitize the whole statement.
-            builder.append(" ?");
-            return YYEOF;
+  "GRANT" {
+          if (!insideComment) {
+            if (statementStart) {
+              identifiedBySanitizationEnabled = true;
+            }
+            markStatementStarted();
           }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "CONNECT" | "VALIDATE" | "CHECK" | "EXPORT" | "IMPORT" | "RECOVER" {
+          if (!insideComment) {
+            if (statementStart) {
+              passwordSanitizationEnabled = true;
+              identifiedBySanitizationEnabled = true;
+            }
+            markStatementStarted();
+          }
+          appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "FROM" {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             if (operation == NoOp.INSTANCE) {
               // hql/jpql queries may skip SELECT and start with FROM clause
               // treat such queries as SELECT queries
@@ -458,6 +518,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "INTO" {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             extractionDone = operation.handleInto();
           }
           appendCurrentFragment();
@@ -465,6 +526,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "JOIN" {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             extractionDone = operation.handleJoin();
           }
           appendCurrentFragment();
@@ -472,6 +534,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "NEXT" {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             extractionDone = operation.handleNext();
           }
           appendCurrentFragment();
@@ -481,8 +544,9 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
+  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" | "USER" {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             if (operation.expectingOperationTarget()) {
               extractionDone = operation.handleOperationTarget(yytext());
             } else {
@@ -492,14 +556,26 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "USER" {
+  "PASSWORD" {
+          boolean passwordTokenIsIdentifier = false;
+          if (!insideComment && !extractionDone) {
+            markStatementStarted();
+            passwordTokenIsIdentifier = operation.handleIdentifier();
+            extractionDone = passwordTokenIsIdentifier;
+          }
           appendCurrentFragment();
-          if (!insideComment && (operation instanceof Create || operation instanceof Alter)) {
-            // CREATE USER and ALTER USER statements could contain an unquoted password. We are not
-            // going to try figuring out whether that is the case or not, just sanitize the whole
-            // statement.
-            // https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_8003.htm
-            // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
+          if (!passwordTokenIsIdentifier && !insideComment && shouldSanitizeRemainderAfterPassword()) {
+            builder.append(" ?");
+            return YYEOF;
+          }
+          if (isOverLimit()) return YYEOF;
+      }
+  "IDENTIFIED" {WHITESPACE}+ "BY" {
+          if (!insideComment) {
+            markStatementStarted();
+          }
+          appendCurrentFragment();
+          if (!insideComment && shouldSanitizeRemainderAfterIdentifiedBy()) {
             builder.append(" ?");
             return YYEOF;
           }
@@ -508,13 +584,24 @@ WHITESPACE           = [ \t\r\n]+
 
   {COMMA} {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             extractionDone = operation.handleComma();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  ";" {
+          if (!insideComment) {
+            statementStart = true;
+            passwordSanitizationEnabled = false;
+            identifiedBySanitizationEnabled = false;
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   {IDENTIFIER} {
           if (!insideComment && !extractionDone) {
+            markStatementStarted();
             extractionDone = operation.handleIdentifier();
           }
           appendCurrentFragment();
@@ -523,6 +610,7 @@ WHITESPACE           = [ \t\r\n]+
 
   {OPEN_PAREN}  {
           if (!insideComment) {
+            markStatementStarted();
             parenLevel += 1;
           }
           appendCurrentFragment();
@@ -530,6 +618,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   {CLOSE_PAREN} {
           if (!insideComment) {
+            markStatementStarted();
             parenLevel -= 1;
           }
           appendCurrentFragment();

@@ -137,6 +137,14 @@ WHITESPACE           = [ \t\r\n]+
     this.operation = operation;
   }
 
+  private boolean shouldSanitizeRemainderAfterPassword() {
+    return !insideComment && operation.shouldSanitizeRemainderAfterPassword();
+  }
+
+  private boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+    return !insideComment && operation.shouldSanitizeRemainderAfterIdentifiedBy();
+  }
+
   /** Push current operation onto stack and reset to none for subquery processing. */
   private void pushOperation() {
     operationStack.push(operation);
@@ -184,6 +192,15 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingOperationTarget() {
       return false;
     }
+    boolean isCapturingIdentifier() {
+      return false;
+    }
+    boolean shouldSanitizeRemainderAfterPassword() {
+      return false;
+    }
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return shouldSanitizeRemainderAfterPassword();
+    }
     /** Returns true if open paren should start a subquery context. */
     boolean isEnteringSubquery() {
       return false;
@@ -208,6 +225,23 @@ WHITESPACE           = [ \t\r\n]+
       operationTarget = target;
       expectingOperationTarget = false;
       appendOperationToSummary(operationTarget);
+    }
+
+    boolean isCapturingIdentifier() {
+      return (!identifierCaptured && !inEmbeddedSelect)
+          || (inEmbeddedSelect && expectingTableName && parenLevel == selectParenLevel);
+    }
+
+    /** Returns true for DDL targets where PASSWORD is treated as an identifier, not a secret clause. */
+    boolean hasSafeDdlTarget() {
+      return "TABLE".equals(operationTarget)
+          || "INDEX".equals(operationTarget)
+          || "PROCEDURE".equals(operationTarget)
+          || "VIEW".equals(operationTarget);
+    }
+
+    boolean shouldSanitizeRemainderAfterPassword() {
+      return !hasSafeDdlTarget();
     }
 
     void handleIdentifier() {
@@ -460,7 +494,16 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Merge extends SimpleOperation {}
+  private class Merge extends Operation {
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+      }
+    }
+  }
 
   private class Call extends Operation {
     boolean identifierCaptured = false;
@@ -496,6 +539,12 @@ WHITESPACE           = [ \t\r\n]+
 
   /** VALUES operation - no table to capture. */
   private class Values extends Operation {}
+
+  private class SensitivePhraseOperation extends Operation {
+    boolean shouldSanitizeRemainderAfterPassword() {
+      return true;
+    }
+  }
 
   /** EXECUTE/EXEC operation for stored procedures. */
   private class Execute extends SimpleOperation {
@@ -591,7 +640,11 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** GRANT operation - blocks other keywords from being parsed. */
-  private class Grant extends Operation {}
+  private class Grant extends Operation {
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return true;
+    }
+  }
 
   /** REVOKE operation - blocks other keywords from being parsed. */
   private class Revoke extends Operation {}
@@ -891,6 +944,13 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "CONNECT" | "VALIDATE" | "CHECK" | "EXPORT" | "IMPORT" | "RECOVER" {
+          if (shouldStartNewOperation()) {
+            setOperation(new SensitivePhraseOperation());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "EXPLAIN" {
           // EXPLAIN is a prefix command - append to summary but don't set an operation,
           // so the inner statement (SELECT, INSERT, etc.) gets processed normally.
@@ -898,20 +958,6 @@ WHITESPACE           = [ \t\r\n]+
             appendOperationToSummary("EXPLAIN");
           }
           appendCurrentFragment();
-          if (isOverLimit()) return YYEOF;
-      }
-  "CONNECT" {
-          appendCurrentFragment();
-          // sanitize SAP HANA CONNECT statement
-          // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
-          // we check that operation is not set to avoid triggering sanitization when a field named
-          // connect is used or CONNECT BY clause is used in a SELECT statement
-          if (!insideComment && operation == none) {
-            // CONNECT statement could contain an unquoted password. We are not going to try
-            // figuring out whether that is the case or not, just sanitize the whole statement.
-            builder.append(" ?");
-            return YYEOF;
-          }
           if (isOverLimit()) return YYEOF;
       }
   "FROM" {
@@ -1000,7 +1046,7 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
+  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" | "USER" {
           if (!insideComment) {
             // If we see a reserved word where we expected a subquery, it's a parenthesized name
             cancelPendingSubqueryIfNeeded();
@@ -1013,14 +1059,23 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "USER" {
+  "PASSWORD" {
+          boolean passwordTokenIsIdentifier = false;
+          if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            passwordTokenIsIdentifier = operation.isCapturingIdentifier();
+            operation.handleIdentifier();
+          }
           appendCurrentFragment();
-          if (!insideComment && (operation instanceof Create || operation instanceof Alter)) {
-            // CREATE USER and ALTER USER statements could contain an unquoted password. We are not
-            // going to try figuring out whether that is the case or not, just sanitize the whole
-            // statement.
-            // https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_8003.htm
-            // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
+          if (!passwordTokenIsIdentifier && !insideComment && shouldSanitizeRemainderAfterPassword()) {
+            builder.append(" ?");
+            return YYEOF;
+          }
+          if (isOverLimit()) return YYEOF;
+      }
+  "IDENTIFIED" {WHITESPACE}+ "BY" {
+          appendCurrentFragment();
+          if (!insideComment && shouldSanitizeRemainderAfterIdentifiedBy()) {
             builder.append(" ?");
             return YYEOF;
           }
