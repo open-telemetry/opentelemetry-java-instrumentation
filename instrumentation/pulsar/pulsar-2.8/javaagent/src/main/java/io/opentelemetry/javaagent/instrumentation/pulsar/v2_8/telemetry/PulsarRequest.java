@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.ProducerData;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.client.api.MessageId;
 
 public class PulsarRequest extends BasePulsarRequest {
   private final Message<?> message;
@@ -37,7 +38,8 @@ public class PulsarRequest extends BasePulsarRequest {
     this.message = message;
     // for producer spans message id is not available when the PulsarRequest is created, so we will
     // try to get it later when it's available
-    this.messageId = message.getMessageId() != null ? message.getMessageId().toString() : null;
+    MessageId id = message.getMessageId();
+    this.messageId = id != null ? id.toString() : null;
   }
 
   public Message<?> getMessage() {
@@ -49,6 +51,7 @@ public class PulsarRequest extends BasePulsarRequest {
     if (messageId != null) {
       return messageId;
     }
-    return message.getMessageId() != null ? message.getMessageId().toString() : null;
+    MessageId id = message.getMessageId();
+    return id != null ? id.toString() : null;
   }
 }
