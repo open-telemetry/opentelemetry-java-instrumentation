@@ -31,6 +31,9 @@ public class MetricHandlerHolder {
   }
 
   void setHandler(JmxMetricHandler handler) {
+    if (this.handler != null) {
+      throw new IllegalStateException("Handler is already set");
+    }
     this.handler = handler;
   }
 
