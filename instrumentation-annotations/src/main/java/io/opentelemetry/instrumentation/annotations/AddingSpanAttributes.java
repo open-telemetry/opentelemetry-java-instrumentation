@@ -11,8 +11,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation marks that an execution of this method or constructor is able to add attributes
- * to the current span {@link io.opentelemetry.api.trace.Span}.
+ * This annotation marks that an execution of this method is able to add attributes to the current
+ * span {@link io.opentelemetry.api.trace.Span}.
+ *
+ * <p>Applying this annotation to constructors is not supported by OpenTelemetry instrumentation.
+ * The constructor target is deprecated and will be removed in the 3.0 release.
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
  * that attributes annotated with the {@link
@@ -30,6 +33,6 @@ import java.lang.annotation.Target;
  * <p>If you are a library developer, then probably you should NOT use this annotation, because it
  * is non-functional without some form of auto-instrumentation.
  */
-@Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
+@Target({ElementType.METHOD, ElementType.CONSTRUCTOR}) // CONSTRUCTOR target to be removed in 3.0
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AddingSpanAttributes {}

@@ -13,16 +13,19 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation marks that an execution of this method or constructor should result in a new
- * {@link io.opentelemetry.api.trace.Span}.
+ * This annotation marks that an execution of this method should result in a new {@link
+ * io.opentelemetry.api.trace.Span}.
+ *
+ * <p>Applying this annotation to constructors is not supported by OpenTelemetry instrumentation.
+ * The constructor target is deprecated and will be removed in the 3.0 release.
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
- * that a new span should be created whenever marked method is executed.
+ * that a new span should be created whenever the marked method is executed.
  *
  * <p>If you are a library developer, then probably you should NOT use this annotation, because it
  * is non-functional without some form of auto-instrumentation.
  */
-@Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
+@Target({ElementType.METHOD, ElementType.CONSTRUCTOR}) // CONSTRUCTOR target to be removed in 3.0
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WithSpan {
   /**

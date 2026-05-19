@@ -81,6 +81,21 @@ class AddingSpanAttributesInstrumentationTest {
   }
 
   @Test
+  void annotatedConstructorDoesNotAddAttributes() {
+    testing.runWithSpan(
+        "root", () -> new ConstructedWithAddingSpanAttributes("foo", "bar", null, "baz"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("root")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)));
+  }
+
+  @Test
   void overwriteAttributes() {
     testing.runWithSpan(
         "root",
