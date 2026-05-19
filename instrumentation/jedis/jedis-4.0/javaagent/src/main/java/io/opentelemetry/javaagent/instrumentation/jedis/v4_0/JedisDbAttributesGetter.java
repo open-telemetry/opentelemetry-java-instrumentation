@@ -21,7 +21,8 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Override
   @Nullable
   public String getDbNamespace(JedisRequest request) {
-    return null;
+    Long databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
   @Override
@@ -32,6 +33,18 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Override
   public String getDbOperationName(JedisRequest request) {
     return request.getOperationName();
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(JedisRequest request) {
+    return request.getServerAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(JedisRequest request) {
+    return request.getServerPort();
   }
 
   @Override

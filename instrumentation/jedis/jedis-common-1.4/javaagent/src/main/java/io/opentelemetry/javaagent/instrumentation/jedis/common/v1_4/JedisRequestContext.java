@@ -59,6 +59,12 @@ public class JedisRequestContext<T> {
   }
 
   @Nullable
+  public static Long databaseIndex(
+      @Nullable Object source, @Nullable Long connectionDatabaseIndex) {
+    return connectionDatabaseIndex != null ? connectionDatabaseIndex : source != null ? 0L : null;
+  }
+
+  @Nullable
   @SuppressWarnings("unchecked") // we lose the generic type in ThreadLocal
   private static <T> JedisRequestContext<T> current() {
     return (JedisRequestContext<T>) contextThreadLocal.get();
