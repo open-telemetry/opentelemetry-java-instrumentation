@@ -1,7 +1,11 @@
 # OpenTelemetry Instrumentation: Spring Security Config
 
-Provides a Servlet `Filter` and a WebFlux `WebFilter` to capture `enduser.*` semantic attributes
+Provides a Servlet `Filter` and a WebFlux `WebFilter` to capture identity semantic attributes
 from Spring Security `Authentication` objects.
+
+By default this instrumentation emits the deprecated `enduser.*` attributes when enabled. When
+`otel.instrumentation.common.v3-preview` is enabled, it emits `user.id` and `user.roles` instead,
+and does not emit `enduser.scope`.
 
 Also provides `Customizer` implementations to insert those filters into the filter chains created by
 `HttpSecurity` and `ServerHttpSecurity`, respectively.

@@ -11,6 +11,9 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -27,6 +30,10 @@ public final class EnduserAttributesCapturer {
   private static final AttributeKey<String> ENDUSER_ID = AttributeKey.stringKey("enduser.id");
   private static final AttributeKey<String> ENDUSER_ROLE = AttributeKey.stringKey("enduser.role");
   private static final AttributeKey<String> ENDUSER_SCOPE = AttributeKey.stringKey("enduser.scope");
+  // copied from UserIncubatingAttributes
+  private static final AttributeKey<String> USER_ID = AttributeKey.stringKey("user.id");
+  private static final AttributeKey<List<String>> USER_ROLES =
+      AttributeKey.stringArrayKey("user.roles");
 
   private static final String DEFAULT_ROLE_PREFIX = "ROLE_";
   private static final String DEFAULT_SCOPE_PREFIX = "SCOPE_";
@@ -73,12 +80,13 @@ public final class EnduserAttributesCapturer {
       Context otelContext, @Nullable Authentication authentication) {
     if (authentication != null) {
       Span localRootSpan = LocalRootSpan.fromContext(otelContext);
+      boolean v3Preview = SemconvStability.v3Preview();
 
       if (enduserIdEnabled) {
-        localRootSpan.setAttribute(ENDUSER_ID, authentication.getName());
+        localRootSpan.setAttribute(v3Preview ? USER_ID : ENDUSER_ID, authentication.getName());
       }
 
-      StringBuilder roleBuilder = null;
+      List<String> roles = null;
       StringBuilder scopeBuilder = null;
       if (enduserRoleEnabled || enduserScopeEnabled) {
         for (GrantedAuthority authority : authentication.getAuthorities()) {
@@ -87,20 +95,37 @@ public final class EnduserAttributesCapturer {
             continue;
           }
           if (enduserRoleEnabled && authorityString.startsWith(roleGrantedAuthorityPrefix)) {
-            roleBuilder = appendSuffix(roleGrantedAuthorityPrefix, authorityString, roleBuilder);
+            roles = appendSuffix(roleGrantedAuthorityPrefix, authorityString, roles);
           } else if (enduserScopeEnabled
+              && !v3Preview
               && authorityString.startsWith(scopeGrantedAuthorityPrefix)) {
             scopeBuilder = appendSuffix(scopeGrantedAuthorityPrefix, authorityString, scopeBuilder);
           }
         }
       }
-      if (roleBuilder != null) {
-        localRootSpan.setAttribute(ENDUSER_ROLE, roleBuilder.toString());
+      if (roles != null) {
+        if (v3Preview) {
+          localRootSpan.setAttribute(USER_ROLES, roles);
+        } else {
+          localRootSpan.setAttribute(ENDUSER_ROLE, String.join(",", roles));
+        }
       }
       if (scopeBuilder != null) {
         localRootSpan.setAttribute(ENDUSER_SCOPE, scopeBuilder.toString());
       }
     }
+  }
+
+  @Nullable
+  private static List<String> appendSuffix(
+      String prefix, String authorityString, @Nullable List<String> values) {
+    if (authorityString.length() > prefix.length()) {
+      if (values == null) {
+        values = new ArrayList<>();
+      }
+      values.add(authorityString.substring(prefix.length()));
+    }
+    return values;
   }
 
   @Nullable
