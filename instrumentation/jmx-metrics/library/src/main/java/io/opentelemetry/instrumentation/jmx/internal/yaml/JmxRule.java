@@ -17,7 +17,9 @@ import io.opentelemetry.instrumentation.jmx.internal.engine.MetricExtractor;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricHandlerHolder;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,16 +50,16 @@ public class JmxRule extends MetricStructure {
   //       METRIC_FIELDS3
   // The parser never calls setters for these fields with null arguments
 
-  private final List<String> beans = new ArrayList<>();
+  private final Collection<String> beans = new LinkedHashSet<>();
   @Nullable private String prefix;
   private Map<String, Metric> mapping = emptyMap();
-  private final List<String> handlers = new ArrayList<>();
+  private final Collection<String> handlers = new LinkedHashSet<>();
 
   boolean hasHandlers() {
     return !handlers.isEmpty();
   }
 
-  public List<String> getBeans() {
+  public Collection<String> getBeans() {
     return beans;
   }
 

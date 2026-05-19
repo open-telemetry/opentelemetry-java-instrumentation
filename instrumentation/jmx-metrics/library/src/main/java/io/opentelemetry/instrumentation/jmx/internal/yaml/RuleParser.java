@@ -98,6 +98,7 @@ public class RuleParser {
       jmxRule.setPrefix(prefix);
     }
     Map<String, Metric> mapping = parseMappings((Map<String, Object>) ruleYaml.remove("mapping"));
+    // if there are no handlers empty mappings are not allowed and trigger an error
     if (!mapping.isEmpty() || !jmxRule.hasHandlers()) {
       jmxRule.setMapping(mapping);
     }

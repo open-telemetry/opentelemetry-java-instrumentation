@@ -26,6 +26,7 @@ public class MetricHandlerHolder {
     return handlerName;
   }
 
+  @Nullable
   JmxMetricHandler getHandler() {
     return handler;
   }
