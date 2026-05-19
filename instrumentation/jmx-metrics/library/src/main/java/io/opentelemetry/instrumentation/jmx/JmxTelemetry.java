@@ -40,15 +40,20 @@ public final class JmxTelemetry {
     this.componentLoader = componentLoader;
   }
 
-  /** Starts JMX metrics collection on current JVM */
+  /**
+   * Starts JMX metrics collection on current JVM.
+   *
+   * @return a {@link AutoCloseable} that can be used to stop the collection of metrics
+   */
   public AutoCloseable start() {
     return start(() -> MBeanServerFactory.findMBeanServer(null));
   }
 
   /**
-   * Starts JMX metrics collection on provided (local or remote) connections
+   * Starts JMX metrics collection on provided (local or remote) connections.
    *
    * @param connections connection provider
+   * @return a {@link AutoCloseable} that can be used to stop the collection of metrics
    */
   public AutoCloseable start(Supplier<List<? extends MBeanServerConnection>> connections) {
     return service.start(metricConfiguration, connections, componentLoader);

@@ -4,7 +4,7 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Changed the return type for `JmxTelemetry.start()` API.
+- Changed the return type for `JmxTelemetry.start(...)` APIs.
   ([#18782](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18782))
 
 ## Version 2.28.0 (2026-05-19)

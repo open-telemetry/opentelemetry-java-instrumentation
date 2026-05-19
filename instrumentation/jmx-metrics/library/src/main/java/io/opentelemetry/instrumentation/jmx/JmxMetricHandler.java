@@ -20,7 +20,7 @@ public interface JmxMetricHandler {
    * @param meter the {@link Meter} to use for creating instruments
    * @param detectorSupplier a supplier of {@link Detector} that provides access to
    *     MBeanServerConnection and ObjectName for the MBeans of interest
-   * @return auto closable for cleaning up resources when the handler is no longer needed
+   * @return a {@link AutoCloseable} for cleaning up resources when the metric collection is stopped
    */
   AutoCloseable create(Meter meter, Supplier<Detector> detectorSupplier);
 
