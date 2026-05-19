@@ -10,27 +10,27 @@ library_link: https://spring.io/projects/spring-security
 configurations:
   - name: otel.instrumentation.common.enduser.id.enabled
     declarative_name: java.common.enduser.id.enabled
-    description: Enables capturing the enduser.id attribute. This property is not honored when v3 preview is enabled.
+    description: Enables capturing the enduser.id attribute. This property and the associated attribute are not supported when v3 preview is enabled.
     type: boolean
     default: false
   - name: otel.instrumentation.common.enduser.role.enabled
     declarative_name: java.common.enduser.role.enabled
-    description: Enables capturing the enduser.role attribute. This property is not honored when v3 preview is enabled.
+    description: Enables capturing the enduser.role attribute. This property and the associated attribute are not supported when v3 preview is enabled.
     type: boolean
     default: false
   - name: otel.instrumentation.common.enduser.scope.enabled
     declarative_name: java.common.enduser.scope.enabled
-    description: Enables capturing the enduser.scope attribute. This attribute is not emitted when v3 preview is enabled.
+    description: Enables capturing the enduser.scope attribute. This property and the associated attribute are not supported when v3 preview is enabled.
     type: boolean
     default: false
   - name: otel.instrumentation.common.user.id.enabled
     declarative_name: java.common.user.id.enabled
-    description: Enables capturing the user.id attribute when v3 preview is enabled. This property is not honored when v3 preview is disabled.
+    description: Enables capturing the user.id attribute when v3 preview is enabled. This property and the associated attribute are not supported when v3 preview is disabled.
     type: boolean
     default: false
   - name: otel.instrumentation.common.user.roles.enabled
     declarative_name: java.common.user.roles.enabled
-    description: Enables capturing the user.roles attribute when v3 preview is enabled. This property is not honored when v3 preview is disabled.
+    description: Enables capturing the user.roles attribute when v3 preview is enabled. This property and the associated attribute are not supported when v3 preview is disabled.
     type: boolean
     default: false
   - name: otel.instrumentation.spring-security.enduser.role.granted-authority-prefix
@@ -40,6 +40,6 @@ configurations:
     default: "ROLE_"
   - name: otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix
     declarative_name: java.spring_security.enduser.scope.granted_authority_prefix
-    description: Prefix of granted authorities identifying scopes to capture in the `enduser.scope` semantic attribute. Scopes are not emitted when v3 preview is enabled.
+    description: Prefix of granted authorities identifying scopes to capture in the `enduser.scope` semantic attribute. This property and the associated attribute are not supported when v3 preview is enabled.
     type: string
     default: "SCOPE_"

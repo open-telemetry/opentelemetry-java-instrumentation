@@ -14,7 +14,8 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
  * attributes.
  *
  * <p>When the v3 preview is enabled, this configuration reads the corresponding {@code user.*}
- * properties instead. Legacy {@code enduser.*} properties are not honored in v3 preview.
+ * properties instead. Legacy {@code enduser.*} properties and their associated attributes are not
+ * supported when v3 preview is enabled.
  *
  * <p>The {@code enduser.*} semantic attributes are not captured by default, due to this text in the
  * specification:
@@ -75,28 +76,31 @@ public class EnduserConfig {
   }
 
   /**
-   * Returns true if capturing of any {@code enduser.*} semantic attribute is enabled.
+   * Returns true if capturing of any identity semantic attribute is enabled.
    *
-   * <p>This flag can be used by capturing instrumentations to bypass all {@code enduser.*}
-   * attribute capturing.
+   * <p>This flag can be used by capturing instrumentations to bypass all identity attribute
+   * capturing. In v3 preview mode, this corresponds to the {@code user.*} attributes; otherwise it
+   * corresponds to the {@code enduser.*} attributes.
    */
   public boolean isAnyEnabled() {
     return this.idEnabled || this.roleEnabled || this.scopeEnabled;
   }
 
   /**
-   * Returns true if capturing the {@code enduser.id} semantic attribute is enabled.
+   * Returns true if capturing the id semantic attribute is enabled.
    *
-   * @return true if capturing the {@code enduser.id} semantic attribute is enabled.
+   * <p>In v3 preview mode, this controls the {@code user.id} attribute; otherwise it controls the
+   * {@code enduser.id} attribute.
    */
   public boolean isIdEnabled() {
     return this.idEnabled;
   }
 
   /**
-   * Returns true if capturing the {@code enduser.role} semantic attribute is enabled.
+   * Returns true if capturing the role(s) semantic attribute is enabled.
    *
-   * @return true if capturing the {@code enduser.role} semantic attribute is enabled.
+   * <p>In v3 preview mode, this controls the {@code user.roles} attribute; otherwise it controls
+   * the {@code enduser.role} attribute.
    */
   public boolean isRoleEnabled() {
     return this.roleEnabled;
@@ -105,7 +109,8 @@ public class EnduserConfig {
   /**
    * Returns true if capturing the {@code enduser.scope} semantic attribute is enabled.
    *
-   * @return true if capturing the {@code enduser.scope} semantic attribute is enabled.
+   * <p>This is always disabled in v3 preview mode, since {@code enduser.scope} has no {@code
+   * user.*} equivalent.
    */
   public boolean isScopeEnabled() {
     return this.scopeEnabled;

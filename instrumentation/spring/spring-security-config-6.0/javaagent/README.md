@@ -5,7 +5,7 @@ from Spring Security `Authentication` objects.
 
 By default this instrumentation emits the deprecated `enduser.*` attributes when enabled. When
 `otel.instrumentation.common.v3-preview` is enabled, it emits `user.id` and `user.roles` instead,
-and does not emit `enduser.scope`.
+and `enduser.scope` is not supported.
 
 ## Settings
 
@@ -19,4 +19,4 @@ It also supports the following properties:
 | Property                                                                      | Type   | Default | Description                                                                                                                    |
 |-------------------------------------------------------------------------------|--------|---------|--------------------------------------------------------------------------------------------------------------------------------|
 | `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix`  | String | `ROLE_` | Prefix of granted authorities identifying roles to capture in the `enduser.role`, or v3 preview `user.roles`, semantic attribute. |
-| `otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix` | String | `SCOPE_` | Prefix of granted authorities identifying scopes to capture in the `enduser.scope` semantic attribute. Scopes are not emitted in v3 preview. |
+| `otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix` | String | `SCOPE_` | Prefix of granted authorities identifying scopes to capture in the `enduser.scope` semantic attribute. This property and the associated attribute are not supported when v3 preview is enabled. |

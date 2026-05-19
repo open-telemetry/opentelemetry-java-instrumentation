@@ -5,7 +5,7 @@ from Spring Security `Authentication` objects.
 
 By default this instrumentation emits the deprecated `enduser.*` attributes when enabled. When
 `otel.instrumentation.common.v3-preview` is enabled, it emits `user.id` and `user.roles` instead,
-and does not emit `enduser.scope`.
+and `enduser.scope` is not supported.
 
 Also provides `Customizer` implementations to insert those filters into the filter chains created by
 `HttpSecurity` and `ServerHttpSecurity`, respectively.
