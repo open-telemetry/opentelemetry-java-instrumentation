@@ -16,8 +16,9 @@ import java.lang.annotation.Target;
  * This annotation marks that an execution of this method should result in a new {@link
  * io.opentelemetry.api.trace.Span}.
  *
- * <p>Applying this annotation to constructors is not supported by OpenTelemetry instrumentation.
- * The constructor target is deprecated and will be removed in the 3.0 release.
+ * <p>Using this annotation on constructors is not supported by OpenTelemetry instrumentation. The
+ * {@link ElementType#CONSTRUCTOR} target exists only for backward compatibility and will be removed
+ * in the 3.0 release.
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
  * that a new span should be created whenever the marked method is executed.
