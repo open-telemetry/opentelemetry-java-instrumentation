@@ -32,7 +32,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class EnduserAttributesCapturingServletFilterTest {
 
   @RegisterExtension
@@ -46,6 +45,7 @@ class EnduserAttributesCapturingServletFilterTest {
    * io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturerTest}
    * tests many other scenarios.
    */
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void test() throws Exception {
 
