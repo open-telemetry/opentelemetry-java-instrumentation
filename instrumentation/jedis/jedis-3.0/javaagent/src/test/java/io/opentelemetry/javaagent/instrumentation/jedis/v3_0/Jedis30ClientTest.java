@@ -72,6 +72,7 @@ class Jedis30ClientTest {
 
   @BeforeEach
   void reset() {
+    jedis.select(0);
     jedis.flushAll();
     testing.clearData();
   }

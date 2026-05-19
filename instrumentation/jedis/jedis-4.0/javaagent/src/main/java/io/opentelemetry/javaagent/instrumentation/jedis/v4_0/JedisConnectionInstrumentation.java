@@ -7,8 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.setConnectionInfo;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -24,6 +26,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.CommandArguments;
+import redis.clients.jedis.Connection;
+import redis.clients.jedis.JedisSocketFactory;
 import redis.clients.jedis.commands.ProtocolCommand;
 
 class JedisConnectionInstrumentation implements TypeInstrumentation {
@@ -34,6 +38,8 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
+
     transformer.applyAdviceToMethod(
         named("sendCommand")
             .and(takesArguments(1))
@@ -77,13 +83,26 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Connection connection,
+        @Advice.FieldValue("socketFactory") JedisSocketFactory socketFactory,
+        @Advice.Argument(value = 1, optional = true) @Nullable Object clientConfig) {
+      setConnectionInfo(connection, socketFactory, clientConfig);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class SendCommandAdvice {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
-        @Advice.Argument(0) ProtocolCommand command, @Advice.Argument(1) byte[][] args) {
-      return AdviceScope.start(JedisRequest.create(command, asList(args)));
+        @Advice.This Connection connection,
+        @Advice.Argument(0) ProtocolCommand command,
+        @Advice.Argument(1) byte[][] args) {
+      return AdviceScope.start(JedisRequest.create(connection, command, asList(args)));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -102,8 +121,9 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.Argument(0) CommandArguments command) {
-      return AdviceScope.start(JedisRequest.create(command));
+    public static AdviceScope onEnter(
+        @Advice.This Connection connection, @Advice.Argument(0) CommandArguments command) {
+      return AdviceScope.start(JedisRequest.create(connection, command));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

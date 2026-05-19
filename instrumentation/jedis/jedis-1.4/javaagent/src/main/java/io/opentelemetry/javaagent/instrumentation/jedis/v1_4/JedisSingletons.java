@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -25,7 +26,7 @@ class JedisSingletons {
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                request -> spanName(dbAttributesGetter, request))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
@@ -36,6 +37,22 @@ class JedisSingletons {
 
   static Instrumenter<JedisRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  // Redis span names follow DB span-name fallback except db.namespace is not used.
+  private static String spanName(JedisDbAttributesGetter getter, JedisRequest request) {
+    String operationName = getter.getDbOperationName(request);
+    if (!emitStableDatabaseSemconv()) {
+      return operationName;
+    }
+    String serverAddress = getter.getServerAddress(request);
+    if (serverAddress == null) {
+      return operationName;
+    }
+    Integer serverPort = getter.getServerPort(request);
+    return serverPort != null
+        ? operationName + " " + serverAddress + ":" + serverPort
+        : operationName + " " + serverAddress;
   }
 
   private JedisSingletons() {}
