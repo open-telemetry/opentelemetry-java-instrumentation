@@ -195,11 +195,13 @@ class BeanFinder {
       Set<ObjectName> objectNames, MBeanServerConnection connection, MetricDef metricDef) {
     for (String handlerName : metricDef.getHandlers()) {
       JmxMetricHandler handler = handlers.get(handlerName);
+      // we remove rules that reference unknown handlers during construction, so this should never
+      // happen
       if (handler == null) {
         throw new IllegalStateException("Unknown handler " + handlerName);
       }
-      MetricHandlerExtractor extractor = new MetricHandlerExtractor(handler);
-      registrar.enrollHandler(connection, objectNames, extractor);
+      MetricHandlerHolder holder = new MetricHandlerHolder(handler);
+      registrar.enrollHandler(connection, objectNames, holder);
     }
   }
 

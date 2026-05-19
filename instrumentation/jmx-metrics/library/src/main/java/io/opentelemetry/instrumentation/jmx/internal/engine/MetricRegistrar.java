@@ -55,14 +55,9 @@ class MetricRegistrar implements AutoCloseable {
       AttributeInfo attributeInfo) {
     // For the first enrollment of the extractor we have to build the corresponding Instrument
     DetectionStatus status = new DetectionStatus(connection, objectNames);
-    boolean firstEnrollment;
-    synchronized (extractor) {
-      firstEnrollment = extractor.getStatus() == null;
-      // For successive enrollments, it is sufficient to refresh the status
-      extractor.setStatus(status);
-    }
-
+    boolean firstEnrollment = extractor.setStatus(status);
     if (!firstEnrollment) {
+      // For successive enrollments, it is sufficient to refresh the status
       return;
     }
 
@@ -215,21 +210,16 @@ class MetricRegistrar implements AutoCloseable {
   void enrollHandler(
       MBeanServerConnection connection,
       Collection<ObjectName> objectNames,
-      MetricHandlerExtractor extractor) {
+      MetricHandlerHolder holder) {
     DetectionStatus status = new DetectionStatus(connection, objectNames);
-    boolean firstEnrollment;
-    synchronized (extractor) {
-      firstEnrollment = extractor.getStatus() == null;
-      // For successive enrollments, it is sufficient to refresh the status
-      extractor.setStatus(status);
-    }
-
+    boolean firstEnrollment = holder.setStatus(status);
     if (!firstEnrollment) {
+      // For successive enrollments, it is sufficient to refresh the status
       return;
     }
 
     register(
-        extractor
+        holder
             .getHandler()
             .create(
                 meter,
@@ -237,12 +227,12 @@ class MetricRegistrar implements AutoCloseable {
                     new JmxMetricHandler.Detector() {
                       @Override
                       public MBeanServerConnection getConnection() {
-                        return extractor.getStatus().getConnection();
+                        return holder.getStatus().getConnection();
                       }
 
                       @Override
                       public Collection<ObjectName> getObjectNames() {
-                        return extractor.getStatus().getObjectNames();
+                        return holder.getStatus().getObjectNames();
                       }
                     }));
   }

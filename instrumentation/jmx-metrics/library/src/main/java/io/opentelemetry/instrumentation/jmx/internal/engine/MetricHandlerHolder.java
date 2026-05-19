@@ -8,13 +8,13 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 import io.opentelemetry.instrumentation.jmx.JmxMetricHandler;
 import javax.annotation.Nullable;
 
-class MetricHandlerExtractor {
+class MetricHandlerHolder {
 
   private final JmxMetricHandler handler;
 
   @Nullable private volatile DetectionStatus status;
 
-  public MetricHandlerExtractor(JmxMetricHandler handler) {
+  public MetricHandlerHolder(JmxMetricHandler handler) {
     this.handler = handler;
   }
 
@@ -22,12 +22,14 @@ class MetricHandlerExtractor {
     return handler;
   }
 
-  void setStatus(DetectionStatus status) {
+  synchronized boolean setStatus(DetectionStatus status) {
+    boolean first = this.status == null;
     this.status = status;
+    return first;
   }
 
   @Nullable
-  DetectionStatus getStatus() {
+  synchronized DetectionStatus getStatus() {
     return status;
   }
 }
