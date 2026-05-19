@@ -77,20 +77,130 @@ class SqlQueryAnalyzerTest {
     }
   }
 
+  @Test
+  void sanitizeGrantObjectNamedPassword() {
+    SqlQuery result =
+        ANALYZER.analyze("GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
+  }
+
+  @Test
+  void sanitizeGrantIdentifiedByAfterPreviousStatement() {
+    SqlQuery result =
+        ANALYZER.analyze(
+            "SELECT 1; GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY Password1",
+            DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText())
+        .isEqualTo("SELECT ?; GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY ?");
+  }
+
+  @Test
+  void sanitizeDdlObjectNamedPassword() {
+    SqlQuery result =
+        ANALYZER.analyze(
+            "CREATE USER password PASSWORD Password1", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText()).isEqualTo("CREATE USER password PASSWORD ?");
+  }
+
+  @Test
+  void sanitizeGrantObjectNamedPasswordWithSummary() {
+    SqlQuery result =
+        ANALYZER.analyzeWithSummary(
+            "GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
+    assertThat(result.getQuerySummary()).isEqualTo("GRANT");
+  }
+
+  @Test
+  void sanitizeDdlObjectNamedPasswordWithSummary() {
+    SqlQuery result =
+        ANALYZER.analyzeWithSummary(
+            "CREATE USER password PASSWORD Password1", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText()).isEqualTo("CREATE USER password PASSWORD ?");
+    assertThat(result.getQuerySummary()).isEqualTo("CREATE USER password");
+  }
+
   private static Stream<Arguments> sensitiveArgs() {
     return Stream.of(
-        // SAP HANA CONNECT and CREATE USER statements can contain unquoted password
+        // SAP HANA CREATE USER statements can contain unquoted password
         // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
-        Arguments.of("CONNECT user PASSWORD Password1", "CONNECT ?", null),
-        Arguments.of("CREATE USER new_user PASSWORD Password1", "CREATE USER ?", "CREATE"),
-        Arguments.of("ALTER USER user PASSWORD Password1", "ALTER USER ?", "ALTER"),
+        Arguments.of(
+            "CREATE USER new_user PASSWORD Password1",
+            "CREATE USER new_user PASSWORD ?",
+            "CREATE USER new_user"),
+        Arguments.of(
+            "ALTER USER user PASSWORD Password1", "ALTER USER user PASSWORD ?", "ALTER USER user"),
+        // Other SAP HANA administrative statements can contain unquoted or double-quoted passwords
+        // after a PASSWORD keyword.
+        Arguments.of("CONNECT user PASSWORD Password1", "CONNECT user PASSWORD ?", null),
+        Arguments.of(
+            "VALIDATE USER user PASSWORD Password1", "VALIDATE USER user PASSWORD ?", null),
+        Arguments.of("CHECK USER user PASSWORD \"Password1\"", "CHECK USER user PASSWORD ?", null),
+        Arguments.of(
+            "CREATE DATABASE db SYSTEM USER PASSWORD Password1",
+            "CREATE DATABASE db SYSTEM USER PASSWORD ?",
+            "CREATE DATABASE db"),
+        Arguments.of(
+            "ALTER SYSTEM SET SECURE STORE BACKUP PASSWORD \"Password1\"",
+            "ALTER SYSTEM SET SECURE STORE BACKUP PASSWORD ?",
+            "ALTER SYSTEM"),
+        Arguments.of(
+            "EXPORT table AS BINARY ENCRYPTION PASSWORD Password1",
+            "EXPORT table AS BINARY ENCRYPTION PASSWORD ?",
+            null),
+        Arguments.of(
+            "IMPORT MY_SCHEMA1.T1 FROM '/backup/export_dir' WITH ENCRYPTION PASSWORD Password1",
+            "IMPORT MY_SCHEMA1.T1 FROM ? WITH ENCRYPTION PASSWORD ?",
+            null),
+        Arguments.of(
+            "RECOVER ENCRYPTION ROOT KEYS USING 'backup' PASSWORD Password1",
+            "RECOVER ENCRYPTION ROOT KEYS USING ? PASSWORD ?",
+            null),
+        Arguments.of(
+            "GRANT SELECT ON users TO admin /* PASSWORD Password1 */",
+            "GRANT SELECT ON users TO admin /* PASSWORD Password1 */",
+            "GRANT"),
         // Oracle CREATE USER statement can contain unquoted password
         // https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_8003.htm
-        Arguments.of("CREATE USER new_user IDENTIFIED BY Password1", "CREATE USER ?", "CREATE"),
         Arguments.of(
-            "ALTER USER user IDENTIFIED BY Password1 REPLACE Password2", "ALTER USER ?", "ALTER"),
-        // field named "connect" does not trigger sanitization
-        Arguments.of("SELECT connect FROM TABLE", "SELECT connect FROM TABLE", "SELECT TABLE"));
+            "CREATE USER new_user IDENTIFIED BY Password1",
+            "CREATE USER new_user IDENTIFIED BY ?",
+            "CREATE USER new_user"),
+        Arguments.of(
+            "ALTER USER user IDENTIFIED BY Password1 REPLACE Password2",
+            "ALTER USER user IDENTIFIED BY ?",
+            "ALTER USER user"),
+        Arguments.of(
+            "GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY Password1",
+            "GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY ?",
+            "GRANT"),
+        Arguments.of(
+            "GRANT SELECT ON users TO admin; SELECT password FROM users",
+            "GRANT SELECT ON users TO admin; SELECT password FROM users",
+            "GRANT; SELECT users"),
+        // field names do not trigger sensitive statement sanitization
+        Arguments.of("SELECT connect FROM TABLE", "SELECT connect FROM TABLE", "SELECT TABLE"),
+        Arguments.of(
+            "SELECT grant, password FROM users",
+            "SELECT grant, password FROM users",
+            "SELECT users"),
+        Arguments.of("SELECT password FROM users", "SELECT password FROM users", "SELECT users"),
+        Arguments.of(
+            "SELECT identified_by FROM users", "SELECT identified_by FROM users", "SELECT users"),
+        Arguments.of(
+            "TRUNCATE TABLE password", "TRUNCATE TABLE password", "TRUNCATE TABLE password"),
+        Arguments.of(
+            "REPLACE password VALUES (1)", "REPLACE password VALUES (?)", "REPLACE password"),
+        Arguments.of("VALUES (password)", "VALUES (password)", "VALUES"),
+        Arguments.of(
+            "UPDATE users SET password = \"Password1\"",
+            "UPDATE users SET password = ?",
+            "UPDATE users"));
   }
 
   @Test
@@ -847,6 +957,7 @@ class SqlQueryAnalyzerTest {
         Arguments.of("SELECT * FROM mytable insert", expect("SELECT", "mytable", "SELECT mytable")),
         Arguments.of(
             "SELECT * FROM mytable AS update", expect("SELECT", "mytable", "SELECT mytable")),
+        Arguments.of("SELECT * FROM user", expect("SELECT", "user", "SELECT user")),
 
         // CTEs (Common Table Expressions) - CTE names are filtered from query summary
         Arguments.of(
@@ -902,7 +1013,33 @@ class SqlQueryAnalyzerTest {
                 "ALTER TABLE users ADD COLUMN email VARCHAR(?), DROP COLUMN legacy_id, MODIFY COLUMN status INT",
                 "ALTER TABLE",
                 "users",
-                "ALTER TABLE users")));
+                "ALTER TABLE users")),
+        Arguments.of(
+            "CREATE TABLE users (password VARCHAR(255))",
+            expect(
+                "CREATE TABLE users (password VARCHAR(?))",
+                "CREATE TABLE",
+                "users",
+                "CREATE TABLE users")),
+        Arguments.of(
+            "ALTER TABLE users ADD COLUMN password VARCHAR(255)",
+            expect(
+                "ALTER TABLE users ADD COLUMN password VARCHAR(?)",
+                "ALTER TABLE",
+                "users",
+                "ALTER TABLE users")),
+        Arguments.of(
+            "ALTER TABLE user ADD COLUMN name VARCHAR(255)",
+            expect(
+                "ALTER TABLE user ADD COLUMN name VARCHAR(?)",
+                "ALTER TABLE",
+                "user",
+                "ALTER TABLE user")),
+        Arguments.of(
+            "CREATE TABLE password (id INT)",
+            expect("CREATE TABLE", "password", "CREATE TABLE password")),
+        Arguments.of(
+            "DROP TABLE password", expect("DROP TABLE", "password", "DROP TABLE password")));
   }
 
   @ParameterizedTest

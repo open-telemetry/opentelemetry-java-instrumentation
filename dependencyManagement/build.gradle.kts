@@ -42,7 +42,7 @@ val byteBuddyVersion = "1.18.8"
 val asmVersion = "9.10"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
-val slf4jVersion = "2.0.17"
+val slf4jVersion = "2.0.18"
 val semConvVersion = "1.41.1"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 

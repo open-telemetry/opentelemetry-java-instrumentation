@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.annotations;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.AsyncResponseData;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.HandlerData;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.AsyncResponseData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsInstrumenterFactory;
 import javax.ws.rs.container.AsyncResponse;
 
 public class JaxrsAnnotationsSingletons {
