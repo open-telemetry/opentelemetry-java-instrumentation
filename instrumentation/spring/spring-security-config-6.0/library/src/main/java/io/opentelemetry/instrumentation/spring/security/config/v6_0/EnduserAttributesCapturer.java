@@ -19,7 +19,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
 /**
- * Captures {@code enduser.*} semantic attributes from {@link Authentication} objects.
+ * Captures identity semantic attributes from {@link Authentication} objects.
+ *
+ * <p>By default, this captures {@code enduser.*} attributes. When the v3 preview is enabled (via
+ * {@link SemconvStability#v3Preview()}), the corresponding {@code user.*} attributes are captured
+ * instead; in that mode {@code enduser.scope} has no {@code user.*} equivalent and is never
+ * captured.
  *
  * <p>After construction, you must selectively enable which attributes you want captured by calling
  * the appropriate {@code setEnduser*Enabled(true)} method.
@@ -54,12 +59,12 @@ public final class EnduserAttributesCapturer {
   private String scopeGrantedAuthorityPrefix = DEFAULT_SCOPE_PREFIX;
 
   /**
-   * Captures the {@code enduser.*} semantic attributes from the given {@link Authentication} into
-   * the {@link LocalRootSpan} of the given {@link Context}.
+   * Captures the identity semantic attributes from the given {@link Authentication} into the
+   * {@link LocalRootSpan} of the given {@link Context}.
    *
    * <p>Only the attributes enabled via the {@code setEnduser*Enabled(true)} methods are captured.
    *
-   * <p>The following attributes can be captured:
+   * <p>By default, the following attributes can be captured:
    *
    * <ul>
    *   <li>{@code enduser.id} - from {@link Authentication#getName()}
@@ -71,10 +76,17 @@ public final class EnduserAttributesCapturer {
    *       #getScopeGrantedAuthorityPrefix() scope prefix}
    * </ul>
    *
+   * <p>When the v3 preview is enabled, the following attributes are captured instead:
+   *
+   * <ul>
+   *   <li>{@code user.id} - from {@link Authentication#getName()}
+   *   <li>{@code user.roles} - a string array from the {@link Authentication#getAuthorities()}
+   *       with the configured {@link #getRoleGrantedAuthorityPrefix() role prefix}
+   * </ul>
+   *
    * @param otelContext the context from which the {@link LocalRootSpan} in which to capture the
    *     attributes will be retrieved
-   * @param authentication the authentication from which to determine the {@code enduser.*}
-   *     attributes.
+   * @param authentication the authentication from which to determine the identity attributes.
    */
   public void captureEnduserAttributes(
       Context otelContext, @Nullable Authentication authentication) {
