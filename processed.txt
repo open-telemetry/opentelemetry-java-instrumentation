@@ -548,3 +548,4 @@ thrift-0.13:javaagent
 thrift-0.13:library
 thrift-0.13:testing
 jetty-common-8.0:javaagent
+opensearch-rest-common-1.0:javaagent
