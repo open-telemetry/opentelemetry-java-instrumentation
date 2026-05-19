@@ -58,7 +58,7 @@ class BeanFinder {
 
     for (MetricDef metricDef : conf.getMetricDefs()) {
       for (MetricHandlerHolder holder : metricDef.getHandlers()) {
-        String handlerName = holder.getHandlerClassName();
+        String handlerName = holder.getHandlerName();
         JmxMetricHandler handler = handlers.get(handlerName);
         if (handler != null) {
           holder.setHandler(handler);

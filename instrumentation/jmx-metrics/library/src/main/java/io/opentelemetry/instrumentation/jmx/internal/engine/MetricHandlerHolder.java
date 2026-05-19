@@ -14,16 +14,16 @@ import javax.annotation.Nullable;
  */
 public class MetricHandlerHolder {
 
-  private final String handlerClassName;
+  private final String handlerName;
   @Nullable private JmxMetricHandler handler;
   @Nullable private volatile DetectionStatus status;
 
-  public MetricHandlerHolder(String handlerClassName) {
-    this.handlerClassName = handlerClassName;
+  public MetricHandlerHolder(String handlerName) {
+    this.handlerName = handlerName;
   }
 
-  String getHandlerClassName() {
-    return handlerClassName;
+  String getHandlerName() {
+    return handlerName;
   }
 
   JmxMetricHandler getHandler() {
