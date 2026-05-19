@@ -707,9 +707,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("content", Value.of("What time is it?")))),
+                    .hasBody(Value.of(KeyValue.of("content", Value.of("What time is it?")))),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1142,8 +1140,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 .json(
                                     Document.mapBuilder()
                                         .putString("type", "object")
-                                        .putDocument(
-                                            "properties", Document.mapBuilder().build())
+                                        .putDocument("properties", Document.mapBuilder().build())
                                         .build())
                                 .build())
                         .build())
