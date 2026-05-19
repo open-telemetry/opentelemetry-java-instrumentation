@@ -81,7 +81,7 @@ public class MetricDef {
   private final BeanGroup beans;
   // Describes how to get the metric values and their attributes, and how to report them
   private final List<MetricExtractor> metricExtractors;
-  private final List<String> handlers;
+  private final List<MetricHandlerHolder> handlers;
 
   /**
    * Constructor for MetricDef.
@@ -91,7 +91,8 @@ public class MetricDef {
    *     MetricExtractor is provided, they should use unique metric names or unique metric
    *     attributes
    */
-  public MetricDef(BeanGroup beans, List<MetricExtractor> metricExtractors, List<String> handlers) {
+  public MetricDef(
+      BeanGroup beans, List<MetricExtractor> metricExtractors, List<MetricHandlerHolder> handlers) {
     this.beans = beans;
     this.metricExtractors = metricExtractors;
     this.handlers = handlers;
@@ -105,7 +106,7 @@ public class MetricDef {
     return metricExtractors;
   }
 
-  List<String> getHandlers() {
+  List<MetricHandlerHolder> getHandlers() {
     return handlers;
   }
 }

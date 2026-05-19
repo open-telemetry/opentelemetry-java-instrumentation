@@ -223,18 +223,20 @@ class MetricRegistrar implements AutoCloseable {
             .getHandler()
             .create(
                 meter,
-                () ->
-                    new JmxMetricHandler.Detector() {
-                      @Override
-                      public MBeanServerConnection getConnection() {
-                        return holder.getStatus().getConnection();
-                      }
+                () -> {
+                  DetectionStatus detectionStatus = holder.getStatus();
+                  return new JmxMetricHandler.Detector() {
+                    @Override
+                    public MBeanServerConnection getConnection() {
+                      return detectionStatus.getConnection();
+                    }
 
-                      @Override
-                      public Collection<ObjectName> getObjectNames() {
-                        return holder.getStatus().getObjectNames();
-                      }
-                    }));
+                    @Override
+                    public Collection<ObjectName> getObjectNames() {
+                      return detectionStatus.getObjectNames();
+                    }
+                  };
+                }));
   }
 
   private void register(AutoCloseable instrument) {

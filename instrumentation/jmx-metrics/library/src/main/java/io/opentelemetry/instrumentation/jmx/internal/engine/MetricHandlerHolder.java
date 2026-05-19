@@ -8,18 +8,30 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 import io.opentelemetry.instrumentation.jmx.JmxMetricHandler;
 import javax.annotation.Nullable;
 
-class MetricHandlerHolder {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public class MetricHandlerHolder {
 
-  private final JmxMetricHandler handler;
-
+  private final String handlerClassName;
+  @Nullable private JmxMetricHandler handler;
   @Nullable private volatile DetectionStatus status;
 
-  public MetricHandlerHolder(JmxMetricHandler handler) {
-    this.handler = handler;
+  public MetricHandlerHolder(String handlerClassName) {
+    this.handlerClassName = handlerClassName;
+  }
+
+  String getHandlerClassName() {
+    return handlerClassName;
   }
 
   JmxMetricHandler getHandler() {
     return handler;
+  }
+
+  void setHandler(JmxMetricHandler handler) {
+    this.handler = handler;
   }
 
   synchronized boolean setStatus(DetectionStatus status) {
@@ -29,7 +41,7 @@ class MetricHandlerHolder {
   }
 
   @Nullable
-  synchronized DetectionStatus getStatus() {
+  DetectionStatus getStatus() {
     return status;
   }
 }

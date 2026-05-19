@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.jmx.internal.engine.MetricAttribute;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricExtractor;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricHandlerHolder;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -185,7 +186,12 @@ public class JmxRule extends MetricStructure {
       }
     }
 
-    return new MetricDef(group, metricExtractors, handlers);
+    List<MetricHandlerHolder> metricHandlers = new ArrayList<>();
+    for (String handler : handlers) {
+      metricHandlers.add(new MetricHandlerHolder(handler));
+    }
+
+    return new MetricDef(group, metricExtractors, metricHandlers);
   }
 
   private static List<MetricExtractor> createStateMappingExtractors(

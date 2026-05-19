@@ -34,7 +34,6 @@ class BeanFinder {
 
   private final MetricRegistrar registrar;
   private final MetricConfiguration conf;
-  private final Map<String, JmxMetricHandler> handlers;
   private final ScheduledExecutorService exec =
       Executors.newSingleThreadScheduledExecutor(
           runnable -> {
@@ -54,13 +53,16 @@ class BeanFinder {
       long discoveryDelay) {
     this.conf = conf;
     this.registrar = registrar;
-    this.handlers = handlers;
     this.discoveryDelay = Math.max(1000, discoveryDelay); // Enforce sanity
     this.maxDelay = Math.max(60000, discoveryDelay);
 
     for (MetricDef metricDef : conf.getMetricDefs()) {
-      for (String handlerName : metricDef.getHandlers()) {
-        if (!handlers.containsKey(handlerName)) {
+      for (MetricHandlerHolder holder : metricDef.getHandlers()) {
+        String handlerName = holder.getHandlerClassName();
+        JmxMetricHandler handler = handlers.get(handlerName);
+        if (handler != null) {
+          holder.setHandler(handler);
+        } else {
           logger.log(
               WARNING,
               "Metric definition references unknown handler {0}, skipping it.",
@@ -190,13 +192,12 @@ class BeanFinder {
 
   private void resolveHandlers(
       Set<ObjectName> objectNames, MBeanServerConnection connection, MetricDef metricDef) {
-    for (String handlerName : metricDef.getHandlers()) {
-      JmxMetricHandler handler = handlers.get(handlerName);
+    for (MetricHandlerHolder holder : metricDef.getHandlers()) {
+      JmxMetricHandler handler = holder.getHandler();
       // we print a warning for missing handlers in constructor
       if (handler == null) {
         continue;
       }
-      MetricHandlerHolder holder = new MetricHandlerHolder(handler);
       registrar.enrollHandler(connection, objectNames, holder);
     }
   }

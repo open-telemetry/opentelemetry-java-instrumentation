@@ -58,7 +58,7 @@ public class MetricExtractor {
   }
 
   @Nullable
-  synchronized DetectionStatus getStatus() {
+  DetectionStatus getStatus() {
     return status;
   }
 }
