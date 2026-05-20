@@ -26,6 +26,12 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
+  @Nullable
+  public String getDbName(JedisRequest request) {
+    return null;
+  }
+
+  @Override
   public String getDbQueryText(JedisRequest request) {
     return request.getQueryText();
   }
