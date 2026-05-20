@@ -21,9 +21,13 @@ import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeI
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.ZOS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.stream.Stream;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
 class OsResourceTest {
@@ -39,102 +43,42 @@ class OsResourceTest {
     assertThat(resource.getAttribute(OS_VERSION)).isEqualTo("5.10");
   }
 
-  @Test
-  @SetSystemProperty(key = "os.name", value = "MacOS X 11")
-  void macos() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(DARWIN);
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("osTypeTestCases")
+  void osType(String name, String osName, String expectedOsType) {
+    String originalOsName = System.getProperty("os.name");
+    try {
+      System.setProperty("os.name", osName);
+
+      Resource resource = OsResource.buildResource();
+      assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+      assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(expectedOsType);
+      assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
+    } finally {
+      restoreSystemProperty("os.name", originalOsName);
+    }
   }
 
-  @Test
-  @SetSystemProperty(key = "os.name", value = "Windows 10")
-  void windows() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(WINDOWS);
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
+  private static Stream<Arguments> osTypeTestCases() {
+    return Stream.of(
+        Arguments.of("macos", "MacOS X 11", DARWIN),
+        Arguments.of("windows", "Windows 10", WINDOWS),
+        Arguments.of("freebsd", "FreeBSD 10", FREEBSD),
+        Arguments.of("netbsd", "NetBSD 10", NETBSD),
+        Arguments.of("openbsd", "OpenBSD 10", OPENBSD),
+        Arguments.of("dragonflybsd", "DragonFlyBSD 10", DRAGONFLYBSD),
+        Arguments.of("hpux", "HP-UX 10", HPUX),
+        Arguments.of("aix", "AIX 10", AIX),
+        Arguments.of("solaris", "Solaris 10", SOLARIS),
+        Arguments.of("zos", "Z/OS 10", ZOS),
+        Arguments.of("unknown", "RagOS 10", null));
   }
 
-  @Test
-  @SetSystemProperty(key = "os.name", value = "FreeBSD 10")
-  void freebsd() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(FREEBSD);
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
-  }
-
-  @Test
-  @SetSystemProperty(key = "os.name", value = "NetBSD 10")
-  void netbsd() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(NETBSD);
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
-  }
-
-  @Test
-  @SetSystemProperty(key = "os.name", value = "OpenBSD 10")
-  void openbsd() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(OPENBSD);
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
-  }
-
-  @Test
-  @SetSystemProperty(key = "os.name", value = "DragonFlyBSD 10")
-  void dragonflybsd() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(DRAGONFLYBSD);
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
-  }
-
-  @Test
-  @SetSystemProperty(key = "os.name", value = "HP-UX 10")
-  void hpux() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(HPUX);
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
-  }
-
-  @Test
-  @SetSystemProperty(key = "os.name", value = "AIX 10")
-  void aix() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(AIX);
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
-  }
-
-  @Test
-  @SetSystemProperty(key = "os.name", value = "Solaris 10")
-  void solaris() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(SOLARIS);
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
-  }
-
-  @Test
-  @SetSystemProperty(key = "os.name", value = "Z/OS 10")
-  void zos() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(ZOS);
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
-  }
-
-  @Test
-  @SetSystemProperty(key = "os.name", value = "RagOS 10")
-  void unknown() {
-    Resource resource = OsResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OS_TYPE)).isNull();
-    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
+  private static void restoreSystemProperty(String key, String value) {
+    if (value == null) {
+      System.clearProperty(key);
+    } else {
+      System.setProperty(key, value);
+    }
   }
 }
