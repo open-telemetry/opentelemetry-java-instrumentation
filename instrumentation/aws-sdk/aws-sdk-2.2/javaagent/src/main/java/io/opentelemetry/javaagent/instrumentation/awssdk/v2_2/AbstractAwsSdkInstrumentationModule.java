@@ -25,11 +25,6 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String getModuleGroup() {
-    return "aws-sdk-v2";
-  }
-
-  @Override
   public boolean isHelperClass(String className) {
     return className.startsWith("io.opentelemetry.contrib.awsxray.");
   }
