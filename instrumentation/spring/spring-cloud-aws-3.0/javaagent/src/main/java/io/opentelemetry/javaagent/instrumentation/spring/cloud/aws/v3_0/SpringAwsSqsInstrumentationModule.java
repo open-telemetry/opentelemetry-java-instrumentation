@@ -27,11 +27,6 @@ public class SpringAwsSqsInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String getModuleGroup() {
-    return "aws-sdk-v2";
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AbstractMessageConvertingMessageSourceInstrumentation(),

@@ -25,11 +25,6 @@ public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationMod
   }
 
   @Override
-  public String getModuleGroup() {
-    return "akka-http";
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new PathMatcherInstrumentation(),
