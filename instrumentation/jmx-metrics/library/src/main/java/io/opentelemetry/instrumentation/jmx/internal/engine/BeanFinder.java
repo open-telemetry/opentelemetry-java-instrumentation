@@ -6,13 +6,16 @@
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.WARNING;
 
+import io.opentelemetry.instrumentation.jmx.JmxMetricHandler;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,7 +33,7 @@ class BeanFinder {
   private static final Logger logger = Logger.getLogger(BeanFinder.class.getName());
 
   private final MetricRegistrar registrar;
-  private MetricConfiguration conf;
+  private final MetricConfiguration conf;
   private final ScheduledExecutorService exec =
       Executors.newSingleThreadScheduledExecutor(
           runnable -> {
@@ -43,23 +46,39 @@ class BeanFinder {
   private final long maxDelay;
   private long delay = 1000; // number of milliseconds until first attempt to discover MBeans
 
-  BeanFinder(MetricRegistrar registrar, long discoveryDelay) {
+  BeanFinder(
+      MetricConfiguration conf,
+      MetricRegistrar registrar,
+      Map<String, JmxMetricHandler> handlers,
+      long discoveryDelay) {
+    this.conf = conf;
     this.registrar = registrar;
     this.discoveryDelay = Math.max(1000, discoveryDelay); // Enforce sanity
     this.maxDelay = Math.max(60000, discoveryDelay);
+
+    for (MetricDef metricDef : conf.getMetricDefs()) {
+      for (MetricHandlerHolder holder : metricDef.getHandlers()) {
+        String handlerName = holder.getHandlerName();
+        JmxMetricHandler handler = handlers.get(handlerName);
+        if (handler != null) {
+          holder.setHandler(handler);
+        } else {
+          logger.log(
+              WARNING,
+              "Metric definition references unknown handler {0}, skipping it.",
+              new Object[] {handlerName});
+        }
+      }
+    }
   }
 
   /**
    * Starts bean discovery on a list of local or remote connections
    *
-   * @param conf metric configuration
    * @param connections supplier for instances of {@link MBeanServerConnection}, will be invoked
    *     after delayed JMX initialization once the {@link #discoveryDelay} has expired.
    */
-  void discoverBeans(
-      MetricConfiguration conf, Supplier<List<? extends MBeanServerConnection>> connections) {
-    this.conf = conf;
-
+  void discoverBeans(Supplier<List<? extends MBeanServerConnection>> connections) {
     exec.schedule(
         () -> {
           // Issue 9336: Corner case: PlatformMBeanServer will remain uninitialized until a direct
@@ -129,6 +148,7 @@ class BeanFinder {
 
       if (!allObjectNames.isEmpty()) {
         resolveAttributes(allObjectNames, connection, metricDef);
+        resolveHandlers(allObjectNames, connection, metricDef);
 
         // Assuming that only one MBeanServer has the required MBeans
         break;
@@ -167,6 +187,20 @@ class BeanFinder {
         // Ready to collect metric values
         registrar.enrollExtractor(connection, validObjectNames, extractor, attributeInfo);
       }
+    }
+  }
+
+  private void resolveHandlers(
+      Set<ObjectName> objectNames, MBeanServerConnection connection, MetricDef metricDef) {
+    for (MetricHandlerHolder holder : metricDef.getHandlers()) {
+      registrar.enrollHandler(connection, objectNames, holder);
+    }
+  }
+
+  void shutdown() throws InterruptedException {
+    exec.shutdownNow();
+    if (!exec.awaitTermination(10, SECONDS)) {
+      logger.log(WARNING, "Bean finder executor did not terminate within 10 seconds");
     }
   }
 }

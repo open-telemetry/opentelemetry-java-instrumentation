@@ -9,7 +9,7 @@ dependencies {
   implementation(project(":instrumentation-api-incubator"))
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
-  testImplementation("io.github.netmikey.logunit:logunit-jul:1.1.3")
+  testImplementation("io.github.netmikey.logunit:logunit-jul")
 }
 
 sourceSets {

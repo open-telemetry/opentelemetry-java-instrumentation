@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -16,8 +18,10 @@ import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.instrumentation.jmx.JmxMetricHandler;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -25,11 +29,12 @@ import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
 /** A class responsible for maintaining the set of metrics to collect and report. */
-class MetricRegistrar {
+class MetricRegistrar implements AutoCloseable {
 
   private static final Logger logger = Logger.getLogger(MetricRegistrar.class.getName());
 
   private final Meter meter;
+  private final Collection<AutoCloseable> instruments = ConcurrentHashMap.newKeySet();
 
   MetricRegistrar(OpenTelemetry openTelemetry, String instrumentationScope) {
     meter = openTelemetry.getMeter(instrumentationScope);
@@ -51,14 +56,9 @@ class MetricRegistrar {
       AttributeInfo attributeInfo) {
     // For the first enrollment of the extractor we have to build the corresponding Instrument
     DetectionStatus status = new DetectionStatus(connection, objectNames);
-    boolean firstEnrollment;
-    synchronized (extractor) {
-      firstEnrollment = extractor.getStatus() == null;
-      // For successive enrollments, it is sufficient to refresh the status
-      extractor.setStatus(status);
-    }
-
+    boolean firstEnrollment = extractor.setStatus(status);
     if (!firstEnrollment) {
+      // For successive enrollments, it is sufficient to refresh the status
       return;
     }
 
@@ -88,9 +88,12 @@ class MetricRegistrar {
           builder.setUnit(unit);
 
           if (recordDoubleValue) {
-            builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor, unitConverter));
+            register(
+                builder
+                    .ofDoubles()
+                    .buildWithCallback(doubleTypeCallback(extractor, unitConverter)));
           } else {
-            builder.buildWithCallback(longTypeCallback(extractor));
+            register(builder.buildWithCallback(longTypeCallback(extractor)));
           }
           logger.log(INFO, "Created Counter for {0}", metricName);
         }
@@ -105,9 +108,12 @@ class MetricRegistrar {
           builder.setUnit(unit);
 
           if (recordDoubleValue) {
-            builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor, unitConverter));
+            register(
+                builder
+                    .ofDoubles()
+                    .buildWithCallback(doubleTypeCallback(extractor, unitConverter)));
           } else {
-            builder.buildWithCallback(longTypeCallback(extractor));
+            register(builder.buildWithCallback(longTypeCallback(extractor)));
           }
           logger.log(INFO, "Created UpDownCounter for {0}", metricName);
         }
@@ -122,9 +128,9 @@ class MetricRegistrar {
           builder.setUnit(unit);
 
           if (recordDoubleValue) {
-            builder.buildWithCallback(doubleTypeCallback(extractor, unitConverter));
+            register(builder.buildWithCallback(doubleTypeCallback(extractor, unitConverter)));
           } else {
-            builder.ofLongs().buildWithCallback(longTypeCallback(extractor));
+            register(builder.ofLongs().buildWithCallback(longTypeCallback(extractor)));
           }
           logger.log(INFO, "Created Gauge for {0}", metricName);
         }
@@ -200,5 +206,58 @@ class MetricRegistrar {
       attrBuilder = attrBuilder.put(metricAttribute.getAttributeName(), attributeValue);
     }
     return attrBuilder.build();
+  }
+
+  void enrollHandler(
+      MBeanServerConnection connection,
+      Collection<ObjectName> objectNames,
+      MetricHandlerHolder holder) {
+    JmxMetricHandler handler = holder.getHandler();
+    // we print a warning for missing handlers in the constructor of BeanFinder
+    if (handler == null) {
+      return;
+    }
+
+    DetectionStatus status = new DetectionStatus(connection, objectNames);
+    boolean firstEnrollment = holder.setStatus(status);
+    if (!firstEnrollment) {
+      // For successive enrollments, it is sufficient to refresh the status
+      return;
+    }
+
+    register(
+        handler.create(
+            meter,
+            () -> {
+              DetectionStatus detectionStatus = holder.getStatus();
+              return new JmxMetricHandler.Detector() {
+                @Override
+                public MBeanServerConnection getConnection() {
+                  return detectionStatus.getConnection();
+                }
+
+                @Override
+                public Collection<ObjectName> getObjectNames() {
+                  return detectionStatus.getObjectNames();
+                }
+              };
+            }));
+  }
+
+  private void register(AutoCloseable instrument) {
+    requireNonNull(instrument);
+    instruments.add(instrument);
+  }
+
+  @Override
+  public void close() {
+    for (AutoCloseable instrument : instruments) {
+      try {
+        instrument.close();
+      } catch (Exception e) {
+        logger.log(WARNING, "Failed to close metric instrument", e);
+      }
+    }
+    instruments.clear();
   }
 }
