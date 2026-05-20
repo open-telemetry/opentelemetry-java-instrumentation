@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -20,6 +21,8 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -67,6 +70,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       SpanNameExtractor<? super REQUEST> spanNameExtractor) {
     return new InstrumenterBuilder<>(openTelemetry, instrumentationName, spanNameExtractor);
   }
+
+  private static final Logger logger = Logger.getLogger(Instrumenter.class.getName());
+  private static final AtomicBoolean startExceptionLogged = new AtomicBoolean();
+  private static final AtomicBoolean endExceptionLogged = new AtomicBoolean();
 
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
@@ -139,7 +146,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * object of this operation.
    */
   public Context start(Context parentContext, REQUEST request) {
-    return doStart(parentContext, request, null);
+    try {
+      return doStart(parentContext, request, null);
+    } catch (Throwable t) {
+      logStartException(t);
+      return parentContext;
+    }
   }
 
   /**
@@ -154,7 +166,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
    */
   public void end(
       Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    doEnd(context, request, response, error, null);
+    try {
+      doEnd(context, request, response, error, null);
+    } catch (Throwable t) {
+      logEndException(t);
+    }
   }
 
   /** Internal method for creating spans with given start/end timestamps. */
@@ -165,8 +181,18 @@ public class Instrumenter<REQUEST, RESPONSE> {
       @Nullable Throwable error,
       Instant startTime,
       Instant endTime) {
-    Context context = doStart(parentContext, request, startTime);
-    doEnd(context, request, response, error, endTime);
+    Context context;
+    try {
+      context = doStart(parentContext, request, startTime);
+    } catch (Throwable t) {
+      logStartException(t);
+      return parentContext;
+    }
+    try {
+      doEnd(context, request, response, error, endTime);
+    } catch (Throwable t) {
+      logEndException(t);
+    }
     return context;
   }
 
@@ -298,6 +324,18 @@ public class Instrumenter<REQUEST, RESPONSE> {
       span.end(endTime);
     } else {
       span.end();
+    }
+  }
+
+  private static void logStartException(Throwable t) {
+    if (startExceptionLogged.compareAndSet(false, true)) {
+      logger.log(WARNING, "Instrumenter.start() threw an exception", t);
+    }
+  }
+
+  private static void logEndException(Throwable t) {
+    if (endExceptionLogged.compareAndSet(false, true)) {
+      logger.log(WARNING, "Instrumenter.end() threw an exception", t);
     }
   }
 
