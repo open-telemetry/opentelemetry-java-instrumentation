@@ -58,11 +58,7 @@ class AttributeBindingFactoryTest {
             stringArrayKey("key"),
             asList("x", "y", "z", null)),
         arguments(
-            "int[]",
-            int[].class,
-            new int[] {1, 2, 3},
-            longArrayKey("key"),
-            asList(1L, 2L, 3L)),
+            "int[]", int[].class, new int[] {1, 2, 3}, longArrayKey("key"), asList(1L, 2L, 3L)),
         arguments(
             "Integer[]",
             Integer[].class,
@@ -70,11 +66,7 @@ class AttributeBindingFactoryTest {
             longArrayKey("key"),
             asList(1L, 2L, 3L)),
         arguments(
-            "long[]",
-            long[].class,
-            new long[] {1, 2, 3},
-            longArrayKey("key"),
-            asList(1L, 2L, 3L)),
+            "long[]", long[].class, new long[] {1, 2, 3}, longArrayKey("key"), asList(1L, 2L, 3L)),
         arguments(
             "Long[]",
             Long[].class,
