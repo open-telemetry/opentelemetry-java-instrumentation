@@ -14,18 +14,19 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension
+import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.nanoseconds
+import java.util.function.Consumer
 import kotlin.time.Duration.Companion.seconds
 
 class KtorHttpClientStreamingTest {
@@ -68,6 +69,8 @@ class KtorHttpClientStreamingTest {
       }
     }.use { client ->
       runBlocking {
+        // withTimeout ensures requests complete before the 30s HttpTimeout fires. The bug this
+        // test guards against caused the instrumentation to prevent timely completion of requests.
         withTimeout(5.seconds) {
           repeat(3) {
             client.prepareGet("http://localhost:$serverPort/success").execute { response ->
@@ -78,15 +81,13 @@ class KtorHttpClientStreamingTest {
       }
     }
 
-    val maxSpanDuration = 5.seconds
-    val traces = testing.waitForTraces(3)
-    traces.forEach { trace ->
-      trace.forEach { span ->
-        val spanDuration = (span.endEpochNanos - span.startEpochNanos).nanoseconds
-        assertTrue(spanDuration < maxSpanDuration) {
-          "Span duration $spanDuration exceeded $maxSpanDuration, span end may have waited for request timeout"
-        }
-      }
+    val spanAssertion = Consumer<TraceAssert> { trace ->
+      trace.hasSpansSatisfyingExactly({ span ->
+        span.hasName("GET")
+          .hasKind(SpanKind.CLIENT)
+          .hasNoParent()
+      })
     }
+    testing.waitAndAssertTraces(spanAssertion, spanAssertion, spanAssertion)
   }
 }
