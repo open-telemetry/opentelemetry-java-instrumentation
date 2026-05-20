@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.instrumentation.servlet.v3_0.internal.Servlet3Accessor;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import io.opentelemetry.javaagent.instrumentation.jetty.common.JettyHelper;
+import io.opentelemetry.javaagent.instrumentation.jetty.common.v8_0.JettyHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.AgentServletInstrumenterBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
