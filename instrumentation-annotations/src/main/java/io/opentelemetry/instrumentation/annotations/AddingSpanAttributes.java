@@ -15,8 +15,8 @@ import java.lang.annotation.Target;
  * span {@link io.opentelemetry.api.trace.Span}.
  *
  * <p>Using this annotation on constructors is not supported by OpenTelemetry instrumentation. The
- * {@link ElementType#CONSTRUCTOR} target exists only for backward compatibility and will be removed
- * in the 3.0 release.
+ * {@link ElementType#CONSTRUCTOR} target exists only for backward compatibility and is planned to
+ * be removed in the 3.0 release.
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
  * that attributes annotated with the {@link
