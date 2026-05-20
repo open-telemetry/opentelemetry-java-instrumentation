@@ -204,6 +204,8 @@ class BeanFinder {
 
   void shutdown() throws InterruptedException {
     exec.shutdownNow();
-    exec.awaitTermination(10, SECONDS);
+    if (!exec.awaitTermination(10, SECONDS)) {
+      logger.log(WARNING, "Bean finder executor did not terminate within 10 seconds");
+    }
   }
 }
