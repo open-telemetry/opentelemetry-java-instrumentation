@@ -211,6 +211,12 @@ class MetricRegistrar implements AutoCloseable {
       MBeanServerConnection connection,
       Collection<ObjectName> objectNames,
       MetricHandlerHolder holder) {
+    JmxMetricHandler handler = holder.getHandler();
+    // we print a warning for missing handlers in the constructor of BeanFinder
+    if (handler == null) {
+      return;
+    }
+
     DetectionStatus status = new DetectionStatus(connection, objectNames);
     boolean firstEnrollment = holder.setStatus(status);
     if (!firstEnrollment) {
@@ -219,24 +225,22 @@ class MetricRegistrar implements AutoCloseable {
     }
 
     register(
-        holder
-            .getHandler()
-            .create(
-                meter,
-                () -> {
-                  DetectionStatus detectionStatus = holder.getStatus();
-                  return new JmxMetricHandler.Detector() {
-                    @Override
-                    public MBeanServerConnection getConnection() {
-                      return detectionStatus.getConnection();
-                    }
+        handler.create(
+            meter,
+            () -> {
+              DetectionStatus detectionStatus = holder.getStatus();
+              return new JmxMetricHandler.Detector() {
+                @Override
+                public MBeanServerConnection getConnection() {
+                  return detectionStatus.getConnection();
+                }
 
-                    @Override
-                    public Collection<ObjectName> getObjectNames() {
-                      return detectionStatus.getObjectNames();
-                    }
-                  };
-                }));
+                @Override
+                public Collection<ObjectName> getObjectNames() {
+                  return detectionStatus.getObjectNames();
+                }
+              };
+            }));
   }
 
   private void register(AutoCloseable instrument) {

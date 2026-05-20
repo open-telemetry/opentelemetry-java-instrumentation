@@ -193,11 +193,6 @@ class BeanFinder {
   private void resolveHandlers(
       Set<ObjectName> objectNames, MBeanServerConnection connection, MetricDef metricDef) {
     for (MetricHandlerHolder holder : metricDef.getHandlers()) {
-      JmxMetricHandler handler = holder.getHandler();
-      // we print a warning for missing handlers in constructor
-      if (handler == null) {
-        continue;
-      }
       registrar.enrollHandler(connection, objectNames, holder);
     }
   }
