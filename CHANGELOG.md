@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### 🛠️ Bug fixes
+
+- Fix javaagent startup failures when declarative configuration uses bundled contrib components,
+  such as the rule-based routing sampler.
+  ([#18813](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18813))
+
 ## Version 2.28.0 (2026-05-18)
 
 This release targets the OpenTelemetry SDK 1.62.0.
