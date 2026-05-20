@@ -110,24 +110,20 @@ class AddingSpanAttributesInstrumentationTest {
                 && t.getMessage().startsWith("Cannot represent ")
                 && t.getMessage().endsWith(" as the specified constant"));
 
-    try {
-      testing.runWithSpan(
-          "root",
-          () ->
-              new ConstructedWithAddingSpanAttributes("foo", "bar", null, "baz")
-                  .addAttributes("method"));
+    testing.runWithSpan(
+        "root",
+        () ->
+            new ConstructedWithAddingSpanAttributes("foo", "bar", null, "baz")
+                .addAttributes("method"));
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("root")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasNoParent()
-                          .hasTotalAttributeCount(0)));
-    } finally {
-      TestAgentListenerAccess.reset();
-    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("root")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)));
   }
 
   @Test
