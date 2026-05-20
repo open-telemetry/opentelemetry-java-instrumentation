@@ -61,7 +61,13 @@ public class JedisRequestContext<T> {
   @Nullable
   public static Long databaseIndex(
       @Nullable Object source, @Nullable Long connectionDatabaseIndex) {
-    return connectionDatabaseIndex != null ? connectionDatabaseIndex : source != null ? 0L : null;
+    if (connectionDatabaseIndex != null) {
+      return connectionDatabaseIndex;
+    }
+    if (source != null) {
+      return 0L;
+    }
+    return null;
   }
 
   @Nullable
