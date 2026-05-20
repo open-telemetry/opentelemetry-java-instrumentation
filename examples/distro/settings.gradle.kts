@@ -8,8 +8,8 @@ pluginManagement {
   }
   plugins {
     id("com.gradleup.shadow") version "9.4.1"
-    id("io.opentelemetry.instrumentation.muzzle-generation") version "2.28.0-alpha"
-    id("io.opentelemetry.instrumentation.muzzle-check") version "2.28.0-alpha"
+    id("io.opentelemetry.instrumentation.muzzle-generation") version "2.28.1-alpha"
+    id("io.opentelemetry.instrumentation.muzzle-check") version "2.28.1-alpha"
   }
 }
 

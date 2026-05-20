@@ -1,5 +1,5 @@
-val stableVersion = "2.28.0"
-val alphaVersion = "2.28.0-alpha"
+val stableVersion = "2.28.1"
+val alphaVersion = "2.28.1-alpha"
 
 val apidiffBaselineVersion = "2.27.0"
 
