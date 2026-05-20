@@ -38,10 +38,11 @@ public class GcUtils {
             garbage.append(garbage);
           }
         }
-      } catch (OutOfMemoryError e) {
+      } catch (OutOfMemoryError ignored) {
         // ignore, we just want to trigger GC
       }
       garbage.setLength(0);
+      garbage.trimToSize();
       System.gc();
     }
     if (ref.get() != null) {
