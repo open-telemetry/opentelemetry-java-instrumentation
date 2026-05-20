@@ -45,8 +45,7 @@ object KtorClientTelemetryUtil {
 
     scope.sendPipeline.intercept(createSpanPhase) {
       val requestBuilder = context
-      val parentContext = requestBuilder.attributes.getOrNull(OPEN_TELEMETRY_PARENT_CONTEXT_KEY)
-        ?: Context.current()
+      val parentContext = requestBuilder.attributes[OPEN_TELEMETRY_PARENT_CONTEXT_KEY]
       val openTelemetryContext = plugin.createSpan(requestBuilder, parentContext)
 
       if (openTelemetryContext != null) {
