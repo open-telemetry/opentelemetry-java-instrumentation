@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
@@ -244,6 +245,7 @@ class MetricRegistrar implements AutoCloseable {
   }
 
   private void register(AutoCloseable instrument) {
+    requireNonNull(instrument);
     instruments.add(instrument);
   }
 
