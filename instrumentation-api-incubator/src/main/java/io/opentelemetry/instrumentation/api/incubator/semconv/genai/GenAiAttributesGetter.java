@@ -15,8 +15,8 @@ import javax.annotation.Nullable;
  * library/framework. It will be used by the {@link GenAiAttributesExtractor} to obtain the various
  * GenAI attributes in a type-generic way.
  */
-public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
-  String getOperationName(REQUEST request);
+public interface GenAiAttributesGetter<REQUEST, RESPONSE>
+    extends GenAiOperationAttributesGetter<REQUEST, RESPONSE> {
 
   String getSystem(REQUEST request);
 
