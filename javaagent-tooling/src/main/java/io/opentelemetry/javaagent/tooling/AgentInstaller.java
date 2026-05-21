@@ -154,9 +154,10 @@ public class AgentInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         installOpenTelemetrySdk(extensionClassLoader);
 
-    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    @Nullable ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    ConfigProperties sdkConfigOrEmpty = getConfigOrEmpty(sdkConfig);
 
-    setBootstrapPackages(sdkConfig, extensionClassLoader);
+    setBootstrapPackages(sdkConfigOrEmpty, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
         SdkAutoconfigureAccess.getResource(autoConfiguredSdk).getAttributes());
 
@@ -166,7 +167,7 @@ public class AgentInstaller {
     }
 
     agentBuilder = agentBuilder.with(new ClassLoadListener());
-    agentBuilder = configureIgnoredTypes(sdkConfig, extensionClassLoader, agentBuilder);
+    agentBuilder = configureIgnoredTypes(sdkConfigOrEmpty, extensionClassLoader, agentBuilder);
 
     int numberOfLoadedExtensions = 0;
     for (AgentExtension agentExtension : loadOrdered(AgentExtension.class, extensionClassLoader)) {
@@ -177,7 +178,7 @@ public class AgentInstaller {
             new Object[] {agentExtension.extensionName(), agentExtension.getClass().getName()});
       }
       try {
-        agentBuilder = agentExtension.extend(agentBuilder, sdkConfig);
+        agentBuilder = agentExtension.extend(agentBuilder, sdkConfigOrEmpty);
         numberOfLoadedExtensions++;
       } catch (Exception | LinkageError e) {
         logger.log(
@@ -267,6 +268,10 @@ public class AgentInstaller {
     agentBuilder.installOn(instrumentation);
   }
 
+  private static ConfigProperties getConfigOrEmpty(@Nullable ConfigProperties config) {
+    return config != null ? config : EmptyConfigProperties.INSTANCE;
+  }
+
   private static void setBootstrapPackages(
       ConfigProperties config, ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
@@ -288,7 +293,7 @@ public class AgentInstaller {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
-      configurer.configure(builder, config != null ? config : EmptyConfigProperties.INSTANCE);
+      configurer.configure(builder, config);
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();
