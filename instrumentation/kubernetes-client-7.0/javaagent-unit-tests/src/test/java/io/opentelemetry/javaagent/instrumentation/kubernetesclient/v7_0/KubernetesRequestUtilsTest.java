@@ -9,34 +9,35 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class KubernetesRequestUtilsTest {
 
-  @Test
-  void isResourceRequest() {
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/apis")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/apis/v1")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/healthz")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/swagger.json")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api/v1")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api/v1/")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/apis/apps/v1")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/apis/apps/v1/")).isFalse();
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("isResourceRequestArguments")
+  void isResourceRequest(String name, String urlPath, boolean expected) {
+    assertThat(KubernetesRequestDigest.isResourceRequest(urlPath)).isEqualTo(expected);
+  }
 
-    assertThat(KubernetesRequestDigest.isResourceRequest("/apis/example.io/v1/foos")).isTrue();
-    assertThat(
-            KubernetesRequestDigest.isResourceRequest(
-                "/apis/example.io/v1/namespaces/default/foos"))
-        .isTrue();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api/v1/namespaces")).isTrue();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api/v1/pods")).isTrue();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api/v1/namespaces/default/pods"))
-        .isTrue();
+  private static Stream<Arguments> isResourceRequestArguments() {
+    return Stream.of(
+        arguments("api root", "/api", false),
+        arguments("apis root", "/apis", false),
+        arguments("apis version only", "/apis/v1", false),
+        arguments("healthz", "/healthz", false),
+        arguments("swagger", "/swagger.json", false),
+        arguments("core api version", "/api/v1", false),
+        arguments("core api version trailing slash", "/api/v1/", false),
+        arguments("group api version", "/apis/apps/v1", false),
+        arguments("group api version trailing slash", "/apis/apps/v1/", false),
+        arguments("custom resource list", "/apis/example.io/v1/foos", true),
+        arguments(
+            "custom resource namespaced list", "/apis/example.io/v1/namespaces/default/foos", true),
+        arguments("core namespaces list", "/api/v1/namespaces", true),
+        arguments("core pods list", "/api/v1/pods", true),
+        arguments("core namespaced pods list", "/api/v1/namespaces/default/pods", true));
   }
 
   @ParameterizedTest(name = "{0}")
@@ -62,9 +63,10 @@ class KubernetesRequestUtilsTest {
     assertThat(actual.getName()).isEqualTo(expected.getName());
   }
 
-  @ParameterizedTest
+  @ParameterizedTest(name = "{0}")
   @MethodSource("k8sRequestVerbsArguments")
   void k8sRequestVerbs(
+      String name,
       String httpVerb,
       boolean hasNamePathParam,
       boolean hasWatchParam,
@@ -75,14 +77,14 @@ class KubernetesRequestUtilsTest {
 
   private static Stream<Arguments> k8sRequestVerbsArguments() {
     return Stream.of(
-        Arguments.of("GET", true, false, KubernetesVerb.GET),
-        Arguments.of("GET", false, true, KubernetesVerb.WATCH),
-        Arguments.of("GET", false, false, KubernetesVerb.LIST),
-        Arguments.of("POST", false, false, KubernetesVerb.CREATE),
-        Arguments.of("PUT", false, false, KubernetesVerb.UPDATE),
-        Arguments.of("PATCH", false, false, KubernetesVerb.PATCH),
-        Arguments.of("DELETE", true, false, KubernetesVerb.DELETE),
-        Arguments.of("DELETE", false, false, KubernetesVerb.DELETE_COLLECTION));
+        arguments("GET named", "GET", true, false, KubernetesVerb.GET),
+        arguments("GET watch", "GET", false, true, KubernetesVerb.WATCH),
+        arguments("GET list", "GET", false, false, KubernetesVerb.LIST),
+        arguments("POST create", "POST", false, false, KubernetesVerb.CREATE),
+        arguments("PUT update", "PUT", false, false, KubernetesVerb.UPDATE),
+        arguments("PATCH", "PATCH", false, false, KubernetesVerb.PATCH),
+        arguments("DELETE named", "DELETE", true, false, KubernetesVerb.DELETE),
+        arguments("DELETE collection", "DELETE", false, false, KubernetesVerb.DELETE_COLLECTION));
   }
 
   private static Stream<Arguments> parseRegularResourceArguments() {
