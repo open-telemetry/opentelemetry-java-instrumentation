@@ -11,6 +11,7 @@ import com.google.auto.service.AutoService;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.thread.internal.AddThreadDetailsSpanProcessor;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
@@ -20,8 +21,6 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 
 @AutoService(AutoConfigurationCustomizerProvider.class)
 public class AgentTracerProviderConfigurer implements AutoConfigurationCustomizerProvider {
-  private static final String ADD_THREAD_DETAILS = "otel.javaagent.add-thread-details";
-
   @Override
   public void customize(AutoConfigurationCustomizer autoConfigurationCustomizer) {
     autoConfigurationCustomizer.addTracerProviderCustomizer(
@@ -32,25 +31,19 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
   private static SdkTracerProviderBuilder configure(
       SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
 
-    // Register additional thread details logging span processor
-    boolean v3Preview = config.getBoolean("otel.instrumentation.common.v3-preview", false);
-    if (config.getBoolean(ADD_THREAD_DETAILS, !v3Preview)) {
+    if (AgentDistributionConfig.fromConfigProperties(config).isThreadDetailsEnabled()) {
       sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
     }
 
-    maybeEnableLoggingExporter(sdkTracerProviderBuilder, config);
-
-    return sdkTracerProviderBuilder;
-  }
-
-  private static void maybeEnableLoggingExporter(
-      SdkTracerProviderBuilder builder, ConfigProperties config) {
     if (EarlyInitAgentConfig.get().isDebug()) {
       // don't install another instance if the user has already explicitly requested it.
       if (loggingExporterIsNotAlreadyConfigured(config)) {
-        builder.addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()));
+        sdkTracerProviderBuilder.addSpanProcessor(
+            SimpleSpanProcessor.create(LoggingSpanExporter.create()));
       }
     }
+
+    return sdkTracerProviderBuilder;
   }
 
   private static boolean loggingExporterIsNotAlreadyConfigured(ConfigProperties config) {

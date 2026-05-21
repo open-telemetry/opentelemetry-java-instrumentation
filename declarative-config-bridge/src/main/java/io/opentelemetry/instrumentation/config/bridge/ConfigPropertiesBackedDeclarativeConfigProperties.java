@@ -226,7 +226,16 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       translatedPath.append(translateName(segments[i]));
     }
 
-    return "otel.instrumentation." + translatedPath;
+    // java.agent.* maps to otel.javaagent.* (not otel.instrumentation.agent.*)
+    String translated = translatedPath.toString();
+    if (translated.equals("agent")) {
+      return "otel.javaagent";
+    }
+    if (translated.startsWith("agent.")) {
+      return "otel.javaagent." + translated.substring("agent.".length());
+    }
+
+    return "otel.instrumentation." + translated;
   }
 
   private String pathWithName(String name) {

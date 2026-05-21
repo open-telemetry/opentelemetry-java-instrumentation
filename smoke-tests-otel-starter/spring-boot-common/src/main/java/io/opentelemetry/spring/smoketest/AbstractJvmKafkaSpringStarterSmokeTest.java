@@ -8,7 +8,6 @@ package io.opentelemetry.spring.smoketest;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka.KafkaInstrumentationAutoConfiguration;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread.ThreadDetailsAutoConfiguration;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -55,7 +54,6 @@ public abstract class AbstractJvmKafkaSpringStarterSmokeTest
             .withConfiguration(
                 AutoConfigurations.of(
                     OpenTelemetryAutoConfiguration.class,
-                    ThreadDetailsAutoConfiguration.class,
                     SpringSmokeOtelConfiguration.class,
                     kafkaAutoConfigurationClass(),
                     KafkaInstrumentationAutoConfiguration.class,

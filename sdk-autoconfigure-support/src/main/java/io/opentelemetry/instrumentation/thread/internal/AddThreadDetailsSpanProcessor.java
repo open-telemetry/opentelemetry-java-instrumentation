@@ -28,8 +28,12 @@ public class AddThreadDetailsSpanProcessor implements SpanProcessor {
   @Override
   public void onStart(Context context, ReadWriteSpan span) {
     Thread currentThread = Thread.currentThread();
-    span.setAttribute(THREAD_ID, currentThread.getId());
-    span.setAttribute(THREAD_NAME, currentThread.getName());
+    if (span.getAttribute(THREAD_ID) == null) {
+      span.setAttribute(THREAD_ID, currentThread.getId());
+    }
+    if (span.getAttribute(THREAD_NAME) == null) {
+      span.setAttribute(THREAD_NAME, currentThread.getName());
+    }
   }
 
   @Override
