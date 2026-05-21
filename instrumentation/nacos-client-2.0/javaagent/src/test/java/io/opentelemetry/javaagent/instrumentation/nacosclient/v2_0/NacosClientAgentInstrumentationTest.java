@@ -80,7 +80,6 @@ class NacosClientAgentInstrumentationTest {
   @Test
   void instrumentsRpcClientHandleServerRequestAdvice() {
     TestRpcClient rpcClient = new TestRpcClient();
-    RpcClientServerInfoAccessor.set(rpcClient, new RpcClient.ServerInfo("127.0.0.1", 9848));
     rpcClient.registerServerRequestHandler(
         new ServerRequestHandler() {
           @Override
@@ -169,6 +168,8 @@ class NacosClientAgentInstrumentationTest {
   }
 
   private static final class TestRpcClient extends RpcClient {
+    private final RpcClient.ServerInfo currentServer =
+        new RpcClient.ServerInfo("127.0.0.1", 9848);
 
     private TestRpcClient() {
       super("test");
@@ -186,6 +187,11 @@ class NacosClientAgentInstrumentationTest {
     @Override
     public int rpcPortOffset() {
       return 1000;
+    }
+
+    @Override
+    public RpcClient.ServerInfo getCurrentServer() {
+      return currentServer;
     }
 
     @Override
