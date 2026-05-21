@@ -18,9 +18,9 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.instrumentation.common.logging.trace-id=trace_id_test")
-            jvmArgs("-Dotel.instrumentation.common.logging.span-id=span_id_test")
-            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags=trace_flags_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=span_id_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test")
           }
         }
       }

@@ -155,9 +155,9 @@ class LogbackAppenderTest {
     properties.put("logging.config", "classpath:logback-test.xml");
     properties.put("otel.instrumentation.logback-appender.enabled", "false");
     properties.put("otel.instrumentation.logback-mdc.add-baggage", "true");
-    properties.put("otel.instrumentation.common.logging.trace-id", "traceid");
-    properties.put("otel.instrumentation.common.logging.span-id", "spanid");
-    properties.put("otel.instrumentation.common.logging.trace-flags", "traceflags");
+    properties.put("otel.instrumentation.common.logging.trace-id-key", "traceid");
+    properties.put("otel.instrumentation.common.logging.span-id-key", "spanid");
+    properties.put("otel.instrumentation.common.logging.trace-flags-key", "traceflags");
 
     SpringApplication app =
         new SpringApplication(

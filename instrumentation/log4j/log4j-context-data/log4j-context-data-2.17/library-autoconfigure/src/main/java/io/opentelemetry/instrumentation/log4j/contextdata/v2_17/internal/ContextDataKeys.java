@@ -29,15 +29,15 @@ public final class ContextDataKeys {
         logging.getString(
             "trace_id",
             ConfigPropertiesUtil.getString(
-                "otel.instrumentation.common.logging.trace-id", LoggingContextConstants.TRACE_ID)),
+                "otel.instrumentation.common.logging.trace-id-key", LoggingContextConstants.TRACE_ID)),
         logging.getString(
             "span_id",
             ConfigPropertiesUtil.getString(
-                "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID)),
+                "otel.instrumentation.common.logging.span-id-key", LoggingContextConstants.SPAN_ID)),
         logging.getString(
             "trace_flags",
             ConfigPropertiesUtil.getString(
-                "otel.instrumentation.common.logging.trace-flags",
+                "otel.instrumentation.common.logging.trace-flags-key",
                 LoggingContextConstants.TRACE_FLAGS)));
   }
 
