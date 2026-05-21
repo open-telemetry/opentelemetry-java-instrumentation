@@ -5,9 +5,15 @@
 
 package io.opentelemetry.instrumentation.spring.security.config.v6_0.webflux;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ROLE;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_SCOPE;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_ID;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_ROLES;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
@@ -77,8 +83,12 @@ class EnduserAttributesCapturingWebFilterTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasAttribute(ENDUSER_ID, "principal")
-                        .hasAttribute(ENDUSER_ROLE, "role1,role2")
-                        .hasAttribute(ENDUSER_SCOPE, "scope1,scope2")));
+                    span.hasAttributesSatisfyingExactly(
+                        equalTo(ERROR_TYPE, "_OTHER"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(v3Preview() ? USER_ID : ENDUSER_ID, "principal"),
+                        equalTo(USER_ROLES, v3Preview() ? asList("role1", "role2") : null),
+                        equalTo(ENDUSER_ROLE, v3Preview() ? null : "role1,role2"),
+                        equalTo(ENDUSER_SCOPE, v3Preview() ? null : "scope1,scope2"))));
   }
 }

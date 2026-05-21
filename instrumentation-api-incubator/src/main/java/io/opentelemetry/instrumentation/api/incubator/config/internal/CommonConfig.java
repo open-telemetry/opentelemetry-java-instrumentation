@@ -87,14 +87,14 @@ public final class CommonConfig {
             .get("http")
             .get("server")
             .getBoolean("emit_experimental_telemetry/development", false);
-    enduserConfig = new EnduserConfig(commonConfig);
+    v3Preview = commonConfig.getBoolean("v3_preview", false);
+    enduserConfig = new EnduserConfig(commonConfig, v3Preview);
     loggingTraceIdKey =
         commonConfig.get("logging").getString("trace_id", LoggingContextConstants.TRACE_ID);
     loggingSpanIdKey =
         commonConfig.get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
     loggingTraceFlagsKey =
         commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
-    v3Preview = commonConfig.getBoolean("v3_preview", false);
   }
 
   public List<String> getClientRequestHeaders() {

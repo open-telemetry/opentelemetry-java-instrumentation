@@ -44,7 +44,11 @@ public final class SemconvStability {
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
-    v3Preview = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
+    v3Preview =
+        getInstrumentationConfig(openTelemetry, "common")
+            .getBoolean(
+                "v3_preview",
+                ConfigPropertiesUtil.getBoolean("otel.instrumentation.common.v3-preview", false));
     Set<String> optInValues = resolveOptInValues(openTelemetry, "opt_in");
     Set<String> previewValues = resolveOptInValues(openTelemetry, "preview");
 
