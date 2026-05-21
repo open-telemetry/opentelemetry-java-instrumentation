@@ -47,6 +47,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.redisson.Redisson;
@@ -98,7 +99,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @BeforeEach
-  void setup() throws InvocationTargetException, IllegalAccessException {
+  void setup(TestInfo testInfo) throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
       // Newer versions of redisson require scheme, older versions forbid it
@@ -115,6 +116,12 @@ public abstract class AbstractRedissonClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
+    if (testInfo.getTestMethod().get().getName().equals("stringCommandLazyConnection")) {
+      // When verifying the stringCommandLazyConnection test case, simulate reconnection during
+      // Redis
+      // command execution.
+      singleServerConfig.setConnectionMinimumIdleSize(0);
+    }
     try {
       // disable connection ping if it exists
       singleServerConfig
@@ -133,6 +140,43 @@ public abstract class AbstractRedissonClientTest {
     if (redisson != null) {
       redisson.shutdown();
     }
+  }
+
+  @Test
+  void stringCommandLazyConnection() {
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          RBucket<String> keyObject = redisson.getBucket("foo");
+          keyObject.set("bar");
+          keyObject.get();
+        });
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent", "SET", "GET"),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SET")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "GET foo"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   @Test
