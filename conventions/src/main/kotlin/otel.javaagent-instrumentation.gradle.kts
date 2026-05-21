@@ -1,8 +1,9 @@
 plugins {
+  id("io.opentelemetry.instrumentation.javaagent-instrumentation")
+
   id("otel.javaagent-testing")
   id("otel.publish-conventions")
-
-  id("io.opentelemetry.instrumentation.javaagent-instrumentation")
+  id("otel.instrumentation-version")
 }
 
 extra["mavenGroupId"] = "io.opentelemetry.javaagent.instrumentation"

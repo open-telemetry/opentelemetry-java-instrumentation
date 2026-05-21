@@ -4,6 +4,7 @@ plugins {
   id("otel.jacoco-conventions")
   id("otel.java-conventions")
   id("otel.publish-conventions")
+  id("otel.instrumentation-version")
 }
 
 extra["mavenGroupId"] = "io.opentelemetry.instrumentation"

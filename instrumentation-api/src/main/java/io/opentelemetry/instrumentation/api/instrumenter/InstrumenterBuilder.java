@@ -89,8 +89,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     this.openTelemetry = openTelemetry;
     this.instrumentationName = instrumentationName;
     this.spanNameExtractor = spanNameExtractor;
-    this.instrumentationVersion =
-        EmbeddedInstrumentationProperties.findVersion(instrumentationName);
   }
 
   /**
@@ -302,6 +300,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   Tracer buildTracer() {
+    if (instrumentationVersion == null) {
+      instrumentationVersion = EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+    }
+
     TracerBuilder tracerBuilder =
         openTelemetry.getTracerProvider().tracerBuilder(instrumentationName);
     if (instrumentationVersion != null) {
