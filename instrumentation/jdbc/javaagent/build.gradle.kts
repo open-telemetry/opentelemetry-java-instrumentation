@@ -84,6 +84,8 @@ tasks {
       excludeTestsMatching("SlickTest")
       excludeTestsMatching("SqlCommenterTest")
       excludeTestsMatching("PreparedStatementParametersTest")
+      excludeTestsMatching("JdbcRowCountInstrumentationTest")
+      excludeTestsMatching("JdbcRowCountLimitTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
@@ -111,11 +113,36 @@ tasks {
     jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
   }
 
+  val testRowCount by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("JdbcRowCountInstrumentationTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-row-count.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+  }
+
+  val testRowCountLimit by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("JdbcRowCountLimitTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-row-count.enabled=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.row-count-limit=100")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+  }
+
   test {
     filter {
       excludeTestsMatching("SlickTest")
       excludeTestsMatching("SqlCommenterTest")
       excludeTestsMatching("PreparedStatementParametersTest")
+      excludeTestsMatching("JdbcRowCountInstrumentationTest")
+      excludeTestsMatching("JdbcRowCountLimitTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
   }
@@ -126,6 +153,8 @@ tasks {
     dependsOn(testStableSemconv)
     dependsOn(testSlickStableSemconv)
     dependsOn(testCaptureParameters)
+    dependsOn(testRowCount)
+    dependsOn(testRowCountLimit)
   }
 }
 

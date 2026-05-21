@@ -24,6 +24,7 @@ public class JdbcInstrumentationModule extends InstrumentationModule {
         new ConnectionInstrumentation(),
         new DriverInstrumentation(),
         new PreparedStatementInstrumentation(),
+        new ResultSetInstrumentation(),
         new StatementInstrumentation());
   }
 }

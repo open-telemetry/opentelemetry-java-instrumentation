@@ -17,34 +17,49 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcTransactionAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Wrapper;
 import javax.sql.DataSource;
 
 public class JdbcSingletons {
-  private static final Instrumenter<DbRequest, Void> statementInstrumenter;
+  private static final Instrumenter<DbRequest, DbResponse> statementInstrumenter;
   private static final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private static final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
   private static final SqlCommenter sqlCommenter = configureSqlCommenter();
   private static final Cache<Class<?>, Boolean> wrapperClassCache = Cache.weak();
   public static final boolean CAPTURE_QUERY_PARAMETERS;
+  public static final boolean CAPTURE_ROW_COUNT;
+  public static final long ROW_COUNT_LIMIT;
+
+  public static final VirtualField<ResultSet, ResultSetInfo> resultSetInfo =
+      VirtualField.find(ResultSet.class, ResultSetInfo.class);
 
   static {
-    AttributesExtractor<DbRequest, Void> servicePeerExtractor =
+    AttributesExtractor<DbRequest, DbResponse> servicePeerExtractor =
         ServicePeerAttributesExtractor.create(
             new JdbcAttributesGetter(), GlobalOpenTelemetry.get());
+    AttributesExtractor<DbRequest, Void> transactionServicePeerExtractor =
+        ServicePeerAttributesExtractor.create(
+            new JdbcTransactionAttributesGetter(), GlobalOpenTelemetry.get());
 
     CAPTURE_QUERY_PARAMETERS =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
             .getBoolean("capture_query_parameters/development", false);
+
+    CAPTURE_ROW_COUNT = JdbcInstrumenterFactory.captureRowCount(GlobalOpenTelemetry.get());
+    ROW_COUNT_LIMIT = JdbcInstrumenterFactory.rowCountLimit(GlobalOpenTelemetry.get());
 
     statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(
@@ -57,7 +72,7 @@ public class JdbcSingletons {
     transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(
             GlobalOpenTelemetry.get(),
-            singletonList(servicePeerExtractor),
+            singletonList(transactionServicePeerExtractor),
             DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
                 .get("transaction/development")
                 .getBoolean("enabled", false));
@@ -67,7 +82,7 @@ public class JdbcSingletons {
     return transactionInstrumenter;
   }
 
-  public static Instrumenter<DbRequest, Void> statementInstrumenter() {
+  public static Instrumenter<DbRequest, DbResponse> statementInstrumenter() {
     return statementInstrumenter;
   }
 

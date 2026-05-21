@@ -54,18 +54,22 @@ public class OpenTelemetryConnection implements Connection {
   private static final boolean hasJdbc43 = hasJdbc43();
   protected final Connection delegate;
   private final DbInfo dbInfo;
-  protected final Instrumenter<DbRequest, Void> statementInstrumenter;
+  protected final Instrumenter<DbRequest, DbResponse> statementInstrumenter;
   protected final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private final boolean captureQueryParameters;
   protected final SqlCommenter sqlCommenter;
+  private final boolean captureRowCount;
+  private final long rowCountLimit;
 
   public static Connection create(
       Connection delegate,
       DbInfo dbInfo,
-      Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<DbRequest, DbResponse> statementInstrumenter,
       Instrumenter<DbRequest, Void> transactionInstrumenter,
       boolean captureQueryParameters,
-      SqlCommenter sqlCommenter) {
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
     if (hasJdbc43) {
       return new OpenTelemetryConnectionJdbc43(
           delegate,
@@ -73,7 +77,9 @@ public class OpenTelemetryConnection implements Connection {
           statementInstrumenter,
           transactionInstrumenter,
           captureQueryParameters,
-          sqlCommenter);
+          sqlCommenter,
+          captureRowCount,
+          rowCountLimit);
     }
     return new OpenTelemetryConnection(
         delegate,
@@ -81,22 +87,28 @@ public class OpenTelemetryConnection implements Connection {
         statementInstrumenter,
         transactionInstrumenter,
         captureQueryParameters,
-        sqlCommenter);
+        sqlCommenter,
+        captureRowCount,
+        rowCountLimit);
   }
 
   protected OpenTelemetryConnection(
       Connection delegate,
       DbInfo dbInfo,
-      Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<DbRequest, DbResponse> statementInstrumenter,
       Instrumenter<DbRequest, Void> transactionInstrumenter,
       boolean captureQueryParameters,
-      SqlCommenter sqlCommenter) {
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
     this.delegate = delegate;
     this.dbInfo = dbInfo;
     this.statementInstrumenter = statementInstrumenter;
     this.transactionInstrumenter = transactionInstrumenter;
     this.captureQueryParameters = captureQueryParameters;
     this.sqlCommenter = sqlCommenter;
+    this.captureRowCount = captureRowCount;
+    this.rowCountLimit = rowCountLimit;
   }
 
   // visible for testing
@@ -115,17 +127,39 @@ public class OpenTelemetryConnection implements Connection {
 
   private Statement wrapStatement(Statement statement) {
     return new OpenTelemetryStatement<>(
-        statement, this, dbInfo, statementInstrumenter, sqlCommenter);
+        statement,
+        this,
+        dbInfo,
+        statementInstrumenter,
+        sqlCommenter,
+        captureRowCount,
+        rowCountLimit);
   }
 
   private PreparedStatement wrapPreparedStatement(PreparedStatement statement, String sql) {
     return new OpenTelemetryPreparedStatement<>(
-        statement, this, dbInfo, sql, statementInstrumenter, captureQueryParameters, sqlCommenter);
+        statement,
+        this,
+        dbInfo,
+        sql,
+        statementInstrumenter,
+        captureQueryParameters,
+        sqlCommenter,
+        captureRowCount,
+        rowCountLimit);
   }
 
   private CallableStatement wrapCallableStatement(CallableStatement statement, String sql) {
     return new OpenTelemetryCallableStatement<>(
-        statement, this, dbInfo, sql, statementInstrumenter, captureQueryParameters, sqlCommenter);
+        statement,
+        this,
+        dbInfo,
+        sql,
+        statementInstrumenter,
+        captureQueryParameters,
+        sqlCommenter,
+        captureRowCount,
+        rowCountLimit);
   }
 
   @Override
@@ -221,8 +255,7 @@ public class OpenTelemetryConnection implements Connection {
     CallableStatement statement =
         delegate.prepareCall(
             processedSql, resultSetType, resultSetConcurrency, resultSetHoldability);
-    return new OpenTelemetryCallableStatement<>(
-        statement, this, dbInfo, sql, statementInstrumenter, captureQueryParameters, sqlCommenter);
+    return wrapCallableStatement(statement, sql);
   }
 
   @Override
@@ -449,17 +482,21 @@ public class OpenTelemetryConnection implements Connection {
     OpenTelemetryConnectionJdbc43(
         Connection delegate,
         DbInfo dbInfo,
-        Instrumenter<DbRequest, Void> statementInstrumenter,
+        Instrumenter<DbRequest, DbResponse> statementInstrumenter,
         Instrumenter<DbRequest, Void> transactionInstrumenter,
         boolean captureQueryParameters,
-        SqlCommenter sqlCommenter) {
+        SqlCommenter sqlCommenter,
+        boolean captureRowCount,
+        long rowCountLimit) {
       super(
           delegate,
           dbInfo,
           statementInstrumenter,
           transactionInstrumenter,
           captureQueryParameters,
-          sqlCommenter);
+          sqlCommenter,
+          captureRowCount,
+          rowCountLimit);
     }
 
     @SuppressWarnings("Since15")

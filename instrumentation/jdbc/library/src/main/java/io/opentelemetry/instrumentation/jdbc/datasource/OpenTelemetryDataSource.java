@@ -28,6 +28,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.ThrowingSupplier;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -44,10 +45,12 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
 
   private final DataSource delegate;
   private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
-  private final Instrumenter<DbRequest, Void> statementInstrumenter;
+  private final Instrumenter<DbRequest, DbResponse> statementInstrumenter;
   private final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private final boolean captureQueryParameters;
   private final SqlCommenter sqlCommenter;
+  private final boolean captureRowCount;
+  private final long rowCountLimit;
   @Nullable private volatile DbInfo cachedDbInfo;
 
   /**
@@ -62,16 +65,20 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   OpenTelemetryDataSource(
       DataSource delegate,
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
-      Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<DbRequest, DbResponse> statementInstrumenter,
       Instrumenter<DbRequest, Void> transactionInstrumenter,
       boolean captureQueryParameters,
-      SqlCommenter sqlCommenter) {
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
     this.delegate = delegate;
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
     this.transactionInstrumenter = transactionInstrumenter;
     this.captureQueryParameters = captureQueryParameters;
     this.sqlCommenter = sqlCommenter;
+    this.captureRowCount = captureRowCount;
+    this.rowCountLimit = rowCountLimit;
   }
 
   @Override
@@ -84,7 +91,9 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
         statementInstrumenter,
         transactionInstrumenter,
         captureQueryParameters,
-        sqlCommenter);
+        sqlCommenter,
+        captureRowCount,
+        rowCountLimit);
   }
 
   @Override
@@ -98,7 +107,9 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
         statementInstrumenter,
         transactionInstrumenter,
         captureQueryParameters,
-        sqlCommenter);
+        sqlCommenter,
+        captureRowCount,
+        rowCountLimit);
   }
 
   @Override

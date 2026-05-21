@@ -114,7 +114,7 @@ class OpenTelemetryConnectionTest {
   }
 
   private static OpenTelemetryConnection getConnection(OpenTelemetry openTelemetry) {
-    Instrumenter<DbRequest, Void> statementInstrumenter =
+    Instrumenter<DbRequest, DbResponse> statementInstrumenter =
         createStatementInstrumenter(openTelemetry);
     Instrumenter<DbRequest, Void> transactionInstrumenter =
         createTransactionInstrumenter(openTelemetry, true);
@@ -125,6 +125,8 @@ class OpenTelemetryConnectionTest {
         statementInstrumenter,
         transactionInstrumenter,
         false,
-        SqlCommenter.noop());
+        SqlCommenter.noop(),
+        false,
+        10000L);
   }
 }

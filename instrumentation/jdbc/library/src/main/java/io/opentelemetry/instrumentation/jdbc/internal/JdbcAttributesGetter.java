@@ -22,7 +22,8 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
+public final class JdbcAttributesGetter
+    implements SqlClientAttributesGetter<DbRequest, DbResponse> {
 
   // Databases where double quotes are exclusively identifiers and cannot be string literals.
   private static final Set<String> DOUBLE_QUOTES_FOR_IDENTIFIERS_SYSTEM_NAMES =
@@ -121,11 +122,17 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Nullable
   @Override
   public String getErrorType(
-      DbRequest request, @Nullable Void response, @Nullable Throwable error) {
+      DbRequest request, @Nullable DbResponse response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
       return Integer.toString(((SQLException) error).getErrorCode());
     }
     return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getDbResponseReturnedRows(@Nullable DbResponse response) {
+    return response != null ? response.getReturnedRows() : null;
   }
 
   @Override

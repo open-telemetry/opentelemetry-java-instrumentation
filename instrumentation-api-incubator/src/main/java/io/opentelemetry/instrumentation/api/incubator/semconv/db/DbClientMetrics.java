@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
@@ -13,6 +14,8 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -52,6 +55,7 @@ public final class DbClientMetrics implements OperationListener {
   }
 
   private final DoubleHistogram duration;
+  private final LongHistogram returnedRows;
 
   private DbClientMetrics(Meter meter) {
     DoubleHistogramBuilder stableDurationBuilder =
@@ -62,6 +66,15 @@ public final class DbClientMetrics implements OperationListener {
             .setExplicitBucketBoundariesAdvice(DbClientMetricsAdvice.DURATION_SECONDS_BUCKETS);
     DbClientMetricsAdvice.applyClientDurationAdvice(stableDurationBuilder);
     duration = stableDurationBuilder.build();
+
+    LongHistogramBuilder returnedRowsBuilder =
+        meter
+            .histogramBuilder("db.client.response.returned_rows")
+            .ofLongs()
+            .setDescription("Number of rows returned by the operation.")
+            .setExplicitBucketBoundariesAdvice(DbClientMetricsAdvice.RETURNED_ROWS_BUCKETS);
+    DbClientMetricsAdvice.applyReturnedRowsAdvice(returnedRowsBuilder);
+    returnedRows = returnedRowsBuilder.build();
   }
 
   @Override
@@ -85,6 +98,12 @@ public final class DbClientMetrics implements OperationListener {
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
 
     duration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
+
+    // Record returned rows metric if present
+    Long rowCount = endAttributes.get(longKey("db.response.returned_rows"));
+    if (rowCount != null) {
+      returnedRows.record(rowCount, attributes, context);
+    }
   }
 
   @AutoValue

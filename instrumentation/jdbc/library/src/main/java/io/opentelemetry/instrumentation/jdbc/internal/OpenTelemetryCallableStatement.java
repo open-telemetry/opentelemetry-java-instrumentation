@@ -52,10 +52,21 @@ class OpenTelemetryCallableStatement<S extends CallableStatement>
       OpenTelemetryConnection connection,
       DbInfo dbInfo,
       String query,
-      Instrumenter<DbRequest, Void> instrumenter,
+      Instrumenter<DbRequest, DbResponse> instrumenter,
       boolean captureQueryParameters,
-      SqlCommenter sqlCommenter) {
-    super(delegate, connection, dbInfo, query, instrumenter, captureQueryParameters, sqlCommenter);
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
+    super(
+        delegate,
+        connection,
+        dbInfo,
+        query,
+        instrumenter,
+        captureQueryParameters,
+        sqlCommenter,
+        captureRowCount,
+        rowCountLimit);
   }
 
   @Override

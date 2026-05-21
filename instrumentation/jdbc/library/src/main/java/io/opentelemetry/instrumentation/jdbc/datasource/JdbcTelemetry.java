@@ -9,16 +9,19 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.sql.DataSource;
 
 /** Entrypoint for instrumenting a JDBC DataSources. */
 public final class JdbcTelemetry {
   private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
-  private final Instrumenter<DbRequest, Void> statementInstrumenter;
+  private final Instrumenter<DbRequest, DbResponse> statementInstrumenter;
   private final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private final boolean captureQueryParameters;
   private final SqlCommenter sqlCommenter;
+  private final boolean captureRowCount;
+  private final long rowCountLimit;
 
   /** Returns a new {@link JdbcTelemetry} configured with the given {@link OpenTelemetry}. */
   public static JdbcTelemetry create(OpenTelemetry openTelemetry) {
@@ -32,15 +35,19 @@ public final class JdbcTelemetry {
 
   JdbcTelemetry(
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
-      Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<DbRequest, DbResponse> statementInstrumenter,
       Instrumenter<DbRequest, Void> transactionInstrumenter,
       boolean captureQueryParameters,
-      SqlCommenter sqlCommenter) {
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
     this.transactionInstrumenter = transactionInstrumenter;
     this.captureQueryParameters = captureQueryParameters;
     this.sqlCommenter = sqlCommenter;
+    this.captureRowCount = captureRowCount;
+    this.rowCountLimit = rowCountLimit;
   }
 
   public DataSource wrap(DataSource dataSource) {
@@ -50,6 +57,8 @@ public final class JdbcTelemetry {
         this.statementInstrumenter,
         this.transactionInstrumenter,
         this.captureQueryParameters,
-        this.sqlCommenter);
+        this.sqlCommenter,
+        this.captureRowCount,
+        this.rowCountLimit);
   }
 }
