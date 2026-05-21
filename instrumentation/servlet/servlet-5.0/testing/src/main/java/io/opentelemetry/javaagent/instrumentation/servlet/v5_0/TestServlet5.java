@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_PRINT_WRITER;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -154,12 +155,19 @@ public class TestServlet5 {
                       context.complete();
                     } else if (EXCEPTION.equals(endpoint)) {
                       resp.setStatus(endpoint.getStatus());
+                      // Workaround for a sporadic bug in older Tomcat versions: when the servlet
+                      // throws after writing the async response body, the connection is sometimes
+                      // reset before the response is flushed, which surfaces on the client as
+                      // ClosedSessionException. Other servlet containers (and current Tomcat)
+                      // handle the basic write-then-throw pattern fine, so this workaround is
+                      // scoped to old Tomcat only: set Content-Length so the response is
+                      // self-delimiting, and close the writer to force the flush before the throw.
+                      if (isOldTomcat(req)) {
+                        resp.setContentLength(endpoint.getBody().length());
+                      }
                       PrintWriter writer = resp.getWriter();
                       writer.print(endpoint.getBody());
-                      if (req.getClass().getName().contains("catalina")) {
-                        // on tomcat close the writer to ensure response is sent immediately,
-                        // otherwise there is a chance that tomcat resets the connection before the
-                        // response is sent
+                      if (isOldTomcat(req)) {
                         writer.close();
                       }
                       throw new IllegalStateException(endpoint.getBody());
@@ -236,12 +244,19 @@ public class TestServlet5 {
                 resp.sendError(endpoint.getStatus(), endpoint.getBody());
               } else if (EXCEPTION.equals(endpoint)) {
                 resp.setStatus(endpoint.getStatus());
+                // Workaround for a sporadic bug in older Tomcat versions: when the servlet throws
+                // after writing the async response body, the connection is sometimes reset before
+                // the response is flushed, which surfaces on the client as ClosedSessionException.
+                // Other servlet containers (and current Tomcat) handle the basic write-then-throw
+                // pattern fine, so this workaround is scoped to old Tomcat only: set
+                // Content-Length so the response is self-delimiting, and close the writer to force
+                // the flush before the throw.
+                if (isOldTomcat(req)) {
+                  resp.setContentLength(endpoint.getBody().length());
+                }
                 PrintWriter writer = resp.getWriter();
                 writer.print(endpoint.getBody());
-                if (req.getClass().getName().contains("catalina")) {
-                  // on tomcat close the writer to ensure response is sent immediately,
-                  // otherwise there is a chance that tomcat resets the connection before the
-                  // response is sent
+                if (isOldTomcat(req)) {
                   writer.close();
                 }
                 throw new IllegalStateException(endpoint.getBody());
@@ -309,6 +324,10 @@ public class TestServlet5 {
         req.startAsync().dispatch("/recursive");
       }
     }
+  }
+
+  private static boolean isOldTomcat(HttpServletRequest req) {
+    return req.getClass().getName().contains("catalina") && !testLatestDeps();
   }
 
   private TestServlet5() {}
