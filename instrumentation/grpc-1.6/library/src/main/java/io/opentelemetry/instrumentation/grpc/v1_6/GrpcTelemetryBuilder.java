@@ -201,7 +201,7 @@ public final class GrpcTelemetryBuilder {
         serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
 
     return new GrpcTelemetry(
-        serverInstrumenterBuilder.buildServerInstrumenter(new GrpcRequestGetter()),
+        serverInstrumenterBuilder.buildServerInstrumenter(GrpcRequestGetter.INSTANCE),
         // gRPC client interceptors require two phases, one to set up request and one to execute.
         // So we go ahead and inject manually in this instrumentation.
         clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient()),

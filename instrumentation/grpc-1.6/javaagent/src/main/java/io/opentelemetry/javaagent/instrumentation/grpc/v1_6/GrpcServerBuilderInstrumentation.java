@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcSingletons.SERVER_BUILDER_INSTRUMENTED;
-import static io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcSingletons.serverInterceptor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -50,7 +49,7 @@ class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
       if (!Boolean.TRUE.equals(SERVER_BUILDER_INSTRUMENTED.get(serverBuilder))) {
-        serverBuilder.intercept(serverInterceptor());
+        GrpcSingletons.configureServerBuilder(serverBuilder);
         SERVER_BUILDER_INSTRUMENTED.set(serverBuilder, true);
       }
       return callDepth;
