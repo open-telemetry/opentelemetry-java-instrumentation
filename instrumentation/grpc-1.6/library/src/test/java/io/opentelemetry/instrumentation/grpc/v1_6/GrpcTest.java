@@ -49,11 +49,11 @@ class GrpcTest extends AbstractGrpcTest {
 
   @Override
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
-    return client.intercept(
-        GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedClientRequestMetadata(singletonList(CLIENT_REQUEST_METADATA_KEY))
-            .build()
-            .createClientInterceptor());
+    GrpcTelemetry.builder(testing.getOpenTelemetry())
+        .setCapturedClientRequestMetadata(singletonList(CLIENT_REQUEST_METADATA_KEY))
+        .build()
+        .addClientInterceptor(client);
+    return client;
   }
 
   @Override
@@ -92,16 +92,14 @@ class GrpcTest extends AbstractGrpcTest {
             .build()
             .start();
 
-    ManagedChannel channel =
-        createChannel(
-            ManagedChannelBuilder.forAddress("localhost", server.getPort())
-                .intercept(
-                    GrpcTelemetry.builder(testing.getOpenTelemetry())
-                        .addAttributesExtractor(new CustomAttributesExtractor())
-                        .addClientAttributeExtractor(
-                            new CustomAttributesExtractorV2("clientSideValue"))
-                        .build()
-                        .createClientInterceptor()));
+    ManagedChannelBuilder<?> channelBuilder =
+        ManagedChannelBuilder.forAddress("localhost", server.getPort());
+    GrpcTelemetry.builder(testing.getOpenTelemetry())
+        .addAttributesExtractor(new CustomAttributesExtractor())
+        .addClientAttributeExtractor(new CustomAttributesExtractorV2("clientSideValue"))
+        .build()
+        .addClientInterceptor(channelBuilder);
+    ManagedChannel channel = createChannel(channelBuilder);
 
     closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
