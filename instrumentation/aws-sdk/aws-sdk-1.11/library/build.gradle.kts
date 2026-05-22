@@ -19,6 +19,8 @@ dependencies {
   testLibrary("com.amazonaws:aws-java-sdk-s3:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-sns:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-stepfunctions:1.11.106")
+
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 }
 
 if (!otelProps.testLatestDeps) {

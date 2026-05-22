@@ -214,22 +214,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     }
   }
 
-  //              // for pekko, we should refactor to help simplify this
-  //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0",
-  //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.route",
-  //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server",
-  //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.tapir",
-  //              // for akka, we should refactor to help simplify this
-  //              "io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0",
-  //              "io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server",
-  //              "io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.route",
-  //              // aws sdk 1.x library
-  //              "io.opentelemetry.instrumentation.awssdk.v1_11",
-  //              // aws sdk 2.x library internals: refactor needed to avoid relying on internals
-  //              "io.opentelemetry.instrumentation.awssdk.v2_2.internal",
-  //              // aws sdk 2.x instrumentation
-  //              "io.opentelemetry.javaagent.instrumentation.awssdk.v2_2"
-
   public synchronized boolean hasModuleInstalled(InstrumentationModule module) {
     return installedModules.contains(module);
   }
