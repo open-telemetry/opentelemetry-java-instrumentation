@@ -7,6 +7,10 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ClassLoadingStrategy;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ClassLoadingTarget;
+import java.io.IOException;
+import java.io.InputStream;
+import javax.annotation.Nullable;
+import net.bytebuddy.utility.StreamDrainer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -28,7 +32,8 @@ public class ClassLoadingTargetUtil {
    *     if annotation is not present.
    */
   // package-protected for testing
-  static ClassLoadingTarget getTarget(byte[] bytecode) {
+  @Nullable
+  private static ClassLoadingTarget getTarget(byte[] bytecode) {
     ClassReader cr = new ClassReader(bytecode);
     ClassNode classNode = new ClassNode();
     cr.accept(classNode, ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
@@ -46,10 +51,58 @@ public class ClassLoadingTargetUtil {
         }
       }
     }
+    return null;
+  }
+
+  /**
+   * Get class target with fallback on package target.
+   *
+   * @param className class name
+   * @param classLoader class loader to load class/package bytecode
+   * @return class loading target, defaults to {@link ClassLoadingTarget#INSTRUMENTATION_ISOLATED}
+   *     if annotation is not present
+   */
+  public static ClassLoadingTarget getClassTarget(String className, ClassLoader classLoader) {
+    ClassLoadingTarget classTarget = classTarget(className, classLoader);
+    if (null != classTarget) {
+      return classTarget;
+    }
+    String packageName = className.substring(0, className.lastIndexOf('.'));
+    ClassLoadingTarget packageTarget = packageTarget(packageName, classLoader);
+    if (packageTarget != null) {
+      return packageTarget;
+    }
     return ClassLoadingTarget.INSTRUMENTATION_ISOLATED;
   }
 
-  public static ClassLoadingTarget getTarget(String className, ClassLoader classLoader) {
-    return null;
+  // package-private for testing
+  @Nullable
+  static ClassLoadingTarget packageTarget(String packageName, ClassLoader classLoader) {
+    String packagePath = packageName.replace(".", "/") + "/package-info.class";
+    byte[] byteCode = getByteCode(packagePath, classLoader);
+    return byteCode == null ? null : getTarget(byteCode);
+  }
+
+  // package-private for testing
+  @Nullable
+  static ClassLoadingTarget classTarget(String className, ClassLoader classLoader) {
+    String classPath = className.replace(".", "/") + ".class";
+    byte[] byteCode = getByteCode(classPath, classLoader);
+    if (byteCode == null) {
+      throw new IllegalArgumentException("missing class: " + classPath);
+    }
+    return getTarget(byteCode);
+  }
+
+  @Nullable
+  private static byte[] getByteCode(String resourcePath, ClassLoader classLoader) {
+    try (InputStream input = classLoader.getResourceAsStream(resourcePath)) {
+      if (input == null) {
+        return null;
+      }
+      return StreamDrainer.DEFAULT.drain(input);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }
