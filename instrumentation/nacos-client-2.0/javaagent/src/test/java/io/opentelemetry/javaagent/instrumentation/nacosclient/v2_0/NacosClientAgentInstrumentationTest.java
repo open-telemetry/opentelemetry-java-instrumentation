@@ -14,6 +14,10 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Answers.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import com.alibaba.nacos.api.config.remote.request.ConfigQueryRequest;
 import com.alibaba.nacos.api.naming.pojo.ServiceInfo;
@@ -21,8 +25,6 @@ import com.alibaba.nacos.api.naming.remote.request.NotifySubscriberRequest;
 import com.alibaba.nacos.api.naming.remote.response.NotifySubscriberResponse;
 import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.api.remote.response.Response;
-import com.alibaba.nacos.common.remote.ConnectionType;
-import com.alibaba.nacos.common.remote.client.Connection;
 import com.alibaba.nacos.common.remote.client.RpcClient;
 import com.alibaba.nacos.common.remote.client.ServerRequestHandler;
 import com.alibaba.nacos.common.remote.client.grpc.GrpcConnection;
@@ -33,6 +35,11 @@ import com.alibaba.nacos.shaded.io.grpc.MethodDescriptor;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -78,22 +85,19 @@ class NacosClientAgentInstrumentationTest {
   }
 
   @Test
-  void instrumentsRpcClientHandleServerRequestAdvice() {
-    TestRpcClient rpcClient = new TestRpcClient();
-    rpcClient.registerServerRequestHandler(
-        new ServerRequestHandler() {
-          @Override
-          public Response requestReply(Request request) {
-            return new NotifySubscriberResponse();
-          }
-        });
+  void instrumentsRpcClientHandleServerRequestAdvice() throws Exception {
+    RpcClient rpcClient = mock(RpcClient.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
+    setField(rpcClient, "serverRequestHandlers", new ArrayList<ServerRequestHandler>());
+    when(rpcClient.getCurrentServer()).thenReturn(new RpcClient.ServerInfo("127.0.0.1", 9848));
+    rpcClient.registerServerRequestHandler(serverRequestHandler());
 
     ServiceInfo serviceInfo = new ServiceInfo();
     serviceInfo.setName("com.example.Service");
     serviceInfo.setGroupName("DEFAULT_GROUP");
 
     Response response =
-        testing.runWithSpan("parent", () -> rpcClient.handle(notifySubscriberRequest(serviceInfo)));
+        testing.runWithSpan(
+            "parent", () -> handleServerRequest(rpcClient, notifySubscriberRequest(serviceInfo)));
 
     assertThat(response).isInstanceOf(NotifySubscriberResponse.class);
     testing.waitAndAssertTraces(
@@ -121,6 +125,45 @@ class NacosClientAgentInstrumentationTest {
     NotifySubscriberRequest request = new NotifySubscriberRequest();
     request.setServiceInfo(serviceInfo);
     return request;
+  }
+
+  private static ServerRequestHandler serverRequestHandler() {
+    InvocationHandler handler =
+        (proxy, method, args) -> {
+          if (method.getDeclaringClass() == Object.class) {
+            if ("toString".equals(method.getName())) {
+              return "TestServerRequestHandler";
+            }
+            if ("hashCode".equals(method.getName())) {
+              return System.identityHashCode(proxy);
+            }
+            if ("equals".equals(method.getName())) {
+              return proxy == args[0];
+            }
+          }
+          return new NotifySubscriberResponse();
+        };
+    return (ServerRequestHandler)
+        Proxy.newProxyInstance(
+            ServerRequestHandler.class.getClassLoader(),
+            new Class<?>[] {ServerRequestHandler.class},
+            handler);
+  }
+
+  private static Response handleServerRequest(RpcClient rpcClient, Request request) {
+    try {
+      Method method = RpcClient.class.getDeclaredMethod("handleServerRequest", Request.class);
+      method.setAccessible(true);
+      return (Response) method.invoke(rpcClient, request);
+    } catch (ReflectiveOperationException e) {
+      throw new LinkageError(e.getMessage(), e);
+    }
+  }
+
+  private static void setField(Object target, String fieldName, Object value) throws Exception {
+    Field field = RpcClient.class.getDeclaredField(fieldName);
+    field.setAccessible(true);
+    field.set(target, value);
   }
 
   private static final class TestManagedChannel extends ManagedChannel {
@@ -164,39 +207,6 @@ class NacosClientAgentInstrumentationTest {
     @Override
     public String authority() {
       return authority;
-    }
-  }
-
-  private static final class TestRpcClient extends RpcClient {
-    private final RpcClient.ServerInfo currentServer =
-        new RpcClient.ServerInfo("127.0.0.1", 9848);
-
-    private TestRpcClient() {
-      super("test");
-    }
-
-    Response handle(Request request) {
-      return handleServerRequest(request);
-    }
-
-    @Override
-    public ConnectionType getConnectionType() {
-      return ConnectionType.GRPC;
-    }
-
-    @Override
-    public int rpcPortOffset() {
-      return 1000;
-    }
-
-    @Override
-    public RpcClient.ServerInfo getCurrentServer() {
-      return currentServer;
-    }
-
-    @Override
-    public Connection connectToServer(RpcClient.ServerInfo serverInfo) {
-      throw new UnsupportedOperationException();
     }
   }
 }
