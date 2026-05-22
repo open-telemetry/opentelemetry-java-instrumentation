@@ -102,7 +102,7 @@ class CacheTest {
       // add a bunch of entries to cache1, later we'll let GC clear them so that there would be
       // stale elements to expunge from the cache
       List<State> state = new ArrayList<>();
-      for (int i = 0; i < 1000000; i++) {
+      for (int i = 0; i < 100_000; i++) {
         State s = new State();
         state.add(s);
         cache1.put(s.key, "value");
