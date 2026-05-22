@@ -214,7 +214,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     }
   }
 
-  //              "io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0",
   //              // for pekko, we should refactor to help simplify this
   //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0",
   //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.route",
