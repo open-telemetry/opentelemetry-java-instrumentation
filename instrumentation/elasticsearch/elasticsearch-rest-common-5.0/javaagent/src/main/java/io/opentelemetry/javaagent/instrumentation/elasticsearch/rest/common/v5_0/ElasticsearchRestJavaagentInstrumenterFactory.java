@@ -13,9 +13,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestInstrumenterFactory;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ClassLoadingStrategy;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ClassLoadingTarget;
 import java.util.function.Function;
 import org.elasticsearch.client.Response;
 
+@ClassLoadingStrategy(ClassLoadingTarget.INSTRUMENTATION_SHARED)
 public class ElasticsearchRestJavaagentInstrumenterFactory {
 
   private static final boolean CAPTURE_SEARCH_QUERY =
