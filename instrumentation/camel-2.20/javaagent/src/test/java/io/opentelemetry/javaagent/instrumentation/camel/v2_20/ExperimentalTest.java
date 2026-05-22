@@ -13,11 +13,11 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 
 public class ExperimentalTest {
-  private static final String EXPERIMENTAL_FLAG =
-      "otel.instrumentation.camel.experimental-span-attributes";
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.camel.experimental-span-attributes");
 
   public static String experimental(String value) {
-    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+    if (!EXPERIMENTAL_ATTRIBUTES) {
       return null;
     }
     return value;
@@ -25,7 +25,7 @@ public class ExperimentalTest {
 
   static AttributeAssertion experimentalSatisfies(
       AttributeKey<String> key, StringAssertConsumer assertion) {
-    if (Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return satisfies(key, assertion);
     } else {
       return equalTo(key, null);

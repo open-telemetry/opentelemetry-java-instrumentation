@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class InstrumentationUtil {
+public class InstrumentationUtil {
 
   public static Instrumentation addInstrumentation(
       @Nullable Instrumentation instrumentation, Instrumentation ourInstrumentation) {

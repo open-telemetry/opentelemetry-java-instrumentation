@@ -165,17 +165,7 @@ class JavaUtilLoggingTest {
     void call(Logger logger, String msg);
   }
 
-  private static String experimental(String value) {
-    if (EXPERIMENTAL_ATTRIBUTES) {
-      return value;
-    }
-    return null;
-  }
-
-  private static Long experimental(long value) {
-    if (EXPERIMENTAL_ATTRIBUTES) {
-      return value;
-    }
-    return null;
+  private static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 }

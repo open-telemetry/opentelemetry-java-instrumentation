@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.jetty.common.JettyHandlerInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jetty.common.v8_0.JettyHandlerInstrumentation;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -78,7 +78,7 @@ public class Jetty8InstrumentationModule extends InstrumentationModule {
         // Must be set here since Jetty handlers can use startAsync outside of servlet scope.
         helper().setAsyncListenerResponse(context, response);
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(context, response, new Jetty8ResponseMutator());
+            .customize(context, response, Jetty8ResponseMutator.INSTANCE);
         return new AdviceScope(requestContext, context, scope);
       }
 

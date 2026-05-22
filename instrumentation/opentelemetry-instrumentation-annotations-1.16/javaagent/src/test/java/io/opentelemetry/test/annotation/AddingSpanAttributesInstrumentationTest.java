@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,12 +35,12 @@ class AddingSpanAttributesInstrumentationTest {
             new ExtractAttributesUsingAddingSpanAttributes()
                 .withSpanTakesPrecedence("foo", "bar", null, "baz"));
 
-    List<AttributeAssertion> attributesAsertions =
+    List<AttributeAssertion> attributesAssertions =
         new ArrayList<>(
             SemconvCodeStabilityUtil.codeFunctionAssertions(
                 ExtractAttributesUsingAddingSpanAttributes.class, "withSpanTakesPrecedence"));
-    attributesAsertions.add(equalTo(stringKey("implicitName"), "foo"));
-    attributesAsertions.add(equalTo(stringKey("explicitName"), "bar"));
+    attributesAssertions.add(equalTo(stringKey("implicitName"), "foo"));
+    attributesAssertions.add(equalTo(stringKey("explicitName"), "bar"));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -50,7 +51,7 @@ class AddingSpanAttributesInstrumentationTest {
                             "ExtractAttributesUsingAddingSpanAttributes.withSpanTakesPrecedence")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
-                        .hasAttributesSatisfyingExactly(attributesAsertions)));
+                        .hasAttributesSatisfyingExactly(attributesAssertions)));
   }
 
   @Test
@@ -78,6 +79,51 @@ class AddingSpanAttributesInstrumentationTest {
     new ExtractAttributesUsingAddingSpanAttributes().withSpanAttributes("foo", "bar", null, "baz");
 
     assertThat(testing.waitForTraces(0)).isEmpty();
+  }
+
+  @Test
+  void constructorOnlyAddingSpanAttributesDoesNotTransformType() {
+    // Current behavior: the type matcher only considers declared methods, so a class with only an
+    // @AddingSpanAttributes constructor is not transformed.
+    testing.runWithSpan(
+        "root", () -> new ConstructorOnlyAddingSpanAttributes("foo", "bar", null, "baz"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("root")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)));
+  }
+
+  @Test
+  void constructorAndMethodAddingSpanAttributesDoesNotAddAttributes() {
+    // Current behavior: once the annotated method makes the class eligible for transformation, the
+    // annotated constructor is also matched and fails because @Advice.Origin Method cannot
+    // represent constructors.
+    TestAgentListenerAccess.addSkipErrorCondition(
+        (typeName, t) ->
+            typeName.equals(ConstructedWithAddingSpanAttributes.class.getName())
+                && t.getMessage() != null
+                && t.getMessage().startsWith("Cannot represent ")
+                && t.getMessage().endsWith(" as the specified constant"));
+
+    testing.runWithSpan(
+        "root",
+        () ->
+            new ConstructedWithAddingSpanAttributes("foo", "bar", null, "baz")
+                .addAttributes("method"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("root")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)));
   }
 
   @Test

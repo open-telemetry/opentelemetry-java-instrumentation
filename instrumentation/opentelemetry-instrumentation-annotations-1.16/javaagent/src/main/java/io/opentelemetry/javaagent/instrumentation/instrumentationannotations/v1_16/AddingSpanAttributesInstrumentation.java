@@ -37,7 +37,7 @@ class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
         isAnnotatedWith(
                 named(
                     "application.io.opentelemetry.instrumentation.annotations.AddingSpanAttributes"))
-            // Avoid repeat extraction if method is already annotation with WithSpan
+            // Avoid repeat extraction if method is already annotated with WithSpan
             .and(
                 not(
                     isAnnotatedWith(

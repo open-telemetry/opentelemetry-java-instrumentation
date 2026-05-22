@@ -1,0 +1,210 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.hibernate.procedure.call.v4_3;
+
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import javax.persistence.ParameterMode;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.exception.SQLGrammarException;
+import org.hibernate.procedure.ParameterRegistration;
+import org.hibernate.procedure.ProcedureCall;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class ProcedureCallTest {
+
+  @RegisterExtension
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  private static SessionFactory sessionFactory;
+
+  @BeforeAll
+  @SuppressWarnings("deprecation") // buildSessionFactory
+  static void setUp() throws SQLException {
+    sessionFactory = new Configuration().configure().buildSessionFactory();
+
+    // Pre-populate the DB, so delete/update can be tested.
+    Session writer = sessionFactory.openSession();
+    try {
+      writer.beginTransaction();
+      for (int i = 0; i < 2; i++) {
+        writer.save(new Value("Hello :) " + i));
+      }
+      writer.getTransaction().commit();
+    } finally {
+      writer.close();
+    }
+
+    // Create a stored procedure.
+    try (Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "sa", "1");
+        Statement stmt = conn.createStatement()) {
+      stmt.execute(
+          "CREATE PROCEDURE TEST_PROC() MODIFIES SQL DATA BEGIN ATOMIC INSERT INTO Value VALUES (420, 'fred'); END");
+    }
+  }
+
+  @AfterAll
+  static void cleanUp() {
+    if (sessionFactory != null) {
+      sessionFactory.close();
+    }
+  }
+
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
+  @Test
+  void testProcedureCall() {
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          Session session = sessionFactory.openSession();
+          try {
+            session.beginTransaction();
+
+            ProcedureCall call = session.createStoredProcedureCall("TEST_PROC");
+            call.getOutputs();
+
+            session.getTransaction().commit();
+          } finally {
+            session.close();
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("ProcedureCall.getOutputs TEST_PROC")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            experimentalSatisfies(
+                                HIBERNATE_SESSION_ID,
+                                val -> assertThat(val).isInstanceOf(String.class))),
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "CALL TEST_PROC" : "CALL test.TEST_PROC")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(maybeStable(DB_STATEMENT), "{call TEST_PROC()}"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "CALL TEST_PROC" : null),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "CALL"),
+                            equalTo(
+                                DB_STORED_PROCEDURE_NAME,
+                                emitStableDatabaseSemconv() ? "TEST_PROC" : null)),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                HIBERNATE_SESSION_ID,
+                                experimental(
+                                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
+  }
+
+  @Test
+  void testFailingProcedureCall() {
+
+    Throwable exception =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              Session session = sessionFactory.openSession();
+              try {
+                session.beginTransaction();
+
+                ProcedureCall call = session.createStoredProcedureCall("TEST_PROC");
+                ParameterRegistration<Long> parameterRegistration =
+                    call.registerParameter("nonexistent", Long.class, ParameterMode.IN);
+                parameterRegistration.bindValue(420L);
+
+                Throwable thrown = catchThrowable(call::getOutputs);
+
+                assertThat(thrown).isInstanceOf(SQLGrammarException.class);
+
+                session.getTransaction().commit();
+                return thrown;
+              } finally {
+                session.close();
+              }
+            });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("ProcedureCall.getOutputs TEST_PROC")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasException(exception)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            experimentalSatisfies(
+                                HIBERNATE_SESSION_ID,
+                                val -> assertThat(val).isInstanceOf(String.class))),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                HIBERNATE_SESSION_ID,
+                                experimental(
+                                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
+  }
+}

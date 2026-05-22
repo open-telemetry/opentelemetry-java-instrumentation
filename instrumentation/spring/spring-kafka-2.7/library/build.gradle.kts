@@ -28,7 +28,7 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter:3.+") // documented limitation
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }

@@ -167,8 +167,8 @@ public final class GrpcTelemetryBuilder {
 
     GrpcClientNetworkAttributesGetter netClientAttributesGetter =
         new GrpcClientNetworkAttributesGetter();
-    GrpcNetworkServerAttributesGetter netServerAttributesGetter =
-        new GrpcNetworkServerAttributesGetter();
+    GrpcServerNetworkAttributesGetter netServerAttributesGetter =
+        new GrpcServerNetworkAttributesGetter();
     GrpcRpcAttributesGetter rpcAttributesGetter = new GrpcRpcAttributesGetter();
 
     clientInstrumenterBuilder

@@ -79,7 +79,7 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-data-jdbc:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   implementation(project(":sdk-autoconfigure-support"))
   implementation(project(":declarative-config-bridge"))
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
@@ -120,7 +120,7 @@ dependencies {
   // needed for the Spring Boot 3 support
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
 
-  // give access to common classes, e.g. InstrumentationConfigUtil
+  // give access to common classes
   add("javaSpring3CompileOnly", files(sourceSets.main.get().output.classesDirs))
   add("javaSpring3CompileOnly", "org.springframework.boot:spring-boot-starter-web:3.2.4")
   add("javaSpring3CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
@@ -219,14 +219,14 @@ testing {
         implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
         implementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
         // configure Spring Boot 3.x dependencies for latest dep testing
-        val version = if (otelProps.testLatestDeps) "3.+" else springBootVersion
+        val version = baseVersion(springBootVersion).orLatest("3.+")
         implementation("org.springframework.boot:spring-boot-starter-test:$version")
         implementation("org.springframework.boot:spring-boot-starter-actuator:$version")
         implementation("org.springframework.boot:spring-boot-starter-web:$version")
         implementation("org.springframework.boot:spring-boot-starter-webflux:$version")
         implementation("org.springframework.boot:spring-boot-starter-jdbc:$version")
         implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:$version")
-        val springKafkaVersion = if (otelProps.testLatestDeps) "3.+" else "2.9.0"
+        val springKafkaVersion = baseVersion("2.9.0").orLatest("3.+")
         implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
         implementation("javax.servlet:javax.servlet-api:3.1.0")
         runtimeOnly("com.h2database:h2:1.4.197")
@@ -237,7 +237,7 @@ testing {
     val testSpring3 by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
-        val version = if (otelProps.testLatestDeps) "3.+" else "3.2.4"
+        val version = baseVersion("3.2.4").orLatest("3.+")
         implementation("org.springframework.boot:spring-boot-starter-web:$version")
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
         implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))

@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "8.4.0"
+  id("com.diffplug.spotless") version "8.5.1"
 }
 
 spotless {
@@ -54,7 +54,7 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.4.0")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.5.1")
   implementation("com.google.guava:guava:33.6.0-jre")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.1") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
@@ -62,8 +62,8 @@ dependencies {
     // We exclude plexus-xml and plexus-utils here because our current usages of the shadow plugin
     // don't require it, the  failure happens in spdx-gradle-plugin that can continue using and
     // older version of plexus-xml and plexus-utils
-    exclude(group = "org.codehaus.plexus", module = "plexus-utils")
-    exclude(group = "org.codehaus.plexus", module = "plexus-xml")
+    exclude("org.codehaus.plexus", "plexus-utils")
+    exclude("org.codehaus.plexus", "plexus-xml")
   }
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.4.1")

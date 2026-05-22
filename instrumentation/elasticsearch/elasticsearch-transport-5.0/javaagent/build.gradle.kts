@@ -28,6 +28,8 @@ dependencies {
 
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent"))
+  testInstrumentation(project(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent"))
+  testInstrumentation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 

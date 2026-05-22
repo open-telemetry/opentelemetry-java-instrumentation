@@ -69,7 +69,7 @@ final class JmsMessageAttributesGetter
 
   @Nullable
   @Override
-  public String getMessageId(MessageWithDestination messageWithDestination, Void unused) {
+  public String getMessageId(MessageWithDestination messageWithDestination, @Nullable Void unused) {
     try {
       return messageWithDestination.message().getJmsMessageId();
     } catch (Exception e) {

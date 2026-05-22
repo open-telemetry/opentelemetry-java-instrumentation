@@ -344,11 +344,10 @@ class PowerJobBasicProcessorTest {
 
     if (EXPERIMENTAL_ATTRIBUTES) {
       attributeAssertions.addAll(
-          new ArrayList<>(
-              asList(
-                  equalTo(stringKey("job.system"), "powerjob"),
-                  equalTo(longKey("scheduling.powerjob.job.id"), jobId),
-                  equalTo(stringKey("scheduling.powerjob.job.type"), jobType))));
+          asList(
+              equalTo(stringKey("job.system"), "powerjob"),
+              equalTo(longKey("scheduling.powerjob.job.id"), jobId),
+              equalTo(stringKey("scheduling.powerjob.job.type"), jobType)));
     }
 
     attributeAssertions.addAll(codeFunctionAssertions(codeNamespace, "process"));

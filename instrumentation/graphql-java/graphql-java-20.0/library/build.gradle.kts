@@ -15,6 +15,6 @@ if (otelProps.testLatestDeps) {
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
 }

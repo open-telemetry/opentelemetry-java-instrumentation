@@ -34,7 +34,7 @@ testing {
   suites {
     val version35Test by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (otelProps.testLatestDeps) "3.+" else "3.5.0"
+        val version = baseVersion("3.5.0").orLatest("3.+")
         implementation("org.hsqldb:hsqldb:2.3.4")
         compileOnly("io.vertx:vertx-codegen:$version")
         implementation("io.vertx:vertx-web:$version")
@@ -47,7 +47,7 @@ testing {
 
     val version41Test by registering(JvmTestSuite::class) {
       dependencies {
-        val version = if (otelProps.testLatestDeps) "4.+" else "4.1.0"
+        val version = baseVersion("4.1.0").orLatest("4.+")
         implementation("org.hsqldb:hsqldb:2.3.4")
         compileOnly("io.vertx:vertx-codegen:$version")
         implementation("io.vertx:vertx-web:$version")

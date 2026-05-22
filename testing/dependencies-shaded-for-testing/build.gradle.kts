@@ -4,17 +4,17 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.38.0")
+  implementation("com.linecorp.armeria:armeria-junit5:1.39.0")
   implementation("com.google.errorprone:error_prone_annotations")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
-  implementation("com.google.protobuf:protobuf-java-util:4.34.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.35.0")
   implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   // we'll replace caffeine shaded in armeria with a later version that doesn't use Unsafe. Caffeine
   // 3+ doesn't work with Java 8, but that is fine since --sun-misc-unsafe-memory-access=deny
   // requires Java 23.
   if (otelProps.denyUnsafe) {
-    implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
   }
 }
 

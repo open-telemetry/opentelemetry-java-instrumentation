@@ -53,8 +53,8 @@ public final class ServletContextPath {
 
   /**
    * Returns a concatenation of a servlet context path stored in the given {@code context} and a
-   * given {@code spanName}. If there is no servlet path stored in the context, returns {@code
-   * spanName}.
+   * given {@code spanName}. If there is no servlet context path stored in the context, returns
+   * {@code spanName}.
    */
   @Nullable
   public static String prepend(Context context, @Nullable String spanName) {

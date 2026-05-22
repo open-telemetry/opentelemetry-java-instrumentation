@@ -33,16 +33,12 @@ import java.net.UnknownHostException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceClientTest {
 
   @BeforeAll
   void setUp() throws UnknownHostException {
     redisServer = redisServer.withCommand("redis-server", "--requirepass password");
     redisServer.start();
-    // Set back so other tests don't fail due to NOAUTH error.
-    cleanup.deferAfterAll(
-        () -> redisServer = redisServer.withCommand("redis-server", "--requirepass \"\""));
     cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
@@ -56,6 +52,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testAuthCommand() throws ReflectiveOperationException {
     Class<?> commandsClass = RedisCommands.class;
     Method authMethod;

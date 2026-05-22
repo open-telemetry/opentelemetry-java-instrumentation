@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-final class ActivejHttpServerAttributesGetter
+class ActivejHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override

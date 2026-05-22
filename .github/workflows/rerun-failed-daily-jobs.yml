@@ -1,0 +1,34 @@
+name: Rerun failed daily jobs
+
+on:
+  workflow_run:
+    workflows:
+      - "Build (daily)"
+      - "Build (daily --no-build-cache)"
+      - "Daily GraalVM native tests"
+    types:
+      - completed
+
+concurrency:
+  group: rerun-failed-daily-jobs
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rerun-failed-jobs:
+    permissions:
+      contents: read
+      actions: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.workflow_run.conclusion == 'failure'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Rerun eligible failed jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: python .github/scripts/rerun-failed-workflow-jobs.py

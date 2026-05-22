@@ -14,32 +14,34 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractHibernateTest {
-  protected static SessionFactory sessionFactory;
-  protected static List<Value> prepopulated;
+  protected SessionFactory sessionFactory;
+  protected List<Value> prepopulated;
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @BeforeAll
-  protected static void setup() {
+  protected void setup() {
     sessionFactory = new Configuration().configure().buildSessionFactory();
     // Pre-populate the DB, so delete/update can be tested.
-    Session writer = sessionFactory.openSession();
-    writer.beginTransaction();
-    prepopulated = new ArrayList<>();
-    for (int i = 0; i < 5; i++) {
-      prepopulated.add(new Value("Hello :) " + i));
-      writer.persist(prepopulated.get(i));
+    try (Session writer = sessionFactory.openSession()) {
+      writer.beginTransaction();
+      prepopulated = new ArrayList<>();
+      for (int i = 0; i < 5; i++) {
+        prepopulated.add(new Value("Hello :) " + i));
+        writer.persist(prepopulated.get(i));
+      }
+      writer.getTransaction().commit();
     }
-    writer.getTransaction().commit();
-    writer.close();
   }
 
   @AfterAll
-  protected static void cleanup() {
+  protected void cleanup() {
     if (sessionFactory != null) {
       sessionFactory.close();
     }

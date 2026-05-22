@@ -51,7 +51,8 @@ public class HttpMethodAttributeExtractor<
 
     GetOutputStreamContext getOutputStreamContext = GetOutputStreamContext.get(context);
 
-    if (getOutputStreamContext.isOutputStreamMethodOfSunConnectionCalled()) {
+    if (getOutputStreamContext != null
+        && getOutputStreamContext.isOutputStreamMethodOfSunConnectionCalled()) {
       String method = connection.getRequestMethod();
       // The getOutputStream() has transformed "GET" into "POST"
       if (knownMethods.contains(method)) {

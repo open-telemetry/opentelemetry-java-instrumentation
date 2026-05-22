@@ -16,8 +16,6 @@ public class EnduserAttributesCapturerSingletons {
   private static final EnduserAttributesCapturer enduserAttributesCapturer =
       createEndUserAttributesCapturerFromConfig();
 
-  private EnduserAttributesCapturerSingletons() {}
-
   public static EnduserAttributesCapturer enduserAttributesCapturer() {
     return enduserAttributesCapturer;
   }
@@ -42,4 +40,6 @@ public class EnduserAttributesCapturerSingletons {
     }
     return capturer;
   }
+
+  private EnduserAttributesCapturerSingletons() {}
 }

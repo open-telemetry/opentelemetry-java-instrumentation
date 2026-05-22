@@ -21,14 +21,14 @@ import java.util.Map;
 public class RabbitInstrumenterHelper {
   static final AttributeKey<String> RABBITMQ_COMMAND = AttributeKey.stringKey("rabbitmq.command");
 
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+  static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "rabbitmq")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final RabbitInstrumenterHelper instrumenterHelper = new RabbitInstrumenterHelper();
+  private static final RabbitInstrumenterHelper helper = new RabbitInstrumenterHelper();
 
   public static RabbitInstrumenterHelper helper() {
-    return instrumenterHelper;
+    return helper;
   }
 
   public void onPublish(Span span, String exchange, String routingKey) {

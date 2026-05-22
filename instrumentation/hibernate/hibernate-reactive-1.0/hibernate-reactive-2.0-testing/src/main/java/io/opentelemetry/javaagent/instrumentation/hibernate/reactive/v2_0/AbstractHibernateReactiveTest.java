@@ -56,10 +56,8 @@ public abstract class AbstractHibernateReactiveTest {
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected final Vertx vertx = Vertx.vertx();
-  private GenericContainer<?> container;
   private String host;
   private int port;
-  private EntityManagerFactory entityManagerFactory;
   private Mutiny.SessionFactory mutinySessionFactory;
   private Stage.SessionFactory stageSessionFactory;
 
@@ -68,7 +66,7 @@ public abstract class AbstractHibernateReactiveTest {
   @BeforeAll
   void setUp() throws Exception {
     cleanup.deferAfterAll(vertx::close);
-    container =
+    GenericContainer<?> container =
         new GenericContainer<>("postgres:9.6.8")
             .withEnv("POSTGRES_USER", USER_DB)
             .withEnv("POSTGRES_PASSWORD", PW_DB)
@@ -84,7 +82,7 @@ public abstract class AbstractHibernateReactiveTest {
     System.setProperty("db.host", host);
     System.setProperty("db.port", String.valueOf(port));
 
-    entityManagerFactory = createEntityManagerFactory();
+    EntityManagerFactory entityManagerFactory = createEntityManagerFactory();
     cleanup.deferAfterAll(entityManagerFactory);
 
     Value value = new Value("name");

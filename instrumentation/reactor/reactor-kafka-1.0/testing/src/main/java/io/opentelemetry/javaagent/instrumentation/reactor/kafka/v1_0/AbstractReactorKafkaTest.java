@@ -67,7 +67,7 @@ public abstract class AbstractReactorKafkaTest {
 
   private static final boolean RECEIVE_TELEMETRY_ENABLED =
       Boolean.getBoolean("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
-  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
   private static final boolean HAS_CONSUMER_GROUP = Boolean.getBoolean("hasConsumerGroup");
 
@@ -220,7 +220,7 @@ public abstract class AbstractReactorKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           equalTo(stringKey("messaging.kafka.bootstrap.servers"), kafka.getBootstrapServers()));
     }
@@ -261,7 +261,7 @@ public abstract class AbstractReactorKafkaTest {
     if (HAS_CONSUMER_GROUP) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }
