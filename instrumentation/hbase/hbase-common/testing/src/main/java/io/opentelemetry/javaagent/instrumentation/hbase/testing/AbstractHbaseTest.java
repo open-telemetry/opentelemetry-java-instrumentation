@@ -12,6 +12,10 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -22,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.dockerjava.api.model.ExposedPort;
@@ -31,6 +36,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -41,6 +47,7 @@ import java.util.function.Consumer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
@@ -60,6 +67,7 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
+import org.apache.hadoop.hbase.ipc.CallTimeoutException;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterAll;
@@ -71,6 +79,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation")
@@ -79,7 +88,7 @@ public abstract class AbstractHbaseTest {
 
   protected static final int MASTER_PORT = 16000;
   protected static final int REGION_SERVER_PORT = 16020;
-  protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.hbase-client-2.0.0";
+  protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.hbase-client-2.0";
 
   private static final String NAMESPACE = "ot_test";
   protected static final byte[] COLUMN_FAMILY = Bytes.toBytes("cf");
@@ -93,6 +102,8 @@ public abstract class AbstractHbaseTest {
   protected static final String MULTI = "Multi";
 
   protected static final String HOSTNAME = getHostName();
+  private static final int GET_TIMEOUT_OPERATION_TIMEOUT_MILLIS = 1000;
+  private static final int GET_TIMEOUT_RPC_TIMEOUT_MILLIS = 200;
 
   protected abstract InstrumentationExtension testing();
 
@@ -112,10 +123,12 @@ public abstract class AbstractHbaseTest {
               })
           .withExposedPorts(2181, 16000, 16010, 16020, 16030, 16201, 16301)
           .withStartupTimeout(Duration.ofMinutes(2))
-          .waitingFor(Wait.forHealthcheck().withStartupTimeout(Duration.ofMinutes(2)))
           .withCreateContainerCmdModifier(cmd -> cmd.withHostName(HOSTNAME))
-          .waitingFor(Wait.forListeningPort())
-          .waitingFor(Wait.forLogMessage(".*Master has completed initialization.*\\n", 1));
+          .waitingFor(
+              new WaitAllStrategy()
+                  .withStrategy(Wait.forLogMessage(".*Master has completed initialization.*\\n", 1))
+                  .withStrategy(Wait.forListeningPorts(2181, MASTER_PORT, REGION_SERVER_PORT))
+                  .withStartupTimeout(Duration.ofMinutes(2)));
 
   protected static Connection connection;
 
@@ -156,15 +169,13 @@ public abstract class AbstractHbaseTest {
 
   @Test
   @Order(1)
-  public void testCreateNameBase() {
+  public void testCreateNamespace() {
     Exception error = null;
     boolean namespaceCreateStatus;
-    try {
-      Admin admin = connection.getAdmin();
+    try (Admin admin = connection.getAdmin()) {
       NamespaceDescriptor namespaceDescriptor = NamespaceDescriptor.create(NAMESPACE).build();
       admin.createNamespace(namespaceDescriptor);
       namespaceCreateStatus = true;
-      admin.close();
     } catch (IOException e) {
       namespaceCreateStatus = false;
       error = e;
@@ -202,8 +213,7 @@ public abstract class AbstractHbaseTest {
   public void testCreateTable() {
     Exception error = null;
     boolean tableExists = false;
-    try {
-      Admin admin = connection.getAdmin();
+    try (Admin admin = connection.getAdmin()) {
       ColumnFamilyDescriptor columnFamilyDescriptor =
           ColumnFamilyDescriptorBuilder.newBuilder(COLUMN_FAMILY).build();
       TableDescriptor tableDescriptor =
@@ -282,6 +292,76 @@ public abstract class AbstractHbaseTest {
     assertEquals(col1Val, "col1_val_1");
     assertEquals(col2Val, "col2_val_1");
     testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  @Order(101)
+  public void testGetTimeout() throws Exception {
+    try (Connection timeoutConnection = ConnectionFactory.createConnection(getTimeoutConfig());
+        Table table = timeoutConnection.getTable(TABLE_NAME)) {
+      warmUpTimeoutConnection(table);
+
+      assertThrows(IOException.class, () -> getWithPausedContainer(table));
+    }
+
+    testing().waitAndAssertTraces(getTimeoutTraceAssertConsumer());
+  }
+
+  private static Configuration getTimeoutConfig() {
+    Configuration timeoutConfig = HBaseConfiguration.create(connection.getConfiguration());
+    timeoutConfig.setInt(HConstants.HBASE_CLIENT_RETRIES_NUMBER, 0);
+    timeoutConfig.setLong(HConstants.HBASE_CLIENT_PAUSE, 1);
+    timeoutConfig.setInt(
+        HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, GET_TIMEOUT_OPERATION_TIMEOUT_MILLIS);
+    timeoutConfig.setInt(HConstants.HBASE_RPC_TIMEOUT_KEY, GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
+    timeoutConfig.setInt(HConstants.HBASE_RPC_READ_TIMEOUT_KEY, GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
+    timeoutConfig.setInt(HConstants.HBASE_RPC_WRITE_TIMEOUT_KEY, GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
+    return timeoutConfig;
+  }
+
+  private void warmUpTimeoutConnection(Table table) throws IOException {
+    table.exists(new Get(Bytes.toBytes("row1")));
+    testing().clearData();
+  }
+
+  private void getWithPausedContainer(Table table) throws IOException {
+    hbaseContainer.getDockerClient().pauseContainerCmd(hbaseContainer.getContainerId()).exec();
+    try {
+      testing().clearData();
+      table.get(new Get(Bytes.toBytes("row1")));
+    } finally {
+      hbaseContainer.getDockerClient().unpauseContainerCmd(hbaseContainer.getContainerId()).exec();
+    }
+  }
+
+  private static Consumer<TraceAssert> getTimeoutTraceAssertConsumer() {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)));
+    assertions.add(equalTo(maybeStable(DB_OPERATION), GET));
+    assertions.add(equalTo(maybeStable(DB_NAME), TABLE_NAME.getNameAsString()));
+    assertions.add(equalTo(SERVER_ADDRESS, HOSTNAME));
+    assertions.add(equalTo(SERVER_PORT, REGION_SERVER_PORT));
+    if (emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(ERROR_TYPE, CallTimeoutException.class.getName()));
+    } else {
+      assertions.add(satisfies(DB_USER, AbstractAssert::isNotNull));
+    }
+
+    return trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(GET + " " + TABLE_NAME.getNameAsString())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(assertions)
+                    .hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("exception")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(EXCEPTION_TYPE, CallTimeoutException.class.getName()),
+                                    satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
+                                    satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull))));
   }
 
   @Test
