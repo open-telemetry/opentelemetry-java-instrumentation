@@ -153,7 +153,11 @@ public final class JdbcConnectionUrlParser {
       // see https://github.com/opentracing-contrib/java-jdbc
       return connectionUrl.substring("jdbc:tracing:".length());
     } else if (connectionUrl.startsWith("jdbc:aws-dsql:")) {
+      // https://docs.aws.amazon.com/aurora-dsql/latest/userguide/SECTION_program-with-jdbc-connector.html
       return connectionUrl.substring("jdbc:aws-dsql:".length());
+    } else if (connectionUrl.startsWith("jdbc:aws-wrapper:")) {
+      // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Connecting.html#Aurora.Connecting.JDBCDriverPostgreSQL
+      return connectionUrl.substring("jdbc:aws-wrapper:".length());
     } else if (connectionUrl.startsWith("jdbc:")) {
       return connectionUrl.substring("jdbc:".length());
     } else if (connectionUrl.startsWith("jdbc-secretsmanager:tracing:")) {
