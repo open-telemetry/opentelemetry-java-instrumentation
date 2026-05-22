@@ -32,7 +32,7 @@ public class ClassLoadingTargetUtil {
    *     if annotation is not present.
    */
   @Nullable
-  static ClassLoadingTarget getTarget(byte[] bytecode) {
+  private static ClassLoadingTarget getTarget(byte[] bytecode) {
     ClassReader cr = new ClassReader(bytecode);
     ClassNode classNode = new ClassNode();
     cr.accept(classNode, ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
@@ -58,17 +58,11 @@ public class ClassLoadingTargetUtil {
    *
    * @param className class name
    * @param classLoader class loader to load class/package bytecode
-   * @return class loading target, {@literal null} if class is not present in class loader or target
-   *     is not defined
+   * @return class loading target, defaults to {@link ClassLoadingTarget#INSTRUMENTATION_ISOLATED}
+   *     if annotation is not present
    */
-  @Nullable
   public static ClassLoadingTarget getClassTarget(String className, ClassLoader classLoader) {
-    String classPath = className.replace(".", "/") + ".class";
-    byte[] byteCode = getByteCode(classPath, classLoader);
-    if (byteCode == null) {
-      return null;
-    }
-    ClassLoadingTarget classTarget = getTarget(byteCode);
+    ClassLoadingTarget classTarget = classTarget(className, classLoader);
     if (null != classTarget) {
       return classTarget;
     }
@@ -77,7 +71,7 @@ public class ClassLoadingTargetUtil {
     if (packageTarget != null) {
       return packageTarget;
     }
-    return null;
+    return ClassLoadingTarget.INSTRUMENTATION_ISOLATED;
   }
 
   // package-private for testing
@@ -86,6 +80,17 @@ public class ClassLoadingTargetUtil {
     String packagePath = packageName.replace(".", "/") + "/package-info.class";
     byte[] byteCode = getByteCode(packagePath, classLoader);
     return byteCode == null ? null : getTarget(byteCode);
+  }
+
+  // package-private for testing
+  @Nullable
+  static ClassLoadingTarget classTarget(String className, ClassLoader classLoader) {
+    String classPath = className.replace(".", "/") + ".class";
+    byte[] byteCode = getByteCode(classPath, classLoader);
+    if (byteCode == null) {
+      throw new IllegalArgumentException("missing class: " + classPath);
+    }
+    return getTarget(byteCode);
   }
 
   @Nullable

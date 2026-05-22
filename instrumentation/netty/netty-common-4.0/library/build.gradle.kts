@@ -9,4 +9,6 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-common:library"))
 
   compileOnly("io.netty:netty-codec-http:4.0.0.Final")
+
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 }

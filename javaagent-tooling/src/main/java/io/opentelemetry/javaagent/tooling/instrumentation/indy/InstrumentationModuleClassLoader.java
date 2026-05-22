@@ -168,7 +168,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     Map<String, BytecodeWithUrl> commonClassesToInject = new HashMap<>();
     Map<String, BytecodeWithUrl> classesToInject = new HashMap<>();
 
-
     getClassesToInject(module)
         .forEach(
             name -> {
@@ -215,13 +214,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     }
   }
 
-  //              "io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0",
-  //              "io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal",
-
-  //              "io.opentelemetry.instrumentation.netty.common.internal",
-  //              "io.opentelemetry.javaagent.instrumentation.netty.common.v4_0",
-  //              "io.opentelemetry.instrumentation.netty.common.v4_0.internal",
-  //              "io.opentelemetry.instrumentation.netty.v4_1.internal",
   //              "io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0",
   //              // for pekko, we should refactor to help simplify this
   //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0",

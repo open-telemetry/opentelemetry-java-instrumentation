@@ -11,6 +11,8 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation(project(":instrumentation:netty:netty-4.1:testing"))
+
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 }
 
 tasks {
