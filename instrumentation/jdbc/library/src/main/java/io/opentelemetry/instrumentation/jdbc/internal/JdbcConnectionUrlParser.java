@@ -153,9 +153,11 @@ public final class JdbcConnectionUrlParser {
       // see https://github.com/opentracing-contrib/java-jdbc
       return connectionUrl.substring("jdbc:tracing:".length());
     } else if (connectionUrl.startsWith("jdbc:aws-dsql:")) {
+      // Amazon Aurora DSQL uses jdbc:aws-dsql: prefix, see
       // https://docs.aws.amazon.com/aurora-dsql/latest/userguide/SECTION_program-with-jdbc-connector.html
       return connectionUrl.substring("jdbc:aws-dsql:".length());
     } else if (connectionUrl.startsWith("jdbc:aws-wrapper:")) {
+      // Amazon Aurora uses jdbc:aws-wrapper: prefix, see
       // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Connecting.html#Aurora.Connecting.JDBCDriverPostgreSQL
       return connectionUrl.substring("jdbc:aws-wrapper:".length());
     } else if (connectionUrl.startsWith("jdbc:")) {
