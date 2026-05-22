@@ -31,7 +31,6 @@ public class ClassLoadingTargetUtil {
    * @return class loading strategy, defaults to {@link ClassLoadingTarget#INSTRUMENTATION_ISOLATED}
    *     if annotation is not present.
    */
-  // package-protected for testing
   @Nullable
   private static ClassLoadingTarget getTarget(byte[] bytecode) {
     ClassReader cr = new ClassReader(bytecode);
