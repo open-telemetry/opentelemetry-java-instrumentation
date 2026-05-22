@@ -551,3 +551,4 @@ jetty-common-8.0:javaagent
 opensearch-rest-common-1.0:javaagent
 opensearch-rest-common-1.0:testing
 tomcat-common-7.0:javaagent
+spring-webmvc-common-3.1:javaagent
