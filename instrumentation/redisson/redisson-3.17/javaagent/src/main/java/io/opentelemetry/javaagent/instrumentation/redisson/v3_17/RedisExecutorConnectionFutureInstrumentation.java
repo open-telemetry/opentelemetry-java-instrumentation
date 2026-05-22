@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -25,6 +26,11 @@ class RedisExecutorConnectionFutureInstrumentation implements TypeInstrumentatio
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.redisson.command.RedisExecutor")
         .or(extendsClass(named("org.redisson.command.RedisExecutor")));
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.redisson.command.RedisExecutor");
   }
 
   @Override

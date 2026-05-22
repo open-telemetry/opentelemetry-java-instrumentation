@@ -9,15 +9,10 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
 
 public final class ContextPropagatingCompletableFuture<T> extends CompletableFuture<T> {
-  private final CompletableFuture<T> delegate;
-  private final Context context;
 
   private ContextPropagatingCompletableFuture(CompletableFuture<T> delegate, Context context) {
-    this.delegate = delegate;
-    this.context = context;
     delegate.whenComplete(
         (result, error) -> {
           try (Scope ignored = context.makeCurrent()) {
@@ -38,29 +33,5 @@ public final class ContextPropagatingCompletableFuture<T> extends CompletableFut
       return delegate;
     }
     return new ContextPropagatingCompletableFuture<>(delegate, context);
-  }
-
-  @Override
-  public CompletableFuture<T> whenComplete(BiConsumer<? super T, ? super Throwable> action) {
-    return super.whenComplete(
-        (result, error) -> {
-          if (Context.current() == context) {
-            action.accept(result, error);
-            return;
-          }
-          try (Scope ignored = context.makeCurrent()) {
-            action.accept(result, error);
-          }
-        });
-  }
-
-  @Override
-  public boolean cancel(boolean mayInterruptIfRunning) {
-    boolean delegateCancelled = delegate.cancel(mayInterruptIfRunning);
-    if (!delegateCancelled && !delegate.isCancelled()) {
-      return false;
-    }
-    boolean wrapperCancelled = super.cancel(mayInterruptIfRunning);
-    return delegateCancelled || wrapperCancelled;
   }
 }

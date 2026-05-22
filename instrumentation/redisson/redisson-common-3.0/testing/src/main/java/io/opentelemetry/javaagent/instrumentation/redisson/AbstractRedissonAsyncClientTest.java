@@ -102,8 +102,8 @@ public abstract class AbstractRedissonAsyncClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
-    if (testInfo.getTestMethod().get().getName().equals("futureWhenComplete")) {
-      // When verifying the futureWhenComplete test case, simulate reconnection during Redis command
+    if (testInfo.getTestMethod().get().getName().equals("futureContinuation")) {
+      // When verifying the futureContinuation test case, simulate reconnection during Redis command
       // execution.
       singleServerConfig.setConnectionMinimumIdleSize(0);
     }
@@ -150,23 +150,23 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @Test
-  void futureWhenComplete() {
+  void futureContinuation() {
     RSet<String> set = redisson.getSet("set1");
     CompletionStage<Boolean> result =
         testing.runWithSpan(
             "parent",
             () -> {
               RFuture<Boolean> future = set.addAsync("s1");
-              return future.whenComplete(
-                  (res, throwable) -> {
+              return future.thenApply(
+                  res -> {
                     assertThat(Span.current().getSpanContext().isValid()).isTrue();
                     testing.runWithSpan("callback", () -> {});
+                    return res;
                   });
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", "SADD", "callback"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),

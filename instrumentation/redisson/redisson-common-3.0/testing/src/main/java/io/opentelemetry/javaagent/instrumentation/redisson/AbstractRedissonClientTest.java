@@ -151,8 +151,7 @@ public abstract class AbstractRedissonClientTest {
           keyObject.set("bar");
           keyObject.get();
         });
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", "SET", "GET"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
