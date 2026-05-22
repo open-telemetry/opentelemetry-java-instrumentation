@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webmvc.boot;
+package io.opentelemetry.instrumentation.spring.webmvc.v3_1.boot;
 
-import static io.opentelemetry.instrumentation.spring.webmvc.boot.AbstractSpringBootBasedTest.DEFERRED_RESULT;
+import static io.opentelemetry.instrumentation.spring.webmvc.v3_1.boot.AbstractSpringBootBasedTest.DEFERRED_RESULT;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
