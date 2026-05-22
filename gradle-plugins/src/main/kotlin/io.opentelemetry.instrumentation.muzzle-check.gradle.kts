@@ -37,13 +37,21 @@ val RANGE_COUNT_LIMIT = Integer.getInteger("otel.javaagent.muzzle.versions.limit
 
 // Read pinned latest-dep versions to cap muzzle's open-ended version ranges,
 // preventing failures when new library versions are released to Maven Central.
-val muzzlePinnedVersions: Map<String, String> by lazy {
+//
+// External users of the muzzle plugin may not have this repo-specific file. In that case,
+// fall back to the old behavior and resolve versions directly from configured repositories.
+val muzzlePinnedVersions: Map<String, String>? by lazy {
   val file = rootProject.file(".github/config/latest-dep-versions.json")
   if (!file.exists()) {
-    throw GradleException("Pinned latest-dep versions file is missing: ${file}.")
+    logger.info(
+      "Pinned latest-dep versions file is missing: ${file}; falling back to repository " +
+        "version resolution for muzzle checks."
+    )
+    null
+  } else {
+    @Suppress("UNCHECKED_CAST")
+    groovy.json.JsonSlurper().parse(file) as Map<String, String>
   }
-  @Suppress("UNCHECKED_CAST")
-  groovy.json.JsonSlurper().parse(file) as Map<String, String>
 }
 
 /**
@@ -60,10 +68,14 @@ val muzzlePinnedVersions: Map<String, String> by lazy {
  * muzzle tasks are created and the directive is silently skipped. To add a sentinel entry,
  * manually add {@code "group:module#+": "0.0"} to
  * {@code .github/config/latest-dep-versions.json}.
+ *
+ * <p>Returns {@code null} when the pinned versions file is not present, which preserves the old
+ * behavior of resolving the full version range from configured repositories.
  */
-fun resolveUpperBound(group: String, module: String): Version {
+fun resolveUpperBound(group: String, module: String): Version? {
+  val pinnedVersions = muzzlePinnedVersions ?: return null
   val key = "$group:$module#+"
-  val pinnedVersion = muzzlePinnedVersions[key]
+  val pinnedVersion = pinnedVersions[key]
     ?: throw GradleException(
       "Pinned version missing for muzzle artifact \"$key\". " +
         "Run ./gradlew resolveLatestDepVersions -PtestLatestDeps=true -PresolveLatestDeps=true " +
@@ -442,9 +454,10 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
   return inverseDirectives
 }
 
-fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version) = sequence {
+fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version?) = sequence {
   val predicate = AcceptableVersions(skipVersions)
-  fun accept(version: Version?): Boolean = version != null && predicate.test(version) && version <= upperBound
+  fun accept(version: Version?): Boolean =
+    version != null && predicate.test(version) && (upperBound == null || version <= upperBound)
   if (accept(range.lowestVersion)) {
     yield(range.lowestVersion.toString())
   }
