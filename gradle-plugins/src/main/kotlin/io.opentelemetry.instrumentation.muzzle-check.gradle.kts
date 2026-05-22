@@ -198,9 +198,12 @@ tasks.register("printMuzzleReferences") {
 val hasRelevantTask = gradle.startParameter.taskNames.any {
   // removing leading ':' if present
   val taskName = it.removePrefix(":")
-  val projectPath = project.path.substring(1)
+  val projectPath = project.path.removePrefix(":")
+  val muzzleTaskName = if (projectPath.isEmpty()) "muzzle" else "$projectPath:muzzle"
   // Either the specific muzzle task in this project or a top level muzzle task.
-  taskName == "${projectPath}:muzzle" || taskName.startsWith("instrumentation:muzzle") ||
+  taskName == muzzleTaskName ||
+    taskName.startsWith("instrumentation:muzzle") ||
+    taskName.startsWith("muzzle-Assert") ||
     taskName.contains(":muzzle-Assert")
 }
 

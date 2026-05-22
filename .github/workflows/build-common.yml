@@ -537,6 +537,10 @@ jobs:
         run: ./gradlew assemble ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
         working-directory: benchmark-overhead
 
+      - name: Run muzzle check against distro
+        run: ./gradlew :instrumentation:servlet-3:muzzle --init-script ../../.github/scripts/local.init.gradle.kts
+        working-directory: examples/distro
+
       - name: Run muzzle check against extension
         run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
         working-directory: examples/extension
