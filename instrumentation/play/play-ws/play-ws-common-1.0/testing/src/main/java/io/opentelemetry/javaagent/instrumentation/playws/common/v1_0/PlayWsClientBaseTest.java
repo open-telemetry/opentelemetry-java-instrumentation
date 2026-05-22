@@ -44,9 +44,9 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static ActorSystem system;
-  protected static AsyncHttpClient asyncHttpClient;
-  protected static AsyncHttpClient asyncHttpClientWithReadTimeout;
-  protected static ActorMaterializer materializer;
+  static AsyncHttpClient asyncHttpClient;
+  static AsyncHttpClient asyncHttpClientWithReadTimeout;
+  static ActorMaterializer materializer;
 
   @BeforeAll
   static void setupHttpClient() {

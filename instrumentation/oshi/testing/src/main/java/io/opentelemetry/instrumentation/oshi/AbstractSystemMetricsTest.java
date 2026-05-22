@@ -6,11 +6,15 @@
 package io.opentelemetry.instrumentation.oshi;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractSystemMetricsTest {
+
+  private static final AttributeKey<String> STATE = AttributeKey.stringKey("state");
 
   protected abstract void registerMetrics();
 
@@ -31,12 +35,19 @@ public abstract class AbstractSystemMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("By")
-                            // TODO: Provide fuzzy value matching
                             .hasLongSumSatisfying(
                                 sum ->
-                                    assertThat(metric.getLongSumData().getPoints())
-                                        .anySatisfy(
-                                            point -> assertThat(point.getValue()).isPositive()))));
+                                    sum.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(STATE, "used"))
+                                                .hasValueSatisfying(v -> v.isNotNegative()),
+                                        point ->
+                                            point
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(STATE, "free"))
+                                                .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",
@@ -46,12 +57,19 @@ public abstract class AbstractSystemMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("1")
-                            // TODO: Provide fuzzy value matching
                             .hasDoubleGaugeSatisfying(
                                 gauge ->
-                                    assertThat(metric.getDoubleGaugeData().getPoints())
-                                        .anySatisfy(
-                                            point -> assertThat(point.getValue()).isPositive()))));
+                                    gauge.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(STATE, "used"))
+                                                .hasValueSatisfying(v -> v.isNotNegative()),
+                                        point ->
+                                            point
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(STATE, "free"))
+                                                .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.oshi",

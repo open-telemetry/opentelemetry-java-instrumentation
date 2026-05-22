@@ -116,9 +116,10 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
+    @Nullable
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.api.trace.Span onExit(
-        @Advice.Return application.io.opentelemetry.api.trace.Span originalResult,
+        @Advice.Return @Nullable application.io.opentelemetry.api.trace.Span originalResult,
         @Advice.Enter @Nullable application.io.opentelemetry.api.trace.Span applicationSpan) {
       return applicationSpan != null ? applicationSpan : originalResult;
     }

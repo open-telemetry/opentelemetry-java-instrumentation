@@ -66,8 +66,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
       SmokeTestInstrumentationExtension.create();
 
   // Using the same fake backend pattern as smoke tests (with ARM64 support)
-  protected static GenericContainer<?> backend;
-  protected static TelemetryRetriever telemetryRetriever;
+  protected GenericContainer<?> backend;
+  protected TelemetryRetriever telemetryRetriever;
 
   protected static final String CONFLUENT_VERSION = "7.5.9";
 
@@ -86,17 +86,17 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
 
   // Other constants
   protected static final String PLUGIN_PATH_CONTAINER = "/usr/share/java";
-  protected static final ObjectMapper MAPPER =
+  protected static final ObjectMapper mapper =
       new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
   // Docker network / containers
-  protected static Network network;
-  protected static FixedHostPortGenericContainer<?> kafka;
-  protected static GenericContainer<?> zookeeper;
-  protected static GenericContainer<?> kafkaConnect;
-  protected static int kafkaExposedPort;
+  protected Network network;
+  protected FixedHostPortGenericContainer<?> kafka;
+  protected GenericContainer<?> zookeeper;
+  protected GenericContainer<?> kafkaConnect;
+  protected int kafkaExposedPort;
 
-  protected static OpenTelemetrySdk openTelemetry;
+  protected OpenTelemetrySdk openTelemetry;
 
   @TempDir static Path kafkaConnectLogsDir;
 
@@ -114,7 +114,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   protected abstract String getConnectorName();
 
   // Static methods
-  protected static String getKafkaConnectUrl() {
+  protected String getKafkaConnectUrl() {
     return format(
         Locale.ROOT,
         "http://%s:%s",
@@ -122,11 +122,11 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
         kafkaConnect.getMappedPort(CONNECT_REST_PORT_INTERNAL));
   }
 
-  protected static String getInternalKafkaBootstrapServers() {
+  protected String getInternalKafkaBootstrapServers() {
     return KAFKA_NETWORK_ALIAS + ":" + KAFKA_INTERNAL_ADVERTISED_LISTENERS_PORT;
   }
 
-  protected static String getKafkaBootstrapServers() {
+  protected String getKafkaBootstrapServers() {
     return kafka.getHost() + ":" + kafkaExposedPort;
   }
 
@@ -192,7 +192,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
         .statusCode(HttpStatus.SC_OK);
   }
 
-  private static void setupZookeeper() {
+  private void setupZookeeper() {
     zookeeper =
         new GenericContainer<>("confluentinc/cp-zookeeper:" + CONFLUENT_VERSION)
             .withNetwork(network)
@@ -203,7 +203,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withStartupTimeout(Duration.of(5, MINUTES));
   }
 
-  private static void setupKafka() {
+  private void setupKafka() {
     String zookeeperInternalUrl = ZOOKEEPER_NETWORK_ALIAS + ":" + ZOOKEEPER_INTERNAL_PORT;
 
     kafkaExposedPort = PortUtils.findOpenPort();
@@ -372,7 +372,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
     }
   }
 
-  protected static Producer<String, String> instrument(Producer<String, String> producer) {
+  protected Producer<String, String> instrument(Producer<String, String> producer) {
     return KafkaTelemetry.create(openTelemetry).wrap(producer);
   }
 }

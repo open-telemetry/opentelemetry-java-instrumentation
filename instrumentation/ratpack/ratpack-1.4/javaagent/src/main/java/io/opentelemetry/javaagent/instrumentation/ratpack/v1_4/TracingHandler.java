@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4;
 
 import static io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.RatpackSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.RatpackSingletons.updateServerSpanName;
-import static io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.RatpackSingletons.updateSpanNames;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
@@ -39,13 +37,14 @@ public class TracingHandler implements Handler {
       ctx.getResponse()
           .beforeSend(
               response -> {
-                updateSpanNames(otelContext, ctx);
+                RatpackSingletons.updateSpanNames(otelContext, ctx);
                 instrumenter().end(otelContext, INITIAL_SPAN_NAME, null, null);
               });
       callbackContext = otelContext;
     } else {
       // just update the server span name
-      ctx.getResponse().beforeSend(response -> updateServerSpanName(parentOtelContext, ctx));
+      ctx.getResponse()
+          .beforeSend(response -> RatpackSingletons.updateServerSpanName(parentOtelContext, ctx));
       callbackContext = parentOtelContext;
     }
 

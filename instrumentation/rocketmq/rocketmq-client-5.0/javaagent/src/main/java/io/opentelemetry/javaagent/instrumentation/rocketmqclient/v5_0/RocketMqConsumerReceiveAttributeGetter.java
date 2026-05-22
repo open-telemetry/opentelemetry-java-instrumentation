@@ -14,13 +14,11 @@ import org.apache.rocketmq.client.apis.message.MessageView;
 class RocketMqConsumerReceiveAttributeGetter
     implements MessagingAttributesGetter<ReceiveMessageRequest, List<MessageView>> {
 
-  @Nullable
   @Override
   public String getSystem(ReceiveMessageRequest request) {
     return "rocketmq";
   }
 
-  @Nullable
   @Override
   public String getDestination(ReceiveMessageRequest request) {
     return request.getMessageQueue().getTopic().getName();

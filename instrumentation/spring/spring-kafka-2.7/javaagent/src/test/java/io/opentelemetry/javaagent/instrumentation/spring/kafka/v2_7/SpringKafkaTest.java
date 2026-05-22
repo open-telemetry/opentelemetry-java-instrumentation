@@ -47,6 +47,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @SuppressWarnings("deprecation") // using deprecated semconv
 class SpringKafkaTest extends AbstractSpringKafkaTest {
 
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
+
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -59,9 +62,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
   protected List<Class<?>> additionalSpringConfigs() {
     return emptyList();
   }
-
-  private static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
   @Test
   void shouldCreateSpansForSingleRecordProcess() {

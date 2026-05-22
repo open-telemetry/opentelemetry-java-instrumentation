@@ -42,6 +42,7 @@ import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
+import io.opentelemetry.javaagent.tooling.ignore.IgnoreAllow;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
@@ -292,14 +293,22 @@ public class AgentInstaller {
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();
     InstrumentedTaskClasses.setIgnoredTaskClassesPredicate(ignoredTasksTrie::contains);
+    Trie<IgnoreAllow> ignoredClassLoadersTrie = builder.buildIgnoredClassLoadersTrie();
+    DefineClassHandler.setIgnoredClassLoadersPredicate(
+        classLoader -> {
+          if (classLoader == null) {
+            return false;
+          }
+          IgnoreAllow ignored = ignoredClassLoadersTrie.getOrNull(classLoader.getClass().getName());
+          return ignored == IgnoreAllow.IGNORE;
+        });
 
     return agentBuilder
-        .ignore(any(), new IgnoredClassLoadersMatcher(builder.buildIgnoredClassLoadersTrie()))
+        .ignore(any(), new IgnoredClassLoadersMatcher(ignoredClassLoadersTrie))
         .or(new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie()))
         .or(
-            (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) -> {
-              return HelperInjector.isInjectedClass(classLoader, typeDescription.getName());
-            });
+            (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
+                HelperInjector.isInjectedClass(classLoader, typeDescription.getName()));
   }
 
   private static void addHttpServerResponseCustomizers(ClassLoader extensionClassLoader) {

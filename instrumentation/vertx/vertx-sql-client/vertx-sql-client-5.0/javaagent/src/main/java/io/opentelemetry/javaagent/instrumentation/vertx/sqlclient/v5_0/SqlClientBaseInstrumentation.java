@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.attachConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.getSqlConnectOptions;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -41,7 +39,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase sqlClientBase) {
       // copy connection options from ThreadLocal to VirtualField
-      attachConnectOptions(sqlClientBase, getSqlConnectOptions());
+      VertxSqlClientSingletons.attachConnectOptions(sqlClientBase, getSqlConnectOptions());
     }
   }
 
@@ -55,7 +53,8 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
       }
 
       // set connection options to ThreadLocal, they will be read in QueryExecutor constructor
-      SqlConnectOptions sqlConnectOptions = getSqlConnectOptions(sqlClientBase);
+      SqlConnectOptions sqlConnectOptions =
+          VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
       setSqlConnectOptions(sqlConnectOptions);
       return callDepth;
     }

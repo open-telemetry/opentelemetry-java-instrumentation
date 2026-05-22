@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vaadin.v14_2;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 
-public class ClientCallableCodeAttributesGetter
+class ClientCallableCodeAttributesGetter
     implements CodeAttributesGetter<VaadinClientCallableRequest> {
 
   @Override

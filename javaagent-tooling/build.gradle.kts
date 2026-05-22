@@ -28,6 +28,10 @@ dependencies {
     // we use byte-buddy-dep
     exclude("net.bytebuddy", "byte-buddy")
   }
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config") {
+    // we use byte-buddy-dep
+    exclude("net.bytebuddy", "byte-buddy")
+  }
 
   // Exporters with dependencies
   implementation("io.opentelemetry:opentelemetry-exporter-logging")

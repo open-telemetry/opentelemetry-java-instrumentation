@@ -64,16 +64,10 @@ properties that are already modeled there, including:
 - `maxTestRetries`
 - `enableStrictContext`
 
-Examples:
+Example:
 
 ```kotlin
-if (otelProps.testLatestDeps) {
-  // ...
-}
-
-tasks.withType<Test>().configureEach {
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-}
+val springBootVersion = if (otelProps.testLatestDeps) "2.+" else "2.6.15"
 ```
 
 For module-local one-off properties that are not part of `otelProps`, using `findProperty(...)`
@@ -81,6 +75,18 @@ directly is still fine.
 
 `settings.gradle.kts` is the exception: it cannot use project extensions like `otelProps`, so
 direct `gradle.startParameter.projectProperties[...]` access is expected there.
+
+### `testLatestDeps` Test JVM Property
+
+Do not add `systemProperty("testLatestDeps", otelProps.testLatestDeps)` solely because a module
+has `latestDepTestLibrary(...)` declarations or sibling modules set the property. Add it only when
+the module's test JVM actually needs to read the flag, for example when an in-scope test source or
+shared testing source used by that module calls `TestLatestDeps.testLatestDeps()` / `testLatestDeps()`
+or checks the `testLatestDeps` system property directly.
+
+`latestDepTestLibrary(...)` already affects Gradle dependency resolution when
+`-PtestLatestDeps=true` is set; the system property is only for runtime test code that branches on
+that mode.
 
 ## `testInstrumentation` Dependencies
 
@@ -266,6 +272,9 @@ These system properties support the metadata collection pipeline. They are not r
 test correctness and are being added as a separate migration — **do not add them during
 review**. Only verify correctness when they are already present.
 
+Do not add `collectMetadata` or `metadataConfig` to `javaagent-unit-tests` projects. These are
+unit tests, and metadata collection should not run there.
+
 | Property | Type | Value |
 | --- | --- | --- |
 | `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false` |
@@ -273,13 +282,17 @@ review**. Only verify correctness when they are already present.
 
 When already present, verify:
 
+- `metadataConfig` is only used in files that also configure `collectMetadata`. A lone
+  `metadataConfig` does not enable collection and should be removed, not added as a partial
+  metadata migration.
 - `collectMetadata` is in `tasks.test` for single-test-task modules, or in
   `withType<Test>().configureEach` for modules that explicitly register additional `Test`
   tasks via `by registering(Test::class)` (`latestDepTest` does not count) — never on
   individual tasks. Do not use
   `withType<Test>().configureEach { ... }` in single-test-task modules.
-- `metadataConfig` is on each non-default task. It may also appear on the default `test`
-  task when that task itself runs with non-default `jvmArgs` (e.g., an experimental flag
-  enabled module-wide via `withType<Test>().configureEach { jvmArgs(...) }`); in that case
-  the `metadataConfig` value should describe those non-default jvmArgs.
+- `metadataConfig` is on each non-default task that participates in metadata collection. It may
+  also appear on the default `test` task when that task participates in metadata collection and
+  itself runs with non-default `jvmArgs` (e.g., an experimental flag enabled module-wide via
+  `withType<Test>().configureEach { jvmArgs(...) }`); in that case the `metadataConfig` value
+  should describe those non-default jvmArgs.
 - The `metadataConfig` value matches at least one of the jvmArgs configured in the task

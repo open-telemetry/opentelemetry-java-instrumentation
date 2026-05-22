@@ -44,8 +44,10 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -56,17 +58,18 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractCassandraTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractCassandraTest.class);
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension protected final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private static GenericContainer<?> cassandra;
+  private GenericContainer<?> cassandra;
 
-  protected static String cassandraHost;
-  protected static String cassandraIp;
-  protected static int cassandraPort;
+  protected String cassandraHost;
+  protected String cassandraIp;
+  protected int cassandraPort;
 
   protected abstract InstrumentationExtension testing();
 
@@ -77,7 +80,7 @@ public abstract class AbstractCassandraTest {
   }
 
   @BeforeAll
-  static void beforeAll() throws UnknownHostException {
+  void beforeAll() throws UnknownHostException {
     cassandra =
         new GenericContainer<>("cassandra:4.0")
             .withEnv("JVM_OPTS", "-Xmx128m -Xms128m")
@@ -324,20 +327,20 @@ public abstract class AbstractCassandraTest {
   }
 
   protected static class Parameter {
-    public final String keyspace;
+    @Nullable public final String keyspace;
     public final String queryText;
     public final String expectedQueryText;
     public final String spanName;
     public final String operation;
-    public final String table;
+    @Nullable public final String table;
 
     public Parameter(
-        String keyspace,
+        @Nullable String keyspace,
         String queryText,
         String expectedQueryText,
         String spanName,
         String operation,
-        String table) {
+        @Nullable String table) {
       this.keyspace = keyspace;
       this.queryText = queryText;
       this.expectedQueryText = expectedQueryText;
@@ -347,7 +350,7 @@ public abstract class AbstractCassandraTest {
     }
   }
 
-  protected CqlSession getSession(String keyspace) {
+  protected CqlSession getSession(@Nullable String keyspace) {
     DriverConfigLoader configLoader =
         DefaultDriverConfigLoader.builder()
             .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))

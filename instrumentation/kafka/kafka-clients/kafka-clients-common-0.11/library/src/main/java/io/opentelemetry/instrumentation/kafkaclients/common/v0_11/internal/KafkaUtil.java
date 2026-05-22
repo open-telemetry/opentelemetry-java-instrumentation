@@ -105,7 +105,7 @@ public final class KafkaUtil {
     try {
       Object metadata = GET_GROUP_METADATA.invoke(consumer);
       return (String) GET_GROUP_ID.invoke(metadata);
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return null;
     }
   }

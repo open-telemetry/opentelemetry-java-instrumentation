@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vaadin.v14_2;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 
-public class RpcCodeAttributesGetter implements CodeAttributesGetter<VaadinRpcRequest> {
+class RpcCodeAttributesGetter implements CodeAttributesGetter<VaadinRpcRequest> {
 
   @Override
   public Class<?> getCodeClass(VaadinRpcRequest request) {

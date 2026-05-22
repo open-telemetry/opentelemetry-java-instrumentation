@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcSingletons.handlerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -63,7 +64,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope enter(HttpServletRequest request, Object handler) {
+      public static AdviceScope start(HttpServletRequest request, Object handler) {
         // TODO (trask) should there be a way to customize Instrumenter.shouldStart()?
         if (IsGrailsHandler.isGrailsHandler(handler)) {
           // skip creating handler span for grails, grails instrumentation will take care of it
@@ -78,8 +79,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
         }
 
         // Name the parent span based on the matching pattern
-        HttpServerRoute.update(
-            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.serverSpanName(), request);
+        HttpServerRoute.update(parentContext, CONTROLLER, serverSpanName(), request);
 
         if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
           return null;
@@ -90,7 +90,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent());
       }
 
-      public void exit(Object handler, @Nullable Throwable throwable) {
+      public void end(Object handler, @Nullable Throwable throwable) {
         scope.close();
         handlerInstrumenter().end(context, handler, null, throwable);
       }
@@ -100,7 +100,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope nameResourceAndStartSpan(
         @Advice.Argument(0) HttpServletRequest request, @Advice.Argument(2) Object handler) {
-      return AdviceScope.enter(request, handler);
+      return AdviceScope.start(request, handler);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -109,7 +109,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(handler, throwable);
+        adviceScope.end(handler, throwable);
       }
     }
   }

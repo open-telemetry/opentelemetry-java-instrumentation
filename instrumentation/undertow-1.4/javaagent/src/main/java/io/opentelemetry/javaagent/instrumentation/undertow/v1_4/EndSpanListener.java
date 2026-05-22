@@ -11,10 +11,10 @@ import io.opentelemetry.context.Context;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpServerExchange;
 
-public class EndSpanListener implements ExchangeCompletionListener {
+class EndSpanListener implements ExchangeCompletionListener {
   private final Context context;
 
-  public EndSpanListener(Context context) {
+  EndSpanListener(Context context) {
     this.context = context;
   }
 

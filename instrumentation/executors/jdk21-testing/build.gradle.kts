@@ -32,7 +32,7 @@ tasks.withType<JavaCompile>().configureEach {
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   // needed for VirtualThreadTest
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")

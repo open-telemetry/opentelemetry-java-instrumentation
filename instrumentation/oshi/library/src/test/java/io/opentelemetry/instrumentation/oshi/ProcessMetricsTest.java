@@ -8,10 +8,10 @@ package io.opentelemetry.instrumentation.oshi;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.List;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -21,18 +21,14 @@ class ProcessMetricsTest extends AbstractProcessMetricsTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private static List<AutoCloseable> observables;
 
   @BeforeAll
   static void setUp() {
     observables = ProcessMetrics.registerObservers(GlobalOpenTelemetry.get());
-  }
-
-  @AfterAll
-  static void tearDown() throws Exception {
-    for (AutoCloseable observable : observables) {
-      observable.close();
-    }
+    observables.forEach(cleanup::deferAfterAll);
   }
 
   @Override

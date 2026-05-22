@@ -51,7 +51,7 @@ public abstract class AbstractJavalinTest {
   void setup() {
     port = PortUtils.findOpenPort();
     app = setupJavalin(port);
-    client = WebClient.of("http://localhost:" + port);
+    client = WebClient.of("h1c://localhost:" + port);
   }
 
   @AfterAll

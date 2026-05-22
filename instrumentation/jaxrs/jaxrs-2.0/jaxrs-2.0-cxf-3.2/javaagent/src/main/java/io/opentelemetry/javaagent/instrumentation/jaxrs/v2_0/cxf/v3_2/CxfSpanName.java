@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsPathUtil.normalizePath;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsPathUtil.normalizePath;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -23,6 +23,7 @@ public class CxfSpanName implements HttpServerRouteGetter<String> {
 
   public static final CxfSpanName INSTANCE = new CxfSpanName();
 
+  @Nullable
   public Context updateServerSpanName(Exchange exchange) {
     Context context = Context.current();
     String jaxrsName = calculateJaxrsName(context, exchange);

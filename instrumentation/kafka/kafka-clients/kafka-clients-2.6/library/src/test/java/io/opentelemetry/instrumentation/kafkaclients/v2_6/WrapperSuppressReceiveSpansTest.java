@@ -28,6 +28,7 @@ import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
 
   @Override
@@ -63,7 +64,6 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(0))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   static List<AttributeAssertion> sendAttributes(boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -86,7 +86,6 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   static List<AttributeAssertion> processAttributes(
       String greeting, boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =

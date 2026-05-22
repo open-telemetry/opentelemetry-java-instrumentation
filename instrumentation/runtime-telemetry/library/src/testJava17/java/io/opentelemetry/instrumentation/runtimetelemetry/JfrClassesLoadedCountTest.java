@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.UNIT_CLASSES;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import org.junit.jupiter.api.Test;
@@ -35,11 +34,7 @@ class JfrClassesLoadedCountTest {
                 .hasLongSumSatisfying(
                     sum ->
                         sum.hasPointsSatisfying(
-                            point ->
-                                point.satisfies(
-                                    pointData ->
-                                        assertThat(pointData.getValue())
-                                            .isGreaterThanOrEqualTo(0)))),
+                            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))),
         metric ->
             metric
                 .hasName("jvm.class.count")
@@ -48,11 +43,7 @@ class JfrClassesLoadedCountTest {
                 .hasLongSumSatisfying(
                     sum ->
                         sum.hasPointsSatisfying(
-                            point ->
-                                point.satisfies(
-                                    pointData ->
-                                        assertThat(pointData.getValue())
-                                            .isGreaterThanOrEqualTo(0)))),
+                            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))),
         metric ->
             metric
                 .hasName("jvm.class.unloaded")
@@ -61,10 +52,6 @@ class JfrClassesLoadedCountTest {
                 .hasLongSumSatisfying(
                     sum ->
                         sum.hasPointsSatisfying(
-                            point ->
-                                point.satisfies(
-                                    pointData ->
-                                        assertThat(pointData.getValue())
-                                            .isGreaterThanOrEqualTo(0)))));
+                            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))));
   }
 }

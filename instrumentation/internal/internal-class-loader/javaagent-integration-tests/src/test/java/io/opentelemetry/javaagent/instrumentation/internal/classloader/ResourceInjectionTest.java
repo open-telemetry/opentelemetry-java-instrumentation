@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
@@ -61,7 +62,7 @@ class ResourceInjectionTest {
     assertThat(ref.get()).isNull();
   }
 
-  private static String readLine(URL url) throws Exception {
+  private static String readLine(URL url) throws IOException {
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(url.openStream(), UTF_8))) {
       return reader.readLine().trim();

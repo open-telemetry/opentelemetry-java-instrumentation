@@ -5,6 +5,7 @@ semantic_conventions:
   - DATABASE_POOL_METRICS
 configurations:
   - name: otel.semconv-stability.opt-in
+    declarative_name: general.semconv_stability.opt_in
     description: >
       Opt-in to emit stable semantic conventions instead of the old
       experimental semantic conventions. Accepts a comma-separated list of semantic convention

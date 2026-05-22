@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.PRODUCER_PROPAGATION_ENABLED;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -79,8 +80,7 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
 
       public ProducerRecord<?, ?> propagateContext(
           ApiVersions apiVersions, ProducerRecord<?, ?> record) {
-        if (KafkaSingletons.isProducerPropagationEnabled()
-            && KafkaPropagation.shouldPropagate(apiVersions)) {
+        if (PRODUCER_PROPAGATION_ENABLED && KafkaPropagation.shouldPropagate(apiVersions)) {
           return KafkaPropagation.propagateContext(context, record);
         }
         return record;
