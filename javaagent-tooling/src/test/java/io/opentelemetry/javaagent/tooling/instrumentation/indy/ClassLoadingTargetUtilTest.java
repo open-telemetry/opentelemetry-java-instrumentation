@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ClassLoadingStrategy;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ClassLoadingTarget;
@@ -18,8 +17,8 @@ public class ClassLoadingTargetUtilTest {
 
   @Test
   void checkTarget() {
-    // isolated by default when not explicitly set
-    testStrategy(AClass.class, ClassLoadingTarget.INSTRUMENTATION_ISOLATED);
+    // not defined at class nor package level
+    testStrategy(AClass.class, null);
 
     // explicitly set at class level
     testExplicitAnnotation(BClass.class, ClassLoadingTarget.INSTRUMENTATION_ISOLATED);
@@ -31,7 +30,7 @@ public class ClassLoadingTargetUtilTest {
     assertThat(ClassLoadingTargetUtil.packageTarget(packageName, getClass().getClassLoader()))
         .isEqualTo(ClassLoadingTarget.INSTRUMENTATION_SHARED);
 
-    // package defines values inherited on class
+    // package defined values inherited on class
     assertThat(DummyInherit.class.getAnnotation(ClassLoadingStrategy.class))
         .describedAs("no annotation is present on class")
         .isNull();
@@ -45,11 +44,10 @@ public class ClassLoadingTargetUtilTest {
     testExplicitAnnotation(DummyOverride.class, ClassLoadingTarget.INSTRUMENTATION_ISOLATED);
 
     // should defend against non-existing class
-    assertThatThrownBy(
-            () ->
-                ClassLoadingTargetUtil.getClassTarget(
-                    "this.class.does.not.Exists", getClass().getClassLoader()))
-        .isInstanceOf(IllegalArgumentException.class);
+    assertThat(
+            ClassLoadingTargetUtil.getClassTarget(
+                "this.class.does.not.Exists", getClass().getClassLoader()))
+        .isNull();
   }
 
   private void testStrategy(Class<?> type, ClassLoadingTarget expected) {
