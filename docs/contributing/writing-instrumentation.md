@@ -42,6 +42,14 @@ the instrumented library and the oldest version being targeted. Ideally an old v
 library is targeted in a way that the instrumentation applies to a large range of versions, but this
 may be restricted by the interception APIs provided by the library.
 
+The version suffix should usually use the major/minor line of the oldest supported library version.
+When the oldest supported version is a patch release, include the patch number only when that patch
+is a meaningful compatibility boundary. For example, Couchbase has both `couchbase-3.1`, which
+supports `[3.1,3.1.6)`, and `couchbase-3.1.6`, which supports `[3.1.6,3.2.0)`, so the patch suffix
+distinguishes real sibling modules. When there is no split inside the minor line, omit the patch
+number: users should generally be on the latest patch for a given minor line, and patch-level
+suffixes add noisy module names unless they represent a real compatibility boundary.
+
 Within the subfolder, create three folders `library` (skip if library instrumentation is not
 possible),`javaagent`, and `testing`.
 
@@ -437,6 +445,9 @@ here, including the instrumented library - you can only use JDK and OpenTelemetr
 When creating a common module shared among different instrumentations, the naming convention should
 include a version suffix that matches the major/minor version of the instrumented library specified
 in the common module's `build.gradle.kts`.
+
+If that dependency uses a patch release as its oldest supported version, follow the same rule as
+above and include the patch number only when it represents a real compatibility boundary.
 
 For example, if the common module's Gradle file contains the following dependency:
 

@@ -1,0 +1,34 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.xxljob.v2_1;
+
+import com.xxl.job.core.biz.model.ReturnT;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9.XxlJobHelper;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9.XxlJobInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9.XxlJobProcessRequest;
+
+public class XxlJobSingletons {
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.xxl-job-2.1";
+  private static final Instrumenter<XxlJobProcessRequest, Void> instrumenter =
+      XxlJobInstrumenterFactory.create(INSTRUMENTATION_NAME);
+  private static final XxlJobHelper helper =
+      XxlJobHelper.create(
+          instrumenter,
+          object -> {
+            if (object instanceof ReturnT) {
+              ReturnT<?> result = (ReturnT<?>) object;
+              return result.getCode() == ReturnT.FAIL_CODE;
+            }
+            return false;
+          });
+
+  public static XxlJobHelper helper() {
+    return helper;
+  }
+
+  private XxlJobSingletons() {}
+}

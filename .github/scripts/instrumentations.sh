@@ -309,13 +309,13 @@ readonly INSTRUMENTATIONS=(
   "vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent:testStableSemconv"
   "vibur-dbcp-11.0:javaagent:test"
   "vibur-dbcp-11.0:javaagent:testStableSemconv"
-  "xxl-job:xxl-job-1.9.2:javaagent:test"
-  "xxl-job:xxl-job-1.9.2:javaagent:testExperimental"
-  "xxl-job:xxl-job-2.1.2:javaagent:test"
-  "xxl-job:xxl-job-2.1.2:javaagent:testExperimental"
-  "xxl-job:xxl-job-2.3.0:javaagent:test"
-  "xxl-job:xxl-job-2.3.0:javaagent:testExperimental"
-  "xxl-job:xxl-job-2.3.0:javaagent:xxlJob33Test"
+  "xxl-job:xxl-job-1.9:javaagent:test"
+  "xxl-job:xxl-job-1.9:javaagent:testExperimental"
+  "xxl-job:xxl-job-2.1:javaagent:test"
+  "xxl-job:xxl-job-2.1:javaagent:testExperimental"
+  "xxl-job:xxl-job-2.3:javaagent:test"
+  "xxl-job:xxl-job-2.3:javaagent:testExperimental"
+  "xxl-job:xxl-job-2.3:javaagent:xxlJob33Test"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64

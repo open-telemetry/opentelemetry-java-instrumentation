@@ -13977,16 +13977,16 @@ libraries:
       Enables the experimental span attribute `rxjava.canceled`.
     type: boolean
     default: false
-- name: rxjava-3.1.1
+- name: rxjava-3.1
   display_name: RxJava
   description: |
     This instrumentation enables context propagation for RxJava 3 reactive streams and adds support for @WithSpan annotations on methods that return RxJava 3 types. It does not emit any telemetry on its own.
   library_link: https://github.com/ReactiveX/RxJava/tree/3.x
   features:
   - CONTEXT_PROPAGATION
-  source_path: instrumentation/rxjava/rxjava-3.1.1
+  source_path: instrumentation/rxjava/rxjava-3.1
   scope:
-    name: io.opentelemetry.rxjava-3.1.1
+    name: io.opentelemetry.rxjava-3.1
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -16889,13 +16889,13 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.wicket:wicket:[8.0.0,]
-- name: xxl-job-1.9.2
+- name: xxl-job-1.9
   display_name: XXL-Job
   description: This instrumentation enables spans for XXL-Job task executions.
   library_link: https://github.com/xuxueli/xxl-job
-  source_path: instrumentation/xxl-job/xxl-job-1.9.2
+  source_path: instrumentation/xxl-job/xxl-job-1.9
   scope:
-    name: io.opentelemetry.xxl-job-1.9.2
+    name: io.opentelemetry.xxl-job-1.9
   has_javaagent: true
   javaagent_target_versions:
   - com.xuxueli:xxl-job-core:[1.9.2, 2.1.2)
@@ -16929,13 +16929,13 @@ libraries:
         type: STRING
       - name: scheduling.xxl-job.job.id
         type: LONG
-- name: xxl-job-2.1.2
+- name: xxl-job-2.1
   display_name: XXL-Job
   description: This instrumentation enables spans for XXL-Job task executions.
   library_link: https://github.com/xuxueli/xxl-job
-  source_path: instrumentation/xxl-job/xxl-job-2.1.2
+  source_path: instrumentation/xxl-job/xxl-job-2.1
   scope:
-    name: io.opentelemetry.xxl-job-2.1.2
+    name: io.opentelemetry.xxl-job-2.1
   has_javaagent: true
   javaagent_target_versions:
   - com.xuxueli:xxl-job-core:[2.1.2,2.3.0)
@@ -16969,13 +16969,13 @@ libraries:
         type: STRING
       - name: scheduling.xxl-job.job.id
         type: LONG
-- name: xxl-job-2.3.0
+- name: xxl-job-2.3
   display_name: XXL-Job
   description: This instrumentation enables spans for XXL-Job task executions.
   library_link: https://github.com/xuxueli/xxl-job
-  source_path: instrumentation/xxl-job/xxl-job-2.3.0
+  source_path: instrumentation/xxl-job/xxl-job-2.3
   scope:
-    name: io.opentelemetry.xxl-job-2.3.0
+    name: io.opentelemetry.xxl-job-2.3
   has_javaagent: true
   javaagent_target_versions:
   - com.xuxueli:xxl-job-core:[2.3.0,)

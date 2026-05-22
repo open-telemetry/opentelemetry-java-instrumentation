@@ -9,5 +9,5 @@ dependencies {
 
   testImplementation(project(":instrumentation:rxjava:rxjava-common-3.0:testing"))
 
-  latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0") // see rxjava-3.1.1 module
+  latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0") // see rxjava-3.1 module
 }

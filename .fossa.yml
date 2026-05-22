@@ -924,10 +924,10 @@ targets:
       target: ':instrumentation:rxjava:rxjava-3.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:rxjava:rxjava-3.1.1:javaagent'
+      target: ':instrumentation:rxjava:rxjava-3.1:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:rxjava:rxjava-3.1.1:library'
+      target: ':instrumentation:rxjava:rxjava-3.1:library'
     - type: gradle
       path: ./
       target: ':instrumentation:rxjava:rxjava-common-3.0:library'
@@ -1047,16 +1047,16 @@ targets:
       target: ':instrumentation:vertx:vertx-web-3.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:xxl-job:xxl-job-1.9.2:javaagent'
+      target: ':instrumentation:xxl-job:xxl-job-1.9:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:xxl-job:xxl-job-2.1.2:javaagent'
+      target: ':instrumentation:xxl-job:xxl-job-2.1:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:xxl-job:xxl-job-2.3.0:javaagent'
+      target: ':instrumentation:xxl-job:xxl-job-2.3:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:xxl-job:xxl-job-common-1.9.2:javaagent'
+      target: ':instrumentation:xxl-job:xxl-job-common-1.9:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:zio:zio-2.0:javaagent'
