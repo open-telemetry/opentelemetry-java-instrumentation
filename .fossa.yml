@@ -237,7 +237,7 @@ targets:
       target: ':instrumentation:oshi:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:payara:javaagent'
+      target: ':instrumentation:payara-5.2020:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:powerjob-4.0:javaagent'
