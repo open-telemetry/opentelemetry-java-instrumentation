@@ -1632,6 +1632,33 @@ class JdbcConnectionUrlParserTest {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 
+  // https://docs.aws.amazon.com/aurora-dsql/latest/userguide/SECTION_program-with-jdbc-connector.html
+  private static Stream<Arguments> amazonAuroraDsqlArguments() {
+    return args(
+        arg("jdbc:aws-dsql:postgresql://your-cluster.dsql.us-east-1.on.aws/postgres")
+            .setShortUrl("postgresql://your-cluster.dsql.us-east-1.on.aws:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("your-cluster.dsql.us-east-1.on.aws")
+            .setPort(5432)
+            .setNamespace("postgres")
+            .build(),
+        arg("jdbc:aws-dsql:postgresql://your-cluster.dsql.us-east-1.on.aws:5432/postgres?user=admin")
+            .setShortUrl("postgresql://your-cluster.dsql.us-east-1.on.aws:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("your-cluster.dsql.us-east-1.on.aws")
+            .setPort(5432)
+            .setUser("admin")
+            .setNamespace("postgres|admin")
+            .setName("postgres")
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("amazonAuroraDsqlArguments")
+  void testAmazonAuroraDsqlParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {
     DbInfo info = parse(argument.url, argument.properties);
     DbInfo expected = argument.dbInfo;

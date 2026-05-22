@@ -152,6 +152,8 @@ public final class JdbcConnectionUrlParser {
     if (connectionUrl.startsWith("jdbc:tracing:")) {
       // see https://github.com/opentracing-contrib/java-jdbc
       return connectionUrl.substring("jdbc:tracing:".length());
+    } else if (connectionUrl.startsWith("jdbc:aws-dsql:")) {
+      return connectionUrl.substring("jdbc:aws-dsql:".length());
     } else if (connectionUrl.startsWith("jdbc:")) {
       return connectionUrl.substring("jdbc:".length());
     } else if (connectionUrl.startsWith("jdbc-secretsmanager:tracing:")) {
