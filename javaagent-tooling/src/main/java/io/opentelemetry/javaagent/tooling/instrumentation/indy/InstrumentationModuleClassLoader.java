@@ -168,10 +168,10 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     Map<String, BytecodeWithUrl> commonClassesToInject = new HashMap<>();
     Map<String, BytecodeWithUrl> classesToInject = new HashMap<>();
 
+
     getClassesToInject(module)
         .forEach(
             name -> {
-
               // TODO: this makes reading bytecode twice, we should find ways to optimize this, for
               // example by
               // making BytecodeWithUrl trigger the target detection
@@ -186,7 +186,10 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
             });
 
     installInjectedClasses(classesToInject);
-    if (!commonClassesToInject.isEmpty()) {
+    if (commonCl != null) {
+      commonCl.installInjectedClasses(commonClassesToInject);
+    } else {
+      // when there is no common CL, default to load everything in module CL
       installInjectedClasses(commonClassesToInject);
     }
 
@@ -212,9 +215,9 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     }
   }
 
-  //              "io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3",
   //              "io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0",
   //              "io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal",
+
   //              "io.opentelemetry.instrumentation.netty.common.internal",
   //              "io.opentelemetry.javaagent.instrumentation.netty.common.v4_0",
   //              "io.opentelemetry.instrumentation.netty.common.v4_0.internal",
