@@ -5,15 +5,14 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-import static java.util.stream.Collectors.toMap;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ClassLoadingTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.BytecodeWithUrl;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
@@ -88,8 +87,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
    */
   private final ElementMatcher<String> agentClassNamesMatcher;
 
-  private final ElementMatcher<String> agentCommonClassNamesMatcher;
-
   /**
    * Mutable set of packages from the agent classloader to hide. So even if a class matches {@link
    * #agentClassNamesMatcher}, it will not be attempted to be loaded from the agent classloader if
@@ -126,7 +123,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     this.agentClassNamesMatcher = classesToLoadFromAgentOrExtensionCl;
     this.hiddenAgentPackages = Collections.newSetFromMap(new ConcurrentHashMap<>());
     this.commonCl = commonCl;
-    this.agentCommonClassNamesMatcher = classesToLoadFromCommonCl;
   }
 
   /**
@@ -168,14 +164,31 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     if (!installedModules.add(module)) {
       return;
     }
-    Map<String, BytecodeWithUrl> classesToInject =
-        getClassesToInject(module).stream()
-            .collect(
-                toMap(
-                    className -> className,
-                    className -> BytecodeWithUrl.create(className, agentOrExtensionCl)));
+
+    Map<String, BytecodeWithUrl> commonClassesToInject = new HashMap<>();
+    Map<String, BytecodeWithUrl> classesToInject = new HashMap<>();
+
+    getClassesToInject(module)
+        .forEach(
+            name -> {
+
+              // TODO: this makes reading bytecode twice, we should find ways to optimize this, for
+              // example by
+              // making BytecodeWithUrl trigger the target detection
+              ClassLoadingTarget target =
+                  ClassLoadingTargetUtil.getClassTarget(name, agentOrExtensionCl);
+              BytecodeWithUrl bytecodeWithUrl = BytecodeWithUrl.create(name, agentOrExtensionCl);
+              if (target == ClassLoadingTarget.INSTRUMENTATION_SHARED) {
+                commonClassesToInject.put(name, bytecodeWithUrl);
+              } else {
+                classesToInject.put(name, bytecodeWithUrl);
+              }
+            });
 
     installInjectedClasses(classesToInject);
+    if (!commonClassesToInject.isEmpty()) {
+      installInjectedClasses(commonClassesToInject);
+    }
 
     if (module instanceof ExperimentalInstrumentationModule) {
       ExperimentalInstrumentationModule experimentalModule =
@@ -199,67 +212,29 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     }
   }
 
-  /**
-   * Determines if injected class should be loaded in a shared class loader or not.
-   *
-   * @param className class name
-   * @return true if class should be loaded in shared class loader, false otherwise (default)
-   */
-  boolean useCommonClassLoader(String className) {
-    if (agentCommonClassNamesMatcher.matches(className)) {
-      return true;
-    }
-    // TODO: we can replace this name-based heuristic with proper annotation
-    // or we can also make the instrumentation modules provide a dedicated API to provide a
-    // list/pattern
-    for (String part : commonPackageHeuristic) {
-      // instrumentation, not shaded
-      String normalized = normalize(part, "io.opentelemetry.javaagent.instrumentation.");
-      // library, not shaded
-      normalized = normalize(normalized, "io.opentelemetry.instrumentation.");
-      if (className.contains(normalized + ".")) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private static String normalize(String value, String prefix) {
-    if (value.startsWith(prefix)) {
-      return value.substring(prefix.length());
-    }
-    return value;
-  }
-
-  // TODO temporary heuristic to validate the idea that a single shared CL is valid
-  // if this approach is valid, then we should probably find a better way, for example by using an
-  // annotation in the packages themselves to indicate they should be shared.
-  private static final Set<String> commonPackageHeuristic =
-      new HashSet<>(
-          asList(
-              "io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3",
-              "io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0",
-              "io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal",
-              "io.opentelemetry.instrumentation.netty.common.internal",
-              "io.opentelemetry.javaagent.instrumentation.netty.common.v4_0",
-              "io.opentelemetry.instrumentation.netty.common.v4_0.internal",
-              "io.opentelemetry.instrumentation.netty.v4_1.internal",
-              "io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0",
-              // for pekko, we should refactor to help simplify this
-              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0",
-              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.route",
-              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server",
-              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.tapir",
-              // for akka, we should refactor to help simplify this
-              "io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0",
-              "io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server",
-              "io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.route",
-              // aws sdk 1.x library
-              "io.opentelemetry.instrumentation.awssdk.v1_11",
-              // aws sdk 2.x library internals: refactor needed to avoid relying on internals
-              "io.opentelemetry.instrumentation.awssdk.v2_2.internal",
-              // aws sdk 2.x instrumentation
-              "io.opentelemetry.javaagent.instrumentation.awssdk.v2_2"));
+  //              "io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3",
+  //              "io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0",
+  //              "io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal",
+  //              "io.opentelemetry.instrumentation.netty.common.internal",
+  //              "io.opentelemetry.javaagent.instrumentation.netty.common.v4_0",
+  //              "io.opentelemetry.instrumentation.netty.common.v4_0.internal",
+  //              "io.opentelemetry.instrumentation.netty.v4_1.internal",
+  //              "io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0",
+  //              // for pekko, we should refactor to help simplify this
+  //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0",
+  //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.route",
+  //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server",
+  //              "io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.tapir",
+  //              // for akka, we should refactor to help simplify this
+  //              "io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0",
+  //              "io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server",
+  //              "io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.route",
+  //              // aws sdk 1.x library
+  //              "io.opentelemetry.instrumentation.awssdk.v1_11",
+  //              // aws sdk 2.x library internals: refactor needed to avoid relying on internals
+  //              "io.opentelemetry.instrumentation.awssdk.v2_2.internal",
+  //              // aws sdk 2.x instrumentation
+  //              "io.opentelemetry.javaagent.instrumentation.awssdk.v2_2"
 
   public synchronized boolean hasModuleInstalled(InstrumentationModule module) {
     return installedModules.contains(module);
@@ -273,22 +248,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
    */
   // Visible for testing
   synchronized void installInjectedClasses(Map<String, BytecodeWithUrl> classesToInject) {
-    if (commonCl == null) {
-      classesToInject.forEach(additionalInjectedClasses::putIfAbsent);
-    } else {
-      Map<String, BytecodeWithUrl> common = new HashMap<>();
-      Map<String, BytecodeWithUrl> injected = new HashMap<>();
-      classesToInject.forEach(
-          (className, bytecode) -> {
-            if (useCommonClassLoader(className)) {
-              common.putIfAbsent(className, bytecode);
-            } else {
-              injected.putIfAbsent(className, bytecode);
-            }
-          });
-      commonCl.installInjectedClasses(common);
-      injected.forEach(additionalInjectedClasses::putIfAbsent);
-    }
+    classesToInject.forEach(additionalInjectedClasses::putIfAbsent);
   }
 
   private static Set<String> getClassesToInject(InstrumentationModule module) {
@@ -339,8 +299,12 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       Class<?> result = findLoadedClass(name);
 
       // Common classes delegation is first to ensure they are only loaded in the common CL
-      if (result == null && commonCl != null && useCommonClassLoader(name)) {
-        result = tryLoad(commonCl, name);
+      if (result == null && commonCl != null) {
+        ClassLoadingTarget classTarget =
+            ClassLoadingTargetUtil.getClassTarget(name, agentOrExtensionCl);
+        if (classTarget == ClassLoadingTarget.INSTRUMENTATION_SHARED) {
+          result = tryLoad(commonCl, name);
+        }
       }
 
       // Injected class are loaded BEFORE a parent lookup
