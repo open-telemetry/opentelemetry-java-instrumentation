@@ -42,6 +42,6 @@ public class KafkaMetricsInstrumentationModule extends InstrumentationModule
 
   @Override
   public boolean defaultEnabled() {
-    return !AgentCommonConfig.get().isV3Preview();
+    return super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview();
   }
 }
