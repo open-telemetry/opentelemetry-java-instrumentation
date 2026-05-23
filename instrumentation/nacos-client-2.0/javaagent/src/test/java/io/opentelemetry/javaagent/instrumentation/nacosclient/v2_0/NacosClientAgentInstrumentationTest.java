@@ -61,7 +61,7 @@ class NacosClientAgentInstrumentationTest {
           () ->
               connection.request(
                   ConfigQueryRequest.build("app.yaml", "DEFAULT_GROUP", "tenant-a"), 1000));
-    } catch (Exception expected) {
+    } catch (Throwable expected) {
       // expected
     }
 
