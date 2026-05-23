@@ -163,6 +163,7 @@ public class TestServlet3 {
                         // otherwise there is a chance that tomcat resets the connection before the
                         // response is sent
                         writer.close();
+                        resp.flushBuffer();
                       }
                       throw new IllegalStateException(endpoint.getBody());
                     } else if (HTML_PRINT_WRITER.equals(endpoint)) {

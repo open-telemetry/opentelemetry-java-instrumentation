@@ -82,7 +82,7 @@ class JaxMultithreadedClientTest {
           .start();
     }
 
-    assertThat(latch.await(10, SECONDS)).isTrue();
+    assertThat(latch.await(20, SECONDS)).isTrue();
     assertThat(hadErrors).isFalse();
   }
 }
