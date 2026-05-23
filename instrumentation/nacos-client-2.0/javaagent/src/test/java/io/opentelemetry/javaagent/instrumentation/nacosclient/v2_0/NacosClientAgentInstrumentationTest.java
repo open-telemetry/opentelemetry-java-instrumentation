@@ -40,8 +40,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -90,7 +88,6 @@ class NacosClientAgentInstrumentationTest {
   void instrumentsRpcClientHandleServerRequestAdvice() throws Exception {
     RpcClient rpcClient = mock(RpcClient.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
     setField(rpcClient, "serverRequestHandlers", new ArrayList<ServerRequestHandler>());
-    initializeRpcClientConfigIfPresent(rpcClient);
     when(rpcClient.getCurrentServer()).thenReturn(new RpcClient.ServerInfo("127.0.0.1", 9848));
     rpcClient.registerServerRequestHandler(serverRequestHandler());
 
@@ -167,62 +164,6 @@ class NacosClientAgentInstrumentationTest {
     Field field = RpcClient.class.getDeclaredField(fieldName);
     field.setAccessible(true);
     field.set(target, value);
-  }
-
-  private static void initializeRpcClientConfigIfPresent(RpcClient rpcClient) throws Exception {
-    try {
-      Field field = RpcClient.class.getDeclaredField("rpcClientConfig");
-      field.setAccessible(true);
-      if (field.get(rpcClient) != null) {
-        return;
-      }
-      Class<?> configType = field.getType();
-      Object config =
-          mock(
-              configType,
-              invocation -> {
-                Method method = invocation.getMethod();
-                String methodName = method.getName();
-                if ("name".equals(methodName)) {
-                  return "test-rpc-client";
-                }
-                Class<?> returnType = method.getReturnType();
-                if (returnType == boolean.class) {
-                  return false;
-                }
-                if (returnType == int.class) {
-                  return 0;
-                }
-                if (returnType == long.class) {
-                  return 0L;
-                }
-                if (returnType == double.class) {
-                  return 0d;
-                }
-                if (returnType == float.class) {
-                  return 0f;
-                }
-                if (returnType == short.class) {
-                  return (short) 0;
-                }
-                if (returnType == byte.class) {
-                  return (byte) 0;
-                }
-                if (returnType == char.class) {
-                  return (char) 0;
-                }
-                if (returnType == String.class) {
-                  return "";
-                }
-                if (returnType == Map.class) {
-                  return Collections.emptyMap();
-                }
-                return null;
-              });
-      field.set(rpcClient, config);
-    } catch (NoSuchFieldException ignored) {
-      // nacos-client 2.0.0 does not expose rpcClientConfig on RpcClient
-    }
   }
 
   private static final class TestManagedChannel extends ManagedChannel {
