@@ -240,7 +240,7 @@ targets:
       target: ':instrumentation:oshi:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:payara:javaagent'
+      target: ':instrumentation:payara-5.2020:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:powerjob-4.0:javaagent'
@@ -1188,7 +1188,7 @@ targets:
       target: ':instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent'
+      target: ':instrumentation:spring:spring-webmvc:spring-webmvc-common-3.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent'

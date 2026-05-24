@@ -11560,14 +11560,14 @@ libraries:
         type: STRING
       - name: direction
         type: STRING
-- name: payara
+- name: payara-5.2020
   display_name: Payara
   description: |
     This instrumentation prevents Payara's built-in OpenTracing integration from interfering with OpenTelemetry server spans, it does not emit any telemetry on its own.
   library_link: https://www.payara.fish/
-  source_path: instrumentation/payara
+  source_path: instrumentation/payara-5.2020
   scope:
-    name: io.opentelemetry.payara
+    name: io.opentelemetry.payara-5.2020
   has_javaagent: true
 - name: pekko-actor-1.0
   display_name: Pekko Actors

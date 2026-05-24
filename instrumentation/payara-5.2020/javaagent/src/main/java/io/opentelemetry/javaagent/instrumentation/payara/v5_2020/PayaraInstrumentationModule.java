@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.payara;
+package io.opentelemetry.javaagent.instrumentation.payara.v5_2020;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class PayaraInstrumentationModule extends InstrumentationModule {
 
   public PayaraInstrumentationModule() {
-    super("payara");
+    super("payara", "payara-5.2020");
   }
 
   @Override
