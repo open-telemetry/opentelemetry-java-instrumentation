@@ -40,6 +40,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -87,9 +88,11 @@ class NacosClientAgentInstrumentationTest {
   @Test
   void instrumentsRpcClientHandleServerRequestAdvice() throws Exception {
     RpcClient rpcClient = mock(RpcClient.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
-    setField(rpcClient, "serverRequestHandlers", new ArrayList<ServerRequestHandler>());
+    ArrayList<ServerRequestHandler> serverRequestHandlers = new ArrayList<>();
+    serverRequestHandlers.add(serverRequestHandler());
+    setField(rpcClient, "serverRequestHandlers", serverRequestHandlers);
+    setRpcClientConfigIfPresent(rpcClient);
     when(rpcClient.getCurrentServer()).thenReturn(new RpcClient.ServerInfo("127.0.0.1", 9848));
-    rpcClient.registerServerRequestHandler(serverRequestHandler());
 
     ServiceInfo serviceInfo = new ServiceInfo();
     serviceInfo.setName("com.example.Service");
@@ -164,6 +167,40 @@ class NacosClientAgentInstrumentationTest {
     Field field = RpcClient.class.getDeclaredField(fieldName);
     field.setAccessible(true);
     field.set(target, value);
+  }
+
+  private static void setRpcClientConfigIfPresent(RpcClient rpcClient) throws Exception {
+    Class<?> rpcClientConfigClass;
+    try {
+      rpcClientConfigClass =
+          Class.forName(
+              "com.alibaba.nacos.common.remote.client.RpcClientConfig",
+              false,
+              RpcClient.class.getClassLoader());
+    } catch (ClassNotFoundException exception) {
+      return;
+    }
+
+    Object config =
+        Proxy.newProxyInstance(
+            rpcClientConfigClass.getClassLoader(),
+            new Class<?>[] {rpcClientConfigClass},
+            (proxy, method, args) -> {
+              if ("name".equals(method.getName())) {
+                return "test";
+              }
+              if ("labels".equals(method.getName())) {
+                return Collections.emptyMap();
+              }
+              if (method.getReturnType() == int.class) {
+                return 0;
+              }
+              if (method.getReturnType() == long.class) {
+                return 0L;
+              }
+              throw new UnsupportedOperationException(method.getName());
+            });
+    setField(rpcClient, "rpcClientConfig", config);
   }
 
   private static final class TestManagedChannel extends ManagedChannel {
