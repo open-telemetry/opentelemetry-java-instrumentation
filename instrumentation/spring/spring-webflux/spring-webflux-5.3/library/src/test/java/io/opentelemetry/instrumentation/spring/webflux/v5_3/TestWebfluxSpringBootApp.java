@@ -57,7 +57,7 @@ class TestWebfluxSpringBootApp {
         .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
         .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
         .build()
-        .createWebFilterAndRegisterReactorHook();
+        .createWebFilter();
   }
 
   @Controller
