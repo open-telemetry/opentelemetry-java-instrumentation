@@ -43,11 +43,11 @@ class JarDetails {
               collectingAndThen(
                   toMap(ext -> ('.' + ext + "!/"), identity()),
                   Collections::<String, String>unmodifiableMap));
-  private static final ThreadLocal<MessageDigest> sha1 =
+  private static final ThreadLocal<MessageDigest> sha256 =
       ThreadLocal.withInitial(
           () -> {
             try {
-              return MessageDigest.getInstance("SHA1");
+              return MessageDigest.getInstance("SHA-256");
             } catch (NoSuchAlgorithmException e) {
               throw new IllegalStateException(e);
             }
@@ -56,14 +56,14 @@ class JarDetails {
   private final URL url;
   @Nullable private final Properties pom;
   @Nullable private final Manifest manifest;
-  private final String sha1Checksum;
+  private final String sha256Checksum;
 
   private JarDetails(
-      URL url, @Nullable Properties pom, @Nullable Manifest manifest, String sha1Checksum) {
+      URL url, @Nullable Properties pom, @Nullable Manifest manifest, String sha256Checksum) {
     this.url = url;
     this.pom = pom;
     this.manifest = manifest;
-    this.sha1Checksum = sha1Checksum;
+    this.sha256Checksum = sha256Checksum;
   }
 
   static JarDetails forUrl(URL url) throws IOException {
@@ -88,14 +88,14 @@ class JarDetails {
                 url,
                 getPom(jarFile, jarEntry),
                 getManifest(jarFile, jarEntry),
-                computeDigest(jarFile, jarEntry, sha1.get()));
+                computeDigest(jarFile, jarEntry, sha256.get()));
           }
         }
       }
     }
     try (JarFile jarFile = new JarFile(UrlPaths.toFile(url))) {
       return new JarDetails(
-          url, getPom(jarFile), getManifest(jarFile), computeDigest(url, sha1.get()));
+          url, getPom(jarFile), getManifest(jarFile), computeDigest(url, sha256.get()));
     }
   }
 
@@ -185,9 +185,9 @@ class JarDetails {
     return name + " by " + vendor;
   }
 
-  /** Returns the SHA1 hash of this file, e.g. {@code 30d16ec2aef6d8094c5e2dce1d95034ca8b6cb42}. */
-  String computeSha1() {
-    return sha1Checksum;
+  /** Returns the SHA-256 hash of this file. */
+  String computeSha256() {
+    return sha256Checksum;
   }
 
   private static String computeDigest(URL url, MessageDigest md) throws IOException {
@@ -210,7 +210,7 @@ class JarDetails {
     byte[] buffer = new byte[8192];
     while (dis.read(buffer) != -1) {}
     byte[] digest = md.digest();
-    return String.format(Locale.ROOT, "%040x", new BigInteger(1, digest));
+    return String.format(Locale.ROOT, "%064x", new BigInteger(1, digest));
   }
 
   @Nullable

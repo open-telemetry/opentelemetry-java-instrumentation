@@ -33,7 +33,7 @@ class JarDetailsTest {
     JarDetails details = JarDetails.forUrl(url);
 
     assertThat(details.packageDescription()).isEqualTo("Test Title by Test Vendor");
-    assertThat(details.computeSha1()).isNotEmpty();
+    assertThat(details.computeSha256()).matches("[0-9a-f]{64}");
   }
 
   @Test
@@ -59,7 +59,7 @@ class JarDetailsTest {
     JarDetails details = JarDetails.forUrl(url);
 
     assertThat(details.packageDescription()).isEqualTo("Inner Title by Inner Vendor");
-    assertThat(details.computeSha1()).isNotEmpty();
+    assertThat(details.computeSha256()).matches("[0-9a-f]{64}");
   }
 
   @Test
@@ -86,7 +86,7 @@ class JarDetailsTest {
     JarDetails details = JarDetails.forUrl(url);
 
     assertThat(details.packageDescription()).isEqualTo("Inner Title by Inner Vendor");
-    assertThat(details.computeSha1()).isNotEmpty();
+    assertThat(details.computeSha256()).matches("[0-9a-f]{64}");
   }
 
   private static Manifest manifest(String title, String vendor) {
