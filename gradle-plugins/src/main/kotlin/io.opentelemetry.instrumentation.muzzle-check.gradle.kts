@@ -39,11 +39,17 @@ val RANGE_COUNT_LIMIT = Integer.getInteger("otel.javaagent.muzzle.versions.limit
 // Read pinned latest-dep versions to cap muzzle's open-ended version ranges,
 // preventing failures when new library versions are released to Maven Central.
 //
-// External users of the muzzle plugin may not have this repo-specific file. In that case,
-// fall back to the old behavior and resolve versions directly from configured repositories.
+// External users of the muzzle plugin may not have this pinned versions file in their project
+// layout. In that case, fall back to the old behavior and resolve versions directly from
+// configured repositories.
 val muzzlePinnedVersions: Map<String, String>? by lazy {
   val file = generateSequence(rootProject.projectDir) { it.parentFile }
-    .map { File(it, ".github/config/latest-dep-versions.json") }
+    .flatMap {
+      sequenceOf(
+        File(it, ".github/config/latest-dep-versions.json"),
+        File(it, "config/latest-dep-versions.json")
+      )
+    }
     .firstOrNull { it.exists() }
   if (file == null) {
     logger.info(
