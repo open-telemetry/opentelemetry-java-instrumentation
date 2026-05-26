@@ -9,7 +9,7 @@ import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.common.ComponentLoader;
-import io.opentelemetry.instrumentation.jmx.JmxMetricHandler;
+import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,8 +83,9 @@ public class JmxMetricInsight {
               + INSTRUMENTATION_SCOPE);
       return () -> {};
     } else {
-      Map<String, JmxMetricHandler> handlers = new HashMap<>();
-      for (JmxMetricHandler handler : componentLoader.load(JmxMetricHandler.class)) {
+      Map<String, ExperimentalJmxMetricHandler> handlers = new HashMap<>();
+      for (ExperimentalJmxMetricHandler handler :
+          componentLoader.load(ExperimentalJmxMetricHandler.class)) {
         String name = handler.getName();
         if (handlers.putIfAbsent(name, handler) != null) {
           logger.warning(

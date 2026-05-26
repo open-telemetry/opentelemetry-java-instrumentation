@@ -14,9 +14,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.github.netmikey.logunit.api.LogCapturer;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.instrumentation.jmx.JmxMetricHandler;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
+import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -63,7 +63,7 @@ class HandlerTest {
 
   @Test
   void singleHandler(@TempDir Path tempDir) throws IOException {
-    Path spiFile = tempDir.resolve(JmxMetricHandler.class.getName());
+    Path spiFile = tempDir.resolve(ExperimentalJmxMetricHandler.class.getName());
     Files.write(spiFile, ThreadHandler.class.getName().getBytes(UTF_8));
 
     JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
@@ -72,7 +72,8 @@ class HandlerTest {
         new ClassLoader(this.getClass().getClassLoader()) {
           @Override
           public Enumeration<URL> getResources(String name) throws IOException {
-            if (("META-INF/services/" + JmxMetricHandler.class.getName()).equals(name)) {
+            if (("META-INF/services/" + ExperimentalJmxMetricHandler.class.getName())
+                .equals(name)) {
               return enumeration(singletonList(spiFile.toUri().toURL()));
             }
             return super.getResources(name);
@@ -97,7 +98,7 @@ class HandlerTest {
 
   @Test
   void handlerList(@TempDir Path tempDir) throws IOException {
-    Path spiFile = tempDir.resolve(JmxMetricHandler.class.getName());
+    Path spiFile = tempDir.resolve(ExperimentalJmxMetricHandler.class.getName());
     Files.write(
         spiFile,
         String.join("\n", asList(ThreadHandler.class.getName(), ThreadHandler2.class.getName()))
@@ -109,7 +110,8 @@ class HandlerTest {
         new ClassLoader(this.getClass().getClassLoader()) {
           @Override
           public Enumeration<URL> getResources(String name) throws IOException {
-            if (("META-INF/services/" + JmxMetricHandler.class.getName()).equals(name)) {
+            if (("META-INF/services/" + ExperimentalJmxMetricHandler.class.getName())
+                .equals(name)) {
               return enumeration(singletonList(spiFile.toUri().toURL()));
             }
             return super.getResources(name);
@@ -143,7 +145,7 @@ class HandlerTest {
 
   @Test
   void handlerMixed(@TempDir Path tempDir) throws IOException {
-    Path spiFile = tempDir.resolve(JmxMetricHandler.class.getName());
+    Path spiFile = tempDir.resolve(ExperimentalJmxMetricHandler.class.getName());
     Files.write(spiFile, ThreadHandler.class.getName().getBytes(UTF_8));
 
     JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
@@ -152,7 +154,8 @@ class HandlerTest {
         new ClassLoader(this.getClass().getClassLoader()) {
           @Override
           public Enumeration<URL> getResources(String name) throws IOException {
-            if (("META-INF/services/" + JmxMetricHandler.class.getName()).equals(name)) {
+            if (("META-INF/services/" + ExperimentalJmxMetricHandler.class.getName())
+                .equals(name)) {
               return enumeration(singletonList(spiFile.toUri().toURL()));
             }
             return super.getResources(name);
@@ -196,7 +199,7 @@ class HandlerTest {
     }
   }
 
-  public abstract static class BaseThreadHandler implements JmxMetricHandler {
+  public abstract static class BaseThreadHandler implements ExperimentalJmxMetricHandler {
     static final AtomicInteger createCount = new AtomicInteger();
 
     private final String name;

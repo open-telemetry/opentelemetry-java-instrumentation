@@ -18,7 +18,7 @@ import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
-import io.opentelemetry.instrumentation.jmx.JmxMetricHandler;
+import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -212,7 +212,7 @@ class MetricRegistrar implements AutoCloseable {
       MBeanServerConnection connection,
       Collection<ObjectName> objectNames,
       MetricHandlerHolder holder) {
-    JmxMetricHandler handler = holder.getHandler();
+    ExperimentalJmxMetricHandler handler = holder.getHandler();
     // we print a warning for missing handlers in the constructor of BeanFinder
     if (handler == null) {
       return;
@@ -230,7 +230,7 @@ class MetricRegistrar implements AutoCloseable {
             meter,
             () -> {
               DetectionStatus detectionStatus = holder.getStatus();
-              return new JmxMetricHandler.Detector() {
+              return new ExperimentalJmxMetricHandler.Detector() {
                 @Override
                 public MBeanServerConnection getConnection() {
                   return detectionStatus.getConnection();

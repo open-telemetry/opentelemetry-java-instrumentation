@@ -9,7 +9,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.WARNING;
 
-import io.opentelemetry.instrumentation.jmx.JmxMetricHandler;
+import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ class BeanFinder {
   BeanFinder(
       MetricConfiguration conf,
       MetricRegistrar registrar,
-      Map<String, JmxMetricHandler> handlers,
+      Map<String, ExperimentalJmxMetricHandler> handlers,
       long discoveryDelay) {
     this.conf = conf;
     this.registrar = registrar;
@@ -59,7 +59,7 @@ class BeanFinder {
     for (MetricDef metricDef : conf.getMetricDefs()) {
       for (MetricHandlerHolder holder : metricDef.getHandlers()) {
         String handlerName = holder.getHandlerName();
-        JmxMetricHandler handler = handlers.get(handlerName);
+        ExperimentalJmxMetricHandler handler = handlers.get(handlerName);
         if (handler != null) {
           holder.setHandler(handler);
         } else {

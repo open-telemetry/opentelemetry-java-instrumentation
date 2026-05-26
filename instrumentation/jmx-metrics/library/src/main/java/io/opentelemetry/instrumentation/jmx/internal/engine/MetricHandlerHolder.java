@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
-import io.opentelemetry.instrumentation.jmx.JmxMetricHandler;
+import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import javax.annotation.Nullable;
 
 /**
@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 public class MetricHandlerHolder {
 
   private final String handlerName;
-  @Nullable private JmxMetricHandler handler;
+  @Nullable private ExperimentalJmxMetricHandler handler;
   @Nullable private volatile DetectionStatus status;
 
   public MetricHandlerHolder(String handlerName) {
@@ -27,11 +27,11 @@ public class MetricHandlerHolder {
   }
 
   @Nullable
-  JmxMetricHandler getHandler() {
+  ExperimentalJmxMetricHandler getHandler() {
     return handler;
   }
 
-  void setHandler(JmxMetricHandler handler) {
+  void setHandler(ExperimentalJmxMetricHandler handler) {
     if (this.handler != null) {
       throw new IllegalStateException("Handler is already set");
     }

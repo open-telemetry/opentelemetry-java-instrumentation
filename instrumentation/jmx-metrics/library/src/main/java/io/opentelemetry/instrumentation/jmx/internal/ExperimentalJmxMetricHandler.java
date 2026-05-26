@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx;
+package io.opentelemetry.instrumentation.jmx.internal;
 
 import io.opentelemetry.api.metrics.Meter;
 import java.util.Collection;
@@ -11,8 +11,13 @@ import java.util.function.Supplier;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
-/** A service provider interface (SPI) for producing custom JMX based metrics. */
-public interface JmxMetricHandler {
+/**
+ * A service provider interface (SPI) for producing custom JMX based metrics.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
+public interface ExperimentalJmxMetricHandler {
 
   /**
    * Create instruments for produced metrics.
@@ -32,6 +37,9 @@ public interface JmxMetricHandler {
   /**
    * A helper class that provides access to MBeanServerConnection and ObjectName for the MBeans of
    * interest.
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
    */
   interface Detector {
     /** Get the MBeanServerConnection to query MBeans. */
