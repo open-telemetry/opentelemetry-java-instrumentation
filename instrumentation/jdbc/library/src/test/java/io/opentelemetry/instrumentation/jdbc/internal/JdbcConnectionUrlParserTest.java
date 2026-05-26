@@ -1632,6 +1632,55 @@ class JdbcConnectionUrlParserTest {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 
+  private static Stream<Arguments> amazonAuroraArguments() {
+    return args(
+        // https://docs.aws.amazon.com/aurora-dsql/latest/userguide/SECTION_program-with-jdbc-connector.html
+        arg("jdbc:aws-dsql:postgresql://your-cluster.dsql.us-east-1.on.aws/postgres")
+            .setShortUrl("postgresql://your-cluster.dsql.us-east-1.on.aws:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("your-cluster.dsql.us-east-1.on.aws")
+            .setPort(5432)
+            .setName("postgres")
+            .build(),
+        arg("jdbc:aws-dsql:postgresql://your-cluster.dsql.us-east-1.on.aws:5432/postgres?user=admin")
+            .setShortUrl("postgresql://your-cluster.dsql.us-east-1.on.aws:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("your-cluster.dsql.us-east-1.on.aws")
+            .setPort(5432)
+            .setUser("admin")
+            .setNamespace("postgres|admin")
+            .setName("postgres")
+            .build(),
+        // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Connecting.html#Aurora.Connecting.JDBCDriverMySQL
+        arg("jdbc:aws-wrapper:mysql://")
+            .setShortUrl("mysql://localhost:3306")
+            .setSystem(MYSQL)
+            .setHost("localhost")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:aws-wrapper:mariadb://mdb.host:33/mdbdb?user=mdbuser&password=PW")
+            .setShortUrl("mariadb://mdb.host:33")
+            .setSystem(MARIADB)
+            .setUser("mdbuser")
+            .setHost("mdb.host")
+            .setPort(33)
+            .setName("mdbdb")
+            .build(),
+        // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Connecting.html#Aurora.Connecting.JDBCDriverPostgreSQL
+        arg("jdbc:aws-wrapper:postgresql://")
+            .setShortUrl("postgresql://localhost:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("localhost")
+            .setPort(5432)
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("amazonAuroraArguments")
+  void testAmazonAuroraParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {
     DbInfo info = parse(argument.url, argument.properties);
     DbInfo expected = argument.dbInfo;
