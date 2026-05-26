@@ -32,9 +32,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageListener;
+import org.apache.pulsar.client.api.MessageRouter;
 import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
+import org.apache.pulsar.client.api.TopicMetadata;
 import org.apache.pulsar.client.api.transaction.Transaction;
 import org.apache.pulsar.common.naming.TopicName;
 import org.junit.jupiter.api.Test;
@@ -745,15 +747,33 @@ class PulsarClientTest extends AbstractPulsarClientTest {
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
             .subscribe();
 
-    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
+    producer =
+        client
+            .newProducer(Schema.STRING)
+            .topic(topic)
+            .enableBatching(false)
+            .messageRouter(
+                new MessageRouter() {
+                  @Override
+                  public int choosePartition(Message<?> message) {
+                    return Integer.parseInt(message.getKey());
+                  }
+
+                  @Override
+                  public int choosePartition(Message<?> message, TopicMetadata metadata) {
+                    return choosePartition(message);
+                  }
+                })
+            .create();
 
     String msg = "test";
-    for (int i = 0; i < 10; i++) {
-      producer.send(msg);
+    for (int i = 0; i < 4; i++) {
+      producer.newMessage().key(String.valueOf(i)).value(msg).send();
     }
 
     Messages<String> receivedMsg = consumer.batchReceive();
     consumer.acknowledge(receivedMsg);
+    assertThat(receivedMsg).hasSize(4);
 
     Map<String, Long> receivedMessagesByTopic = new HashMap<>();
     for (Message<String> message : receivedMsg) {
