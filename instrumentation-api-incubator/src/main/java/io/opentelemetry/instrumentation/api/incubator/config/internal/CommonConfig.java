@@ -13,12 +13,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class CommonConfig {
+  private static final Logger logger = Logger.getLogger(CommonConfig.class.getName());
 
   private final List<String> clientRequestHeaders;
   private final List<String> clientResponseHeaders;
@@ -88,13 +90,58 @@ public final class CommonConfig {
             .get("server")
             .getBoolean("emit_experimental_telemetry/development", false);
     enduserConfig = new EnduserConfig(commonConfig);
+    DeclarativeConfigProperties logging = commonConfig.get("logging");
     loggingTraceIdKey =
-        commonConfig.get("logging").getString("trace_id", LoggingContextConstants.TRACE_ID);
+        getConfig(
+            logging,
+            "trace_id_key",
+            "trace_id",
+            "instrumentation/development: java: common: logging: trace_id_key",
+            "instrumentation/development: java: common: logging: trace_id",
+            LoggingContextConstants.TRACE_ID);
     loggingSpanIdKey =
-        commonConfig.get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
+        getConfig(
+            logging,
+            "span_id_key",
+            "span_id",
+            "instrumentation/development: java: common: logging: span_id_key",
+            "instrumentation/development: java: common: logging: span_id",
+            LoggingContextConstants.SPAN_ID);
     loggingTraceFlagsKey =
-        commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
+        getConfig(
+            logging,
+            "trace_flags_key",
+            "trace_flags",
+            "instrumentation/development: java: common: logging: trace_flags_key",
+            "instrumentation/development: java: common: logging: trace_flags",
+            LoggingContextConstants.TRACE_FLAGS);
     v3Preview = commonConfig.getBoolean("v3_preview", false);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated config property
+  private static String getConfig(
+      DeclarativeConfigProperties config,
+      String newDeclarativeKey,
+      String oldDeclarativeKey,
+      String newDeclarativeProperty,
+      String oldDeclarativeProperty,
+      String defaultValue) {
+    String value = config.getString(newDeclarativeKey);
+    if (value != null) {
+      return value;
+    }
+    value = config.getString(oldDeclarativeKey);
+    if (value != null) {
+      logger.warning(
+          "The '"
+              + oldDeclarativeProperty
+              + "' declarative configuration is deprecated"
+              + " and will be removed in a future version. Use '"
+              + newDeclarativeProperty
+              + "' instead.");
+      return value;
+    }
+    return defaultValue;
   }
 
   public List<String> getClientRequestHeaders() {

@@ -20,6 +20,7 @@ import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEven
 import org.springframework.core.env.ConfigurableEnvironment;
 
 class LogbackAppenderInstaller {
+  private static final Logger logger = LoggerFactory.getLogger(LogbackAppenderInstaller.class);
 
   static void install(ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
     Optional<io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender>
@@ -217,28 +218,48 @@ class LogbackAppenderInstaller {
     }
 
     String traceIdKey =
-        applicationEnvironmentPreparedEvent
-            .getEnvironment()
-            .getProperty("otel.instrumentation.common.logging.trace-id", String.class);
+        getLoggingProperty(
+            applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.common.logging.trace-id-key",
+            "otel.instrumentation.common.logging.trace-id");
     if (traceIdKey != null) {
       openTelemetryAppender.setTraceIdKey(traceIdKey);
     }
 
     String spanIdKey =
-        applicationEnvironmentPreparedEvent
-            .getEnvironment()
-            .getProperty("otel.instrumentation.common.logging.span-id", String.class);
+        getLoggingProperty(
+            applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.common.logging.span-id-key",
+            "otel.instrumentation.common.logging.span-id");
     if (spanIdKey != null) {
       openTelemetryAppender.setSpanIdKey(spanIdKey);
     }
 
     String traceFlagsKey =
-        applicationEnvironmentPreparedEvent
-            .getEnvironment()
-            .getProperty("otel.instrumentation.common.logging.trace-flags", String.class);
+        getLoggingProperty(
+            applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.common.logging.trace-flags-key",
+            "otel.instrumentation.common.logging.trace-flags");
     if (traceFlagsKey != null) {
       openTelemetryAppender.setTraceFlagsKey(traceFlagsKey);
     }
+  }
+
+  private static String getLoggingProperty(
+      ConfigurableEnvironment environment, String newProperty, String oldProperty) {
+    String value = environment.getProperty(newProperty, String.class);
+    if (value != null) {
+      return value;
+    }
+    value = environment.getProperty(oldProperty, String.class);
+    if (value != null) {
+      logger.warn(
+          "The '{}' property is deprecated and will be removed in 3.0. Use '{}' instead.",
+          oldProperty,
+          newProperty);
+      return value;
+    }
+    return null;
   }
 
   /** Evaluates a boolean property, taking into account whether declarative config is in use. */

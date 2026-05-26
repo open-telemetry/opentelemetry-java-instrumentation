@@ -10,12 +10,14 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import java.util.logging.Logger;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class ContextDataKeys {
+  private static final Logger logger = Logger.getLogger(ContextDataKeys.class.getName());
 
   private final String traceIdKey;
   private final String spanIdKey;
@@ -25,20 +27,79 @@ public final class ContextDataKeys {
   public static ContextDataKeys create(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties logging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("logging");
-    return new ContextDataKeys(
-        logging.getString(
+    String traceIdKey =
+        getConfig(
+            logging,
+            "trace_id_key",
             "trace_id",
-            ConfigPropertiesUtil.getString(
-                "otel.instrumentation.common.logging.trace-id", LoggingContextConstants.TRACE_ID)),
-        logging.getString(
+            "instrumentation/development: java: common: logging: trace_id_key",
+            "instrumentation/development: java: common: logging: trace_id",
+            "otel.instrumentation.common.logging.trace-id-key",
+            "otel.instrumentation.common.logging.trace-id",
+            LoggingContextConstants.TRACE_ID);
+    String spanIdKey =
+        getConfig(
+            logging,
+            "span_id_key",
             "span_id",
-            ConfigPropertiesUtil.getString(
-                "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID)),
-        logging.getString(
+            "instrumentation/development: java: common: logging: span_id_key",
+            "instrumentation/development: java: common: logging: span_id",
+            "otel.instrumentation.common.logging.span-id-key",
+            "otel.instrumentation.common.logging.span-id",
+            LoggingContextConstants.SPAN_ID);
+    String traceFlagsKey =
+        getConfig(
+            logging,
+            "trace_flags_key",
             "trace_flags",
-            ConfigPropertiesUtil.getString(
-                "otel.instrumentation.common.logging.trace-flags",
-                LoggingContextConstants.TRACE_FLAGS)));
+            "instrumentation/development: java: common: logging: trace_flags_key",
+            "instrumentation/development: java: common: logging: trace_flags",
+            "otel.instrumentation.common.logging.trace-flags-key",
+            "otel.instrumentation.common.logging.trace-flags",
+            LoggingContextConstants.TRACE_FLAGS);
+    return new ContextDataKeys(traceIdKey, spanIdKey, traceFlagsKey);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated config property
+  private static String getConfig(
+      DeclarativeConfigProperties config,
+      String newDeclarativeKey,
+      String oldDeclarativeKey,
+      String newDeclarativeProperty,
+      String oldDeclarativeProperty,
+      String newProperty,
+      String oldProperty,
+      String defaultValue) {
+    String value = config.getString(newDeclarativeKey);
+    if (value != null) {
+      return value;
+    }
+    value = config.getString(oldDeclarativeKey);
+    if (value != null) {
+      logger.warning(
+          "The '"
+              + oldDeclarativeProperty
+              + "' declarative configuration is deprecated"
+              + " and will be removed in a future version. Use '"
+              + newDeclarativeProperty
+              + "' instead.");
+      return value;
+    }
+    value = ConfigPropertiesUtil.getString(newProperty);
+    if (value != null) {
+      return value;
+    }
+    value = ConfigPropertiesUtil.getString(oldProperty);
+    if (value != null) {
+      logger.warning(
+          "The '"
+              + oldProperty
+              + "' system property is deprecated and will be removed in 3.0. Use '"
+              + newProperty
+              + "' instead.");
+      return value;
+    }
+    return defaultValue;
   }
 
   private ContextDataKeys(String traceIdKey, String spanIdKey, String traceFlags) {
