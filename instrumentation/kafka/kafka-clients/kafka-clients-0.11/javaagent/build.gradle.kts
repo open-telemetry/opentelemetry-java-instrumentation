@@ -77,6 +77,8 @@ tasks {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    // kafka metrics are disabled by default with v3-preview enabled
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
   }
 
