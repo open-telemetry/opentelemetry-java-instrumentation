@@ -30,8 +30,10 @@ public final class HbaseInstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
+            // added in 2.0.0
             "org.apache.hadoop.hbase.ipc.RpcConnection",
             "org.apache.hadoop.hbase.client.AsyncAdmin")
+        // added in 2.5.0 (native OTel support)
         .and(not(hasClassesNamed("org.apache.hadoop.hbase.client.trace.IpcClientSpanBuilder")));
   }
 
