@@ -46,6 +46,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
@@ -76,6 +77,7 @@ public abstract class AbstractRedissonClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  private static final String TEST_RECONNECT = "testReconnect";
   private static final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
@@ -116,7 +118,7 @@ public abstract class AbstractRedissonClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
-    if (testInfo.getTestMethod().get().getName().equals("stringCommandLazyConnection")) {
+    if (testInfo.getTags().contains(TEST_RECONNECT)) {
       // When verifying the stringCommandLazyConnection test case, simulate reconnection during
       // Redis
       // command execution.
@@ -143,6 +145,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
+  @Tag(TEST_RECONNECT)
   void stringCommandLazyConnection() {
     testing.runWithSpan(
         "parent",
@@ -169,6 +172,7 @@ public abstract class AbstractRedissonClientTest {
                 span ->
                     span.hasName("GET")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),

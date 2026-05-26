@@ -24,8 +24,7 @@ class RedisExecutorConnectionFutureInstrumentation implements TypeInstrumentatio
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.redisson.command.RedisExecutor")
-        .or(extendsClass(named("org.redisson.command.RedisExecutor")));
+    return extendsClass(named("org.redisson.command.RedisExecutor"));
   }
 
   @Override

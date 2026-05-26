@@ -42,6 +42,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
@@ -66,8 +67,8 @@ public abstract class AbstractRedissonAsyncClientTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  private static final String TEST_RECONNECT = "testReconnect";
   private static final Duration TIMEOUT = Duration.ofSeconds(30);
-
   private static final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
@@ -102,8 +103,8 @@ public abstract class AbstractRedissonAsyncClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
-    if (testInfo.getTestMethod().get().getName().equals("futureContinuation")) {
-      // When verifying the futureContinuation test case, simulate reconnection during Redis command
+    if (testInfo.getTags().contains(TEST_RECONNECT)) {
+      // When verifying the futureCallback test case, simulate reconnection during Redis command
       // execution.
       singleServerConfig.setConnectionMinimumIdleSize(0);
     }
@@ -150,7 +151,8 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @Test
-  void futureContinuation() {
+  @Tag(TEST_RECONNECT)
+  void futureCallback() {
     RSet<String> set = redisson.getSet("set1");
     CompletionStage<Boolean> result =
         testing.runWithSpan(

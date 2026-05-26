@@ -17,11 +17,11 @@ public class ContextPropagatingRFuture<T> extends RedissonPromise<T> {
         (result, error) -> {
           try (Scope ignored = context.makeCurrent()) {
             if (delegate.isCancelled()) {
-              super.cancel(false);
+              cancel(false);
             } else if (error != null) {
-              super.tryFailure(error);
+              tryFailure(error);
             } else {
-              super.trySuccess(result);
+              trySuccess(result);
             }
           }
         });
