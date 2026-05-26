@@ -555,3 +555,4 @@ spring-webmvc-common-3.1:javaagent
 spring-webmvc-common-3.1:testing
 payara-5.2020:javaagent
 quarkus-resteasy-reactive-1.11:javaagent
+quarkus-resteasy-reactive-1.11:quarkus-2.0-testing
