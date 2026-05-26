@@ -14,6 +14,7 @@ Updated on 2026-05-19 after PRs 23-24 merged and their unversioned common-module
 Updated again on 2026-05-19 after deciding app-server/framework module names for Payara, Quarkus RESTEasy Reactive, and Tomcat JDBC.
 Updated on 2026-05-22 after documenting how patch-level base versions map to module names.
 Updated again on 2026-05-22 after PR 25 merged, Java util logging PR 22 was closed, and app-server/framework PR 27 was split into Payara and Quarkus/Tomcat PRs.
+Updated on 2026-05-26 after PRs 27a, 27b, and the Spring testing-package alignment cleanup merged.
 
 ## Goal
 
@@ -130,7 +131,7 @@ For common-module package moves, search for downstream versioned modules importi
 
 ## Open Cleanup PRs
 
-PR 14 is open as #18747, PR 17 is open as #18772, Payara is open as #18835, and Quarkus/Tomcat JDBC is open as #18838. PR 22 (#18784) was closed without merging. Keep `.github/scripts/check-package-names.sh` and checker exception removals on `next` until cleanup PRs merge.
+PR 14 is open as #18747 and PR 17 is open as #18772. PR 22 (#18784) was closed without merging. Keep `.github/scripts/check-package-names.sh` and checker exception removals on `next` until cleanup PRs merge.
 
 For JDK instrumentation modules, keep the leading `java` token in package paths. For example,
 `java-util-logging` maps to `io.opentelemetry.javaagent.instrumentation.java.util.logging`, while
@@ -268,7 +269,7 @@ Suggested verification:
 ./gradlew :instrumentation:spring:spring-webmvc:spring-webmvc-common-3.1:javaagent:test :instrumentation:spring:spring-webmvc:spring-webmvc-3.1:javaagent:test :instrumentation:spring:spring-webmvc:spring-webmvc-6.0:javaagent:test
 ```
 
-### PR 28: Spring WebMVC testing package alignment
+### PR 28: Spring WebMVC testing package alignment (merged in #18839)
 
 Modules:
 
@@ -283,7 +284,7 @@ Notes:
 
 - This is a follow-up to #18788's review comment asking whether the testing module should add the `v3_1` directory too.
 - Audit testing helpers currently under `io.opentelemetry.instrumentation.spring.webmvc.boot` and `io.opentelemetry.instrumentation.spring.webmvc.filter`; decide the exact target packages from their module-local usage before moving files.
-- Keep this separate from the already-merged javaagent module rename so the public/private testing API decision is reviewable on its own.
+- This landed together with PR 26 as the combined Spring testing package cleanup in #18839.
 
 Suggested verification:
 
@@ -292,7 +293,7 @@ Suggested verification:
 ./gradlew :instrumentation:spring:spring-webmvc:spring-webmvc-common-3.1:javaagent:test :instrumentation:spring:spring-webmvc:spring-webmvc-3.1:javaagent:compileTestJava :instrumentation:spring:spring-webmvc:spring-webmvc-6.0:javaagent:compileTestJava
 ```
 
-### PR 26: Spring Cloud Gateway common testing package decision
+### PR 26: Spring Cloud Gateway common testing package decision (merged in #18839)
 
 Module:
 
@@ -307,7 +308,8 @@ Notes:
 
 - The javaagent helper has no direct Spring Cloud Gateway compile dependency and is shared by WebFlux/WebMVC instrumentations, so #16090 does not obviously require a versioned module name.
 - Estimated changed files: about 7 if this is only the testing package rename; more if the audit expands scope beyond testing packages.
-- The likely cleanup is only the testing package name, and this may be public testing API. Keep it separate from the module-name PRs above.
+- The likely cleanup is only the testing package name, and this may be public testing API.
+- This landed together with PR 28 as the combined Spring testing package cleanup in #18839.
 
 Suggested verification:
 
@@ -316,7 +318,7 @@ Suggested verification:
 ./gradlew :instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:javaagent:test :instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent:test :instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webmvc-4.3:javaagent:test
 ```
 
-### PR 27a: Payara module name (open #18835)
+### PR 27a: Payara module name (merged #18835)
 
 Modules:
 
@@ -328,7 +330,7 @@ Expected package change:
 
 Notes:
 
-- This module-name cleanup is open as #18835.
+- This module-name cleanup merged as #18835.
 - Use `payara-5.2020` because `5.2020.2` is the earliest `5.2020.x` release, the javaagent builds against it, and it contains both `fish.payara.opentracing.OpenTracingService` and `org.apache.catalina.core.StandardWrapper`. Per the patch-floor rule above, use the minor line in the module/package name instead of `payara-5.2020.2`.
 - Keep `payara` as the main instrumentation name and add `payara-5.2020` as the versioned alias.
 
@@ -339,7 +341,7 @@ Suggested verification:
 ./gradlew generateFossaConfiguration :instrumentation:payara-5.2020:javaagent:test
 ```
 
-### PR 27b: Quarkus RESTEasy Reactive and Tomcat JDBC module names (open #18838)
+### PR 27b: Quarkus RESTEasy Reactive and Tomcat JDBC module names (merged #18838)
 
 Modules:
 
@@ -353,7 +355,7 @@ Expected package changes:
 
 Notes:
 
-- This module-name cleanup is open as #18838.
+- This module-name cleanup merged as #18838.
 - Keep existing instrumentation names as compatibility aliases. For Quarkus RESTEasy Reactive, deprecate the old `quarkus-resteasy-reactive-3.0` suppression key using the repo's `expandDeprecatedNames(...)` convention, and keep the muzzle split across `io.quarkus:quarkus-resteasy-reactive:(,3.9.0)` and `io.quarkus:quarkus-rest:[3.9.0,)`; `3.9` is the artifact rename boundary, not the module's minimum supported version.
 - Use `quarkus-resteasy-reactive-1.11` because the artifact starts at `1.11.0` prereleases, the first final is `1.11.0.Final`, the javaagent compiles against `1.11.0.Final`, and the original muzzle range covered all versions of the old artifact.
 - Use `tomcat-jdbc-8.5` because the javaagent compiles/tests against `org.apache.tomcat:tomcat-jdbc:8.5.0` and docs list support from `[8.5.0,)`.
@@ -382,7 +384,7 @@ These are probably not the next easiest wins:
     - `spring-webmvc-common` was completed in PR 25, its testing package follow-up is planned above as PR 28, and the `spring-cloud-gateway-common` testing package decision is planned above as PR 26. `jetty-common`, `tomcat-common`, and `opensearch-rest-common` were completed in PRs 23-24.
     - `jaxrs-common`: keep unversioned. The javaagent module has no direct JAX-RS API dependency and acts as cross-generation helper/bootstrap code used by JAX-RS 1.0, 2.0, 3.0, and Quarkus RESTEasy Reactive. Keep it separate from the already version-scoped `jaxrs-2.0-common`, `jaxrs-3.0-common`, `jaxrs-common-2.0`, and `jaxrs-common-3.0` modules.
     - `servlet-common`: keep unversioned. This matches #16090's pure abstraction/variant shape: shared code for both `javax.servlet` and `jakarta.servlet`, with `servlet-common-javax` as the variant-specific module. Because it includes published `library` packages, treat any future package changes as public API policy, not package-only cleanup.
-  - App-server/framework module-name cleanups for `payara`, `quarkus-resteasy-reactive`, and `tomcat-jdbc` are open above as PRs 27a-27b.
+  - App-server/framework module-name cleanups for `payara`, `quarkus-resteasy-reactive`, and `tomcat-jdbc` were completed in PRs 27a-27b.
   - Treat this as a checker-policy cleanup first: document legitimate unversioned javaagent module shapes, then only rename leftovers that are true module-name debt.
 
 ## Re-Audit Command
