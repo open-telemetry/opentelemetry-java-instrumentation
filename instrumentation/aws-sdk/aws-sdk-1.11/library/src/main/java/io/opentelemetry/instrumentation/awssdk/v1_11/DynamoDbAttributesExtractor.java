@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static java.util.Collections.singletonList;
@@ -54,6 +55,9 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     String tableName = RequestAccess.getTableName(request.getOriginalRequest());
     if (tableName != null) {
       attributes.put(AWS_DYNAMODB_TABLE_NAMES, singletonList(tableName));
+    }
+    if (emitStableDatabaseSemconv() && tableName != null) {
+      attributes.put(DB_COLLECTION_NAME, tableName);
     }
   }
 

@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -42,6 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -296,6 +298,9 @@ public abstract class AbstractAws2ClientCoreTest {
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
                 equalTo(maybeStable(DB_OPERATION), operation)));
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(DB_COLLECTION_NAME, "sometable"));
+    }
     assertions.addAll(extraAttributes);
     span.hasName("DynamoDb." + operation)
         .hasKind(SpanKind.CLIENT)
