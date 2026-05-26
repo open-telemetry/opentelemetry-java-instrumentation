@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.scala.fork.join.v2_8
+package io.opentelemetry.javaagent.instrumentation.scala.forkjoin.v2_8
 
 import java.util.concurrent._
 import scala.concurrent.forkjoin.{ForkJoinPool, ForkJoinTask}
