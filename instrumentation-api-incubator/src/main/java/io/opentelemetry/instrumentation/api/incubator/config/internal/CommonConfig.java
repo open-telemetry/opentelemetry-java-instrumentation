@@ -118,7 +118,6 @@ public final class CommonConfig {
     v3Preview = commonConfig.getBoolean("v3_preview", false);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated config property
   private static String getConfig(
       DeclarativeConfigProperties config,
       String newDeclarativeKey,
