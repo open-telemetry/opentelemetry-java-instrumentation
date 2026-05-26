@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -60,7 +61,6 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
   }
 
   @Nullable
-  @SuppressWarnings("rawtypes")
   private static String extractTableName(ExecutionAttributes executionAttributes) {
     SdkRequest request =
         executionAttributes.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
@@ -72,15 +72,16 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
     if (tableName.isPresent() && !tableName.get().isEmpty()) {
       return tableName.get();
     }
-    // Batch operations (BatchGetItem, BatchWriteItem) use a map keyed by table names.
-    // When there is exactly one table, return it; otherwise return the sentinel for multiple tables.
-    Optional<Map> requestItems = request.getValueForField("RequestItems", Map.class);
-    if (requestItems.isPresent() && !requestItems.get().isEmpty()) {
-      Map<?, ?> items = requestItems.get();
-      if (items.size() == 1) {
-        return items.keySet().iterator().next().toString();
+    // Batch operations (BatchGetItem, BatchWriteItem) key RequestItems by table name.
+    // Emit db.collection.name only when the batch targets exactly one table; omit it otherwise,
+    // as the attribute is defined as a single collection identifier.
+    Optional<?> requestItems = request.getValueForField("RequestItems", Object.class);
+    if (requestItems.isPresent() && requestItems.get() instanceof Map) {
+      @SuppressWarnings("unchecked")
+      Set<String> tables = ((Map<String, ?>) requestItems.get()).keySet();
+      if (tables.size() == 1) {
+        return tables.iterator().next();
       }
-      return "MULTIPLE_TABLES";
     }
     return null;
   }
