@@ -1,0 +1,42 @@
+plugins {
+  id("otel.javaagent-instrumentation")
+}
+
+muzzle {
+  pass {
+    group.set("com.github.oshi")
+    module.set("oshi-core")
+    versions.set("[5.0.0,)")
+    // Could not parse POM https://repo.maven.apache.org/maven2/com/github/oshi/oshi-core/6.1.1/oshi-core-6.1.1.pom
+    skip("6.1.1")
+    assertInverse.set(true)
+  }
+}
+
+dependencies {
+  implementation(project(":instrumentation:oshi-5.0:library"))
+
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+
+  library("com.github.oshi:oshi-core:5.0.0")
+
+  testImplementation(project(":instrumentation:oshi-5.0:testing"))
+}
+
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.oshi.experimental-metrics.enabled=true")
+    systemProperty("testExperimental", "true")
+    systemProperty("metadataConfig", "otel.instrumentation.oshi.experimental-metrics.enabled=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
+}
