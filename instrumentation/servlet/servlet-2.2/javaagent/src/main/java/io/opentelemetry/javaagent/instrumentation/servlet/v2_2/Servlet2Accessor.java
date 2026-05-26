@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.servlet.common.javax.JavaxServletAccessor;
-import io.opentelemetry.instrumentation.servlet.internal.ServletAsyncListener;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletAsyncListener;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import java.util.List;
 import javax.annotation.Nullable;

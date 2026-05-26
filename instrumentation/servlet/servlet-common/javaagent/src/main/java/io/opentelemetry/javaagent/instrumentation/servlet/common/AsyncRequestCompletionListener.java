@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.servlet.internal.ServletAsyncListener;
-import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
-import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletAsyncListener;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 class AsyncRequestCompletionListener<REQUEST, RESPONSE> implements ServletAsyncListener<RESPONSE> {
