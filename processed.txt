@@ -557,3 +557,4 @@ payara-5.2020:javaagent
 quarkus-resteasy-reactive-1.11:javaagent
 quarkus-resteasy-reactive-1.11:quarkus-2.0-testing
 quarkus-resteasy-reactive-1.11:quarkus-3.0-testing
+quarkus-resteasy-reactive-1.11:quarkus-3.9-testing
