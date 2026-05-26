@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webmvc.filter;
+package io.opentelemetry.instrumentation.spring.webmvc.v3_1.filter;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
