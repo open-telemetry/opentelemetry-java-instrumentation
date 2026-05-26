@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppen
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
 import java.util.Iterator;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -245,6 +246,7 @@ class LogbackAppenderInstaller {
     }
   }
 
+  @Nullable
   private static String getLoggingProperty(
       ConfigurableEnvironment environment, String newProperty, String oldProperty) {
     String value = environment.getProperty(newProperty, String.class);
@@ -263,6 +265,7 @@ class LogbackAppenderInstaller {
   }
 
   /** Evaluates a boolean property, taking into account whether declarative config is in use. */
+  @Nullable
   private static Boolean evaluateBooleanProperty(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
     ConfigurableEnvironment environment = applicationEnvironmentPreparedEvent.getEnvironment();
