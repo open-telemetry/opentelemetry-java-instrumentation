@@ -182,7 +182,7 @@ jobs:
       - name: Install gh-aw
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh extension install github/gh-aw --pin v0.71.5
+        run: gh extension install github/gh-aw --pin v0.74.0
 
       # Always compile all gh-aw workflows. The compiler is pinned via
       # `gh extension install --pin` and `--no-check-update`, and action
@@ -423,6 +423,16 @@ jobs:
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
+
+      # sometimes on windows docker isn't running
+      # https://github.com/actions/runner-images/issues/13729
+      - name: Docker issue workaround
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          $dockerState = Get-Service -Name "docker"
+          if ($dockerState.Status -ne "Running") {
+            Start-Service -Name "docker"
+          }
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0

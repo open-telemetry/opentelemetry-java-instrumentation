@@ -78,17 +78,17 @@ public abstract class AbstractRedissonClientTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final String TEST_RECONNECT = "testReconnect";
-  private static final GenericContainer<?> redisServer =
+
+  private final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
-  private static String ip;
-
-  private static int port;
-  private static String address;
+  private String ip;
+  private int port;
+  private String address;
   private RedissonClient redisson;
 
   @BeforeAll
-  static void setupAll() throws UnknownHostException {
+  void setupAll() throws UnknownHostException {
     redisServer.start();
     ip = InetAddress.getByName(redisServer.getHost()).getHostAddress();
     port = redisServer.getMappedPort(6379);
@@ -96,7 +96,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @AfterAll
-  static void cleanupAll() {
+  void cleanupAll() {
     redisServer.stop();
   }
 
@@ -254,8 +254,7 @@ public abstract class AbstractRedissonClientTest {
     // Adapt different method signature:
     // `BatchResult<?> execute()` and `List<?> execute()`
     invokeExecute(batch);
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("SET", "GET"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -271,6 +270,38 @@ public abstract class AbstractRedissonClientTest {
 
   private static void invokeExecute(RBatch batch) throws ReflectiveOperationException {
     batch.getClass().getMethod("execute").invoke(batch);
+  }
+
+  @Test
+  void largeBatchCommand() throws ReflectiveOperationException {
+    RBatch batch = createBatch(redisson);
+    assertThat(batch).isNotNull();
+    StringBuilder bucketNameBuilder = new StringBuilder("bucket");
+    for (int i = 0; i < 20_000; i++) {
+      bucketNameBuilder.append("a");
+    }
+    String bucketName = bucketNameBuilder.toString();
+    // run 4 command but only 2 will be added to the query text because of the max length limit
+    for (int i = 0; i < 4; i++) {
+      batch.getBucket(bucketName).setAsync("v" + i);
+    }
+    // Adapt different method signature:
+    // `BatchResult<?> execute()` and `List<?> execute()`
+    invokeExecute(batch);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "SET " + bucketName + " ?;SET " + bucketName + " ?"))));
   }
 
   @Test

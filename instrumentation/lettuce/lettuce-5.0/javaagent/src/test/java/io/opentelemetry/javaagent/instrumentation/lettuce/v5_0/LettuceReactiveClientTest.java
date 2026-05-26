@@ -37,10 +37,10 @@ import reactor.core.scheduler.Schedulers;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class LettuceReactiveClientTest extends AbstractLettuceClientTest {
-  private static RedisReactiveCommands<String, String> reactiveCommands;
+  private RedisReactiveCommands<String, String> reactiveCommands;
 
   @BeforeAll
-  static void setUp() throws UnknownHostException {
+  void setUp() throws UnknownHostException {
     redisServer.start();
 
     host = redisServer.getHost();
@@ -63,7 +63,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   }
 
   @AfterAll
-  static void cleanUp() {
+  void cleanUp() {
     connection.close();
     shutdown(redisClient);
     redisServer.stop();

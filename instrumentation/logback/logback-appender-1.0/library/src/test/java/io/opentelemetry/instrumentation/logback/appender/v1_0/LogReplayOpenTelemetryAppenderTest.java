@@ -88,8 +88,8 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasResource(RESOURCE)
+                .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
                 .hasBody("log message 1")
                 .hasAttributesSatisfyingExactly(assertions));
   }

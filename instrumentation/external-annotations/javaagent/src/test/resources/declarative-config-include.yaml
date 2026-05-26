@@ -3,4 +3,4 @@ instrumentation/development:
   java:
     external_annotations:
       include:
-        - io.opentelemetry.javaagent.instrumentation.extannotations.OuterClass$InterestingMethod
+        - io.opentelemetry.javaagent.instrumentation.external.annotations.OuterClass$InterestingMethod

@@ -9,11 +9,8 @@ class ExperimentalTestHelper {
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.rxjava.experimental-span-attributes");
 
-  static Boolean experimentalCanceled(boolean value) {
-    if (EXPERIMENTAL_ATTRIBUTES) {
-      return value;
-    }
-    return null;
+  static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
   private ExperimentalTestHelper() {}

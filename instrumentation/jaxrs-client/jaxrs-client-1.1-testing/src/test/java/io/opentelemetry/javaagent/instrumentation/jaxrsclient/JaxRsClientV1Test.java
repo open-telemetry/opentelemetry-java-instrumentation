@@ -81,7 +81,7 @@ class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
   public int sendRequest(
       WebResource.Builder builder, String method, URI uri, Map<String, String> headers)
       throws Exception {
-    String body = "POST".equals(method) || "PUT".equals(method) ? "" : null;
+    String body = method.equals("POST") || method.equals("PUT") ? "" : null;
     try {
       return builder.method(method, ClientResponse.class, body).getStatus();
     } catch (ClientHandlerException e) {

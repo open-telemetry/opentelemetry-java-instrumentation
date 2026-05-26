@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings({"InterruptedExceptionSwallowed", "deprecation"}) // using deprecated semconv
 public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceClientTest {
 
-  protected static RedisReactiveCommands<String, String> reactiveCommands;
+  protected RedisReactiveCommands<String, String> reactiveCommands;
 
   @BeforeAll
   void setUp() throws UnknownHostException {

@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDes
 public class SpringJmsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-jms-2.0";
 
-  private static final boolean RECEIVE_TELEMETRY_ENABLED =
+  public static final boolean RECEIVE_TELEMETRY_ENABLED =
       ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
   private static final Instrumenter<MessageWithDestination, Void> listenerInstrumenter;
   private static final Instrumenter<MessageWithDestination, Void> receiveInstrumenter;
@@ -27,10 +27,6 @@ public class SpringJmsSingletons {
 
     listenerInstrumenter = factory.createConsumerProcessInstrumenter(true);
     receiveInstrumenter = factory.createConsumerReceiveInstrumenter();
-  }
-
-  public static boolean isReceiveTelemetryEnabled() {
-    return RECEIVE_TELEMETRY_ENABLED;
   }
 
   public static Instrumenter<MessageWithDestination, Void> listenerInstrumenter() {

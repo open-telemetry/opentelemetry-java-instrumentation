@@ -143,9 +143,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   fun knownMethods(methods: Iterable<HttpMethod>) = knownMethods(methods.map { it.value })
 
   fun knownMethods(methods: Iterable<String>) {
-    methods.toSet().apply {
-      builder.setKnownMethods(this)
-    }
+    builder.setKnownMethods(methods.toSet())
   }
 
   /** `setOpenTelemetry()` initializes `builder`. */

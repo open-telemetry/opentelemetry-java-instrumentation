@@ -44,7 +44,7 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
   private val errorAfterSendEndpoint = ServerEndpoint("errorAfterSend", "error-after-send", 200, "")
 
   abstract fun serverInstall(application: Application)
-  abstract fun instrumentationName(): String
+  abstract fun getInstrumentationName(): String
 
   @BeforeAll
   fun setupOptions() {
@@ -95,7 +95,7 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
     }
 
     testing().waitAndAssertMetrics(
-      instrumentationName(),
+      getInstrumentationName(),
       "http.server.active_requests",
     ) { metrics ->
       metrics.anySatisfy { metric ->

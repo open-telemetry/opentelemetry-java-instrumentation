@@ -5,78 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
-import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
-import static java.util.logging.Level.FINE;
-
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
-import io.opentelemetry.sdk.resources.Resource;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.logging.Logger;
 
-/**
- * Note: The spring starter already includes provider in
- * io.opentelemetry.instrumentation.spring.autoconfigure.resources.SpringResourceProvider
- */
+// In 3.0, switch the AutoService annotation to
+// io.opentelemetry.javaagent.instrumentation.spring.boot.resources.
+@Deprecated // to be removed in 3.0
 @AutoService(ResourceProvider.class)
-public class SpringBootServiceVersionDetector implements ResourceProvider {
-
-  private static final Logger logger =
-      Logger.getLogger(SpringBootServiceVersionDetector.class.getName());
-
-  private final SystemHelper system;
-
-  public SpringBootServiceVersionDetector() {
-    this.system = new SystemHelper();
-  }
-
-  // Exists for testing
-  SpringBootServiceVersionDetector(SystemHelper system) {
-    this.system = system;
-  }
-
-  @Override
-  public Resource createResource(ConfigProperties config) {
-    return create();
-  }
-
-  Resource createResource(DeclarativeConfigProperties config) {
-    return create();
-  }
-
-  private Resource create() {
-    return getServiceVersionFromBuildInfo()
-        .map(
-            version -> {
-              logger.log(FINE, "Auto-detected Spring Boot service version: {0}", version);
-              return Resource.builder().put(SERVICE_VERSION, version).build();
-            })
-        .orElseGet(Resource::empty);
-  }
-
-  private Optional<String> getServiceVersionFromBuildInfo() {
-    // build-info.properties is placed by Spring Boot's buildInfo() at the jar root under META-INF/
-    // (not under BOOT-INF/classes/), so look it up at the jar root.
-    try (InputStream in = system.openJarRootResource("META-INF/build-info.properties")) {
-      return in != null ? getServiceVersionPropertyFromStream(in) : Optional.empty();
-    } catch (IOException ignored) {
-      return Optional.empty();
-    }
-  }
-
-  private static Optional<String> getServiceVersionPropertyFromStream(InputStream in) {
-    Properties properties = new Properties();
-    try {
-      // Note: load() uses ISO 8859-1 encoding, same as spring uses by default for property files
-      properties.load(in);
-      return Optional.ofNullable(properties.getProperty("build.version"));
-    } catch (IOException ignored) {
-      return Optional.empty();
-    }
-  }
-}
+public class SpringBootServiceVersionDetector
+    extends io.opentelemetry.javaagent.instrumentation.spring.boot.resources
+        .SpringBootServiceVersionDetector {}

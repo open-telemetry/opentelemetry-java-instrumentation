@@ -7599,6 +7599,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -7729,6 +7730,7 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.peer_service_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
@@ -11558,14 +11560,14 @@ libraries:
         type: STRING
       - name: direction
         type: STRING
-- name: payara
+- name: payara-5.2020
   display_name: Payara
   description: |
     This instrumentation prevents Payara's built-in OpenTracing integration from interfering with OpenTelemetry server spans, it does not emit any telemetry on its own.
   library_link: https://www.payara.fish/
-  source_path: instrumentation/payara
+  source_path: instrumentation/payara-5.2020
   scope:
-    name: io.opentelemetry.payara
+    name: io.opentelemetry.payara-5.2020
   has_javaagent: true
 - name: pekko-actor-1.0
   display_name: Pekko Actors
@@ -15591,6 +15593,23 @@ libraries:
     spans:
     - span_kind: INTERNAL
       attributes: []
+- name: thrift-0.13
+  display_name: Apache Thrift
+  description: This instrumentation enables RPC client and RPC server spans and metrics
+    for Apache Thrift.
+  semantic_conventions:
+  - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
+  - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
+  library_link: https://thrift.apache.org
+  source_path: instrumentation/thrift-0.13
+  scope:
+    name: io.opentelemetry.thrift-0.13
+  has_standalone_library: true
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.thrift:libthrift:[0.13.0,)
 - name: tomcat-7.0
   display_name: Apache Tomcat
   description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -16463,7 +16482,7 @@ libraries:
     default: true
   - name: otel.instrumentation.kafka.experimental-span-attributes
     declarative_name: java.kafka.experimental_span_attributes/development
-    description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`
+    description: Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms`
       and `messaging.kafka.bootstrap.servers`.
     type: boolean
     default: false

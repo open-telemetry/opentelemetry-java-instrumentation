@@ -28,5 +28,5 @@ class ServerMetricsTest : AbstractKtorServerMetricsTest() {
 
   // For javaagent, HTTP server metrics are emitted by the Netty instrumentation
   // since Ktor runs on top of Netty as its HTTP engine
-  override fun instrumentationName(): String = "io.opentelemetry.netty-4.1"
+  override fun getInstrumentationName(): String = "io.opentelemetry.netty-4.1"
 }

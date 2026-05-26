@@ -37,7 +37,7 @@ class TapirHttpServerRouteTest {
   implicit val system: ActorSystem = ActorSystem("my-system")
 
   private def buildAddress(port: Int): URI = try
-    new URI("http://localhost:" + port + "/")
+    new URI("h1c://localhost:" + port + "/")
   catch {
     case exception: URISyntaxException =>
       throw new IllegalStateException(exception)
