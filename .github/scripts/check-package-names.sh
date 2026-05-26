@@ -121,15 +121,11 @@ check_source_set() {
         javaagent:methods) ;;
         javaagent:opentelemetry-instrumentation-api) ;;
         javaagent:oshi) ;;
-        javaagent:payara) ;;
-        javaagent:quarkus-resteasy-reactive) ;;
         javaagent:rmi) ;;
         javaagent:runtime-telemetry) ;;
         javaagent:servlet-common) ;;
         javaagent:spring-boot-resources) ;;
         javaagent:spring-cloud-gateway-common) ;;
-        javaagent:spring-webmvc-common) ;;
-        javaagent:tomcat-jdbc) ;;
         *)
           echo "module name doesn't have a base version: $dir"
           exit 1
