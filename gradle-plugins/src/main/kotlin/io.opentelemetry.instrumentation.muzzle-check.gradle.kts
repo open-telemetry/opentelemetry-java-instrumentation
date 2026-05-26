@@ -23,6 +23,7 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.util.version.GenericVersionScheme
 import org.eclipse.aether.version.Version
+import java.io.File
 import java.net.URL
 import java.net.URLClassLoader
 import java.util.stream.StreamSupport
@@ -41,14 +42,17 @@ val RANGE_COUNT_LIMIT = Integer.getInteger("otel.javaagent.muzzle.versions.limit
 // External users of the muzzle plugin may not have this repo-specific file. In that case,
 // fall back to the old behavior and resolve versions directly from configured repositories.
 val muzzlePinnedVersions: Map<String, String>? by lazy {
-  val file = rootProject.file(".github/config/latest-dep-versions.json")
-  if (!file.exists()) {
+  val file = generateSequence(rootProject.projectDir) { it.parentFile }
+    .map { File(it, ".github/config/latest-dep-versions.json") }
+    .firstOrNull { it.exists() }
+  if (file == null) {
     logger.info(
-      "Pinned latest-dep versions file is missing: ${file}; falling back to repository " +
+      "Pinned latest-dep versions file is missing under ${rootProject.projectDir}; falling back to repository " +
         "version resolution for muzzle checks."
     )
     null
   } else {
+    logger.info("Using pinned latest-dep versions file: ${file}")
     @Suppress("UNCHECKED_CAST")
     groovy.json.JsonSlurper().parse(file) as Map<String, String>
   }
