@@ -23,7 +23,6 @@ public final class ContextDataKeys {
   private final String spanIdKey;
   private final String traceFlags;
 
-  @SuppressWarnings("deprecation") // using deprecated config property
   public static ContextDataKeys create(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties logging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("logging");
@@ -60,7 +59,7 @@ public final class ContextDataKeys {
     return new ContextDataKeys(traceIdKey, spanIdKey, traceFlagsKey);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated config property
+  @SuppressWarnings("deprecation") // using deprecated ConfigPropertiesUtil
   private static String getConfig(
       DeclarativeConfigProperties config,
       String newDeclarativeKey,
