@@ -8,13 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.vertx.sqlclient.internal.command.CommandBase;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -49,7 +49,12 @@ class CommandSchedulerInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("schedule")
-            .and(takesArgument(0, named("io.vertx.sqlclient.internal.command.CommandBase")))
+            .and(
+                takesArgument(
+                    0,
+                    namedOneOf(
+                        "io.vertx.sqlclient.internal.command.CommandBase",
+                        "io.vertx.sqlclient.spi.protocol.CommandBase")))
             .and(takesArgument(1, named("io.vertx.core.Completable"))),
         getClass().getName() + "$ScheduleAdvice");
   }
@@ -59,7 +64,7 @@ class CommandSchedulerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static Scope onEnter(@Advice.Argument(0) CommandBase<?> command) {
+    public static Scope onEnter(@Advice.Argument(0) Object command) {
       Context stored = VertxSqlClientSingletons.getCommandContext(command);
       if (stored == null) {
         // First schedule call (query executor → pool or direct connection).
