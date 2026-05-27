@@ -563,3 +563,4 @@ tomcat-jdbc-8.5:javaagent
 elasticsearch-transport-common-5.0:javaagent
 elasticsearch-transport-common-5.0:testing
 oshi-5.0:javaagent
+oshi-5.0:library
