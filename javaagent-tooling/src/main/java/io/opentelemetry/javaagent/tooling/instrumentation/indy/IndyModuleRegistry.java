@@ -11,7 +11,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.util.ClassLoaderValue;
 import java.lang.instrument.Instrumentation;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.utility.JavaModule;
@@ -31,7 +30,7 @@ public class IndyModuleRegistry {
    * <p>The keys of the contained map are the instrumentation module group names, see {@link
    * ExperimentalInstrumentationModule#getModuleGroup()};
    */
-  private static final ClassLoaderValue<Map<String, InstrumentationModuleClassLoader>>
+  private static final ClassLoaderValue<InstrumentationModuleClassLoader>
       instrumentationClassLoaders = new ClassLoaderValue<>();
 
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
@@ -47,20 +46,9 @@ public class IndyModuleRegistry {
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
       InstrumentationModule module, ClassLoader instrumentedClassLoader) {
 
-    String groupName = "default";
-
-    Map<String, InstrumentationModuleClassLoader> loadersByGroupName =
+    InstrumentationModuleClassLoader loader =
         instrumentationClassLoaders.get(instrumentedClassLoader);
 
-    if (loadersByGroupName == null) {
-      throw new IllegalArgumentException(
-          module
-              + " has not been initialized for class loader "
-              + instrumentedClassLoader
-              + " yet");
-    }
-
-    InstrumentationModuleClassLoader loader = loadersByGroupName.get(groupName);
     if (loader == null || !loader.hasModuleInstalled(module)) {
       throw new IllegalArgumentException(
           module
@@ -92,8 +80,7 @@ public class IndyModuleRegistry {
 
   /**
    * Returns a newly created class loader containing only the provided module. Note that other
-   * modules from the same module group will
-   * not be installed in this class loader.
+   * modules from the same module group will not be installed in this class loader.
    */
   public static InstrumentationModuleClassLoader createInstrumentationClassLoaderForMuzzle(
       InstrumentationModule module, ClassLoader instrumentedClassLoader) {
@@ -124,15 +111,10 @@ public class IndyModuleRegistry {
       InstrumentationModule module, ClassLoader classLoader) {
 
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
-
-    String groupName = "default";
-
     InstrumentationModuleClassLoader moduleCl =
-        instrumentationClassLoaders
-            .computeIfAbsent(classLoader, ConcurrentHashMap::new)
-            .computeIfAbsent(
-                groupName,
-                unused -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
+        instrumentationClassLoaders.computeIfAbsent(
+            classLoader,
+            () -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
 
     moduleCl.installModule(module);
   }
