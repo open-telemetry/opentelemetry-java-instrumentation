@@ -77,6 +77,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
     // as the attribute is defined as a single collection identifier.
     Optional<?> requestItems = request.getValueForField("RequestItems", Object.class);
     if (requestItems.isPresent() && requestItems.get() instanceof Map) {
+      // The instanceof check above guarantees Map, only the generic parameters are unchecked.
       @SuppressWarnings("unchecked")
       Set<String> tables = ((Map<String, ?>) requestItems.get()).keySet();
       if (tables.size() == 1) {

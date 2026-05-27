@@ -54,10 +54,14 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
 
-    List<AttributeAssertion> additionalAttributes = new ArrayList<>(asList(
-            equalTo(maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
-            equalTo(maybeStable(DB_OPERATION), "CreateTable"),
-            equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable"))));
+    List<AttributeAssertion> additionalAttributes =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM),
+                    emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
+                equalTo(maybeStable(DB_OPERATION), "CreateTable"),
+                equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable"))));
     if (emitStableDatabaseSemconv()) {
       additionalAttributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
     }
