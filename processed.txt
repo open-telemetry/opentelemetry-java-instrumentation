@@ -560,3 +560,4 @@ quarkus-resteasy-reactive-1.11:quarkus-3.0-testing
 quarkus-resteasy-reactive-1.11:quarkus-3.9-testing
 quarkus-resteasy-reactive-1.11:quarkus-common-testing
 tomcat-jdbc-8.5:javaagent
+elasticsearch-transport-common-5.0:javaagent
