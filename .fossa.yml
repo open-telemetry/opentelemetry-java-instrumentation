@@ -243,7 +243,7 @@ targets:
       target: ':instrumentation:powerjob-4.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:quarkus-resteasy-reactive:javaagent'
+      target: ':instrumentation:quarkus-resteasy-reactive-1.11:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:quartz-2.0:javaagent'
@@ -1032,7 +1032,7 @@ targets:
       target: ':instrumentation:tomcat:tomcat-common-7.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:tomcat:tomcat-jdbc:javaagent'
+      target: ':instrumentation:tomcat:tomcat-jdbc-8.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-kafka-client-3.6:javaagent'
