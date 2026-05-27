@@ -76,8 +76,7 @@ val muzzlePinnedVersions: Map<String, String>? by lazy {
  * the agent uses shaded/in-repo classes rather than the external library). With "0.0" as the
  * upper bound, {@code filterVersions} rejects all real versions (none are <= 0.0), so no
  * muzzle tasks are created and the directive is silently skipped. To add a sentinel entry,
- * manually add {@code "group:module#+": "0.0"} to
- * {@code .github/config/latest-dep-versions.json}.
+ * manually add {@code "group:module#+": "0.0"} to the pinned latest-dep versions file.
  *
  * <p>Returns {@code null} when the pinned versions file is not present, which preserves the old
  * behavior of resolving the full version range from configured repositories.
@@ -89,7 +88,7 @@ fun resolveUpperBound(group: String, module: String): Version? {
     ?: throw GradleException(
       "Pinned version missing for muzzle artifact \"$key\". " +
         "Run ./gradlew resolveLatestDepVersions -PtestLatestDeps=true -PresolveLatestDeps=true " +
-        "to regenerate .github/config/latest-dep-versions.json"
+        "to regenerate the pinned latest-dep versions file"
     )
   return GenericVersionScheme().parseVersion(pinnedVersion)
 }
