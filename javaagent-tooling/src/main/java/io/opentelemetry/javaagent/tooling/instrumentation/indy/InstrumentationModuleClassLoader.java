@@ -148,10 +148,6 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   synchronized void installModule(InstrumentationModule module, boolean forMuzzleCheck) {
-    if (module.getClass().getClassLoader() != agentOrExtensionCl) {
-      throw new IllegalArgumentException(
-          module.getClass().getName() + " is not loaded by " + agentOrExtensionCl);
-    }
     if (!installedModules.add(module)) {
       return;
     }
