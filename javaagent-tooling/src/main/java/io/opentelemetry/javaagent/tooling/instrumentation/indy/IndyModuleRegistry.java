@@ -47,7 +47,7 @@ public class IndyModuleRegistry {
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
       InstrumentationModule module, ClassLoader instrumentedClassLoader) {
 
-    String groupName = getModuleGroup(module);
+    String groupName = "default";
 
     Map<String, InstrumentationModuleClassLoader> loadersByGroupName =
         instrumentationClassLoaders.get(instrumentedClassLoader);
@@ -92,7 +92,7 @@ public class IndyModuleRegistry {
 
   /**
    * Returns a newly created class loader containing only the provided module. Note that other
-   * modules from the same module group (see {@link #getModuleGroup(InstrumentationModule)}) will
+   * modules from the same module group will
    * not be installed in this class loader.
    */
   public static InstrumentationModuleClassLoader createInstrumentationClassLoaderForMuzzle(
@@ -125,7 +125,7 @@ public class IndyModuleRegistry {
 
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
 
-    String groupName = getModuleGroup(module);
+    String groupName = "default";
 
     InstrumentationModuleClassLoader moduleCl =
         instrumentationClassLoaders
@@ -135,12 +135,5 @@ public class IndyModuleRegistry {
                 unused -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
 
     moduleCl.installModule(module);
-  }
-
-  private static String getModuleGroup(InstrumentationModule module) {
-    if (module instanceof ExperimentalInstrumentationModule) {
-      return ((ExperimentalInstrumentationModule) module).getModuleGroup();
-    }
-    return module.getClass().getName();
   }
 }
