@@ -11393,7 +11393,7 @@ libraries:
   semantic_conventions:
   - SYSTEM_METRICS
   library_link: https://github.com/oshi/oshi/
-  source_path: instrumentation/oshi
+  source_path: instrumentation/oshi-5.0
   scope:
     name: io.opentelemetry.oshi
   has_standalone_library: true
