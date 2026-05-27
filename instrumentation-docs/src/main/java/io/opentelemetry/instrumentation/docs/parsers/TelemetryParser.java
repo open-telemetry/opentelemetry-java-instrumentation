@@ -57,7 +57,9 @@ class TelemetryParser {
             // servlet-5.0 tests use jetty-12.0 instrumentation
             entry("io.opentelemetry.servlet-5.0", singleton("io.opentelemetry.jetty-12.0")),
             // runtime-telemetry library tests use a meter named "test"
-            entry("io.opentelemetry.runtime-telemetry", singleton("test")));
+            entry("io.opentelemetry.runtime-telemetry", singleton("test")),
+            // tomcat-jdbc was renamed to tomcat-jdbc-8.5 but the scope name was not changed
+            entry("io.opentelemetry.tomcat-jdbc-8.5", singleton("io.opentelemetry.tomcat-jdbc")));
   }
 
   /**
