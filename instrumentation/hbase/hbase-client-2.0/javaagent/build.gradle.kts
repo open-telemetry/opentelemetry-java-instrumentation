@@ -18,7 +18,7 @@ muzzle {
 
 dependencies {
   library("org.apache.hbase:hbase-client:2.0.0")
-  latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // HBase 2.5+ includes native OpenTelemetry instrumentation, so latest-dep tests stay on 2.4.x.
+  latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // native on-by-default instrumentation after this version
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
   testImplementation("com.google.code.findbugs:annotations:3.0.1")
