@@ -34,7 +34,11 @@ public interface ExperimentalInstrumentationModule {
    * <p>Sometimes this is not desired, e.g. when instrumenting modular libraries such as the AWS
    * SDK. In such cases the {@link InstrumentationModule}s which want to share a classloader can
    * return the same group name from this method.
+   *
+   * @deprecated to be removed in 3.0, instrumentation modules are automatically loaded in a common
+   *     class-loader for internal instrumentation and one class-loader per extension.
    */
+  @Deprecated
   default String getModuleGroup() {
     return getClass().getName();
   }
