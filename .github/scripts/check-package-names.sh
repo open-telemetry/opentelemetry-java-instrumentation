@@ -35,11 +35,10 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   # - jdbc
   # - lettuce-common
   # - netty-common
-  # - oshi
   # - resources
   # - servlet-common
   # - servlet-common-javax
-  if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "jdbc" && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" && "$module_name" != "oshi" && "$module_name" != "resources" && "$module_name" != "servlet-common" && "$module_name" != "servlet-common-javax" ]]; then
+  if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "jdbc" && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" && "$module_name" != "resources" && "$module_name" != "servlet-common" && "$module_name" != "servlet-common-javax" ]]; then
     echo "module name doesn't have a base version: $dir"
     exit 1
   fi

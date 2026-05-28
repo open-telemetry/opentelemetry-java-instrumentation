@@ -24,7 +24,7 @@ muzzle {
 dependencies {
   library("org.elasticsearch.client:transport:6.0.0")
 
-  implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent"))
+  implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent"))
 
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent"))
@@ -34,7 +34,7 @@ dependencies {
   testLibrary("org.elasticsearch.plugin:transport-netty4-client:6.0.0")
 
   testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-  testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+  testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
@@ -47,7 +47,7 @@ testing {
         implementation("org.elasticsearch.client:transport:$version")
         implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
       }
     }
 
@@ -57,7 +57,7 @@ testing {
         implementation("org.elasticsearch.client:transport:$version")
         implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
       }
     }
 
@@ -67,7 +67,7 @@ testing {
         implementation("org.elasticsearch.client:transport:$version")
         implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
         implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
       }
     }
   }
