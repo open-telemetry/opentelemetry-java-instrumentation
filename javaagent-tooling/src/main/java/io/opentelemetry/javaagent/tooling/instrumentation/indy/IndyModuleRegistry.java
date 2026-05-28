@@ -15,6 +15,7 @@ import java.lang.instrument.Instrumentation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.utility.JavaModule;
 
@@ -57,16 +58,8 @@ public class IndyModuleRegistry {
       InstrumentationModule module, ClassLoader instrumentedClassLoader) {
 
     ClassLoader moduleCl = module.getClass().getClassLoader();
-    InstrumentationModuleClassLoader loader = null;
-    if (!(moduleCl instanceof ExtensionClassLoader)) {
-      loader = instrumentationClassLoaders.get(instrumentedClassLoader);
-    } else {
-      Map<ClassLoader, InstrumentationModuleClassLoader> map =
-          extensionsInstrumentationClassLoaders.get(moduleCl);
-      if (map != null) {
-        loader = map.get(instrumentedClassLoader);
-      }
-    }
+    InstrumentationModuleClassLoader loader =
+        lookupInstrumentationClassLoader(instrumentedClassLoader, moduleCl);
 
     if (loader == null || !loader.hasModuleInstalled(module)) {
       throw new IllegalArgumentException(
@@ -95,6 +88,22 @@ public class IndyModuleRegistry {
       }
     }
     return loader;
+  }
+
+  @Nullable
+  private static InstrumentationModuleClassLoader lookupInstrumentationClassLoader(
+      ClassLoader instrumentedClassLoader, ClassLoader moduleCl) {
+    if (!(moduleCl instanceof ExtensionClassLoader)) {
+      // internal instrumentation is using one CL per instrumented CL.
+      return instrumentationClassLoaders.get(instrumentedClassLoader);
+    }
+    // extension module needs to use a common CL per extension and instrumented CL.
+    Map<ClassLoader, InstrumentationModuleClassLoader> map =
+        extensionsInstrumentationClassLoaders.get(moduleCl);
+    if (map != null) {
+      return map.get(instrumentedClassLoader);
+    }
+    return null;
   }
 
   /**
