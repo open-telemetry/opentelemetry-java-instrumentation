@@ -99,13 +99,11 @@ check_source_set() {
         library:jdbc) ;;
         library:lettuce-common) ;;
         library:netty-common) ;;
-        library:oshi) ;;
         library:resources) ;;
         library:runtime-telemetry) ;;
         library:servlet-common) ;;
         library:servlet-common-javax) ;;
         # javaagent:
-        javaagent:elasticsearch-transport-common) ;;
         javaagent:executors) ;;
         javaagent:external-annotations) ;;
         javaagent:http-url-connection) ;;
@@ -120,7 +118,6 @@ check_source_set() {
         javaagent:jsf-common-javax) ;;
         javaagent:methods) ;;
         javaagent:opentelemetry-instrumentation-api) ;;
-        javaagent:oshi) ;;
         javaagent:rmi) ;;
         javaagent:runtime-telemetry) ;;
         javaagent:servlet-common) ;;
