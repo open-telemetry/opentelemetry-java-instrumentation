@@ -37,12 +37,18 @@ class CommandSchedulerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("io.vertx.sqlclient.internal.command.CommandScheduler");
+    return hasClassesNamed("io.vertx.sqlclient.internal.command.CommandScheduler")
+        .or(hasClassesNamed("io.vertx.sqlclient.spi.protocol.CommandScheduler"));
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("io.vertx.sqlclient.internal.command.CommandScheduler"));
+    return implementsInterface(
+        namedOneOf(
+            // 5.0.0
+            "io.vertx.sqlclient.internal.command.CommandScheduler",
+            // 5.1.0
+            "io.vertx.sqlclient.spi.protocol.CommandScheduler"));
   }
 
   @Override
