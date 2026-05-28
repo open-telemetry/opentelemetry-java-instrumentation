@@ -231,10 +231,10 @@ targets:
       target: ':instrumentation:oracle-ucp-11.2:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:oshi:javaagent'
+      target: ':instrumentation:oshi-5.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:oshi:library'
+      target: ':instrumentation:oshi-5.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:payara-5.2020:javaagent'
@@ -489,7 +489,7 @@ targets:
       target: ':instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:elasticsearch:elasticsearch-transport-common:javaagent'
+      target: ':instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:graphql-java:graphql-java-12.0:javaagent'
