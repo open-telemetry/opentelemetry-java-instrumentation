@@ -8,9 +8,12 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.tooling.ExtensionClassLoader;
 import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.util.ClassLoaderValue;
 import java.lang.instrument.Instrumentation;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.utility.JavaModule;
@@ -32,6 +35,9 @@ public class IndyModuleRegistry {
    */
   private static final ClassLoaderValue<InstrumentationModuleClassLoader>
       instrumentationClassLoaders = new ClassLoaderValue<>();
+
+  private static final ClassLoaderValue<Map<ClassLoader, InstrumentationModuleClassLoader>> extensionClassLoaders =
+      new ClassLoaderValue<>();
 
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
       String moduleClassName, ClassLoader instrumentedClassLoader) {
@@ -111,10 +117,18 @@ public class IndyModuleRegistry {
       InstrumentationModule module, ClassLoader classLoader) {
 
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
-    InstrumentationModuleClassLoader moduleCl =
-        instrumentationClassLoaders.computeIfAbsent(
-            classLoader,
-            () -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
+    InstrumentationModuleClassLoader moduleCl = null;
+    if(!(agentOrExtensionCl instanceof ExtensionClassLoader)){
+      // non-extension modules are loaded in a common InstrumentationModuleClassLoader per instrumented CL
+          moduleCl = instrumentationClassLoaders.computeIfAbsent(
+              classLoader,
+              () -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
+    } else {
+      // extension modules are loaded in a common InstrumentationModuleCLassLoader per extension and instrumented CL
+      moduleCl = extensionClassLoaders
+          .computeIfAbsent(agentOrExtensionCl, HashMap::new)
+          .computeIfAbsent(classLoader, k -> new  InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
+    }
 
     moduleCl.installModule(module);
   }
