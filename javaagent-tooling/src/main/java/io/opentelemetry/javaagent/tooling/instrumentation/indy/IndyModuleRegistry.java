@@ -27,17 +27,21 @@ public class IndyModuleRegistry {
 
   /**
    * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application class
-   * loader. The {@link InstrumentationModuleClassLoader} are kept alive by a strong reference from
-   * the instrumented class loader realized via {@link ClassLoaderValue}.
-   *
-   * <p>The keys of the contained map are the instrumentation module group names, see {@link
-   * ExperimentalInstrumentationModule#getModuleGroup()};
+   * loader for the internal instrumentation. The {@link InstrumentationModuleClassLoader} are kept
+   * alive by a strong reference from the instrumented class loader realized via {@link
+   * ClassLoaderValue}.
    */
   private static final ClassLoaderValue<InstrumentationModuleClassLoader>
       instrumentationClassLoaders = new ClassLoaderValue<>();
 
-  private static final ClassLoaderValue<Map<ClassLoader, InstrumentationModuleClassLoader>> extensionClassLoaders =
-      new ClassLoaderValue<>();
+  /**
+   * Weakly references the {@link InstrumentationModuleClassLoader}s for a given extension class
+   * loader with application class loader as key. The {@link InstrumentationModuleClassLoader} are
+   * kept alive by a strong reference from the instrumented class loader realized via {@link
+   * ClassLoaderValue}.
+   */
+  private static final ClassLoaderValue<Map<ClassLoader, InstrumentationModuleClassLoader>>
+      extensionsInstrumentationClassLoaders = new ClassLoaderValue<>();
 
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
       String moduleClassName, ClassLoader instrumentedClassLoader) {
@@ -117,17 +121,23 @@ public class IndyModuleRegistry {
       InstrumentationModule module, ClassLoader classLoader) {
 
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
-    InstrumentationModuleClassLoader moduleCl = null;
-    if(!(agentOrExtensionCl instanceof ExtensionClassLoader)){
-      // non-extension modules are loaded in a common InstrumentationModuleClassLoader per instrumented CL
-          moduleCl = instrumentationClassLoaders.computeIfAbsent(
+    InstrumentationModuleClassLoader moduleCl;
+    if (!(agentOrExtensionCl instanceof ExtensionClassLoader)) {
+      // non-extension modules are loaded in a common InstrumentationModuleClassLoader per
+      // instrumented CL
+      moduleCl =
+          instrumentationClassLoaders.computeIfAbsent(
               classLoader,
               () -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
     } else {
-      // extension modules are loaded in a common InstrumentationModuleCLassLoader per extension and instrumented CL
-      moduleCl = extensionClassLoaders
-          .computeIfAbsent(agentOrExtensionCl, HashMap::new)
-          .computeIfAbsent(classLoader, k -> new  InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
+      // extension modules are loaded in a common InstrumentationModuleCLassLoader per extension and
+      // instrumented CL
+      moduleCl =
+          extensionsInstrumentationClassLoaders
+              .computeIfAbsent(agentOrExtensionCl, HashMap::new)
+              .computeIfAbsent(
+                  classLoader,
+                  k -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
     }
 
     moduleCl.installModule(module);
