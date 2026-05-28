@@ -16,6 +16,7 @@ Updated on 2026-05-22 after documenting how patch-level base versions map to mod
 Updated again on 2026-05-22 after PR 25 merged, Java util logging PR 22 was closed, and app-server/framework PR 27 was split into Payara and Quarkus/Tomcat PRs.
 Updated on 2026-05-26 after PRs 27a, 27b, and the Spring testing-package alignment cleanup merged.
 Updated again on 2026-05-26 after auditing remaining unversioned-allowlist entries against the documented base-version convention and planning PRs 29-30.
+Updated on 2026-05-28 after PRs 29 and 30 merged upstream together as #18854 and their `library:oshi`, `javaagent:oshi`, and `javaagent:elasticsearch-transport-common` allowlist entries were removed from the checker.
 
 ## Goal
 
@@ -90,6 +91,10 @@ PRs 23-24 merged upstream as:
 PR 25 merged upstream as:
 
 - #18788: `spring-webmvc-common` -> `spring-webmvc-common-3.1`.
+
+PRs 29-30 merged upstream together as:
+
+- #18854: `oshi` -> `oshi-5.0` and `elasticsearch-transport-common` -> `elasticsearch-transport-common-5.0`.
 
 `external-annotations` still remains in the unversioned-module allowlist as `javaagent:external-annotations`; that is a separate module-name exception, not a historical package exception.
 `spring-boot-resources` keeps a narrow deprecated compatibility-package exception for `io.opentelemetry.instrumentation.spring.resources`; the replacement javaagent package is already present under `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`.
@@ -368,7 +373,7 @@ Suggested verification:
 ./gradlew generateFossaConfiguration :instrumentation:quarkus-resteasy-reactive-1.11:javaagent:test :instrumentation:quarkus-resteasy-reactive-1.11:quarkus-2.0-testing:compileTestJava :instrumentation:quarkus-resteasy-reactive-1.11:quarkus-3.0-testing:compileTestJava :instrumentation:quarkus-resteasy-reactive-1.11:quarkus-3.9-testing:compileTestJava :instrumentation:tomcat:tomcat-jdbc-8.5:javaagent:test :instrumentation:tomcat:tomcat-jdbc-8.5:javaagent:testStableSemconv
 ```
 
-### PR 29: OSHI module name
+### PR 29: OSHI module name (merged in #18854)
 
 Modules:
 
@@ -385,6 +390,7 @@ Notes:
 - Javaagent muzzle is `[5.0.0,)` and compiles against `com.github.oshi:oshi-core:5.0.0`; library compiles against `5.3.1` (with a `5.5.0` arm-mac test override). Use `5.0` as the module base version because the javaagent muzzle floor is `5.0.0`.
 - Keep `oshi` as the main instrumentation name and add `oshi-5.0` as the versioned alias.
 - Update `settings.gradle.kts`, `.fossa.yml`, documentation inventory, and the testing module reference.
+- Landed together with PR 30 as #18854.
 
 Suggested verification:
 
@@ -393,7 +399,7 @@ Suggested verification:
 ./gradlew generateFossaConfiguration :instrumentation:oshi-5.0:javaagent:test :instrumentation:oshi-5.0:library:test
 ```
 
-### PR 30: Elasticsearch transport common module name
+### PR 30: Elasticsearch transport common module name (merged in #18854)
 
 Modules:
 
@@ -408,6 +414,7 @@ Notes:
 - The common javaagent module has a direct `compileOnly("org.elasticsearch.client:transport:5.0.0")` dependency and is shared by `elasticsearch-transport-5.0`, `elasticsearch-transport-5.3`, and `elasticsearch-transport-6.0`; per #16090 this is the `<lib>-common-<major.minor>` shape.
 - Use `5.0` as the base version because that is the minimum supported version across the sibling modules and matches the common module's own `compileOnly` floor.
 - Update `settings.gradle.kts`, sibling module Gradle references, and the testing module path.
+- Landed together with PR 29 as #18854.
 
 Suggested verification:
 
@@ -436,9 +443,9 @@ These are probably not the next easiest wins:
     - `netty-common`: keep unversioned. No direct Netty compile dependency; explicitly listed as the canonical pure-abstraction example in `.github/agents/knowledge/module-naming.md`. Sibling `netty-common-4.0` carries the version-scoped shared code.
     - `lettuce-common`: keep unversioned. No direct Lettuce compile dependency; matches the `netty-common` pure-abstraction shape and is shared by `lettuce-5.0` and `lettuce-5.1`.
     - `spring-cloud-gateway-common`: keep unversioned. No direct Spring Cloud Gateway compile dependency; shared by `spring-cloud-gateway-2.0`, `spring-cloud-gateway-2.2`, and the gateway webflux/webmvc sibling modules.
-    - `elasticsearch-transport-common`: rename to `elasticsearch-transport-common-5.0` (planned above as PR 30). It has a direct `org.elasticsearch.client:transport:5.0.0` compile dependency, matching #16090's `<lib>-common-<major.minor>` shape.
+    - `elasticsearch-transport-common`: renamed to `elasticsearch-transport-common-5.0` in PR 30 (merged as #18854). It had a direct `org.elasticsearch.client:transport:5.0.0` compile dependency, matching #16090's `<lib>-common-<major.minor>` shape.
   - Non-common third-party library modules on the unversioned allowlist need module renames:
-    - `oshi`: rename to `oshi-5.0` (planned above as PR 29).
+    - `oshi`: renamed to `oshi-5.0` in PR 29 (merged as #18854).
     - `spring-boot-resources`: special case - not a `*-common` module and has no Spring Boot compile dependency (parses `application.yaml`/`bootstrap.yaml` by file convention via `snakeyaml-engine`). Defer until we decide whether a base version is meaningful here; if so, the natural floor is the earliest Spring Boot release whose YAML config layout we still parse.
   - App-server/framework module-name cleanups for `payara`, `quarkus-resteasy-reactive`, and `tomcat-jdbc` were completed in PRs 27a-27b.
   - Treat this as a checker-policy cleanup first: document legitimate unversioned javaagent module shapes, then only rename leftovers that are true module-name debt.
