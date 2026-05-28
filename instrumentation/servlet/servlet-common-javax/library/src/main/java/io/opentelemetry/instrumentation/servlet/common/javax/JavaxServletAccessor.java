@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.servlet.common.javax;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.Enumeration;
