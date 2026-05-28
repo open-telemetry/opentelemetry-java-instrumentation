@@ -81,10 +81,6 @@ check_source_set() {
         instrumentation/java-http-client/javaagent/*) continue ;;
         instrumentation/java-http-server/javaagent/*) continue ;;
         instrumentation/java-util-logging/javaagent/*) continue ;;
-        instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations/javaagent/*) continue ;;
-        instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-common/javaagent/*) continue ;;
-        instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations/javaagent/*) continue ;;
-        instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-common/javaagent/*) continue ;;
         instrumentation/opentelemetry-api/opentelemetry-api-1.0/javaagent/*) continue ;;
         instrumentation/opentelemetry-extension-annotations-1.0/javaagent/*) continue ;;
         instrumentation/opentelemetry-instrumentation-annotations-1.16/javaagent/*) continue ;;
@@ -92,7 +88,9 @@ check_source_set() {
       esac
     fi
 
-    # some common modules don't have any base version (might have a variant instead, ex: javax)
+    # modules whose name does not end with a version digit, either because they have no base
+    # version (e.g. jdbc, netty-common) or because the version is embedded mid-name (e.g.
+    # jaxrs-2.0-annotations); package layout is still derived from the module name below
     if [[ ! "$module_name" =~ [0-9]$ ]]; then
       case "$source_set:$module_name" in
         # library:
@@ -112,6 +110,10 @@ check_source_set() {
         javaagent:internal-lambda) ;;
         javaagent:internal-reflection) ;;
         javaagent:internal-url-class-loader) ;;
+        javaagent:jaxrs-2.0-annotations) ;;
+        javaagent:jaxrs-2.0-common) ;;
+        javaagent:jaxrs-3.0-annotations) ;;
+        javaagent:jaxrs-3.0-common) ;;
         javaagent:jaxrs-common) ;;
         javaagent:jdbc) ;;
         javaagent:jsf-common-jakarta) ;;
