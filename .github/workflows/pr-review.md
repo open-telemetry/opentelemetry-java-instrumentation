@@ -93,7 +93,7 @@ jobs:
       model_warning: ${{ steps.gate.outputs.model_warning }}
       triggered_by: ${{ steps.gate.outputs.triggered_by }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -130,20 +130,20 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
 
       - name: Download agent artifact
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: agent
           path: ./agent-artifact
         continue-on-error: true
 
       - name: Download review bundle artifact
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: review-bundle
           path: ./review-bundle
@@ -197,7 +197,7 @@ steps:
         --findings-path /tmp/gh-aw/agent/findings.json
 
   - name: Upload review bundle for finalize job
-    uses: actions/upload-artifact@v5
+    uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
     with:
       name: review-bundle
       path: /tmp/gh-aw/bundle

@@ -433,5 +433,25 @@
         'npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)',
       ],
     },
+    {
+      // GitHub Actions referenced from gh-aw workflow source files
+      // (.github/workflows/*.md). Renovate's built-in github-actions
+      // manager only scans .yml/.yaml; the SHAs Renovate rewrites in
+      // the generated *.lock.yml files get overwritten on the next
+      // `gh aw compile` run unless the source .md is updated too.
+      //
+      // The depName captures the first two path segments (owner/repo)
+      // and intentionally discards any trailing subpath
+      // (e.g. `gradle/actions/setup-gradle` -> `gradle/actions`),
+      // because the github-tags datasource takes owner/repo only.
+      customType: 'regex',
+      datasourceTemplate: 'github-tags',
+      managerFilePatterns: [
+        '.github/workflows/*.md',
+      ],
+      matchStrings: [
+        'uses:\\s+(?<depName>[\\w.-]+/[\\w.-]+)(?:/[\\w./-]+)?@(?<currentDigest>[a-f0-9]{40})\\s+#\\s+(?<currentValue>v[\\d.]+)',
+      ],
+    },
   ],
 }
