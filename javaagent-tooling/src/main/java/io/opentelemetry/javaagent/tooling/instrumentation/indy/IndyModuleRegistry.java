@@ -12,7 +12,6 @@ import io.opentelemetry.javaagent.tooling.ExtensionClassLoader;
 import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.util.ClassLoaderValue;
 import java.lang.instrument.Instrumentation;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
@@ -36,12 +35,12 @@ public class IndyModuleRegistry {
       instrumentationClassLoaders = new ClassLoaderValue<>();
 
   /**
-   * Weakly references the {@link InstrumentationModuleClassLoader}s for a given extension class
-   * loader with application class loader as key. The {@link InstrumentationModuleClassLoader} are
+   * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application class
+   * loader with extension class loader as key. The {@link InstrumentationModuleClassLoader} are
    * kept alive by a strong reference from the instrumented class loader realized via {@link
    * ClassLoaderValue}.
    */
-  private static final ClassLoaderValue<Map<ClassLoader, InstrumentationModuleClassLoader>>
+  private static final ClassLoaderValue<Map<ExtensionClassLoader, InstrumentationModuleClassLoader>>
       extensionsInstrumentationClassLoaders = new ClassLoaderValue<>();
 
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
@@ -98,10 +97,10 @@ public class IndyModuleRegistry {
       return instrumentationClassLoaders.get(instrumentedClassLoader);
     }
     // extension module needs to use a common CL per extension and instrumented CL.
-    Map<ClassLoader, InstrumentationModuleClassLoader> map =
-        extensionsInstrumentationClassLoaders.get(moduleCl);
+    Map<ExtensionClassLoader, InstrumentationModuleClassLoader> map =
+        extensionsInstrumentationClassLoaders.get(instrumentedClassLoader);
     if (map != null) {
-      return map.get(instrumentedClassLoader);
+      return map.get(moduleCl);
     }
     return null;
   }
@@ -152,9 +151,9 @@ public class IndyModuleRegistry {
       // instrumented CL
       moduleCl =
           extensionsInstrumentationClassLoaders
-              .computeIfAbsent(agentOrExtensionCl, HashMap::new)
+              .computeIfAbsent(classLoader, ConcurrentHashMap::new)
               .computeIfAbsent(
-                  classLoader,
+                  (ExtensionClassLoader) agentOrExtensionCl,
                   k -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
     }
 

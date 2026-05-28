@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.extension.instrumentation.internal;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.utility.JavaModule;
@@ -28,12 +27,8 @@ public interface ExperimentalInstrumentationModule {
   }
 
   /**
-   * By default every InstrumentationModule is loaded by an isolated classloader, even if multiple
-   * modules instrument the same application classloader.
-   *
-   * <p>Sometimes this is not desired, e.g. when instrumenting modular libraries such as the AWS
-   * SDK. In such cases the {@link InstrumentationModule}s which want to share a classloader can
-   * return the same group name from this method.
+   * Deprecated method previously used to define a common class-loader when using shared
+   * instrumentation classes across instrumentation modules.
    *
    * @deprecated to be removed in 3.0, instrumentation modules are automatically loaded in a common
    *     class-loader for internal instrumentation and one class-loader per extension.
