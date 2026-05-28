@@ -56,8 +56,17 @@ public class IndyModuleRegistry {
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
       InstrumentationModule module, ClassLoader instrumentedClassLoader) {
 
-    InstrumentationModuleClassLoader loader =
-        instrumentationClassLoaders.get(instrumentedClassLoader);
+    ClassLoader moduleCl = module.getClass().getClassLoader();
+    InstrumentationModuleClassLoader loader = null;
+    if (!(moduleCl instanceof ExtensionClassLoader)) {
+      loader = instrumentationClassLoaders.get(instrumentedClassLoader);
+    } else {
+      Map<ClassLoader, InstrumentationModuleClassLoader> map =
+          extensionsInstrumentationClassLoaders.get(moduleCl);
+      if (map != null) {
+        loader = map.get(instrumentedClassLoader);
+      }
+    }
 
     if (loader == null || !loader.hasModuleInstalled(module)) {
       throw new IllegalArgumentException(
