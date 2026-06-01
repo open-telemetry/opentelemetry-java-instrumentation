@@ -123,10 +123,25 @@ def iter_test_files(root: Path) -> list[Path]:
 def find_matching_brace(text: str, open_idx: int) -> int:
   depth = 0
   in_string: str | None = None
+  in_line_comment = False
+  in_block_comment = False
   escaping = False
   i = open_idx
   while i < len(text):
     char = text[i]
+    next_char = text[i + 1] if i + 1 < len(text) else ""
+    if in_line_comment:
+      if char == "\n":
+        in_line_comment = False
+      i += 1
+      continue
+    if in_block_comment:
+      if char == "*" and next_char == "/":
+        in_block_comment = False
+        i += 2
+      else:
+        i += 1
+      continue
     if in_string:
       if escaping:
         escaping = False
@@ -137,6 +152,14 @@ def find_matching_brace(text: str, open_idx: int) -> int:
     else:
       if char in ('"', "'"):
         in_string = char
+      elif char == "/" and next_char == "/":
+        in_line_comment = True
+        i += 2
+        continue
+      elif char == "/" and next_char == "*":
+        in_block_comment = True
+        i += 2
+        continue
       elif char == "{":
         depth += 1
       elif char == "}":

@@ -139,14 +139,22 @@ class AttributeExtractorTest {
         arguments("LongAttribute", 13L));
   }
 
+  private static Stream<String> longAttributeNames() {
+    return Stream.of("ByteAttribute", "ShortAttribute", "IntAttribute", "LongAttribute");
+  }
+
   private static Stream<Arguments> doubleAttributes() {
     // accurate representation
     return Stream.of(arguments("FloatAttribute", 14.0), arguments("DoubleAttribute", 15.0));
   }
 
+  private static Stream<String> doubleAttributeNames() {
+    return Stream.of("FloatAttribute", "DoubleAttribute");
+  }
+
   @ParameterizedTest(name = "{0}")
-  @MethodSource("longAttributes")
-  void longAttributeInfo(String attributeName, long expectedValue) {
+  @MethodSource("longAttributeNames")
+  void longAttributeInfo(String attributeName) {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName(attributeName);
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info).isNotNull();
@@ -163,8 +171,8 @@ class AttributeExtractorTest {
   }
 
   @ParameterizedTest(name = "{0}")
-  @MethodSource("doubleAttributes")
-  void doubleAttributeInfo(String attributeName, double expectedValue) {
+  @MethodSource("doubleAttributeNames")
+  void doubleAttributeInfo(String attributeName) {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName(attributeName);
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info).isNotNull();

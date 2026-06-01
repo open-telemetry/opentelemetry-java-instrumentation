@@ -25,6 +25,8 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -45,6 +47,7 @@ class OsResourceTest {
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("osTypeTestCases")
+  @ResourceLock(Resources.SYSTEM_PROPERTIES)
   void osType(String name, String osName, String expectedOsType) {
     String originalOsName = System.getProperty("os.name");
     try {
