@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
-import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
-import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import javax.annotation.Nullable;
 

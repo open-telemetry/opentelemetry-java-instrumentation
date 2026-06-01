@@ -13,7 +13,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
-import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,8 +82,6 @@ class AddingSpanAttributesInstrumentationTest {
 
   @Test
   void constructorOnlyAddingSpanAttributesDoesNotTransformType() {
-    // Current behavior: the type matcher only considers declared methods, so a class with only an
-    // @AddingSpanAttributes constructor is not transformed.
     testing.runWithSpan(
         "root", () -> new ConstructorOnlyAddingSpanAttributes("foo", "bar", null, "baz"));
 
@@ -99,17 +96,7 @@ class AddingSpanAttributesInstrumentationTest {
   }
 
   @Test
-  void constructorAndMethodAddingSpanAttributesDoesNotAddAttributes() {
-    // Current behavior: once the annotated method makes the class eligible for transformation, the
-    // annotated constructor is also matched and fails because @Advice.Origin Method cannot
-    // represent constructors.
-    TestAgentListenerAccess.addSkipErrorCondition(
-        (typeName, t) ->
-            typeName.equals(ConstructedWithAddingSpanAttributes.class.getName())
-                && t.getMessage() != null
-                && t.getMessage().startsWith("Cannot represent ")
-                && t.getMessage().endsWith(" as the specified constant"));
-
+  void constructorAndMethodAddingSpanAttributesIgnoresConstructor() {
     testing.runWithSpan(
         "root",
         () ->
@@ -123,7 +110,8 @@ class AddingSpanAttributesInstrumentationTest {
                     span.hasName("root")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasTotalAttributeCount(0)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("methodAttribute"), "method"))));
   }
 
   @Test
