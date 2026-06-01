@@ -73,7 +73,8 @@ class JarAnalyzerTest {
                         .containsEntry(PACKAGE_DESCRIPTION, "javaagent by OpenTelemetry")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256")
                         .hasEntrySatisfying(
-                            PACKAGE_CHECKSUM, checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
+                            PACKAGE_CHECKSUM,
+                            checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // dummy war
         Arguments.of(
             archiveUrl(new File(System.getenv("DUMMY_APP_WAR"))),
@@ -85,7 +86,8 @@ class JarAnalyzerTest {
                         .containsEntry(PACKAGE_DESCRIPTION, "Dummy App by OpenTelemetry")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256")
                         .hasEntrySatisfying(
-                            PACKAGE_CHECKSUM, checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
+                            PACKAGE_CHECKSUM,
+                            checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // io.opentelemetry:opentelemetry-api
         Arguments.of(
             archiveUrl(Tracer.class),
@@ -101,7 +103,8 @@ class JarAnalyzerTest {
                         .containsEntry(PACKAGE_DESCRIPTION, "all")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256")
                         .hasEntrySatisfying(
-                            PACKAGE_CHECKSUM, checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
+                            PACKAGE_CHECKSUM,
+                            checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // org.springframework:spring-webmvc
         Arguments.of(
             archiveUrl(HttpRequest.class),
@@ -117,7 +120,8 @@ class JarAnalyzerTest {
                         .containsEntry(PACKAGE_DESCRIPTION, "org.springframework.web")
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256")
                         .hasEntrySatisfying(
-                            PACKAGE_CHECKSUM, checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
+                            PACKAGE_CHECKSUM,
+                            checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // com.google.guava:guava
         Arguments.of(
             archiveUrl(ImmutableMap.class),
@@ -133,7 +137,8 @@ class JarAnalyzerTest {
                             PACKAGE_VERSION, version -> assertThat(version).isNotEmpty())
                         .containsEntry(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256")
                         .hasEntrySatisfying(
-                            PACKAGE_CHECKSUM, checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))));
+                            PACKAGE_CHECKSUM,
+                            checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))));
   }
 
   private static URL archiveUrl(File file) {

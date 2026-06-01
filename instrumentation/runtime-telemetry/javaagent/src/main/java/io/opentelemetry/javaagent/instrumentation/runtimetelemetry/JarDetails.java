@@ -11,7 +11,6 @@ import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.net.URL;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -37,6 +36,7 @@ class JarDetails {
   static final String JAR_EXTENSION = "jar";
   static final String WAR_EXTENSION = "war";
   static final String EAR_EXTENSION = "ear";
+  private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
   private static final Map<String, String> EMBEDDED_FORMAT_TO_EXTENSION =
       Stream.of(JAR_EXTENSION, WAR_EXTENSION, EAR_EXTENSION)
           .collect(
@@ -185,7 +185,7 @@ class JarDetails {
     return name + " by " + vendor;
   }
 
-  /** Returns the SHA-256 hash of this file. */
+  /** Returns the lowercase hex-encoded SHA-256 digest of this file as a 64-character string. */
   String computeSha256() {
     return sha256Checksum;
   }
@@ -206,11 +206,23 @@ class JarDetails {
   private static String computeDigest(InputStream inputStream, MessageDigest md)
       throws IOException {
     md.reset();
-    DigestInputStream dis = new DigestInputStream(inputStream, md);
-    byte[] buffer = new byte[8192];
-    while (dis.read(buffer) != -1) {}
-    byte[] digest = md.digest();
-    return String.format(Locale.ROOT, "%064x", new BigInteger(1, digest));
+    try (DigestInputStream digestInputStream = new DigestInputStream(inputStream, md)) {
+      byte[] buffer = new byte[8192];
+      while (digestInputStream.read(buffer) != -1) {}
+      return toHex(md.digest());
+    } finally {
+      md.reset();
+    }
+  }
+
+  private static String toHex(byte[] bytes) {
+    char[] chars = new char[bytes.length * 2];
+    for (int i = 0; i < bytes.length; i++) {
+      int value = bytes[i] & 0xff;
+      chars[i * 2] = HEX_DIGITS[value >>> 4];
+      chars[i * 2 + 1] = HEX_DIGITS[value & 0x0f];
+    }
+    return new String(chars);
   }
 
   @Nullable
