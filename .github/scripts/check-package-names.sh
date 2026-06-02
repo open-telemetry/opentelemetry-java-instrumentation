@@ -70,6 +70,17 @@ check_source_set() {
         instrumentation/vertx/vertx-sql-client/vertx-sql-client-common-4.0/javaagent/src/main/java/io/vertx/sqlclient/impl*) continue ;;
       esac
 
+      # self-instrumentation modules: these instrument OpenTelemetry's own code,
+      # so the standard module-name <-> package-name convention (which treats the
+      # first dash-separated token as the instrumented library's namespace) does
+      # not apply; package layout is owned by these modules and reviewed by hand
+      case "$dir" in
+        instrumentation/opentelemetry-api/opentelemetry-api-1.0/javaagent/*) continue ;;
+        instrumentation/opentelemetry-extension-annotations-1.0/javaagent/*) continue ;;
+        instrumentation/opentelemetry-instrumentation-annotations-1.16/javaagent/*) continue ;;
+        instrumentation/opentelemetry-instrumentation-api/javaagent/*) continue ;;
+      esac
+
       # historical javaagent modules that do not follow the module-name <-> package-name convention
       case "$dir" in
         instrumentation/aws-sdk/aws-sdk-1.11/javaagent/src/main/java/io/opentelemetry/instrumentation/awssdk/v1_11) continue ;;
@@ -77,10 +88,6 @@ check_source_set() {
         instrumentation/java-http-client/javaagent/*) continue ;;
         instrumentation/java-http-server/javaagent/*) continue ;;
         instrumentation/java-util-logging/javaagent/*) continue ;;
-        instrumentation/opentelemetry-api/opentelemetry-api-1.0/javaagent/*) continue ;;
-        instrumentation/opentelemetry-extension-annotations-1.0/javaagent/*) continue ;;
-        instrumentation/opentelemetry-instrumentation-annotations-1.16/javaagent/*) continue ;;
-        instrumentation/opentelemetry-instrumentation-api/javaagent/*) continue ;;
       esac
     fi
 
@@ -115,7 +122,6 @@ check_source_set() {
         javaagent:jsf-common-jakarta) ;;
         javaagent:jsf-common-javax) ;;
         javaagent:methods) ;;
-        javaagent:opentelemetry-instrumentation-api) ;;
         javaagent:rmi) ;;
         javaagent:runtime-telemetry) ;;
         javaagent:servlet-common) ;;
