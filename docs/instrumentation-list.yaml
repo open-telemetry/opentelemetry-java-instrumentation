@@ -103,16 +103,16 @@ libraries:
   - com.typesafe.akka:akka-actor_2.11:[2.3,)
   - com.typesafe.akka:akka-actor_2.12:[2.3,)
   - com.typesafe.akka:akka-actor_2.13:[2.3,)
-- name: akka-actor-fork-join-2.5
+- name: akka-actor-forkjoin-2.5
   display_name: Akka Actors
   description: This instrumentation provides context propagation for the Akka Fork-Join
     Pool, it does not emit any telemetry on its own.
   library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
   features:
   - CONTEXT_PROPAGATION
-  source_path: instrumentation/akka/akka-actor-fork-join-2.5
+  source_path: instrumentation/akka/akka-actor-forkjoin-2.5
   scope:
-    name: io.opentelemetry.akka-actor-fork-join-2.5
+    name: io.opentelemetry.akka-actor-forkjoin-2.5
   has_javaagent: true
   javaagent_target_versions:
   - com.typesafe.akka:akka-actor_2.11:[2.5,)
@@ -13998,14 +13998,14 @@ libraries:
       Enables the experimental span attribute `rxjava.canceled`.
     type: boolean
     default: false
-- name: scala-fork-join-2.8
+- name: scala-forkjoin-2.8
   display_name: Scala ForkJoinPool
   description: |
     This instrumentation enables context propagation for Scala fork-join tasks, it does not emit any telemetry on its own.
   library_link: https://www.scala-lang.org/api/2.12.0/scala/concurrent/forkjoin/package$$ForkJoinPool$.html
-  source_path: instrumentation/scala-fork-join-2.8
+  source_path: instrumentation/scala-forkjoin-2.8
   scope:
-    name: io.opentelemetry.scala-fork-join-2.8
+    name: io.opentelemetry.scala-forkjoin-2.8
   has_javaagent: true
   javaagent_target_versions:
   - org.scala-lang:scala-library:[2.8.0,2.12.0)
