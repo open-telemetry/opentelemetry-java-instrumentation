@@ -17,6 +17,7 @@ Updated again on 2026-05-22 after PR 25 merged, Java util logging PR 22 was clos
 Updated on 2026-05-26 after PRs 27a, 27b, and the Spring testing-package alignment cleanup merged.
 Updated again on 2026-05-26 after auditing remaining unversioned-allowlist entries against the documented base-version convention and planning PRs 29-30.
 Updated on 2026-05-28 after PRs 29 and 30 merged upstream together as #18854 and their `library:oshi`, `javaagent:oshi`, and `javaagent:elasticsearch-transport-common` allowlist entries were removed from the checker.
+Updated on 2026-06-02 after PR 17 merged upstream as #18772 (Akka/Scala forkjoin module renames), and after #18855 moved the `servlet-common` library internal package; both allowlist entries were removed from the checker.
 
 ## Goal
 
@@ -96,6 +97,14 @@ PRs 29-30 merged upstream together as:
 
 - #18854: `oshi` -> `oshi-5.0` and `elasticsearch-transport-common` -> `elasticsearch-transport-common-5.0`.
 
+PR 17 merged upstream as:
+
+- #18772: `akka-actor-fork-join-2.5` -> `akka-actor-forkjoin-2.5` and `scala-fork-join-2.8` -> `scala-forkjoin-2.8`.
+
+The `servlet-common` library internal package was moved upstream as:
+
+- #18855: `io.opentelemetry.instrumentation.servlet.internal` -> `io.opentelemetry.instrumentation.servlet.common.internal`.
+
 `external-annotations` still remains in the unversioned-module allowlist as `javaagent:external-annotations`; that is a separate module-name exception, not a historical package exception.
 `spring-boot-resources` keeps a narrow deprecated compatibility-package exception for `io.opentelemetry.instrumentation.spring.resources`; the replacement javaagent package is already present under `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`.
 
@@ -137,7 +146,7 @@ For common-module package moves, search for downstream versioned modules importi
 
 ## Open Cleanup PRs
 
-PR 14 is open as #18747 and PR 17 is open as #18772. PR 22 (#18784) was closed without merging. Keep `.github/scripts/check-package-names.sh` and checker exception removals on `next` until cleanup PRs merge.
+PR 14 is open as #18747. PR 22 (#18784) was closed without merging. Keep `.github/scripts/check-package-names.sh` and checker exception removals on `next` until cleanup PRs merge.
 
 For JDK instrumentation modules, keep the leading `java` token in package paths. For example,
 `java-util-logging` maps to `io.opentelemetry.javaagent.instrumentation.java.util.logging`, while
@@ -181,7 +190,7 @@ Suggested verification:
 ./gradlew :instrumentation:opentelemetry-extension-annotations-1.0:javaagent:test :instrumentation:opentelemetry-instrumentation-api:javaagent:test :instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent:test :instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent:compileJava
 ```
 
-### PR 17: Akka and Scala forkjoin module/package names (open #18772)
+### PR 17: Akka and Scala forkjoin module/package names (merged #18772)
 
 Modules:
 

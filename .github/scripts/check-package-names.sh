@@ -48,9 +48,6 @@ check_source_set() {
       if [[ "$dir" == "instrumentation/elasticsearch/elasticsearch-rest-7.0/library/src/main/java/org/elasticsearch/client" ]]; then
         continue
       fi
-      if [[ "$dir" == "instrumentation/servlet/servlet-common/library/src/main/java/io/opentelemetry/instrumentation/servlet/internal" ]]; then
-        continue
-      fi
       if [[ "$dir" == instrumentation/java-http-client/library/src/main/java/io/opentelemetry/instrumentation/javahttpclient* ]]; then
         continue
       fi
@@ -75,7 +72,6 @@ check_source_set() {
 
       # historical javaagent modules that do not follow the module-name <-> package-name convention
       case "$dir" in
-        instrumentation/akka/akka-actor-fork-join-2.5/javaagent/*) continue ;;
         instrumentation/aws-sdk/aws-sdk-1.11/javaagent/src/main/java/io/opentelemetry/instrumentation/awssdk/v1_11) continue ;;
         instrumentation/aws-sdk/aws-sdk-2.2/javaagent/src/main/java/io/opentelemetry/instrumentation/awssdk/v2_2/internal) continue ;;
         instrumentation/java-http-client/javaagent/*) continue ;;
