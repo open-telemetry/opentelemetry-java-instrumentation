@@ -205,7 +205,6 @@ class JarDetails {
 
   private static String computeDigest(InputStream inputStream, MessageDigest md)
       throws IOException {
-    md.reset();
     try (DigestInputStream digestInputStream = new DigestInputStream(inputStream, md)) {
       byte[] buffer = new byte[8192];
       while (digestInputStream.read(buffer) != -1) {}
@@ -215,7 +214,7 @@ class JarDetails {
     }
   }
 
-  private static String toHex(byte[] bytes) {
+  static String toHex(byte[] bytes) {
     char[] chars = new char[bytes.length * 2];
     for (int i = 0; i < bytes.length; i++) {
       int value = bytes[i] & 0xff;

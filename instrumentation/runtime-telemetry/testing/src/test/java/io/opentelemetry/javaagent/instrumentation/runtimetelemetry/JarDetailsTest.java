@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.runtimetelemetry;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
@@ -20,6 +21,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class JarDetailsTest {
+
+  @Test
+  void toHex_encodesBytes() {
+    assertThat(JarDetails.toHex("hello".getBytes(UTF_8))).isEqualTo("68656c6c6f");
+  }
 
   @Test
   void forUrl_handlesPathWithSpaces(@TempDir Path tempDir) throws IOException {
