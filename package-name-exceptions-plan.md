@@ -18,6 +18,7 @@ Updated on 2026-05-26 after PRs 27a, 27b, and the Spring testing-package alignme
 Updated again on 2026-05-26 after auditing remaining unversioned-allowlist entries against the documented base-version convention and planning PRs 29-30.
 Updated on 2026-05-28 after PRs 29 and 30 merged upstream together as #18854 and their `library:oshi`, `javaagent:oshi`, and `javaagent:elasticsearch-transport-common` allowlist entries were removed from the checker.
 Updated on 2026-06-02 after PR 17 merged upstream as #18772 (Akka/Scala forkjoin module renames), and after #18855 moved the `servlet-common` library internal package; both allowlist entries were removed from the checker.
+Updated again on 2026-06-02 after deciding to keep the four self-instrumentation modules' historical packages and document them as self-instrumentation in the checker instead of renaming them (PR 14 / #18747 deferred).
 
 ## Goal
 
@@ -146,7 +147,7 @@ For common-module package moves, search for downstream versioned modules importi
 
 ## Open Cleanup PRs
 
-PR 14 is open as #18747. PR 22 (#18784) was closed without merging. Keep `.github/scripts/check-package-names.sh` and checker exception removals on `next` until cleanup PRs merge.
+PR 14 (#18747) and PR 22 (#18784) were closed without merging. Keep `.github/scripts/check-package-names.sh` and checker exception removals on `next` until cleanup PRs merge.
 
 For JDK instrumentation modules, keep the leading `java` token in package paths. For example,
 `java-util-logging` maps to `io.opentelemetry.javaagent.instrumentation.java.util.logging`, while
@@ -161,34 +162,36 @@ example, `payara-embedded-web:5.2020.2` maps to `payara-5.2020` and package suff
 would create noisy module names unless they identify a real boundary such as a muzzle range or
 sibling module split.
 
-### PR 14: OpenTelemetry annotation and instrumentation API modules (open #18747)
+### PR 14: OpenTelemetry annotation and instrumentation API modules (deferred, #18747 to be closed)
 
 Modules:
 
+- `opentelemetry-api-1.0`
 - `opentelemetry-extension-annotations-1.0`
 - `opentelemetry-instrumentation-api`
 - `opentelemetry-instrumentation-annotations-1.16`
 
-Expected package changes:
+Decision: do not rename these packages. The original proposal moved them under
+`io.opentelemetry.javaagent.instrumentation.opentelemetry.*`, which adds an
+`opentelemetry.opentelemetry` redundancy (and `instrumentation.instrumentation` for the API/annotations
+modules) for no real navigation gain. These four are self-instrumentation modules: the agent
+instruments OpenTelemetry's own code, so the convention that treats the first dash-separated module
+token as the instrumented library's namespace does not meaningfully apply.
 
-- `io.opentelemetry.javaagent.instrumentation.extensionannotations.v1_0` -> `io.opentelemetry.javaagent.instrumentation.opentelemetry.extension.annotations.v1_0`
-- `io.opentelemetry.javaagent.instrumentation.instrumentationapi` -> `io.opentelemetry.javaagent.instrumentation.opentelemetry.instrumentation.api`
-- `io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16` -> `io.opentelemetry.javaagent.instrumentation.opentelemetry.instrumentation.annotations.v1_16`
+Keep the existing packages and promote them in the checker from a generic "historical" wildcard to a
+dedicated `self-instrumentation modules` case block with a comment that explains why the standard
+convention is skipped. Current packages stay as:
 
-Notes:
+- `opentelemetry-api-1.0` -> `io.opentelemetry.javaagent.instrumentation.opentelemetryapi[.*]`
+- `opentelemetry-extension-annotations-1.0` -> `io.opentelemetry.javaagent.instrumentation.extensionannotations.v1_0`
+- `opentelemetry-instrumentation-annotations-1.16` -> `io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16`
+- `opentelemetry-instrumentation-api` -> `io.opentelemetry.javaagent.instrumentation.instrumentationapi`
 
-- Around 30 changed Java files after the dependent Kotlin coroutines import is included.
-- Reference audit found only local package declarations/imports for `opentelemetry-extension-annotations-1.0`.
-- `opentelemetry-instrumentation-api` has local tests in `src/test` and `src/testOldServerSpan` that must move with the main package.
-- Update dependent import(s) in `kotlinx-coroutines-1.0` for instrumentation annotations.
-- `opentelemetry-instrumentation-api` still remains in the unversioned-module allowlist unless the module name changes; the PR removes only the broad historical package skip after merge.
+The `javaagent:opentelemetry-instrumentation-api` unversioned-module allowlist entry was removed at
+the same time because the self-instrumentation case block already short-circuits before the
+unversioned check.
 
-Suggested verification:
-
-```bash
-.github/scripts/check-package-names.sh
-./gradlew :instrumentation:opentelemetry-extension-annotations-1.0:javaagent:test :instrumentation:opentelemetry-instrumentation-api:javaagent:test :instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent:test :instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent:compileJava
-```
+Close #18747 once this lands on `next`.
 
 ### PR 17: Akka and Scala forkjoin module/package names (merged #18772)
 
