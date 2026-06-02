@@ -13,9 +13,9 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
  * <ul>
  *   <li>sqlite:memory: (in-memory)
  *   <li>sqlite: (in-memory, alternative syntax)
- *   <li>sqlite::file:myDB?mode=memory (in-memory, alternative syntax)
+ *   <li>sqlite:file:myDB?mode=memory (in-memory, alternative syntax)
  *   <li>sqlite:/path/to/db (file-based)
- *   <li>sqlite::resource:db (from classpath resource)
+ *   <li>sqlite:resource:db (from classpath resource)
  * </ul>
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
@@ -48,15 +48,17 @@ public final class SqliteUrlParser implements JdbcUrlParser {
     }
 
     if ("memory:".equals(sqliteUrl) || "".equals(sqliteUrl)) {
+      // typical in-memory URL is "sqlite:memory:", but "sqlite:" is also supported
       ctx.subtype("memory");
     } else if (sqliteUrl.startsWith("file:") && jdbcUrl.contains("mode=memory")) {
+      // in-memory database specified using "file:" syntax with ?mode=memory"
       ctx.subtype("memory");
       String filePath = sqliteUrl.substring("file:".length());
-      // Use the last segment of the file path as the database name, if available
       if (!filePath.isEmpty()) {
         ctx.databaseName(filePath);
       }
     } else if (sqliteUrl.startsWith("resource:")) {
+      // database loaded from classpath resource, e.g. "sqlite:resource:db/mydb.db"
       ctx.subtype("resource");
       String resourcePath = sqliteUrl.substring("resource:".length());
       // Use the last segment of the resource path as the database name, if available
