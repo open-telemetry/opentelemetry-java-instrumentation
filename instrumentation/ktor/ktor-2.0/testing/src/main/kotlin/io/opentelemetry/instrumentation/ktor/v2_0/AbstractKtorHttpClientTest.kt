@@ -9,7 +9,9 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest
@@ -21,8 +23,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Test
 import java.net.URI
+import kotlin.time.Duration.Companion.seconds
 
 abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBuilder>() {
 
@@ -55,6 +60,34 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
 
   override fun sendRequest(request: HttpRequestBuilder, method: String, uri: URI, headers: MutableMap<String, String>) = runBlocking {
     client.request(request).status.value
+  }
+
+  fun sendStreamingRequest(request: HttpRequestBuilder) = runBlocking {
+    // withTimeout ensures requests complete before the HttpTimeout fires. The bug this guards
+    // against caused the instrumentation to prevent timely completion of streaming requests.
+    withTimeout(5.seconds) {
+      client.prepareRequest(request).execute { response ->
+        response.bodyAsText()
+        response.status.value
+      }
+    }
+  }
+
+  @Test
+  fun streamingRequestCompletesPromptly() {
+    val uri = resolveAddress("/success")
+    val request = buildRequest("GET", uri, mutableMapOf())
+
+    sendStreamingRequest(request)
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent() },
+          { span -> assertServerSpan(span).hasParent(trace.getSpan(0)) },
+        )
+      }
+    )
   }
 
   override fun sendRequestWithCallback(
