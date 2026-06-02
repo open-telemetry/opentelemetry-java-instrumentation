@@ -565,3 +565,4 @@ elasticsearch-transport-common-5.0:testing
 oshi-5.0:javaagent
 oshi-5.0:library
 oshi-5.0:testing
+akka-actor-forkjoin-2.5:javaagent
