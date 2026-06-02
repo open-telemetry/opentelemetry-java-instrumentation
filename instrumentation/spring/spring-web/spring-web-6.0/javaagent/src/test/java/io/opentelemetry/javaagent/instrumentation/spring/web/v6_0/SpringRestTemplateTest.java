@@ -26,18 +26,18 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-@SuppressWarnings("PreferJavaTimeOverload")
 class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  private static final boolean EMIT_EXPERIMENTAL_TELEMETRY =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry");
 
   private static final RestTemplate restTemplate = buildClient(false);
   private static final RestTemplate restTemplateWithReadTimeout = buildClient(true);
 
+  @SuppressWarnings("PreferJavaTimeOverload")
   private static RestTemplate buildClient(boolean readTimeout) {
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
     factory.setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis());
@@ -107,7 +107,7 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
 
     // no enum value for TEST
     optionsBuilder.disableTestNonStandardHttpMethod();
-    if (EMIT_EXPERIMENTAL_TELEMETRY) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       optionsBuilder.setExpectedClientSpanNameMapper(
           (uri, method) -> method + " " + getTemplate(uri));
       optionsBuilder.setExpectedUrlTemplateMapper(SpringRestTemplateTest::getTemplate);

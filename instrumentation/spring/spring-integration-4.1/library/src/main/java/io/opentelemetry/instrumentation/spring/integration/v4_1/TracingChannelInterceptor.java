@@ -33,6 +33,42 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   private static final ThreadLocal<Map<MessageChannel, ContextAndScope>> localContextAndScope =
       ThreadLocal.withInitial(IdentityHashMap::new);
 
+  @Nullable
+  private static final Class<?> DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS =
+      getDirectWithAttributesChannelClass();
+
+  @Nullable
+  private static final MethodHandle CHANNEL_GET_ATTRIBUTE_MH =
+      getChannelAttributeMh(DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS);
+
+  @Nullable
+  private static Class<?> getDirectWithAttributesChannelClass() {
+    try {
+      return Class.forName(
+          "org.springframework.cloud.stream.messaging.DirectWithAttributesChannel");
+    } catch (ClassNotFoundException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static MethodHandle getChannelAttributeMh(
+      @Nullable Class<?> directWithAttributesChannelClass) {
+    if (directWithAttributesChannelClass == null) {
+      return null;
+    }
+
+    try {
+      return MethodHandles.lookup()
+          .findVirtual(
+              directWithAttributesChannelClass,
+              "getAttribute",
+              MethodType.methodType(Object.class, String.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      return null;
+    }
+  }
+
   private final ContextPropagators propagators;
   private final Instrumenter<MessageWithChannel, Void> consumerInstrumenter;
   private final Instrumenter<MessageWithChannel, Void> producerInstrumenter;
@@ -203,60 +239,24 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
         .build();
   }
 
-  @Nullable
-  private static final Class<?> directWithAttributesChannelClass =
-      getDirectWithAttributesChannelClass();
-
-  @Nullable
-  private static final MethodHandle channelGetAttributeMh =
-      getChannelAttributeMh(directWithAttributesChannelClass);
-
-  @Nullable
-  private static Class<?> getDirectWithAttributesChannelClass() {
-    try {
-      return Class.forName(
-          "org.springframework.cloud.stream.messaging.DirectWithAttributesChannel");
-    } catch (ClassNotFoundException ignored) {
-      return null;
-    }
-  }
-
-  @Nullable
-  private static MethodHandle getChannelAttributeMh(
-      @Nullable Class<?> directWithAttributesChannelClass) {
-    if (directWithAttributesChannelClass == null) {
-      return null;
-    }
-
-    try {
-      return MethodHandles.lookup()
-          .findVirtual(
-              directWithAttributesChannelClass,
-              "getAttribute",
-              MethodType.methodType(Object.class, String.class));
-    } catch (NoSuchMethodException | IllegalAccessException ignored) {
-      return null;
-    }
-  }
-
   private boolean createProducerSpan(MessageChannel messageChannel) {
-    if (!producerSpanEnabled || directWithAttributesChannelClass == null) {
+    if (!producerSpanEnabled || DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS == null) {
       return false;
     }
 
     messageChannel = unwrapProxy(messageChannel);
-    if (!directWithAttributesChannelClass.isInstance(messageChannel)) {
+    if (!DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS.isInstance(messageChannel)) {
       // we can only tell if it is an output channel for instances of DirectWithAttributesChannel
       // that are used by spring cloud stream
       return false;
     }
 
-    if (channelGetAttributeMh == null) {
+    if (CHANNEL_GET_ATTRIBUTE_MH == null) {
       return false;
     }
 
     try {
-      return "output".equals(channelGetAttributeMh.invoke(messageChannel, "type"));
+      return "output".equals(CHANNEL_GET_ATTRIBUTE_MH.invoke(messageChannel, "type"));
     } catch (Throwable ignored) {
       return false;
     }

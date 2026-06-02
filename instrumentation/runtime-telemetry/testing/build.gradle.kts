@@ -11,7 +11,6 @@ dependencies {
 
   // Bring in various archives to test introspection logic
   testImplementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry:opentelemetry-api-incubator")
   testImplementation("org.springframework:spring-webmvc:3.1.0.RELEASE")
   testImplementation("com.google.guava:guava")
 }
@@ -26,17 +25,12 @@ tasks.war {
   }
 }
 
-tasks.named("test") {
-  dependsOn(tasks.getByName("war"))
-}
-
-tasks {
-  withType<Test>().configureEach {
-    environment(
-      mapOf(
-        // Expose dummy app war location to test
-        "DUMMY_APP_WAR" to "${layout.buildDirectory.asFile.get()}/libs/app.war"
-      )
+tasks.test {
+  dependsOn(tasks.war)
+  environment(
+    mapOf(
+      // Expose dummy app war location to test
+      "DUMMY_APP_WAR" to "${layout.buildDirectory.asFile.get()}/libs/app.war"
     )
-  }
+  )
 }

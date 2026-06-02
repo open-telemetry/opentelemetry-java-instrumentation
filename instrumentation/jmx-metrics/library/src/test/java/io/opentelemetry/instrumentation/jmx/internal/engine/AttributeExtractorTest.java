@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Set;
+import javax.management.JMException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
@@ -104,7 +105,7 @@ class AttributeExtractorTest {
   private static MBeanServer theServer;
 
   @BeforeAll
-  static void setUp() throws Exception {
+  static void setUp() throws JMException {
     theServer = MBeanServerFactory.createMBeanServer(DOMAIN);
     objectName = new ObjectName(OBJECT_NAME);
     theServer.registerMBean(test1, objectName);
@@ -255,15 +256,12 @@ class AttributeExtractorTest {
         BeanAttributeExtractor.filterNegativeValues(rawExtractor);
     assertThat(rawExtractor.extractNumericalAttribute(theServer, objectName))
         .isNotNull()
-        .describedAs("when value is not negative original numerical value is returned")
         .isEqualTo(filteringExtractor.extractNumericalAttribute(theServer, objectName));
 
     test1.negativeValues = true;
     Number rawValue = rawExtractor.extractNumericalAttribute(theServer, objectName);
     assertThat(rawValue).isNotNull();
     assertThat(rawValue.doubleValue()).isNegative();
-    assertThat(filteringExtractor.extractNumericalAttribute(theServer, objectName))
-        .describedAs("negative value should be filtered")
-        .isNull();
+    assertThat(filteringExtractor.extractNumericalAttribute(theServer, objectName)).isNull();
   }
 }

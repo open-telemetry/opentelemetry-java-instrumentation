@@ -48,7 +48,7 @@ class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstru
         this.scope = scope;
       }
 
-      public void exit(@Nullable Throwable throwable, Message<?> message) {
+      public void end(@Nullable Throwable throwable, Message<?> message) {
         scope.close();
         instrumenter().end(context, message, null, throwable);
       }
@@ -71,7 +71,7 @@ class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstru
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.exit(throwable, message);
+        adviceScope.end(throwable, message);
       }
     }
   }

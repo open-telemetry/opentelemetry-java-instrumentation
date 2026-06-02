@@ -31,7 +31,7 @@ class RunnableInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("run").and(takesArguments(0)).and(isPublic()),
-        RunnableInstrumentation.class.getName() + "$RunnableAdvice");
+        getClass().getName() + "$RunnableAdvice");
   }
 
   @SuppressWarnings("unused")

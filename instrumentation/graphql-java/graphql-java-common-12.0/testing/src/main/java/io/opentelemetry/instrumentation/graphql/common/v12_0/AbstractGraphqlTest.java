@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GR
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -48,8 +49,8 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractGraphqlTest {
 
-  private static final String DATA_FETCHER_PROPERTY =
-      "otel.instrumentation.graphql.data-fetcher.enabled";
+  private static final boolean DATA_FETCHER_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.graphql.data-fetcher.enabled");
 
   private final List<Map<String, String>> books = new ArrayList<>();
   private final List<Map<String, String>> authors = new ArrayList<>();
@@ -66,7 +67,7 @@ public abstract class AbstractGraphqlTest {
   }
 
   private boolean includeDataFetcher() {
-    return Boolean.getBoolean(DATA_FETCHER_PROPERTY) && hasDataFetcherSpans();
+    return DATA_FETCHER_ENABLED && hasDataFetcherSpans();
   }
 
   @BeforeAll
@@ -80,7 +81,8 @@ public abstract class AbstractGraphqlTest {
 
     try (Reader reader =
         new InputStreamReader(
-            this.getClass().getClassLoader().getResourceAsStream("schema.graphqls"), UTF_8)) {
+            requireNonNull(getClass().getClassLoader().getResourceAsStream("schema.graphqls")),
+            UTF_8)) {
       graphqlSchema = buildSchema(reader);
       GraphQL.Builder graphqlBuilder = GraphQL.newGraphQL(graphqlSchema);
       configure(graphqlBuilder);
@@ -250,8 +252,9 @@ public abstract class AbstractGraphqlTest {
   void parseError() {
     ExecutionResult result = graphql.execute("query foo bar");
 
-    assertThat(result.getErrors()).hasSize(1);
-    assertThat(result.getErrors().get(0).getErrorType().toString()).isEqualTo("InvalidSyntax");
+    assertThat(result.getErrors())
+        .singleElement()
+        .satisfies(error -> assertThat(error.getErrorType().toString()).isEqualTo("InvalidSyntax"));
 
     getTesting()
         .waitAndAssertTraces(
@@ -290,8 +293,10 @@ public abstract class AbstractGraphqlTest {
                 + "  }");
     // spotless:on
 
-    assertThat(result.getErrors()).hasSize(1);
-    assertThat(result.getErrors().get(0).getErrorType().toString()).isEqualTo("ValidationError");
+    assertThat(result.getErrors())
+        .singleElement()
+        .satisfies(
+            error -> assertThat(error.getErrorType().toString()).isEqualTo("ValidationError"));
 
     getTesting()
         .waitAndAssertTraces(

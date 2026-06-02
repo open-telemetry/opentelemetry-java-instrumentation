@@ -73,7 +73,7 @@ class TestWebSpringBootApp {
 
     @RequestMapping("/query")
     @ResponseBody
-    String query_param(@RequestParam("some") String param) {
+    String queryParam(@RequestParam("some") String param) {
       return controller(QUERY_PARAM, () -> "some=" + param);
     }
 
@@ -100,7 +100,7 @@ class TestWebSpringBootApp {
     }
 
     @RequestMapping("/captureHeaders")
-    ResponseEntity<String> capture_headers(
+    ResponseEntity<String> captureHeaders(
         @RequestHeader("X-Test-Request") String testRequestHeader) {
       return controller(
           CAPTURE_HEADERS,
@@ -112,13 +112,13 @@ class TestWebSpringBootApp {
 
     @RequestMapping("/path/{id}/param")
     @ResponseBody
-    String path_param(@PathVariable("id") int id) {
+    String pathParam(@PathVariable("id") int id) {
       return controller(PATH_PARAM, () -> String.valueOf(id));
     }
 
     @RequestMapping("/child")
     @ResponseBody
-    String indexed_child(@RequestParam("id") String id) {
+    String indexedChild(@RequestParam("id") String id) {
       return controller(
           INDEXED_CHILD,
           () -> {

@@ -28,7 +28,15 @@ public class TestAccessLogValve extends ValveBase implements AccessLog {
   }
 
   public List<Map.Entry<String, String>> getLoggedIds() {
-    return loggedIds;
+    synchronized (loggedIds) {
+      return new ArrayList<>(loggedIds);
+    }
+  }
+
+  public void clearLoggedIds() {
+    synchronized (loggedIds) {
+      loggedIds.clear();
+    }
   }
 
   @Override

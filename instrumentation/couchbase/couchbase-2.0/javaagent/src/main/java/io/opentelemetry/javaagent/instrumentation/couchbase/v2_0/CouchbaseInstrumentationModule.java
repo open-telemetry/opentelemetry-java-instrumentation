@@ -46,7 +46,7 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // removed in 3.x
+    // added in 2.0.0, removed in 3.0.0
     return hasClassesNamed("com.couchbase.client.java.CouchbaseAsyncBucket");
   }
 }

@@ -23,7 +23,7 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
 
   protected abstract Class<?> getMeterRegistryClass();
 
-  protected final ApplicationContextRunner contextRunner =
+  private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withConfiguration(autoConfigurations());
@@ -36,7 +36,6 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
         .run(
             context ->
                 assertThat(context.getBean("otelMeterRegistry", getMeterRegistryClass()))
-                    .isNotNull()
                     .isInstanceOf(OpenTelemetryMeterRegistry.class));
   }
 
@@ -44,7 +43,7 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
   void metricsDisabledByDefault() {
     contextRunner
         .withConfiguration(AutoConfigurations.of(getMetricsAutoConfigurationClass()))
-        .run(context -> assertThat(context.containsBean("otelMeterRegistry")).isFalse());
+        .run(context -> assertThat(context).doesNotHaveBean("otelMeterRegistry"));
   }
 
   @Test
@@ -52,14 +51,14 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
     contextRunner
         .withConfiguration(AutoConfigurations.of(getMetricsAutoConfigurationClass()))
         .withPropertyValues("otel.instrumentation.micrometer.enabled=false")
-        .run(context -> assertThat(context.containsBean("otelMeterRegistry")).isFalse());
+        .run(context -> assertThat(context).doesNotHaveBean("otelMeterRegistry"));
   }
 
   @Test
   void noActuatorAutoConfiguration() {
     contextRunner
         .withPropertyValues("otel.instrumentation.micrometer.enabled=true")
-        .run(context -> assertThat(context.containsBean("otelMeterRegistry")).isFalse());
+        .run(context -> assertThat(context).doesNotHaveBean("otelMeterRegistry"));
   }
 
   @Test
@@ -68,10 +67,6 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
         .withClassLoader(new FilteredClassLoader(getMetricsAutoConfigurationClass()))
         .withBean(Clock.class, () -> Clock.SYSTEM)
         .withPropertyValues("otel.instrumentation.micrometer.enabled=true")
-        .run(
-            context ->
-                assertThat(context)
-                    .hasNotFailed()
-                    .satisfies(ctx -> assertThat(ctx.containsBean("otelMeterRegistry")).isFalse()));
+        .run(context -> assertThat(context).hasNotFailed().doesNotHaveBean("otelMeterRegistry"));
   }
 }

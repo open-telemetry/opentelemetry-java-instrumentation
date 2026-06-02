@@ -15,14 +15,15 @@ muzzle {
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:jms:jms-common:bootstrap"))
-  implementation(project(":instrumentation:jms:jms-common:javaagent"))
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+  implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
   implementation(project(":instrumentation:jms:jms-3.0:javaagent"))
 
   library("org.springframework:spring-jms:6.0.0")
   compileOnly("jakarta.jms:jakarta.jms-api:3.0.0")
 
   testInstrumentation(project(":instrumentation:jms:jms-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:javaagent"))
 
   testImplementation("org.apache.activemq:artemis-jakarta-client:2.27.1")
 
@@ -55,6 +56,10 @@ tasks {
       excludeTestsMatching("SpringListenerSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {

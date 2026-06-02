@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.ElasticTransportRequest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.ElasticsearchTransportInstrumenterFactory;
 import org.elasticsearch.action.ActionResponse;
 
-public class Elasticsearch5TransportSingletons {
+class Elasticsearch5TransportSingletons {
 
   private static final Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter =
       ElasticsearchTransportInstrumenterFactory.create(
@@ -18,7 +18,7 @@ public class Elasticsearch5TransportSingletons {
           new Elasticsearch5TransportExperimentalAttributesExtractor(),
           new Elasticsearch5TransportAttributesGetter());
 
-  public static Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter() {
+  static Instrumenter<ElasticTransportRequest, ActionResponse> instrumenter() {
     return instrumenter;
   }
 

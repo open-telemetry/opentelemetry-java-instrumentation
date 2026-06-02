@@ -12,13 +12,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 public class Webflux7Util {
-  static final boolean isWebflux7 = detectWebflux7();
+  static final boolean IS_WEBFLUX_7 = detectWebflux7();
 
   private static boolean detectWebflux7() {
     try {
       WebClient.RequestBodySpec.class.getMethod("exchange");
       return false;
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return true;
     }
   }
@@ -27,13 +27,13 @@ public class Webflux7Util {
     return request.exchangeToMono(Mono::just);
   }
 
+  static int doRequest(WebClient.RequestBodySpec request) {
+    return doRequest(request, response -> Mono.just(response.statusCode().value()));
+  }
+
   static <T> T doRequest(
       WebClient.RequestBodySpec request, Function<ClientResponse, Mono<T>> handler) {
     return request.exchangeToMono(handler).block();
-  }
-
-  static int doRequest(WebClient.RequestBodySpec request) {
-    return doRequest(request, response -> Mono.just(response.statusCode().value()));
   }
 
   static int getStatusCode(ClientResponse response) {

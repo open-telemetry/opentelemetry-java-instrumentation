@@ -20,16 +20,20 @@ public final class Experimental {
   private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setEmitExperimentalMetrics;
 
   @Nullable
+  private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean>
+      setEmitExperimentalJfrMetrics;
+
+  @Nullable
   private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setPreferJfrMetrics;
 
   /**
-   * Sets whether experimental metrics should be emitted. Experimental metrics are those not marked
-   * as stable in the <a
+   * Sets whether experimental JMX-based metrics should be emitted. Experimental metrics are those
+   * not marked as stable in the <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md">semantic
    * conventions</a>.
    *
    * @param builder the runtime telemetry builder
-   * @param emitExperimentalMetrics {@code true} to emit experimental metrics
+   * @param emitExperimentalMetrics {@code true} to emit experimental JMX metrics
    */
   public static void setEmitExperimentalMetrics(
       RuntimeTelemetryBuilder builder, boolean emitExperimentalMetrics) {
@@ -41,6 +45,27 @@ public final class Experimental {
   public static void internalSetEmitExperimentalMetrics(
       BiConsumer<RuntimeTelemetryBuilder, Boolean> setEmitExperimentalMetrics) {
     Experimental.setEmitExperimentalMetrics = setEmitExperimentalMetrics;
+  }
+
+  /**
+   * Sets whether experimental JFR-based metrics should be emitted (Java 17+). Experimental metrics
+   * are those not marked as stable in the <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md">semantic
+   * conventions</a>.
+   *
+   * @param builder the runtime telemetry builder
+   * @param emitExperimentalJfrMetrics {@code true} to emit experimental JFR metrics
+   */
+  public static void setEmitExperimentalJfrMetrics(
+      RuntimeTelemetryBuilder builder, boolean emitExperimentalJfrMetrics) {
+    if (setEmitExperimentalJfrMetrics != null) {
+      setEmitExperimentalJfrMetrics.accept(builder, emitExperimentalJfrMetrics);
+    }
+  }
+
+  public static void internalSetEmitExperimentalJfrMetrics(
+      BiConsumer<RuntimeTelemetryBuilder, Boolean> setEmitExperimentalJfrMetrics) {
+    Experimental.setEmitExperimentalJfrMetrics = setEmitExperimentalJfrMetrics;
   }
 
   /**

@@ -23,6 +23,7 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("io.opentelemetry.pulsar-2.8.debug", "true")
   }
 
   val testReceiveSpanDisabled by registering(Test::class) {
@@ -52,6 +53,10 @@ tasks {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
   check {

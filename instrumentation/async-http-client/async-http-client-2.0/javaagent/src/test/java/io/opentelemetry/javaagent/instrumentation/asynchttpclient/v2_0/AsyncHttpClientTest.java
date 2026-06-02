@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -29,8 +31,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpClientInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   private static final int CONNECTION_TIMEOUT_MS = (int) CONNECTION_TIMEOUT.toMillis();
 
@@ -46,11 +47,10 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
 
   private static void setTimeout(
       DefaultAsyncHttpClientConfig.Builder builder, String methodName, int timeout) {
-    boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
     try {
       Method method =
-          builder.getClass().getMethod(methodName, testLatestDeps ? Duration.class : int.class);
-      method.invoke(builder, testLatestDeps ? Duration.ofMillis(timeout) : timeout);
+          builder.getClass().getMethod(methodName, testLatestDeps() ? Duration.class : int.class);
+      method.invoke(builder, testLatestDeps() ? Duration.ofMillis(timeout) : timeout);
     } catch (Exception e) {
       throw new IllegalStateException("Failed to set timeout " + methodName, e);
     }

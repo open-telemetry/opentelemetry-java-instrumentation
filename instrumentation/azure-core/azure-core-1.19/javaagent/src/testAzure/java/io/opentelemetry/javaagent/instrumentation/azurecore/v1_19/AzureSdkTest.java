@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class AzureSdkTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void testHelperClassesInjected() {

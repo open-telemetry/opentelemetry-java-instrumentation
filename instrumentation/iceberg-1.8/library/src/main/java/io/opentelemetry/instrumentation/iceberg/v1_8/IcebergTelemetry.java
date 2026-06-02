@@ -19,7 +19,7 @@ public final class IcebergTelemetry {
     return new IcebergTelemetry(openTelemetry);
   }
 
-  IcebergTelemetry(OpenTelemetry openTelemetry) {
+  private IcebergTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
 

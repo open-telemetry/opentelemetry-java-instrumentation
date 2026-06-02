@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameE
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
-public class JaxrsSingletons {
+class JaxrsSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxrs-1.0";
 
@@ -30,7 +30,7 @@ public class JaxrsSingletons {
             .buildInstrumenter();
   }
 
-  public static Instrumenter<HandlerData, Void> instrumenter() {
+  static Instrumenter<HandlerData, Void> instrumenter() {
     return instrumenter;
   }
 

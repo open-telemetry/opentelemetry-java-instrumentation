@@ -13,11 +13,14 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.V3PreviewFallbackEnabledInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
+@SuppressWarnings("deprecation") // using v3 preview fallback helper until 3.0
+public class OpenTelemetryApiInstrumentationModule
+    extends V3PreviewFallbackEnabledInstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
     super("opentelemetry-api", "opentelemetry-api-1.38");
@@ -25,15 +28,15 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // skip instrumentation when opentelemetry-api-incubator is present, instrumentation is
-    // handled by OpenTelemetryApiIncubatorInstrumentationModule
-    return hasClassesNamed(
-            // added in 1.38
-            "application.io.opentelemetry.api.metrics.LongGauge")
+    // this instrumentation module targets io.opentelemetry:opentelemetry-api
+    // added in 1.38.0
+    return hasClassesNamed("application.io.opentelemetry.api.metrics.LongGauge")
+        // artifact presence gate
+        // added in io.opentelemetry:opentelemetry-api-incubator 1.37.0
+        // (renamed from io.opentelemetry.extension.incubator)
         .and(
             not(
                 hasClassesNamed(
-                    // present when opentelemetry-api-incubator is on the classpath
                     "application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder")));
   }
 

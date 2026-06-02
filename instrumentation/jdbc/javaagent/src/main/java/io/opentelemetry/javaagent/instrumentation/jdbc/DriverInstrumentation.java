@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.Connection;
 import java.util.Properties;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -52,7 +53,7 @@ class DriverInstrumentation implements TypeInstrumentation {
     public static void addDbInfo(
         @Advice.Argument(0) String url,
         @Advice.Argument(1) Properties props,
-        @Advice.Return Connection connection) {
+        @Advice.Return @Nullable Connection connection) {
       if (connection == null) {
         // Exception was probably thrown.
         return;

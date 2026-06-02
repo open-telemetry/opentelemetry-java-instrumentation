@@ -41,21 +41,19 @@ public abstract class AbstractGaugeTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testGauge",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test gauge")
-                            .hasUnit("items")
-                            .hasDoubleGaugeSatisfying(
-                                doubleGauge ->
-                                    doubleGauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(42)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("tag"), "value"))))));
+            metric ->
+                metric
+                    .hasName("testGauge")
+                    .hasDescription("This is a test gauge")
+                    .hasUnit("items")
+                    .hasDoubleGaugeSatisfying(
+                        doubleGauge ->
+                            doubleGauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(42)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(gauge);
@@ -95,21 +93,19 @@ public abstract class AbstractGaugeTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testGauge",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test gauge")
-                            .hasUnit("items")
-                            .hasDoubleGaugeSatisfying(
-                                doubleGauge ->
-                                    doubleGauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(42)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("tag"), "value"))))));
+            metric ->
+                metric
+                    .hasName("testGauge")
+                    .hasDescription("This is a test gauge")
+                    .hasUnit("items")
+                    .hasDoubleGaugeSatisfying(
+                        doubleGauge ->
+                            doubleGauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(42)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(gauge);
@@ -138,26 +134,24 @@ public abstract class AbstractGaugeTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testGaugeWithTags",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("First description wins")
-                            .hasUnit("items")
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(12)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("tag"), "1")),
-                                        point ->
-                                            point
-                                                .hasValue(42)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("tag"), "2"))))));
+            metric ->
+                metric
+                    .hasName("testGaugeWithTags")
+                    .hasDescription("First description wins")
+                    .hasUnit("items")
+                    .hasDoubleGaugeSatisfying(
+                        gauge ->
+                            gauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "1")),
+                                point ->
+                                    point
+                                        .hasValue(42)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "2")))));
   }
 
   @Test
@@ -172,13 +166,11 @@ public abstract class AbstractGaugeTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testWeakRefGauge",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDoubleGaugeSatisfying(
-                                gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42)))));
+            metric ->
+                metric
+                    .hasName("testWeakRefGauge")
+                    .hasDoubleGaugeSatisfying(
+                        gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
 
     // when
     WeakReference<AtomicLong> numWeakRef = new WeakReference<>(num);

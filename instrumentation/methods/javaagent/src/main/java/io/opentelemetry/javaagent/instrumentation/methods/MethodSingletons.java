@@ -44,7 +44,7 @@ class MethodSingletons {
     return instrumenter;
   }
 
-  static ClassLoader getBootstrapLoader() {
+  static ClassLoader bootstrapLoader() {
     return bootstrapLoader;
   }
 

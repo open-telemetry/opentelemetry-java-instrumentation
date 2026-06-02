@@ -18,23 +18,22 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.batch.core.JobParameter;
 
 abstract class SpringBatchTest {
 
-  private final JobRunner runner;
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.spring-batch.experimental-span-attributes");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @Nullable
+  private final JobRunner runner;
+
   static String experimental() {
-    return Boolean.getBoolean("otel.instrumentation.spring-batch.experimental-span-attributes")
-        ? "spring_batch"
-        : null;
+    return EXPERIMENTAL_ATTRIBUTES ? "spring_batch" : null;
   }
 
   SpringBatchTest(JobRunner runner) {

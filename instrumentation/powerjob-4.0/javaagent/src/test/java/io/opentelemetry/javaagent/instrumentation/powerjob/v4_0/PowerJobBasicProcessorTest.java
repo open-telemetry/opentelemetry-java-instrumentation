@@ -45,7 +45,7 @@ class PowerJobBasicProcessorTest {
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.powerjob.experimental-span-attributes");
 
   private static final String BASIC_PROCESSOR = "BasicProcessor";
@@ -342,18 +342,17 @@ class PowerJobBasicProcessorTest {
       String codeNamespace, long jobId, String jobParam, String jobType) {
     List<AttributeAssertion> attributeAssertions = new ArrayList<>();
 
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       attributeAssertions.addAll(
-          new ArrayList<>(
-              asList(
-                  equalTo(stringKey("job.system"), "powerjob"),
-                  equalTo(longKey("scheduling.powerjob.job.id"), jobId),
-                  equalTo(stringKey("scheduling.powerjob.job.type"), jobType))));
+          asList(
+              equalTo(stringKey("job.system"), "powerjob"),
+              equalTo(longKey("scheduling.powerjob.job.id"), jobId),
+              equalTo(stringKey("scheduling.powerjob.job.type"), jobType)));
     }
 
     attributeAssertions.addAll(codeFunctionAssertions(codeNamespace, "process"));
 
-    if (!StringUtils.isNullOrEmpty(jobParam) && EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+    if (!StringUtils.isNullOrEmpty(jobParam) && EXPERIMENTAL_ATTRIBUTES) {
       attributeAssertions.add(equalTo(stringKey("scheduling.powerjob.job.param"), jobParam));
     }
     return attributeAssertions;

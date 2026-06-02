@@ -14,6 +14,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
+import javax.annotation.Nullable;
 
 final class RetryPolicyEventListenerBuilders {
   private static final AttributeKey<String> OUTCOME_KEY =
@@ -27,14 +28,8 @@ final class RetryPolicyEventListenerBuilders {
       LongHistogram attemptsHistogram,
       Attributes commonAttributes) {
     Attributes attributes = commonAttributes.toBuilder().put(OUTCOME_KEY, "failure").build();
-    EventListener<ExecutionCompletedEvent<R>> userFailureListener = userConfig.getFailureListener();
-    return e -> {
-      executionCounter.add(1, attributes);
-      attemptsHistogram.record(e.getAttemptCount(), attributes);
-      if (userFailureListener != null) {
-        userFailureListener.accept(e);
-      }
-    };
+    return countAndRecord(
+        executionCounter, attemptsHistogram, attributes, userConfig.getFailureListener());
   }
 
   static <R> EventListener<ExecutionCompletedEvent<R>> buildInstrumentedSuccessListener(
@@ -43,12 +38,20 @@ final class RetryPolicyEventListenerBuilders {
       LongHistogram attemptsHistogram,
       Attributes commonAttributes) {
     Attributes attributes = commonAttributes.toBuilder().put(OUTCOME_KEY, "success").build();
-    EventListener<ExecutionCompletedEvent<R>> userSuccessListener = userConfig.getSuccessListener();
+    return countAndRecord(
+        executionCounter, attemptsHistogram, attributes, userConfig.getSuccessListener());
+  }
+
+  private static <R> EventListener<ExecutionCompletedEvent<R>> countAndRecord(
+      LongCounter executionCounter,
+      LongHistogram attemptsHistogram,
+      Attributes attributes,
+      @Nullable EventListener<ExecutionCompletedEvent<R>> delegate) {
     return e -> {
       executionCounter.add(1, attributes);
       attemptsHistogram.record(e.getAttemptCount(), attributes);
-      if (userSuccessListener != null) {
-        userSuccessListener.accept(e);
+      if (delegate != null) {
+        delegate.accept(e);
       }
     };
   }

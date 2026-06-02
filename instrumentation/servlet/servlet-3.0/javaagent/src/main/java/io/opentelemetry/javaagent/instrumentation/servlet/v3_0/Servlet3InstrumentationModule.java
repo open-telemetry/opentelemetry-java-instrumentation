@@ -32,7 +32,7 @@ public class Servlet3InstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 3.0
+    // added in Servlet 3.0
     return hasClassesNamed("javax.servlet.ServletRegistration");
   }
 

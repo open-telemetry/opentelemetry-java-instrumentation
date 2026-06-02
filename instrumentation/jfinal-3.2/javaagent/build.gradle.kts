@@ -23,10 +23,11 @@ dependencies {
   testLibrary("com.jfinal:jetty-server:2019.3")
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jetty:jetty-common:javaagent"))
+  testInstrumentation(project(":instrumentation:jetty:jetty-common-8.0:javaagent"))
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }

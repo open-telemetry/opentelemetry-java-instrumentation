@@ -119,7 +119,7 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
     return null;
   }
 
-  public static void setAttribute(
+  private static void setAttribute(
       AttributesBuilder attributes,
       AttributeKey<String> key,
       Object carrier,

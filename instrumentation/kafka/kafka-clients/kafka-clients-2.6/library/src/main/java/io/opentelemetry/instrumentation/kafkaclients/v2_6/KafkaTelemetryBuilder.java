@@ -109,16 +109,6 @@ public final class KafkaTelemetryBuilder {
     return this;
   }
 
-  /**
-   * @deprecated Use {@link #setMessagingReceiveTelemetryEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public KafkaTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    return setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
-  }
-
   public KafkaTelemetry build() {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)

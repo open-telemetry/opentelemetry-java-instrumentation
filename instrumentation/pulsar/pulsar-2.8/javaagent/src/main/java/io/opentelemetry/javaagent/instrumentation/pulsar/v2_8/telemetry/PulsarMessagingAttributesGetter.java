@@ -11,7 +11,6 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.common.naming.TopicName;
 
 final class PulsarMessagingAttributesGetter
@@ -64,12 +63,7 @@ final class PulsarMessagingAttributesGetter
   @Nullable
   @Override
   public String getMessageId(PulsarRequest request, @Nullable Void response) {
-    Message<?> message = request.getMessage();
-    if (message.getMessageId() != null) {
-      return message.getMessageId().toString();
-    }
-
-    return null;
+    return request.getMessageId();
   }
 
   @Nullable

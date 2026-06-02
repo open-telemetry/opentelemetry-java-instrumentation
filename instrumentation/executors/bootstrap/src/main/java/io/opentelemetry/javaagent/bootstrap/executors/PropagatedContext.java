@@ -22,6 +22,7 @@ public final class PropagatedContext {
 
   // Used by AtomicReferenceFieldUpdater
   @SuppressWarnings("UnusedVariable")
+  @Nullable
   private volatile Context context;
 
   PropagatedContext() {}

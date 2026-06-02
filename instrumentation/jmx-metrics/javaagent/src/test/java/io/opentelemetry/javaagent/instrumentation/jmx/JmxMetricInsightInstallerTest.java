@@ -27,7 +27,7 @@ class JmxMetricInsightInstallerTest {
   private static final Set<String> FILES_TO_BE_TESTED = singleton("kafka-broker.yaml");
 
   @Test
-  void testToVerifyExistingRulesAreValid() throws Exception {
+  void testToVerifyExistingRulesAreValid() {
     RuleParser parser = RuleParser.get();
     assertThat(parser).isNotNull();
 

@@ -55,7 +55,6 @@ class ApacheHttpClientTest extends AbstractApacheHttpClientTest {
             .build();
 
     builder.setConnectionManager(connManager);
-    builder.setConnectionManagerShared(true);
     return builder.build();
   }
 }

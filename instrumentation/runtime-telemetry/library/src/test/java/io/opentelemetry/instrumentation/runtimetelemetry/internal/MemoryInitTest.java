@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.when;
 
@@ -59,28 +58,24 @@ class MemoryInitTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.memory.init",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription("Measure of initial memory requested.")
-                        .hasUnit("By")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(11)
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.pool.name"), "heap_pool")
-                                            .hasAttribute(stringKey("jvm.memory.type"), "heap"),
-                                    point ->
-                                        point
-                                            .hasValue(15)
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.pool.name"), "non_heap_pool")
-                                            .hasAttribute(
-                                                stringKey("jvm.memory.type"), "non_heap")))));
+        metric ->
+            metric
+                .hasName("jvm.memory.init")
+                .hasDescription("Measure of initial memory requested.")
+                .hasUnit("By")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(11)
+                                    .hasAttribute(stringKey("jvm.memory.pool.name"), "heap_pool")
+                                    .hasAttribute(stringKey("jvm.memory.type"), "heap"),
+                            point ->
+                                point
+                                    .hasValue(15)
+                                    .hasAttribute(
+                                        stringKey("jvm.memory.pool.name"), "non_heap_pool")
+                                    .hasAttribute(stringKey("jvm.memory.type"), "non_heap"))));
   }
 }

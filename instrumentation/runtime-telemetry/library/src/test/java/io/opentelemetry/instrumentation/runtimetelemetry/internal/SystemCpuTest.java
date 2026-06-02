@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -36,27 +35,23 @@ class SystemCpuTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.system.cpu.load_1m",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription(
-                            "Average CPU load of the whole system for the last minute as reported by the JVM.")
-                        .hasUnit("{run_queue_item}")
-                        .hasDoubleGaugeSatisfying(
-                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(2.2)))));
+        metric ->
+            metric
+                .hasName("jvm.system.cpu.load_1m")
+                .hasDescription(
+                    "Average CPU load of the whole system for the last minute as reported by the JVM.")
+                .hasUnit("{run_queue_item}")
+                .hasDoubleGaugeSatisfying(
+                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(2.2))));
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.system.cpu.utilization",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription(
-                            "Recent CPU utilization for the whole system as reported by the JVM.")
-                        .hasUnit("1")
-                        .hasDoubleGaugeSatisfying(
-                            gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.11)))));
+        metric ->
+            metric
+                .hasName("jvm.system.cpu.utilization")
+                .hasDescription(
+                    "Recent CPU utilization for the whole system as reported by the JVM.")
+                .hasUnit("1")
+                .hasDoubleGaugeSatisfying(
+                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.11))));
   }
 }

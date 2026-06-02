@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
 import static java.util.Collections.emptyIterator;
-import static java.util.stream.Collectors.toList;
 
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.netty.util.AsciiString;
@@ -18,9 +17,7 @@ final class RequestContextGetter implements TextMapGetter<ServiceRequestContext>
 
   @Override
   public Iterable<String> keys(ServiceRequestContext carrier) {
-    return carrier.request().headers().names().stream()
-        .map(AsciiString::toString)
-        .collect(toList());
+    return () -> new HeaderNamesIterator(carrier.request().headers().names().iterator());
   }
 
   @Override
@@ -38,5 +35,24 @@ final class RequestContextGetter implements TextMapGetter<ServiceRequestContext>
       return emptyIterator();
     }
     return carrier.request().headers().valueIterator(key);
+  }
+
+  private static final class HeaderNamesIterator implements Iterator<String> {
+
+    private final Iterator<AsciiString> delegate;
+
+    HeaderNamesIterator(Iterator<AsciiString> delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return delegate.hasNext();
+    }
+
+    @Override
+    public String next() {
+      return delegate.next().toString();
+    }
   }
 }

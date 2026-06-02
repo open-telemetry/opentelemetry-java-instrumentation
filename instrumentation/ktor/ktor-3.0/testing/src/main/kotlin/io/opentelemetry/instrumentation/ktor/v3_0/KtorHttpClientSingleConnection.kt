@@ -10,7 +10,7 @@ import io.ktor.client.request.*
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import kotlinx.coroutines.runBlocking
 
-class KtorHttpClientSingleConnection(
+internal class KtorHttpClientSingleConnection(
   private val client: HttpClient,
   private val host: String,
   private val port: Int

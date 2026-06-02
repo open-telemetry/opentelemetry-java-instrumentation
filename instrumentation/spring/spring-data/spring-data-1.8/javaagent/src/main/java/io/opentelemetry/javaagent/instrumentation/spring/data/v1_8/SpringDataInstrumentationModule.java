@@ -113,9 +113,11 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
       Method method = methodInvocation.getMethod();
       // Since this interceptor is the outermost interceptor, non-Repository methods
       // including Object methods will also flow through here. Don't create spans for those.
-      boolean isRepositoryOp = !Object.class.equals(method.getDeclaringClass());
+      if (Object.class.equals(method.getDeclaringClass())) {
+        return methodInvocation.proceed();
+      }
       ClassAndMethod classAndMethod = ClassAndMethod.create(repositoryInterface, method.getName());
-      if (!isRepositoryOp || !instrumenter().shouldStart(parentContext, classAndMethod)) {
+      if (!instrumenter().shouldStart(parentContext, classAndMethod)) {
         return methodInvocation.proceed();
       }
 

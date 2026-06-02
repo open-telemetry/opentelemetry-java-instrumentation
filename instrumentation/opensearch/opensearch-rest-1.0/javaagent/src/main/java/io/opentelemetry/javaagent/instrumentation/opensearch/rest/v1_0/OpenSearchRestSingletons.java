@@ -6,22 +6,27 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestRequest;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestResponse;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestRequest;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestResponse;
 import java.net.InetAddress;
+import javax.annotation.Nullable;
 import org.opensearch.client.Response;
 
-public class OpenSearchRestSingletons {
+class OpenSearchRestSingletons {
 
   private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter =
       OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-1.0");
 
-  public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
+  static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
     return instrumenter;
   }
 
-  public static OpenSearchRestResponse convertResponse(Response response) {
+  @Nullable
+  static OpenSearchRestResponse convertResponse(@Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
     return new OpenSearchRestResponse() {
 
       @Override
@@ -30,6 +35,7 @@ public class OpenSearchRestSingletons {
       }
 
       @Override
+      @Nullable
       public InetAddress getAddress() {
         return response.getHost().getAddress();
       }

@@ -41,7 +41,7 @@ class ServletContextPathTest {
     assertThat(ServletContextPath.prepend(contextWithEmptyPath, "")).isEqualTo("");
     assertThat(ServletContextPath.prepend(contextWithPath, "")).isEqualTo("/context");
 
-    assertThat(ServletContextPath.prepend(contextWithEmptyPath, null)).isEqualTo(null);
+    assertThat(ServletContextPath.prepend(contextWithEmptyPath, null)).isNull();
     assertThat(ServletContextPath.prepend(contextWithPath, null)).isEqualTo("/context");
   }
 }

@@ -143,7 +143,7 @@ final class JarAnalyzer implements ClassFileTransformer {
     // To avoid this here we recreate the URL when it points to a file.
     if ("file".equals(archiveUrl.getProtocol())) {
       try {
-        File archiveFile = new File(archiveUrl.toURI().getSchemeSpecificPart());
+        File archiveFile = UrlPaths.toFile(archiveUrl);
         if (archiveFile.exists() && archiveFile.isFile()) {
           archiveUrl = archiveFile.toURI().toURL();
         }
@@ -182,7 +182,7 @@ final class JarAnalyzer implements ClassFileTransformer {
             continue;
           }
           archiveUrl = toProcess.poll(100, MILLISECONDS);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
           Thread.currentThread().interrupt();
         }
         if (archiveUrl == null) {
@@ -192,9 +192,9 @@ final class JarAnalyzer implements ClassFileTransformer {
           // TODO(jack-berg): add ability to optionally re-process urls periodically to re-emit
           // events
           processUrl(logger, archiveUrl);
-        } catch (Throwable e) {
+        } catch (Throwable t) {
           JarAnalyzer.logger.log(
-              WARNING, "Unexpected error processing archive URL: " + archiveUrl, e);
+              WARNING, "Unexpected error processing archive URL: " + archiveUrl, t);
         }
       }
       JarAnalyzer.logger.warning("JarAnalyzer stopped");

@@ -11,11 +11,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.concurrent.Callable;
-import library.MyProxySuperclass;
-import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -134,39 +129,5 @@ class IndyInstrumentationTest {
     Class<?> globalHelper = getHelperClass(false);
     assertThat(globalHelper.getName()).endsWith("GlobalHelper");
     assertThat(globalHelper.getClassLoader().getClass().getName()).endsWith("AgentClassLoader");
-  }
-
-  @Test
-  @SuppressWarnings("unchecked")
-  void testProxyInjection() throws Exception {
-    Class<?> proxyClass = Class.forName("foo.bar.Proxy");
-
-    // create an instance and invoke static & non-static methods
-    // this verifies that our invokedynamic bootstrapping works for constructors, static and
-    // non-static methods
-
-    Object proxyInstance = proxyClass.getConstructor().newInstance();
-    assertThat(proxyInstance).isInstanceOf(Callable.class);
-    assertThat(proxyInstance).isInstanceOf(MyProxySuperclass.class);
-
-    String invocResult = ((Callable<String>) proxyInstance).call();
-    assertThat(invocResult).isEqualTo("Hi from ProxyMe");
-
-    String staticResult = (String) proxyClass.getMethod("staticHello").invoke(null);
-    assertThat(staticResult).isEqualTo("Hi from static");
-
-    Field delegateField = proxyClass.getDeclaredField("delegate");
-    delegateField.setAccessible(true);
-    Object delegate = delegateField.get(proxyInstance);
-
-    ClassLoader delegateCl = delegate.getClass().getClassLoader();
-    assertThat(delegate.getClass().getName()).isEqualTo("indy.ProxyMe");
-    assertThat(delegateCl.getClass().getName()).endsWith("InstrumentationModuleClassLoader");
-
-    // Ensure that the bytecode of the proxy is injected as a resource
-    InputStream res =
-        IndyInstrumentationTest.class.getClassLoader().getResourceAsStream("foo/bar/Proxy.class");
-    byte[] bytecode = IOUtils.toByteArray(res);
-    assertThat(bytecode).startsWith(0xCA, 0xFE, 0xBA, 0xBE);
   }
 }

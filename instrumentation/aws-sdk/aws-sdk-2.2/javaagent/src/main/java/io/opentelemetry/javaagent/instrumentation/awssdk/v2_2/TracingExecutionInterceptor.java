@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.AwsSdkSingletons.telemetry;
+
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -25,8 +27,7 @@ import software.amazon.awssdk.http.SdkHttpResponse;
  */
 public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
-  private final ExecutionInterceptor delegate =
-      AwsSdkSingletons.telemetry().createExecutionInterceptor();
+  private final ExecutionInterceptor delegate = telemetry().createExecutionInterceptor();
 
   @Override
   public void beforeExecution(

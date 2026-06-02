@@ -11,6 +11,7 @@ import static java.util.Collections.emptySet;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 import org.objectweb.asm.ClassReader;
 
 public class DefineClassHandler implements Handler {
@@ -18,7 +19,13 @@ public class DefineClassHandler implements Handler {
   private static final ThreadLocal<DefineClassContextImpl> defineClassContext =
       ThreadLocal.withInitial(() -> DefineClassContextImpl.NOP);
 
+  private static Predicate<ClassLoader> ignoredClassLoaders = (classLoader) -> false;
+
   private DefineClassHandler() {}
+
+  static void setIgnoredClassLoadersPredicate(Predicate<ClassLoader> predicate) {
+    ignoredClassLoaders = predicate;
+  }
 
   @Override
   public DefineClassContext beforeDefineClass(
@@ -27,6 +34,11 @@ public class DefineClassHandler implements Handler {
     if (classBytes == null
         || (classBytes.length == 40
             && new String(classBytes, ISO_8859_1).startsWith("J9ROMCLASSCOOKIE"))) {
+      return null;
+    }
+
+    // skip ignore class loaders, class is not going to be instrumented anyway
+    if (ignoredClassLoaders.test(classLoader)) {
       return null;
     }
 

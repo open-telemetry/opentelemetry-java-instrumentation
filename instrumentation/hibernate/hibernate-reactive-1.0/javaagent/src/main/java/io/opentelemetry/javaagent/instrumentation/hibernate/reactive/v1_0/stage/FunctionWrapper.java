@@ -13,11 +13,6 @@ public class FunctionWrapper<T, R> implements Function<T, R> {
   private final Function<T, R> delegate;
   private final Context context;
 
-  private FunctionWrapper(Function<T, R> delegate, Context context) {
-    this.delegate = delegate;
-    this.context = context;
-  }
-
   public static <T, R> Function<T, R> wrap(Function<T, R> function) {
     if (function instanceof FunctionWrapper) {
       return function;
@@ -28,6 +23,11 @@ public class FunctionWrapper<T, R> implements Function<T, R> {
     }
 
     return new FunctionWrapper<>(function, context);
+  }
+
+  private FunctionWrapper(Function<T, R> delegate, Context context) {
+    this.delegate = delegate;
+    this.context = context;
   }
 
   @Override

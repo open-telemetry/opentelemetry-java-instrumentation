@@ -29,7 +29,7 @@ public class ApacheHttpClientRequest {
   private final HttpRequest delegate;
   @Nullable private final HttpHost target;
 
-  public ApacheHttpClientRequest(HttpHost httpHost, HttpRequest httpRequest) {
+  public ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
     if (calculatedUri != null && httpHost != null) {
       uri = getCalculatedUri(httpHost, calculatedUri);
@@ -46,7 +46,7 @@ public class ApacheHttpClientRequest {
     target = null;
   }
 
-  public List<String> getHeader(String name) {
+  List<String> getHeader(String name) {
     return headersToList(delegate.getHeaders(name));
   }
 
@@ -62,16 +62,16 @@ public class ApacheHttpClientRequest {
     return headersList;
   }
 
-  public void setHeader(String name, String value) {
+  void setHeader(String name, String value) {
     delegate.setHeader(name, value);
   }
 
-  public String getMethod() {
+  String getMethod() {
     return delegate.getRequestLine().getMethod();
   }
 
   @Nullable
-  public String getUrl() {
+  String getUrl() {
     return uri != null ? uri.toString() : null;
   }
 
@@ -88,7 +88,7 @@ public class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public String getServerAddress() {
+  String getServerAddress() {
     if (uri != null) {
       return uri.getHost();
     }
@@ -99,7 +99,7 @@ public class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public Integer getServerPort() {
+  Integer getServerPort() {
     if (uri != null) {
       return uri.getPort();
     }
@@ -110,7 +110,7 @@ public class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public String getScheme() {
+  String getScheme() {
     if (uri != null) {
       return uri.getScheme();
     }

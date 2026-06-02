@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import com.linecorp.armeria.server.ServerBuilder;
 import io.opentelemetry.instrumentation.armeria.v1_3.AbstractArmeriaHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -31,7 +33,7 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
     options.setTestHttpPipelining(false);
     // span for non-standard request is created by netty instrumentation when not running latest
     // dep tests
-    if (Boolean.getBoolean("testLatestDeps")) {
+    if (testLatestDeps()) {
       options.disableTestNonStandardHttpMethod();
     } else {
       options.setResponseCodeOnNonStandardHttpMethod(405);

@@ -54,14 +54,16 @@ class ResteasySingleConnection implements SingleConnection {
     }
 
     Response response = requestBuilder.buildGet().invoke();
-    response.close();
+    try {
+      String responseId = response.getHeaderString(REQUEST_ID_HEADER);
+      if (!Objects.equals(requestId, responseId)) {
+        throw new IllegalStateException(
+            String.format("Received response with id %s, expected %s", responseId, requestId));
+      }
 
-    String responseId = response.getHeaderString(REQUEST_ID_HEADER);
-    if (!Objects.equals(requestId, responseId)) {
-      throw new IllegalStateException(
-          String.format("Received response with id %s, expected %s", responseId, requestId));
+      return response.getStatus();
+    } finally {
+      response.close();
     }
-
-    return response.getStatus();
   }
 }

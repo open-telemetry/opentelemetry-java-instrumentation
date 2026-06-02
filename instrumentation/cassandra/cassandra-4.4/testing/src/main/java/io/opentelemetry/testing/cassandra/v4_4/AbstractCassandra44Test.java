@@ -45,6 +45,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
   @MethodSource("provideReactiveParameters")
   void reactiveTest(Parameter parameter) {
     CqlSession session = getSession(parameter.keyspace);
+    cleanup.deferCleanup(session);
 
     testing()
         .runWithSpan(
@@ -95,8 +96,6 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
-
-    session.close();
   }
 
   private static Stream<Arguments> provideReactiveParameters() {

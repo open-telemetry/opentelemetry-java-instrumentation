@@ -101,6 +101,10 @@ public final class TracingAssembly {
   @GuardedBy("TracingAssembly.class")
   private static boolean enabled;
 
+  @GuardedBy("TracingAssembly.class")
+  @Nullable
+  private static RxJava2AsyncOperationEndStrategy asyncOperationEndStrategy;
+
   public static TracingAssembly create() {
     return builder().build();
   }
@@ -278,8 +282,6 @@ public final class TracingAssembly {
                       }
                     }));
   }
-
-  @Nullable private static RxJava2AsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
     asyncOperationEndStrategy =

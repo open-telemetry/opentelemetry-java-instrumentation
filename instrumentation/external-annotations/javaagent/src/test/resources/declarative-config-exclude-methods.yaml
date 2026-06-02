@@ -3,7 +3,7 @@ instrumentation/development:
   java:
     external_annotations:
       exclude_methods:
-        - class: io.opentelemetry.javaagent.instrumentation.extannotations.TracedMethodsExclusionTest$TestClass
+        - class: io.opentelemetry.javaagent.instrumentation.external.annotations.TracedMethodsExclusionTest$TestClass
           methods:
             - excluded
             - annotatedButExcluded

@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-  implementation("com.graphql-java:graphql-java:12.0")
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("com.graphql-java:graphql-java:12.0")
 }

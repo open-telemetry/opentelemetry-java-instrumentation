@@ -284,7 +284,7 @@ public final class Internal {
       RuntimeTelemetryBuilder builder, DeclarativeConfigProperties config) {
     logger.warning(
         "otel.instrumentation.runtime-telemetry-java17.enable-all is deprecated and will be"
-            + " removed in 3.0. Use otel.instrumentation.runtime-telemetry.emit-experimental-metrics"
+            + " removed in 3.0. Use otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics"
             + " and otel.instrumentation.runtime-telemetry.experimental.prefer-jfr instead.");
     // For backward compatibility: route JMX metrics to java8 scope, JFR metrics to java17 scope
     Internal.setJmxInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java8");
@@ -311,27 +311,33 @@ public final class Internal {
   private static void configureJava17Enabled(RuntimeTelemetryBuilder builder) {
     logger.warning(
         "otel.instrumentation.runtime-telemetry-java17.enabled is deprecated and will be"
-            + " removed in 3.0. Use otel.instrumentation.runtime-telemetry.emit-experimental-metrics"
-            + " for experimental JFR features.");
-    // Enable default JFR features: context switches, CPU count, locks, allocations, network I/O
-    Internal.setEnableJfrFeature(builder, "CONTEXT_SWITCH_METRICS");
+            + " removed in 3.0. Use"
+            + " otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics instead.");
+    enableDefaultJfrFeatures(builder);
+    // Preserve legacy behavior of the deprecated runtime-telemetry-java17 module, which enabled
+    // CPU_COUNT_METRICS by default (emitted as jvm.cpu.limit via useLegacyJfrCpuCountMetric).
     Internal.setEnableJfrFeature(builder, "CPU_COUNT_METRICS");
-    Internal.setEnableJfrFeature(builder, "LOCK_METRICS");
-    Internal.setEnableJfrFeature(builder, "MEMORY_ALLOCATION_METRICS");
-    Internal.setEnableJfrFeature(builder, "NETWORK_IO_METRICS");
     Internal.setUseLegacyJfrCpuCountMetric(builder, true);
     // For backward compatibility: OLD java17 module used java8's JMX factory, so JMX -> java8 scope
     Internal.setJmxInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java8");
     Internal.setJfrInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java17");
   }
 
+  private static void enableDefaultJfrFeatures(RuntimeTelemetryBuilder builder) {
+    Internal.setEnableJfrFeature(builder, "CONTEXT_SWITCH_METRICS");
+    Internal.setEnableJfrFeature(builder, "LOCK_METRICS");
+    Internal.setEnableJfrFeature(builder, "MEMORY_ALLOCATION_METRICS");
+    Internal.setEnableJfrFeature(builder, "NETWORK_IO_METRICS");
+  }
+
   private static void configureUnified(
       RuntimeTelemetryBuilder builder, DeclarativeConfigProperties config) {
-    // Check if user is using new unified config options
     boolean emitExperimentalMetrics =
         config.getBoolean("emit_experimental_metrics/development", false);
-    boolean preferJfr = config.getBoolean("prefer_jfr/development", false);
-    boolean newConfig = emitExperimentalMetrics || preferJfr;
+    boolean emitExperimentalJfrMetrics =
+        config.getBoolean("emit_experimental_jfr_metrics/development", false);
+    boolean preferJfrMetrics = config.getBoolean("prefer_jfr/development", false);
+    boolean newConfig = emitExperimentalMetrics || emitExperimentalJfrMetrics || preferJfrMetrics;
 
     if (newConfig) {
       // New unified config: Use new instrumentation name for both JMX and JFR
@@ -357,8 +363,10 @@ public final class Internal {
       Experimental.setEmitExperimentalMetrics(builder, true);
     }
 
-    // Apply prefer_jfr
-    if (preferJfr) {
+    if (emitExperimentalJfrMetrics) {
+      Experimental.setEmitExperimentalJfrMetrics(builder, true);
+    }
+    if (preferJfrMetrics) {
       Experimental.setPreferJfrMetrics(builder, true);
     }
 

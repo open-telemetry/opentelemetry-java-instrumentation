@@ -3,9 +3,6 @@ name: Reusable - Native tests
 on:
   workflow_call:
     inputs:
-      skip-native-tests:
-        type: boolean
-        required: false
       test-latest-deps:
         type: boolean
         required: false
@@ -15,7 +12,6 @@ permissions:
 
 jobs:
   graalvm-native-tests:
-    if: "!inputs.skip-native-tests"
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,7 +24,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - id: read-java
         run: echo "version=$(cat .java-version)" >> "$GITHUB_OUTPUT"
-      - uses: graalvm/setup-graalvm@f744c72a42b1995d7b0cbc314bde4bace7ac1fe1 # v1.5.0.1
+      - uses: graalvm/setup-graalvm@bef4b0e916c7dd079bf60fb95d49139f67e32c5f # v1.5.3.1
         with:
           version: "latest"
           java-version: ${{ matrix.test-java-version }}
@@ -44,5 +40,5 @@ jobs:
           # therefore we're starting a Kafka container manually for the tests
           docker compose -f .github/graal-native-docker-compose.yaml up -d
           # don't wait for startup - gradle compile takes long enough
-          ./gradlew ${{ inputs.test-latest-deps && '-PtestLatestDeps=true' || '' }} nativeTest
+          ./gradlew ${{ inputs.test-latest-deps && '-PtestLatestDeps=true' || '' }} nativeTest --no-configuration-cache
           docker compose -f .github/graal-native-docker-compose.yaml down # is this needed?

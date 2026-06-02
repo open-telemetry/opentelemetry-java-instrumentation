@@ -13,9 +13,6 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
-
   bootstrap(project(":instrumentation:rmi:bootstrap"))
   testInstrumentation(project(":instrumentation:rmi:javaagent"))
 
@@ -35,7 +32,7 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_23)
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
   systemProperty("collectMetadata", otelProps.collectMetadata)
 }

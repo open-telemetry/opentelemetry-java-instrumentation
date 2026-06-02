@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.when;
 
@@ -48,27 +47,21 @@ class FileDescriptorTest {
 
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.file_descriptor.count",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription("Number of open file descriptors as reported by the JVM.")
-                        .hasUnit("{file_descriptor}")
-                        .hasLongSumSatisfying(
-                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(42)))));
+        metric ->
+            metric
+                .hasName("jvm.file_descriptor.count")
+                .hasDescription("Number of open file descriptors as reported by the JVM.")
+                .hasUnit("{file_descriptor}")
+                .hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(42))));
 
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.file_descriptor.limit",
-        metrics ->
-            metrics.anySatisfy(
-                metricData ->
-                    assertThat(metricData)
-                        .hasDescription(
-                            "Measure of max open file descriptors as reported by the JVM.")
-                        .hasUnit("{file_descriptor}")
-                        .hasLongSumSatisfying(
-                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(100)))));
+        metric ->
+            metric
+                .hasName("jvm.file_descriptor.limit")
+                .hasDescription("Measure of max open file descriptors as reported by the JVM.")
+                .hasUnit("{file_descriptor}")
+                .hasLongSumSatisfying(
+                    sum -> sum.hasPointsSatisfying(point -> point.hasValue(100))));
   }
 }

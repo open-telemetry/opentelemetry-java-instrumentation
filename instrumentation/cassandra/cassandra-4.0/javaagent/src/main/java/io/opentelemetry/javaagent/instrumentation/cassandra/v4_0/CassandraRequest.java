@@ -9,16 +9,15 @@ import com.datastax.oss.driver.api.core.session.Session;
 import com.google.auto.value.AutoValue;
 
 @AutoValue
-public abstract class CassandraRequest {
+abstract class CassandraRequest {
 
-  public static CassandraRequest create(
-      Session session, String queryText, boolean parameterizedQuery) {
+  static CassandraRequest create(Session session, String queryText, boolean parameterizedQuery) {
     return new AutoValue_CassandraRequest(session, queryText, parameterizedQuery);
   }
 
-  public abstract Session getSession();
+  abstract Session getSession();
 
-  public abstract String getQueryText();
+  abstract String getQueryText();
 
-  public abstract boolean isParameterizedQuery();
+  abstract boolean isParameterizedQuery();
 }

@@ -27,10 +27,10 @@ public class FutureConverter {
     return futures;
   }
 
-  public static class ListFutureCallback<T> implements FutureCallback<List<T>> {
+  private static class ListFutureCallback<T> implements FutureCallback<List<T>> {
     private final List<SettableFuture<T>> futures;
 
-    public ListFutureCallback(List<SettableFuture<T>> futures) {
+    private ListFutureCallback(List<SettableFuture<T>> futures) {
       this.futures = futures;
     }
 

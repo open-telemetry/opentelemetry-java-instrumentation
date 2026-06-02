@@ -24,15 +24,15 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
     printObject = true)
 public class ListAppender extends AbstractAppender {
 
+  private static final ListAppender INSTANCE = new ListAppender();
+
   public static ListAppender get() {
     return INSTANCE;
   }
 
-  private static final ListAppender INSTANCE = new ListAppender();
-
   private final List<LoggedEvent> events = Collections.synchronizedList(new ArrayList<>());
 
-  public ListAppender() {
+  private ListAppender() {
     super("ListAppender", null, null, /* ignoreExceptions= */ true);
   }
 

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0.OpenSearchRestSingletons.convertResponse;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0.OpenSearchRestSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -16,8 +15,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestRequest;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.RestResponseListener;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestRequest;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.RestResponseListener;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -87,7 +86,8 @@ class RestClientInstrumentation implements TypeInstrumentation {
 
     public void endWithResponse(@Nullable Response response, @Nullable Throwable throwable) {
       scope.close();
-      instrumenter().end(context, otelRequest, convertResponse(response), throwable);
+      instrumenter()
+          .end(context, otelRequest, OpenSearchRestSingletons.convertResponse(response), throwable);
     }
 
     public void endWithListener(@Nullable Throwable throwable) {
@@ -103,6 +103,7 @@ class RestClientInstrumentation implements TypeInstrumentation {
   public static class PerformRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static AdviceScope onEnter(@Advice.Argument(0) Request request) {
       return AdviceScope.start(request);
     }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.AwsSdkSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -34,7 +35,7 @@ class DefaultSqsAsyncClientBuilderInstrumentation implements TypeInstrumentation
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static SqsAsyncClient methodExit(@Advice.Return SqsAsyncClient sqsClient) {
-      return AwsSdkSingletons.telemetry().wrap(sqsClient);
+      return telemetry().wrap(sqsClient);
     }
   }
 }

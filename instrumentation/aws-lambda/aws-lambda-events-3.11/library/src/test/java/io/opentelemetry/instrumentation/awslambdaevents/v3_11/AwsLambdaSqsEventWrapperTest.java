@@ -106,8 +106,8 @@ class AwsLambdaSqsEventWrapperTest {
     try {
       Constructor<SQSEvent.SQSMessage> ctor = SQSEvent.SQSMessage.class.getDeclaredConstructor();
       return ctor.newInstance();
-    } catch (ReflectiveOperationException t) {
-      throw new LinkageError(t.getMessage(), t);
+    } catch (ReflectiveOperationException e) {
+      throw new LinkageError(e.getMessage(), e);
     }
   }
 }

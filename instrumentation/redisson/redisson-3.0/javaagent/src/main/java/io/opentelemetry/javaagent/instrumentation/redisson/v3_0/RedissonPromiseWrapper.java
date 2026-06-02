@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.redisson.EndOperationListener;
-import io.opentelemetry.javaagent.instrumentation.redisson.PromiseWrapper;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.EndOperationListener;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.PromiseWrapper;
 import org.redisson.misc.RPromise;
 import org.redisson.misc.RedissonPromise;
 

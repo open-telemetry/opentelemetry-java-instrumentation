@@ -41,7 +41,7 @@ public abstract class AbstractStepFunctionsClientTest extends AbstractBaseAwsCli
       String operation,
       List<AttributeAssertion> additionalAttributes,
       Function<AWSStepFunctions, Object> call)
-      throws Exception {
+      throws ReflectiveOperationException {
 
     AWSStepFunctionsClientBuilder clientBuilder = AWSStepFunctionsClientBuilder.standard();
 

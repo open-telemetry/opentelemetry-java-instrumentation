@@ -18,11 +18,4 @@ class LogbackTest extends AbstractLogbackTest {
   protected InstrumentationExtension testing() {
     return testing;
   }
-
-  @Override
-  protected boolean expectEventName() {
-    // TODO support event name in the agent once the attribute name is decided
-    // see https://github.com/open-telemetry/semantic-conventions/issues/2913
-    return false;
-  }
 }

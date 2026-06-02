@@ -34,9 +34,21 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
   @Override
   public Iterator<String> getAll(@Nullable Request carrier, String key) {
     Form headers = getHeaders(carrier);
-    return headers == null
-        ? emptyIterator()
-        : headers.subList(key, true).stream().map(Parameter::getValue).iterator();
+    if (headers == null) {
+      return emptyIterator();
+    }
+    Iterator<Parameter> iterator = headers.subList(key, true).iterator();
+    return new Iterator<String>() {
+      @Override
+      public boolean hasNext() {
+        return iterator.hasNext();
+      }
+
+      @Override
+      public String next() {
+        return iterator.next().getValue();
+      }
+    };
   }
 
   @Nullable

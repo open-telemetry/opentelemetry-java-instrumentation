@@ -5,18 +5,21 @@ semantic_conventions:
   - MESSAGING_SPANS
 configurations:
   - name: otel.instrumentation.rabbitmq.experimental-span-attributes
+    declarative_name: java.rabbitmq.experimental_span_attributes/development
     description: >
       Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
       `rabbitmq.queue`, and `rabbitmq.record.queue_time_ms`.
     type: boolean
     default: false
-  - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: >
       Enables the creation of consumer spans on messaging receive operations. These spans will
       measure the time between receiving a message and the consumer processing that message.
     type: boolean
     default: false
-  - name: otel.instrumentation.common.messaging.capture-headers
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    declarative_name: java.common.messaging.capture_headers/development
     description: List of messaging headers to capture.
     type: list
     default: ""

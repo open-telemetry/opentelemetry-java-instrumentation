@@ -25,6 +25,7 @@ public class JmxRuntimeMetricsFactory {
     if (!preferJfrMetrics) {
       observables.addAll(Classes.registerObservers(meter));
       observables.addAll(Cpu.registerObservers(meter));
+      observables.addAll(CpuCount.registerObservers(meter));
       observables.addAll(GarbageCollector.registerObservers(meter, captureGcCause));
       observables.addAll(MemoryPools.registerObservers(meter));
       observables.addAll(Threads.registerObservers(meter));

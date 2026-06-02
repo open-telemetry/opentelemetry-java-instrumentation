@@ -67,10 +67,10 @@ must be communicated through:
    (`otel.instrumentation.…`) since that is what most users configure today:
 
    ```java
-   boolean captureEventName = config.getBoolean("capture_event_name/development", false);
-   if (captureEventName) {
+   boolean oldSetting = config.getBoolean("old_setting/development", false);
+   if (oldSetting) {
      logger.warning(
-         "The otel.instrumentation.logback-appender.experimental.capture-event-name setting is"
+         "The otel.instrumentation.<module>.experimental.old-setting setting is"
              + " deprecated and will be removed in a future version.");
    }
    ```

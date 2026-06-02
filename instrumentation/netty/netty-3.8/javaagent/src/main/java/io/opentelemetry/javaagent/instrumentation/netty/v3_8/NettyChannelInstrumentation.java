@@ -79,8 +79,8 @@ class NettyChannelInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return ChannelFuture channelFuture,
-        @Advice.Thrown Throwable error,
-        @Advice.Enter NettyScope nettyScope) {
+        @Advice.Thrown @Nullable Throwable error,
+        @Advice.Enter @Nullable NettyScope nettyScope) {
 
       if (nettyScope == null) {
         return;

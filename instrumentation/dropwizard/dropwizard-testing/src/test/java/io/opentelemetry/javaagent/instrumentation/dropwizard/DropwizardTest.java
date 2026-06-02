@@ -33,7 +33,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Locale;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -168,11 +167,13 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
 
     @GET
     @Path("redirect")
-    public Response redirect() throws URISyntaxException {
+    public Response redirect() {
       return controller(
           REDIRECT,
           () ->
-              Response.status(REDIRECT.getStatus()).location(new URI(REDIRECT.getBody())).build());
+              Response.status(REDIRECT.getStatus())
+                  .location(URI.create(REDIRECT.getBody()))
+                  .build());
     }
   }
 
@@ -188,7 +189,7 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
 
     @GET
     @Path("exception")
-    public Response exception() throws Exception {
+    public Response exception() {
       return controller(
           EXCEPTION,
           () -> {

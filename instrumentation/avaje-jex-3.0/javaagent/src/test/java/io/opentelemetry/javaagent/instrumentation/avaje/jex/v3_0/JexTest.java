@@ -46,7 +46,7 @@ class JexTest {
   static void setup() {
     app = TestJexJavaApplication.initJex();
     port = app.port();
-    client = WebClient.of("http://localhost:" + port);
+    client = WebClient.of("h1c://localhost:" + port);
   }
 
   @AfterAll
@@ -122,14 +122,12 @@ class JexTest {
     assertThat(response.status().code()).isEqualTo(200);
     testing.waitAndAssertMetrics(
         instrumentation,
-        "http.server.request.duration",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}")))));
+        metric ->
+            metric
+                .hasName("http.server.request.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}"))));
   }
 }

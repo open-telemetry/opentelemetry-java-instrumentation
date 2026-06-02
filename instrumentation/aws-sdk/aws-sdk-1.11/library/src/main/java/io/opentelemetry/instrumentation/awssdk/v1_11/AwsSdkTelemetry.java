@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Entrypoint for instrumenting AWS SDK v1 clients.
@@ -22,7 +23,7 @@ import java.util.List;
  * ensure you do not register any problematic {@link RequestHandler2}s on your clients or you will
  * witness broken traces.
  */
-public class AwsSdkTelemetry {
+public final class AwsSdkTelemetry {
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
@@ -77,6 +78,7 @@ public class AwsSdkTelemetry {
    * there is no {@link Context}. This is generally not needed unless you are implementing your own
    * instrumentation that delegates to this one.
    */
+  @Nullable
   public static Context getOpenTelemetryContext(Request<?> request) {
     return request.getHandlerContext(TracingRequestHandler.CONTEXT);
   }

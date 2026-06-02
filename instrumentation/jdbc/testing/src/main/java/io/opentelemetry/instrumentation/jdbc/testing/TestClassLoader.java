@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.jdbc.testing;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-public class TestClassLoader extends URLClassLoader {
+class TestClassLoader extends URLClassLoader {
 
-  public TestClassLoader(ClassLoader parent) {
+  TestClassLoader(ClassLoader parent) {
     super(
         new URL[] {TestClassLoader.class.getProtectionDomain().getCodeSource().getLocation()},
         parent);

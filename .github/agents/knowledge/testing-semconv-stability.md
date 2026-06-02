@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - Use when: reviewing semconv dual-mode assertions or `testStableSemconv` / `testBothSemconv` tasks
-- Review focus: mode-specific assertions, `maybeStable()` usage boundaries, class-level deprecation suppression
+- Review focus: mode-specific assertions, `maybeStable()` usage boundaries
 
 ## Background: The Three Modes
 
@@ -76,24 +76,30 @@ for other domains `check { dependsOn(testStableSemconv) }`.
 
 ## Asserting Attributes in Tests
 
-Preferred approach (most compact) — inline ternary with `emitStable*()`, where `null` means
-the attribute is expected absent:
+For the cross-cutting shape — inline ternary with `null` for "absent", static-imported flag
+accessors, and `assumeTrue(...)` guidance — see
+[testing-general-patterns.md](testing-general-patterns.md#flag-gated--mode-dependent-assertions).
+The semconv-specific patterns below build on that shape.
 
-```java
-equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
-equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)
-span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")
-```
+### `maybeStable(OLD_KEY)` for 1:1 key renames
 
-Use `maybeStable(oldKey)` when only the attribute key changes and the value stays the same.
-`maybeStable()` does NOT cover `dup` mode — use separate `if` blocks for that.
+Use `maybeStable(OLD_KEY)` when only the attribute *key* flips between old and stable
+semconv and the value is identical:
 
 ```java
 span.hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?"));
 ```
 
-Use separate `if` blocks (not `if/else`) when assertion structure differs significantly between
-modes — this ensures both branches execute in `dup` mode:
+`maybeStable()` does **not** cover `/dup` mode (it returns one key, not both), and does
+**not** apply where the mapping isn't 1:1 — for example `DB_RESPONSE_STATUS_CODE` →
+`ERROR_TYPE`. Use `emitOld*()` / `emitStable*()` `if` blocks for those.
+
+### `if` blocks (not `if/else`) when structure differs
+
+When the *set* of asserted attributes differs between modes — not just values — use
+separate top-level `if` blocks rather than `if/else`. For domains that support `/dup` mode
+(currently RPC), this is required so both branches run; for other domains it's a habit
+that keeps the assertion `/dup`-safe if the domain ever adopts it:
 
 ```java
 if (emitStableCodeSemconv()) {
@@ -103,12 +109,3 @@ if (emitOldCodeSemconv()) {
   assertThat(attributes).containsEntry(CODE_NAMESPACE, "MyClass");
 }
 ```
-
-Use `assumeTrue(emitStable*())` only when an entire test is meaningful in one mode only.
-
-## Key Rules
-
-- Add `@SuppressWarnings("deprecation")` at class level when tests use old Semconv constants.
-- Use `if` (not `if/else`) for dual-mode assertions so both branches run in `/dup` mode.
-- Do NOT use `maybeStable()` for `DB_RESPONSE_STATUS_CODE` → `ERROR_TYPE` — these don't have
-  a 1:1 mapping. Use `emitOld*()`/`emitStable*()` `if` blocks instead.

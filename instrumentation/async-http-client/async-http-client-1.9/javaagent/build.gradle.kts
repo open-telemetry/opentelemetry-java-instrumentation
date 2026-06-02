@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:async-http-client:async-http-client-1-common:javaagent"))
+  implementation(project(":instrumentation:async-http-client:async-http-client-common-1.8:javaagent"))
 
   library("com.ning:async-http-client:1.9.0")
 

@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v11_0;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import jakarta.servlet.http.HttpServletResponse;
 
-public class Jetty11ResponseMutator implements HttpServerResponseMutator<HttpServletResponse> {
+enum Jetty11ResponseMutator implements HttpServerResponseMutator<HttpServletResponse> {
+  INSTANCE;
 
   @Override
   public void appendHeader(HttpServletResponse response, String name, String value) {

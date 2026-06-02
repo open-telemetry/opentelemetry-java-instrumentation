@@ -45,13 +45,15 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
     public static class AdviceScope {
       private final Context context;
       private final Scope scope;
+      private final Message message;
 
-      public AdviceScope(Context context, Scope scope) {
+      public AdviceScope(Context context, Message message) {
         this.context = context;
-        this.scope = scope;
+        this.scope = context.makeCurrent();
+        this.message = message;
       }
 
-      public void exit(@Nullable Throwable throwable, Message message) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, message, null, throwable);
       }
@@ -69,18 +71,17 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
         return null;
       }
       Context context = instrumenter().start(parentContext, message);
-      return new AdviceScope(context, context.makeCurrent());
+      return new AdviceScope(context, message);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Argument(1) Object data,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope == null || !(data instanceof Message)) {
+      if (adviceScope == null) {
         return;
       }
-      adviceScope.exit(throwable, (Message) data);
+      adviceScope.end(throwable);
     }
   }
 }

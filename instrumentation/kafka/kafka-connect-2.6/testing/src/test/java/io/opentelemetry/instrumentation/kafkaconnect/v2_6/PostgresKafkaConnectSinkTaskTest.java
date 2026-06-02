@@ -70,7 +70,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   private static final String CONNECTOR_NAME = "test-postgres-connector";
   private static final String TOPIC_NAME = "test-postgres-topic";
 
-  private static PostgreSQLContainer<?> postgreSql;
+  private PostgreSQLContainer<?> postgreSql;
 
   @Override
   protected void setupDatabaseContainer() {
@@ -99,7 +99,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Override
-  protected void clearDatabaseData() throws Exception {
+  protected void clearDatabaseData() throws SQLException {
     clearPostgresTable();
   }
 
@@ -115,13 +115,13 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  void testSingleMessage() throws Exception {
+  void testSingleMessage() throws IOException {
     String testTopicName = TOPIC_NAME;
     setupPostgresSinkConnector(testTopicName);
     awaitForTopicCreation(testTopicName);
 
     Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBootstrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
@@ -206,7 +206,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  void testMultiTopic() throws Exception {
+  void testMultiTopic() throws IOException {
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";
@@ -217,7 +217,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     awaitForTopicCreation(topicName3);
 
     Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBootstrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.BATCH_SIZE_CONFIG, 10); // to send messages in one batch
@@ -341,7 +341,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                 span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()));
   }
 
-  private static void setupPostgresSinkConnector(String topicName) throws IOException {
+  private void setupPostgresSinkConnector(String topicName) throws IOException {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put("connector.class", "io.confluent.connect.jdbc.JdbcSinkConnector");
     configMap.put("tasks.max", "1");
@@ -366,7 +366,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     configMap.put("pk.mode", "none");
 
     String payload =
-        MAPPER.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
+        mapper.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
     given()
         .log()
         .headers()
@@ -381,8 +381,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         .all();
   }
 
-  private static void setupPostgresSinkConnectorMultiTopic(String... topicNames)
-      throws IOException {
+  private void setupPostgresSinkConnectorMultiTopic(String... topicNames) throws IOException {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put("connector.class", "io.confluent.connect.jdbc.JdbcSinkConnector");
     configMap.put("tasks.max", "1");
@@ -408,7 +407,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     configMap.put("pk.mode", "none");
 
     String payload =
-        MAPPER.writeValueAsString(
+        mapper.writeValueAsString(
             ImmutableMap.of("name", CONNECTOR_NAME + "-multi", "config", configMap));
     given()
         .log()
@@ -424,7 +423,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         .all();
   }
 
-  private static long getRecordCountFromPostgres() throws SQLException {
+  private long getRecordCountFromPostgres() throws SQLException {
     try (Connection conn =
             DriverManager.getConnection(postgreSql.getJdbcUrl(), DB_USERNAME, DB_PASSWORD);
         Statement st = conn.createStatement();
@@ -436,7 +435,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     return 0;
   }
 
-  private static void clearPostgresTable() throws SQLException {
+  private void clearPostgresTable() throws SQLException {
     try (Connection conn =
             DriverManager.getConnection(postgreSql.getJdbcUrl(), DB_USERNAME, DB_PASSWORD);
         Statement st = conn.createStatement()) {

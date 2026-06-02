@@ -68,5 +68,5 @@ public class ContextDispatcher implements Dispatcher {
     call.done();
   }
 
-  public static class NoopRemote implements Remote {}
+  private static class NoopRemote implements Remote {}
 }

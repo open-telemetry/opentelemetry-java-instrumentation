@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 import static java.util.Collections.singletonList;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.AbstractElasticsearchNodeClientTest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.AbstractElasticsearchNodeClientTest;
 import java.io.File;
 import java.util.UUID;
 import org.elasticsearch.client.Client;
@@ -17,7 +17,6 @@ import org.elasticsearch.env.Environment;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.internal.InternalSettingsPreparer;
 import org.elasticsearch.transport.Netty3Plugin;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -49,6 +48,7 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
         new Node(
             new Environment(InternalSettingsPreparer.prepareSettings(settings)),
             singletonList(Netty3Plugin.class)) {};
+    cleanup.deferAfterAll(testNode);
     startNode(testNode);
 
     client = testNode.client();
@@ -69,13 +69,8 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
     testing.clearData();
   }
 
-  @AfterAll
-  static void cleanUp() throws Exception {
-    testNode.close();
-  }
-
   @Override
-  public Client client() {
+  protected Client client() {
     return client;
   }
 

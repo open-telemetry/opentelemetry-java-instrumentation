@@ -126,8 +126,8 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
       Thread.currentThread().interrupt();
       httpClientResult.complete(e);
       return;
-    } catch (Throwable th) {
-      httpClientResult.complete(th);
+    } catch (Throwable t) {
+      httpClientResult.complete(t);
       return;
     }
     CompletableFuture<Integer> result = new CompletableFuture<>();

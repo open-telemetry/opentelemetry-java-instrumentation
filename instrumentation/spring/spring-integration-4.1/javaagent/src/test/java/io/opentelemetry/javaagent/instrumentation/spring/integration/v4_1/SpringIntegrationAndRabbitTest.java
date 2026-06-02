@@ -27,10 +27,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SpringIntegrationAndRabbitTest {
 
-  @RegisterExtension RabbitExtension rabbit;
+  @RegisterExtension private final RabbitExtension rabbit;
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   SpringIntegrationAndRabbitTest() {
     rabbit = new RabbitExtension(null);

@@ -29,7 +29,7 @@ public class FutureListenerWrappers {
   private static final VirtualField<
           GenericFutureListener<? extends Future<?>>,
           WeakReference<GenericFutureListener<? extends Future<?>>>>
-      wrapperVirtualField = VirtualField.find(GenericFutureListener.class, WeakReference.class);
+      WRAPPER_VIRTUAL_FIELD = VirtualField.find(GenericFutureListener.class, WeakReference.class);
 
   private static final ClassValue<Boolean> shouldWrap =
       new ClassValue<Boolean>() {
@@ -54,7 +54,7 @@ public class FutureListenerWrappers {
     // collected before we have a chance to make (and return) a strong reference to the wrapper
 
     WeakReference<GenericFutureListener<? extends Future<?>>> resultReference =
-        wrapperVirtualField.get(delegate);
+        WRAPPER_VIRTUAL_FIELD.get(delegate);
 
     if (resultReference != null) {
       GenericFutureListener<? extends Future<?>> wrapper = resultReference.get();
@@ -75,14 +75,14 @@ public class FutureListenerWrappers {
     } else {
       wrapper = new WrappedFutureListener(context, (GenericFutureListener<Future<?>>) delegate);
     }
-    wrapperVirtualField.set(delegate, new WeakReference<>(wrapper));
+    WRAPPER_VIRTUAL_FIELD.set(delegate, new WeakReference<>(wrapper));
     return wrapper;
   }
 
   public static GenericFutureListener<? extends Future<?>> getWrapper(
       GenericFutureListener<? extends Future<?>> delegate) {
     WeakReference<GenericFutureListener<? extends Future<?>>> wrapperReference =
-        wrapperVirtualField.get(delegate);
+        WRAPPER_VIRTUAL_FIELD.get(delegate);
     if (wrapperReference == null) {
       return delegate;
     }

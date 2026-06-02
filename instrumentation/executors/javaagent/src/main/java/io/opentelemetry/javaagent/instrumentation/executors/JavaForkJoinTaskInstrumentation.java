@@ -47,10 +47,9 @@ class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("exec").and(takesArguments(0)).and(not(isAbstract())),
-        JavaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
+        getClass().getName() + "$ForkJoinTaskAdvice");
     transformer.applyAdviceToMethod(
-        named("fork").and(takesArguments(0)),
-        JavaForkJoinTaskInstrumentation.class.getName() + "$ForkAdvice");
+        named("fork").and(takesArguments(0)), getClass().getName() + "$ForkAdvice");
   }
 
   @SuppressWarnings("unused")

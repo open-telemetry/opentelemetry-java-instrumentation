@@ -66,7 +66,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
   }
 
   @Test
-  void handlerTraced() throws Exception {
+  void handlerTraced() throws IOException {
     String content =
         "{"
             + "\"headers\" : {"
@@ -137,13 +137,13 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
 
   public static class TestRequestHandler implements RequestStreamHandler {
 
-    private static final JsonFactory JSON_FACTORY = new JsonFactory();
+    private static final JsonFactory jsonFactory = new JsonFactory();
 
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context)
         throws IOException {
       String body = "";
-      try (JsonParser parser = JSON_FACTORY.createParser(input)) {
+      try (JsonParser parser = jsonFactory.createParser(input)) {
         parser.nextToken();
         while (parser.nextToken() != JsonToken.END_OBJECT) {
           parser.nextToken();

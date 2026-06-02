@@ -70,9 +70,9 @@ class OtelExecChainHandler implements ExecChainHandler {
     try (io.opentelemetry.context.Scope ignored = context.makeCurrent()) {
       response = chain.proceed(request, scope);
       return response;
-    } catch (Exception e) {
-      error = e;
-      throw e;
+    } catch (Throwable t) {
+      error = t;
+      throw t;
     } finally {
       instrumenter.end(context, instrumenterRequest, response, error);
     }

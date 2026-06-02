@@ -15,10 +15,10 @@ import javax.annotation.Nullable;
  * any time.
  */
 public class OpenTelemetryInstrumentationState implements InstrumentationState {
-  private Context context;
-  private Operation operation;
-  private String operationName;
-  private String query;
+  @Nullable private Context context;
+  @Nullable private Operation operation;
+  @Nullable private String operationName;
+  @Nullable private String query;
 
   @Nullable
   public Context getContext() {
@@ -43,7 +43,7 @@ public class OpenTelemetryInstrumentationState implements InstrumentationState {
     return operationName;
   }
 
-  public void setOperationName(String operationName) {
+  public void setOperationName(@Nullable String operationName) {
     this.operationName = operationName;
   }
 

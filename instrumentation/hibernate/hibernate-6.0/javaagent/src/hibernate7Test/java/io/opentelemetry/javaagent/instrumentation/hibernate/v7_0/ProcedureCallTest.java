@@ -56,23 +56,22 @@ class ProcedureCallTest {
     sessionFactory =
         new Configuration().configure("procedure-call-hibernate.cfg.xml").buildSessionFactory();
     // Pre-populate the DB, so delete/update can be tested.
-    Session writer = sessionFactory.openSession();
-    writer.beginTransaction();
-    prepopulated = new ArrayList<>();
-    for (int i = 0; i < 2; i++) {
-      prepopulated.add(new Value("Hello :) " + i));
-      writer.persist(prepopulated.get(i));
+    try (Session writer = sessionFactory.openSession()) {
+      writer.beginTransaction();
+      prepopulated = new ArrayList<>();
+      for (int i = 0; i < 2; i++) {
+        prepopulated.add(new Value("Hello :) " + i));
+        writer.persist(prepopulated.get(i));
+      }
+      writer.getTransaction().commit();
     }
-    writer.getTransaction().commit();
-    writer.close();
 
     // Create a stored procedure.
-    Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "sa", "1");
-    Statement stmt = conn.createStatement();
-    stmt.execute(
-        "CREATE PROCEDURE TEST_PROC() MODIFIES SQL DATA BEGIN ATOMIC INSERT INTO Value VALUES (420, 'fred'); END");
-    stmt.close();
-    conn.close();
+    try (Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "sa", "1");
+        Statement stmt = conn.createStatement()) {
+      stmt.execute(
+          "CREATE PROCEDURE TEST_PROC() MODIFIES SQL DATA BEGIN ATOMIC INSERT INTO Value VALUES (420, 'fred'); END");
+    }
   }
 
   @AfterAll
@@ -162,7 +161,7 @@ class ProcedureCallTest {
           call.setParameter(parameterRegistration, 420L);
           try {
             call.getOutputs();
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this.
           }
           session.getTransaction().commit();

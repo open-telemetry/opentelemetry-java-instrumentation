@@ -31,7 +31,7 @@ public class HttpServletResponseAdviceHelper {
     return null;
   }
 
-  public static final class StartResult {
+  public static class StartResult {
     private final ClassAndMethod classAndMethod;
     private final Context context;
     private final Scope scope;
@@ -57,7 +57,7 @@ public class HttpServletResponseAdviceHelper {
 
   public static void stopSpan(
       Instrumenter<ClassAndMethod, Void> instrumenter,
-      Throwable throwable,
+      @Nullable Throwable throwable,
       @Nullable Context context,
       @Nullable Scope scope,
       @Nullable ClassAndMethod request) {

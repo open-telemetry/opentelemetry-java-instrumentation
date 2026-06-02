@@ -21,13 +21,13 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
   private final Dispatcher delegate;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
-  public OpenTelemetryDispatcher(
+  private OpenTelemetryDispatcher(
       Dispatcher delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.delegate = delegate;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
-  public static Dispatcher wrap(
+  static Dispatcher wrap(
       Dispatcher delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     return (Dispatcher)
         Proxy.newProxyInstance(

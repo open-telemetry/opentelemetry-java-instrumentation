@@ -119,11 +119,11 @@ class RestletAppTestBase {
                   (key) -> {
                     try {
                       return constructor.newInstance(headerClass);
-                    } catch (Exception e) {
+                    } catch (ReflectiveOperationException e) {
                       throw new IllegalStateException(e);
                     }
                   });
-    } catch (ClassNotFoundException | NoClassDefFoundError | NoSuchMethodException e) {
+    } catch (ClassNotFoundException | NoClassDefFoundError | NoSuchMethodException ignored) {
       responseHeaders =
           (Series<?>)
               responseAttributes.computeIfAbsent("org.restlet.http.headers", (key) -> new Form());

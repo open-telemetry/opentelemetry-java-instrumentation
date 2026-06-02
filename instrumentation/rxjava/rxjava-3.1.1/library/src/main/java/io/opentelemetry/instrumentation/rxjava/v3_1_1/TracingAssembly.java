@@ -50,13 +50,13 @@ import org.reactivestreams.Subscriber;
 /**
  * RxJava3 library instrumentation.
  *
- * <p>In order to enable RxJava3 instrumentation one has to call the {@link
- * TracingAssembly#enable()} method.
+ * <p>In order to enable RxJava3 instrumentation create a {@link TracingAssembly} with {@link
+ * #create()} or {@link #builder()} and then call {@link #enable()}.
  *
  * <p>Instrumentation uses <code>on*Assembly</code> and <code>on*Subscribe</code> RxJavaPlugin hooks
  * to wrap RxJava3 classes in their tracing equivalents.
  *
- * <p>Instrumentation can be disabled by calling the {@link TracingAssembly#disable()} method.
+ * <p>Instrumentation can be disabled by calling {@link #disable()} on that instance.
  */
 @SuppressWarnings("SuppressWarningsWithoutExplanation") // RxJavaPlugins uses raw types
 public final class TracingAssembly {
@@ -106,6 +106,7 @@ public final class TracingAssembly {
   private static boolean enabled;
 
   @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static RxJava3AsyncOperationEndStrategy asyncOperationEndStrategy;
 
   public static TracingAssembly create() {
@@ -347,7 +348,7 @@ public final class TracingAssembly {
   }
 
   private static <T> Function<? super T, ? extends T> compose(
-      Function<? super T, ? extends T> before, Function<? super T, ? extends T> after) {
+      @Nullable Function<? super T, ? extends T> before, Function<? super T, ? extends T> after) {
     if (before == null) {
       return after;
     }
@@ -355,7 +356,7 @@ public final class TracingAssembly {
   }
 
   private static <T, U> BiFunction<? super T, ? super U, ? extends U> biCompose(
-      BiFunction<? super T, ? super U, ? extends U> before,
+      @Nullable BiFunction<? super T, ? super U, ? extends U> before,
       BiFunction<? super T, ? super U, ? extends U> after) {
     if (before == null) {
       return after;

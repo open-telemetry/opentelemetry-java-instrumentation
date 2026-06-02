@@ -18,8 +18,7 @@ import org.eclipse.jetty.http.HttpVersion;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class JettyClientHttpAttributesGetter
-    implements HttpClientAttributesGetter<Request, Response> {
+class JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Request, Response> {
 
   @Override
   @Nullable

@@ -60,26 +60,6 @@ class DbConfigTest {
   }
 
   @Test
-  void commonSqlCommenterPropertyIsUsedAsFallback() {
-    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
-    DeclarativeConfigProperties commonConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    DeclarativeConfigProperties instrumentationConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(openTelemetry.getInstrumentationConfig("jdbc")).thenReturn(instrumentationConfig);
-    when(instrumentationConfig.get("sqlcommenter/development").getBoolean("enabled"))
-        .thenReturn(null);
-    when(commonConfig.get("db").get("sqlcommenter/development").getBoolean("enabled"))
-        .thenReturn(null);
-    when(commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled"))
-        .thenReturn(null);
-    when(commonConfig.get("db_sqlcommenter/development").getBoolean("enabled")).thenReturn(true);
-
-    assertThat(DbConfig.isSqlCommenterEnabled(openTelemetry, "jdbc")).isTrue();
-  }
-
-  @Test
   void deprecatedCommonSqlCommenterConfigWarningUsesFutureVersionMessage() throws Exception {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig =

@@ -20,13 +20,16 @@ public class ItemSingletons {
   static final String ITEM_OPERATION_WRITE = "ItemWrite";
   static final String ITEM_OPERATION_PROCESS = "ItemProcess";
 
-  private static final Instrumenter<String, Void> instrumenter =
+  private static final ContextKey<ChunkContext> CHUNK_CONTEXT_KEY =
+      ContextKey.named("opentelemetry-spring-batch-chunk-context-context-key");
+
+  private static final Instrumenter<String, Void> itemInstrumenter =
       Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), str -> str)
           .buildInstrumenter();
 
   public static Instrumenter<String, Void> itemInstrumenter() {
-    return instrumenter;
+    return itemInstrumenter;
   }
 
   public static String itemName(ChunkContext chunkContext, String itemOperationName) {
@@ -35,9 +38,6 @@ public class ItemSingletons {
 
     return "BatchJob " + jobName + "." + stepName + "." + itemOperationName;
   }
-
-  private static final ContextKey<ChunkContext> CHUNK_CONTEXT_KEY =
-      ContextKey.named("opentelemetry-spring-batch-chunk-context-context-key");
 
   /**
    * Item-level listeners do not receive chunk/step context as parameters. Fortunately the whole

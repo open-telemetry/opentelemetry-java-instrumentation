@@ -12,7 +12,6 @@ import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldH
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.FORKJOINTASK_PROPAGATED_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.FUTURE_PROPAGATED_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.RUNNABLE_PROPAGATED_CONTEXT;
-import static java.util.Collections.emptyList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -53,45 +52,44 @@ class JavaExecutorInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, Runnable.class)).and(takesArguments(1)),
-        JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
+        getClass().getName() + "$SetExecuteRunnableStateAdvice");
     // Netty uses addTask as the actual core of their submission; there are non-standard variations
     // like execute(Runnable,boolean) that aren't caught by standard instrumentation
     transformer.applyAdviceToMethod(
         named("addTask").and(takesArgument(0, Runnable.class)).and(takesArguments(1)),
-        JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
+        getClass().getName() + "$SetExecuteRunnableStateAdvice");
     transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, ForkJoinTask.class)),
-        JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
+        getClass().getName() + "$SetJavaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
         named("submit")
             .and(takesArgument(0, Runnable.class))
             .and(returns(hasSuperType(is(Future.class)))),
-        JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
+        getClass().getName() + "$SetSubmitRunnableStateAdvice");
     transformer.applyAdviceToMethod(
         named("submit")
             .and(takesArgument(0, Callable.class))
             .and(returns(hasSuperType(is(Future.class)))),
-        JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
+        getClass().getName() + "$SetCallableStateAdvice");
     transformer.applyAdviceToMethod(
         named("submit").and(takesArgument(0, ForkJoinTask.class)),
-        JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
+        getClass().getName() + "$SetJavaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("invokeAny", "invokeAll").and(takesArgument(0, Collection.class)),
-        JavaExecutorInstrumentation.class.getName()
-            + "$SetCallableStateForCallableCollectionAdvice");
+        getClass().getName() + "$SetCallableStateForCallableCollectionAdvice");
     transformer.applyAdviceToMethod(
         named("invoke").and(takesArgument(0, ForkJoinTask.class)),
-        JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
+        getClass().getName() + "$SetJavaForkJoinStateAdvice");
     transformer.applyAdviceToMethod(
         named("schedule")
             .and(takesArgument(0, Runnable.class))
             .and(returns(hasSuperType(is(Future.class)))),
-        JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
+        getClass().getName() + "$SetSubmitRunnableStateAdvice");
     transformer.applyAdviceToMethod(
         named("schedule")
             .and(takesArgument(0, Callable.class))
             .and(returns(hasSuperType(is(Future.class)))),
-        JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
+        getClass().getName() + "$SetCallableStateAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -339,7 +337,7 @@ class JavaExecutorInstrumentation implements TypeInstrumentation {
       public static CallableCollectionAdviceScope start(
           CallDepth callDepth, Collection<? extends Callable<?>> tasks) {
         if (callDepth.getAndIncrement() > 0) {
-          return new CallableCollectionAdviceScope(callDepth, tasks != null ? tasks : emptyList());
+          return new CallableCollectionAdviceScope(callDepth, tasks);
         }
         Context context = Context.current();
 
@@ -402,7 +400,8 @@ class JavaExecutorInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] submitEnter(
-        @Advice.This Object executor, @Advice.Argument(0) Collection<? extends Callable<?>> tasks) {
+        @Advice.This Object executor,
+        @Advice.Argument(0) @Nullable Collection<? extends Callable<?>> tasks) {
       if (tasks == null) {
         return new Object[] {null, null};
       }

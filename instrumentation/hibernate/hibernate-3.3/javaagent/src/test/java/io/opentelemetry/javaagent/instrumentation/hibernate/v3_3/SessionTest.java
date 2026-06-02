@@ -137,7 +137,7 @@ class SessionTest extends AbstractHibernateTest {
           session.beginTransaction();
           try {
             session.replicate(123L /* Not a valid entity */, ReplicationMode.OVERWRITE);
-          } catch (RuntimeException e) {
+          } catch (RuntimeException ignored) {
             // We expected this, we should see the error field set on the span.
           }
           session.getTransaction().commit();
@@ -575,7 +575,7 @@ class SessionTest extends AbstractHibernateTest {
     }
   }
 
-  static void sessionAssertion(TraceAssert trace, String methodName, String resource) {
+  private static void sessionAssertion(TraceAssert trace, String methodName, String resource) {
     trace.hasSpansSatisfyingExactly(
         span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
         span -> assertSessionSpan(span, trace.getSpan(0), "Session." + methodName + " " + resource),

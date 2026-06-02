@@ -38,20 +38,22 @@ import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInstance;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractBaseAwsClientTest {
+  protected static final AWSStaticCredentialsProvider credentialsProvider =
+      new AWSStaticCredentialsProvider(new AnonymousAWSCredentials());
+  protected final MockWebServerExtension server = new MockWebServerExtension();
+  protected AwsClientBuilder.EndpointConfiguration endpoint;
+
   protected abstract InstrumentationExtension testing();
 
   protected abstract boolean hasRequestId();
 
-  protected static MockWebServerExtension server = new MockWebServerExtension();
-  protected static AwsClientBuilder.EndpointConfiguration endpoint;
-  protected static final AWSStaticCredentialsProvider credentialsProvider =
-      new AWSStaticCredentialsProvider(new AnonymousAWSCredentials());
-
   @BeforeAll
-  static void setUp() {
+  void setUp() {
     System.setProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY, "my-access-key");
     System.setProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY, "my-secret-key");
     server.start();
@@ -64,7 +66,7 @@ public abstract class AbstractBaseAwsClientTest {
   }
 
   @AfterAll
-  static void cleanUp() {
+  void cleanUp() {
     System.clearProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY);
     System.clearProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY);
     server.stop();
@@ -77,7 +79,7 @@ public abstract class AbstractBaseAwsClientTest {
       String operation,
       String method,
       List<AttributeAssertion> additionalAttributes)
-      throws Exception {
+      throws ReflectiveOperationException {
 
     assertThat(response).isNotNull();
 
@@ -125,7 +127,8 @@ public abstract class AbstractBaseAwsClientTest {
   }
 
   @SuppressWarnings("unchecked")
-  protected List<RequestHandler2> extractRequestHandlers(Object client) throws Exception {
+  protected List<RequestHandler2> extractRequestHandlers(Object client)
+      throws ReflectiveOperationException {
     Field requestHandler2sField = AmazonWebServiceClient.class.getDeclaredField("requestHandler2s");
     requestHandler2sField.setAccessible(true);
     return (List<RequestHandler2>) requestHandler2sField.get(client);

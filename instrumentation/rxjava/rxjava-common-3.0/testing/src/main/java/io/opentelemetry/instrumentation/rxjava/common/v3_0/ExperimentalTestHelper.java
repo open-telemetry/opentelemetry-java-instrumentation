@@ -5,15 +5,12 @@
 
 package io.opentelemetry.instrumentation.rxjava.common.v3_0;
 
-import javax.annotation.Nullable;
-
-public class ExperimentalTestHelper {
-  private static final boolean isEnabled =
+class ExperimentalTestHelper {
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.rxjava.experimental-span-attributes");
 
-  @Nullable
-  public static Boolean experimentalCanceled(boolean value) {
-    if (isEnabled) {
+  static Boolean experimentalCanceled(boolean value) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       return value;
     }
     return null;

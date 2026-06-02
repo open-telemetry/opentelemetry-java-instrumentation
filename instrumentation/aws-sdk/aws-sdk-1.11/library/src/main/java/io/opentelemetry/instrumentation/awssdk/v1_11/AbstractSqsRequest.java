@@ -9,5 +9,5 @@ import com.amazonaws.Request;
 
 abstract class AbstractSqsRequest {
 
-  public abstract Request<?> getRequest();
+  abstract Request<?> getRequest();
 }

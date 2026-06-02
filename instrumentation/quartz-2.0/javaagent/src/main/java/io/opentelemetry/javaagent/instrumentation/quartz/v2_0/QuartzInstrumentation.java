@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -48,10 +49,10 @@ class QuartzInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addTracingInterceptor(
-        @Advice.This Scheduler scheduler, @Advice.Enter CallDepth callDepth) {
+        @Advice.This Scheduler scheduler, @Advice.Enter @Nullable CallDepth callDepth) {
       // No-args constructor is automatically called by constructors with args, but we only want to
       // run once from the constructor with args because that is where the dedupe needs to happen.
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth == null || callDepth.decrementAndGet() > 0) {
         return;
       }
       telemetry().configure(scheduler);

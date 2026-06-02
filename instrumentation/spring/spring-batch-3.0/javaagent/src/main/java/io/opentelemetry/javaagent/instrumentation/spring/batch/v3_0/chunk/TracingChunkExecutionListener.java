@@ -37,7 +37,7 @@ public class TracingChunkExecutionListener implements ChunkListener, Ordered {
     }
 
     Context context = chunkInstrumenter().start(parentContext, chunkContextAndBuilder);
-    // beforeJob & afterJob always execute on the same thread
+    // beforeChunk & afterChunk always execute on the same thread
     Scope scope = context.makeCurrent();
     CONTEXT_AND_SCOPE.set(chunkContext, new ContextAndScope(context, scope));
   }
@@ -73,7 +73,7 @@ public class TracingChunkExecutionListener implements ChunkListener, Ordered {
   }
 
   // equals() and hashCode() methods guarantee that only one instance of
-  // TracingJobExecutionListener will be present in an ordered set of listeners
+  // TracingChunkExecutionListener will be present in an ordered set of listeners
 
   @Override
   public boolean equals(@Nullable Object o) {

@@ -35,21 +35,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 abstract class AbstractIcebergTest {
-  protected static final int FORMAT_VERSION = 2;
-  protected static final Schema SCHEMA =
+  private static final int FORMAT_VERSION = 2;
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.iceberg-1.8";
+  private static final Schema SCHEMA =
       new Schema(
           NestedField.required(3, "id", IntegerType.get()),
           NestedField.required(4, "data", StringType.get()));
-  protected static final PartitionSpec SPEC =
+  private static final PartitionSpec SPEC =
       PartitionSpec.builderFor(SCHEMA).bucket("data", 16).build();
-  protected static final DataFile FILE_1 =
+  private static final DataFile FILE_1 =
       DataFiles.builder(SPEC)
           .withPath("/path/to/data-a.parquet")
           .withFileSizeInBytes(10L)
           .withPartitionPath("data_bucket=0")
           .withRecordCount(1L)
           .build();
-  protected static final DataFile FILE_2 =
+  private static final DataFile FILE_2 =
       DataFiles.builder(SPEC)
           .withPath("/path/to/data-b.parquet")
           .withFileSizeInBytes(10L)
@@ -58,8 +59,8 @@ abstract class AbstractIcebergTest {
           .withSplitOffsets(asList(1L))
           .build();
 
-  @TempDir protected File tableDir = null;
-  protected Table table;
+  @TempDir private File tableDir;
+  private Table table;
 
   protected abstract InstrumentationExtension testing();
 
@@ -110,7 +111,7 @@ abstract class AbstractIcebergTest {
   private void assertScanDurationMetric(ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName("iceberg.scan.planning.duration")
@@ -134,7 +135,7 @@ abstract class AbstractIcebergTest {
   private void assertDataFilesCountMetrics(ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName("iceberg.scan.data_files.count")
@@ -171,7 +172,7 @@ abstract class AbstractIcebergTest {
   private void assertDataManifestCountMetrics(ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName("iceberg.scan.data_manifests.count")
@@ -214,7 +215,7 @@ abstract class AbstractIcebergTest {
   private void assertDeleteManifestCountMetrics(ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName("iceberg.scan.delete_manifests.count")
@@ -257,7 +258,7 @@ abstract class AbstractIcebergTest {
   private void assertDeleteFilesCountMetrics(ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName("iceberg.scan.delete_files.count")
@@ -366,7 +367,7 @@ abstract class AbstractIcebergTest {
       String otelMetricName, ScanReport expectedReport, long expectedValue) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg-1.8",
+            INSTRUMENTATION_NAME,
             metricAssert ->
                 metricAssert
                     .hasName(otelMetricName)
@@ -386,7 +387,7 @@ abstract class AbstractIcebergTest {
                                                 expectedReport.tableName())))));
   }
 
-  static class SimpleReporter implements MetricsReporter {
+  private static class SimpleReporter implements MetricsReporter {
     private MetricsReport report;
 
     @Override

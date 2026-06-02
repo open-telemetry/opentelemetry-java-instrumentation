@@ -169,22 +169,17 @@ class Log4j1Test {
     }
   }
 
-  private static Stream<Arguments> eventNameProperties() {
-    return Stream.of(Arguments.of("event.name"), Arguments.of("otel.event.name"));
-  }
-
-  @ParameterizedTest
-  @MethodSource("eventNameProperties")
-  void testMdc(String eventNameProperty) {
+  @Test
+  void testMdc() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
-    MDC.put(eventNameProperty, "MyEventName");
+    MDC.put("otel.event.name", "MyEventName");
     try {
       logger.info("xyz");
     } finally {
       MDC.remove("key1");
       MDC.remove("key2");
-      MDC.remove(eventNameProperty);
+      MDC.remove("otel.event.name");
     }
 
     List<AttributeAssertion> assertions =

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jaxrs;
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -49,7 +50,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
   }
 
   protected boolean shouldTestCompletableStageAsync() {
-    return Boolean.getBoolean("testLatestDeps");
+    return testLatestDeps();
   }
 
   @Override
@@ -64,7 +65,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
   @Test
   void superMethodWithoutPathAnnotation() {
     AggregatedHttpResponse response =
-        client.get(address.resolve("test-resource-super").toString()).aggregate().join();
+        client.get(h1Address.resolve("test-resource-super").toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
@@ -88,7 +89,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     assumeTrue(testInterfaceMethodWithPath());
 
     AggregatedHttpResponse response =
-        client.get(address.resolve("test-resource-interface/call").toString()).aggregate().join();
+        client.get(h1Address.resolve("test-resource-interface/call").toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
@@ -111,7 +112,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
   void subResourceLocator() {
     AggregatedHttpResponse response =
         client
-            .get(address.resolve("test-sub-resource-locator/call/sub").toString())
+            .get(h1Address.resolve("test-sub-resource-locator/call/sub").toString())
             .aggregate()
             .join();
 
@@ -145,7 +146,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                             .hasParent(trace.getSpan(3))));
   }
 
-  enum AsyncResponseTestKind {
+  private enum AsyncResponseTestKind {
     SUCCESSFUL("succeed", 200) {
       @Override
       void assertBody(String body) {
@@ -179,7 +180,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
   @ParameterizedTest
   @EnumSource(AsyncResponseTestKind.class)
   void shouldHandleAsyncResponse(AsyncResponseTestKind testKind) throws Exception {
-    String url = address.resolve("async?action=" + testKind.action).toString();
+    String url = h1Address.resolve("async?action=" + testKind.action).toString();
     CompletableFuture<AggregatedHttpResponse> futureResponse = client.get(url).aggregate();
 
     // there are no traces yet
@@ -239,7 +240,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
             });
   }
 
-  enum CompletionStageTestKind {
+  private enum CompletionStageTestKind {
     SUCCESSFUL("succeed", 200) {
       @Override
       void assertBody(String body) {
@@ -270,7 +271,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     // JAX-RS 2.1+ only
     assumeTrue(shouldTestCompletableStageAsync());
 
-    String url = address.resolve("async-completion-stage?action=" + testKind.action).toString();
+    String url = h1Address.resolve("async-completion-stage?action=" + testKind.action).toString();
     CompletableFuture<AggregatedHttpResponse> futureResponse = client.get(url).aggregate();
 
     // there are no traces yet

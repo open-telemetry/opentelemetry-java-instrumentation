@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.NettyScope;
 import java.net.SocketAddress;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -39,6 +40,7 @@ class BootstrapInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static NettyScope startConnect(@Advice.Argument(2) SocketAddress remoteAddress) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
@@ -52,9 +54,9 @@ class BootstrapInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void endConnect(
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(4) ChannelPromise channelPromise,
-        @Advice.Enter NettyScope enterScope) {
+        @Advice.Enter @Nullable NettyScope enterScope) {
 
       NettyScope.end(enterScope, connectionInstrumenter(), channelPromise, throwable);
     }

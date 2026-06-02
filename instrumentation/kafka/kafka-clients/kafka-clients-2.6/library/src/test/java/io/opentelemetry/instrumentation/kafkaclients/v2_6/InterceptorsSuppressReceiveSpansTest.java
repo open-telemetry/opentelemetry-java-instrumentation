@@ -31,6 +31,11 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
     return kafkaTelemetry;
   }
 
+  @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return false;
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   void assertTraces() {

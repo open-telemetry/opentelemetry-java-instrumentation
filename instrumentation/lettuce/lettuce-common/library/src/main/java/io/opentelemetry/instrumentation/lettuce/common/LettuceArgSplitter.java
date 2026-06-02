@@ -17,21 +17,19 @@ public final class LettuceArgSplitter {
   private static final Pattern KEY_PATTERN =
       Pattern.compile("((key|value)<(?<wrapped>.*?)>|(?<plain>\\S++))(?:\\s+|$)");
 
-  // this method removes the key|value<...> wrappers around redis keys or values and splits the args
-  // string
   public static List<String> splitArgs(@Nullable String args) {
     if (args == null || args.isEmpty()) {
       return emptyList();
     }
 
     List<String> argsList = new ArrayList<>();
-    Matcher m = KEY_PATTERN.matcher(args);
-    while (m.find()) {
-      String wrapped = m.group("wrapped");
+    Matcher matcher = KEY_PATTERN.matcher(args);
+    while (matcher.find()) {
+      String wrapped = matcher.group("wrapped");
       if (wrapped != null) {
         argsList.add(wrapped);
       } else {
-        argsList.add(m.group("plain"));
+        argsList.add(matcher.group("plain"));
       }
     }
     return argsList;

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.reactor.v3_1;
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.lang.invoke.MethodType.methodType;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,7 +54,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
       return lookup.findVirtual(type, "contextWrite", methodType(type, Function.class));
-    } catch (NoSuchMethodException | IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       // ignore
     }
     try {
@@ -162,7 +163,6 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
 
   @Test
   void nestedNonBlocking() {
-    boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
     int result =
         testing.runWithSpan(
             "parent",
@@ -171,7 +171,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                         () -> {
                           // earliest tested and latest version behave differently
                           // in latest dep test current span is "parent" not "middle"
-                          if (!testLatestDeps) {
+                          if (!testLatestDeps()) {
                             Span.current().setAttribute("middle", "foo");
                           }
                           return Mono.fromCallable(
@@ -190,12 +190,11 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
-                span -> {
-                  span.hasName("middle").hasParent(trace.getSpan(0));
-                  if (!testLatestDeps) {
-                    span.hasAttributesSatisfyingExactly(equalTo(stringKey("middle"), "foo"));
-                  }
-                },
+                span ->
+                    span.hasName("middle")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("middle"), testLatestDeps() ? null : "foo")),
                 span ->
                     span.hasName("inner")
                         .hasParent(trace.getSpan(1))

@@ -28,10 +28,11 @@ import org.springframework.batch.repeat.policy.SimpleCompletionPolicy;
 import org.springframework.batch.repeat.support.TaskExecutorRepeatTemplate;
 
 abstract class ItemLevelSpanTest {
-  private final JobRunner runner;
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  private final JobRunner runner;
 
   ItemLevelSpanTest(JobRunner runner) {
     this.runner = runner;

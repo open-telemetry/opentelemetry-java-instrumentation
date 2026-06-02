@@ -7,8 +7,8 @@ muzzle {
     group.set("io.projectreactor")
     module.set("reactor-core")
     versions.set("[3.1.0.RELEASE,)")
-    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     assertInverse.set(true)
+    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
     excludeInstrumentationName("opentelemetry-api")
   }
 }
@@ -48,7 +48,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
         implementation(project(":instrumentation-annotations"))
-        val version = if (otelProps.testLatestDeps) "latest.release" else "3.1.0.RELEASE"
+        val version = baseVersion("3.1.0.RELEASE").orLatest()
         implementation("io.projectreactor:reactor-test:$version")
       }
     }

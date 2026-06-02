@@ -58,7 +58,6 @@ public final class R2dbcSqlAttributesGetter
 
   @Deprecated // to be removed in 3.0
   @Override
-  @Nullable
   public String getConnectionString(DbExecution request) {
     return request.getConnectionString();
   }

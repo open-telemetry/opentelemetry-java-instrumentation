@@ -12,8 +12,6 @@ muzzle {
     versions.set("[3.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("ktor-server")
-    // missing dependencies
-    skip("1.1.0", "1.1.1", "1.1.5")
   }
   pass {
     group.set("io.ktor")
@@ -21,8 +19,6 @@ muzzle {
     versions.set("[3.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("ktor-client")
-    // missing dependencies
-    skip("1.1.0", "1.1.1")
   }
 }
 
@@ -69,7 +65,6 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
   }
 
   check {

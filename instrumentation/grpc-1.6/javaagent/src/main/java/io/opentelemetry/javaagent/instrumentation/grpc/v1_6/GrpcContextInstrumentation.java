@@ -47,7 +47,8 @@ class GrpcContextInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Context.Storage onExit(
-        @Advice.Return Context.Storage originalStorage, @Advice.Enter Context.Storage ourStorage) {
+        @Advice.Return Context.Storage originalStorage,
+        @Advice.Enter @Nullable Context.Storage ourStorage) {
       return ourStorage != null ? ourStorage : GrpcSingletons.setStorage(originalStorage);
     }
   }

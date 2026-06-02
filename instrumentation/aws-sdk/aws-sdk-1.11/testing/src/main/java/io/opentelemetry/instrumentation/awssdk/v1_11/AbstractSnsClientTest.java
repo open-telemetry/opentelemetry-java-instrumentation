@@ -61,7 +61,7 @@ public abstract class AbstractSnsClientTest extends AbstractBaseAwsClientTest {
       String operation,
       String responseBody,
       List<AttributeAssertion> additionalAttributes)
-      throws Exception {
+      throws ReflectiveOperationException {
     AmazonSNSClientBuilder clientBuilder = AmazonSNSClientBuilder.standard();
     AmazonSNS client =
         configureClient(clientBuilder)

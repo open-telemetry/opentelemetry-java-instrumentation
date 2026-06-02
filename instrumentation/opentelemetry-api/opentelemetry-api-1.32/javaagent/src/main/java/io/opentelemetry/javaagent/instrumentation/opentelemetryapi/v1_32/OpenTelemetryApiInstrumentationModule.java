@@ -13,11 +13,14 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.V3PreviewFallbackEnabledInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
+@SuppressWarnings("deprecation") // using v3 preview fallback helper until 3.0
+public class OpenTelemetryApiInstrumentationModule
+    extends V3PreviewFallbackEnabledInstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
     super("opentelemetry-api", "opentelemetry-api-1.32");
@@ -27,13 +30,12 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // skip instrumentation when opentelemetry-extension-incubator is present, instrumentation is
     // handled by OpenTelemetryApiIncubatorInstrumentationModule
-    return hasClassesNamed(
-            // added in 1.32
-            "application.io.opentelemetry.api.logs.LoggerBuilder")
+    // added in 1.32
+    return hasClassesNamed("application.io.opentelemetry.api.logs.LoggerBuilder")
+        // added in 1.31
         .and(
             not(
                 hasClassesNamed(
-                    // added in 1.31
                     "application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder")));
   }
 

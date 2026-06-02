@@ -11,7 +11,7 @@ import com.openai.models.chat.completions.ChatCompletionTool;
 import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.openai.TestHelper.MessageToolCallBuilder.FunctionBuilder;
 
-public class OpenAi1TestHelper implements TestHelper {
+class OpenAi1TestHelper implements TestHelper {
   @Override
   public String id(ChatCompletionMessageToolCall toolCall) {
     return toolCall.id();

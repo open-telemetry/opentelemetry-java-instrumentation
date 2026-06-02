@@ -28,9 +28,9 @@ block but there is no dedicated `testExperimental` task, fix it:
 
 1. Create a `testExperimental` task (see Gradle Task Setup below).
 2. Move the experimental flag out of the shared/default task config into `testExperimental`.
-3. Add a `private static final boolean EXPERIMENTAL_ATTRIBUTES` field to test classes.
-4. Wrap experimental attribute assertions with the `experimental()` helper.
-5. Wire the new task into `check`.
+3. Add a `private static final boolean EXPERIMENTAL_ATTRIBUTES` field to test classes and
+   gate experimental attribute assertions on it (see Java Test Patterns below).
+4. Wire the new task into `check`.
 
 ## Gradle Task Setup
 
@@ -51,30 +51,38 @@ val testExperimental by registering(Test::class) {
 
 ## Java Test Patterns
 
-Read the flag once into a `private static final boolean` at class level:
+For the cross-cutting shape — inline ternary with `null` for "absent", when to use top-level
+`if` blocks, and `assumeTrue(...)` guidance — see
+[testing-general-patterns.md](testing-general-patterns.md#flag-gated--mode-dependent-assertions).
+The experimental-specific patterns below build on that shape.
+
+### Hoist the flag into a per-class `EXPERIMENTAL_ATTRIBUTES` constant
+
+The property name is module-specific, so there is no shared accessor. Read it once into a
+`private static final boolean` near the top of the class and reference the constant
+everywhere in the file:
 
 ```java
 private static final boolean EXPERIMENTAL_ATTRIBUTES =
     Boolean.getBoolean("otel.instrumentation.<module>.experimental-span-attributes");
 ```
 
-Use inline ternary in assertions — `null` means attribute expected absent:
+When multiple experimental flags coexist in one class, use a more specific name per flag.
 
-```java
-equalTo(ExperimentalAttributes.SOME_ATTR, EXPERIMENTAL_ATTRIBUTES ? "value" : null)
-```
+### Single-arg `experimental(value)` helper
 
-When many assertions share the flag, extract an `experimental()` helper:
+Experimental attributes are by definition absent when the flag is off, so the off-branch is
+always `null`. When several assertions in the same class gate attributes on
+`EXPERIMENTAL_ATTRIBUTES`, extract a tiny helper:
 
 ```java
 @Nullable
 private static <T> T experimental(T value) {
   return EXPERIMENTAL_ATTRIBUTES ? value : null;
 }
+
+equalTo(SOME_KEY, experimental("value"))
 ```
 
 For multiple test classes sharing the same flag, move the helper into a shared
 `ExperimentalTestHelper` class and static-import it.
-
-Use `assumeTrue(EXPERIMENTAL_ATTRIBUTES)` only when an entire test is meaningful in
-experimental mode only — prefer the ternary/helper pattern so both modes are exercised.

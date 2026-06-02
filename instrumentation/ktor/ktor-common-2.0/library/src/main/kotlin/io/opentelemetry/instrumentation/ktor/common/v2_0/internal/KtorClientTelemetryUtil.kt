@@ -14,9 +14,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount
 import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorClientTelemetry
-import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
@@ -24,7 +22,8 @@ import kotlinx.coroutines.withContext
  * any time.
  */
 object KtorClientTelemetryUtil {
-  private val openTelemetryContextKey = AttributeKey<Context>("OpenTelemetry")
+  private val OPEN_TELEMETRY_CONTEXT_KEY = AttributeKey<Context>("OpenTelemetry")
+  private val OPEN_TELEMETRY_PARENT_CONTEXT_KEY = AttributeKey<Context>("OpenTelemetryParent")
 
   fun install(plugin: AbstractKtorClientTelemetry, scope: HttpClient) {
     installSpanCreation(plugin, scope)
@@ -37,7 +36,8 @@ object KtorClientTelemetryUtil {
 
     scope.requestPipeline.intercept(initializeRequestPhase) {
       val openTelemetryContext = HttpClientRequestResendCount.initialize(Context.current())
-      withContext(openTelemetryContext.asContextElement()) { proceed() }
+      context.attributes.put(OPEN_TELEMETRY_PARENT_CONTEXT_KEY, openTelemetryContext)
+      proceed()
     }
 
     val createSpanPhase = PipelinePhase("OpenTelemetryCreateSpan")
@@ -45,17 +45,18 @@ object KtorClientTelemetryUtil {
 
     scope.sendPipeline.intercept(createSpanPhase) {
       val requestBuilder = context
-      val openTelemetryContext = plugin.createSpan(requestBuilder)
+      val parentContext = requestBuilder.attributes[OPEN_TELEMETRY_PARENT_CONTEXT_KEY]
+      val openTelemetryContext = plugin.createSpan(requestBuilder, parentContext)
 
       if (openTelemetryContext != null) {
         try {
-          requestBuilder.attributes.put(openTelemetryContextKey, openTelemetryContext)
+          requestBuilder.attributes.put(OPEN_TELEMETRY_CONTEXT_KEY, openTelemetryContext)
           plugin.populateRequestHeaders(requestBuilder, openTelemetryContext)
 
           withContext(openTelemetryContext.asContextElement()) { proceed() }
-        } catch (e: Throwable) {
-          plugin.endSpan(openTelemetryContext, requestBuilder, null, e)
-          throw e
+        } catch (t: Throwable) {
+          plugin.endSpan(openTelemetryContext, requestBuilder, null, t)
+          throw t
         }
       } else {
         proceed()
@@ -63,25 +64,19 @@ object KtorClientTelemetryUtil {
     }
   }
 
-  @OptIn(InternalCoroutinesApi::class)
   private fun installSpanEnd(plugin: AbstractKtorClientTelemetry, scope: HttpClient) {
     val endSpanPhase = PipelinePhase("OpenTelemetryEndSpan")
     scope.receivePipeline.insertPhaseBefore(HttpReceivePipeline.State, endSpanPhase)
 
     scope.receivePipeline.intercept(endSpanPhase) {
-      val openTelemetryContext = it.call.attributes.getOrNull(openTelemetryContextKey)
+      val openTelemetryContext = it.call.attributes.getOrNull(OPEN_TELEMETRY_CONTEXT_KEY)
       openTelemetryContext ?: return@intercept
 
-      scope.launch {
-        val job = it.call.coroutineContext.job
-        job.join()
-        val cause = if (!job.isCancelled) {
-          null
-        } else {
-          kotlin.runCatching { job.getCancellationException() }.getOrNull()
-        }
+      val job = it.call.coroutineContext.job
+      val call = it.call
 
-        plugin.endSpan(openTelemetryContext, it.call, cause)
+      job.invokeOnCompletion { cause ->
+        plugin.endSpan(openTelemetryContext, call, cause)
       }
     }
   }

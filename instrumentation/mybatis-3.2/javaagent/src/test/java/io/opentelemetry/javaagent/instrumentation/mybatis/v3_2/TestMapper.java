@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 
 import org.apache.ibatis.annotations.Select;
 
-public interface TestMapper {
+interface TestMapper {
 
   @Select("SELECT 1")
   int select();

@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -92,8 +93,8 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     public static void after(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
-        @Advice.Return Message<?> message,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Return @Nullable Message<?> message,
+        @Advice.Thrown @Nullable Throwable throwable) {
       Context parent = Context.current();
       Context current = startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
       if (current != null && throwable == null) {
@@ -116,8 +117,8 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     public static void after(
         @Advice.Enter Timer timer,
         @Advice.This Consumer<?> consumer,
-        @Advice.Return Message<?> message,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Return @Nullable Message<?> message,
+        @Advice.Thrown @Nullable Throwable throwable) {
       Context parent = Context.current();
       startAndEndConsumerReceive(parent, message, timer, consumer, throwable);
       // No need to inject context to message.
@@ -133,7 +134,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<Message<?>> after(
         @Advice.This Consumer<?> consumer,
         @Advice.Return CompletableFuture<Message<?>> future,
@@ -151,7 +152,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<Messages<?>> after(
         @Advice.This Consumer<?> consumer,
         @Advice.Return CompletableFuture<Messages<?>> future,

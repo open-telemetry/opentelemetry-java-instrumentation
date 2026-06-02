@@ -10,7 +10,7 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 }

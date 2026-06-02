@@ -21,9 +21,9 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,10 @@ public abstract class AbstractJedisTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final GenericContainer<?> REDIS_SERVER =
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  private static final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
   private static String host;
@@ -47,15 +50,12 @@ public abstract class AbstractJedisTest {
 
   @BeforeAll
   static void setup() {
-    REDIS_SERVER.start();
-    host = REDIS_SERVER.getHost();
-    port = REDIS_SERVER.getMappedPort(6379);
+    redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
+    host = redisServer.getHost();
+    port = redisServer.getMappedPort(6379);
     jedis = new Jedis(host, port);
-  }
-
-  @AfterAll
-  static void cleanup() {
-    REDIS_SERVER.stop();
+    cleanup.deferAfterAll(jedis::disconnect);
   }
 
   @BeforeEach

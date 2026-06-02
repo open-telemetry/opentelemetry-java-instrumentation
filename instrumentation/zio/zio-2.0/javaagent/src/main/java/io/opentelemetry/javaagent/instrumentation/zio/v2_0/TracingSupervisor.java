@@ -15,7 +15,8 @@ import zio.ZEnvironment;
 import zio.ZIO;
 import zio.ZIO$;
 
-@SuppressWarnings("unchecked") // fine
+// ZIO's Supervisor API uses Scala generic signatures that javac cannot verify.
+@SuppressWarnings("unchecked")
 public class TracingSupervisor extends Supervisor<Object> {
 
   public static final TracingSupervisor INSTANCE = new TracingSupervisor();
@@ -25,7 +26,8 @@ public class TracingSupervisor extends Supervisor<Object> {
   private TracingSupervisor() {}
 
   @Override
-  @SuppressWarnings("rawtypes") // fine
+  // The upstream Supervisor.value signature returns raw ZIO.
+  @SuppressWarnings("rawtypes")
   public ZIO value(Object trace) {
     return ZIO$.MODULE$.unit();
   }

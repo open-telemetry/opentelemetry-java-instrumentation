@@ -6,7 +6,6 @@ dependencies {
   library("org.apache.wicket:wicket:8.0.0")
 
   testImplementation(project(":instrumentation:wicket-8.0:common-testing"))
-  testImplementation("org.jsoup:jsoup:1.13.1")
   testImplementation("org.eclipse.jetty:jetty-server:8.0.0.v20110901")
   testImplementation("org.eclipse.jetty:jetty-servlet:8.0.0.v20110901")
 
@@ -20,5 +19,17 @@ dependencies {
 if (otelProps.testLatestDeps) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
+  }
+}
+
+tasks {
+  val testV3Preview by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
+  check {
+    dependsOn(testV3Preview)
   }
 }

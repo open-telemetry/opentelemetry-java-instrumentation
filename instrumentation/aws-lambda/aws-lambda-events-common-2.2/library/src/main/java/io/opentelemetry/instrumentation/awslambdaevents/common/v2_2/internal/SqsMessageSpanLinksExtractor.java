@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 
 class SqsMessageSpanLinksExtractor implements SpanLinksExtractor<SQSMessage> {
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
+  private static final MapGetter mapGetter = new MapGetter();
 
   // lower-case map getter used for extraction
   static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
@@ -34,7 +35,7 @@ class SqsMessageSpanLinksExtractor implements SpanLinksExtractor<SQSMessage> {
               .extract(
                   Context.root(), // We don't want the ambient context.
                   singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
-                  new MapGetter());
+                  mapGetter);
       SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
       if (messageSpanCtx.isValid()) {
         spanLinks.addLink(messageSpanCtx);

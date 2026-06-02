@@ -35,7 +35,6 @@ dependencies {
   testLibrary("org.jboss.resteasy:resteasy-undertow:6.0.0.Final") {
     exclude("org.jboss.resteasy", "resteasy-client")
   }
-  testLibrary("io.undertow:undertow-servlet-jakarta:2.2.17.Final")
   testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:6.0.0.Final")
 }
 
@@ -44,6 +43,7 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
@@ -52,7 +52,11 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.jaxrs.experimental-span-attributes=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
+        "otel.instrumentation.jaxrs.experimental-span-attributes=true"
+    )
   }
 
   check {

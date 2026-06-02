@@ -26,7 +26,7 @@ final class PulsarBatchRequestSpanLinksExtractor implements SpanLinksExtractor<P
 
     for (Message<?> message : request.getMessages()) {
       singleRecordLinkExtractor.extract(
-          spanLinks, Context.root(), PulsarRequest.create(message, request.getUrlData()));
+          spanLinks, parentContext, PulsarRequest.create(message, request.getUrlData()));
     }
   }
 }

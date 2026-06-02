@@ -7,7 +7,15 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://github.com/apache/cassandra-java-driver
 configurations:
+  - name: otel.instrumentation.cassandra.query-sanitization.enabled
+    declarative_name: java.cassandra.query_sanitization.enabled
+    description: >
+      Enables query sanitization for Cassandra queries. Takes precedence over
+      otel.instrumentation.common.db.query-sanitization.enabled.
+    type: boolean
+    default: true
   - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
     description: Enables query sanitization for database queries.
     type: boolean
     default: true

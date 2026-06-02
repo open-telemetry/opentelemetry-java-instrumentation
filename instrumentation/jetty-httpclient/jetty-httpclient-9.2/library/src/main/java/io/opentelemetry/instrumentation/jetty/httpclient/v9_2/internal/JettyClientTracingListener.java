@@ -33,7 +33,7 @@ public final class JettyClientTracingListener
 
   private static final Logger logger = Logger.getLogger(JettyClientTracingListener.class.getName());
 
-  private static final Class<?>[] requestlistenerInterfaces = {
+  private static final Class<?>[] REQUEST_LISTENER_INTERFACES = {
     Request.BeginListener.class,
     Request.FailureListener.class,
     Request.SuccessListener.class,
@@ -84,12 +84,12 @@ public final class JettyClientTracingListener
     ListIterator<Request.RequestListener> iterator = requestListeners.listIterator();
 
     while (iterator.hasNext()) {
-      List<Class<?>> interfaces = new ArrayList<>();
+      List<Class<?>> interfaces = new ArrayList<>(REQUEST_LISTENER_INTERFACES.length);
       Request.RequestListener listener = iterator.next();
 
       Class<?> listenerClass = listener.getClass();
 
-      for (Class<?> type : requestlistenerInterfaces) {
+      for (Class<?> type : REQUEST_LISTENER_INTERFACES) {
         if (type.isInstance(listener)) {
           interfaces.add(type);
         }

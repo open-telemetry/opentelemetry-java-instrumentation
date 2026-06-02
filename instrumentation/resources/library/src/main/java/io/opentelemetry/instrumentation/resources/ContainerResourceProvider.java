@@ -12,7 +12,7 @@ import io.opentelemetry.sdk.resources.Resource;
 
 /** {@link ResourceProvider} for automatically configuring {@link ContainerResource}. */
 @AutoService(ResourceProvider.class)
-public class ContainerResourceProvider implements ResourceProvider {
+public final class ContainerResourceProvider implements ResourceProvider {
   @Override
   public Resource createResource(ConfigProperties config) {
     return ContainerResource.get();

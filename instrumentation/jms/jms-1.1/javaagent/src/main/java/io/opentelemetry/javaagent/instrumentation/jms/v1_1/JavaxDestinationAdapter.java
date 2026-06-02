@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
-import io.opentelemetry.javaagent.instrumentation.jms.DestinationAdapter;
+import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Queue;

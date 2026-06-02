@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.webmvc;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
@@ -25,7 +26,7 @@ class SpringWebMvcInstrumentation5AutoConfigurationTest {
 
   @BeforeEach
   void setUp() {
-    assumeFalse(Boolean.getBoolean("testLatestDeps"));
+    assumeFalse(testLatestDeps());
   }
 
   @Test

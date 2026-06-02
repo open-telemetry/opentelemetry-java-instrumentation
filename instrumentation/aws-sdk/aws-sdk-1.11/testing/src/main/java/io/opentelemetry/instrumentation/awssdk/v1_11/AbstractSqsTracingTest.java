@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -27,7 +28,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import org.assertj.core.api.AbstractStringAssert;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -62,14 +63,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSqsTracingTest {
 
+  private static int sqsPort;
+  private static SQSRestServer sqsRestServer;
+  private static AmazonSQSAsync sqsClient;
+
   protected abstract InstrumentationExtension testing();
 
   protected abstract AmazonSQSAsyncClientBuilder configureClient(
       AmazonSQSAsyncClientBuilder client);
-
-  private static int sqsPort;
-  private static SQSRestServer sqsRestServer;
-  private static AmazonSQSAsync sqsClient;
 
   @BeforeEach
   void setUp() {
@@ -108,13 +109,16 @@ public abstract class AbstractSqsTracingTest {
       sendMessageRequest.addMessageAttributesEntry(
           "Test-Message-Header",
           new MessageAttributeValue().withDataType("String").withStringValue("test"));
+      sendMessageRequest.addMessageAttributesEntry(
+          "Uncaptured-Header",
+          new MessageAttributeValue().withDataType("String").withStringValue("password"));
     }
     sqsClient.sendMessage(sendMessageRequest);
 
     ReceiveMessageRequest receiveMessageRequest =
         new ReceiveMessageRequest("http://localhost:" + sqsPort + "/000000000000/testSdkSqs");
     if (testCaptureHeaders) {
-      receiveMessageRequest.withMessageAttributeNames("Test-Message-Header");
+      receiveMessageRequest.withMessageAttributeNames("Test-Message-Header", "Uncaptured-Header");
     }
     ReceiveMessageResult receiveMessageResult = sqsClient.receiveMessage(receiveMessageRequest);
 
@@ -140,7 +144,8 @@ public abstract class AbstractSqsTracingTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "CreateQueue"),
@@ -160,7 +165,8 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(
                                       AWS_SQS_QUEUE_URL,
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                  satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                  satisfies(
+                                      AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, "AmazonSQS"),
                                   equalTo(RPC_METHOD, "SendMessage"),
@@ -179,8 +185,8 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                                headerAttributeKey("Test-Message-Header"),
+                                val -> val.containsExactly("test")));
                       }
 
                       span.hasName("testSdkSqs publish")
@@ -198,7 +204,8 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(
                                       AWS_SQS_QUEUE_URL,
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                  satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                  satisfies(
+                                      AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, "AmazonSQS"),
                                   equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -216,8 +223,8 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                                headerAttributeKey("Test-Message-Header"),
+                                val -> val.containsExactly("test")));
                       }
 
                       span.hasName("testSdkSqs receive")
@@ -233,7 +240,8 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(
                                       AWS_SQS_QUEUE_URL,
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                  satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                  satisfies(
+                                      AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, "AmazonSQS"),
                                   equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -252,8 +260,8 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                                headerAttributeKey("Test-Message-Header"),
+                                val -> val.containsExactly("test")));
                       }
                       span.hasName("testSdkSqs process")
                           .hasKind(SpanKind.CONSUMER)
@@ -297,7 +305,8 @@ public abstract class AbstractSqsTracingTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "CreateQueue"),
@@ -318,7 +327,8 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(
                                     AWS_SQS_QUEUE_URL,
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "SendMessage"),
@@ -353,7 +363,8 @@ public abstract class AbstractSqsTracingTest {
                                               + sqsPort
                                               + "/000000000000/testSdkSqs"),
                                       satisfies(
-                                          AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                          AWS_REQUEST_ID,
+                                          AbstractSqsTracingTest::assertAwsRequestId),
                                       equalTo(RPC_SYSTEM, "aws-api"),
                                       equalTo(RPC_SERVICE, "AmazonSQS"),
                                       equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -375,7 +386,8 @@ public abstract class AbstractSqsTracingTest {
                                               + sqsPort
                                               + "/000000000000/testSdkSqs"),
                                       satisfies(
-                                          AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                          AWS_REQUEST_ID,
+                                          AbstractSqsTracingTest::assertAwsRequestId),
                                       equalTo(RPC_SYSTEM, "aws-api"),
                                       equalTo(RPC_SERVICE, "AmazonSQS"),
                                       equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -401,7 +413,8 @@ public abstract class AbstractSqsTracingTest {
                                               + sqsPort
                                               + "/000000000000/testSdkSqs"),
                                       satisfies(
-                                          AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                                          AWS_REQUEST_ID,
+                                          AbstractSqsTracingTest::assertAwsRequestId),
                                       equalTo(RPC_SYSTEM, "aws-api"),
                                       equalTo(RPC_SERVICE, "AmazonSQS"),
                                       equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -451,6 +464,14 @@ public abstract class AbstractSqsTracingTest {
     sqsClient.receiveMessage(receive);
     sqsClient.sendMessage(send);
     sqsClient.receiveMessage(receive);
-    assertThat(receive.getAttributeNames()).isEqualTo(singletonList("AWSTraceHeader"));
+    assertThat(receive.getAttributeNames()).containsExactly("AWSTraceHeader");
+  }
+
+  static void assertAwsRequestId(AbstractStringAssert<?> val) {
+    if (testLatestDeps()) {
+      val.isNull();
+    } else {
+      val.isInstanceOf(String.class);
+    }
   }
 }

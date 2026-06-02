@@ -36,7 +36,7 @@ by auto-formatting.
 
 To run these checks locally:
 
-```
+```bash
 ./gradlew checkstyleMain checkstyleTest
 ```
 
@@ -125,6 +125,11 @@ Examples that may remain uppercase include:
   `MethodHandle`, and `Pattern`
 - canonical singleton or sentinel fields named `INSTANCE`, `EMPTY`, or `NOOP`
 
+Private `static final` arrays of constant or immutable values should also use uppercase names when
+the array is not exposed outside the class and is not mutated after initialization. Even though Java
+arrays are technically mutable, treat this private, unexposed usage as constant-like for naming
+purposes.
+
 Do not use uppercase solely because a field is `static final`.
 
 Use lower camel case for runtime-created collaborator objects even when they are `static final`,
@@ -197,6 +202,10 @@ affect end users.
 
 Prefer AssertJ assertions over JUnit assertions (assertEquals, assertTrue, etc.) for better
 error messages.
+
+In test files that use `io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat`,
+do not also statically import `org.assertj.core.api.Assertions.assertThat` — `OpenTelemetryAssertions`
+extends `Assertions`, so all AssertJ `assertThat` overloads are already in scope via inheritance.
 
 ### JUnit
 

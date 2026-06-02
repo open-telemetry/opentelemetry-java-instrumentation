@@ -29,7 +29,7 @@ echo "Processing standard instrumentations..."
 ./gradlew "${ALL_TASKS[@]}" \
   -PcollectMetadata=true \
   "${GRADLE_FLAGS[@]}" \
-  --rerun-tasks --continue
+  --rerun-tasks
 
 # Collect and run tasks that need testLatestDeps
 LATEST_DEPS_TASKS=()
@@ -43,7 +43,7 @@ if [[ ${#LATEST_DEPS_TASKS[@]} -gt 0 ]]; then
     -PcollectMetadata=true \
     -PtestLatestDeps=true \
     "${GRADLE_FLAGS[@]}" \
-    --rerun-tasks --continue
+    --rerun-tasks
 fi
 
 echo "Telemetry file regeneration complete."

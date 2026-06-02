@@ -10,23 +10,6 @@ import java.lang.reflect.Method;
 
 class ReflectiveMethodsFactory {
 
-  private ReflectiveMethodsFactory() {}
-
-  public static class ReflectObject {
-
-    private ReflectObject() {}
-
-    public void initMethod() {}
-
-    public void destroyMethod() {}
-
-    public Response<String> echo(String param) {
-      Response<String> result = new Response<>();
-      result.setData("echo: " + param);
-      return result;
-    }
-  }
-
   private static final Object singletonObject = new ReflectObject();
 
   static Object getTarget() {
@@ -50,6 +33,23 @@ class ReflectiveMethodsFactory {
       return singletonObject.getClass().getMethod(name, parameterTypes);
     } catch (ReflectiveOperationException e) {
       throw new IllegalStateException("Failed to resolve reflective method: " + name, e);
+    }
+  }
+
+  private ReflectiveMethodsFactory() {}
+
+  public static class ReflectObject {
+
+    private ReflectObject() {}
+
+    public void initMethod() {}
+
+    public void destroyMethod() {}
+
+    public Response<String> echo(String param) {
+      Response<String> result = new Response<>();
+      result.setData("echo: " + param);
+      return result;
     }
   }
 }

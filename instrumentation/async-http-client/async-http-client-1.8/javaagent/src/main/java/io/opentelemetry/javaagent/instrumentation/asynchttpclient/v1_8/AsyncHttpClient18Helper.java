@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_8;
 
 import com.ning.http.client.Request;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.AsyncHttpClientHelper;
+import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.v1_8.AsyncHttpClientHelper;
 import java.net.MalformedURLException;
 import java.net.URI;
 import javax.annotation.Nullable;
@@ -23,12 +23,13 @@ final class AsyncHttpClient18Helper implements AsyncHttpClientHelper {
   public String getUrlFull(Request request) {
     try {
       return request.getURI().toURL().toString();
-    } catch (MalformedURLException e) {
+    } catch (MalformedURLException ignored) {
       return null;
     }
   }
 
   @Override
+  @Nullable
   public String getServerAddress(Request request) {
     return request.getOriginalURI().getHost();
   }

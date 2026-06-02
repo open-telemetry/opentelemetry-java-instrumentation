@@ -9,10 +9,10 @@ import io.opentelemetry.instrumentation.annotations.AddingSpanAttributes;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
-public class ExtractAttributesUsingAddingSpanAttributes {
+class ExtractAttributesUsingAddingSpanAttributes {
 
   @AddingSpanAttributes
-  public String withSpanAttributes(
+  String withSpanAttributes(
       @SpanAttribute String implicitName,
       @SpanAttribute("explicitName") String parameter,
       @SpanAttribute("nullAttribute") String nullAttribute,
@@ -22,7 +22,7 @@ public class ExtractAttributesUsingAddingSpanAttributes {
   }
 
   @AddingSpanAttributes
-  public String withSpanAttributesParent(
+  String withSpanAttributesParent(
       @SpanAttribute String implicitName,
       @SpanAttribute("explicitName") String parameter,
       @SpanAttribute("nullAttribute") String nullAttribute,
@@ -33,7 +33,7 @@ public class ExtractAttributesUsingAddingSpanAttributes {
 
   @WithSpan
   @AddingSpanAttributes
-  public String withSpanTakesPrecedence(
+  String withSpanTakesPrecedence(
       @SpanAttribute String implicitName,
       @SpanAttribute("explicitName") String parameter,
       @SpanAttribute("nullAttribute") String nullAttribute,

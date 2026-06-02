@@ -26,18 +26,15 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
   }
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestMethod(requestContext.request());
   }
 
   @Override
-  @Nullable
   public String getUrlScheme(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestScheme(requestContext.request());
   }
 
-  @Nullable
   @Override
   public String getUrlPath(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestUri(requestContext.request());
@@ -89,7 +86,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
     if (response == null) {
       return emptyList();
     }
-    return accessor.getResponseHeaderValues(responseContext.response(), name);
+    return accessor.getResponseHeaderValues(response, name);
   }
 
   @Nullable
@@ -117,7 +114,6 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
   }
 
   @Override
-  @Nullable
   public String getNetworkPeerAddress(
       ServletRequestContext<REQUEST> requestContext,
       @Nullable ServletResponseContext<RESPONSE> response) {

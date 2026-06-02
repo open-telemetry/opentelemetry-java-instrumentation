@@ -10,7 +10,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.function.Function;
 
-/** Abstract class to simply {@link Resource} {@link ComponentProvider} implementations. */
+/** Abstract class to simplify {@link Resource} {@link ComponentProvider} implementations. */
 abstract class ResourceComponentProvider implements ComponentProvider {
 
   private final String name;

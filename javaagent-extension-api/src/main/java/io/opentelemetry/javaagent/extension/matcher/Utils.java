@@ -13,7 +13,7 @@ final class Utils {
       return td.getTypeName();
     } catch (IllegalStateException e) {
       String message = e.getMessage();
-      if (message.startsWith("Cannot resolve type description for ")) {
+      if (message != null && message.startsWith("Cannot resolve type description for ")) {
         return message.replace("Cannot resolve type description for ", "");
       } else {
         return "?";

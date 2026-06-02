@@ -92,7 +92,7 @@ class FutureInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("cancel").and(returns(boolean.class)),
-        FutureInstrumentation.class.getName() + "$CanceledFutureAdvice");
+        getClass().getName() + "$CanceledFutureAdvice");
   }
 
   @SuppressWarnings("unused")

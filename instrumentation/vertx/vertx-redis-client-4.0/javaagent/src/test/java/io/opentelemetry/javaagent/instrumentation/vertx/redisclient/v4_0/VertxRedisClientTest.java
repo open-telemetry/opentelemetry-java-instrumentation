@@ -1,0 +1,223 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
+
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.vertx.core.Vertx;
+import io.vertx.redis.client.Redis;
+import io.vertx.redis.client.RedisAPI;
+import io.vertx.redis.client.RedisConnection;
+import java.net.InetAddress;
+import java.util.concurrent.CompletableFuture;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.containers.GenericContainer;
+
+@SuppressWarnings("deprecation") // using deprecated semconv
+class VertxRedisClientTest {
+  @RegisterExtension
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  private static final GenericContainer<?> redisServer =
+      new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
+  private static String host;
+  private static String ip;
+  private static int port;
+  private static Vertx vertx;
+  private static Redis client;
+  private static RedisAPI redis;
+
+  @BeforeAll
+  static void setup() throws Exception {
+    redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
+
+    host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
+    port = redisServer.getMappedPort(6379);
+
+    vertx = Vertx.vertx();
+    cleanup.deferAfterAll(vertx::close);
+    client = Redis.createClient(vertx, "redis://" + host + ":" + port + "/1");
+    cleanup.deferAfterAll(client::close);
+    RedisConnection connection =
+        client.connect().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    redis = RedisAPI.api(connection);
+    cleanup.deferAfterAll(redis::close);
+  }
+
+  @Test
+  void setCommand() throws Exception {
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))));
+
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.vertx-redis-client-4.0",
+          metric -> metric.hasName("db.client.operation.duration"));
+    }
+  }
+
+  @Test
+  void getCommand() throws Exception {
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    String value =
+        redis.get("foo").toCompletionStage().toCompletableFuture().get(30, SECONDS).toString();
+
+    assertThat(value).isEqualTo("bar");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo"))));
+  }
+
+  @Test
+  void getCommandWithParent() throws Exception {
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
+
+    CompletableFuture<String> future = new CompletableFuture<>();
+    CompletableFuture<String> result =
+        future.whenComplete((value, throwable) -> testing.runWithSpan("callback", () -> {}));
+
+    testing.runWithSpan(
+        "parent",
+        () ->
+            redis
+                .get("foo")
+                .toCompletionStage()
+                .toCompletableFuture()
+                .whenComplete(
+                    (response, throwable) -> {
+                      if (throwable == null) {
+                        future.complete(response.toString());
+                      } else {
+                        future.completeExceptionally(throwable);
+                      }
+                    }));
+
+    String value = result.get(30, SECONDS);
+    assertThat(value).isEqualTo("bar");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo")),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void commandWithNoArguments() throws Exception {
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
+
+    String value =
+        redis.randomkey().toCompletionStage().toCompletableFuture().get(30, SECONDS).toString();
+
+    assertThat(value).isEqualTo("foo");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("RANDOMKEY")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));
+  }
+
+  private static AttributeAssertion[] redisSpanAttributes(String operation, String queryText) {
+    // not testing database/dup
+    if (emitStableDatabaseSemconv()) {
+      return new AttributeAssertion[] {
+        equalTo(DB_SYSTEM_NAME, REDIS),
+        equalTo(DB_QUERY_TEXT, queryText),
+        equalTo(DB_OPERATION_NAME, operation),
+        equalTo(DB_NAMESPACE, "1"),
+        equalTo(SERVER_ADDRESS, host),
+        equalTo(SERVER_PORT, port),
+        equalTo(maybeStablePeerService(), "test-peer-service"),
+        equalTo(NETWORK_PEER_PORT, port),
+        equalTo(NETWORK_PEER_ADDRESS, ip)
+      };
+    } else {
+      return new AttributeAssertion[] {
+        equalTo(DB_SYSTEM, REDIS),
+        equalTo(DB_STATEMENT, queryText),
+        equalTo(DB_OPERATION, operation),
+        equalTo(DB_REDIS_DATABASE_INDEX, 1),
+        equalTo(SERVER_ADDRESS, host),
+        equalTo(SERVER_PORT, port),
+        equalTo(maybeStablePeerService(), "test-peer-service"),
+        equalTo(NETWORK_PEER_PORT, port),
+        equalTo(NETWORK_PEER_ADDRESS, ip)
+      };
+    }
+  }
+}

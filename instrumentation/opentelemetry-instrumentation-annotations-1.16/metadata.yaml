@@ -3,3 +3,12 @@ classification: custom
 description: >
   Instruments methods annotated with OpenTelemetry instrumentation annotations, such as @WithSpan
   and @SpanAttribute.
+configurations:
+  - name: otel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods
+    declarative_name: java.opentelemetry_instrumentation_annotations.exclude_methods
+    description: All methods to be excluded from auto-instrumentation by annotation-based advices.
+    type: string
+    default: ""
+    examples:
+      - "com.example.MyClass[method1,method2]"
+      - "com.example.MyClass[method1];com.example.OtherClass[method2]"

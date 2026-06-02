@@ -90,9 +90,7 @@ public class LibraryTestRunner extends InstrumentationTestRunner {
                     .addSpanProcessor(SimpleSpanProcessor.create(testSpanExporter))
                     .addSpanProcessor(
                         new BaggageSpanProcessor(
-                            baggageKey ->
-                                asList("test-baggage-key-1", "test-baggage-key-2")
-                                    .contains(baggageKey)))
+                            asList("test-baggage-key-1", "test-baggage-key-2"), null))
                     .build())
             .setMeterProvider(SdkMeterProvider.builder().registerMetricReader(metricReader).build())
             .setLoggerProvider(

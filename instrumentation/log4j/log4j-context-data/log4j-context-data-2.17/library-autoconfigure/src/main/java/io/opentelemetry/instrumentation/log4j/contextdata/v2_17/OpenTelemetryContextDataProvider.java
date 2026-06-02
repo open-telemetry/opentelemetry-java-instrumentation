@@ -51,7 +51,7 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
           "io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder");
       return true;
 
-    } catch (ClassNotFoundException ok) {
+    } catch (ClassNotFoundException ignored) {
       return false;
     }
   }

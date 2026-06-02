@@ -10,11 +10,10 @@ import io.opentelemetry.instrumentation.viburdbcp.v11_0.ViburTelemetry;
 
 public class ViburSingletons {
 
-  private static final ViburTelemetry viburTelemetry =
-      ViburTelemetry.create(GlobalOpenTelemetry.get());
+  private static final ViburTelemetry telemetry = ViburTelemetry.create(GlobalOpenTelemetry.get());
 
   public static ViburTelemetry telemetry() {
-    return viburTelemetry;
+    return telemetry;
   }
 
   private ViburSingletons() {}

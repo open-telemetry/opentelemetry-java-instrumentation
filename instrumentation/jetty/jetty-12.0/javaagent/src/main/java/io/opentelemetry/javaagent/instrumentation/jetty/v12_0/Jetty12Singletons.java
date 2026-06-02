@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 
-public class Jetty12Singletons {
+class Jetty12Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jetty-12.0";
 
   private static final Instrumenter<Request, Response> instrumenter;
@@ -33,7 +33,7 @@ public class Jetty12Singletons {
 
   private static final Jetty12Helper helper = new Jetty12Helper(instrumenter);
 
-  public static Jetty12Helper helper() {
+  static Jetty12Helper helper() {
     return helper;
   }
 

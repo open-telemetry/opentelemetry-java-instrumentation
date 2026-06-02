@@ -25,7 +25,7 @@ class SpringWebfluxSingleConnection implements SingleConnection {
   private final int port;
   private final WebClient webClient;
 
-  public SpringWebfluxSingleConnection(
+  SpringWebfluxSingleConnection(
       String host, int port, UnaryOperator<WebClient.Builder> instrumentationFunction) {
     this.host = host;
     this.port = port;
@@ -51,7 +51,7 @@ class SpringWebfluxSingleConnection implements SingleConnection {
     WebClient.RequestBodySpec request =
         webClient.method(HttpMethod.GET).uri(uri).headers(h -> headers.forEach(h::add));
 
-    if (Webflux7Util.isWebflux7) {
+    if (Webflux7Util.IS_WEBFLUX_7) {
       return Webflux7Util.doRequest(
           request,
           response -> {

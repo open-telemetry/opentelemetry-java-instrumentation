@@ -85,15 +85,6 @@ public final class DbConfig {
       return deprecatedValue;
     }
 
-    Boolean deprecatedPropertyValue =
-        commonConfig.get("db_sqlcommenter/development").getBoolean("enabled");
-    if (deprecatedPropertyValue != null) {
-      warnIfDeprecatedExperimentalSystemPropertyUsed(
-          "otel.instrumentation.common.experimental.db-sqlcommenter.enabled",
-          "otel.instrumentation.common.db.experimental.sqlcommenter.enabled");
-      return deprecatedPropertyValue;
-    }
-
     return null;
   }
 
@@ -167,18 +158,6 @@ public final class DbConfig {
           "The "
               + deprecatedProperty
               + " system property is deprecated and will be removed in 3.0. Use "
-              + replacementProperty
-              + " instead.");
-    }
-  }
-
-  private static void warnIfDeprecatedExperimentalSystemPropertyUsed(
-      String deprecatedProperty, String replacementProperty) {
-    if (warnedDeprecatedProperties.add(deprecatedProperty)) {
-      logger.warning(
-          "The "
-              + deprecatedProperty
-              + " system property is deprecated and will be removed in a future version. Use "
               + replacementProperty
               + " instead.");
     }

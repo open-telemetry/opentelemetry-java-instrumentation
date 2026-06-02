@@ -41,13 +41,14 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 class SpringSchedulingTest {
 
-  private static final String EXPERIMENTAL_FLAG =
-      "otel.instrumentation.spring-scheduling.experimental-span-attributes";
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.spring-scheduling.experimental-span-attributes");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void scheduleOneTimeTest() throws InterruptedException {
@@ -62,9 +63,6 @@ class SpringSchedulingTest {
     assertThat(testing.waitForTraces(0)).isEmpty();
   }
 
-  private static final String JOB_SYSTEM =
-      Boolean.getBoolean(EXPERIMENTAL_FLAG) ? "spring_scheduling" : null;
-
   @Test
   void scheduleCronExpressionTest() throws InterruptedException {
     AnnotationConfigApplicationContext context =
@@ -75,7 +73,7 @@ class SpringSchedulingTest {
     task.blockUntilExecute();
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(TriggerTask.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
 
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
@@ -97,7 +95,7 @@ class SpringSchedulingTest {
     task.blockUntilExecute();
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(IntervalTask.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
 
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
@@ -116,11 +114,11 @@ class SpringSchedulingTest {
     cleanup.deferCleanup(context);
 
     LambdaTaskConfigurer configurer = context.getBean(LambdaTaskConfigurer.class);
-    configurer.singleUseLatch.await(2000, MILLISECONDS);
+    assertThat(configurer.singleUseLatch.await(2000, MILLISECONDS)).isTrue();
 
     List<AttributeAssertion> assertions =
         codeFunctionPrefixAssertions(LambdaTaskConfigurer.class.getName() + "$$Lambda", "run");
-    assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
 
     assertThat(configurer).isNotNull();
     testing.waitAndAssertTraces(
@@ -139,11 +137,11 @@ class SpringSchedulingTest {
     cleanup.deferCleanup(context);
 
     CountDownLatch latch = context.getBean(CountDownLatch.class);
-    latch.await(5, SECONDS);
+    assertThat(latch.await(5, SECONDS)).isTrue();
 
     List<AttributeAssertion> assertions =
         codeFunctionAssertions(EnhancedClassTaskConfig.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
 
     assertThat(latch).isNotNull();
     testing.waitAndAssertTraces(
@@ -165,7 +163,7 @@ class SpringSchedulingTest {
     task.blockUntilExecute();
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(TaskWithError.class, "run");
-    assertions.add(equalTo(stringKey("job.system"), JOB_SYSTEM));
+    assertions.add(equalTo(stringKey("job.system"), experimental("spring_scheduling")));
 
     assertThat(task).isNotNull();
     testing.waitAndAssertTraces(
@@ -188,5 +186,9 @@ class SpringSchedulingTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class)))),
                 span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
+  }
+
+  private static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 }

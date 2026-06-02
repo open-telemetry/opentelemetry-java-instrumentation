@@ -14,7 +14,7 @@ muzzle {
 dependencies {
   library("org.hibernate:hibernate-core:6.0.0.Final")
 
-  implementation(project(":instrumentation:hibernate:hibernate-common:javaagent"))
+  implementation(project(":instrumentation:hibernate:hibernate-common-3.3:javaagent"))
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   // Added to ensure cross compatibility:
@@ -42,17 +42,14 @@ testing {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
         }
       }
       dependencies {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
-        if (otelProps.testLatestDeps) {
-          implementation("org.hibernate:hibernate-core:6.+")
-        } else {
-          implementation("org.hibernate:hibernate-core:6.0.0.Final")
-        }
+        implementation("org.hibernate:hibernate-core:${baseVersion("6.0.0.Final").orLatest("6.+")}")
       }
     }
 
@@ -60,17 +57,14 @@ testing {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
         }
       }
       dependencies {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
-        if (otelProps.testLatestDeps) {
-          implementation("org.hibernate:hibernate-core:7.+")
-        } else {
-          implementation("org.hibernate:hibernate-core:7.0.0.Final")
-        }
+        implementation("org.hibernate:hibernate-core:${baseVersion("7.0.0.Final").orLatest("7.+")}")
       }
     }
   }
@@ -106,6 +100,7 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
       }
     }
 

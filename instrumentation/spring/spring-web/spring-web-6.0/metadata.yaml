@@ -7,6 +7,7 @@ features:
 library_link: https://github.com/spring-projects/spring-framework
 configurations:
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: >
       Enables the capture of experimental HTTP client telemetry, including URL template
       as the span name.

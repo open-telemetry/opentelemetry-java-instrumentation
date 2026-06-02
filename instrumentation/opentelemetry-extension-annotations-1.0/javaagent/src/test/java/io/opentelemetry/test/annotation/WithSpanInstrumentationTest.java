@@ -102,8 +102,16 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void excludedMethod() throws Exception {
+  void excludedMethod() throws InterruptedException {
     new TracedWithSpan().ignored();
+
+    Thread.sleep(500); // sleep a bit just to make sure no span is captured
+    assertThat(testing.waitForTraces(0)).isEmpty();
+  }
+
+  @Test
+  void annotatedConstructorDoesNotCreateSpan() throws InterruptedException {
+    new TracedWithSpan("unused");
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
     assertThat(testing.waitForTraces(0)).isEmpty();
@@ -161,7 +169,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void completingCompletionStage() throws Exception {
+  void completingCompletionStage() throws InterruptedException {
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completionStage(future);
 
@@ -182,7 +190,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void exceptionallyCompletingCompletionStage() throws Exception {
+  void exceptionallyCompletingCompletionStage() throws InterruptedException {
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completionStage(future);
 
@@ -257,7 +265,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void completingCompletableFuture() throws Exception {
+  void completingCompletableFuture() throws InterruptedException {
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completableFuture(future);
 
@@ -278,7 +286,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void exceptionallyCompletingCompletableFuture() throws Exception {
+  void exceptionallyCompletingCompletableFuture() throws InterruptedException {
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completableFuture(future);
 
@@ -329,7 +337,7 @@ class WithSpanInstrumentationTest {
 
   @Test
   @SuppressWarnings("deprecation") // testing deprecated WithSpan annotation
-  void java6Class() throws Exception {
+  void java6Class() throws ReflectiveOperationException {
     /*
     class GeneratedJava6TestClass implements Runnable {
       @WithSpan

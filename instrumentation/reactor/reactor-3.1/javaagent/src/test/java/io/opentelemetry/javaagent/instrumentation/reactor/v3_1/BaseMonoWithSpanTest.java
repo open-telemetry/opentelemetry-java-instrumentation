@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
@@ -84,7 +85,7 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
                             // earliest tested and latest version behave differently
-                            .hasParent(trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 0 : 1))
+                            .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
                             .hasTotalAttributeCount(0)));
   }
 
@@ -125,7 +126,7 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 0 : 1))
+                            .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
                             .hasTotalAttributeCount(0)));
   }
 

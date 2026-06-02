@@ -47,7 +47,7 @@ class MeterTest {
   }
 
   @Test
-  void batchLongCounter() throws InterruptedException {
+  void batchLongCounter() {
     ObservableLongMeasurement observableMeasurement =
         meter.counterBuilder("test").setDescription("d").setUnit("u").buildObserver();
 
@@ -60,40 +60,35 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(11)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(11)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void batchDoubleCounter() throws InterruptedException {
+  void batchDoubleCounter() {
     ObservableDoubleMeasurement observableMeasurement =
         meter.counterBuilder("test").ofDoubles().setDescription("d").setUnit("u").buildObserver();
 
@@ -106,40 +101,35 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasDoubleSumSatisfying(
-                            sum ->
-                                sum.isMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(12.1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasDoubleSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12.1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void batchLongUpDownCounter() throws InterruptedException {
+  void batchLongUpDownCounter() {
     ObservableLongMeasurement observableMeasurement =
         meter.upDownCounterBuilder("test").setDescription("d").setUnit("u").buildObserver();
 
@@ -152,40 +142,35 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(11)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isNotMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(11)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void batchDoubleUpDownCounter() throws InterruptedException {
+  void batchDoubleUpDownCounter() {
     ObservableDoubleMeasurement observableMeasurement =
         meter
             .upDownCounterBuilder("test")
@@ -203,40 +188,35 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasDoubleSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(12.1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasDoubleSumSatisfying(
+                    sum ->
+                        sum.isNotMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12.1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void batchLongGauge() throws InterruptedException {
+  void batchLongGauge() {
     ObservableLongMeasurement observableMeasurement =
         meter.gaugeBuilder("test").ofLongs().setDescription("d").setUnit("u").buildObserver();
 
@@ -249,39 +229,34 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasLongGaugeSatisfying(
-                            gauge ->
-                                gauge.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(123)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasLongGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(123)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }
 
   @Test
-  void batchDoubleGauge() throws InterruptedException {
+  void batchDoubleGauge() {
     ObservableDoubleMeasurement observableMeasurement =
         meter.gaugeBuilder("test").setDescription("d").setUnit("u").buildObserver();
 
@@ -294,33 +269,28 @@ class MeterTest {
 
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "test",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDescription("d")
-                        .hasUnit("u")
-                        .hasInstrumentationScope(
-                            InstrumentationScopeInfo.builder(instrumentationName)
-                                .setVersion("1.2.3")
-                                .setSchemaUrl("http://schema.org")
-                                .build())
-                        .hasDoubleGaugeSatisfying(
-                            gauge ->
-                                gauge.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1.23)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("q"), "r"))))));
+        metric ->
+            metric
+                .hasName("test")
+                .hasDescription("d")
+                .hasUnit("u")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(instrumentationName)
+                        .setVersion("1.2.3")
+                        .setSchemaUrl("http://schema.org")
+                        .build())
+                .hasDoubleGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(1.23)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("q"), "r")))));
 
     callback.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
     testing.clearData();
-    Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
   }

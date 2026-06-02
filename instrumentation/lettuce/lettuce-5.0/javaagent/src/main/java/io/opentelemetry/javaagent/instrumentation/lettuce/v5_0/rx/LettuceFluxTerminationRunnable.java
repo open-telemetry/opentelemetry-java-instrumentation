@@ -25,15 +25,15 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
           .getBoolean("experimental_span_attributes/development", false);
 
+  private final FluxOnSubscribeConsumer onSubscribeConsumer;
   private Context context;
   private int numResults;
-  private final FluxOnSubscribeConsumer onSubscribeConsumer;
 
   public LettuceFluxTerminationRunnable(RedisCommand<?, ?, ?> command, boolean expectsResponse) {
     onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, expectsResponse);
   }
 
-  public FluxOnSubscribeConsumer getOnSubscribeConsumer() {
+  public Consumer<Subscription> getOnSubscribeConsumer() {
     return onSubscribeConsumer;
   }
 

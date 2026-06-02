@@ -23,10 +23,9 @@ public final class OtelCommandArgsUtil {
    */
   public static List<String> getCommandArgs(CommandArgs<?, ?> commandArgs) {
     List<String> result = new ArrayList<>();
-    StringCodec stringCodec = new StringCodec();
 
     for (SingularArgument argument : commandArgs.singularArguments) {
-      String value = getArgValue(stringCodec, argument);
+      String value = getArgValue(StringCodec.UTF8, argument);
       result.add(value);
     }
     return result;

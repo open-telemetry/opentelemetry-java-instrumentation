@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNet
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import org.apache.dubbo.rpc.Filter;
 
-public class DubboSingletons {
+class DubboSingletons {
   private static final Filter clientFilter;
   private static final Filter serverFilter;
 
@@ -26,11 +26,11 @@ public class DubboSingletons {
     serverFilter = telemetry.newServerFilter();
   }
 
-  public static Filter clientFilter() {
+  static Filter clientFilter() {
     return clientFilter;
   }
 
-  public static Filter serverFilter() {
+  static Filter serverFilter() {
     return serverFilter;
   }
 

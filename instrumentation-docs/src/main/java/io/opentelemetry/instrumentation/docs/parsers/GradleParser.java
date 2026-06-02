@@ -31,7 +31,7 @@ public class GradleParser {
   private static final Pattern muzzlePassBlockPattern =
       Pattern.compile("pass\\s*\\{(.*?)}", Pattern.DOTALL);
 
-  private static final Pattern coreJdkPattern = Pattern.compile("coreJdk\\(\\)");
+  private static final Pattern coreJdkPattern = Pattern.compile("coreJdk\\.set\\(true\\)");
 
   private static final Pattern ifBlockPattern =
       Pattern.compile("if\\s*\\([^)]*\\)\\s*\\{.*?}", Pattern.DOTALL);

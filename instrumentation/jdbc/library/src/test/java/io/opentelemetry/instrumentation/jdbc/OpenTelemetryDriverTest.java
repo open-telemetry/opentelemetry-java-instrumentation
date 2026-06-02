@@ -268,8 +268,8 @@ class OpenTelemetryDriverTest {
   @Test
   void verifyGetPropertyInfoWithNullUrl() {
     assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(null, null))
-        .describedAs("url is required")
-        .isInstanceOf(IllegalArgumentException.class);
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("url is required");
   }
 
   @DisplayName("verify get property info with empty url")

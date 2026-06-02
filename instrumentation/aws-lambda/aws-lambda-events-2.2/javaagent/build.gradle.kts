@@ -14,8 +14,6 @@ muzzle {
 }
 
 dependencies {
-  compileOnly(project(":javaagent-bootstrap"))
-
   implementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:library"))
 
   implementation(project(":instrumentation:aws-lambda:aws-lambda-events-common-2.2:library")) {

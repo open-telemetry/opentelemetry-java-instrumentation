@@ -26,7 +26,7 @@ class JfrThreadCountTest {
           });
 
   @Test
-  void shouldHaveJfrThreadCountEvents() throws Exception {
+  void shouldHaveJfrThreadCountEvents() throws InterruptedException {
     Runnable work =
         () -> {
           try {
@@ -55,11 +55,11 @@ class JfrThreadCountTest {
                 .satisfies(
                     data ->
                         assertThat(data.getLongSumData().getPoints())
-                            .anyMatch(p -> p.getValue() > 0 && !isDaemon(p))
-                            .anyMatch(p -> p.getValue() > 0 && isDaemon(p))));
+                            .anyMatch(point -> point.getValue() > 0 && !isDaemon(point))
+                            .anyMatch(point -> point.getValue() > 0 && isDaemon(point))));
   }
 
-  private static boolean isDaemon(LongPointData p) {
-    return requireNonNull(p.getAttributes().get(ATTR_DAEMON));
+  private static boolean isDaemon(LongPointData point) {
+    return requireNonNull(point.getAttributes().get(ATTR_DAEMON));
   }
 }

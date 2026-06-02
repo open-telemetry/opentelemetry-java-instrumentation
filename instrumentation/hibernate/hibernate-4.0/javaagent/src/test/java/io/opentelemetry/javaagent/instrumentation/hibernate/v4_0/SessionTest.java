@@ -246,7 +246,7 @@ class SessionTest extends AbstractHibernateTest {
                                     trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
   }
 
-  private static Stream<Arguments> provideArgumentsHibernateActionStateless() {
+  private Stream<Arguments> provideArgumentsHibernateActionStateless() {
     return Stream.of(
         Arguments.of(named("refresh", new Parameter("refresh", null, StatelessSession::refresh))),
         Arguments.of(
@@ -489,7 +489,7 @@ class SessionTest extends AbstractHibernateTest {
               return exception;
             });
 
-    assertThat(mappingException.getClass()).isEqualTo(MappingException.class);
+    assertThat(mappingException).isInstanceOf(MappingException.class);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -586,7 +586,7 @@ class SessionTest extends AbstractHibernateTest {
                                 emitStableDatabaseSemconv() ? null : "Value"))));
   }
 
-  private static Stream<Arguments> provideArgumentsHibernateCommitAction() {
+  private Stream<Arguments> provideArgumentsHibernateCommitAction() {
     return Stream.of(
         Arguments.of(
             named(
@@ -812,7 +812,7 @@ class SessionTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void testHibernateOverlappingSessions() {
-    assumeTrue(ExperimentalTestHelper.isEnabled); // needs experimental session id
+    assumeTrue(ExperimentalTestHelper.EXPERIMENTAL_ATTRIBUTES); // needs experimental session id
 
     testing.runWithSpan(
         "overlapping Sessions",

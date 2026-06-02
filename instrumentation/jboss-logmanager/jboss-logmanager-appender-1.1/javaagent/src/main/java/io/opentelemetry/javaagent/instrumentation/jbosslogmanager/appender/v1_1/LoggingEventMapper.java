@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1;
 
-import static io.opentelemetry.semconv.incubating.OtelIncubatingAttributes.OTEL_EVENT_NAME;
+import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
@@ -28,28 +28,18 @@ import org.jboss.logmanager.MDC;
 
 public class LoggingEventMapper {
 
-  private static final java.util.logging.Logger logger =
-      java.util.logging.Logger.getLogger(LoggingEventMapper.class.getName());
-
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
-
-  // copied from EventIncubatingAttributes
-  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
-
-  private final List<AttributeKey<String>> captureMdcAttributeKeys;
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jboss_logmanager")
           .getBoolean("experimental_log_attributes/development", false);
 
+  private final List<AttributeKey<String>> captureMdcAttributeKeys;
+
   // cached as an optimization
   private final boolean captureAllMdcAttributes;
-
-  private final boolean captureEventName =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jboss_logmanager")
-          .getBoolean("capture_event_name/development", false);
 
   private LoggingEventMapper() {
     List<String> captureMdcAttributes =
@@ -63,17 +53,11 @@ public class LoggingEventMapper {
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
       for (String key : captureMdcAttributes) {
-        if (!OTEL_EVENT_NAME.getKey().equals(key)
-            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
           keys.add(getMdcAttributeKey(key));
         }
       }
       this.captureMdcAttributeKeys = keys;
-    }
-    if (captureEventName) {
-      logger.warning(
-          "The otel.instrumentation.jboss-logmanager.experimental.capture-event-name setting is"
-              + " deprecated and will be removed in a future version.");
     }
   }
 
@@ -126,22 +110,15 @@ public class LoggingEventMapper {
       return;
     }
 
-    // otel.event.name takes priority over event.name
     String otelEventName = context.get(OTEL_EVENT_NAME.getKey());
     if (otelEventName != null) {
       builder.setEventName(otelEventName);
-    } else if (captureEventName) {
-      String eventName = context.get(EVENT_NAME.getKey());
-      if (eventName != null) {
-        builder.setEventName(eventName);
-      }
     }
 
     if (captureAllMdcAttributes) {
       for (Map.Entry<String, String> entry : context.entrySet()) {
         String key = entry.getKey();
-        if (!OTEL_EVENT_NAME.getKey().equals(key)
-            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
           builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
         }
       }
@@ -154,7 +131,7 @@ public class LoggingEventMapper {
     }
   }
 
-  public static AttributeKey<String> getMdcAttributeKey(String key) {
+  private static AttributeKey<String> getMdcAttributeKey(String key) {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 

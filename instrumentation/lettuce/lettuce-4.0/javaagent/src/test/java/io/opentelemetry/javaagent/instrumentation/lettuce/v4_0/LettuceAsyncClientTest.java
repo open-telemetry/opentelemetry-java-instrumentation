@@ -48,12 +48,10 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -73,7 +71,8 @@ class LettuceAsyncClientTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static final DockerImageName containerImage = DockerImageName.parse("redis:6.2.3-alpine");
+  private static final DockerImageName CONTAINER_IMAGE =
+      DockerImageName.parse("redis:6.2.3-alpine");
 
   private static final int DB_INDEX = 0;
 
@@ -82,7 +81,7 @@ class LettuceAsyncClientTest {
       new ClientOptions.Builder().autoReconnect(false).build();
 
   private static final GenericContainer<?> redisServer =
-      new GenericContainer<>(containerImage)
+      new GenericContainer<>(CONTAINER_IMAGE)
           .withExposedPorts(6379)
           .withLogConsumer(new Slf4jLogConsumer(logger))
           .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
@@ -93,19 +92,20 @@ class LettuceAsyncClientTest {
   private static String dbUriNonExistent;
   private static String embeddedDbUri;
 
-  private static final ImmutableMap<String, String> testHashMap =
+  private static final ImmutableMap<String, String> TEST_HASH_MAP =
       ImmutableMap.of(
           "firstname", "John",
           "lastname", "Doe",
           "age", "53");
 
-  static RedisClient redisClient;
+  private static RedisClient redisClient;
   private static StatefulRedisConnection<String, String> connection;
-  static RedisAsyncCommands<String, String> asyncCommands;
+  private static RedisAsyncCommands<String, String> asyncCommands;
 
   @BeforeAll
   static void setUp() {
     redisServer.start();
+    cleanup.deferAfterAll(redisServer::stop);
     host = redisServer.getHost();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
@@ -115,8 +115,10 @@ class LettuceAsyncClientTest {
 
     redisClient = RedisClient.create(embeddedDbUri);
     redisClient.setOptions(CLIENT_OPTIONS);
+    cleanup.deferAfterAll(redisClient::shutdown);
 
     connection = redisClient.connect();
+    cleanup.deferAfterAll(connection);
     asyncCommands = connection.async();
     RedisCommands<String, String> syncCommands = connection.sync();
 
@@ -125,13 +127,6 @@ class LettuceAsyncClientTest {
     // 1 set + 1 connect trace
     testing.waitForTraces(2);
     testing.clearData();
-  }
-
-  @AfterAll
-  static void cleanUp() {
-    connection.close();
-    redisClient.shutdown();
-    redisServer.stop();
   }
 
   @Test
@@ -189,8 +184,7 @@ class LettuceAsyncClientTest {
   }
 
   @Test
-  void testSetCommandUsingFutureGetWithTimeout()
-      throws ExecutionException, InterruptedException, TimeoutException {
+  void testSetCommandUsingFutureGetWithTimeout() throws Exception {
     RedisFuture<String> redisFuture = asyncCommands.set("TESTSETKEY", "TESTSETVAL");
     String res = redisFuture.get(3, SECONDS);
 
@@ -348,7 +342,7 @@ class LettuceAsyncClientTest {
   void testHashSetAndThenNestApplyToHashGetall() {
     CompletableFuture<Map<String, String>> future = new CompletableFuture<>();
 
-    RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", testHashMap);
+    RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", TEST_HASH_MAP);
     hmsetFuture.thenApplyAsync(
         setResult -> {
           // Wait for 'hmset' trace to get written
@@ -371,7 +365,7 @@ class LettuceAsyncClientTest {
           return null;
         });
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue(testHashMap));
+    await().untilAsserted(() -> assertThat(future).isCompletedWithValue(TEST_HASH_MAP));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -485,7 +479,7 @@ class LettuceAsyncClientTest {
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
+    GenericContainer<?> server = new GenericContainer<>(CONTAINER_IMAGE).withExposedPorts(6379);
     server.start();
     cleanup.deferCleanup(server::stop);
 
@@ -517,7 +511,7 @@ class LettuceAsyncClientTest {
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    GenericContainer<?> server = new GenericContainer<>(containerImage).withExposedPorts(6379);
+    GenericContainer<?> server = new GenericContainer<>(CONTAINER_IMAGE).withExposedPorts(6379);
     server.start();
     cleanup.deferCleanup(server::stop);
 

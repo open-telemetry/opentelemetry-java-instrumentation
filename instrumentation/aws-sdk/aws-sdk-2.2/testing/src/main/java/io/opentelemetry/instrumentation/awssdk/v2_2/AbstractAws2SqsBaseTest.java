@@ -30,7 +30,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.pekko.http.scaladsl.Http;
@@ -39,6 +38,7 @@ import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -55,42 +55,25 @@ import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractAws2SqsBaseTest {
   protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
-  protected static int sqsPort;
-  protected static SQSRestServer sqs;
-  protected final String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+  protected int sqsPort;
+  protected SQSRestServer sqs;
+  protected String queueUrl;
 
-  protected ReceiveMessageRequest receiveMessageRequest =
-      ReceiveMessageRequest.builder().queueUrl(queueUrl).build();
+  protected ReceiveMessageRequest receiveMessageRequest;
 
-  protected ReceiveMessageRequest receiveMessageBatchRequest =
-      ReceiveMessageRequest.builder()
-          .queueUrl(queueUrl)
-          .maxNumberOfMessages(3)
-          .messageAttributeNames("All")
-          .waitTimeSeconds(5)
-          .build();
+  protected ReceiveMessageRequest receiveMessageBatchRequest;
 
   protected CreateQueueRequest createQueueRequest =
       CreateQueueRequest.builder().queueName("testSdkSqs").build();
 
-  protected SendMessageRequest sendMessageRequest =
-      SendMessageRequest.builder().queueUrl(queueUrl).messageBody("{\"type\": \"hello\"}").build();
+  protected SendMessageRequest sendMessageRequest;
 
-  @SuppressWarnings("unchecked")
-  protected SendMessageBatchRequest sendMessageBatchRequest =
-      SendMessageBatchRequest.builder()
-          .queueUrl(queueUrl)
-          .entries(
-              e -> e.messageBody("e1").id("i1"),
-              // 8 attributes, injection always possible
-              e -> e.messageBody("e2").id("i2").messageAttributes(dummyMessageAttributes(8)),
-              // 10 attributes, injection with custom propagator never possible
-              e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(10)))
-          .build();
+  protected SendMessageBatchRequest sendMessageBatchRequest;
 
   protected abstract InstrumentationExtension getTesting();
 
@@ -115,17 +98,17 @@ public abstract class AbstractAws2SqsBaseTest {
     return true;
   }
 
-  protected void configureSdkClient(SqsClientBuilder builder) throws URISyntaxException {
+  protected void configureSdkClient(SqsClientBuilder builder) {
     builder
         .overrideConfiguration(createOverrideConfigurationBuilder().build())
-        .endpointOverride(new URI("http://localhost:" + sqsPort));
+        .endpointOverride(URI.create("http://localhost:" + sqsPort));
     builder.region(Region.AP_NORTHEAST_1).credentialsProvider(CREDENTIALS_PROVIDER);
   }
 
-  protected void configureSdkClient(SqsAsyncClientBuilder builder) throws URISyntaxException {
+  protected void configureSdkClient(SqsAsyncClientBuilder builder) {
     builder
         .overrideConfiguration(createOverrideConfigurationBuilder().build())
-        .endpointOverride(new URI("http://localhost:" + sqsPort));
+        .endpointOverride(URI.create("http://localhost:" + sqsPort));
     builder.region(Region.AP_NORTHEAST_1).credentialsProvider(CREDENTIALS_PROVIDER);
   }
 
@@ -136,21 +119,47 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @BeforeAll
-  static void setUp() {
+  void setUp() {
     sqs = SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
     Http.ServerBinding server = sqs.waitUntilStarted();
     sqsPort = server.localAddress().getPort();
+    queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    receiveMessageRequest = ReceiveMessageRequest.builder().queueUrl(queueUrl).build();
+    receiveMessageBatchRequest =
+        ReceiveMessageRequest.builder()
+            .queueUrl(queueUrl)
+            .maxNumberOfMessages(3)
+            .messageAttributeNames("All")
+            .waitTimeSeconds(5)
+            .build();
+    sendMessageRequest =
+        SendMessageRequest.builder()
+            .queueUrl(queueUrl)
+            .messageBody("{\"type\": \"hello\"}")
+            .build();
+    @SuppressWarnings("unchecked")
+    SendMessageBatchRequest batch =
+        SendMessageBatchRequest.builder()
+            .queueUrl(queueUrl)
+            .entries(
+                e -> e.messageBody("e1").id("i1"),
+                // 8 attributes, injection always possible
+                e -> e.messageBody("e2").id("i2").messageAttributes(dummyMessageAttributes(8)),
+                // 10 attributes, injection with custom propagator never possible
+                e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(10)))
+            .build();
+    sendMessageBatchRequest = batch;
   }
 
   @AfterAll
-  static void cleanUp() {
+  void cleanUp() {
     if (sqs != null) {
       sqs.stopAndWait();
     }
   }
 
   @Test
-  void testSimpleSqsProducerConsumerServicesSync() throws URISyntaxException {
+  void testSimpleSqsProducerConsumerServicesSync() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -167,7 +176,7 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @Test
-  void testSimpleSqsProducerConsumerServicesWithParentSync() throws URISyntaxException {
+  void testSimpleSqsProducerConsumerServicesWithParentSync() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -184,17 +193,16 @@ public abstract class AbstractAws2SqsBaseTest {
     assertSqsTraces(true, false);
   }
 
-  @SuppressWarnings("InterruptedExceptionSwallowed")
   @Test
-  void testSimpleSqsProducerConsumerServicesAsync() throws Exception {
+  void testSimpleSqsProducerConsumerServicesAsync() {
     SqsAsyncClientBuilder builder = SqsAsyncClient.builder();
     configureSdkClient(builder);
     SqsAsyncClient client = configureSqsClient(builder.build());
 
-    client.createQueue(createQueueRequest).get();
-    client.sendMessage(sendMessageRequest).get();
+    client.createQueue(createQueueRequest).join();
+    client.sendMessage(sendMessageRequest).join();
 
-    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest).get();
+    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest).join();
 
     assertThat(response.messages()).hasSize(1);
 
@@ -202,7 +210,7 @@ public abstract class AbstractAws2SqsBaseTest {
     assertSqsTraces(false, false);
   }
 
-  static SpanDataAssert createQueueSpan(SpanDataAssert span) {
+  SpanDataAssert createQueueSpan(SpanDataAssert span) {
     return span.hasName("Sqs.CreateQueue")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
@@ -223,7 +231,7 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  static SpanDataAssert processSpan(SpanDataAssert span, SpanData parent) {
+  SpanDataAssert processSpan(SpanDataAssert span, SpanData parent) {
     return span.hasName("testSdkSqs process")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parent)
@@ -245,7 +253,7 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  static SpanDataAssert publishSpan(SpanDataAssert span, String queueUrl, String rcpMethod) {
+  SpanDataAssert publishSpan(SpanDataAssert span, String queueUrl, String rpcMethod) {
     return span.hasName("testSdkSqs publish")
         .hasKind(SpanKind.PRODUCER)
         .hasNoParent()
@@ -257,7 +265,7 @@ public abstract class AbstractAws2SqsBaseTest {
                 val -> val.matches("\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "Sqs"),
-            equalTo(RPC_METHOD, rcpMethod),
+            equalTo(RPC_METHOD, rpcMethod),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),

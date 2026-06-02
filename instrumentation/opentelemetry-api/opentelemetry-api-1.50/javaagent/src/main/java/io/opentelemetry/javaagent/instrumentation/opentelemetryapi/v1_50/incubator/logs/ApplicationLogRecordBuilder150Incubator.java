@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incuba
 import static application.io.opentelemetry.api.incubator.common.ExtendedAttributeType.EXTENDED_ATTRIBUTES;
 import static java.util.logging.Level.FINE;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
 import io.opentelemetry.api.incubator.common.ExtendedAttributes;
 import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
@@ -35,6 +36,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setEventName(
       String eventName) {
     agentLogRecordBuilder.setEventName(eventName);
@@ -42,6 +44,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setTimestamp(
       long timestamp, TimeUnit unit) {
     agentLogRecordBuilder.setTimestamp(timestamp, unit);
@@ -49,6 +52,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setTimestamp(
       Instant instant) {
     agentLogRecordBuilder.setTimestamp(instant);
@@ -56,6 +60,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder
       setObservedTimestamp(long timestamp, TimeUnit unit) {
     agentLogRecordBuilder.setObservedTimestamp(timestamp, unit);
@@ -63,6 +68,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder
       setObservedTimestamp(Instant instant) {
     agentLogRecordBuilder.setObservedTimestamp(instant);
@@ -70,6 +76,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setContext(
       application.io.opentelemetry.context.Context applicationContext) {
     agentLogRecordBuilder.setContext(AgentContextStorage.getAgentContext(applicationContext));
@@ -77,6 +84,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setSeverity(
       application.io.opentelemetry.api.logs.Severity severity) {
     agentLogRecordBuilder.setSeverity(LogBridging.toAgent(severity));
@@ -84,6 +92,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setSeverityText(
       String severityText) {
     agentLogRecordBuilder.setSeverityText(severityText);
@@ -91,6 +100,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setBody(
       String body) {
     agentLogRecordBuilder.setBody(body);
@@ -98,13 +108,15 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setBody(
-      application.io.opentelemetry.api.common.Value<?> body) {
+      @Nullable application.io.opentelemetry.api.common.Value<?> body) {
     agentLogRecordBuilder.setBody(convertValue(body));
     return this;
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setAllAttributes(
       application.io.opentelemetry.api.common.Attributes applicationAttributes) {
     agentLogRecordBuilder.setAllAttributes(Bridging.toAgent(applicationAttributes));
@@ -112,6 +124,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setAllAttributes(
       application.io.opentelemetry.api.incubator.common.ExtendedAttributes attributes) {
     agentLogRecordBuilder.setAllAttributes(convertExtendedAttributes(attributes));
@@ -119,6 +132,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public <T> application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setAttribute(
       application.io.opentelemetry.api.common.AttributeKey<T> key, @Nullable T value) {
     return (application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder)
@@ -126,6 +140,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   @SuppressWarnings("unchecked") // converting ExtendedAttributeKey loses generic type
   public <T> application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setAttribute(
       application.io.opentelemetry.api.incubator.common.ExtendedAttributeKey<T> key, T value) {
@@ -144,6 +159,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setException(
       Throwable throwable) {
     agentLogRecordBuilder.setException(throwable);

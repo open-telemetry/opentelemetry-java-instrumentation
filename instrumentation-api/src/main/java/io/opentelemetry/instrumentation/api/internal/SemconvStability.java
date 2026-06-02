@@ -25,6 +25,8 @@ import java.util.Set;
 @SuppressWarnings("deprecation")
 public final class SemconvStability {
 
+  private static final boolean v3Preview;
+
   private static final boolean emitOldDatabaseSemconv;
   private static final boolean emitStableDatabaseSemconv;
 
@@ -37,11 +39,14 @@ public final class SemconvStability {
   private static final boolean emitOldRpcSemconv;
   private static final boolean emitStableRpcSemconv;
 
+  private static final boolean emitOldMessagingSemconv;
+  private static final boolean emitStableMessagingSemconv;
+
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
-    boolean v3Preview =
-        getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
-    Set<String> optInValues = resolveOptInValues(openTelemetry);
+    v3Preview = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
+    Set<String> optInValues = resolveOptInValues(openTelemetry, "opt_in");
+    Set<String> previewValues = resolveOptInValues(openTelemetry, "preview");
 
     emitOldDatabaseSemconv = shouldEmitOld("database", v3Preview, optInValues);
     emitStableDatabaseSemconv = shouldEmitStable("database", v3Preview, optInValues);
@@ -54,24 +59,32 @@ public final class SemconvStability {
 
     emitOldRpcSemconv = shouldEmitOld("rpc", v3Preview, optInValues);
     emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, optInValues);
+
+    emitOldMessagingSemconv = shouldEmitOld("messaging", false, previewValues);
+    emitStableMessagingSemconv = shouldEmitStable("messaging", false, previewValues);
   }
 
-  private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry) {
+  private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry, String flag) {
     // Try declarative config via GlobalOpenTelemetry first
     DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
     Set<String> values =
         new HashSet<>(
             generalConfig
                 .get("semconv_stability")
-                .getScalarList("opt_in", String.class, new ArrayList<>()));
+                .getScalarList(flag, String.class, new ArrayList<>()));
     if (values.isEmpty()) {
       // Fall back to system property / env var
-      String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
+      String value =
+          ConfigPropertiesUtil.getString("otel.semconv-stability." + flag.replace('_', '-'));
       if (value != null) {
         return new HashSet<>(asList(value.split(",")));
       }
     }
     return values;
+  }
+
+  public static boolean v3Preview() {
+    return v3Preview;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -172,6 +185,14 @@ public final class SemconvStability {
     return openTelemetry instanceof ExtendedOpenTelemetry
         ? ((ExtendedOpenTelemetry) openTelemetry).getInstrumentationConfig(instrumentationName)
         : empty();
+  }
+
+  public static boolean emitOldMessagingSemconv() {
+    return emitOldMessagingSemconv;
+  }
+
+  public static boolean emitStableMessagingSemconv() {
+    return emitStableMessagingSemconv;
   }
 
   private SemconvStability() {}

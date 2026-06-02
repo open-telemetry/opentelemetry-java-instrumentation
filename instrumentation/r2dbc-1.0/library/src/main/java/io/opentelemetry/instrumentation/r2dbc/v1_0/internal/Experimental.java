@@ -44,15 +44,6 @@ public final class Experimental {
   }
 
   /**
-   * @deprecated Use {@link #setSqlCommenterEnabled(R2dbcTelemetryBuilder, boolean)} instead.
-   */
-  @Deprecated
-  public static void setEnableSqlCommenter(
-      R2dbcTelemetryBuilder builder, boolean sqlCommenterEnabled) {
-    setSqlCommenterEnabled(builder, sqlCommenterEnabled);
-  }
-
-  /**
    * Set the propagator used to inject tracing context into sql comments. By default, W3C Trace
    * Context propagator is used.
    */

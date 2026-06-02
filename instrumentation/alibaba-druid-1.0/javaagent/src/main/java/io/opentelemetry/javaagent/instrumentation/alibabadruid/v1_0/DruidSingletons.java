@@ -10,11 +10,10 @@ import io.opentelemetry.instrumentation.alibabadruid.v1_0.DruidTelemetry;
 
 public class DruidSingletons {
 
-  private static final DruidTelemetry druidTelemetry =
-      DruidTelemetry.create(GlobalOpenTelemetry.get());
+  private static final DruidTelemetry telemetry = DruidTelemetry.create(GlobalOpenTelemetry.get());
 
   public static DruidTelemetry telemetry() {
-    return druidTelemetry;
+    return telemetry;
   }
 
   private DruidSingletons() {}

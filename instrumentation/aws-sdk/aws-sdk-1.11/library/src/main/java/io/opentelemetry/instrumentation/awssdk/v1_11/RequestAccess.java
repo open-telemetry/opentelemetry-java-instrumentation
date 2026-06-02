@@ -122,7 +122,7 @@ final class RequestAccess {
     }
     try {
       return returnType.cast(method.invoke(obj));
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -172,7 +172,7 @@ final class RequestAccess {
     try {
       return MethodHandles.publicLookup()
           .findVirtual(clz, methodName, MethodType.methodType(returnType));
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -183,7 +183,7 @@ final class RequestAccess {
       Class<?> returnType =
           Class.forName("com.amazonaws.services.lambda.model.FunctionConfiguration");
       return findAccessorOrNull(clz, "getConfiguration", returnType);
-    } catch (Throwable t) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -197,7 +197,7 @@ final class RequestAccess {
         Class<?> lambdaConfigurationClass =
             Class.forName("com.amazonaws.services.lambda.model.FunctionConfiguration");
         return findAccessorOrNull(lambdaConfigurationClass, "getFunctionArn");
-      } catch (Throwable t) {
+      } catch (Throwable ignored) {
         return null;
       }
     }

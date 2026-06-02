@@ -65,13 +65,16 @@ class JavaAsyncChild extends ForkJoinTask<Object> implements TestTask {
   }
 
   private void runImpl() {
-    while (blockThread.get()) {
-      // busy-wait to block thread
+    try {
+      while (blockThread.get()) {
+        // busy-wait to block thread
+      }
+      if (doTraceableWork) {
+        asyncChild();
+      }
+    } finally {
+      latch.countDown();
     }
-    if (doTraceableWork) {
-      asyncChild();
-    }
-    latch.countDown();
   }
 
   private static void asyncChild() {

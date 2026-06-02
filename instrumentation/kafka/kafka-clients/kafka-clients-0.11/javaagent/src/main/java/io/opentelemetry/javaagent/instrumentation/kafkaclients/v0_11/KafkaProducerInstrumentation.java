@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.PRODUCER_PROPAGATION_ENABLED;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaPropagation;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -25,6 +27,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 class KafkaProducerInstrumentation implements TypeInstrumentation {
@@ -71,14 +74,13 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
         return new AdviceScope(parentContext, request, context, context.makeCurrent());
       }
 
-      public Callback wrapCallback(Callback originalCallback) {
+      public Callback wrapCallback(@Nullable Callback originalCallback) {
         return new ProducerCallback(originalCallback, parentContext, context, request);
       }
 
       public ProducerRecord<?, ?> propagateContext(
           ApiVersions apiVersions, ProducerRecord<?, ?> record) {
-        if (KafkaSingletons.isProducerPropagationEnabled()
-            && KafkaPropagation.shouldPropagate(apiVersions)) {
+        if (PRODUCER_PROPAGATION_ENABLED && KafkaPropagation.shouldPropagate(apiVersions)) {
           return KafkaPropagation.propagateContext(context, record);
         }
         return record;
@@ -101,12 +103,17 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
     public static Object[] onEnter(
         @Advice.FieldValue("apiVersions") ApiVersions apiVersions,
         @Advice.FieldValue("clientId") String clientId,
+        @Advice.FieldValue("producerConfig") ProducerConfig producerConfig,
         @Advice.Argument(0) ProducerRecord<?, ?> originalRecord,
-        @Advice.Argument(1) Callback originalCallback) {
+        @Advice.Argument(1) @Nullable Callback originalCallback) {
       ProducerRecord<?, ?> record = originalRecord;
       Callback callback = originalCallback;
 
-      KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId);
+      String bootstrapServers =
+          KafkaUtil.extractBootstrapServers(
+              producerConfig.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+      KafkaProducerRequest request =
+          KafkaProducerRequest.create(record, clientId, bootstrapServers);
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, record, callback};

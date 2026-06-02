@@ -18,11 +18,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.Logger;
@@ -324,15 +322,10 @@ class ValueAttributeTest {
         .setAttribute(valueKey("key"), Value.of("test"))
         .emit();
 
-    await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.logRecords())
-                    .satisfiesExactly(
-                        logRecordData -> {
-                          assertThat(logRecordData.getBodyValue().asString()).isEqualTo("body");
-                          assertThat(logRecordData.getAttributes())
-                              .isEqualTo(Attributes.builder().put("key", "test").build());
-                        }));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("body")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "test")));
   }
 }

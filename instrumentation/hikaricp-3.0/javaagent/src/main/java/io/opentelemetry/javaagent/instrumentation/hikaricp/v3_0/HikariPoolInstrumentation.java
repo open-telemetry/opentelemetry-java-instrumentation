@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -42,8 +43,8 @@ class HikariPoolInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static MetricsTrackerFactory onEnter(
-        @Advice.Argument(0) MetricsTrackerFactory userMetricsTracker,
-        @Advice.FieldValue("metricsTracker") AutoCloseable existingMetricsTracker)
+        @Advice.Argument(0) @Nullable MetricsTrackerFactory userMetricsTracker,
+        @Advice.FieldValue("metricsTracker") @Nullable AutoCloseable existingMetricsTracker)
         throws Exception {
 
       if (existingMetricsTracker != null) {

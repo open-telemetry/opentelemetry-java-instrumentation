@@ -24,7 +24,7 @@ class KotlinSpringDataTest {
   companion object {
     @JvmStatic
     @RegisterExtension
-    val testing = AgentInstrumentationExtension.create()
+    private val testing = AgentInstrumentationExtension.create()
   }
 
   private lateinit var applicationContext: ConfigurableApplicationContext

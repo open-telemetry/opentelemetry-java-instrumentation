@@ -25,7 +25,7 @@ public abstract class AbstractRdsClientTest extends AbstractBaseAwsClientTest {
   }
 
   @Test
-  void sendRequestWithMockedResponse() throws Exception {
+  void sendRequestWithMockedResponse() throws ReflectiveOperationException {
     AmazonRDSClientBuilder clientBuilder = AmazonRDSClientBuilder.standard();
     AmazonRDS client =
         configureClient(clientBuilder)

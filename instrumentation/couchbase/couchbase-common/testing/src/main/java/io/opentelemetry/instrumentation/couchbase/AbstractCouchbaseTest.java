@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractCouchbaseTest {
   private static final Logger logger = LoggerFactory.getLogger(AbstractCouchbaseTest.class);
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
 
   protected static final String USERNAME = "Administrator";
   protected static final String PASSWORD = "password";
@@ -109,7 +111,7 @@ public abstract class AbstractCouchbaseTest {
    * otel.instrumentation.couchbase.experimental-span-attributes=true).
    */
   protected boolean includesExperimentalAttributes() {
-    return Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 
   protected String networkType() {

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
@@ -21,9 +22,13 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public class AutoCleanupExtension implements AfterEachCallback, AfterAllCallback {
+public class AutoCleanupExtension
+    implements BeforeAllCallback, AfterEachCallback, AfterAllCallback {
   private final Deque<AutoCloseable> thingsToCleanUp = new ConcurrentLinkedDeque<>();
   private final Deque<AutoCloseable> thingsToCleanUpAfterAll = new ConcurrentLinkedDeque<>();
+  // Tracks the first (outermost) container the extension is registered in, so that afterAll only
+  // runs deferAfterAll cleanups once — not once per @Nested container.
+  private volatile ExtensionContext rootContext;
 
   public static AutoCleanupExtension create() {
     return new AutoCleanupExtension();
@@ -42,6 +47,13 @@ public class AutoCleanupExtension implements AfterEachCallback, AfterAllCallback
   }
 
   @Override
+  public void beforeAll(ExtensionContext extensionContext) {
+    if (rootContext == null) {
+      rootContext = extensionContext;
+    }
+  }
+
+  @Override
   public void afterEach(ExtensionContext extensionContext) throws Exception {
     List<Exception> exceptions = new ArrayList<>();
     while (!thingsToCleanUp.isEmpty()) {
@@ -56,6 +68,11 @@ public class AutoCleanupExtension implements AfterEachCallback, AfterAllCallback
 
   @Override
   public void afterAll(ExtensionContext extensionContext) throws Exception {
+    // afterAll fires once per container the extension is registered in, including each @Nested
+    // class. Only run deferAfterAll cleanups when the outermost container completes.
+    if (extensionContext != rootContext) {
+      return;
+    }
     List<Exception> exceptions = new ArrayList<>();
     while (!thingsToCleanUpAfterAll.isEmpty()) {
       try {

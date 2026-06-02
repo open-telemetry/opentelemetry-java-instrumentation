@@ -27,6 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractAwsLambdaTest {
 
+  @Mock private Context context;
+
   protected static String doHandleRequest(String input, Context context) {
     if (input.equals("hello")) {
       return "world";
@@ -37,8 +39,6 @@ public abstract class AbstractAwsLambdaTest {
   protected abstract RequestHandler<String, String> handler();
 
   protected abstract InstrumentationExtension testing();
-
-  @Mock private Context context;
 
   @BeforeEach
   void setUp() {

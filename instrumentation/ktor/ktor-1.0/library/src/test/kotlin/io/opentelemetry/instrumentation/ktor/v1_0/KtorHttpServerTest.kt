@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.semconv.ServerAttributes
 import kotlinx.coroutines.withContext
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
@@ -32,7 +33,7 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    val testing = HttpServerInstrumentationExtension.forLibrary()
+    private val testing = HttpServerInstrumentationExtension.forLibrary()
   }
 
   override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
@@ -101,7 +102,7 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
 
   // Copy in HttpServerTest.controller but make it a suspending function
   private suspend fun controller(endpoint: ServerEndpoint, wrapped: suspend () -> Unit) {
-    assert(Span.current().spanContext.isValid, { "Controller should have a parent span. " })
+    assertThat(Span.current().spanContext.isValid).isTrue()
     if (endpoint == ServerEndpoint.NOT_FOUND) {
       wrapped()
       return

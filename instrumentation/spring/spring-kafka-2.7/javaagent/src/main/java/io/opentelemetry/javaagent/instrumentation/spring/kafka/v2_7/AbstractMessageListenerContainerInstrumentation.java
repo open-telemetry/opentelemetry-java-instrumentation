@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -45,7 +46,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <K, V> RecordInterceptor<K, V> onExit(
-        @Advice.Return RecordInterceptor<K, V> originalInterceptor) {
+        @Advice.Return @Nullable RecordInterceptor<K, V> originalInterceptor) {
       RecordInterceptor<K, V> interceptor = originalInterceptor;
 
       if (interceptor == null

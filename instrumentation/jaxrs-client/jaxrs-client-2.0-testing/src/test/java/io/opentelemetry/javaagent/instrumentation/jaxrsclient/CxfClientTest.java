@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.ConnectException;
 import java.net.URI;
@@ -42,7 +44,7 @@ class CxfClientTest extends AbstractJaxRsClientTest {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
     optionsBuilder.setTestReadTimeout(false);
-    optionsBuilder.setTestWithClientParent(!Boolean.getBoolean("testLatestDeps"));
+    optionsBuilder.setTestWithClientParent(!testLatestDeps());
     optionsBuilder.setClientSpanErrorMapper(CxfClientTest::clientSpanError);
     // CXF JAX-RS client uses HttpURLConnection internally, which does not support pipelining nor
     // waiting for a connection in the pool to become available. Therefore, a high concurrency test

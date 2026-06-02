@@ -7,7 +7,6 @@ package io.opentelemetry.opencensusshim;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opencensus.trace.AttributeValue;
 import io.opencensus.trace.Tracing;
@@ -19,7 +18,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import org.assertj.core.api.AbstractBooleanAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -79,33 +77,24 @@ class JavaagentInstrumentationTest {
 
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
-        ta ->
+        trace ->
             // ensure each span's attributes haven't seeped into parents or children
-            ta.hasSpansSatisfyingExactly(
+            trace.hasSpansSatisfyingExactly(
                 // outer span
-                sa ->
-                    sa.hasName("outer-span")
+                span ->
+                    span.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("outer"), true),
-                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("outer"), true)),
                 // middle span
-                sa ->
-                    sa.hasName("mid-span")
-                        .hasParent(ta.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("middle"), true),
-                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                span ->
+                    span.hasName("mid-span")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("middle"), true)),
                 // inner span
-                sa ->
-                    sa.hasName("inner-span")
-                        .hasParent(ta.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("inner"), true),
-                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull))));
+                span ->
+                    span.hasName("inner-span")
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("inner"), true))));
   }
 
   @Test
@@ -147,33 +136,24 @@ class JavaagentInstrumentationTest {
 
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
-        ta ->
+        trace ->
             // ensure each span's attributes haven't seeped into parents or children
-            ta.hasSpansSatisfyingExactly(
+            trace.hasSpansSatisfyingExactly(
                 // outer span
-                sa ->
-                    sa.hasName("outer-span")
+                span ->
+                    span.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("outer"), true),
-                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("outer"), true)),
                 // middle span
-                sa ->
-                    sa.hasName("mid-span")
-                        .hasParent(ta.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("middle"), true),
-                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                span ->
+                    span.hasName("mid-span")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("middle"), true)),
                 // inner span
-                sa ->
-                    sa.hasName("inner-span")
-                        .hasParent(ta.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("inner"), true),
-                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull))));
+                span ->
+                    span.hasName("inner-span")
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("inner"), true))));
   }
 
   @Test
@@ -207,11 +187,13 @@ class JavaagentInstrumentationTest {
                 span ->
                     span.hasName("otel-span")
                         .hasNoParent()
-                        .hasAttribute(booleanKey("present-on-otel"), true),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(booleanKey("present-on-otel"), true)),
                 span ->
                     span.hasName("oc-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(booleanKey("present-on-oc"), true)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(booleanKey("present-on-oc"), true))));
   }
 
   @Test
@@ -240,11 +222,12 @@ class JavaagentInstrumentationTest {
                 span ->
                     span.hasName("oc-span")
                         .hasNoParent()
-                        .hasAttribute(booleanKey("present-on-oc"), true),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("present-on-oc"), true)),
                 span ->
                     span.hasName("otel-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(booleanKey("present-on-otel"), true)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(booleanKey("present-on-otel"), true))));
   }
 
   @Test
@@ -278,32 +261,23 @@ class JavaagentInstrumentationTest {
 
     // expecting 1 trace with 3 spans
     testing.waitAndAssertTraces(
-        ta ->
+        trace ->
             // ensure each span's attributes haven't seeped into parents or children
-            ta.hasSpansSatisfyingExactly(
+            trace.hasSpansSatisfyingExactly(
                 // outer span
-                sa ->
-                    sa.hasName("outer-span")
+                span ->
+                    span.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("outer"), true),
-                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull)),
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("outer"), true)),
                 // middle span
-                sa ->
-                    sa.hasName("mid-span")
-                        .hasParent(ta.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("middle"), true),
-                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                span ->
+                    span.hasName("mid-span")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("middle"), true)),
                 // inner span
-                sa ->
-                    sa.hasName("inner-span")
-                        .hasParent(ta.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(booleanKey("inner"), true),
-                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull))));
+                span ->
+                    span.hasName("inner-span")
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("inner"), true))));
   }
 }

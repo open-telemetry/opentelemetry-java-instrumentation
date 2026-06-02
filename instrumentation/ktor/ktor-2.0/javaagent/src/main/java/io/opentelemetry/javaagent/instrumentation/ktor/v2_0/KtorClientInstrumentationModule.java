@@ -28,6 +28,7 @@ public class KtorClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // this instrumentation module targets io.ktor:ktor-client-core
     // removed in 3.0
     return hasClassesNamed("io.ktor.client.engine.HttpClientJvmEngine");
   }

@@ -56,9 +56,9 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
           ERROR.getStatus(),
           ERROR.getBody(),
           false);
-  private TestAccessLogValve accessLogValve;
-
   @TempDir private static File tempDir;
+
+  private TestAccessLogValve accessLogValve;
 
   @Override
   protected void configure(HttpServerTestOptions options) {
@@ -75,7 +75,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
     if (NOT_FOUND.equals(endpoint)) {
-      span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
+      span.satisfies(spanData -> assertThat(spanData.getName()).matches(".*\\.sendError"))
           .hasKind(SpanKind.INTERNAL)
           .hasParent(parentSpan);
     }
@@ -97,7 +97,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
     tomcatServer.setPort(port);
     tomcatServer.getConnector().setEnableLookups(true); // get localhost instead of 127.0.0.1
 
-    File applicationDir = new File(baseDir, "/webapps/ROOT");
+    File applicationDir = new File(baseDir, "webapps/ROOT");
     applicationDir.mkdirs();
 
     Context servletContext =
@@ -122,7 +122,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
 
   @BeforeEach
   void setUp() {
-    accessLogValve.getLoggedIds().clear();
+    accessLogValve.clearLoggedIds();
     testing().clearAllExportedData();
   }
 
@@ -196,7 +196,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
     if (errorEndpointUsesSendError()) {
       spanDataAsserts.add(
           (span, trace) ->
-              span.satisfies(s -> assertThat(s.getName()).matches(".*\\.sendError"))
+              span.satisfies(spanData -> assertThat(spanData.getName()).matches(".*\\.sendError"))
                   .hasKind(SpanKind.INTERNAL)
                   .hasParent(trace.getSpan(1)));
     }

@@ -86,7 +86,7 @@ class ResourceInjectionInstrumentation implements TypeInstrumentation {
         return resources;
       }
 
-      if (!resources.hasMoreElements()) {
+      if (resources == null || !resources.hasMoreElements()) {
         return Collections.enumeration(helpers);
       }
 

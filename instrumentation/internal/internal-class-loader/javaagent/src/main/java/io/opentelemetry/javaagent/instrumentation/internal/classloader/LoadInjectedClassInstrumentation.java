@@ -66,6 +66,15 @@ class LoadInjectedClassInstrumentation implements TypeInstrumentation {
             io.opentelemetry.javaagent.instrumentation.internal.classloader.stub.ClassLoader
                 classLoaderStub,
         @Advice.Argument(0) String name) {
+
+      // first check whether this is an exposed class and load it from the instrumentation class
+      // loader
+      Class<?> exposedClass = InjectedClassHelper.loadExposedClass(classLoader, name);
+      if (exposedClass != null) {
+        return exposedClass;
+      }
+
+      // if this class is a helper class fetch its bytes and define it
       InjectedClassHelper.HelperClassInfo helperClassInfo =
           InjectedClassHelper.getHelperClassInfo(classLoader, name);
       if (helperClassInfo != null) {

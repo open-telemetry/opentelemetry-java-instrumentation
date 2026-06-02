@@ -25,7 +25,7 @@ class Helper {
       Method method;
       try {
         method = LoggerContext.class.getDeclaredMethod("syncRemoteView");
-      } catch (NoSuchMethodException noSuchMethodException) {
+      } catch (NoSuchMethodException ignored) {
         method = LoggerContext.class.getDeclaredMethod("updateLoggerContextVO");
       }
       method.setAccessible(true);

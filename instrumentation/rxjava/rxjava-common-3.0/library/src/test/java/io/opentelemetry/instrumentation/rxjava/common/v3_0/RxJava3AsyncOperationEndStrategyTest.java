@@ -927,8 +927,8 @@ class RxJava3AsyncOperationEndStrategyTest {
       verify(instrumenter).end(context, "request", null, null);
     }
 
-    class CustomPublisher implements Publisher<String>, Subscription {
-      Subscriber<? super String> subscriber;
+    private class CustomPublisher implements Publisher<String>, Subscription {
+      private Subscriber<? super String> subscriber;
 
       @Override
       public void subscribe(Subscriber<? super String> subscriber) {
@@ -936,11 +936,11 @@ class RxJava3AsyncOperationEndStrategyTest {
         subscriber.onSubscribe(this);
       }
 
-      public void onComplete() {
+      private void onComplete() {
         this.subscriber.onComplete();
       }
 
-      public void onError(Throwable exception) {
+      private void onError(Throwable exception) {
         this.subscriber.onError(exception);
       }
 

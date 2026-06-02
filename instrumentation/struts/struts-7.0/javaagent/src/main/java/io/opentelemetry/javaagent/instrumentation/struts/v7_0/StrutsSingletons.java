@@ -30,7 +30,7 @@ class StrutsSingletons {
             .buildInstrumenter();
   }
 
-  public static Instrumenter<ActionInvocation, Void> instrumenter() {
+  static Instrumenter<ActionInvocation, Void> instrumenter() {
     return instrumenter;
   }
 

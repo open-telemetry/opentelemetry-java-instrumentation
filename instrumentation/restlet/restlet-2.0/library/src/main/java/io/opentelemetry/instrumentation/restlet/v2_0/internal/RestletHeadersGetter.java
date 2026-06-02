@@ -64,14 +64,14 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
 
   @Nullable
   static Series<?> getHeaders(@Nullable Message carrier) {
-    if (GET_ATTRIBUTES == null) {
+    if (carrier == null || GET_ATTRIBUTES == null) {
       return null;
     }
     try {
       @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
       Map<String, Object> attributes = (Map<String, Object>) GET_ATTRIBUTES.invoke(carrier);
       return (Series<?>) attributes.get("org.restlet.http.headers");
-    } catch (Throwable e) {
+    } catch (Throwable ignored) {
       return null;
     }
   }

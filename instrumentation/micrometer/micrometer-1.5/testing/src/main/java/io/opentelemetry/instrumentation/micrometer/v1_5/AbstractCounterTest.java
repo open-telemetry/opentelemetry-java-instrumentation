@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.micrometer.core.instrument.Counter;
@@ -45,22 +44,20 @@ public abstract class AbstractCounterTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "testCounter",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("This is a test counter")
-                            .hasUnit("items")
-                            .hasDoubleSumSatisfying(
-                                sum ->
-                                    sum.isMonotonic()
-                                        .hasPointsSatisfying(
-                                            point ->
-                                                point
-                                                    .hasValue(3)
-                                                    .hasAttributesSatisfyingExactly(
-                                                        equalTo(stringKey("tag"), "value"))))));
+            metric ->
+                metric
+                    .hasName("testCounter")
+                    .hasDescription("This is a test counter")
+                    .hasUnit("items")
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.isMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(3)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(counter);

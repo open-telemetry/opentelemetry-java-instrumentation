@@ -19,12 +19,9 @@ import java.util.Map;
 
 class Utils {
 
-  private Utils() {}
-
   static Http.Client createClient(ClientType clientType) {
     Http.Client client =
         Http.client()
-            .withNoHttp2()
             .withTransport()
             .readTimeout(Duration.fromMilliseconds(READ_TIMEOUT.toMillis()))
             .withTransport()
@@ -70,4 +67,6 @@ class Utils {
     headers.forEach((key, value) -> request.headerMap().put(key, value));
     return request;
   }
+
+  private Utils() {}
 }

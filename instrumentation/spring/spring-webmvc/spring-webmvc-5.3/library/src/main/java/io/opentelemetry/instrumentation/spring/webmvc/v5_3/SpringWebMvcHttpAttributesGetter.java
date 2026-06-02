@@ -21,7 +21,6 @@ class SpringWebMvcHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpServletRequest, HttpServletResponse> {
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(HttpServletRequest request) {
     return request.getMethod();
   }
@@ -65,12 +64,10 @@ class SpringWebMvcHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getUrlScheme(HttpServletRequest request) {
     return request.getScheme();
   }
 
-  @Nullable
   @Override
   public String getUrlPath(HttpServletRequest request) {
     return request.getRequestURI();
@@ -105,7 +102,6 @@ class SpringWebMvcHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getNetworkPeerAddress(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getRemoteAddr();
@@ -126,7 +122,7 @@ class SpringWebMvcHttpAttributesGetter
 
   @Override
   public Integer getNetworkLocalPort(
-      HttpServletRequest request, @Nullable HttpServletResponse respo) {
+      HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getLocalPort();
   }
 }

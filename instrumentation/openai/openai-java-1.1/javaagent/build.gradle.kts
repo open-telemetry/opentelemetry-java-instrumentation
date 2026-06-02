@@ -22,7 +22,7 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     // TODO run tests both with and without genai message capture
 

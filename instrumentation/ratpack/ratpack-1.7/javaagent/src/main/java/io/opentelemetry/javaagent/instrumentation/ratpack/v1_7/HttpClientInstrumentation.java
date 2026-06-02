@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_7;
 
+import static io.opentelemetry.javaagent.instrumentation.ratpack.v1_7.RatpackSingletons.httpClient;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -36,7 +37,7 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static HttpClient injectTracing(@Advice.Return HttpClient httpClient) throws Exception {
-      return RatpackSingletons.httpClient().instrument(httpClient);
+      return httpClient().instrument(httpClient);
     }
   }
 }

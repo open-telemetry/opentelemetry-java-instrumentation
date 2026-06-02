@@ -24,7 +24,7 @@ public abstract class AbstractEc2ClientTest extends AbstractBaseAwsClientTest {
   }
 
   @Test
-  void sendRequestWithMockedResponse() throws Exception {
+  void sendRequestWithMockedResponse() throws ReflectiveOperationException {
     AmazonEC2ClientBuilder clientBuilder = AmazonEC2ClientBuilder.standard();
     AmazonEC2 client =
         configureClient(clientBuilder)

@@ -71,14 +71,6 @@ class LogstashStructuredArgsTest {
   }
 
   @Test
-  void structuredArgumentWithEventName() {
-    logger.info("Event occurred: {}", StructuredArguments.v("event.name", "OrderPlaced"));
-
-    testing.waitAndAssertLogRecords(
-        logRecord -> logRecord.hasBody("Event occurred: OrderPlaced").hasEventName("OrderPlaced"));
-  }
-
-  @Test
   void otelEventNameInStructuredArgument() {
     logger.info(
         "Event occurred: {}",

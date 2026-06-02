@@ -132,9 +132,10 @@
     <module name="PackageName">
       <!-- modified from default to support packages like
            io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_17 and
-           io.opentelemetry.javaagent.instrumentation.netty.v4_1.client -->
+           io.opentelemetry.javaagent.instrumentation.netty.v4_1.client and
+           io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.common.v3_0 -->
       <property name="format"
-        value="^[a-z]+(\.[a-z][a-z0-9]*)*(\.v[0-9]+_[0-9]+(_[0-9]+)?)?(\.[a-z][a-z0-9]*)*$"/>
+        value="^[a-z]+(\.(?:[a-z][a-z0-9]*|v[0-9]+_[0-9]+(?:_[0-9]+)?))*$"/>
       <message key="name.invalidPattern"
         value="Package name ''{0}'' must match pattern ''{1}''."/>
     </module>

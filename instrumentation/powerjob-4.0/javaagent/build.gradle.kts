@@ -25,6 +25,14 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=code")
+  }
+
   val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -34,6 +42,6 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental)
+    dependsOn(testStableSemconv, testExperimental)
   }
 }

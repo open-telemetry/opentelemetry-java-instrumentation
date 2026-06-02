@@ -2,7 +2,7 @@ import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
-  id("otel.props-conventions")
+  id("otel.dsl-conventions")
   id("net.ltgt.errorprone")
 }
 

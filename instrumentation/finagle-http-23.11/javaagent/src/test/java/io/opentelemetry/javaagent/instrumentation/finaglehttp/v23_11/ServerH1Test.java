@@ -6,13 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import com.twitter.finagle.Http;
-import com.twitter.finagle.ListeningServer;
 
 class ServerH1Test extends AbstractServerTest {
   @Override
-  protected ListeningServer setupServer() {
-    return Http.server()
-        .withNoHttp2()
-        .serve(address.getHost() + ":" + port, new AbstractServerTest.TestService());
+  protected Http.Server configureServer(Http.Server in) {
+    return super.configureServer(in).withNoHttp2();
   }
 }

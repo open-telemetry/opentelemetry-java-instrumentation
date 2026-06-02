@@ -39,7 +39,7 @@ class SpanInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static application.io.opentelemetry.api.trace.Span methodExit(
         @Advice.Argument(0)
             application.io.opentelemetry.api.trace.SpanContext applicationSpanContext) {

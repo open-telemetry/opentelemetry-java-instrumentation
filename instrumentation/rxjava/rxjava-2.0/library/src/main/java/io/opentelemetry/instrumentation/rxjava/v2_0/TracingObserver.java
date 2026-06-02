@@ -111,7 +111,7 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
     return queueDisposableField;
   }
 
-  public static boolean canEnable() {
+  static boolean canEnable() {
     return queueDisposableField != null;
   }
 }

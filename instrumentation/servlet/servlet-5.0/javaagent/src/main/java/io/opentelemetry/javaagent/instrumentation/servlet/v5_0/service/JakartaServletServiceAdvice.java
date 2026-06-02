@@ -84,7 +84,7 @@ public class JakartaServletServiceAdvice {
             .customize(
                 contextToUpdate,
                 (HttpServletResponse) response,
-                Servlet5HttpServerResponseMutator.INSTANCE);
+                new Servlet5HttpServerResponseMutator());
       }
     }
 
@@ -124,7 +124,7 @@ public class JakartaServletServiceAdvice {
         new AdviceScope(
             CallDepth.forClass(AppServerBridge.getCallDepthKey()),
             servletOrFilter,
-            (HttpServletRequest) request,
+            httpServletRequest,
             response);
 
     return new Object[] {adviceScope, request, response};
@@ -134,7 +134,7 @@ public class JakartaServletServiceAdvice {
   public static void stopSpan(
       @Advice.Argument(0) ServletRequest request,
       @Advice.Argument(1) ServletResponse response,
-      @Advice.Thrown Throwable throwable,
+      @Advice.Thrown @Nullable Throwable throwable,
       @Advice.Enter Object[] enterResult) {
 
     AdviceScope adviceScope = (AdviceScope) enterResult[0];
