@@ -230,10 +230,10 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.27.1.jar/META-INF/LICENSE](zipkin-2.27.1.jar/META-INF/LICENSE)
 
-**53** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.8`
+**53** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.9`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.18.8.jar/META-INF/LICENSE](byte-buddy-dep-1.18.8.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.18.8.jar/META-INF/NOTICE](byte-buddy-dep-1.18.8.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.18.9.jar/META-INF/LICENSE](byte-buddy-dep-1.18.9.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.18.9.jar/META-INF/NOTICE](byte-buddy-dep-1.18.9.jar/META-INF/NOTICE)
 
 **54** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
@@ -257,7 +257,7 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**58** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.9.1`
+**58** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -316,7 +316,7 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**67** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.9.1`
+**67** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: The 3-Clause BSD License (Not Packaged)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
