@@ -64,8 +64,10 @@ class JdbcConnectionUrlParserTest {
 
   @Test
   void testParserExceptionReturnsBestEffortInfo() {
-    // Intentionally malformed Oracle URL: missing subtype/connect info, which triggers the
-    // Oracle parser's substring-based failure path after it has already applied defaults/props.
+    // Intentionally malformed Oracle URL: missing subtype/connect info, which
+    // triggers the
+    // Oracle parser's substring-based failure path after it has already applied
+    // defaults/props.
     testVerifySystemSubtypeParsingOfUrl(
         arg("jdbc:oracle:")
             .setProperties(stdProps())
@@ -297,7 +299,8 @@ class JdbcConnectionUrlParserTest {
             .setNamespace("pgdb|myschema")
             .setName("pgdb")
             .build(),
-        // currentSchema from connection properties is used when the URL does not specify it
+        // currentSchema from connection properties is used when the URL does not
+        // specify it
         arg("jdbc:postgresql://pg.host/pgdb")
             .setProperties(postgresProps("pguser", "propertyschema"))
             .setShortUrl("postgresql://pg.host:5432")
@@ -1678,6 +1681,38 @@ class JdbcConnectionUrlParserTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("amazonAuroraArguments")
   void testAmazonAuroraParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> sqliteArguments() {
+    return args(
+        arg("jdbc:sqlite:").setShortUrl("sqlite:memory:").setSystem("sqlite").build(),
+        arg("jdbc:sqlite:memory:").setShortUrl("sqlite:memory:").setSystem("sqlite").build(),
+        arg("jdbc:sqlite:file:mydb?mode=memory")
+            .setShortUrl("sqlite:memory:")
+            .setSystem("sqlite")
+            .setName("mydb")
+            .build(),
+        arg("jdbc:sqlite:/tmp/app.db")
+            .setShortUrl("sqlite:file:")
+            .setSystem("sqlite")
+            .setName("app.db")
+            .build(),
+        arg("jdbc:sqlite:resource:db")
+            .setShortUrl("sqlite:resource:")
+            .setSystem("sqlite")
+            .setName("db")
+            .build(),
+        arg("jdbc:sqlite:resource:dir/db")
+            .setShortUrl("sqlite:resource:")
+            .setSystem("sqlite")
+            .setName("db")
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("sqliteArguments")
+  void testSqliteParsing(ParseTestArgument argument) {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 
