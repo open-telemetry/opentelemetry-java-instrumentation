@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
-import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.BaseServletHelper;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
