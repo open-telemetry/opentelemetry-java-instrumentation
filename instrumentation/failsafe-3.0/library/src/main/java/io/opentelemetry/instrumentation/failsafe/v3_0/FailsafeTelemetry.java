@@ -22,6 +22,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 
 /** Entrypoint for instrumenting Failsafe components. */
 public final class FailsafeTelemetry {
@@ -53,7 +55,7 @@ public final class FailsafeTelemetry {
   public <R> CircuitBreaker<R> createCircuitBreaker(
       CircuitBreaker<R> delegate, String circuitBreakerName) {
     CircuitBreakerConfig<R> userConfig = delegate.getConfig();
-    Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
+    Meter meter = getMeter();
     LongCounter executionCounter =
         meter
             .counterBuilder("failsafe.circuit_breaker.execution.count")
@@ -86,7 +88,7 @@ public final class FailsafeTelemetry {
    */
   public <R> RetryPolicy<R> createRetryPolicy(RetryPolicy<R> delegate, String retryPolicyName) {
     RetryPolicyConfig<R> userConfig = delegate.getConfig();
-    Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
+    Meter meter = getMeter();
     LongCounter executionCounter =
         meter
             .counterBuilder("failsafe.retry_policy.execution.count")
@@ -112,5 +114,14 @@ public final class FailsafeTelemetry {
             RetryPolicyEventListenerBuilders.buildInstrumentedSuccessListener(
                 userConfig, executionCounter, attemptsHistogram, attributes))
         .build();
+  }
+
+  private Meter getMeter() {
+    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
+    String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
+    if (version != null) {
+      meterBuilder.setInstrumentationVersion(version);
+    }
+    return meterBuilder.build();
   }
 }

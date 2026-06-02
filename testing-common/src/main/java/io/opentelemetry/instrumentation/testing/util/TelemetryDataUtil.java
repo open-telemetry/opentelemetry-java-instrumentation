@@ -16,8 +16,10 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -96,17 +98,29 @@ public class TelemetryDataUtil {
     Set<String> missingScopeVersionErrors = new LinkedHashSet<>();
     for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
-        InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
-        if (!scopeInfo.getName().startsWith("test") && scopeInfo.getVersion() == null) {
-          missingScopeVersionErrors.add(
-              "Instrumentation version of module "
-                  + scopeInfo.getName()
-                  + " was empty; make sure that the instrumentation name matches the gradle"
-                  + " module name");
-        }
+        recordIfMissingScopeVersion(span.getInstrumentationScopeInfo(), missingScopeVersionErrors);
       }
     }
     assertThat(missingScopeVersionErrors).isEmpty();
+  }
+
+  public static void assertMetricScopeVersion(Collection<MetricData> metrics) {
+    Set<String> missingScopeVersionErrors = new LinkedHashSet<>();
+    for (MetricData metric : metrics) {
+      recordIfMissingScopeVersion(metric.getInstrumentationScopeInfo(), missingScopeVersionErrors);
+    }
+    assertThat(missingScopeVersionErrors).isEmpty();
+  }
+
+  private static void recordIfMissingScopeVersion(
+      InstrumentationScopeInfo scopeInfo, Set<String> errors) {
+    if (!scopeInfo.getName().startsWith("test") && scopeInfo.getVersion() == null) {
+      errors.add(
+          "Instrumentation version of module "
+              + scopeInfo.getName()
+              + " was empty; make sure that the instrumentation name matches the gradle"
+              + " module name");
+    }
   }
 
   private static long elapsedSeconds(long startTime) {

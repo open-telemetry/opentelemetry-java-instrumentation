@@ -279,7 +279,7 @@ targets:
       target: ':instrumentation:runtime-telemetry:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:scala-fork-join-2.8:javaagent'
+      target: ':instrumentation:scala-forkjoin-2.8:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spark-2.3:javaagent'
@@ -324,7 +324,7 @@ targets:
       target: ':instrumentation:akka:akka-actor-2.3:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:akka:akka-actor-fork-join-2.5:javaagent'
+      target: ':instrumentation:akka:akka-actor-forkjoin-2.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:akka:akka-http-10.0:javaagent'

@@ -56,7 +56,7 @@ dependencies {
   // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:8.6.0")
   implementation("com.google.guava:guava:33.6.0-jre")
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.1") {
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.2") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
     // causing "No XmlService implementation found" in Gradle's classloader
     // We exclude plexus-xml and plexus-utils here because our current usages of the shadow plugin
@@ -79,7 +79,7 @@ dependencies {
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
   // Used by otel.spring-native-test-conventions for typed access to the metadata repository
   // extension. Provided at runtime by smoke-test modules that apply this plugin via settings.
-  compileOnly("org.graalvm.buildtools:native-gradle-plugin:1.1.0")
+  compileOnly("org.graalvm.buildtools:native-gradle-plugin:1.1.1")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")

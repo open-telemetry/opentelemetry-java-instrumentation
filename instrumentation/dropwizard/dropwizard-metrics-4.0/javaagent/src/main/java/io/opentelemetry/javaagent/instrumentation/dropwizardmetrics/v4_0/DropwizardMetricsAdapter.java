@@ -19,7 +19,9 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
+import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,7 +59,13 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
   private final Map<String, Timer> dropwizardTimers = new ConcurrentHashMap<>();
 
   public DropwizardMetricsAdapter(OpenTelemetry openTelemetry) {
-    this.otelMeter = openTelemetry.getMeter("io.opentelemetry.dropwizard-metrics-4.0");
+    String instrumentationName = "io.opentelemetry.dropwizard-metrics-4.0";
+    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationName);
+    String version = EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+    if (version != null) {
+      meterBuilder.setInstrumentationVersion(version);
+    }
+    this.otelMeter = meterBuilder.build();
   }
 
   /**

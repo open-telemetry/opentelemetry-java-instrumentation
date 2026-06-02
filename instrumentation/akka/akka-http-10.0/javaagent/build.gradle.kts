@@ -35,8 +35,8 @@ dependencies {
   library("com.typesafe.akka:akka-stream_2.11:2.4.14")
 
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
-  testInstrumentation(project(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent"))
-  testInstrumentation(project(":instrumentation:scala-fork-join-2.8:javaagent"))
+  testInstrumentation(project(":instrumentation:akka:akka-actor-forkjoin-2.5:javaagent"))
+  testInstrumentation(project(":instrumentation:scala-forkjoin-2.8:javaagent"))
 
   latestDepTestLibrary("com.typesafe.akka:akka-http_2.13:latest.release")
   latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:latest.release")
