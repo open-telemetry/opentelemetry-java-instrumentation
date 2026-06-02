@@ -29,6 +29,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class StatementInstrumentation implements TypeInstrumentation {
 
+  private static final String[] NAMED_CLASSES =
+      new String[] {"org.sqlite.jdbc3.JDBC3Statement", "org.sqlite.jdbc4.JDBC4Statement"};
+
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("java.sql.Statement");
@@ -36,7 +39,7 @@ class StatementInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("java.sql.Statement"));
+    return implementsInterface(named("java.sql.Statement")).or(namedOneOf(NAMED_CLASSES));
   }
 
   @Override
@@ -62,8 +65,11 @@ class StatementInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object[] onEnter(
-        @Advice.Argument(0) String sql, @Advice.This Statement statement) {
+    public static Object[] onEnter(@Advice.Argument(0) String sql, @Advice.This Object object) {
+      if (!(object instanceof Statement)) {
+        return new Object[] {null, sql};
+      }
+      Statement statement = (Statement) object;
       if (JdbcSingletons.isWrapper(statement, Statement.class)) {
         return new Object[] {null, sql};
       }
@@ -90,11 +96,15 @@ class StatementInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static String addBatch(
-        @Advice.This Statement statement, @Advice.Argument(0) String sql) {
+    public static String addBatch(@Advice.This Object object, @Advice.Argument(0) String sql) {
+      if (!(object instanceof Statement)) {
+        return sql;
+      }
+      Statement statement = (Statement) object;
       if (statement instanceof PreparedStatement) {
         return sql;
       }
+
       if (JdbcSingletons.isWrapper(statement, Statement.class)) {
         return sql;
       }
@@ -108,8 +118,11 @@ class StatementInstrumentation implements TypeInstrumentation {
   public static class ClearBatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void clearBatch(@Advice.This Statement statement) {
-      JdbcData.clearBatch(statement);
+    public static void clearBatch(@Advice.This Object object) {
+      if (object instanceof Statement) {
+        Statement statement = (Statement) object;
+        JdbcData.clearBatch(statement);
+      }
     }
   }
 
@@ -118,7 +131,11 @@ class StatementInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static JdbcAdviceScope onEnter(@Advice.This Statement statement) {
+    public static JdbcAdviceScope onEnter(@Advice.This Object object) {
+      if (!(object instanceof Statement)) {
+        return null;
+      }
+      Statement statement = (Statement) object;
       if (JdbcSingletons.isWrapper(statement, Statement.class)) {
         return null;
       }
@@ -140,8 +157,11 @@ class StatementInstrumentation implements TypeInstrumentation {
   public static class CloseAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void closeStatement(@Advice.This Statement statement) {
-      JdbcData.close(statement);
+    public static void closeStatement(@Advice.This Object object) {
+      if (object instanceof Statement) {
+        Statement statement = (Statement) object;
+        JdbcData.close(statement);
+      }
     }
   }
 }

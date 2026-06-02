@@ -36,6 +36,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class PreparedStatementInstrumentation implements TypeInstrumentation {
 
+  private static final String[] NAMED_CLASSES =
+      new String[] {
+        "org.sqlite.jdbc3.JDBC3PreparedStatement", "org.sqlite.jdbc4.JDBC4PreparedStatement"
+      };
+
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("java.sql.PreparedStatement");
@@ -43,7 +48,7 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("java.sql.PreparedStatement"));
+    return implementsInterface(named("java.sql.PreparedStatement")).or(namedOneOf(NAMED_CLASSES));
   }
 
   @Override
@@ -103,8 +108,13 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static JdbcAdviceScope onEnter(@Advice.This PreparedStatement statement) {
-      // skip prepared statements without attached sql, probably a wrapper around the actual
+    public static JdbcAdviceScope onEnter(@Advice.This Object object) {
+      if (!(object instanceof PreparedStatement)) {
+        return null;
+      }
+      PreparedStatement statement = (PreparedStatement) object;
+      // skip prepared statements without attached sql, probably a wrapper around the
+      // actual
       // prepared statement
       if (JdbcData.PREPARED_STATEMENT.get(statement) == null) {
         return null;
@@ -130,7 +140,11 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class AddBatchAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void addBatch(@Advice.This PreparedStatement statement) {
+    public static void addBatch(@Advice.This Object object) {
+      if (!(object instanceof PreparedStatement)) {
+        return;
+      }
+      PreparedStatement statement = (PreparedStatement) object;
       if (JdbcSingletons.isWrapper(statement, Statement.class)) {
         return;
       }
@@ -143,12 +157,16 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class SetParameter2Advice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This PreparedStatement statement,
+        @Advice.This Object object,
         @Advice.Argument(0) int index,
         @Advice.Argument(1) Object value) {
       if (!CAPTURE_QUERY_PARAMETERS) {
         return;
       }
+      if (!(object instanceof PreparedStatement)) {
+        return;
+      }
+      PreparedStatement statement = (PreparedStatement) object;
       if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
@@ -177,13 +195,17 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class SetParameter3Advice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This PreparedStatement statement,
+        @Advice.This Object object,
         @Advice.Argument(0) int index,
         @Advice.Argument(1) Object value,
         @Advice.Argument(2) int targetSqlType) {
       if (!CAPTURE_QUERY_PARAMETERS) {
         return;
       }
+      if (!(object instanceof PreparedStatement)) {
+        return;
+      }
+      PreparedStatement statement = (PreparedStatement) object;
       if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
@@ -212,13 +234,17 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class SetTimeParameter3Advice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This PreparedStatement statement,
+        @Advice.This Object object,
         @Advice.Argument(0) int index,
         @Advice.Argument(1) Object value,
         @Advice.Argument(2) Calendar calendar) {
       if (!CAPTURE_QUERY_PARAMETERS) {
         return;
       }
+      if (!(object instanceof PreparedStatement)) {
+        return;
+      }
+      PreparedStatement statement = (PreparedStatement) object;
       if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
@@ -239,8 +265,11 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
   public static class ClearParametersAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void clearParameters(@Advice.This PreparedStatement statement) {
-      JdbcData.clearParameters(statement);
+    public static void clearParameters(@Advice.This Object object) {
+      if (object instanceof PreparedStatement) {
+        PreparedStatement statement = (PreparedStatement) object;
+        JdbcData.clearParameters(statement);
+      }
     }
   }
 }
