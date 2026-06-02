@@ -56,6 +56,7 @@ public class DocGeneratorApplication {
       configWriter.write("# This file is generated and should not be manually edited.\n");
       configWriter.write(
           "# It shows all available instrumentation configurations in declarative config format.\n\n");
+      configWriter.write("file_format: '1.0'\n\n");
       DeclarativeConfigYamlGenerator.generateConfigurationYaml(modules, configWriter);
     }
 

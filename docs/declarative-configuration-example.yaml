@@ -1,27 +1,38 @@
 # This file is generated and should not be manually edited.
 # It shows all available instrumentation configurations in declarative config format.
 
-general:
-  http:
-    client:
-      # List of HTTP request headers to capture in HTTP client telemetry.
-      request_captured_headers: []
+file_format: '1.0'
 
-      # List of HTTP response headers to capture in HTTP client telemetry.
-      response_captured_headers: []
-    server:
-      # List of HTTP request headers to capture in HTTP server telemetry.
-      request_captured_headers: []
+instrumentation/development:
+  general:
+    http:
+      client:
+        # List of HTTP request headers to capture in HTTP client telemetry.
+        request_captured_headers: []
 
-      # List of HTTP response headers to capture in HTTP server telemetry.
-      response_captured_headers: []
-  semconv_stability:
-    # Opt-in to emit stable semantic conventions instead of the old experimental semantic
-    # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
-    # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
-    # Stable semantic conventions will become the default in version 3.0 of the agent.
-    opt_in: []
-instrumentation:
+        # List of HTTP response headers to capture in HTTP client telemetry.
+        response_captured_headers: []
+      server:
+        # List of HTTP request headers to capture in HTTP server telemetry.
+        request_captured_headers: []
+
+        # List of HTTP response headers to capture in HTTP server telemetry.
+        response_captured_headers: []
+    sanitization:
+      url:
+        # List of URL query parameter names whose values are redacted in URL attributes. See
+        # https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+        sensitive_query_parameters/development:
+          - AWSAccessKeyId
+          - Signature
+          - sig
+          - X-Goog-Signature
+    semconv_stability:
+      # Opt-in to emit stable semantic conventions instead of the old experimental semantic
+      # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
+      # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
+      # Stable semantic conventions will become the default in version 3.0 of the agent.
+      opt_in: []
   java:
     apache_elasticjob:
       # Enables experimental span attributes `job.system`, `scheduling.apache-elasticjob.job.name`,
@@ -29,23 +40,23 @@ instrumentation:
       # `scheduling.apache-elasticjob.sharding.total.count`,
       # `scheduling.apache-elasticjob.sharding.item.parameter`, and
       # `scheduling.apache-elasticjob.job.type`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     apache_shenyu:
       # Enables experimental `apache-shenyu.meta.` prefixed span attributes `app-name`,
       # `service-name`, `context-path`, `param-types`, `id`, `method-name`, `rpc-type`, `path` and
       # `rpc-ext`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     aws_lambda:
       # Flush timeout in milliseconds.
       flush_timeout: 10000
     aws_sdk:
+      # Enables the experimental span attributes `aws.agent`, `aws.queue.name`,
+      # `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
+      experimental_span_attributes/development: false
+
       # Determines whether errors returned by each individual HTTP request should be recorded as
       # events for the SDK span.
       record_individual_http_error/development: false
-
-      # Enables the experimental span attributes `aws.agent`, `aws.queue.name`,
-      # `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
-      span_attributes/development: false
 
       # Determines whether the configured TextMapPropagator should be used to inject into supported
       # messaging attributes (for SQS).
@@ -53,11 +64,16 @@ instrumentation:
     camel:
       # Enable the capture of experimental `camel.uri`, `camel.kafka.partitionKey`,
       # `camel.kafka.key` and `camel.kafka.offset` span attributes.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
+    cassandra:
+      query_sanitization:
+        # Enables query sanitization for Cassandra queries. Takes precedence over
+        # otel.instrumentation.common.db.query-sanitization.enabled.
+        enabled: true
     common:
-      controller_telemetry:
+      controller_telemetry/development:
         # Enables the creation of experimental controller spans.
-        enabled/development: false
+        enabled: false
       db:
         query_sanitization:
           # Enables query sanitization for database queries.
@@ -72,6 +88,35 @@ instrumentation:
         scope:
           # Enables capturing the enduser.scope attribute.
           enabled: false
+      gen_ai:
+        # Determines whether Generative AI events include full content of user and assistant
+        # messages. Note that full content can have data privacy and size concerns and care should
+        # be taken when enabling this
+        capture_message_content: false
+      http:
+        client:
+          # Enable the capture of experimental HTTP client telemetry. Adds the
+          # `http.request.body.size` and `http.response.body.size` attributes to spans, and records
+          # `http.client.request.size` and `http.client.response.size` metrics.
+          emit_experimental_telemetry/development: false
+
+        # Configures the instrumentation to recognize an alternative set of HTTP request methods.
+        # All other methods will be treated as `_OTHER`.
+        known_methods:
+          - CONNECT
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+          - TRACE
+        server:
+          # Enable the capture of experimental HTTP server telemetry. Adds the
+          # `http.request.body.size` and `http.response.body.size` attributes to spans, and records
+          # `http.server.request.size` and `http.server.response.size` metrics.
+          emit_experimental_telemetry/development: false
       logging:
         # Specifies the key name used to store the span ID in the logging context.
         span_id: span_id
@@ -86,22 +131,22 @@ instrumentation:
         # list of attribute keys.
         resource_attributes: []
       messaging:
-        # List of messaging headers to capture.
-        capture_headers: []
-        receive_telemetry:
-          # Enables the creation of consumer spans on messaging receive operations. These spans will
-          # measure the time between receiving a message and the consumer processing that message.
-          enabled/development: false
+        # A comma-separated list of header names to capture as span attributes.
+        capture_headers/development: []
+        receive_telemetry/development:
+          # Enables experimental receive telemetry, which will cause consumers to start a new trace,
+          # with only a span link connecting it to the producer trace.
+          enabled: false
 
       # Used to specify a mapping from host names or IP addresses to peer services.
       peer_service_mapping: {}
-      view_telemetry:
+      view_telemetry/development:
         # Enables the creation of experimental view spans.
-        enabled/development: false
+        enabled: false
     couchbase:
       # Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
       # Different operation types receive different experimental attributes.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     dropwizard_metrics:
       # Enables the dropwizard metrics instrumentation.
       enabled: false
@@ -116,7 +161,7 @@ instrumentation:
       # `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`,
       # `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version`
       # experimental span attributes.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     executors:
       # List of Executor subclasses to be instrumented.
       include: []
@@ -127,15 +172,11 @@ instrumentation:
       # All methods to be excluded from auto-instrumentation by annotation-based advices.
       exclude_methods: ""
 
-      # Configuration for trace annotations, in the form of a pattern that matches
-      # `'package.Annotation$Name;*'`.
-      include: ""
-    genai:
-      # Determines whether Generative AI events include full content of user and assistant messages.
-      # Note that full content can have data privacy and size concerns and care should be taken when
-      # enabling this
-      capture_message_content: false
+      # Semicolon-separated list of annotation class names to instrument.
+      include: []
     graphql:
+      # Whether to capture the query in `graphql.document` span attribute.
+      capture_query: true
       data_fetcher:
         # Enables span generation for data fetchers.
         enabled: false
@@ -168,62 +209,30 @@ instrumentation:
 
       # Enable the capture of experimental span attributes `grpc.received.message_count`,
       # `grpc.sent.message_count` and `grpc.canceled`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     guava:
       # Enables experimental span attribute `guava.canceled` for cancelled operations.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     hibernate:
       # Enables the experimental `hibernate.session_id` span attribute.
-      span_attributes/development: false
-    http:
-      client:
-        # Enable the capture of experimental HTTP client telemetry. Adds the
-        # `http.request.body.size` and `http.response.body.size` attributes to spans, and records
-        # `http.client.request.size` and `http.client.response.size` metrics.
-        emit_telemetry/development: false
-
-        # Redact sensitive URL parameters. See
-        # https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-        redact_query_parameters/development: true
-
-      # Configures the instrumentation to recognize an alternative set of HTTP request methods. All
-      # other methods will be treated as `_OTHER`.
-      known_methods:
-        - CONNECT
-        - DELETE
-        - GET
-        - HEAD
-        - OPTIONS
-        - PATCH
-        - POST
-        - PUT
-        - TRACE
-      server:
-        # Enable the capture of experimental HTTP server telemetry. Adds the
-        # `http.request.body.size` and `http.response.body.size` attributes to spans, and records
-        # `http.server.request.size` and `http.server.response.size` metrics.
-        emit_telemetry/development: false
+      experimental_span_attributes/development: false
     hystrix:
       # Enables capturing the experimental `hystrix.command`, `hystrix.circuit_open` and
       # `hystrix.group` span attributes.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     java_util_logging:
       # Enables capturing the experimental `thread.name` and `thread.id` log attributes.
-      log_attributes/development: false
+      experimental_log_attributes/development: false
     jaxrs:
       # Enables the experimental `jaxrs.canceled` span attribute.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     jboss_logmanager:
-      # Enables the capture of the event name from the MDC attribute "event.name" and sets it as the
-      # log record's event name.
-      capture_event_name/development: false
-
       # Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
       # comma-separated list of specific keys.
       capture_mdc_attributes/development: []
 
       # Enables the capture of experimental log attributes, including thread name and thread ID.
-      log_attributes/development: false
+      experimental_log_attributes/development: false
     jdbc:
       # Sets whether the query parameters should be captured as span attributes named
       # <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement
@@ -234,52 +243,60 @@ instrumentation:
         # Enables query sanitization for database queries. Takes precedence over
         # otel.instrumentation.common.db.query-sanitization.enabled.
         enabled: true
-      sqlcommenter:
+      sqlcommenter/development:
         # Enables augmenting queries with a comment containing the tracing information. See
         # [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
         # queries with tracing context will make query texts unique, which may have adverse impact
         # on database performance. Consult with database experts before enabling.
-        enabled/development: false
-      transaction:
+        enabled: false
+      transaction/development:
         # Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.
-        enabled/development: false
+        enabled: false
     jdbc_datasource:
       # Enables instrumentation of JDBC datasource connections.
       enabled: false
+    jmx:
+      # List of paths to JMX metric definition YAML files.
+      config: []
+      discovery:
+        # Time in milliseconds between JMX MBean detection attempts.
+        delay: 60000
+
+      # Enables collection of JMX metrics.
+      enabled: true
+      target:
+        # List of predefined JMX target systems to collect metrics for.
+        system: []
     jsp:
       # Enables experimental span attributes `jsp.forwardOrigin`, `jsp.requestURL`, `jsp.compiler`,
       # and `jsp.classFQCN`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     kafka:
+      # Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms` and
+      # `messaging.kafka.bootstrap.servers`.
+      experimental_span_attributes/development: false
       producer_propagation:
         # Enable context propagation for Kafka message producers.
         enabled: true
-
-      # Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
-      span_attributes/development: false
     kubernetes_client:
       # Enables experimental span attributes `kubernetes-client.namespace` and
       # `kubernetes-client.name` for Kubernetes API requests.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     lettuce:
-      command_encoding_events:
+      command_encoding_events/development:
         # Enables capturing `redis.encode.start` and `redis.encode.end` span events.
-        enabled/development: false
+        enabled: false
       connection_telemetry:
         # Enables connection telemetry spans for Redis connections.
         enabled: false
 
       # Enables experimental span attributes `lettuce.command.cancelled` and
       # `lettuce.command.results.count`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     log4j_appender:
       # Enables the capture of code location attributes, including file path, class name, method
       # name, and line number.
       capture_code_attributes/development: false
-
-      # Enables the capture of the event name from the MDC attribute "event.name" and sets it as the
-      # log record's event name.
-      capture_event_name/development: false
 
       # Enables the capture of attributes from Log4j MapMessage instances.
       capture_map_message_attributes/development: false
@@ -292,7 +309,7 @@ instrumentation:
       capture_mdc_attributes/development: []
 
       # Enables the capture of experimental log attributes, including thread name and thread ID.
-      log_attributes/development: false
+      experimental_log_attributes/development: false
     log4j_context_data:
       # Enables adding baggage entries to the Log4j ThreadContext, prefixed with "baggage.".
       add_baggage: false
@@ -303,10 +320,6 @@ instrumentation:
       # Enables the capture of code location attributes, including file path, class name, method
       # name, and line number.
       capture_code_attributes/development: false
-
-      # Enables the capture of the event name from the MDC attribute "event.name" and sets it as the
-      # log record's event name.
-      capture_event_name/development: false
 
       # Enables the capture of attributes from Logback key-value pairs.
       capture_key_value_pair_attributes/development: false
@@ -331,17 +344,13 @@ instrumentation:
       capture_template/development: false
 
       # Enables the capture of experimental log attributes, including thread name and thread ID.
-      log_attributes/development: false
+      experimental_log_attributes/development: false
     logback_mdc:
       # Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
       add_baggage: false
-    messaging:
-      # A comma-separated list of header names to capture as span attributes.
-      capture_headers/development: []
-      receive_telemetry:
-        # Enables experimental receive telemetry, which will cause consumers to start a new trace,
-        # with only a span link connecting it to the producer trace.
-        enabled/development: false
+    methods:
+      # Semicolon-separated list of fully qualified class and method patterns to instrument.
+      include: []
     micrometer:
       # Sets the base time unit for the OpenTelemetry MeterRegistry. Supported values: ns, us, ms,
       # s, min, h, d.
@@ -366,41 +375,51 @@ instrumentation:
       ssl_telemetry:
         # Enable SSL telemetry.
         enabled: false
+    opensearch:
+      # Enable the capture of sanitized search query bodies. Search queries may contain personal or
+      # sensitive information.
+      capture_search_query: true
+    opentelemetry_extension_annotations:
+      # All methods to be excluded from auto-instrumentation by annotation-based advices.
+      exclude_methods: ""
+    opentelemetry_instrumentation_annotations:
+      # All methods to be excluded from auto-instrumentation by annotation-based advices.
+      exclude_methods: ""
     oshi:
-      metrics:
+      experimental_metrics/development:
         # Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time` metrics.
-        enabled/development: false
+        enabled: false
     powerjob:
       # Enables experimental span attributes `job.system`, `scheduling.powerjob.job.id`,
       # `scheduling.powerjob.job.param`, `scheduling.powerjob.job.instance.param`, and
       # `scheduling.powerjob.job.type`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     pulsar:
       # Enables capturing experimental span attribute `messaging.pulsar.message.type` on PRODUCER
       # spans.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     quartz:
       # Enables the experimental `job.system` span attribute.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     r2dbc:
       query_sanitization:
         # Enables query sanitization for database queries. Takes precedence over
         # otel.instrumentation.common.db.query-sanitization.enabled.
         enabled: true
-      sqlcommenter:
+      sqlcommenter/development:
         # Enables augmenting queries with a comment containing the tracing information. See
         # [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
         # queries with tracing context will make query texts unique, which may have adverse impact
         # on database performance.
-        enabled/development: false
+        enabled: false
     rabbitmq:
       # Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
       # `rabbitmq.queue`, and `rabbitmq.record.queue_time_ms`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     reactor:
       # Enables the capture of the experimental `reactor.canceled` attribute on spans when reactive
       # streams are cancelled.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     reactor_netty:
       connection_telemetry:
         # Enables the creation of Connect and DNS spans.
@@ -409,51 +428,56 @@ instrumentation:
       # Enables capturing experimental span attributes `messaging.rocketmq.message.tag`,
       # `messaging.rocketmq.broker_address`, `messaging.rocketmq.send_result`,
       # `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     runtime_telemetry:
-      # Enables the capture of experimental JVM runtime metrics.
-      emit_metrics/development: false
-      package_emitter:
+      # Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.
+      emit_experimental_jfr_metrics/development: false
+
+      # Enables the capture of experimental JMX-based JVM runtime metrics.
+      emit_experimental_metrics/development: false
+      package_emitter/development:
         # Enables creating events for JAR libraries used by the application.
-        enabled/development: false
+        enabled: false
 
         # The number of JAR files processed per second by the package emitter.
-        jars_per_second/development: 10
+        jars_per_second: 10
 
-      # Prefers JFR over JMX for metrics where both collection methods are available (Java 17+).
+      # Prefer JFR over JMX for metrics available from both sources, on Java 17+. When enabled,
+      # overlapping metrics are collected via JFR and the corresponding JMX metrics are suppressed.
       prefer_jfr/development: false
     rxjava:
       # Enables the experimental span attribute `rxjava.canceled`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     servlet:
-      # List of request parameter names to capture as span attributes.
-      capture_request_parameters: []
-
       # List of request parameter names to capture as span attributes.
       capture_request_parameters/development: []
 
       # Enables capturing the experimental `servlet.timeout` span attribute.
-      span_attributes/development: false
-      trace_id_request_attribute:
+      experimental_span_attributes/development: false
+
+      # Experimental setting to inject a JavaScript snippet into HTML responses after the opening
+      # `<head>` tag.
+      javascript_snippet/development: ""
+      trace_id_request_attribute/development:
         # Enables adding the trace ID and span ID as request attributes for downstream servlet
         # access.
-        enabled/development: true
+        enabled: true
     spring_batch:
-      chunk:
+      chunk/development:
         # When enabled, a new root span will be created for each chunk processing. Please note that
         # this may lead to a high number of spans being created.
-        new_trace/development: false
+        new_trace: false
+
+      # Adds the experimental attribute `job.system` to spans.
+      experimental_span_attributes/development: false
       item:
         # When enabled, spans will be created for each item processed. Please note that this may
         # lead to a high number of spans being created.
         enabled: false
-
-      # Adds the experimental attribute `job.system` to spans.
-      span_attributes/development: false
     spring_cloud_gateway:
       # Enables experimental `spring-cloud-gateway.route` attributes (e.g.,
       # `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on spans.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     spring_integration:
       # A list of Spring channel name patterns that will be intercepted.
       global_channel_interceptor_patterns:
@@ -466,31 +490,30 @@ instrumentation:
         enabled: false
     spring_scheduling:
       # Adds the experimental span attribute `job.system` with the value `spring_scheduling`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     spring_security:
       enduser:
         role:
           # Prefix of granted authorities identifying roles to capture in the `enduser.role`
           # semantic attribute.
           granted_authority_prefix: ROLE_
-      scope:
-        role:
-          # Prefix of granted authorities identifying scopes to capture in the `enduser.scopes`
+        scope:
+          # Prefix of granted authorities identifying scopes to capture in the `enduser.scope`
           # semantic attribute.
           granted_authority_prefix: SCOPE_
     spring_webmvc:
       # Enables the capture of experimental span attributes `spring-webmvc.view.name` and
       # `spring-webmvc.view.type`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     spymemcached:
       # Enables experimental span attributes `spymemcached.result` and
       # `spymemcached.command.cancelled`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false
     twilio:
-      # Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`, and
-      # `twilio.status`.
-      span_attributes/development: false
+      # Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`,
+      # `twilio.parentSid`, and `twilio.status`.
+      experimental_span_attributes/development: false
     xxl_job:
       # Enables experimental span attributes `job.system`, `scheduling.xxl-job.glue.type`, and
       # `scheduling.xxl-job.job.id`.
-      span_attributes/development: false
+      experimental_span_attributes/development: false

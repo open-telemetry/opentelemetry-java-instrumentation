@@ -63,17 +63,22 @@ public class DeclarativeConfigYamlGenerator {
       List<ConfigurationOption> configs = module.getMetadata().getConfigurations();
 
       for (ConfigurationOption config : configs) {
-        String flatName = config.name();
+        String declarativeName = config.declarativeName();
 
-        // Skip duplicates
-        if (seenConfigs.contains(flatName)) {
+        // Skip configurations that don't declare a declarative config name.
+        if (declarativeName == null || declarativeName.isBlank()) {
           continue;
         }
-        seenConfigs.add(flatName);
 
-        String declarativePath = DeclarativeConfigConverter.toDeclarativePath(flatName);
+        // Skip duplicates (e.g. common configurations shared across many modules).
+        if (!seenConfigs.add(declarativeName)) {
+          continue;
+        }
 
-        insertIntoTree(tree, declarativePath, config);
+        // declarative_name is relative to the "instrumentation" config node (e.g.
+        // "java.grpc.emit_message_events" or "general.http.client.request_captured_headers"),
+        // so nest it under "instrumentation" to form a complete declarative config path.
+        insertIntoTree(tree, "instrumentation/development." + declarativeName, config);
       }
     }
 
