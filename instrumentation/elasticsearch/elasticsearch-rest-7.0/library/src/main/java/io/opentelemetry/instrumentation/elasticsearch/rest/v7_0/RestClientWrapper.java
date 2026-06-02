@@ -116,7 +116,7 @@ class RestClientWrapper {
         .make()
         .load(
             RestClient.class.getClassLoader(),
-            ClassInjector.UsingUnsafe.isAvailable()
+            ClassInjector.UsingReflection.isAvailable()
                 ? ClassLoadingStrategy.Default.INJECTION
                 : ClassLoadingStrategy.UsingLookup.of(RestClientPackageAccess.getLookup()))
         .getLoaded();
