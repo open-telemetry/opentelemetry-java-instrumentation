@@ -23,6 +23,7 @@ dependencies {
   compileOnly(project(":bootstrap"))
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
 
+  add("muzzleBootstrap", project(":bootstrap"))
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:$opentelemetryJavaagentAlphaVersion")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:$opentelemetryJavaagentAlphaVersion")
   add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:$opentelemetryJavaagentAlphaVersion")

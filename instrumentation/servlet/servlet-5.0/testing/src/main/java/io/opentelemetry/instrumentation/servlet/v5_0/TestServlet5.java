@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
+package io.opentelemetry.instrumentation.servlet.v5_0;
 
+import static io.opentelemetry.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_PRINT_WRITER;
+import static io.opentelemetry.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
@@ -14,8 +16,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_PRINT_WRITER;
-import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test.HTML_SERVLET_OUTPUT_STREAM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
@@ -156,7 +156,7 @@ public class TestServlet5 {
                       resp.setStatus(endpoint.getStatus());
                       PrintWriter writer = resp.getWriter();
                       writer.print(endpoint.getBody());
-                      if (req.getClass().getName().contains("catalina")) {
+                      if (req.getServletContext().getClass().getName().contains("catalina")) {
                         // on tomcat close the writer to ensure response is sent immediately,
                         // otherwise there is a chance that tomcat resets the connection before the
                         // response is sent
@@ -239,11 +239,12 @@ public class TestServlet5 {
                 resp.setStatus(endpoint.getStatus());
                 PrintWriter writer = resp.getWriter();
                 writer.print(endpoint.getBody());
-                if (req.getClass().getName().contains("catalina")) {
+                if (req.getServletContext().getClass().getName().contains("catalina")) {
                   // on tomcat close the writer to ensure response is sent immediately,
                   // otherwise there is a chance that tomcat resets the connection before the
                   // response is sent
                   writer.close();
+                  resp.flushBuffer();
                 }
                 throw new IllegalStateException(endpoint.getBody());
               } else if (HTML_PRINT_WRITER.equals(endpoint)) {

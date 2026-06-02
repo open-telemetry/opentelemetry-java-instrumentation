@@ -48,7 +48,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
         // this is just to avoid a bit more copy-pasting
-        implementation(project.sourceSets["test"].output)
+        implementation(sourceSets["test"].output)
       }
     }
   }
