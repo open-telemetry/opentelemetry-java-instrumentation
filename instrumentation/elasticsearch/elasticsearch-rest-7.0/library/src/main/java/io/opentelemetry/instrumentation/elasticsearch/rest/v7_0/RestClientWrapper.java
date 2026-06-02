@@ -21,6 +21,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Visibility;
+import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.InvocationHandlerAdapter;
 import org.apache.http.Header;
@@ -115,7 +116,9 @@ class RestClientWrapper {
         .make()
         .load(
             RestClient.class.getClassLoader(),
-            ClassLoadingStrategy.UsingLookup.of(RestClientPackageAccess.getLookup()))
+            ClassInjector.UsingUnsafe.isAvailable()
+                ? ClassLoadingStrategy.Default.INJECTION
+                : ClassLoadingStrategy.UsingLookup.of(RestClientPackageAccess.getLookup()))
         .getLoaded();
   }
 
