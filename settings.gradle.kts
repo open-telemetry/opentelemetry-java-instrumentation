@@ -6,8 +6,8 @@ pluginManagement {
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.3.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
-    id("com.github.bjornvester.xjc") version "1.9.0"
-    id("org.graalvm.buildtools.native") version "1.1.0"
+    id("com.github.bjornvester.xjc") version "1.9.1"
+    id("org.graalvm.buildtools.native") version "1.1.1"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
