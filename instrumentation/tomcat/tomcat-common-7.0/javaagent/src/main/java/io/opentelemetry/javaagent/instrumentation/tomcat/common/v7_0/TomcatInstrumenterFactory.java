@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common.v7_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
-import io.opentelemetry.instrumentation.servlet.internal.ServletErrorCauseExtractor;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletErrorCauseExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import org.apache.coyote.Request;
