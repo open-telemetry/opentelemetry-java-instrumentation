@@ -34,18 +34,6 @@ public interface ExperimentalInstrumentationModule {
   }
 
   /**
-   * Deprecated method previously used to define a common class-loader when using shared
-   * instrumentation classes across instrumentation modules.
-   *
-   * @deprecated to be removed in 3.0, instrumentation modules are automatically loaded in a common
-   *     class-loader for internal instrumentation and one class-loader per extension.
-   */
-  @Deprecated
-  default String getModuleGroup() {
-    return getClass().getName();
-  }
-
-  /**
    * Some instrumentations need to invoke classes which are present both in the agent classloader
    * and the instrumented application classloader. By default, the classloader of the
    * instrumentation would link those against the class provided by the agent. This setting allows
