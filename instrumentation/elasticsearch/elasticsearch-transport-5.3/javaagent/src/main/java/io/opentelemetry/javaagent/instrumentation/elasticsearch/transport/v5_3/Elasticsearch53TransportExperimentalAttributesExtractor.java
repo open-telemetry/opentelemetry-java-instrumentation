@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.ElasticTransportRequest;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.ElasticsearchTransportExperimentalAttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticTransportRequest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportExperimentalAttributesExtractor;
 import org.elasticsearch.action.DocWriteRequest;
 
 class Elasticsearch53TransportExperimentalAttributesExtractor

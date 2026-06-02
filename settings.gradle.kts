@@ -6,8 +6,8 @@ pluginManagement {
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.3.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
-    id("com.github.bjornvester.xjc") version "1.9.0"
-    id("org.graalvm.buildtools.native") version "1.1.0"
+    id("com.github.bjornvester.xjc") version "1.9.1"
+    id("org.graalvm.buildtools.native") version "1.1.1"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.4.1"
+  id("com.gradle.develocity") version "4.4.2"
 }
 
 dependencyResolutionManagement {
@@ -278,8 +278,8 @@ include(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing")
-include(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent")
-include(":instrumentation:elasticsearch:elasticsearch-transport-common:testing")
+include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent")
+include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing")
 include(":instrumentation:executors:bootstrap")
 include(":instrumentation:executors:javaagent")
 include(":instrumentation:executors:jdk21-testing")
@@ -537,9 +537,9 @@ include(":instrumentation:opentelemetry-instrumentation-api:testing")
 include(":instrumentation:oracle-ucp-11.2:javaagent")
 include(":instrumentation:oracle-ucp-11.2:library")
 include(":instrumentation:oracle-ucp-11.2:testing")
-include(":instrumentation:oshi:javaagent")
-include(":instrumentation:oshi:library")
-include(":instrumentation:oshi:testing")
+include(":instrumentation:oshi-5.0:javaagent")
+include(":instrumentation:oshi-5.0:library")
+include(":instrumentation:oshi-5.0:testing")
 include(":instrumentation:payara-5.2020:javaagent")
 include(":instrumentation:pekko:pekko-actor-1.0:javaagent")
 include(":instrumentation:pekko:pekko-http-1.0:javaagent")

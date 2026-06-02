@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "8.5.1"
+  id("com.diffplug.spotless") version "8.6.0"
 }
 
 spotless {
@@ -54,7 +54,7 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.5.1")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.6.0")
   implementation("com.google.guava:guava:33.6.0-jre")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.1") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
@@ -66,7 +66,7 @@ dependencies {
     exclude("org.codehaus.plexus", "plexus-xml")
   }
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.4.1")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.4.2")
   implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:3.1.5")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.11.0")
