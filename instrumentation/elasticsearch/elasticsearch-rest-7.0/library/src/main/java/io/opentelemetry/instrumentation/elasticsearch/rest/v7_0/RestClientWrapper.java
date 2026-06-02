@@ -29,6 +29,7 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientPackageAccess;
 
 class RestClientWrapper {
   private static final Class<?> proxyClass = createProxyClass();
@@ -112,7 +113,9 @@ class RestClientWrapper {
                   return method.invoke(target, args);
                 }))
         .make()
-        .load(RestClient.class.getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
+        .load(
+            RestClient.class.getClassLoader(),
+            ClassLoadingStrategy.UsingLookup.of(RestClientPackageAccess.getLookup()))
         .getLoaded();
   }
 
