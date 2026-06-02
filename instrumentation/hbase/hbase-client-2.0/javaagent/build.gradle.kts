@@ -21,7 +21,6 @@ dependencies {
   latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // native on-by-default instrumentation after this version
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
-  testImplementation("com.google.code.findbugs:annotations:3.0.1")
   testImplementation(project(":instrumentation:hbase:hbase-common:testing"))
 }
 
@@ -29,9 +28,6 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
-    jvmArgs(
-      "-Dotel.javaagent.exclude-classes=com.google.protobuf.*,com.fasterxml.jackson.*,com.google.common.*,ch.qos.logback.*,javax.xml.*",
-    )
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -41,10 +37,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs(
-      "-Dotel.semconv-stability.opt-in=database",
-      "-Dotel.javaagent.exclude-classes=com.google.protobuf.*,com.fasterxml.jackson.*,com.google.common.*,ch.qos.logback.*,javax.xml.*",
-    )
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }

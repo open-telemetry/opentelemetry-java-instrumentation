@@ -25,7 +25,7 @@ import org.apache.hadoop.hbase.net.Address;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hbase.thirdparty.com.google.protobuf.Descriptors;
 
-final class AbstractRpcClientInstrumentation implements TypeInstrumentation {
+class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

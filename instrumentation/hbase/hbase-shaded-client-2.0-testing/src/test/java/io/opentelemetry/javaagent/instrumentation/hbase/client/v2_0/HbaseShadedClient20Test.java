@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.hbase.testing.AbstractHbaseTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class HbaseClient200Test extends AbstractHbaseTest {
+class HbaseShadedClient20Test extends AbstractHbaseTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

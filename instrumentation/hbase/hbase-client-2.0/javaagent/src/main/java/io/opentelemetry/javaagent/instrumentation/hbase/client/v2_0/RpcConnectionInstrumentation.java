@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.RC_THREAD_LOCAL;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil;
 
-public final class RpcConnectionInstrumentation implements TypeInstrumentation {
+class RpcConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -33,9 +33,11 @@ public final class RpcConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("sendRequest")), getClass().getName() + "$SendRequestAdvice");
+        named("sendRequest").and(takesArgument(0, named("org.apache.hadoop.hbase.ipc.Call"))),
+        getClass().getName() + "$SendRequestAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SendRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) Object call) {

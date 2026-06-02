@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.TABLE_THREAD_LOCAL;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -16,20 +16,21 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hadoop.hbase.TableName;
 
-public final class RegionServerCallableInstrumentation implements TypeInstrumentation {
+class RegionServerCallableInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.hadoop.hbase.client.RegionServerCallable")
-        .or(named("org.apache.hadoop.hbase.client.RegionAdminServiceCallable"));
+    return namedOneOf(
+        "org.apache.hadoop.hbase.client.RegionServerCallable",
+        "org.apache.hadoop.hbase.client.RegionAdminServiceCallable");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("call")), getClass().getName() + "$RpcCallAdvice");
+    transformer.applyAdviceToMethod(named("call"), getClass().getName() + "$RpcCallAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class RpcCallAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.FieldValue(value = "tableName") TableName table) {

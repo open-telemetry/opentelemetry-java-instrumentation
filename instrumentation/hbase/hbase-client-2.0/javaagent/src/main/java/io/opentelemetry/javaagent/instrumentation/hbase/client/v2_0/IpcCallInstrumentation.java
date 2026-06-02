@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil;
 
-public final class IpcCallInstrumentation implements TypeInstrumentation {
+class IpcCallInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -31,6 +31,7 @@ public final class IpcCallInstrumentation implements TypeInstrumentation {
         namedOneOf("callComplete", "setTimeout"), getClass().getName() + "$CallAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CallAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

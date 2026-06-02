@@ -23,9 +23,6 @@ tasks {
       ":instrumentation:hbase:hbase-client-2.0:javaagent:test",
       ":instrumentation:hbase:hbase-client-2.0:javaagent:testStableSemconv",
     )
-    jvmArgs(
-      "-Dotel.javaagent.exclude-classes=com.google.protobuf.*,com.fasterxml.jackson.*,com.google.common.*,ch.qos.logback.*,javax.xml.*",
-    )
   }
 
   if (otelProps.denyUnsafe) {
