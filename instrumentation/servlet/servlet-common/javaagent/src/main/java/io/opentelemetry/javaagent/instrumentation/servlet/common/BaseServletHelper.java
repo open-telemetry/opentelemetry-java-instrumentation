@@ -31,6 +31,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.UserIncubatingAttributes;
 import java.security.Principal;
 import java.util.List;
 import java.util.function.Function;
@@ -168,8 +169,9 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID} as span attributes when SERVER span is
-   * not created by servlet instrumentation.
+   * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID}, or {@link
+   * UserIncubatingAttributes#USER_ID} when v3 preview is enabled, as a span attribute when SERVER
+   * span is not created by servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not

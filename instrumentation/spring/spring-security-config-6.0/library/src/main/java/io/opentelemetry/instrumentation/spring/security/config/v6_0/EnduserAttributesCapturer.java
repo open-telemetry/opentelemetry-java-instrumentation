@@ -43,13 +43,13 @@ public final class EnduserAttributesCapturer {
   private static final String DEFAULT_ROLE_PREFIX = "ROLE_";
   private static final String DEFAULT_SCOPE_PREFIX = "SCOPE_";
 
-  /** Determines if the {@code enduser.id} attribute should be captured. */
+  /** Determines if {@code enduser.id}, or {@code user.id} in v3 preview, should be captured. */
   private boolean enduserIdEnabled;
 
-  /** Determines if the {@code enduser.role} attribute should be captured. */
+  /** Determines if {@code enduser.role}, or {@code user.roles} in v3 preview, should be captured. */
   private boolean enduserRoleEnabled;
 
-  /** Determines if the {@code enduser.scope} attribute should be captured. */
+  /** Determines if {@code enduser.scope} should be captured when v3 preview is disabled. */
   private boolean enduserScopeEnabled;
 
   /** The prefix used to find {@link GrantedAuthority} objects for roles. */

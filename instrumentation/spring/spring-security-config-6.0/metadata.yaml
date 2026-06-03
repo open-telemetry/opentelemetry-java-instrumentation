@@ -4,8 +4,8 @@ description: >
   attributes, and is only enabled when at least one common identity configuration is enabled.
 
   NOTE: The `enduser` attributes have been deprecated. When `otel.instrumentation.common.v3-preview`
-  is enabled, `enduser.id` is emitted as `user.id`, `enduser.role` is emitted as `user.roles`,
-  and `enduser.scope` is not emitted.
+  is enabled, `enduser.id` is emitted as `user.id`, `enduser.role` is emitted as the string array
+  `user.roles`, and `enduser.scope` is not emitted.
 library_link: https://spring.io/projects/spring-security
 configurations:
   - name: otel.instrumentation.common.enduser.id.enabled
@@ -20,7 +20,7 @@ configurations:
     default: false
   - name: otel.instrumentation.common.enduser.scope.enabled
     declarative_name: java.common.enduser.scope.enabled
-    description: Enables capturing the enduser.scope attribute. This property and the associated attribute are not supported when v3 preview is enabled.
+    description: Enables capturing the enduser.scope attribute when v3 preview is not enabled. This property is not honored when v3 preview is enabled.
     type: boolean
     default: false
   - name: otel.instrumentation.common.user.id.enabled
