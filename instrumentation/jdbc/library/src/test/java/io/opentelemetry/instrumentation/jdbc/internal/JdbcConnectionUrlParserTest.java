@@ -297,8 +297,7 @@ class JdbcConnectionUrlParserTest {
             .setNamespace("pgdb|myschema")
             .setName("pgdb")
             .build(),
-        // currentSchema from connection properties is used when the URL does not
-        // specify it
+        // currentSchema from connection properties is used when the URL does not specify it
         arg("jdbc:postgresql://pg.host/pgdb")
             .setProperties(postgresProps("pguser", "propertyschema"))
             .setShortUrl("postgresql://pg.host:5432")

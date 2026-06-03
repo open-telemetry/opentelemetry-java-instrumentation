@@ -386,8 +386,7 @@ public abstract class AbstractPreparedStatementParametersTest {
       String url,
       String table)
       throws SQLException {
-    // we are using old database drivers that don't support the tested setObject
-    // method
+    // we are using old database drivers that don't support the tested setObject method
     Assumptions.assumeTrue(testLatestDeps());
 
     test(

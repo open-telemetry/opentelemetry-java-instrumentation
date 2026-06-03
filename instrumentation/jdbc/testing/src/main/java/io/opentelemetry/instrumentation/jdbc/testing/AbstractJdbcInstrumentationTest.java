@@ -1219,8 +1219,7 @@ public abstract class AbstractJdbcInstrumentationTest {
           statement -> assertThat(statement.executeLargeUpdate()).isEqualTo(0));
     } else {
       // Older drivers don't support JDBC 4.2, expect UnsupportedOperationException
-      // This is the correct behavior - instrumentation should not change driver
-      // behavior
+      // This is the correct behavior - instrumentation should not change driver behavior
       String sql = connection.nativeSQL(query);
       PreparedStatement statement = connection.prepareStatement(sql);
       cleanup.deferCleanup(statement);
@@ -1876,8 +1875,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       assertThat(statement.executeLargeBatch()).isEqualTo(new long[] {1, 1});
     } else {
       // Older drivers don't support JDBC 4.2, expect UnsupportedOperationException
-      // This is the correct behavior - instrumentation should not change driver
-      // behavior
+      // This is the correct behavior - instrumentation should not change driver behavior
       assertThatThrownBy(statement::executeLargeBatch)
           .isInstanceOf(UnsupportedOperationException.class);
     }
