@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.faas.internal.FaasExceptionEventExtractors.setFaasInvocationExceptionEventExtractor;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -19,11 +21,12 @@ public final class AwsLambdaFunctionInstrumenterFactory {
   public static AwsLambdaFunctionInstrumenter createInstrumenter(OpenTelemetry openTelemetry) {
     return new AwsLambdaFunctionInstrumenter(
         openTelemetry,
-        Instrumenter.builder(
-                openTelemetry,
-                "io.opentelemetry.aws-lambda-core-1.0",
-                AwsLambdaFunctionInstrumenterFactory::spanName)
-            .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
+        setFaasInvocationExceptionEventExtractor(
+                Instrumenter.builder(
+                        openTelemetry,
+                        "io.opentelemetry.aws-lambda-core-1.0",
+                        AwsLambdaFunctionInstrumenterFactory::spanName)
+                    .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor()))
             .buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 

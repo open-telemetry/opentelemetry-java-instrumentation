@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.faas.internal.FaasExceptionEventExtractors.setFaasInvocationExceptionEventExtractor;
+
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -24,10 +26,13 @@ public final class AwsLambdaEventsInstrumenterFactory {
       OpenTelemetry openTelemetry, String instrumentationName, Set<String> knownMethods) {
     return new AwsLambdaFunctionInstrumenter(
         openTelemetry,
-        Instrumenter.builder(
-                openTelemetry, instrumentationName, AwsLambdaEventsInstrumenterFactory::spanName)
-            .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
-            .addAttributesExtractor(new ApiGatewayProxyAttributesExtractor(knownMethods))
+        setFaasInvocationExceptionEventExtractor(
+                Instrumenter.builder(
+                        openTelemetry,
+                        instrumentationName,
+                        AwsLambdaEventsInstrumenterFactory::spanName)
+                    .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
+                    .addAttributesExtractor(new ApiGatewayProxyAttributesExtractor(knownMethods)))
             .buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
