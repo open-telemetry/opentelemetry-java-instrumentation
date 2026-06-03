@@ -19,7 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class ResultSetInstrumentation implements TypeInstrumentation {
+class ResultSetInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -35,10 +35,10 @@ public class ResultSetInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("next").and(takesNoArguments()).and(isPublic()),
-        ResultSetInstrumentation.class.getName() + "$ResultSetNextAdvice");
+        getClass().getName() + "$ResultSetNextAdvice");
     transformer.applyAdviceToMethod(
         named("close").and(takesNoArguments()).and(isPublic()),
-        ResultSetInstrumentation.class.getName() + "$ResultSetCloseAdvice");
+        getClass().getName() + "$ResultSetCloseAdvice");
   }
 
   @SuppressWarnings("unused")

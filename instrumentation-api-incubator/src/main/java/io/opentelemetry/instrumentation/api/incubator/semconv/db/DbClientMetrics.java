@@ -11,6 +11,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
@@ -35,6 +36,9 @@ import java.util.logging.Logger;
 public final class DbClientMetrics implements OperationListener {
 
   private static final double NANOS_PER_S = SECONDS.toNanos(1);
+
+  private static final AttributeKey<Long> DB_RESPONSE_RETURNED_ROWS =
+      longKey("db.response.returned_rows");
 
   private static final ContextKey<State> DB_CLIENT_OPERATION_METRICS_STATE =
       ContextKey.named("db-client-metrics-state");
@@ -100,7 +104,7 @@ public final class DbClientMetrics implements OperationListener {
     duration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
 
     // Record returned rows metric if present
-    Long rowCount = endAttributes.get(longKey("db.response.returned_rows"));
+    Long rowCount = endAttributes.get(DB_RESPONSE_RETURNED_ROWS);
     if (rowCount != null) {
       returnedRows.record(rowCount, attributes, context);
     }
