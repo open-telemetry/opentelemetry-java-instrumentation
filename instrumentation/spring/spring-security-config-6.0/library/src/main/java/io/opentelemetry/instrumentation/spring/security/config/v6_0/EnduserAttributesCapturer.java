@@ -59,8 +59,8 @@ public final class EnduserAttributesCapturer {
   private String scopeGrantedAuthorityPrefix = DEFAULT_SCOPE_PREFIX;
 
   /**
-   * Captures the identity semantic attributes from the given {@link Authentication} into the
-   * {@link LocalRootSpan} of the given {@link Context}.
+   * Captures the identity semantic attributes from the given {@link Authentication} into the {@link
+   * LocalRootSpan} of the given {@link Context}.
    *
    * <p>Only the attributes enabled via the {@code setEnduser*Enabled(true)} methods are captured.
    *
@@ -80,8 +80,8 @@ public final class EnduserAttributesCapturer {
    *
    * <ul>
    *   <li>{@code user.id} - from {@link Authentication#getName()}
-   *   <li>{@code user.roles} - a string array from the {@link Authentication#getAuthorities()}
-   *       with the configured {@link #getRoleGrantedAuthorityPrefix() role prefix}
+   *   <li>{@code user.roles} - a string array from the {@link Authentication#getAuthorities()} with
+   *       the configured {@link #getRoleGrantedAuthorityPrefix() role prefix}
    * </ul>
    *
    * @param otelContext the context from which the {@link LocalRootSpan} in which to capture the
