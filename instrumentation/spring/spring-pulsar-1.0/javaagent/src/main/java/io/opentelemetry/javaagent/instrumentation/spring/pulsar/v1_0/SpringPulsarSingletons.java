@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
@@ -37,6 +39,7 @@ public class SpringPulsarSingletons {
                 MessagingAttributesExtractor.builder(getter, operation)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build());
+    setMessagingProcessExceptionEventExtractor(builder);
     if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(

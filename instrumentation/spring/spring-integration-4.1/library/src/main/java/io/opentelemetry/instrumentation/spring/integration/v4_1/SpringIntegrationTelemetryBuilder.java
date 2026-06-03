@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -73,29 +75,31 @@ public final class SpringIntegrationTelemetryBuilder {
    */
   public SpringIntegrationTelemetry build() {
     Instrumenter<MessageWithChannel, Void> consumerInstrumenter =
-        Instrumenter.<MessageWithChannel, Void>builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                SpringIntegrationTelemetryBuilder::consumerSpanName)
-            .addAttributesExtractors(additionalAttributeExtractors)
-            .addAttributesExtractor(
-                buildMessagingAttributesExtractor(
-                    new SpringMessagingAttributesGetter(),
-                    MessageOperation.PROCESS,
-                    capturedHeaders))
+        setMessagingProcessExceptionEventExtractor(
+                Instrumenter.<MessageWithChannel, Void>builder(
+                        openTelemetry,
+                        INSTRUMENTATION_NAME,
+                        SpringIntegrationTelemetryBuilder::consumerSpanName)
+                    .addAttributesExtractors(additionalAttributeExtractors)
+                    .addAttributesExtractor(
+                        buildMessagingAttributesExtractor(
+                            new SpringMessagingAttributesGetter(),
+                            MessageOperation.PROCESS,
+                            capturedHeaders)))
             .buildConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
 
     Instrumenter<MessageWithChannel, Void> producerInstrumenter =
-        Instrumenter.<MessageWithChannel, Void>builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                SpringIntegrationTelemetryBuilder::producerSpanName)
-            .addAttributesExtractors(additionalAttributeExtractors)
-            .addAttributesExtractor(
-                buildMessagingAttributesExtractor(
-                    new SpringMessagingAttributesGetter(),
-                    MessageOperation.PUBLISH,
-                    capturedHeaders))
+        setMessagingSendExceptionEventExtractor(
+                Instrumenter.<MessageWithChannel, Void>builder(
+                        openTelemetry,
+                        INSTRUMENTATION_NAME,
+                        SpringIntegrationTelemetryBuilder::producerSpanName)
+                    .addAttributesExtractors(additionalAttributeExtractors)
+                    .addAttributesExtractor(
+                        buildMessagingAttributesExtractor(
+                            new SpringMessagingAttributesGetter(),
+                            MessageOperation.PUBLISH,
+                            capturedHeaders)))
             .buildInstrumenter(SpanKindExtractor.alwaysProducer());
     return new SpringIntegrationTelemetry(
         openTelemetry.getPropagators(),

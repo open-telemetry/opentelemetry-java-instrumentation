@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
@@ -26,16 +28,17 @@ public class KafkaConnectSingletons {
         new KafkaConnectBatchProcessSpanLinksExtractor(propagator);
 
     instrumenter =
-        Instrumenter.<KafkaConnectTask, Void>builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(
-                    new KafkaConnectAttributesGetter(), MessageOperation.PROCESS))
-            .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(
-                        new KafkaConnectAttributesGetter(), MessageOperation.PROCESS)
-                    .build())
-            .addSpanLinksExtractor(spanLinksExtractor)
+        setMessagingProcessExceptionEventExtractor(
+                Instrumenter.<KafkaConnectTask, Void>builder(
+                        GlobalOpenTelemetry.get(),
+                        INSTRUMENTATION_NAME,
+                        MessagingSpanNameExtractor.create(
+                            new KafkaConnectAttributesGetter(), MessageOperation.PROCESS))
+                    .addAttributesExtractor(
+                        MessagingAttributesExtractor.builder(
+                                new KafkaConnectAttributesGetter(), MessageOperation.PROCESS)
+                            .build())
+                    .addSpanLinksExtractor(spanLinksExtractor))
             .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
