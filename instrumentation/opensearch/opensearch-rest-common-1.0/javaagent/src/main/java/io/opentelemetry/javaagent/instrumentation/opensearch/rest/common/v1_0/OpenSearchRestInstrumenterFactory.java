@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -18,12 +20,14 @@ public class OpenSearchRestInstrumenterFactory {
       String instrumentationName) {
     OpenSearchRestAttributesGetter dbClientAttributesGetter = new OpenSearchRestAttributesGetter();
 
-    return Instrumenter.<OpenSearchRestRequest, OpenSearchRestResponse>builder(
-            GlobalOpenTelemetry.get(),
-            instrumentationName,
-            DbClientSpanNameExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-        .addOperationMetrics(DbClientMetrics.get())
+    return setDbClientExceptionEventExtractor(
+            Instrumenter.<OpenSearchRestRequest, OpenSearchRestResponse>builder(
+                    GlobalOpenTelemetry.get(),
+                    instrumentationName,
+                    DbClientSpanNameExtractor.create(dbClientAttributesGetter))
+                .addAttributesExtractor(
+                    DbClientAttributesExtractor.create(dbClientAttributesGetter))
+                .addOperationMetrics(DbClientMetrics.get()))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

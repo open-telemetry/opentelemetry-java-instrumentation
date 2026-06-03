@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
@@ -37,12 +39,13 @@ public class LettuceSingletons {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
 
     instrumenter =
-        Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addOperationMetrics(DbClientMetrics.get())
+        setDbClientExceptionEventExtractor(
+                Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
+                        GlobalOpenTelemetry.get(),
+                        INSTRUMENTATION_NAME,
+                        DbClientSpanNameExtractor.create(dbAttributesGetter))
+                    .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+                    .addOperationMetrics(DbClientMetrics.get()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     LettuceConnectNetworkAttributesGetter connectNetworkAttributesGetter =

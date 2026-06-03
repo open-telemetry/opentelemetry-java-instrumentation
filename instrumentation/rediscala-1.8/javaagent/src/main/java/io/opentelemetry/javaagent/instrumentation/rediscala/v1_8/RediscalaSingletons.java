@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -23,12 +25,13 @@ public class RediscalaSingletons {
     RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();
 
     instrumenter =
-        Instrumenter.<RedisCommand<?, ?>, Void>builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addOperationMetrics(DbClientMetrics.get())
+        setDbClientExceptionEventExtractor(
+                Instrumenter.<RedisCommand<?, ?>, Void>builder(
+                        GlobalOpenTelemetry.get(),
+                        INSTRUMENTATION_NAME,
+                        DbClientSpanNameExtractor.create(dbAttributesGetter))
+                    .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+                    .addOperationMetrics(DbClientMetrics.get()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

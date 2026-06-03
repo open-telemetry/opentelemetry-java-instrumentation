@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -22,17 +24,19 @@ public class ClickHouseInstrumenterFactory {
     ClickHouseAttributesGetter dbAttributesGetter =
         new ClickHouseAttributesGetter(errorCodeExtractor);
 
-    return Instrumenter.<ClickHouseDbRequest, Void>builder(
-            GlobalOpenTelemetry.get(),
-            instrumenterName,
-            DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
-        .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(dbAttributesGetter)
-                .setTableAttribute(null)
-                .setQuerySanitizationEnabled(
-                    DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "clickhouse"))
-                .build())
-        .addOperationMetrics(DbClientMetrics.get())
+    return setDbClientExceptionEventExtractor(
+            Instrumenter.<ClickHouseDbRequest, Void>builder(
+                    GlobalOpenTelemetry.get(),
+                    instrumenterName,
+                    DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
+                .addAttributesExtractor(
+                    SqlClientAttributesExtractor.builder(dbAttributesGetter)
+                        .setTableAttribute(null)
+                        .setQuerySanitizationEnabled(
+                            DbConfig.isQuerySanitizationEnabled(
+                                GlobalOpenTelemetry.get(), "clickhouse"))
+                        .build())
+                .addOperationMetrics(DbClientMetrics.get()))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

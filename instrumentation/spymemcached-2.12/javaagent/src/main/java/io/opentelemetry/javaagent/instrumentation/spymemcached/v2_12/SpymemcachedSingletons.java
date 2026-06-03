@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -30,32 +32,36 @@ public class SpymemcachedSingletons {
         ServerAttributesExtractor.create(serverAttributesGetter);
 
     instrumenter =
-        Instrumenter.builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(
-                new AttributesExtractor<SpymemcachedRequest, Object>() {
-                  @Override
-                  public void onStart(
-                      AttributesBuilder attributes, Context context, SpymemcachedRequest request) {}
+        setDbClientExceptionEventExtractor(
+                Instrumenter.<SpymemcachedRequest, Object>builder(
+                        GlobalOpenTelemetry.get(),
+                        INSTRUMENTATION_NAME,
+                        DbClientSpanNameExtractor.create(dbAttributesGetter))
+                    .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+                    .addAttributesExtractor(
+                        new AttributesExtractor<SpymemcachedRequest, Object>() {
+                          @Override
+                          public void onStart(
+                              AttributesBuilder attributes,
+                              Context context,
+                              SpymemcachedRequest request) {}
 
-                  @Override
-                  public void onEnd(
-                      AttributesBuilder attributes,
-                      Context context,
-                      SpymemcachedRequest request,
-                      @Nullable Object object,
-                      @Nullable Throwable error) {
-                    // For spymemcached, we can only extract server attributes at the end of the
-                    // request because they are not available at the start.
-                    serverAttributesExtractor.onStart(attributes, context, request);
-                  }
-                })
-            .addContextCustomizer(
-                (context, request, attributes) -> SpymemcachedRequestHolder.init(context, request))
-            .addOperationMetrics(DbClientMetrics.get())
+                          @Override
+                          public void onEnd(
+                              AttributesBuilder attributes,
+                              Context context,
+                              SpymemcachedRequest request,
+                              @Nullable Object object,
+                              @Nullable Throwable error) {
+                            // For spymemcached, we can only extract server attributes at the
+                            // end of the request because they are not available at the start.
+                            serverAttributesExtractor.onStart(attributes, context, request);
+                          }
+                        })
+                    .addContextCustomizer(
+                        (context, request, attributes) ->
+                            SpymemcachedRequestHolder.init(context, request))
+                    .addOperationMetrics(DbClientMetrics.get()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

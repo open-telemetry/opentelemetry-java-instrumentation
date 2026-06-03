@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -74,16 +75,17 @@ public final class JdbcInstrumenterFactory {
       boolean querySanitizationEnabled,
       boolean captureQueryParameters) {
     JdbcAttributesGetter getter = new JdbcAttributesGetter();
-    return Instrumenter.<DbRequest, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(getter))
-        .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(getter)
-                .setQuerySanitizationEnabled(querySanitizationEnabled)
-                .setCaptureQueryParameters(captureQueryParameters)
-                .build())
-        .addAttributesExtractors(extractors)
-        .addOperationMetrics(DbClientMetrics.get())
-        .setEnabled(enabled)
+    return setDbClientExceptionEventExtractor(
+            Instrumenter.<DbRequest, Void>builder(
+                    openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(getter))
+                .addAttributesExtractor(
+                    SqlClientAttributesExtractor.builder(getter)
+                        .setQuerySanitizationEnabled(querySanitizationEnabled)
+                        .setCaptureQueryParameters(captureQueryParameters)
+                        .build())
+                .addAttributesExtractors(extractors)
+                .addOperationMetrics(DbClientMetrics.get())
+                .setEnabled(enabled))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

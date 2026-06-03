@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTelemetry.INSTRUMENTATION_NAME;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -59,21 +60,22 @@ public final class LettuceTelemetryBuilder {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
 
     Instrumenter<LettuceRequest, LettuceResponse> instrumenter =
-        Instrumenter.<LettuceRequest, LettuceResponse>builder(
-                openTelemetry,
-                INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addOperationMetrics(DbClientMetrics.get())
-            .setSpanStatusExtractor(
-                (spanStatusBuilder, request, response, error) -> {
-                  if (response != null && response.getErrorMessage() != null) {
-                    spanStatusBuilder.setStatus(StatusCode.ERROR);
-                  } else {
-                    SpanStatusExtractor.getDefault()
-                        .extract(spanStatusBuilder, request, response, error);
-                  }
-                })
+        setDbClientExceptionEventExtractor(
+                Instrumenter.<LettuceRequest, LettuceResponse>builder(
+                        openTelemetry,
+                        INSTRUMENTATION_NAME,
+                        DbClientSpanNameExtractor.create(dbAttributesGetter))
+                    .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+                    .addOperationMetrics(DbClientMetrics.get())
+                    .setSpanStatusExtractor(
+                        (spanStatusBuilder, request, response, error) -> {
+                          if (response != null && response.getErrorMessage() != null) {
+                            spanStatusBuilder.setStatus(StatusCode.ERROR);
+                          } else {
+                            SpanStatusExtractor.getDefault()
+                                .extract(spanStatusBuilder, request, response, error);
+                          }
+                        }))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     return new LettuceTelemetry(instrumenter, querySanitizationEnabled, encodingEventsEnabled);

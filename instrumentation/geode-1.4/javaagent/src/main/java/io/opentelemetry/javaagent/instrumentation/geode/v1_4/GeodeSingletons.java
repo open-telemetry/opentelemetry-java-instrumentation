@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -21,12 +23,14 @@ class GeodeSingletons {
     GeodeDbAttributesGetter dbClientAttributesGetter = new GeodeDbAttributesGetter();
 
     instrumenter =
-        Instrumenter.<GeodeRequest, Void>builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbClientAttributesGetter))
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-            .addOperationMetrics(DbClientMetrics.get())
+        setDbClientExceptionEventExtractor(
+                Instrumenter.<GeodeRequest, Void>builder(
+                        GlobalOpenTelemetry.get(),
+                        INSTRUMENTATION_NAME,
+                        DbClientSpanNameExtractor.create(dbClientAttributesGetter))
+                    .addAttributesExtractor(
+                        DbClientAttributesExtractor.create(dbClientAttributesGetter))
+                    .addOperationMetrics(DbClientMetrics.get()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

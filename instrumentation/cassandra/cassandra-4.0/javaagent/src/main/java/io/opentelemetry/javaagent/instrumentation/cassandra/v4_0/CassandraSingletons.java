@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -27,18 +28,20 @@ class CassandraSingletons {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
     instrumenter =
-        Instrumenter.<CassandraRequest, ExecutionInfo>builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(attributesGetter))
-            .addAttributesExtractor(
-                SqlClientAttributesExtractor.builder(attributesGetter)
-                    .setTableAttribute(DB_CASSANDRA_TABLE)
-                    .setQuerySanitizationEnabled(
-                        DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "cassandra"))
-                    .build())
-            .addAttributesExtractor(new CassandraAttributesExtractor())
-            .addOperationMetrics(DbClientMetrics.get())
+        setDbClientExceptionEventExtractor(
+                Instrumenter.<CassandraRequest, ExecutionInfo>builder(
+                        GlobalOpenTelemetry.get(),
+                        INSTRUMENTATION_NAME,
+                        DbClientSpanNameExtractor.create(attributesGetter))
+                    .addAttributesExtractor(
+                        SqlClientAttributesExtractor.builder(attributesGetter)
+                            .setTableAttribute(DB_CASSANDRA_TABLE)
+                            .setQuerySanitizationEnabled(
+                                DbConfig.isQuerySanitizationEnabled(
+                                    GlobalOpenTelemetry.get(), "cassandra"))
+                            .build())
+                    .addAttributesExtractor(new CassandraAttributesExtractor())
+                    .addOperationMetrics(DbClientMetrics.get()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

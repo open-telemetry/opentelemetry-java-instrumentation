@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
@@ -21,15 +23,16 @@ public class InfluxDbSingletons {
     InfluxDbAttributesGetter dbAttributesGetter = new InfluxDbAttributesGetter();
 
     instrumenter =
-        Instrumenter.<InfluxDbRequest, Void>builder(
-                GlobalOpenTelemetry.get(),
-                "io.opentelemetry.influxdb-2.4",
-                DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
-            .addAttributesExtractor(
-                SqlClientAttributesExtractor.builder(dbAttributesGetter)
-                    .setTableAttribute(null)
-                    .build())
-            .addOperationMetrics(DbClientMetrics.get())
+        setDbClientExceptionEventExtractor(
+                Instrumenter.<InfluxDbRequest, Void>builder(
+                        GlobalOpenTelemetry.get(),
+                        "io.opentelemetry.influxdb-2.4",
+                        DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
+                    .addAttributesExtractor(
+                        SqlClientAttributesExtractor.builder(dbAttributesGetter)
+                            .setTableAttribute(null)
+                            .build())
+                    .addOperationMetrics(DbClientMetrics.get()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

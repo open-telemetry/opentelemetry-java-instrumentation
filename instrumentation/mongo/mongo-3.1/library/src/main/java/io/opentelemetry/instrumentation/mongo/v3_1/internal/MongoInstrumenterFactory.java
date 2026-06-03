@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
@@ -42,11 +44,12 @@ public final class MongoInstrumenterFactory {
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
         new MongoSpanNameExtractor(dbAttributesGetter, attributesExtractor);
 
-    return Instrumenter.<CommandStartedEvent, Void>builder(
-            openTelemetry, instrumentationName, spanNameExtractor)
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(attributesExtractor)
-        .addOperationMetrics(DbClientMetrics.get())
+    return setDbClientExceptionEventExtractor(
+            Instrumenter.<CommandStartedEvent, Void>builder(
+                    openTelemetry, instrumentationName, spanNameExtractor)
+                .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+                .addAttributesExtractor(attributesExtractor)
+                .addOperationMetrics(DbClientMetrics.get()))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

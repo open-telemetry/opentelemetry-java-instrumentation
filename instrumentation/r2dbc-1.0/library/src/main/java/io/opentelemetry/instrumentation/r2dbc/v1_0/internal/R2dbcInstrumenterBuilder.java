@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -49,14 +51,15 @@ public final class R2dbcInstrumenterBuilder {
         spanNameExtractorTransformer.apply(
             DbClientSpanNameExtractor.create(new R2dbcSqlAttributesGetter()));
 
-    return Instrumenter.<DbExecution, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-        .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(new R2dbcSqlAttributesGetter())
-                .setQuerySanitizationEnabled(querySanitizationEnabled)
-                .build())
-        .addAttributesExtractors(additionalExtractors)
-        .addOperationMetrics(DbClientMetrics.get())
+    return setDbClientExceptionEventExtractor(
+            Instrumenter.<DbExecution, Void>builder(
+                    openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+                .addAttributesExtractor(
+                    SqlClientAttributesExtractor.builder(new R2dbcSqlAttributesGetter())
+                        .setQuerySanitizationEnabled(querySanitizationEnabled)
+                        .build())
+                .addAttributesExtractors(additionalExtractors)
+                .addOperationMetrics(DbClientMetrics.get()))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }

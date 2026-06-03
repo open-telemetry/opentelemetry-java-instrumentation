@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
@@ -27,12 +29,14 @@ class OpenSearchSingletons {
   private static Instrumenter<OpenSearchRequest, Void> createInstrumenter() {
     OpenSearchAttributesGetter dbClientAttributesGetter = new OpenSearchAttributesGetter();
 
-    return Instrumenter.<OpenSearchRequest, Void>builder(
-            GlobalOpenTelemetry.get(),
-            "io.opentelemetry.opensearch-java-3.0",
-            DbClientSpanNameExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-        .addOperationMetrics(DbClientMetrics.get())
+    return setDbClientExceptionEventExtractor(
+            Instrumenter.<OpenSearchRequest, Void>builder(
+                    GlobalOpenTelemetry.get(),
+                    "io.opentelemetry.opensearch-java-3.0",
+                    DbClientSpanNameExtractor.create(dbClientAttributesGetter))
+                .addAttributesExtractor(
+                    DbClientAttributesExtractor.create(dbClientAttributesGetter))
+                .addOperationMetrics(DbClientMetrics.get()))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
