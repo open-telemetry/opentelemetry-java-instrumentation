@@ -35,7 +35,12 @@ configurations:
     default: false
   - name: otel.instrumentation.spring-security.enduser.role.granted-authority-prefix
     declarative_name: java.spring_security.enduser.role.granted_authority_prefix
-    description: Prefix of granted authorities identifying roles to capture in the `enduser.role` semantic attribute, or `user.roles` when v3 preview is enabled.
+    description: Prefix of granted authorities identifying roles to capture in the `enduser.role` semantic attribute. This property is not honored when v3 preview is enabled; use the `user.roles` variant instead.
+    type: string
+    default: "ROLE_"
+  - name: otel.instrumentation.spring-security.user.roles.granted-authority-prefix
+    declarative_name: java.spring_security.user.roles.granted_authority_prefix
+    description: Prefix of granted authorities identifying roles to capture in the `user.roles` semantic attribute when v3 preview is enabled. This property is not honored when v3 preview is disabled; use the `enduser.role` variant instead.
     type: string
     default: "ROLE_"
   - name: otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix
