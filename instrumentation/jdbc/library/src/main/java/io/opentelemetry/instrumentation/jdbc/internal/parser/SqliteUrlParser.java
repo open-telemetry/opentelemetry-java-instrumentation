@@ -72,6 +72,11 @@ public final class SqliteUrlParser implements JdbcUrlParser {
       }
     } else {
       ctx.subtype("file");
+      if (sqliteUrl.startsWith("file:")) {
+        // Remove leading "file:" prefix for file-based URLs, e.g. "sqlite:file:/path/to/db"
+        sqliteUrl = sqliteUrl.substring("file:".length());
+      }
+
       // Use the last segment of the file path as the database name, if available
       int dbNameStartLocation = sqliteUrl.lastIndexOf('/');
       if (dbNameStartLocation != -1) {

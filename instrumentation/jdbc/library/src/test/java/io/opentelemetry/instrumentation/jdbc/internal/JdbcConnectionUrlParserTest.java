@@ -1695,6 +1695,11 @@ class JdbcConnectionUrlParserTest {
             .setSystem("sqlite")
             .setName("app.db")
             .build(),
+        arg("jdbc:sqlite:file:app.db")
+            .setShortUrl("sqlite:file:")
+            .setSystem("sqlite")
+            .setName("app.db")
+            .build(),
         arg("jdbc:sqlite:resource:db")
             .setShortUrl("sqlite:resource:")
             .setSystem("sqlite")
