@@ -46,7 +46,9 @@ public final class EnduserAttributesCapturer {
   /** Determines if {@code enduser.id}, or {@code user.id} in v3 preview, should be captured. */
   private boolean enduserIdEnabled;
 
-  /** Determines if {@code enduser.role}, or {@code user.roles} in v3 preview, should be captured. */
+  /**
+   * Determines if {@code enduser.role}, or {@code user.roles} in v3 preview, should be captured.
+   */
   private boolean enduserRoleEnabled;
 
   /** Determines if {@code enduser.scope} should be captured when v3 preview is disabled. */
