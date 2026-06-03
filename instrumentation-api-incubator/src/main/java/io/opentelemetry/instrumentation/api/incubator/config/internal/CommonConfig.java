@@ -25,7 +25,7 @@ public final class CommonConfig {
   private final List<String> serverRequestHeaders;
   private final List<String> serverResponseHeaders;
   private final Set<String> knownHttpRequestMethods;
-  private final EnduserConfig enduserConfig;
+  private final UserConfig userConfig;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
   private final Set<String> sensitiveQueryParameters;
@@ -88,7 +88,7 @@ public final class CommonConfig {
             .get("server")
             .getBoolean("emit_experimental_telemetry/development", false);
     v3Preview = commonConfig.getBoolean("v3_preview", false);
-    enduserConfig = new EnduserConfig(commonConfig, v3Preview);
+    userConfig = new UserConfig(commonConfig, v3Preview);
     loggingTraceIdKey =
         commonConfig.get("logging").getString("trace_id", LoggingContextConstants.TRACE_ID);
     loggingSpanIdKey =
@@ -117,8 +117,8 @@ public final class CommonConfig {
     return knownHttpRequestMethods;
   }
 
-  public EnduserConfig getEnduserConfig() {
-    return enduserConfig;
+  public UserConfig getUserConfig() {
+    return userConfig;
   }
 
   public boolean shouldEmitExperimentalHttpClientTelemetry() {

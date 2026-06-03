@@ -26,7 +26,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
   // copied from EnduserIncubatingAttributes
   private static final AttributeKey<String> ENDUSER_ID = AttributeKey.stringKey("enduser.id");
   // copied from UserIncubatingAttributes
-  private static final AttributeKey<String> USER_ID = AttributeKey.stringKey("user.id");
+  private static final AttributeKey<String> USER_NAME = AttributeKey.stringKey("user.name");
   private static final AttributeKey<Long> SERVLET_TIMEOUT = longKey("servlet.timeout");
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
@@ -58,7 +58,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
     if (captureEnduserId) {
       Principal principal = accessor.getRequestUserPrincipal(requestContext.request());
       if (principal != null) {
-        attributes.put(SemconvStability.v3Preview() ? USER_ID : ENDUSER_ID, principal.getName());
+        attributes.put(SemconvStability.v3Preview() ? USER_NAME : ENDUSER_ID, principal.getName());
       }
     }
     if (!captureExperimentalAttributes) {

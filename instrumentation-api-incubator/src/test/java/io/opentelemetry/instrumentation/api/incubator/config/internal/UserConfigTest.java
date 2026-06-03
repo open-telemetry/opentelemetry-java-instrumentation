@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import org.junit.jupiter.api.Test;
 
-class EnduserConfigTest {
+class UserConfigTest {
 
   @Test
   void readsEnduserConfigWhenV3PreviewIsDisabled() {
@@ -22,14 +22,14 @@ class EnduserConfigTest {
     when(commonConfig.get("enduser").get("id").getBoolean("enabled", false)).thenReturn(false);
     when(commonConfig.get("enduser").get("role").getBoolean("enabled", false)).thenReturn(true);
     when(commonConfig.get("enduser").get("scope").getBoolean("enabled", false)).thenReturn(true);
-    when(commonConfig.get("user").get("id").getBoolean("enabled", false)).thenReturn(true);
+    when(commonConfig.get("user").get("name").getBoolean("enabled", false)).thenReturn(true);
     when(commonConfig.get("user").get("roles").getBoolean("enabled", false)).thenReturn(false);
 
-    EnduserConfig enduserConfig = new EnduserConfig(commonConfig, false);
+    UserConfig userConfig = new UserConfig(commonConfig, false);
 
-    assertThat(enduserConfig.isIdEnabled()).isFalse();
-    assertThat(enduserConfig.isRoleEnabled()).isTrue();
-    assertThat(enduserConfig.isScopeEnabled()).isTrue();
+    assertThat(userConfig.isIdEnabled()).isFalse();
+    assertThat(userConfig.isRoleEnabled()).isTrue();
+    assertThat(userConfig.isScopeEnabled()).isTrue();
   }
 
   @Test
@@ -39,13 +39,13 @@ class EnduserConfigTest {
     when(commonConfig.get("enduser").get("id").getBoolean("enabled", false)).thenReturn(true);
     when(commonConfig.get("enduser").get("role").getBoolean("enabled", false)).thenReturn(true);
     when(commonConfig.get("enduser").get("scope").getBoolean("enabled", false)).thenReturn(true);
-    when(commonConfig.get("user").get("id").getBoolean("enabled", false)).thenReturn(false);
+    when(commonConfig.get("user").get("name").getBoolean("enabled", false)).thenReturn(false);
     when(commonConfig.get("user").get("roles").getBoolean("enabled", false)).thenReturn(true);
 
-    EnduserConfig enduserConfig = new EnduserConfig(commonConfig, true);
+    UserConfig userConfig = new UserConfig(commonConfig, true);
 
-    assertThat(enduserConfig.isIdEnabled()).isFalse();
-    assertThat(enduserConfig.isRoleEnabled()).isTrue();
-    assertThat(enduserConfig.isScopeEnabled()).isFalse();
+    assertThat(userConfig.isIdEnabled()).isFalse();
+    assertThat(userConfig.isRoleEnabled()).isTrue();
+    assertThat(userConfig.isScopeEnabled()).isFalse();
   }
 }

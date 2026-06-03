@@ -41,20 +41,20 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
  * individually enabled by configuring the following properties:
  *
  * <pre>
- * otel.instrumentation.common.user.id.enabled=true
+ * otel.instrumentation.common.user.name.enabled=true
  * otel.instrumentation.common.user.roles.enabled=true
  * </pre>
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public class EnduserConfig {
+public class UserConfig {
 
-  private final boolean idEnabled;
+  private final boolean nameEnabled;
   private final boolean roleEnabled;
   private final boolean scopeEnabled;
 
-  EnduserConfig(DeclarativeConfigProperties commonConfig, boolean v3Preview) {
+  UserConfig(DeclarativeConfigProperties commonConfig, boolean v3Preview) {
     requireNonNull(commonConfig, "commonConfig must not be null");
 
     /*
@@ -65,11 +65,11 @@ public class EnduserConfig {
      * https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#general-identity-attributes
      */
     if (v3Preview) {
-      this.idEnabled = commonConfig.get("user").get("id").getBoolean("enabled", false);
+      this.nameEnabled = commonConfig.get("user").get("name").getBoolean("enabled", false);
       this.roleEnabled = commonConfig.get("user").get("roles").getBoolean("enabled", false);
       this.scopeEnabled = false;
     } else {
-      this.idEnabled = commonConfig.get("enduser").get("id").getBoolean("enabled", false);
+      this.nameEnabled = commonConfig.get("enduser").get("id").getBoolean("enabled", false);
       this.roleEnabled = commonConfig.get("enduser").get("role").getBoolean("enabled", false);
       this.scopeEnabled = commonConfig.get("enduser").get("scope").getBoolean("enabled", false);
     }
@@ -83,17 +83,17 @@ public class EnduserConfig {
    * corresponds to the {@code enduser.*} attributes.
    */
   public boolean isAnyEnabled() {
-    return this.idEnabled || this.roleEnabled || this.scopeEnabled;
+    return this.nameEnabled || this.roleEnabled || this.scopeEnabled;
   }
 
   /**
    * Returns true if capturing the id semantic attribute is enabled.
    *
-   * <p>In v3 preview mode, this controls the {@code user.id} attribute; otherwise it controls the
+   * <p>In v3 preview mode, this controls the {@code user.name} attribute; otherwise it controls the
    * {@code enduser.id} attribute.
    */
   public boolean isIdEnabled() {
-    return this.idEnabled;
+    return this.nameEnabled;
   }
 
   /**

@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3P
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
-import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_ID;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -170,7 +170,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   /**
    * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID}, or {@link
-   * UserIncubatingAttributes#USER_ID} when v3 preview is enabled, as a span attribute when SERVER
+   * UserIncubatingAttributes#USER_NAME} when v3 preview is enabled, as a span attribute when SERVER
    * span is not created by servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
@@ -178,13 +178,13 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
    * created by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
   private void captureEnduserId(Span serverSpan, REQUEST request) {
-    if (!AgentCommonConfig.get().getEnduserConfig().isIdEnabled()) {
+    if (!AgentCommonConfig.get().getUserConfig().isIdEnabled()) {
       return;
     }
 
     Principal principal = accessor.getRequestUserPrincipal(request);
     if (principal != null) {
-      serverSpan.setAttribute(v3Preview() ? USER_ID : ENDUSER_ID, principal.getName());
+      serverSpan.setAttribute(v3Preview() ? USER_NAME : ENDUSER_ID, principal.getName());
     }
   }
 

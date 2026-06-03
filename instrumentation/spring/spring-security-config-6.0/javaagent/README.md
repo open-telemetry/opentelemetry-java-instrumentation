@@ -4,14 +4,14 @@ Javaagent automatic instrumentation to capture identity semantic attributes
 from Spring Security `Authentication` objects.
 
 By default this instrumentation emits the deprecated `enduser.*` attributes when enabled. When
-`otel.instrumentation.common.v3-preview` is enabled, it emits `user.id` and the string array
+`otel.instrumentation.common.v3-preview` is enabled, it emits `user.name` and the string array
 `user.roles` instead, and `enduser.scope` is not supported.
 
 ## Settings
 
 This module honors the [common `otel.instrumentation.common.enduser.*` properties](https://opentelemetry.io/docs/zero-code/java/agent/instrumentation/#capturing-enduser-attributes).
 When `otel.instrumentation.common.v3-preview` is enabled, it honors
-`otel.instrumentation.common.user.id.enabled` and
+`otel.instrumentation.common.user.name.enabled` and
 `otel.instrumentation.common.user.roles.enabled` instead.
 
 It also supports the following properties:

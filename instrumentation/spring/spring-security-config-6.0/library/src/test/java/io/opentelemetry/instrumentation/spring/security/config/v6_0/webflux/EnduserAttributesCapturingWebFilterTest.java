@@ -12,7 +12,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ROLE;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_SCOPE;
-import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_ID;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_ROLES;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -86,7 +86,7 @@ class EnduserAttributesCapturingWebFilterTest {
                     span.hasAttributesSatisfyingExactly(
                         equalTo(ERROR_TYPE, "_OTHER"),
                         equalTo(HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(v3Preview() ? USER_ID : ENDUSER_ID, "principal"),
+                        equalTo(v3Preview() ? USER_NAME : ENDUSER_ID, "principal"),
                         equalTo(USER_ROLES, v3Preview() ? asList("role1", "role2") : null),
                         equalTo(ENDUSER_ROLE, v3Preview() ? null : "role1,role2"),
                         equalTo(ENDUSER_SCOPE, v3Preview() ? null : "scope1,scope2"))));

@@ -52,7 +52,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("otel.instrumentation.common.user.id.enabled", "true")
+    systemProperty("otel.instrumentation.common.user.name.enabled", "true")
     systemProperty("otel.instrumentation.common.user.roles.enabled", "true")
   }
 
