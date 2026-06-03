@@ -58,8 +58,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         new ArrayList<>(
             asList(
                 equalTo(
-                    maybeStable(DB_SYSTEM),
-                    emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
+                    maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
                 equalTo(maybeStable(DB_OPERATION), "CreateTable"),
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable"))));
     if (emitStableDatabaseSemconv()) {
@@ -75,6 +74,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         "io.opentelemetry.aws-sdk-1.11",
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
+        DB_COLLECTION_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
   }

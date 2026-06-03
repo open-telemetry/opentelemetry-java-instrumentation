@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -22,11 +23,14 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -174,21 +178,28 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                     span -> {
                       span.hasKind(SpanKind.CLIENT);
                       span.hasNoParent();
-                      span.hasAttributesSatisfyingExactly(
-                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                          equalTo(SERVER_PORT, server.httpPort()),
-                          equalTo(HTTP_REQUEST_METHOD, method),
-                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                          equalTo(
-                              stringKey("url.full"), "http://127.0.0.1:" + server.httpPort() + "/"),
-                          equalTo(RPC_SYSTEM, "aws-api"),
-                          equalTo(RPC_SERVICE, service),
-                          equalTo(RPC_METHOD, operation),
-                          equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                          equalTo(AWS_REQUEST_ID, requestId),
-                          equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
-                          equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
-                          equalTo(maybeStable(DB_OPERATION), operation));
+                      List<AttributeAssertion> attrs =
+                          new ArrayList<>(
+                              asList(
+                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                  equalTo(SERVER_PORT, server.httpPort()),
+                                  equalTo(HTTP_REQUEST_METHOD, method),
+                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                  equalTo(
+                                      stringKey("url.full"),
+                                      "http://127.0.0.1:" + server.httpPort() + "/"),
+                                  equalTo(RPC_SYSTEM, "aws-api"),
+                                  equalTo(RPC_SERVICE, service),
+                                  equalTo(RPC_METHOD, operation),
+                                  equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                  equalTo(AWS_REQUEST_ID, requestId),
+                                  equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
+                                  equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
+                                  equalTo(maybeStable(DB_OPERATION), operation)));
+                      if (SemconvStability.emitStableDatabaseSemconv()) {
+                        attrs.add(equalTo(DB_COLLECTION_NAME, "sometable"));
+                      }
+                      span.hasAttributesSatisfyingExactly(attrs);
                       if (isRecordIndividualHttpErrorEnabled()) {
                         span.hasEventsSatisfyingExactly(
                             event ->

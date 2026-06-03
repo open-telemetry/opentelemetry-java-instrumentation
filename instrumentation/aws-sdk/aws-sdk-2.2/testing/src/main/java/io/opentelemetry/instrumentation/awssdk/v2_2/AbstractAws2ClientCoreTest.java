@@ -228,7 +228,11 @@ public abstract class AbstractAws2ClientCoreTest {
                     }));
 
     assertDurationMetric(
-        getTesting(), "io.opentelemetry.aws-sdk-2.2", DB_SYSTEM_NAME, DB_OPERATION_NAME);
+        getTesting(),
+        "io.opentelemetry.aws-sdk-2.2",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_COLLECTION_NAME);
   }
 
   private static CreateTableRequest createTableRequest() {
