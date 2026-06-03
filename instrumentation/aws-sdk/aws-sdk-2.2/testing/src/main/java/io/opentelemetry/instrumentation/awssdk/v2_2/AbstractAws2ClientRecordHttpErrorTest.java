@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -28,7 +29,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
@@ -196,7 +196,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                                   equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                                   equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
                                   equalTo(maybeStable(DB_OPERATION), operation)));
-                      if (SemconvStability.emitStableDatabaseSemconv()) {
+                      if (emitStableDatabaseSemconv()) {
                         attrs.add(equalTo(DB_COLLECTION_NAME, "sometable"));
                       }
                       span.hasAttributesSatisfyingExactly(attrs);

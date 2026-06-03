@@ -228,7 +228,8 @@ public abstract class AbstractAws2ClientCoreTest {
                     }));
 
     if ("ListTables".equals(operation)) {
-      assertDurationMetric(getTesting(), "io.opentelemetry.aws-sdk-2.2", DB_SYSTEM_NAME, DB_OPERATION_NAME);
+      assertDurationMetric(
+          getTesting(), "io.opentelemetry.aws-sdk-2.2", DB_SYSTEM_NAME, DB_OPERATION_NAME);
     } else {
       assertDurationMetric(
           getTesting(),
@@ -520,8 +521,7 @@ public abstract class AbstractAws2ClientCoreTest {
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
     server.enqueue(
-        HttpResponse.of(
-            HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, "{\"ConsumedCapacity\":[]}"));
+        HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, "{\"ConsumedCapacity\":[]}"));
 
     client.batchGetItem(
         b ->
@@ -531,15 +531,13 @@ public abstract class AbstractAws2ClientCoreTest {
                     KeysAndAttributes.builder()
                         .keys(
                             singletonList(
-                                ImmutableMap.of(
-                                    "key", AttributeValue.builder().s("v1").build())))
+                                ImmutableMap.of("key", AttributeValue.builder().s("v1").build())))
                         .build(),
                     "table2",
                     KeysAndAttributes.builder()
                         .keys(
                             singletonList(
-                                ImmutableMap.of(
-                                    "key", AttributeValue.builder().s("v2").build())))
+                                ImmutableMap.of("key", AttributeValue.builder().s("v2").build())))
                         .build())));
 
     getTesting()
