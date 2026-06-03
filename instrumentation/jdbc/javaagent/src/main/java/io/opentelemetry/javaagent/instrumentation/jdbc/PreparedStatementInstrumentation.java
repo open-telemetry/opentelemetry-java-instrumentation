@@ -36,11 +36,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class PreparedStatementInstrumentation implements TypeInstrumentation {
 
-  private static final String[] NAMED_CLASSES =
-      new String[] {
-        "org.sqlite.jdbc3.JDBC3PreparedStatement", "org.sqlite.jdbc4.JDBC4PreparedStatement"
-      };
-
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("java.sql.PreparedStatement");
@@ -48,7 +43,8 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("java.sql.PreparedStatement")).or(namedOneOf(NAMED_CLASSES));
+    return implementsInterface(named("java.sql.PreparedStatement"))
+        .or(named("org.sqlite.jdbc3.JDBC3PreparedStatement"));
   }
 
   @Override
@@ -113,8 +109,7 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
         return null;
       }
       PreparedStatement statement = (PreparedStatement) object;
-      // skip prepared statements without attached sql, probably a wrapper around the
-      // actual
+      // skip prepared statements without attached sql, probably a wrapper around the actual
       // prepared statement
       if (JdbcData.PREPARED_STATEMENT.get(statement) == null) {
         return null;

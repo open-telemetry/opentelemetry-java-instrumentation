@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -42,8 +41,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.beans.PropertyVetoException;
 import java.io.Closeable;
@@ -736,7 +737,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
-    // SQLite does not support Stored Procedures, so skip this test for SQLite.
+    // SQLite does not support CallableStatement, so skip this test for SQLite.
     Assumptions.assumeFalse(system.equalsIgnoreCase("sqlite"));
 
     Connection connection = wrap(conn);
@@ -1454,31 +1455,31 @@ public abstract class AbstractJdbcInstrumentationTest {
     testing()
         .waitAndAssertTraces(
             trace -> {
-              if (ds instanceof SQLiteDataSource) {
-                // sqlite-jdbc may emit extra PRAGMA spans during connection init
-                trace.anySatisfy(
+              List<Consumer<SpanDataAssert>> assertions =
+                  new ArrayList<>(
+                      asList(
+                          span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                          span ->
+                              span.hasName(
+                                      originalDatasourceClass.getSimpleName() + ".getConnection")
+                                  .hasKind(SpanKind.INTERNAL)
+                                  .hasParent(trace.getSpan(0))
+                                  .hasAttributesSatisfyingExactly(attributesAssertions)));
+              // sqlite-jdbc executes extra statements during connection init
+              if (ds instanceof SQLiteDataSource
+                  && testing() instanceof AgentInstrumentationExtension) {
+                assertions.add(
                     span ->
-                        assertThat(span)
-                            .hasName("parent")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent());
-                trace.anySatisfy(
+                        span.hasName("jdbcunittest")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1)));
+                assertions.add(
                     span ->
-                        assertThat(span)
-                            .hasName(originalDatasourceClass.getSimpleName() + ".getConnection")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(attributesAssertions));
-              } else {
-                trace.hasSpansSatisfyingExactly(
-                    span1 -> span1.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span2 ->
-                        span2
-                            .hasName(originalDatasourceClass.getSimpleName() + ".getConnection")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(attributesAssertions));
+                        span.hasName("jdbcunittest")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1)));
               }
+              trace.hasSpansSatisfyingExactly(assertions);
             });
   }
 

@@ -64,10 +64,8 @@ class JdbcConnectionUrlParserTest {
 
   @Test
   void testParserExceptionReturnsBestEffortInfo() {
-    // Intentionally malformed Oracle URL: missing subtype/connect info, which
-    // triggers the
-    // Oracle parser's substring-based failure path after it has already applied
-    // defaults/props.
+    // Intentionally malformed Oracle URL: missing subtype/connect info, which triggers the
+    // Oracle parser's substring-based failure path after it has already applied defaults/props.
     testVerifySystemSubtypeParsingOfUrl(
         arg("jdbc:oracle:")
             .setProperties(stdProps())

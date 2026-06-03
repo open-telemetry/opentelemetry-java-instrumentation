@@ -29,9 +29,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class StatementInstrumentation implements TypeInstrumentation {
 
-  private static final String[] NAMED_CLASSES =
-      new String[] {"org.sqlite.jdbc3.JDBC3Statement", "org.sqlite.jdbc4.JDBC4Statement"};
-
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("java.sql.Statement");
@@ -39,7 +36,8 @@ class StatementInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("java.sql.Statement")).or(namedOneOf(NAMED_CLASSES));
+    return implementsInterface(named("java.sql.Statement"))
+        .or(named("org.sqlite.jdbc3.JDBC3Statement"));
   }
 
   @Override
