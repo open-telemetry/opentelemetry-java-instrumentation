@@ -3,10 +3,8 @@ plugins {
 }
 
 dependencies {
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
+  implementation(project(":instrumentation:sofa-rpc-5.4:library"))
 
-  // 5.4.0 is the recommended minimum version for production use
   library("com.alipay.sofa:sofa-rpc-all:5.4.0")
 
   testImplementation(project(":instrumentation:sofa-rpc-5.4:testing"))

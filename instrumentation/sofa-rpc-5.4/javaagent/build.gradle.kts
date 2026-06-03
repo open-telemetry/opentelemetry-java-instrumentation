@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:sofa-rpc-5.4:library-autoconfigure"))
+  implementation(project(":instrumentation:sofa-rpc-5.4:library"))
 
   library("com.alipay.sofa:sofa-rpc-all:5.4.0")
 }

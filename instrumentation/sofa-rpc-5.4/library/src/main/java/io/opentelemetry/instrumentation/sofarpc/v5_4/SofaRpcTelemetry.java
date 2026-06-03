@@ -3,18 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.sofarpc.v5_4.internal;
+package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.filter.Filter;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.sofarpc.v5_4.SofaRpcRequest;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 public final class SofaRpcTelemetry {
 
   private final Instrumenter<SofaRpcRequest, SofaResponse> serverInstrumenter;

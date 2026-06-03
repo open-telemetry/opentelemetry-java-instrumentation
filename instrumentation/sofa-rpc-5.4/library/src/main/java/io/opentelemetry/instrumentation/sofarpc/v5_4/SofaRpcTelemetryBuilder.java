@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.sofarpc.v5_4.internal;
+package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -20,14 +20,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.instrumentation.sofarpc.v5_4.SofaRpcRequest;
+import io.opentelemetry.instrumentation.sofarpc.v5_4.internal.SofaRpcClientNetworkAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 public final class SofaRpcTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.sofa-rpc-5.4";

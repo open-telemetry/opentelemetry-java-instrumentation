@@ -3,19 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.sofarpc.v5_4.internal;
+package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import io.opentelemetry.instrumentation.sofarpc.v5_4.SofaRpcRequest;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public final class SofaRpcNetworkServerAttributesGetter
+final class SofaRpcNetworkServerAttributesGetter
     implements NetworkAttributesGetter<SofaRpcRequest, SofaResponse> {
 
   @Nullable
