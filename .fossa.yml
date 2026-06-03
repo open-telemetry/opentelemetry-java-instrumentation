@@ -285,6 +285,9 @@ targets:
       target: ':instrumentation:sofa-rpc-5.4:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:sofa-rpc-5.4:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:sofa-rpc-5.4:library-autoconfigure'
     - type: gradle
       path: ./
