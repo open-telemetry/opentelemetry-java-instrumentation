@@ -5,8 +5,12 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import com.amazonaws.Request;
@@ -81,7 +85,7 @@ public final class AwsSdkInstrumenterFactory {
         new AwsSdkSpanNameExtractor(),
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        emptyList(),
+        builder -> setRpcClientExceptionEventExtractor(builder),
         true);
   }
 
@@ -110,6 +114,7 @@ public final class AwsSdkInstrumenterFactory {
         SpanKindExtractor.alwaysConsumer(),
         toSqsRequestExtractors(attributesExtractors()),
         singletonList(messagingAttributeExtractor),
+        builder -> setMessagingReceiveExceptionEventExtractor(builder),
         messagingReceiveInstrumentationEnabled);
   }
 
@@ -126,6 +131,7 @@ public final class AwsSdkInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractors(toSqsRequestExtractors(attributesExtractors()))
             .addAttributesExtractor(messagingAttributeExtractor);
+    setMessagingProcessExceptionEventExtractor(builder);
 
     if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
@@ -178,6 +184,7 @@ public final class AwsSdkInstrumenterFactory {
         SpanKindExtractor.alwaysProducer(),
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
+        builder -> setMessagingSendExceptionEventExtractor(builder),
         true);
   }
 
@@ -187,10 +194,12 @@ public final class AwsSdkInstrumenterFactory {
         new AwsSdkSpanNameExtractor(),
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        builder ->
-            builder
-                .addAttributesExtractor(new DynamoDbAttributesExtractor())
-                .addOperationMetrics(DbClientMetrics.get()),
+        builder -> {
+          builder
+              .addAttributesExtractor(new DynamoDbAttributesExtractor())
+              .addOperationMetrics(DbClientMetrics.get());
+          setDbClientExceptionEventExtractor(builder);
+        },
         true);
   }
 
@@ -200,13 +209,17 @@ public final class AwsSdkInstrumenterFactory {
       SpanKindExtractor<REQUEST> spanKindExtractor,
       List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributeExtractors,
       List<AttributesExtractor<REQUEST, RESPONSE>> additionalAttributeExtractors,
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> exceptionEventCustomizer,
       boolean enabled) {
     return createInstrumenter(
         openTelemetry,
         spanNameExtractor,
         spanKindExtractor,
         attributeExtractors,
-        builder -> builder.addAttributesExtractors(additionalAttributeExtractors),
+        builder -> {
+          builder.addAttributesExtractors(additionalAttributeExtractors);
+          exceptionEventCustomizer.accept(builder);
+        },
         enabled);
   }
 
