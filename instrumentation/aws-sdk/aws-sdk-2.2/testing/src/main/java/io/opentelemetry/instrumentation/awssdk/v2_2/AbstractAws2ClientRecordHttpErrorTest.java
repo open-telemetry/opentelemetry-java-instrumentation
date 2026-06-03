@@ -194,7 +194,8 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                   equalTo(AWS_REQUEST_ID, requestId),
                                   equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
-                                  equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
+                                  equalTo(
+                                      maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
                                   equalTo(maybeStable(DB_OPERATION), operation)));
                       if (emitStableDatabaseSemconv()) {
                         attrs.add(equalTo(DB_COLLECTION_NAME, "sometable"));
