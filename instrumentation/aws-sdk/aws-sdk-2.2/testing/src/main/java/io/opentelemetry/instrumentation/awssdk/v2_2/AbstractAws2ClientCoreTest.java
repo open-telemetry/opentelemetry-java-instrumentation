@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
@@ -44,7 +45,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -227,12 +227,16 @@ public abstract class AbstractAws2ClientCoreTest {
                       }
                     }));
 
-    assertDurationMetric(
-        getTesting(),
-        "io.opentelemetry.aws-sdk-2.2",
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        DB_COLLECTION_NAME);
+    if ("ListTables".equals(operation)) {
+      assertDurationMetric(getTesting(), "io.opentelemetry.aws-sdk-2.2", DB_SYSTEM_NAME, DB_OPERATION_NAME);
+    } else {
+      assertDurationMetric(
+          getTesting(),
+          "io.opentelemetry.aws-sdk-2.2",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_COLLECTION_NAME);
+    }
   }
 
   private static CreateTableRequest createTableRequest() {
@@ -304,7 +308,7 @@ public abstract class AbstractAws2ClientCoreTest {
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
                 equalTo(maybeStable(DB_OPERATION), operation)));
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(DB_COLLECTION_NAME, "sometable"));
     }
     assertions.addAll(extraAttributes);
