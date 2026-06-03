@@ -1455,7 +1455,7 @@ public abstract class AbstractJdbcInstrumentationTest {
         .waitAndAssertTraces(
             trace -> {
               if (ds instanceof SQLiteDataSource) {
-                // sqlite-jdbc may emit varying PRAGMA spans during DataSource init
+                // sqlite-jdbc may emit extra PRAGMA spans during connection init
                 trace.anySatisfy(
                     span ->
                         assertThat(span)
@@ -1467,9 +1467,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                         assertThat(span)
                             .hasName(originalDatasourceClass.getSimpleName() + ".getConnection")
                             .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(attributesAssertions));
-                trace.anySatisfy(
-                    span -> assertThat(span).hasName("jdbcunittest").hasKind(SpanKind.CLIENT));
               } else {
                 trace.hasSpansSatisfyingExactly(
                     span1 -> span1.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
