@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.rpc.core.request.SofaRequest;
+import io.opentelemetry.instrumentation.sofarpc.v5_4.internal.SofaRpcHeadersGetter;
 import java.util.Iterator;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

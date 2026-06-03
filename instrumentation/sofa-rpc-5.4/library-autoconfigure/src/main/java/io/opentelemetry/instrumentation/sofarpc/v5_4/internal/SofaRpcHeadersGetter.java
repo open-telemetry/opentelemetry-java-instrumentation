@@ -3,16 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.sofarpc.v5_4;
+package io.opentelemetry.instrumentation.sofarpc.v5_4.internal;
 
 import static java.util.Collections.emptySet;
 
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.sofarpc.v5_4.SofaRpcRequest;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-enum SofaRpcHeadersGetter implements TextMapGetter<SofaRpcRequest> {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public enum SofaRpcHeadersGetter implements TextMapGetter<SofaRpcRequest> {
   INSTANCE;
 
   @Override

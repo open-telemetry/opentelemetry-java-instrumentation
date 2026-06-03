@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class SofaRpcRequest {
 
-  static SofaRpcRequest create(SofaRequest request) {
+  public static SofaRpcRequest create(SofaRequest request) {
     RpcInternalContext context = RpcInternalContext.getContext();
 
     // Get network addresses from RpcInternalContext

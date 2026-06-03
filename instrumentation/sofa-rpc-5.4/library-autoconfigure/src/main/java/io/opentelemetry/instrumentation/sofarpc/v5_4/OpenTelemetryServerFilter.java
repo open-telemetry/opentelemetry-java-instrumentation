@@ -13,6 +13,7 @@ import com.alipay.sofa.rpc.filter.AutoActive;
 import com.alipay.sofa.rpc.filter.Filter;
 import com.alipay.sofa.rpc.filter.FilterInvoker;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.sofarpc.v5_4.internal.SofaRpcTelemetry;
 
 @Extension(value = "openTelemetryServer", order = -25000)
 @AutoActive(providerSide = true)

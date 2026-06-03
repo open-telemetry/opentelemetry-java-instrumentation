@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4;
 import com.alipay.sofa.rpc.filter.Filter;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
-import io.opentelemetry.instrumentation.sofarpc.v5_4.SofaRpcTelemetry;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.internal.SofaRpcClientNetworkAttributesGetter;
+import io.opentelemetry.instrumentation.sofarpc.v5_4.internal.SofaRpcTelemetry;
 
 class SofaRpcSingletons {
   private static final Filter clientFilter;

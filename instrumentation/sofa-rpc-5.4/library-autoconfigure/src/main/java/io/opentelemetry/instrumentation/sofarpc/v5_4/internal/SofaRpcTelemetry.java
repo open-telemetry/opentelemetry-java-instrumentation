@@ -3,27 +3,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.sofarpc.v5_4;
+package io.opentelemetry.instrumentation.sofarpc.v5_4.internal;
 
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.filter.Filter;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.sofarpc.v5_4.SofaRpcRequest;
 
-/** Entrypoint for instrumenting SOFARPC servers and clients. */
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class SofaRpcTelemetry {
 
   private final Instrumenter<SofaRpcRequest, SofaResponse> serverInstrumenter;
   private final Instrumenter<SofaRpcRequest, SofaResponse> clientInstrumenter;
 
-  /** Returns a new {@link SofaRpcTelemetry} configured with the given {@link OpenTelemetry}. */
   public static SofaRpcTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  /**
-   * Returns a new {@link SofaRpcTelemetryBuilder} configured with the given {@link OpenTelemetry}.
-   */
   public static SofaRpcTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new SofaRpcTelemetryBuilder(openTelemetry);
   }
@@ -35,12 +35,10 @@ public final class SofaRpcTelemetry {
     this.clientInstrumenter = clientInstrumenter;
   }
 
-  /** Returns a new SOFARPC client {@link Filter} that traces SOFARPC RPC invocations. */
   public Filter newClientFilter() {
     return new TracingFilter(clientInstrumenter, true);
   }
 
-  /** Returns a new SOFARPC server {@link Filter} that traces SOFARPC RPC invocations. */
   public Filter newServerFilter() {
     return new TracingFilter(serverInstrumenter, false);
   }

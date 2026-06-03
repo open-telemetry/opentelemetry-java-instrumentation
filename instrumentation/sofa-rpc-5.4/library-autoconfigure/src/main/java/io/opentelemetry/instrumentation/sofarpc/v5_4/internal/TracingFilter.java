@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.sofarpc.v5_4;
+package io.opentelemetry.instrumentation.sofarpc.v5_4.internal;
 
 import static com.alipay.sofa.rpc.core.exception.RpcErrorType.SERVER_UNDECLARED_ERROR;
 
@@ -19,8 +19,13 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.sofarpc.v5_4.SofaRpcRequest;
 
-final class TracingFilter extends Filter {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class TracingFilter extends Filter {
 
   private static final VirtualField<SofaRequest, Context> ASYNC_CONTEXT =
       VirtualField.find(SofaRequest.class, Context.class);
@@ -30,7 +35,8 @@ final class TracingFilter extends Filter {
   private final Instrumenter<SofaRpcRequest, SofaResponse> instrumenter;
   private final boolean isClientSide;
 
-  TracingFilter(Instrumenter<SofaRpcRequest, SofaResponse> instrumenter, boolean isClientSide) {
+  public TracingFilter(
+      Instrumenter<SofaRpcRequest, SofaResponse> instrumenter, boolean isClientSide) {
     this.instrumenter = instrumenter;
     this.isClientSide = isClientSide;
   }
