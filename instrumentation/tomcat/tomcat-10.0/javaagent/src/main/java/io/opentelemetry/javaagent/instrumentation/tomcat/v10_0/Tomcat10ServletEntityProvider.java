@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0;
 
-import io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatServletEntityProvider;
+import io.opentelemetry.javaagent.instrumentation.tomcat.common.v7_0.TomcatServletEntityProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import javax.annotation.Nullable;

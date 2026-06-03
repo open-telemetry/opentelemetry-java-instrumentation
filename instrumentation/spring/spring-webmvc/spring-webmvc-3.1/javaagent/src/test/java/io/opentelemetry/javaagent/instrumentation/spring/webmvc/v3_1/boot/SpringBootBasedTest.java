@@ -10,8 +10,8 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.instrumentation.spring.webmvc.boot.AbstractSpringBootBasedTest;
-import io.opentelemetry.instrumentation.spring.webmvc.boot.AppConfig;
+import io.opentelemetry.instrumentation.spring.webmvc.v3_1.boot.AbstractSpringBootBasedTest;
+import io.opentelemetry.instrumentation.spring.webmvc.v3_1.boot.AppConfig;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;

@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.OpenSearchRestInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.OpenSearchRestRequest;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.OpenSearchRestResponse;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestRequest;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestResponse;
 import java.net.InetAddress;
 import javax.annotation.Nullable;
 import org.opensearch.client.Response;

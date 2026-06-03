@@ -103,16 +103,16 @@ libraries:
   - com.typesafe.akka:akka-actor_2.11:[2.3,)
   - com.typesafe.akka:akka-actor_2.12:[2.3,)
   - com.typesafe.akka:akka-actor_2.13:[2.3,)
-- name: akka-actor-fork-join-2.5
+- name: akka-actor-forkjoin-2.5
   display_name: Akka Actors
   description: This instrumentation provides context propagation for the Akka Fork-Join
     Pool, it does not emit any telemetry on its own.
   library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
   features:
   - CONTEXT_PROPAGATION
-  source_path: instrumentation/akka/akka-actor-fork-join-2.5
+  source_path: instrumentation/akka/akka-actor-forkjoin-2.5
   scope:
-    name: io.opentelemetry.akka-actor-fork-join-2.5
+    name: io.opentelemetry.akka-actor-forkjoin-2.5
   has_javaagent: true
   javaagent_target_versions:
   - com.typesafe.akka:akka-actor_2.11:[2.5,)
@@ -11393,7 +11393,7 @@ libraries:
   semantic_conventions:
   - SYSTEM_METRICS
   library_link: https://github.com/oshi/oshi/
-  source_path: instrumentation/oshi
+  source_path: instrumentation/oshi-5.0
   scope:
     name: io.opentelemetry.oshi
   has_standalone_library: true
@@ -11560,14 +11560,14 @@ libraries:
         type: STRING
       - name: direction
         type: STRING
-- name: payara
+- name: payara-5.2020
   display_name: Payara
   description: |
     This instrumentation prevents Payara's built-in OpenTracing integration from interfering with OpenTelemetry server spans, it does not emit any telemetry on its own.
   library_link: https://www.payara.fish/
-  source_path: instrumentation/payara
+  source_path: instrumentation/payara-5.2020
   scope:
-    name: io.opentelemetry.payara
+    name: io.opentelemetry.payara-5.2020
   has_javaagent: true
 - name: pekko-actor-1.0
   display_name: Pekko Actors
@@ -12323,16 +12323,16 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-- name: quarkus-resteasy-reactive
+- name: quarkus-resteasy-reactive-1.11
   display_name: Quarkus RESTEasy Reactive
   description: |
     This instrumentation enriches HTTP server spans with route information for Quarkus RESTEasy Reactive, it does not emit any telemetry on its own.
   library_link: https://quarkus.io/guides/resteasy-reactive/
   features:
   - HTTP_ROUTE
-  source_path: instrumentation/quarkus-resteasy-reactive
+  source_path: instrumentation/quarkus-resteasy-reactive-1.11
   scope:
-    name: io.opentelemetry.quarkus-resteasy-reactive
+    name: io.opentelemetry.quarkus-resteasy-reactive-1.11
   has_javaagent: true
   javaagent_target_versions:
   - io.quarkus:quarkus-rest:[3.9.0,)
@@ -13998,14 +13998,14 @@ libraries:
       Enables the experimental span attribute `rxjava.canceled`.
     type: boolean
     default: false
-- name: scala-fork-join-2.8
+- name: scala-forkjoin-2.8
   display_name: Scala ForkJoinPool
   description: |
     This instrumentation enables context propagation for Scala fork-join tasks, it does not emit any telemetry on its own.
   library_link: https://www.scala-lang.org/api/2.12.0/scala/concurrent/forkjoin/package$$ForkJoinPool$.html
-  source_path: instrumentation/scala-fork-join-2.8
+  source_path: instrumentation/scala-forkjoin-2.8
   scope:
-    name: io.opentelemetry.scala-fork-join-2.8
+    name: io.opentelemetry.scala-forkjoin-2.8
   has_javaagent: true
   javaagent_target_versions:
   - org.scala-lang:scala-library:[2.8.0,2.12.0)
@@ -15814,14 +15814,14 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-- name: tomcat-jdbc
+- name: tomcat-jdbc-8.5
   display_name: Tomcat JDBC
   description: This instrumentation enables database connection pool metrics for Tomcat
     JDBC.
   semantic_conventions:
   - DATABASE_POOL_METRICS
   library_link: https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html
-  source_path: instrumentation/tomcat/tomcat-jdbc
+  source_path: instrumentation/tomcat/tomcat-jdbc-8.5
   scope:
     name: io.opentelemetry.tomcat-jdbc
   has_javaagent: true

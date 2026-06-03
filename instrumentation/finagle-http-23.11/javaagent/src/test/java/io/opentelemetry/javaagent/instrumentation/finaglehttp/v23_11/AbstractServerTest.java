@@ -62,7 +62,7 @@ abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer
 
   @Override
   protected void stopServer(ListeningServer server) throws Exception {
-    Await.ready(server.close(), Duration.fromSeconds(2));
+    Await.ready(server.close(), Duration.fromSeconds(10));
   }
 
   static class TestService extends Service<Request, Response> implements Logging {
