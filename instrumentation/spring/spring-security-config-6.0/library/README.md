@@ -13,7 +13,7 @@ Also provides `Customizer` implementations to insert those filters into the filt
 ## Usage in Spring WebMVC Applications
 
 When not using [automatic instrumentation](../javaagent/), you can enable identity attribute capturing
-for a `SecurityFilterChain` by appling a `UserAttributesHttpSecurityCustomizer`
+for a `SecurityFilterChain` by applying a `UserAttributesHttpSecurityCustomizer`
 to the `HttpSecurity` which constructs the `SecurityFilterChain`.
 
 ```java
@@ -48,7 +48,7 @@ class MyWebSecurityConfig {
 ## Usage in Spring WebFlux Applications
 
 When not using [automatic instrumentation](../javaagent/), you can enable identity attribute capturing
-for a `SecurityWebFilterChain` by appling a `UserAttributesServerHttpSecurityCustomizer`
+for a `SecurityWebFilterChain` by applying a `UserAttributesServerHttpSecurityCustomizer`
 to the `ServerHttpSecurity` which constructs the `SecurityWebFilterChain`.
 
 ```java
