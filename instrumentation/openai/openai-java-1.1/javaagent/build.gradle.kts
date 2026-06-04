@@ -22,7 +22,7 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     // TODO run tests both with and without genai message capture
 
@@ -34,11 +34,11 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    systemProperty("otel.instrumentation.genai.capture-message-content", "true")
     filter {
       includeTestsMatching("EmbeddingsTest")
     }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
   }
 
   check {
