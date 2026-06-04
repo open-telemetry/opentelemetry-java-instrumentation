@@ -34,3 +34,19 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }
+
+tasks {
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("AwsLambdaTest")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs)
+  }
+}

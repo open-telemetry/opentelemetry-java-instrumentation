@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.faas.intern
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 
@@ -19,15 +20,16 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 public final class AwsLambdaFunctionInstrumenterFactory {
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(OpenTelemetry openTelemetry) {
+    InstrumenterBuilder<AwsLambdaRequest, Object> builder =
+        Instrumenter.<AwsLambdaRequest, Object>builder(
+                openTelemetry,
+                "io.opentelemetry.aws-lambda-core-1.0",
+                AwsLambdaFunctionInstrumenterFactory::spanName)
+            .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor());
+    setFaasInvocationExceptionEventExtractor(builder);
+
     return new AwsLambdaFunctionInstrumenter(
-        openTelemetry,
-        setFaasInvocationExceptionEventExtractor(
-                Instrumenter.builder(
-                        openTelemetry,
-                        "io.opentelemetry.aws-lambda-core-1.0",
-                        AwsLambdaFunctionInstrumenterFactory::spanName)
-                    .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor()))
-            .buildInstrumenter(SpanKindExtractor.alwaysServer()));
+        openTelemetry, builder.buildInstrumenter(SpanKindExtractor.alwaysServer()));
   }
 
   private static String spanName(AwsLambdaRequest input) {
