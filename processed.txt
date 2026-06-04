@@ -568,3 +568,4 @@ oshi-5.0:testing
 akka-actor-forkjoin-2.5:javaagent
 scala-forkjoin-2.8:javaagent
 opentelemetry-instrumentation-api-1.14:javaagent
+opentelemetry-instrumentation-api-1.14:testing
