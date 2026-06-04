@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 class GeodeSingletons {
@@ -22,16 +23,16 @@ class GeodeSingletons {
   static {
     GeodeDbAttributesGetter dbClientAttributesGetter = new GeodeDbAttributesGetter();
 
-    instrumenter =
-        setDbClientExceptionEventExtractor(
-                Instrumenter.<GeodeRequest, Void>builder(
-                        GlobalOpenTelemetry.get(),
-                        INSTRUMENTATION_NAME,
-                        DbClientSpanNameExtractor.create(dbClientAttributesGetter))
-                    .addAttributesExtractor(
-                        DbClientAttributesExtractor.create(dbClientAttributesGetter))
-                    .addOperationMetrics(DbClientMetrics.get()))
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<GeodeRequest, Void> builder =
+        Instrumenter.<GeodeRequest, Void>builder(
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(dbClientAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   static Instrumenter<GeodeRequest, Void> instrumenter() {

@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -75,18 +76,19 @@ public final class JdbcInstrumenterFactory {
       boolean querySanitizationEnabled,
       boolean captureQueryParameters) {
     JdbcAttributesGetter getter = new JdbcAttributesGetter();
-    return setDbClientExceptionEventExtractor(
-            Instrumenter.<DbRequest, Void>builder(
-                    openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(getter))
-                .addAttributesExtractor(
-                    SqlClientAttributesExtractor.builder(getter)
-                        .setQuerySanitizationEnabled(querySanitizationEnabled)
-                        .setCaptureQueryParameters(captureQueryParameters)
-                        .build())
-                .addAttributesExtractors(extractors)
-                .addOperationMetrics(DbClientMetrics.get())
-                .setEnabled(enabled))
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<DbRequest, Void> builder =
+        Instrumenter.<DbRequest, Void>builder(
+                openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(getter))
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(getter)
+                    .setQuerySanitizationEnabled(querySanitizationEnabled)
+                    .setCaptureQueryParameters(captureQueryParameters)
+                    .build())
+            .addAttributesExtractors(extractors)
+            .addOperationMetrics(DbClientMetrics.get())
+            .setEnabled(enabled);
+    setDbClientExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<DataSource, DbInfo> createDataSourceInstrumenter(

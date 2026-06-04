@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -27,22 +28,22 @@ class CassandraSingletons {
   static {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
-    instrumenter =
-        setDbClientExceptionEventExtractor(
-                Instrumenter.<CassandraRequest, ExecutionInfo>builder(
-                        GlobalOpenTelemetry.get(),
-                        INSTRUMENTATION_NAME,
-                        DbClientSpanNameExtractor.create(attributesGetter))
-                    .addAttributesExtractor(
-                        SqlClientAttributesExtractor.builder(attributesGetter)
-                            .setTableAttribute(DB_CASSANDRA_TABLE)
-                            .setQuerySanitizationEnabled(
-                                DbConfig.isQuerySanitizationEnabled(
-                                    GlobalOpenTelemetry.get(), "cassandra"))
-                            .build())
-                    .addAttributesExtractor(new CassandraAttributesExtractor())
-                    .addOperationMetrics(DbClientMetrics.get()))
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<CassandraRequest, ExecutionInfo> builder =
+        Instrumenter.<CassandraRequest, ExecutionInfo>builder(
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(attributesGetter))
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(attributesGetter)
+                    .setTableAttribute(DB_CASSANDRA_TABLE)
+                    .setQuerySanitizationEnabled(
+                        DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "cassandra"))
+                    .build())
+            .addAttributesExtractor(new CassandraAttributesExtractor())
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   static Instrumenter<CassandraRequest, ExecutionInfo> instrumenter() {

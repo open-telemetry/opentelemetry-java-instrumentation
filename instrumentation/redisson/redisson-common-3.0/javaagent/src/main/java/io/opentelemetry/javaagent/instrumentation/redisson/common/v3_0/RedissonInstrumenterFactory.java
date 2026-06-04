@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 public class RedissonInstrumenterFactory {
@@ -19,14 +20,15 @@ public class RedissonInstrumenterFactory {
   public static Instrumenter<RedissonRequest, Void> createInstrumenter(String instrumentationName) {
     RedissonDbAttributesGetter dbAttributesGetter = new RedissonDbAttributesGetter();
 
-    return setDbClientExceptionEventExtractor(
-            Instrumenter.<RedissonRequest, Void>builder(
-                    GlobalOpenTelemetry.get(),
-                    instrumentationName,
-                    DbClientSpanNameExtractor.create(dbAttributesGetter))
-                .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-                .addOperationMetrics(DbClientMetrics.get()))
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<RedissonRequest, Void> builder =
+        Instrumenter.<RedissonRequest, Void>builder(
+                GlobalOpenTelemetry.get(),
+                instrumentationName,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private RedissonInstrumenterFactory() {}

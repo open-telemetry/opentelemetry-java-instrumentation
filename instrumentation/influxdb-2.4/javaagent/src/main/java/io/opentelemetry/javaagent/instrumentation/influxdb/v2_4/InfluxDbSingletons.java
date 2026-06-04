@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 @SuppressWarnings("deprecation") // to support old semconv
@@ -22,18 +23,19 @@ public class InfluxDbSingletons {
   static {
     InfluxDbAttributesGetter dbAttributesGetter = new InfluxDbAttributesGetter();
 
-    instrumenter =
-        setDbClientExceptionEventExtractor(
-                Instrumenter.<InfluxDbRequest, Void>builder(
-                        GlobalOpenTelemetry.get(),
-                        "io.opentelemetry.influxdb-2.4",
-                        DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
-                    .addAttributesExtractor(
-                        SqlClientAttributesExtractor.builder(dbAttributesGetter)
-                            .setTableAttribute(null)
-                            .build())
-                    .addOperationMetrics(DbClientMetrics.get()))
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<InfluxDbRequest, Void> builder =
+        Instrumenter.<InfluxDbRequest, Void>builder(
+                GlobalOpenTelemetry.get(),
+                "io.opentelemetry.influxdb-2.4",
+                DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(dbAttributesGetter)
+                    .setTableAttribute(null)
+                    .build())
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<InfluxDbRequest, Void> instrumenter() {

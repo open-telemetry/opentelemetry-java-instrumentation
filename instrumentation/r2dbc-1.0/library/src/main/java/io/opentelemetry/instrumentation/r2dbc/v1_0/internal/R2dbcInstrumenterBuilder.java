@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.ArrayList;
@@ -51,15 +52,16 @@ public final class R2dbcInstrumenterBuilder {
         spanNameExtractorTransformer.apply(
             DbClientSpanNameExtractor.create(new R2dbcSqlAttributesGetter()));
 
-    return setDbClientExceptionEventExtractor(
-            Instrumenter.<DbExecution, Void>builder(
-                    openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-                .addAttributesExtractor(
-                    SqlClientAttributesExtractor.builder(new R2dbcSqlAttributesGetter())
-                        .setQuerySanitizationEnabled(querySanitizationEnabled)
-                        .build())
-                .addAttributesExtractors(additionalExtractors)
-                .addOperationMetrics(DbClientMetrics.get()))
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<DbExecution, Void> builder =
+        Instrumenter.<DbExecution, Void>builder(
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(new R2dbcSqlAttributesGetter())
+                    .setQuerySanitizationEnabled(querySanitizationEnabled)
+                    .build())
+            .addAttributesExtractors(additionalExtractors)
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }
