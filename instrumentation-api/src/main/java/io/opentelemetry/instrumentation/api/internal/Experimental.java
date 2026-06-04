@@ -40,6 +40,10 @@ public final class Experimental {
   private static volatile BiConsumer<InstrumenterBuilder<?, ?>, AttributesExtractor<?, ?>>
       operationListenerAttributesExtractorAdder;
 
+  @Nullable
+  private static volatile BiConsumer<InstrumenterBuilder<?, ?>, InternalExceptionEventExtractor<?>>
+      exceptionEventExtractorSetter;
+
   private Experimental() {}
 
   /**
@@ -116,5 +120,25 @@ public final class Experimental {
           operationListenerAttributesExtractorAdder) {
     Experimental.operationListenerAttributesExtractorAdder =
         (BiConsumer) operationListenerAttributesExtractorAdder;
+  }
+
+  /**
+   * Sets the {@link InternalExceptionEventExtractor} that will determine the exception event name
+   * and severity. Only used when emitting exceptions as logs is enabled via the {@code
+   * otel.semconv.exception.signal.preview} flag.
+   */
+  public static <REQUEST> void setExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder,
+      InternalExceptionEventExtractor<? super REQUEST> exceptionEventExtractor) {
+    if (exceptionEventExtractorSetter != null) {
+      exceptionEventExtractorSetter.accept(builder, exceptionEventExtractor);
+    }
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"}) // we lose the generic type information
+  public static <REQUEST> void internalSetExceptionEventExtractor(
+      BiConsumer<InstrumenterBuilder<REQUEST, ?>, InternalExceptionEventExtractor<? super REQUEST>>
+          exceptionEventExtractorSetter) {
+    Experimental.exceptionEventExtractorSetter = (BiConsumer) exceptionEventExtractorSetter;
   }
 }
