@@ -119,7 +119,7 @@
     "com.typesafe.play:play_2.11#2.7.+": "2.7.9",
     "com.typesafe.play:play_2.12#+": "2.8.22",
     "com.typesafe.play:play_2.13#+": "2.9.11",
-    "com.vaadin:flow-server#+": "25.1.8",
+    "com.vaadin:flow-server#+": "25.1.9",
     "com.vaadin:vaadin-spring-boot-starter#14.11.+": "14.11.14",
     "com.xuxueli:xxl-job-core#+": "3.4.0",
     "com.xuxueli:xxl-job-core#2.2.+": "2.2.0",
