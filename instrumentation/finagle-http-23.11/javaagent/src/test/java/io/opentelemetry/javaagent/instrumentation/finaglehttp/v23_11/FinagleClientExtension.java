@@ -56,7 +56,7 @@ public class FinagleClientExtension implements AfterAllCallback {
     ClientType type = ClientType.DEFAULT;
     if ("https".equals(uri.getScheme())) {
       type = ClientType.TLS;
-    } else if (uri.getPath().contains("/read-timeout")) {
+    } else if (uri.getPath().endsWith("/read-timeout")) {
       type = ClientType.READ_TIMEOUT;
     }
     return getService(uri, type);
