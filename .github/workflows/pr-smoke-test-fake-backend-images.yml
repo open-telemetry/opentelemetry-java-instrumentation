@@ -46,6 +46,7 @@ jobs:
       # sometimes on windows docker isn't running
       # https://github.com/actions/runner-images/issues/13729
       - name: Docker issue workaround
+        shell: pwsh
         run: |
           $dockerState = Get-Service -Name "docker"
           if ($dockerState.Status -ne "Running") {
