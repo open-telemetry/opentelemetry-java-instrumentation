@@ -32,6 +32,8 @@ import com.azure.core.util.LibraryTelemetryOptions;
 import com.azure.core.util.TracingOptions;
 import com.azure.core.util.tracing.Tracer;
 import com.azure.core.util.tracing.TracerProvider;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -76,6 +78,34 @@ class AzureSdkTest {
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("az.namespace"), "otel.tests"))));
+  }
+
+  @Test
+  void testExplicitParentContextBridge() {
+    // Azure's bundled OpenTelemetryTracer reflectively calls
+    // io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage
+    //   #getAgentContext(application io.opentelemetry.context.Context)
+    // to convert an explicitly-supplied application context into the agent (shaded) context.
+    // This test exercises that path: the parent span is supplied only via the Azure context bag
+    // under PARENT_TRACE_CONTEXT_KEY and is never made current, so the only way the child can be
+    // linked to it is through the reflective bridge.
+    Tracer azTracer = createAzTracer();
+
+    Span parentSpan = GlobalOpenTelemetry.getTracer("test").spanBuilder("parent").startSpan();
+    // application (unshaded) context carrying the parent span, NOT made current
+    io.opentelemetry.context.Context parentContext =
+        io.opentelemetry.context.Context.root().with(parentSpan);
+
+    Context azContext = new Context(Tracer.PARENT_TRACE_CONTEXT_KEY, parentContext);
+    Context child = azTracer.start("child", azContext);
+    azTracer.end(null, null, child);
+    parentSpan.end();
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("child").hasParent(trace.getSpan(0))));
   }
 
   @Test
