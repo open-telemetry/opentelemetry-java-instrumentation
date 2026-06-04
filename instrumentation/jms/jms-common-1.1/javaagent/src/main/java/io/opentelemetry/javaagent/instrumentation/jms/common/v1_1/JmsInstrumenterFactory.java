@@ -53,13 +53,14 @@ public class JmsInstrumenterFactory {
     JmsMessageAttributesGetter getter = new JmsMessageAttributesGetter();
     MessageOperation operation = MessageOperation.PUBLISH;
 
-    return setMessagingSendExceptionEventExtractor(
-            Instrumenter.<MessageWithDestination, Void>builder(
-                    openTelemetry,
-                    instrumentationName,
-                    MessagingSpanNameExtractor.create(getter, operation))
-                .addAttributesExtractor(createMessagingAttributesExtractor(operation)))
-        .buildProducerInstrumenter(new MessagePropertySetter());
+    InstrumenterBuilder<MessageWithDestination, Void> builder =
+        Instrumenter.<MessageWithDestination, Void>builder(
+                openTelemetry,
+                instrumentationName,
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(createMessagingAttributesExtractor(operation));
+    setMessagingSendExceptionEventExtractor(builder);
+    return builder.buildProducerInstrumenter(new MessagePropertySetter());
   }
 
   public Instrumenter<MessageWithDestination, Void> createConsumerReceiveInstrumenter() {

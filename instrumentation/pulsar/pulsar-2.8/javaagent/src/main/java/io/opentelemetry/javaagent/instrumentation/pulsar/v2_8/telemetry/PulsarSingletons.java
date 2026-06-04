@@ -96,18 +96,19 @@ public class PulsarSingletons {
     MessagingAttributesGetter<PulsarBatchRequest, Void> getter =
         new PulsarBatchMessagingAttributesGetter();
 
-    return setMessagingReceiveExceptionEventExtractor(
-            Instrumenter.<PulsarBatchRequest, Void>builder(
-                    telemetry,
-                    INSTRUMENTATION_NAME,
-                    MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
-                .addAttributesExtractor(
-                    createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
-                .addAttributesExtractor(
-                    ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
-                .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(propagator))
-                .addOperationMetrics(MessagingConsumerMetrics.get()))
-        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    InstrumenterBuilder<PulsarBatchRequest, Void> instrumenterBuilder =
+        Instrumenter.<PulsarBatchRequest, Void>builder(
+                telemetry,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
+            .addAttributesExtractor(
+                createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+            .addAttributesExtractor(
+                ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
+            .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(propagator))
+            .addOperationMetrics(MessagingConsumerMetrics.get());
+    setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
+    return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerProcessInstrumenter() {

@@ -86,16 +86,17 @@ public class RabbitSingletons {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
     }
 
-    return setMessagingReceiveExceptionEventExtractor(
-            Instrumenter.<ReceiveRequest, GetResponse>builder(
-                    GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, ReceiveRequest::spanName)
-                .addAttributesExtractors(extractors)
-                .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-                .addSpanLinksExtractor(
-                    new PropagatorBasedSpanLinksExtractor<>(
-                        GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
-                        new ReceiveRequestTextMapGetter())))
-        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    InstrumenterBuilder<ReceiveRequest, GetResponse> builder =
+        Instrumenter.<ReceiveRequest, GetResponse>builder(
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, ReceiveRequest::spanName)
+            .addAttributesExtractors(extractors)
+            .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+            .addSpanLinksExtractor(
+                new PropagatorBasedSpanLinksExtractor<>(
+                    GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
+                    new ReceiveRequestTextMapGetter()));
+    setMessagingReceiveExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static Instrumenter<DeliveryRequest, Void> createDeliverInstrumenter() {
@@ -109,11 +110,12 @@ public class RabbitSingletons {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
     }
 
-    return setMessagingProcessExceptionEventExtractor(
-            Instrumenter.<DeliveryRequest, Void>builder(
-                    GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, DeliveryRequest::spanName)
-                .addAttributesExtractors(extractors))
-        .buildConsumerInstrumenter(new DeliveryRequestGetter());
+    InstrumenterBuilder<DeliveryRequest, Void> builder =
+        Instrumenter.<DeliveryRequest, Void>builder(
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, DeliveryRequest::spanName)
+            .addAttributesExtractors(extractors);
+    setMessagingProcessExceptionEventExtractor(builder);
+    return builder.buildConsumerInstrumenter(new DeliveryRequestGetter());
   }
 
   private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(

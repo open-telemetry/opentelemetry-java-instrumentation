@@ -7,8 +7,13 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
@@ -20,14 +25,17 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -38,6 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -177,15 +186,40 @@ class WrapperTest extends AbstractWrapperTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("unknown receive")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(new IllegalStateException())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "kafka"),
-                            equalTo(MESSAGING_OPERATION, "receive"),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0))));
+                span -> {
+                  span.hasName("unknown receive")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasNoParent()
+                      .hasStatus(StatusData.error())
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, "kafka"),
+                          equalTo(MESSAGING_OPERATION, "receive"),
+                          equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0));
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasException(new IllegalStateException());
+                  }
+                }));
+
+    if (emitExceptionAsLogs()) {
+      assertReceiveExceptionLog();
+    }
+  }
+
+  private static void assertReceiveExceptionLog() {
+    Awaitility.await()
+        .untilAsserted(
+            () -> {
+              List<LogRecordData> logs =
+                  testing.logRecords().stream()
+                      .filter(log -> "messaging.receive.exception".equals(log.getEventName()))
+                      .collect(toList());
+              assertThat(logs).hasSize(1);
+              assertThat(logs.get(0))
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("messaging.receive.exception")
+                  .hasAttributesSatisfyingExactly(
+                      satisfies(EXCEPTION_TYPE, val -> val.isNotNull()),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
+            });
   }
 }

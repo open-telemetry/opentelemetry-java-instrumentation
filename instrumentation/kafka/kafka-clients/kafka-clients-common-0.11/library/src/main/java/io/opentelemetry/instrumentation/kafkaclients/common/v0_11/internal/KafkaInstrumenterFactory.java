@@ -107,18 +107,19 @@ public final class KafkaInstrumenterFactory {
     KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessageOperation operation = MessageOperation.RECEIVE;
 
-    return setMessagingReceiveExceptionEventExtractor(
-            Instrumenter.<KafkaReceiveRequest, Void>builder(
-                    openTelemetry,
-                    instrumentationName,
-                    MessagingSpanNameExtractor.create(getter, operation))
-                .addAttributesExtractor(
-                    buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
-                .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
-                .addAttributesExtractors(extractors)
-                .setErrorCauseExtractor(errorCauseExtractor)
-                .setEnabled(messagingReceiveInstrumentationEnabled))
-        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    InstrumenterBuilder<KafkaReceiveRequest, Void> builder =
+        Instrumenter.<KafkaReceiveRequest, Void>builder(
+                openTelemetry,
+                instrumentationName,
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(
+                buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
+            .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
+            .addAttributesExtractors(extractors)
+            .setErrorCauseExtractor(errorCauseExtractor)
+            .setEnabled(messagingReceiveInstrumentationEnabled);
+    setMessagingReceiveExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter() {
@@ -160,19 +161,20 @@ public final class KafkaInstrumenterFactory {
     KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessageOperation operation = MessageOperation.PROCESS;
 
-    return setMessagingProcessExceptionEventExtractor(
-            Instrumenter.<KafkaReceiveRequest, Void>builder(
-                    openTelemetry,
-                    instrumentationName,
-                    MessagingSpanNameExtractor.create(getter, operation))
-                .addAttributesExtractor(
-                    buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
-                .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
-                .addSpanLinksExtractor(
-                    new KafkaBatchProcessSpanLinksExtractor(
-                        openTelemetry.getPropagators().getTextMapPropagator()))
-                .setErrorCauseExtractor(errorCauseExtractor))
-        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    InstrumenterBuilder<KafkaReceiveRequest, Void> builder =
+        Instrumenter.<KafkaReceiveRequest, Void>builder(
+                openTelemetry,
+                instrumentationName,
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(
+                buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
+            .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
+            .addSpanLinksExtractor(
+                new KafkaBatchProcessSpanLinksExtractor(
+                    openTelemetry.getPropagators().getTextMapPropagator()))
+            .setErrorCauseExtractor(errorCauseExtractor);
+    setMessagingProcessExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static <REQUEST, RESPONSE>

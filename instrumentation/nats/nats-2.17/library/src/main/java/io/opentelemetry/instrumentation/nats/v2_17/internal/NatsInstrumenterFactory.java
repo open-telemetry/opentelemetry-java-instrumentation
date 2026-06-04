@@ -25,18 +25,19 @@ public final class NatsInstrumenterFactory {
 
   public static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
       OpenTelemetry openTelemetry, List<String> capturedHeaders) {
-    return setMessagingSendExceptionEventExtractor(
-            Instrumenter.<NatsRequest, NatsRequest>builder(
-                    openTelemetry,
-                    INSTRUMENTATION_NAME,
-                    MessagingSpanNameExtractor.create(
-                        new NatsRequestMessagingAttributesGetter(), MessageOperation.PUBLISH))
-                .addAttributesExtractor(
-                    MessagingAttributesExtractor.builder(
-                            new NatsRequestMessagingAttributesGetter(), MessageOperation.PUBLISH)
-                        .setCapturedHeaders(capturedHeaders)
-                        .build()))
-        .buildProducerInstrumenter(new NatsRequestTextMapSetter());
+    InstrumenterBuilder<NatsRequest, NatsRequest> builder =
+        Instrumenter.<NatsRequest, NatsRequest>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(
+                    new NatsRequestMessagingAttributesGetter(), MessageOperation.PUBLISH))
+            .addAttributesExtractor(
+                MessagingAttributesExtractor.builder(
+                        new NatsRequestMessagingAttributesGetter(), MessageOperation.PUBLISH)
+                    .setCapturedHeaders(capturedHeaders)
+                    .build());
+    setMessagingSendExceptionEventExtractor(builder);
+    return builder.buildProducerInstrumenter(new NatsRequestTextMapSetter());
   }
 
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(

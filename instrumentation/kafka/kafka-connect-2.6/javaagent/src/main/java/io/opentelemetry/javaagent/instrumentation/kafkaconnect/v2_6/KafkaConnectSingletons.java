@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageO
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 public class KafkaConnectSingletons {
@@ -27,19 +28,20 @@ public class KafkaConnectSingletons {
     KafkaConnectBatchProcessSpanLinksExtractor spanLinksExtractor =
         new KafkaConnectBatchProcessSpanLinksExtractor(propagator);
 
-    instrumenter =
-        setMessagingProcessExceptionEventExtractor(
-                Instrumenter.<KafkaConnectTask, Void>builder(
-                        GlobalOpenTelemetry.get(),
-                        INSTRUMENTATION_NAME,
-                        MessagingSpanNameExtractor.create(
-                            new KafkaConnectAttributesGetter(), MessageOperation.PROCESS))
-                    .addAttributesExtractor(
-                        MessagingAttributesExtractor.builder(
-                                new KafkaConnectAttributesGetter(), MessageOperation.PROCESS)
-                            .build())
-                    .addSpanLinksExtractor(spanLinksExtractor))
-            .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    InstrumenterBuilder<KafkaConnectTask, Void> builder =
+        Instrumenter.<KafkaConnectTask, Void>builder(
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(
+                    new KafkaConnectAttributesGetter(), MessageOperation.PROCESS))
+            .addAttributesExtractor(
+                MessagingAttributesExtractor.builder(
+                        new KafkaConnectAttributesGetter(), MessageOperation.PROCESS)
+                    .build())
+            .addSpanLinksExtractor(spanLinksExtractor);
+    setMessagingProcessExceptionEventExtractor(builder);
+
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   public static Instrumenter<KafkaConnectTask, Void> instrumenter() {
