@@ -29,19 +29,7 @@ tasks {
     jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=code")
-  }
-
-  val testBothSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
-  }
-
   check {
-    dependsOn(testAsyncLogger, testStableSemconv, testBothSemconv)
+    dependsOn(testAsyncLogger)
   }
 }

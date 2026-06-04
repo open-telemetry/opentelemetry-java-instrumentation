@@ -51,8 +51,8 @@ public final class SemconvStability {
     emitOldDatabaseSemconv = shouldEmitOld("database", v3Preview, optInValues);
     emitStableDatabaseSemconv = shouldEmitStable("database", v3Preview, optInValues);
 
-    emitOldCodeSemconv = shouldEmitOld("code", v3Preview, optInValues);
-    emitStableCodeSemconv = shouldEmitStable("code", v3Preview, optInValues);
+    emitOldCodeSemconv = !v3Preview;
+    emitStableCodeSemconv = v3Preview;
 
     emitOldServicePeerSemconv = shouldEmitOld("service.peer", v3Preview, optInValues);
     emitStableServicePeerSemconv = shouldEmitStable("service.peer", v3Preview, optInValues);
