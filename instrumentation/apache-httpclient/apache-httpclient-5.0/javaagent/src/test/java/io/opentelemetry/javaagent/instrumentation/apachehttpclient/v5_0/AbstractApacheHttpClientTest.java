@@ -39,8 +39,8 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
     // circular redirects don't report protocol information as well
     if ("http://localhost:61/".equals(uri.toString())
         || "https://192.0.2.1/".equals(uri.toString())
-        || uri.toString().contains("/read-timeout")
-        || uri.toString().contains("/circular-redirect")) {
+        || uri.getPath().endsWith("/read-timeout")
+        || uri.getPath().endsWith("/circular-redirect")) {
       attributes.remove(NETWORK_PROTOCOL_VERSION);
     }
     return attributes;

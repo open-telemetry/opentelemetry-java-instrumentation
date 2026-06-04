@@ -37,7 +37,7 @@ class ReactorNettyHttpClientDeferredHeadersTest extends AbstractReactorNettyHttp
                   return Mono.just(h);
                 })
             .baseUrl(resolveAddress("").toString());
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       client = client.responseTimeout(READ_TIMEOUT);
     }
     return client.request(HttpMethod.valueOf(method)).uri(uri.toString());

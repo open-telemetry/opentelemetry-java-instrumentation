@@ -51,7 +51,7 @@ abstract class AbstractReactorNettyHttpClientTest
   @Override
   public HttpClient.ResponseReceiver<?> buildRequest(
       String method, URI uri, Map<String, String> headers) {
-    boolean readTimeout = uri.toString().contains("/read-timeout");
+    boolean readTimeout = uri.getPath().endsWith("/read-timeout");
     return createHttpClient(readTimeout)
         .followRedirect(true)
         .headers(h -> headers.forEach(h::add))
