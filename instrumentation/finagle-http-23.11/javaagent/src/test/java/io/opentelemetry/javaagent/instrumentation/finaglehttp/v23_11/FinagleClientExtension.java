@@ -53,7 +53,13 @@ public class FinagleClientExtension implements AfterAllCallback {
   }
 
   public Service<Request, Response> getService(URI uri) {
-    return getService(uri, "https".equals(uri.getScheme()) ? ClientType.TLS : ClientType.DEFAULT);
+    ClientType type = ClientType.DEFAULT;
+    if ("https".equals(uri.getScheme())) {
+      type = ClientType.TLS;
+    } else if (uri.toString().contains("/read-timeout")) {
+      type = ClientType.READ_TIMEOUT;
+    }
+    return getService(uri, type);
   }
 
   public Service<Request, Response> getService(URI uri, ClientType type) {
@@ -73,8 +79,6 @@ public class FinagleClientExtension implements AfterAllCallback {
     Http.Client client =
         Http.client()
             .withTransport()
-            .readTimeout(Duration.fromMilliseconds(READ_TIMEOUT.toMillis()))
-            .withTransport()
             .connectTimeout(Duration.fromMilliseconds(CONNECTION_TIMEOUT.toMillis()))
             .withRetryBudget(RetryBudget.Empty());
 
@@ -84,6 +88,10 @@ public class FinagleClientExtension implements AfterAllCallback {
         break;
       case SINGLE_CONN:
         client = client.withSessionPool().maxSize(1);
+        break;
+      case READ_TIMEOUT:
+        client =
+            client.withTransport().readTimeout(Duration.fromMilliseconds(READ_TIMEOUT.toMillis()));
         break;
       case DEFAULT:
         break;
