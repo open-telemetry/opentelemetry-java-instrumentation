@@ -39,7 +39,7 @@ class HttpUrlConnectionUseCachesFalseTest extends AbstractHttpClientTest<HttpURL
       connection.setRequestProperty("Connection", "close");
       connection.setUseCaches(false);
       connection.setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis());
-      if (uri.toString().contains("/read-timeout")) {
+      if (uri.getPath().endsWith("/read-timeout")) {
         connection.setReadTimeout((int) READ_TIMEOUT.toMillis());
       }
       Span parentSpan = Span.current();
