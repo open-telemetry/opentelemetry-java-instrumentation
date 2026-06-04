@@ -5,8 +5,14 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_ENCODING_FORMATS;
@@ -18,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiProviderNameIncubatingValues.OPENAI;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -28,11 +35,15 @@ import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.errors.OpenAIIoException;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
+import java.util.List;
 import java.util.concurrent.CompletionException;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -239,19 +250,26 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span ->
-                            span.hasName("embeddings text-embedding-3-small")
-                                .hasKind(SpanKind.CLIENT)
-                                .hasException(thrown)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                    // Newer versions of the library populate base64 when unset by
-                                    // the user.
-                                    satisfies(
-                                        GEN_AI_REQUEST_ENCODING_FORMATS,
-                                        val -> val.isIn(singletonList("base64"), null))))));
+                        span -> {
+                          span.hasName("embeddings text-embedding-3-small")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                  equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                  equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                  // Newer versions of the library populate base64 when unset by
+                                  // the user.
+                                  satisfies(
+                                      GEN_AI_REQUEST_ENCODING_FORMATS,
+                                      val -> val.isIn(singletonList("base64"), null)));
+                          if (emitExceptionAsSpanEvents()) {
+                            span.hasException(thrown);
+                          }
+                        })));
+
+    if (emitExceptionAsLogs()) {
+      assertClientExceptionLog();
+    }
 
     getTesting()
         .waitAndAssertMetrics(
@@ -269,5 +287,24 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
+  }
+
+  private void assertClientExceptionLog() {
+    Awaitility.await()
+        .untilAsserted(
+            () -> {
+              List<LogRecordData> logs =
+                  getTesting().logRecords().stream()
+                      .filter(log -> "gen_ai.client.operation.exception".equals(log.getEventName()))
+                      .collect(toList());
+              assertThat(logs).hasSize(1);
+              assertThat(logs.get(0))
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("gen_ai.client.operation.exception")
+                  .hasAttributesSatisfyingExactly(
+                      satisfies(EXCEPTION_TYPE, val -> val.isNotNull()),
+                      satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
+            });
   }
 }

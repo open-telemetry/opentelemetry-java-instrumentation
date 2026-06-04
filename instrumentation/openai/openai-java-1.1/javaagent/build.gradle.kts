@@ -29,4 +29,19 @@ tasks {
     systemProperty("otel.instrumentation.genai.capture-message-content", "true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
+
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+    filter {
+      includeTestsMatching("EmbeddingsTest")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs)
+  }
 }
