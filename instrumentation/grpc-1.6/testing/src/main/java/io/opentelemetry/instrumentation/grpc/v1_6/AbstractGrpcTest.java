@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
@@ -15,6 +17,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -31,6 +36,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -64,10 +70,12 @@ import io.grpc.reflection.v1alpha.ServerReflectionResponse;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
@@ -80,6 +88,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -652,13 +661,17 @@ public abstract class AbstractGrpcTest {
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MESSAGE_ID, 1L));
-                                  if (status.getCause() == null) {
+                                  if (status.getCause() == null || !emitExceptionAsSpanEvents()) {
                                     assertThat(events).hasSize(1);
                                   } else {
                                     assertThat(events).hasSize(2);
                                     span.hasException(status.getCause());
                                   }
                                 })));
+
+    if (emitExceptionAsLogs() && status.getCause() != null) {
+      assertServerExceptionLog(status.getCause());
+    }
 
     assertMetrics(server, status.getCode());
   }
@@ -780,16 +793,59 @@ public abstract class AbstractGrpcTest {
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
-                                  assertThat(events).hasSize(2);
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MESSAGE_ID, 1L));
-                                  span.hasException(status.asRuntimeException());
+                                  if (emitExceptionAsSpanEvents()) {
+                                    assertThat(events).hasSize(2);
+                                    span.hasException(status.asRuntimeException());
+                                  } else {
+                                    assertThat(events).hasSize(1);
+                                  }
                                 })));
 
+    if (emitExceptionAsLogs()) {
+      assertServerExceptionLog(status.asRuntimeException());
+    }
+
     assertMetrics(server, Status.Code.UNKNOWN);
+  }
+
+  private void assertServerExceptionLog(Throwable expectedException) {
+    assertExceptionLog(expectedException, "rpc.server.call.exception", Severity.ERROR);
+  }
+
+  private void assertClientExceptionLog(Throwable expectedException) {
+    assertExceptionLog(expectedException, "rpc.client.call.exception", Severity.WARN);
+  }
+
+  private void assertExceptionLog(
+      Throwable expectedException, String expectedEventName, Severity expectedSeverity) {
+    Awaitility.await()
+        .untilAsserted(
+            () -> {
+              List<LogRecordData> logs =
+                  testing().logRecords().stream()
+                      .filter(log -> expectedEventName.equals(log.getEventName()))
+                      .collect(toList());
+
+              assertThat(logs).hasSize(1);
+              assertThat(logs.get(0))
+                  .hasSeverity(expectedSeverity)
+                  .hasEventName(expectedEventName)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, expectedException.getClass().getName()),
+                      satisfies(
+                          EXCEPTION_MESSAGE,
+                          val -> {
+                            if (expectedException.getMessage() != null) {
+                              val.isEqualTo(expectedException.getMessage());
+                            }
+                          }),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
+            });
   }
 
   private static Stream<Arguments> provideErrorArguments() {
@@ -1123,7 +1179,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfying(
                                 events -> {
-                                  assertThat(events).hasSize(3);
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
@@ -1133,7 +1188,12 @@ public abstract class AbstractGrpcTest {
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MESSAGE_ID, 1L));
-                                  span.hasException(thrown);
+                                  if (emitExceptionAsSpanEvents()) {
+                                    assertThat(events).hasSize(3);
+                                    span.hasException(thrown);
+                                  } else {
+                                    assertThat(events).hasSize(2);
+                                  }
                                 }),
                     span ->
                         span.hasName("example.Greeter/SayMultipleHello")
@@ -1180,6 +1240,10 @@ public abstract class AbstractGrpcTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGE_TYPE, "SENT"),
                                             equalTo(MESSAGE_ID, 1L)))));
+
+    if (emitExceptionAsLogs()) {
+      assertClientExceptionLog(thrown);
+    }
   }
 
   @Test
