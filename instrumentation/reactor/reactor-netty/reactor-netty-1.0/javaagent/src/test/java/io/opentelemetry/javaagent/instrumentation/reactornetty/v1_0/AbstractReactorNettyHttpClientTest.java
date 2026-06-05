@@ -69,7 +69,7 @@ abstract class AbstractReactorNettyHttpClientTest
             .followRedirect(true)
             .headers(h -> headers.forEach(h::add))
             .baseUrl(resolveAddress("").toString());
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       client = client.responseTimeout(READ_TIMEOUT);
     }
     return client.request(HttpMethod.valueOf(method)).uri(uri.toString());
@@ -141,7 +141,7 @@ abstract class AbstractReactorNettyHttpClientTest
       attributes.remove(NETWORK_PROTOCOL_VERSION);
     }
 
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       attributes.remove(NETWORK_PROTOCOL_VERSION);
       attributes.remove(SERVER_ADDRESS);
       attributes.remove(SERVER_PORT);
