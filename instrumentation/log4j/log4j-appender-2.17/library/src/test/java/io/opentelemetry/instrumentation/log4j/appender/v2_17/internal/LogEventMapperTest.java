@@ -124,6 +124,31 @@ class LogEventMapperTest {
   }
 
   @Test
+  void testExclusionWithoutWildcardIsIgnored() {
+    // given - "!key1" without "*" is not a capture-all, and must not be captured as a literal key
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            asList("key2", "!key1"),
+            false);
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put("key2", "value2");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureContextDataAttributes(builder, contextData);
+
+    // then - only the explicitly listed key2 is captured; "!key1" is ignored entirely
+    verify(builder).setAttribute(stringKey("key2"), "value2");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
   void testCaptureEventNameFromContextDataWithCaptureAll() {
     // given
     LogEventMapper<Map<String, String>> mapper =

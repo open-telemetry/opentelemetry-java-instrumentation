@@ -85,7 +85,8 @@ public final class LogEventMapper<T> {
       this.captureContextDataAttributeKeys = emptyList();
       Set<String> excluded = new HashSet<>();
       for (String key : captureContextDataAttributes) {
-        if (key.startsWith("!")) {
+        // an entry of "!<key>" excludes <key>; a bare "!" is ignored
+        if (key.startsWith("!") && key.length() > 1) {
           excluded.add(key.substring(1));
         }
       }
@@ -93,7 +94,8 @@ public final class LogEventMapper<T> {
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureContextDataAttributes.size());
       for (String key : captureContextDataAttributes) {
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
+        // "!" prefixed entries are exclusions, which only apply together with "*"; ignore them here
+        if (!OTEL_EVENT_NAME.getKey().equals(key) && !key.startsWith("!")) {
           keys.add(getContextDataAttributeKey(key));
         }
       }
