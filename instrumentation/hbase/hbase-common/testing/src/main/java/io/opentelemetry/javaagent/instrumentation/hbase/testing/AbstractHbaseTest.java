@@ -224,7 +224,8 @@ public abstract class AbstractHbaseTest {
 
   @Test
   void testPut() throws IOException {
-    try (Connection putConnection = ConnectionFactory.createConnection(connection.getConfiguration());
+    try (Connection putConnection =
+            ConnectionFactory.createConnection(connection.getConfiguration());
         Table table = putConnection.getTable(TABLE_NAME)) {
       Put put = row("put-row", "put_col1_val", "put_col2_val");
       table.put(put);
