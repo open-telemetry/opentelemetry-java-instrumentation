@@ -1207,6 +1207,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       throws SQLException {
     Connection connection = wrap(conn);
 
+    // SQLite is only tested with a current driver that supports JDBC 4.2 large updates.
     if (testLatestDeps() || "sqlite".equals(system)) {
       testPreparedStatementUpdateImpl(
           system,

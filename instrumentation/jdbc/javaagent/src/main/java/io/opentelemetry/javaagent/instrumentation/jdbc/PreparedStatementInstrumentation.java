@@ -43,6 +43,8 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    // SQLite declares many PreparedStatement methods on JDBC3PreparedStatement, but only its
+    // JDBC4PreparedStatement subclass implements java.sql.PreparedStatement.
     return implementsInterface(named("java.sql.PreparedStatement"))
         .or(named("org.sqlite.jdbc3.JDBC3PreparedStatement"));
   }

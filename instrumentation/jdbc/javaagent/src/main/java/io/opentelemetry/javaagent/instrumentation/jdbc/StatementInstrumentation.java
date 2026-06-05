@@ -36,6 +36,8 @@ class StatementInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    // SQLite declares many Statement methods on JDBC3Statement, but only its JDBC4Statement
+    // subclass implements java.sql.Statement.
     return implementsInterface(named("java.sql.Statement"))
         .or(named("org.sqlite.jdbc3.JDBC3Statement"));
   }
