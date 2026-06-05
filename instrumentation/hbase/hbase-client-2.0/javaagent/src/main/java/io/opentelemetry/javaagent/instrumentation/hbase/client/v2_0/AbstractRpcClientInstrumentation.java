@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.RC_THREAD_LOCAL;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.TABLE_THREAD_LOCAL;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.getTableName;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.resetRequestAndContext;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.setRequestAndContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -64,8 +65,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
         hostname = address.getHostString();
       }
       HbaseRequest request =
-          HbaseRequest.create(
-              md.getName(), TABLE_THREAD_LOCAL.get(), ticket.getName(), hostname, port);
+          HbaseRequest.create(md.getName(), getTableName(), ticket.getName(), hostname, port);
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
@@ -73,7 +73,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       Context context = instrumenter().start(parentContext, request);
       Scope scope = context.makeCurrent();
       RequestAndContext requestAndContext = RequestAndContext.create(request, scope, context);
-      RC_THREAD_LOCAL.set(requestAndContext);
+      setRequestAndContext(requestAndContext);
       return requestAndContext;
     }
 
@@ -81,7 +81,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Enter @Nullable RequestAndContext requestAndContext) {
-      RC_THREAD_LOCAL.remove();
+      resetRequestAndContext();
       if (requestAndContext == null) {
         return;
       }

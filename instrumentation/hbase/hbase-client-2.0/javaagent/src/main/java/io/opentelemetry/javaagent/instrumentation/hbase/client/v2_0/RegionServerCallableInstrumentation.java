@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.TABLE_THREAD_LOCAL;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.resetTableName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.setTableName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
@@ -35,13 +36,13 @@ class RegionServerCallableInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.FieldValue(value = "tableName") TableName table) {
       if (table != null) {
-        TABLE_THREAD_LOCAL.set(table.getNameAsString());
+        setTableName(table.getNameAsString());
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit() {
-      TABLE_THREAD_LOCAL.remove();
+      resetTableName();
     }
   }
 }

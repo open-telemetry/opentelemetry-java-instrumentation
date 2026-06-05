@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.RC_THREAD_LOCAL;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.getRequestAndContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -41,7 +41,7 @@ class RpcConnectionInstrumentation implements TypeInstrumentation {
   public static class SendRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) Object call) {
-      RequestAndContext requestAndContext = RC_THREAD_LOCAL.get();
+      RequestAndContext requestAndContext = getRequestAndContext();
       OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
     }
   }

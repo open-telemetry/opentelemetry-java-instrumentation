@@ -22,17 +22,14 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -70,20 +67,17 @@ import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.ipc.CallTimeoutException;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.assertj.core.api.AbstractAssert;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("deprecation")
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@SuppressWarnings("deprecation") // using deprecated semconv
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractHbaseTest {
 
   protected static final int MASTER_PORT = 16000;
@@ -101,119 +95,75 @@ public abstract class AbstractHbaseTest {
   protected static final String GET = "Get";
   protected static final String MULTI = "Multi";
 
-  protected static final String HOSTNAME = getHostName();
   private static final int GET_TIMEOUT_OPERATION_TIMEOUT_MILLIS = 1000;
   private static final int GET_TIMEOUT_RPC_TIMEOUT_MILLIS = 200;
+  private static final String ROW_1 = "row1";
+  private static final String ROW_2 = "row2";
+  private static final String ROW_3 = "row3";
+  private static final String ROW_4 = "row4";
+  private static final String ROW_5 = "row5";
+  private static final String SCAN_ROW = "scan-row";
 
   protected abstract InstrumentationExtension testing();
 
-  protected static final GenericContainer<?> hbaseContainer =
-      new GenericContainer<>(DockerImageName.parse("harisekhon/hbase:2.0"))
-          .withCreateContainerCmdModifier(
-              cmd -> {
-                cmd.getHostConfig()
-                    .withPortBindings(
-                        new PortBinding(Ports.Binding.bindPort(2181), new ExposedPort(2181)),
-                        new PortBinding(Ports.Binding.bindPort(16000), new ExposedPort(16000)),
-                        new PortBinding(Ports.Binding.bindPort(16010), new ExposedPort(16010)),
-                        new PortBinding(Ports.Binding.bindPort(16020), new ExposedPort(16020)),
-                        new PortBinding(Ports.Binding.bindPort(16030), new ExposedPort(16030)),
-                        new PortBinding(Ports.Binding.bindPort(16201), new ExposedPort(16201)),
-                        new PortBinding(Ports.Binding.bindPort(16301), new ExposedPort(16301)));
-              })
-          .withExposedPorts(2181, 16000, 16010, 16020, 16030, 16201, 16301)
-          .withStartupTimeout(Duration.ofMinutes(2))
-          .withCreateContainerCmdModifier(cmd -> cmd.withHostName(HOSTNAME))
-          .waitingFor(
-              new WaitAllStrategy()
-                  .withStrategy(Wait.forLogMessage(".*Master has completed initialization.*\\n", 1))
-                  .withStrategy(Wait.forListeningPorts(2181, MASTER_PORT, REGION_SERVER_PORT))
-                  .withStartupTimeout(Duration.ofMinutes(2)));
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  protected static Connection connection;
+  private final String hostname = getHostName();
+  protected final GenericContainer<?> hbaseContainer = createHbaseContainer(hostname);
+
+  protected Connection connection;
 
   private static String getHostName() {
     try {
       return InetAddress.getLocalHost().getHostName();
     } catch (UnknownHostException e) {
-      return null;
+      return "localhost";
     }
   }
 
+  private static GenericContainer<?> createHbaseContainer(String hostname) {
+    return new GenericContainer<>(DockerImageName.parse("harisekhon/hbase:2.0"))
+        .withCreateContainerCmdModifier(
+            cmd -> {
+              cmd.getHostConfig()
+                  .withPortBindings(
+                      new PortBinding(Ports.Binding.bindPort(2181), new ExposedPort(2181)),
+                      new PortBinding(Ports.Binding.bindPort(16000), new ExposedPort(16000)),
+                      new PortBinding(Ports.Binding.bindPort(16010), new ExposedPort(16010)),
+                      new PortBinding(Ports.Binding.bindPort(16020), new ExposedPort(16020)),
+                      new PortBinding(Ports.Binding.bindPort(16030), new ExposedPort(16030)),
+                      new PortBinding(Ports.Binding.bindPort(16201), new ExposedPort(16201)),
+                      new PortBinding(Ports.Binding.bindPort(16301), new ExposedPort(16301)));
+            })
+        .withExposedPorts(2181, 16000, 16010, 16020, 16030, 16201, 16301)
+        .withStartupTimeout(Duration.ofMinutes(2))
+        .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostname))
+        .waitingFor(
+            new WaitAllStrategy()
+                .withStrategy(Wait.forLogMessage(".*Master has completed initialization.*\\n", 1))
+                .withStrategy(Wait.forListeningPorts(2181, MASTER_PORT, REGION_SERVER_PORT))
+                .withStartupTimeout(Duration.ofMinutes(2)));
+  }
+
   @BeforeAll
-  static void setupSpec() throws IOException {
+  void setUp() throws IOException {
     hbaseContainer.start();
+    cleanup.deferAfterAll(hbaseContainer::stop);
     String host = hbaseContainer.getHost();
     Configuration config = HBaseConfiguration.create();
     config.set("hbase.zookeeper.quorum", host);
     config.set("hbase.zookeeper.property.clientPort", "2181");
     connection = ConnectionFactory.createConnection(config);
-  }
-
-  @AfterAll
-  static void cleanupSpec() throws IOException {
-    try {
-      if (connection != null) {
-        connection.close();
-      }
-    } finally {
-      connection = null;
-      hbaseContainer.stop();
-    }
-  }
-
-  @BeforeEach
-  void setup() {
+    cleanup.deferAfterAll(connection);
+    createNamespaceAndTable();
+    seedRows();
     testing().clearData();
   }
 
-  @Test
-  @Order(1)
-  public void testCreateNamespace() {
-    Exception error = null;
-    boolean namespaceCreateStatus;
+  private void createNamespaceAndTable() throws IOException {
     try (Admin admin = connection.getAdmin()) {
       NamespaceDescriptor namespaceDescriptor = NamespaceDescriptor.create(NAMESPACE).build();
       admin.createNamespace(namespaceDescriptor);
-      namespaceCreateStatus = true;
-    } catch (IOException e) {
-      namespaceCreateStatus = false;
-      error = e;
-    }
-    assertNull(error);
-    assertTrue(namespaceCreateStatus);
-  }
-
-  @Test
-  @Order(2)
-  public void testListNamespace() {
-    Exception error = null;
-    boolean namespaceExists = false;
-    try {
-      Admin admin = connection.getAdmin();
-      for (NamespaceDescriptor ns : admin.listNamespaceDescriptors()) {
-        if (ns.getName().equals(NAMESPACE)) {
-          namespaceExists = true;
-        }
-      }
-      admin.close();
-    } catch (IOException e) {
-      error = e;
-    }
-    assertNull(error);
-    assertTrue(namespaceExists);
-    testing()
-        .waitAndAssertTraces(
-            traceAssertConsumer(null, "IsMasterRunning", MASTER_PORT, false),
-            traceAssertConsumer(null, "ListNamespaceDescriptors", MASTER_PORT, false));
-  }
-
-  @Test
-  @Order(3)
-  public void testCreateTable() {
-    Exception error = null;
-    boolean tableExists = false;
-    try (Admin admin = connection.getAdmin()) {
       ColumnFamilyDescriptor columnFamilyDescriptor =
           ColumnFamilyDescriptorBuilder.newBuilder(COLUMN_FAMILY).build();
       TableDescriptor tableDescriptor =
@@ -221,33 +171,51 @@ public abstract class AbstractHbaseTest {
               .setColumnFamily(columnFamilyDescriptor)
               .build();
       admin.createTable(tableDescriptor);
-      tableExists = true;
-    } catch (IOException e) {
-      tableExists = false;
-      error = e;
     }
-    assertNull(error);
-    assertTrue(tableExists);
+  }
+
+  private void seedRows() throws IOException {
+    try (Table table = connection.getTable(TABLE_NAME)) {
+      table.put(row(ROW_1, "col1_val_1", "col2_val_1"));
+      table.put(row(SCAN_ROW, "scan_col1_val", "scan_col2_val"));
+    }
+  }
+
+  private static Put row(String rowKey, String col1Value, String col2Value) {
+    Put put = new Put(Bytes.toBytes(rowKey));
+    put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes(col1Value));
+    put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col2"), Bytes.toBytes(col2Value));
+    return put;
   }
 
   @Test
-  @Order(4)
-  public void testListTable() {
-    Exception error = null;
-    boolean tableExists = false;
-    try {
-      Admin admin = connection.getAdmin();
-      for (TableName tableName : admin.listTableNames()) {
-        if (tableName.equals(TABLE_NAME)) {
-          tableExists = true;
-        }
-      }
-      admin.close();
-    } catch (IOException e) {
-      error = e;
+  void testListNamespace() throws IOException {
+    Admin admin = connection.getAdmin();
+    cleanup.deferCleanup(admin);
+
+    List<String> namespaces = new ArrayList<>();
+    for (NamespaceDescriptor ns : admin.listNamespaceDescriptors()) {
+      namespaces.add(ns.getName());
     }
-    assertNull(error);
-    assertTrue(tableExists);
+    assertThat(namespaces).contains(NAMESPACE);
+
+    testing()
+        .waitAndAssertTraces(
+            traceAssertConsumer(null, "IsMasterRunning", MASTER_PORT, false),
+            traceAssertConsumer(null, "ListNamespaceDescriptors", MASTER_PORT, false));
+  }
+
+  @Test
+  void testListTable() throws IOException {
+    Admin admin = connection.getAdmin();
+    cleanup.deferCleanup(admin);
+
+    List<TableName> tableNames = new ArrayList<>();
+    for (TableName tableName : admin.listTableNames()) {
+      tableNames.add(tableName);
+    }
+    assertThat(tableNames).contains(TABLE_NAME);
+
     testing()
         .waitAndAssertTraces(
             traceAssertConsumer(null, "IsMasterRunning", MASTER_PORT, false),
@@ -255,19 +223,12 @@ public abstract class AbstractHbaseTest {
   }
 
   @Test
-  @Order(5)
-  public void testPut() {
-    Integer id = 1;
-    Exception error = null;
-    try (Table table = connection.getTable(TABLE_NAME)) {
-      Put put = new Put(Bytes.toBytes("row" + id));
-      put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val_" + id));
-      put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col2"), Bytes.toBytes("col2_val_" + id));
+  void testPut() throws IOException {
+    try (Connection putConnection = ConnectionFactory.createConnection(connection.getConfiguration());
+        Table table = putConnection.getTable(TABLE_NAME)) {
+      Put put = row("put-row", "put_col1_val", "put_col2_val");
       table.put(put);
-    } catch (Exception e) {
-      error = e;
     }
-    assertNull(error);
     testing()
         .waitAndAssertTraces(
             traceAssertConsumer(META, SCAN, REGION_SERVER_PORT, true),
@@ -275,39 +236,33 @@ public abstract class AbstractHbaseTest {
   }
 
   @Test
-  @Order(100)
-  public void testGet() {
-    Exception error = null;
-    String col1Val = null;
-    String col2Val = null;
+  void testGet() throws IOException {
     try (Table table = connection.getTable(TABLE_NAME)) {
-      Get get = new Get(Bytes.toBytes("row1"));
+      Get get = new Get(Bytes.toBytes(ROW_1));
       Result result = table.get(get);
-      col1Val = Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col1")));
-      col2Val = Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col2")));
-    } catch (Exception e) {
-      error = e;
+      assertThat(value(result, "col1")).isEqualTo("col1_val_1");
+      assertThat(value(result, "col2")).isEqualTo("col2_val_1");
     }
-    assertNull(error);
-    assertEquals(col1Val, "col1_val_1");
-    assertEquals(col2Val, "col2_val_1");
     testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
   }
 
+  private static String value(Result result, String column) {
+    return Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes(column)));
+  }
+
   @Test
-  @Order(101)
-  public void testGetTimeout() throws Exception {
+  void testGetTimeout() throws IOException {
     try (Connection timeoutConnection = ConnectionFactory.createConnection(getTimeoutConfig());
         Table table = timeoutConnection.getTable(TABLE_NAME)) {
       warmUpTimeoutConnection(table);
 
-      assertThrows(IOException.class, () -> getWithPausedContainer(table));
+      assertThatExceptionOfType(IOException.class).isThrownBy(() -> getWithPausedContainer(table));
     }
 
     testing().waitAndAssertTraces(getTimeoutTraceAssertConsumer());
   }
 
-  private static Configuration getTimeoutConfig() {
+  private Configuration getTimeoutConfig() {
     Configuration timeoutConfig = HBaseConfiguration.create(connection.getConfiguration());
     timeoutConfig.setInt(HConstants.HBASE_CLIENT_RETRIES_NUMBER, 0);
     timeoutConfig.setLong(HConstants.HBASE_CLIENT_PAUSE, 1);
@@ -320,26 +275,26 @@ public abstract class AbstractHbaseTest {
   }
 
   private void warmUpTimeoutConnection(Table table) throws IOException {
-    table.exists(new Get(Bytes.toBytes("row1")));
+    table.exists(new Get(Bytes.toBytes(ROW_1)));
+    testing().waitForTraces(2);
     testing().clearData();
   }
 
   private void getWithPausedContainer(Table table) throws IOException {
     hbaseContainer.getDockerClient().pauseContainerCmd(hbaseContainer.getContainerId()).exec();
     try {
-      testing().clearData();
-      table.get(new Get(Bytes.toBytes("row1")));
+      table.get(new Get(Bytes.toBytes(ROW_1)));
     } finally {
       hbaseContainer.getDockerClient().unpauseContainerCmd(hbaseContainer.getContainerId()).exec();
     }
   }
 
-  private static Consumer<TraceAssert> getTimeoutTraceAssertConsumer() {
+  private Consumer<TraceAssert> getTimeoutTraceAssertConsumer() {
     List<AttributeAssertion> assertions = new ArrayList<>();
     assertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)));
     assertions.add(equalTo(maybeStable(DB_OPERATION), GET));
     assertions.add(equalTo(maybeStable(DB_NAME), TABLE_NAME.getNameAsString()));
-    assertions.add(equalTo(SERVER_ADDRESS, HOSTNAME));
+    assertions.add(equalTo(SERVER_ADDRESS, hostname));
     assertions.add(equalTo(SERVER_PORT, REGION_SERVER_PORT));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, CallTimeoutException.class.getName()));
@@ -365,184 +320,139 @@ public abstract class AbstractHbaseTest {
   }
 
   @Test
-  @Order(100)
-  public void testScan() {
-    Exception error = null;
+  void testScan() throws IOException {
     List<String> rowIdList = new ArrayList<>();
     try (Table table = connection.getTable(TABLE_NAME)) {
       Scan scan = new Scan();
       scan.setCaching(5);
-      ResultScanner scanner = table.getScanner(scan);
-      for (Result result : scanner) {
-        rowIdList.add(Bytes.toString(result.getRow()));
+      scan.setRowPrefixFilter(Bytes.toBytes(SCAN_ROW));
+      try (ResultScanner scanner = table.getScanner(scan)) {
+        for (Result result : scanner) {
+          rowIdList.add(Bytes.toString(result.getRow()));
+        }
       }
-      scanner.close();
-    } catch (Exception e) {
-      error = e;
     }
-    assertNull(error);
-    assertEquals(rowIdList.size(), 1);
-    assertEquals(rowIdList.get(0), "row1");
+    assertThat(rowIdList).containsExactly(SCAN_ROW);
     testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, SCAN, REGION_SERVER_PORT, true));
   }
 
   @Test
-  @Order(100)
-  public void testBatchGet() {
-    Exception error = null;
-    Result[] results = null;
+  void testBatchGet() throws IOException {
+    Result[] results;
     try (Table table = connection.getTable(TABLE_NAME)) {
       List<Get> getList = new ArrayList<>();
-      getList.add(new Get(Bytes.toBytes("row1")));
-      getList.add(new Get(Bytes.toBytes("row2")));
-      getList.add(new Get(Bytes.toBytes("row5")));
+      getList.add(new Get(Bytes.toBytes(ROW_1)));
+      getList.add(new Get(Bytes.toBytes(ROW_2)));
+      getList.add(new Get(Bytes.toBytes(ROW_5)));
       results = table.get(getList);
-    } catch (Exception e) {
-      error = e;
     }
-    assertNull(error);
-    assertNotNull(results);
-    assertEquals(3, results.length);
+    assertThat(results).hasSize(3);
     {
-      assertEquals("row1", Bytes.toString(results[0].getRow()));
-      assertEquals(
-          "col1_val_1", Bytes.toString(results[0].getValue(COLUMN_FAMILY, Bytes.toBytes("col1"))));
-      assertEquals(
-          "col2_val_1", Bytes.toString(results[0].getValue(COLUMN_FAMILY, Bytes.toBytes("col2"))));
+      assertThat(Bytes.toString(results[0].getRow())).isEqualTo(ROW_1);
+      assertThat(value(results[0], "col1")).isEqualTo("col1_val_1");
+      assertThat(value(results[0], "col2")).isEqualTo("col2_val_1");
     }
     {
-      assertNull(Bytes.toString(results[1].getRow()));
-      assertNull(Bytes.toString(results[1].getValue(COLUMN_FAMILY, Bytes.toBytes("col1"))));
-      assertNull(Bytes.toString(results[1].getValue(COLUMN_FAMILY, Bytes.toBytes("col2"))));
+      assertThat(Bytes.toString(results[1].getRow())).isNull();
+      assertThat(value(results[1], "col1")).isNull();
+      assertThat(value(results[1], "col2")).isNull();
     }
     {
-      assertNull(Bytes.toString(results[2].getRow()));
-      assertNull(Bytes.toString(results[2].getValue(COLUMN_FAMILY, Bytes.toBytes("col1"))));
-      assertNull(Bytes.toString(results[2].getValue(COLUMN_FAMILY, Bytes.toBytes("col2"))));
+      assertThat(Bytes.toString(results[2].getRow())).isNull();
+      assertThat(value(results[2], "col1")).isNull();
+      assertThat(value(results[2], "col2")).isNull();
     }
     testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
   }
 
   @Test
-  @Order(200)
-  public void testBatchPut() {
-    Exception error = null;
+  void testBatchPut() throws IOException {
     try (Table table = connection.getTable(TABLE_NAME)) {
       List<Put> putList = new ArrayList<>();
       for (int i = 2; i < 5; i++) {
-        Put put = new Put(Bytes.toBytes("row" + i));
+        Put put = new Put(Bytes.toBytes("batch-put-row" + i));
         put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val_" + i));
         putList.add(put);
       }
       table.put(putList);
-    } catch (Exception e) {
-      error = e;
     }
-    assertNull(error);
     testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
   }
 
   @Test
-  @Order(201)
-  public void testDelete() {
-    Exception error = null;
+  void testDelete() throws IOException {
     try (Table table = connection.getTable(TABLE_NAME)) {
-      table.delete(new Delete(Bytes.toBytes("row4")));
-    } catch (Exception e) {
-      error = e;
+      table.delete(new Delete(Bytes.toBytes(ROW_4)));
     }
-    assertNull(error);
     testing()
         .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
   }
 
   @Test
-  @Order(300)
-  public void testAppend() {
-    Exception error = null;
+  void testAppend() throws IOException {
     try (Table table = connection.getTable(TABLE_NAME)) {
-      Append append = new Append(Bytes.toBytes("row2"));
+      Append append = new Append(Bytes.toBytes("append-row"));
       append.add(COLUMN_FAMILY, Bytes.toBytes("col3"), Bytes.toBytes(1L));
       table.append(append);
-    } catch (Exception e) {
-      error = e;
     }
-    assertNull(error);
     testing()
         .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
   }
 
   @Test
-  @Order(301)
-  public void testIncrement() {
-    Exception error = null;
+  void testIncrement() throws IOException {
     try (Table table = connection.getTable(TABLE_NAME)) {
-      Increment increment = new Increment(Bytes.toBytes("row2"));
+      Increment increment = new Increment(Bytes.toBytes("increment-row"));
       increment.addColumn(COLUMN_FAMILY, Bytes.toBytes("col3"), 1L);
       table.increment(increment);
-    } catch (Exception e) {
-      error = e;
     }
-    assertNull(error);
     testing()
         .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
   }
 
   @Test
-  @Order(400)
-  public void testCheckAndPutSuccess() {
-    Exception error = null;
-    boolean success = false;
+  void testCheckAndPutSuccess() throws IOException {
+    boolean success;
     try (Table table = connection.getTable(TABLE_NAME)) {
-      byte[] rowKey = Bytes.toBytes("row1");
+      byte[] rowKey = Bytes.toBytes(ROW_1);
       Put put = new Put(rowKey);
       put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col4"), Bytes.toBytes("new_value"));
       success =
           table.checkAndPut(
               rowKey, COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val_1"), put);
-    } catch (Exception e) {
-      error = e;
     }
-    assertNull(error);
-    assertTrue(success);
+    assertThat(success).isTrue();
     testing()
         .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
   }
 
   @Test
-  @Order(400)
-  public void testCheckAndPutFail() {
-    Exception error = null;
-    boolean success = false;
+  void testCheckAndPutFail() throws IOException {
+    boolean success;
     try (Table table = connection.getTable(TABLE_NAME)) {
-      byte[] rowKey = Bytes.toBytes("row1");
+      byte[] rowKey = Bytes.toBytes(ROW_1);
       Put put = new Put(rowKey);
       put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col5"), Bytes.toBytes("new_value"));
       success =
           table.checkAndPut(
               rowKey, COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("expected_value"), put);
-    } catch (Exception e) {
-      error = e;
     }
-    assertNull(error);
-    assertFalse(success);
+    assertThat(success).isFalse();
     testing()
         .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
   }
 
   @Test
-  @Order(400)
-  public void testCheckAndMutateSuccess() {
-    Exception error = null;
+  void testCheckAndMutateSuccess() throws IOException {
     try (Table table = connection.getTable(TABLE_NAME)) {
-      byte[] rowKey = Bytes.toBytes("row1");
-      Put put = new Put(Bytes.toBytes("row3"));
+      byte[] rowKey = Bytes.toBytes(ROW_1);
+      Put put = new Put(Bytes.toBytes(ROW_3));
       put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col4"), Bytes.toBytes("new_value1"));
       put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col5"), Bytes.toBytes("new_value2"));
 
-      RowMutations rowMutations = new RowMutations(Bytes.toBytes("row3"));
+      RowMutations rowMutations = new RowMutations(Bytes.toBytes(ROW_3));
       rowMutations.add(put);
-      Delete delete = new Delete(Bytes.toBytes("row3"));
+      Delete delete = new Delete(Bytes.toBytes(ROW_3));
       delete.addColumns(COLUMN_FAMILY, Bytes.toBytes("col1"));
       rowMutations.add(delete);
 
@@ -552,16 +462,11 @@ public abstract class AbstractHbaseTest {
           .ifMatches(CompareOperator.EQUAL, Bytes.toBytes("col1_val_1"))
           .thenMutate(rowMutations);
 
-      Result result = table.get(new Get(Bytes.toBytes("row3")));
-      assertEquals(
-          "new_value1", Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col4"))));
-      assertEquals(
-          "new_value2", Bytes.toString(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col5"))));
-      assertNull(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col1")));
-    } catch (Exception e) {
-      error = e;
+      Result result = table.get(new Get(Bytes.toBytes(ROW_3)));
+      assertThat(value(result, "col4")).isEqualTo("new_value1");
+      assertThat(value(result, "col5")).isEqualTo("new_value2");
+      assertThat(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col1"))).isNull();
     }
-    assertNull(error);
     testing()
         .waitAndAssertTraces(
             traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true),
@@ -569,36 +474,26 @@ public abstract class AbstractHbaseTest {
   }
 
   @Test
-  @Order(500)
-  public void testCheckAndDeleteSuccess() {
-    Exception error = null;
-    boolean success = false;
+  void testCheckAndDeleteSuccess() throws IOException {
+    boolean success;
     try (Table table = connection.getTable(TABLE_NAME)) {
-      byte[] rowKey = Bytes.toBytes("row1");
+      byte[] rowKey = Bytes.toBytes(ROW_1);
       Delete delete = new Delete(rowKey);
       delete.addColumn(COLUMN_FAMILY, Bytes.toBytes("col4"));
       success =
           table.checkAndDelete(
               rowKey, COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val_1"), delete);
-    } catch (Exception e) {
-      error = e;
     }
-    assertNull(error);
-    assertTrue(success);
+    assertThat(success).isTrue();
     testing()
         .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
   }
 
   @Test
-  @Order(600)
-  public void hasDurationMetric() {
-    Exception error = null;
+  void hasDurationMetric() throws IOException {
     try (Table table = connection.getTable(TABLE_NAME)) {
-      table.get(new Get(Bytes.toBytes("row1")));
-    } catch (Exception e) {
-      error = e;
+      table.get(new Get(Bytes.toBytes(ROW_1)));
     }
-    assertNull(error);
     testing().waitForTraces(1);
     assertDurationMetric(
         testing(),
@@ -610,7 +505,7 @@ public abstract class AbstractHbaseTest {
         SERVER_PORT);
   }
 
-  protected static Consumer<TraceAssert> traceAssertConsumer(
+  protected Consumer<TraceAssert> traceAssertConsumer(
       TableName table, String operation, int port, boolean hasTable) {
     List<AttributeAssertion> assertions = new ArrayList<>();
     assertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)));
@@ -618,7 +513,7 @@ public abstract class AbstractHbaseTest {
     if (hasTable) {
       assertions.add(equalTo(maybeStable(DB_NAME), table.getNameAsString()));
     }
-    assertions.add(equalTo(SERVER_ADDRESS, HOSTNAME));
+    assertions.add(equalTo(SERVER_ADDRESS, hostname));
     assertions.add(equalTo(SERVER_PORT, port));
     if (!emitStableDatabaseSemconv()) {
       assertions.add(satisfies(DB_USER, AbstractAssert::isNotNull));
@@ -627,7 +522,7 @@ public abstract class AbstractHbaseTest {
     if (hasTable) {
       spanName = operation + " " + table.getNameAsString();
     } else if (emitStableDatabaseSemconv()) {
-      spanName = operation + " " + HOSTNAME + ":" + port;
+      spanName = operation + " " + hostname + ":" + port;
     } else {
       spanName = operation;
     }
