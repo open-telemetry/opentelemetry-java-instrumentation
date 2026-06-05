@@ -22,7 +22,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testImplementation(project(":instrumentation:hbase:hbase-common:testing"))
+  testImplementation(project(":instrumentation:hbase-client-2.0:testing"))
 
   latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // native on-by-default instrumentation after this version
 }
@@ -32,7 +32,7 @@ testing {
     val shadedClientTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("2.0.0").orLatest("2.4.+")}")
-        implementation(project(":instrumentation:hbase:hbase-common:testing"))
+        implementation(project(":instrumentation:hbase-client-2.0:testing"))
       }
     }
   }
