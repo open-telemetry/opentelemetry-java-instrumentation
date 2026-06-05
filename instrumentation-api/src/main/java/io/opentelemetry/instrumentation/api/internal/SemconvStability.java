@@ -54,11 +54,11 @@ public final class SemconvStability {
     emitOldCodeSemconv = shouldEmitOld("code", v3Preview, optInValues);
     emitStableCodeSemconv = shouldEmitStable("code", v3Preview, optInValues);
 
-    emitOldServicePeerSemconv = shouldEmitOld("service.peer", v3Preview, optInValues);
-    emitStableServicePeerSemconv = shouldEmitStable("service.peer", v3Preview, optInValues);
+    emitOldServicePeerSemconv = shouldEmitOld("service.peer", v3Preview, v3Preview ? previewValues : optInValues);
+    emitStableServicePeerSemconv = shouldEmitStable("service.peer", v3Preview, v3Preview ? previewValues : optInValues);
 
-    emitOldRpcSemconv = shouldEmitOld("rpc", v3Preview, optInValues);
-    emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, optInValues);
+    emitOldRpcSemconv = shouldEmitOld("rpc", v3Preview, v3Preview ? previewValues : optInValues);
+    emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, v3Preview ? previewValues : optInValues);
 
     emitOldMessagingSemconv = shouldEmitOld("messaging", false, previewValues);
     emitStableMessagingSemconv = shouldEmitStable("messaging", false, previewValues);
@@ -83,14 +83,17 @@ public final class SemconvStability {
     return values;
   }
 
+  @Deprecated // to be removed in 3.0
   public static boolean v3Preview() {
     return v3Preview;
   }
 
+  @Deprecated // to be removed in 3.0
   public static boolean emitOldDatabaseSemconv() {
     return emitOldDatabaseSemconv;
   }
 
+  @Deprecated // to be removed in 3.0
   public static boolean emitStableDatabaseSemconv() {
     return emitStableDatabaseSemconv;
   }
@@ -128,10 +131,12 @@ public final class SemconvStability {
     return dbSystemName != null ? dbSystemName : oldDbSystem;
   }
 
+  @Deprecated // to be removed in 3.0
   public static boolean emitOldCodeSemconv() {
     return emitOldCodeSemconv;
   }
 
+  @Deprecated // to be removed in 3.0
   public static boolean emitStableCodeSemconv() {
     return emitStableCodeSemconv;
   }
