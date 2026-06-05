@@ -31,7 +31,6 @@ import com.github.dockerjava.api.model.Ports;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
@@ -124,17 +123,16 @@ public abstract class AbstractHbaseTest {
   private static GenericContainer<?> createHbaseContainer(String hostname) {
     return new GenericContainer<>(DockerImageName.parse("harisekhon/hbase:2.0"))
         .withCreateContainerCmdModifier(
-            cmd -> {
-              cmd.getHostConfig()
-                  .withPortBindings(
-                      new PortBinding(Ports.Binding.bindPort(2181), new ExposedPort(2181)),
-                      new PortBinding(Ports.Binding.bindPort(16000), new ExposedPort(16000)),
-                      new PortBinding(Ports.Binding.bindPort(16010), new ExposedPort(16010)),
-                      new PortBinding(Ports.Binding.bindPort(16020), new ExposedPort(16020)),
-                      new PortBinding(Ports.Binding.bindPort(16030), new ExposedPort(16030)),
-                      new PortBinding(Ports.Binding.bindPort(16201), new ExposedPort(16201)),
-                      new PortBinding(Ports.Binding.bindPort(16301), new ExposedPort(16301)));
-            })
+            cmd ->
+                cmd.getHostConfig()
+                    .withPortBindings(
+                        new PortBinding(Ports.Binding.bindPort(2181), new ExposedPort(2181)),
+                        new PortBinding(Ports.Binding.bindPort(16000), new ExposedPort(16000)),
+                        new PortBinding(Ports.Binding.bindPort(16010), new ExposedPort(16010)),
+                        new PortBinding(Ports.Binding.bindPort(16020), new ExposedPort(16020)),
+                        new PortBinding(Ports.Binding.bindPort(16030), new ExposedPort(16030)),
+                        new PortBinding(Ports.Binding.bindPort(16201), new ExposedPort(16201)),
+                        new PortBinding(Ports.Binding.bindPort(16301), new ExposedPort(16301))))
         .withExposedPorts(2181, 16000, 16010, 16020, 16030, 16201, 16301)
         .withStartupTimeout(Duration.ofMinutes(2))
         .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostname))
@@ -155,8 +153,14 @@ public abstract class AbstractHbaseTest {
     config.set("hbase.zookeeper.property.clientPort", "2181");
     connection = ConnectionFactory.createConnection(config);
     cleanup.deferAfterAll(connection);
-    createNamespaceAndTable();
-    seedRows();
+    testing()
+        .runWithSpan(
+            "setup",
+            () -> {
+              createNamespaceAndTable();
+              seedRows();
+            });
+    testing().waitForTraces(1);
     testing().clearData();
   }
 
@@ -210,11 +214,7 @@ public abstract class AbstractHbaseTest {
     Admin admin = connection.getAdmin();
     cleanup.deferCleanup(admin);
 
-    List<TableName> tableNames = new ArrayList<>();
-    for (TableName tableName : admin.listTableNames()) {
-      tableNames.add(tableName);
-    }
-    assertThat(tableNames).contains(TABLE_NAME);
+    assertThat(admin.listTableNames()).contains(TABLE_NAME);
 
     testing()
         .waitAndAssertTraces(
@@ -260,7 +260,44 @@ public abstract class AbstractHbaseTest {
       assertThatExceptionOfType(IOException.class).isThrownBy(() -> getWithPausedContainer(table));
     }
 
-    testing().waitAndAssertTraces(getTimeoutTraceAssertConsumer());
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(GET + " " + TABLE_NAME.getNameAsString())
+                            .hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    maybeStable(DB_SYSTEM),
+                                    maybeStableDbSystemName(DB_SYSTEM_VALUE)),
+                                equalTo(maybeStable(DB_OPERATION), GET),
+                                equalTo(maybeStable(DB_NAME), TABLE_NAME.getNameAsString()),
+                                equalTo(SERVER_ADDRESS, hostname),
+                                equalTo(SERVER_PORT, REGION_SERVER_PORT),
+                                equalTo(
+                                    ERROR_TYPE,
+                                    emitStableDatabaseSemconv()
+                                        ? CallTimeoutException.class.getName()
+                                        : null),
+                                satisfies(
+                                    DB_USER,
+                                    emitStableDatabaseSemconv()
+                                        ? AbstractAssert::isNull
+                                        : AbstractAssert::isNotNull))
+                            .hasEventsSatisfyingExactly(
+                                event ->
+                                    event
+                                        .hasName("exception")
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                EXCEPTION_TYPE,
+                                                CallTimeoutException.class.getName()),
+                                            satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
+                                            satisfies(
+                                                EXCEPTION_STACKTRACE,
+                                                AbstractAssert::isNotNull)))));
   }
 
   private Configuration getTimeoutConfig() {
@@ -288,36 +325,6 @@ public abstract class AbstractHbaseTest {
     } finally {
       hbaseContainer.getDockerClient().unpauseContainerCmd(hbaseContainer.getContainerId()).exec();
     }
-  }
-
-  private Consumer<TraceAssert> getTimeoutTraceAssertConsumer() {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)));
-    assertions.add(equalTo(maybeStable(DB_OPERATION), GET));
-    assertions.add(equalTo(maybeStable(DB_NAME), TABLE_NAME.getNameAsString()));
-    assertions.add(equalTo(SERVER_ADDRESS, hostname));
-    assertions.add(equalTo(SERVER_PORT, REGION_SERVER_PORT));
-    if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(ERROR_TYPE, CallTimeoutException.class.getName()));
-    } else {
-      assertions.add(satisfies(DB_USER, AbstractAssert::isNotNull));
-    }
-
-    return trace ->
-        trace.hasSpansSatisfyingExactly(
-            span ->
-                span.hasName(GET + " " + TABLE_NAME.getNameAsString())
-                    .hasKind(SpanKind.CLIENT)
-                    .hasStatus(StatusData.error())
-                    .hasAttributesSatisfyingExactly(assertions)
-                    .hasEventsSatisfyingExactly(
-                        event ->
-                            event
-                                .hasName("exception")
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(EXCEPTION_TYPE, CallTimeoutException.class.getName()),
-                                    satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
-                                    satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull))));
   }
 
   @Test
@@ -508,17 +515,6 @@ public abstract class AbstractHbaseTest {
 
   protected Consumer<TraceAssert> traceAssertConsumer(
       TableName table, String operation, int port, boolean hasTable) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)));
-    assertions.add(equalTo(maybeStable(DB_OPERATION), operation));
-    if (hasTable) {
-      assertions.add(equalTo(maybeStable(DB_NAME), table.getNameAsString()));
-    }
-    assertions.add(equalTo(SERVER_ADDRESS, hostname));
-    assertions.add(equalTo(SERVER_PORT, port));
-    if (!emitStableDatabaseSemconv()) {
-      assertions.add(satisfies(DB_USER, AbstractAssert::isNotNull));
-    }
     String spanName;
     if (hasTable) {
       spanName = operation + " " + table.getNameAsString();
@@ -532,6 +528,16 @@ public abstract class AbstractHbaseTest {
             span ->
                 span.hasName(spanName)
                     .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(assertions));
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)),
+                        equalTo(maybeStable(DB_OPERATION), operation),
+                        equalTo(maybeStable(DB_NAME), hasTable ? table.getNameAsString() : null),
+                        equalTo(SERVER_ADDRESS, hostname),
+                        equalTo(SERVER_PORT, port),
+                        satisfies(
+                            DB_USER,
+                            emitStableDatabaseSemconv()
+                                ? AbstractAssert::isNull
+                                : AbstractAssert::isNotNull)));
   }
 }
