@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THR
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -60,7 +61,7 @@ public class LoggingEventMapper {
           excluded.add(key.substring(1));
         }
       }
-      this.excludedMdcAttributeKeys = excluded;
+      this.excludedMdcAttributeKeys = unmodifiableSet(excluded);
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
       for (String key : captureMdcAttributes) {

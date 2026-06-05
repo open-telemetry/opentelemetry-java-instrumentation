@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
@@ -90,7 +91,7 @@ public final class LogEventMapper<T> {
           excluded.add(key.substring(1));
         }
       }
-      this.excludedContextDataAttributeKeys = excluded;
+      this.excludedContextDataAttributeKeys = unmodifiableSet(excluded);
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureContextDataAttributes.size());
       for (String key : captureContextDataAttributes) {

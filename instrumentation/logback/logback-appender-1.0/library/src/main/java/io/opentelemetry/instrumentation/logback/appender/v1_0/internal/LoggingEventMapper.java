@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
@@ -110,7 +111,7 @@ public final class LoggingEventMapper {
           excluded.add(key.substring(1));
         }
       }
-      this.excludedMdcAttributeKeys = excluded;
+      this.excludedMdcAttributeKeys = unmodifiableSet(excluded);
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(builder.captureMdcAttributes.size());
       for (String key : builder.captureMdcAttributes) {
