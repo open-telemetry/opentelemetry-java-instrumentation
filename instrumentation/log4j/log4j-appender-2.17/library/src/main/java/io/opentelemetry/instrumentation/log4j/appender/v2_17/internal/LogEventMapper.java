@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
@@ -20,7 +21,9 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
@@ -60,6 +63,7 @@ public final class LogEventMapper<T> {
   private final boolean captureMarkerAttribute;
   private final List<AttributeKey<String>> captureContextDataAttributeKeys;
   private final boolean captureAllContextDataAttributes;
+  private final Set<String> excludedContextDataAttributeKeys;
   private final boolean v3Preview;
 
   public LogEventMapper(
@@ -76,10 +80,16 @@ public final class LogEventMapper<T> {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMapMessageAttributes = captureMapMessageAttributes;
     this.captureMarkerAttribute = captureMarkerAttribute;
-    this.captureAllContextDataAttributes =
-        captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
+    this.captureAllContextDataAttributes = captureContextDataAttributes.contains("*");
     if (captureAllContextDataAttributes) {
       this.captureContextDataAttributeKeys = emptyList();
+      Set<String> excluded = new HashSet<>();
+      for (String key : captureContextDataAttributes) {
+        if (key.startsWith("!")) {
+          excluded.add(key.substring(1));
+        }
+      }
+      this.excludedContextDataAttributeKeys = excluded;
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureContextDataAttributes.size());
       for (String key : captureContextDataAttributes) {
@@ -88,6 +98,7 @@ public final class LogEventMapper<T> {
         }
       }
       this.captureContextDataAttributeKeys = keys;
+      this.excludedContextDataAttributeKeys = emptySet();
     }
     this.v3Preview = v3Preview;
   }
@@ -230,7 +241,8 @@ public final class LogEventMapper<T> {
       contextDataAccessor.forEach(
           contextData,
           (key, value) -> {
-            if (!OTEL_EVENT_NAME.getKey().equals(key)) {
+            if (!OTEL_EVENT_NAME.getKey().equals(key)
+                && !excludedContextDataAttributeKeys.contains(key)) {
               builder.setAttribute(getContextDataAttributeKey(key), value);
             }
           });

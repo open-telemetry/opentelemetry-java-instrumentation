@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -24,9 +25,11 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.log4j.Category;
 import org.apache.log4j.MDC;
@@ -55,6 +58,7 @@ public class LogEventMapper {
 
   // cached as an optimization
   private final boolean captureAllMdcAttributes;
+  private final Set<String> excludedMdcAttributeKeys;
 
   private final boolean captureCodeAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
@@ -64,10 +68,16 @@ public class LogEventMapper {
     List<String> captureMdcAttributes =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
             .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    this.captureAllMdcAttributes =
-        captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
+    this.captureAllMdcAttributes = captureMdcAttributes.contains("*");
     if (captureAllMdcAttributes) {
       this.captureMdcAttributeKeys = emptyList();
+      Set<String> excluded = new HashSet<>();
+      for (String key : captureMdcAttributes) {
+        if (key.startsWith("!")) {
+          excluded.add(key.substring(1));
+        }
+      }
+      this.excludedMdcAttributeKeys = excluded;
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
       for (String key : captureMdcAttributes) {
@@ -76,6 +86,7 @@ public class LogEventMapper {
         }
       }
       this.captureMdcAttributeKeys = keys;
+      this.excludedMdcAttributeKeys = emptySet();
     }
   }
 
@@ -182,7 +193,7 @@ public class LogEventMapper {
     if (captureAllMdcAttributes) {
       for (Map.Entry<?, ?> entry : context.entrySet()) {
         String key = String.valueOf(entry.getKey());
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
+        if (!OTEL_EVENT_NAME.getKey().equals(key) && !excludedMdcAttributeKeys.contains(key)) {
           Object value = entry.getValue();
           if (value != null) {
             builder.setAttribute(getMdcAttributeKey(key), value.toString());

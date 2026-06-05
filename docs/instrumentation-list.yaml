@@ -6920,12 +6920,13 @@ libraries:
   - name: otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
     declarative_name: java.jboss_logmanager.capture_mdc_attributes/development
     description: |
-      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys. When using "*", prefix a key with "!" to exclude it (e.g. "*,!foo" captures all MDC attributes except "foo").
     type: list
     default: ''
     examples:
     - custom-mdc-key
     - key1,key2,key3
+    - '*,!foo'
 - name: jboss-logmanager-mdc-1.1
   display_name: JBoss Log Manager
   description: |
@@ -9555,12 +9556,13 @@ libraries:
   - name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
     declarative_name: java.log4j_appender.capture_mdc_attributes/development
     description: |
-      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys. When using "*", prefix a key with "!" to exclude it (e.g. "*,!foo" captures all MDC attributes except "foo").
     type: list
     default: ''
     examples:
     - custom-mdc-key
     - key1,key2,key3
+    - '*,!foo'
   - name: otel.instrumentation.log4j-appender.experimental.capture-code-attributes
     declarative_name: java.log4j_appender.capture_code_attributes/development
     description: |
@@ -9609,12 +9611,13 @@ libraries:
   - name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
     declarative_name: java.log4j_appender.capture_mdc_attributes/development
     description: |
-      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys. When using "*", prefix a key with "!" to exclude it (e.g. "*,!foo" captures all MDC attributes except "foo").
     type: list
     default: ''
     examples:
     - '*'
     - key1,key2
+    - '*,!foo'
 - name: log4j-context-data-2.7
   display_name: Log4j
   description: |
@@ -9807,12 +9810,13 @@ libraries:
   - name: otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
     declarative_name: java.logback_appender.capture_mdc_attributes/development
     description: |
-      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys. When using "*", prefix a key with "!" to exclude it (e.g. "*,!foo" captures all MDC attributes except "foo").
     type: list
     default: ''
     examples:
     - custom-mdc-key
     - key1,key2,key3
+    - '*,!foo'
 - name: logback-mdc-1.0
   display_name: Logback
   description: |
