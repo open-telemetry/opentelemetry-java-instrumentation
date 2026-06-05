@@ -37,7 +37,9 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -435,13 +437,15 @@ public abstract class AbstractJdbcInstrumentationTest {
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
 
-    assertThatThrownBy(
+    Throwable error =
+        catchThrowable(
             () ->
                 testing()
                     .runWithSpan(
                         "parent",
-                        () -> statement.executeQuery("SELECT * FROM table_does_not_exist")))
-        .isInstanceOf(SQLException.class);
+                        () -> statement.executeQuery("SELECT * FROM table_does_not_exist")));
+
+    assertThat(error).isInstanceOf(SQLException.class);
 
     testing()
         .waitAndAssertTraces(
@@ -452,16 +456,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                         span.hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
-                            .satisfies(
-                                spanData -> {
-                                  if (emitExceptionAsSpanEvents()) {
-                                    assertThat(spanData.getEvents()).hasSize(1);
-                                    assertThat(spanData.getEvents().get(0).getName())
-                                        .isEqualTo("exception");
-                                  } else {
-                                    assertThat(spanData.getEvents()).isEmpty();
-                                  }
-                                })));
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
       assertExceptionLog();
