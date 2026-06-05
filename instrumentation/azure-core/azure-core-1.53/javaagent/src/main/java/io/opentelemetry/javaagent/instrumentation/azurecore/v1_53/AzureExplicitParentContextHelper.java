@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_53;
 
+import static com.azure.core.util.tracing.Tracer.PARENT_TRACE_CONTEXT_KEY;
+
 import io.opentelemetry.context.Context;
 import java.util.Optional;
 
@@ -18,9 +20,6 @@ import java.util.Optional;
  * indy mode without reaching into agent-internal helper classes.
  */
 public final class AzureExplicitParentContextHelper {
-
-  // azure-core-tracing-opentelemetry stores the explicit parent context under this key
-  private static final String PARENT_TRACE_CONTEXT_KEY = "trace-context";
 
   public static Optional<Object> bridgeApplicationContext(Object key, Optional<Object> data) {
     if (!PARENT_TRACE_CONTEXT_KEY.equals(key) || data == null || !data.isPresent()) {
