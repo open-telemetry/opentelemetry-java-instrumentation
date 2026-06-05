@@ -51,8 +51,8 @@ public class SpymemcachedSingletons {
                       SpymemcachedRequest request,
                       @Nullable Object object,
                       @Nullable Throwable error) {
-                    // For spymemcached, we can only extract server attributes at the
-                    // end of the request because they are not available at the start.
+                    // For spymemcached, we can only extract server attributes at the end of the
+                    // request because they are not available at the start.
                     serverAttributesExtractor.onStart(attributes, context, request);
                   }
                 })
