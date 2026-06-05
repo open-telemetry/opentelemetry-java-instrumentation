@@ -1,0 +1,37 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.servlet.common;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBiGetter;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
+import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
+import javax.annotation.Nullable;
+
+/** Helper class for constructing span name for given servlet/filter mapping and request. */
+class ServletSpanNameProvider<REQUEST>
+    implements HttpServerRouteBiGetter<MappingResolver, REQUEST> {
+  private final ServletAccessor<REQUEST, ?> servletAccessor;
+
+  ServletSpanNameProvider(ServletAccessor<REQUEST, ?> servletAccessor) {
+    this.servletAccessor = servletAccessor;
+  }
+
+  @Override
+  @Nullable
+  public String get(Context context, MappingResolver mappingResolver, REQUEST request) {
+    String servletPath = servletAccessor.getRequestServletPath(request);
+    String pathInfo = servletAccessor.getRequestPathInfo(request);
+    String mapping = mappingResolver.resolve(servletPath, pathInfo);
+    // mapping was not found
+    if (mapping == null) {
+      return null;
+    }
+
+    return ServletContextPath.prepend(context, mapping);
+  }
+}

@@ -46,11 +46,11 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-incubator")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   api(project(":instrumentation-api-incubator"))
 
   annotationProcessor("com.google.auto.service:auto-service")
-  compileOnly("com.google.auto.service:auto-service")
+  compileOnly("com.google.auto.service:auto-service-annotations")
 
   testImplementation(project(":javaagent-tooling"))
   testImplementation(project(":javaagent-bootstrap"))
@@ -59,7 +59,7 @@ dependencies {
 
   // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
   testAnnotationProcessor("com.google.auto.service:auto-service")
-  testCompileOnly("com.google.auto.service:auto-service")
+  testCompileOnly("com.google.auto.service:auto-service-annotations")
 }
 
 tasks {

@@ -10,8 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
+import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -44,7 +44,7 @@ class ResourceCustomizerProviderTest {
       try {
         assertThat(objectMapper.writeValueAsString(configurationModel.getResource()))
             .isEqualTo(
-                "{\"attributes\":[],\"detection/development\":{\"detectors\":[{\"opentelemetry_javaagent_distribution\":null}]}}");
+                "{\"detection/development\":{\"detectors\":[{\"opentelemetry_javaagent_distribution\":null}]}}");
       } catch (JsonProcessingException e) {
         throw new AssertionError(e);
       }

@@ -1,0 +1,221 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.external.annotations;
+
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.external.annotations.ExternalAnnotationSingletons.instrumenter;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
+import static java.util.logging.Level.WARNING;
+import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.none;
+import static net.bytebuddy.matcher.ElementMatchers.not;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.ByteCodeElement;
+import net.bytebuddy.description.NamedElement;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+class ExternalAnnotationInstrumentation implements TypeInstrumentation {
+
+  private static final Logger logger =
+      Logger.getLogger(ExternalAnnotationInstrumentation.class.getName());
+
+  private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
+
+  static final String CONFIG_FORMAT =
+      "(?:\\s*"
+          + PACKAGE_CLASS_NAME_REGEX
+          + "\\s*;)*\\s*"
+          + PACKAGE_CLASS_NAME_REGEX
+          + "\\s*;?\\s*";
+
+  // visible for testing
+  static final List<String> DEFAULT_ANNOTATIONS =
+      asList(
+          "com.appoptics.api.ext.LogMethod",
+          "com.newrelic.api.agent.Trace",
+          "com.signalfx.tracing.api.Trace",
+          "com.tracelytics.api.ext.LogMethod",
+          "datadog.trace.api.Trace",
+          "io.opentracing.contrib.dropwizard.Trace",
+          "kamon.annotation.Trace",
+          "kamon.annotation.api.Trace",
+          "org.springframework.cloud.sleuth.annotation.NewSpan");
+
+  private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
+  private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
+
+  /** This matcher matches all methods that should be excluded from transformation. */
+  private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
+
+  ExternalAnnotationInstrumentation() {
+    Set<String> additionalTraceAnnotations =
+        configureAdditionalTraceAnnotations(
+            DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.get(), "external_annotations"));
+
+    if (additionalTraceAnnotations.isEmpty()) {
+      classLoaderOptimization = none();
+      traceAnnotationMatcher = none();
+    } else {
+      ElementMatcher.Junction<ClassLoader> classLoaderMatcher = none();
+      for (String annotationName : additionalTraceAnnotations) {
+        classLoaderMatcher = classLoaderMatcher.or(hasClassesNamed(annotationName));
+      }
+      this.classLoaderOptimization = classLoaderMatcher;
+      this.traceAnnotationMatcher = namedOneOf(additionalTraceAnnotations.toArray(new String[0]));
+    }
+
+    excludedMethodsMatcher = configureExcludedMethods();
+  }
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return classLoaderOptimization;
+  }
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return declaresMethod(isAnnotatedWith(traceAnnotationMatcher));
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isAnnotatedWith(traceAnnotationMatcher).and(not(excludedMethodsMatcher)).and(isMethod()),
+        getClass().getName() + "$ExternalAnnotationAdvice");
+  }
+
+  // visible for testing
+  static Set<String> configureAdditionalTraceAnnotations(DeclarativeConfigProperties config) {
+    // First try structured declarative config (YAML list format)
+    List<String> list = config.getScalarList("include", String.class);
+    if (list != null) {
+      return new HashSet<>(list);
+    }
+
+    // Fall back to old string property format for backward compatibility
+    String configString = config.getString("include");
+    if (configString == null) {
+      return new HashSet<>(DEFAULT_ANNOTATIONS);
+    } else if (configString.isEmpty()) {
+      return emptySet();
+    } else if (!configString.matches(CONFIG_FORMAT)) {
+      logger.log(
+          WARNING,
+          "Invalid trace annotations config \"{0}\". Must match 'package.Annotation$Name;*'.",
+          configString);
+      return emptySet();
+    } else {
+      Set<String> annotations = new HashSet<>();
+      String[] annotationClasses = configString.split(";", -1);
+      for (String annotationClass : annotationClasses) {
+        if (!annotationClass.trim().isEmpty()) {
+          annotations.add(annotationClass.trim());
+        }
+      }
+      return annotations;
+    }
+  }
+
+  /**
+   * Returns a matcher for all methods that should be excluded from auto-instrumentation by
+   * annotation-based advices.
+   */
+  private static ElementMatcher.Junction<MethodDescription> configureExcludedMethods() {
+    ElementMatcher.Junction<MethodDescription> result = none();
+
+    Map<String, Set<String>> excludedMethods =
+        MethodsConfigurationParser.parseExcludeMethods(
+            DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.get(), "external_annotations"));
+    for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
+      String className = entry.getKey();
+      ElementMatcher.Junction<ByteCodeElement> matcher = isDeclaredBy(named(className));
+
+      Set<String> methodNames = entry.getValue();
+      if (!methodNames.isEmpty()) {
+        matcher = matcher.and(namedOneOf(methodNames.toArray(new String[0])));
+      }
+
+      result = result.or(matcher);
+    }
+
+    return result;
+  }
+
+  @SuppressWarnings("unused")
+  public static class ExternalAnnotationAdvice {
+
+    public static class AdviceScope {
+      private final ClassAndMethod classAndMethod;
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(ClassAndMethod classAndMethod, Context context, Scope scope) {
+        this.classAndMethod = classAndMethod;
+        this.context = context;
+        this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope start(Class<?> declaringClass, String methodName) {
+        Context parentContext = Context.current();
+        ClassAndMethod classAndMethod = ClassAndMethod.create(declaringClass, methodName);
+        if (!instrumenter().shouldStart(parentContext, classAndMethod)) {
+          return null;
+        }
+
+        Context context = instrumenter().start(parentContext, classAndMethod);
+        return new AdviceScope(classAndMethod, context, context.makeCurrent());
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, classAndMethod, null, throwable);
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(
+        @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {
+      return AdviceScope.start(declaringClass, methodName);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
+      }
+    }
+  }
+}

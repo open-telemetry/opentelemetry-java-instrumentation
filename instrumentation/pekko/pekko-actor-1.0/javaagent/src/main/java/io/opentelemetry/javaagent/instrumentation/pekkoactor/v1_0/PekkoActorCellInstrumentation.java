@@ -42,6 +42,7 @@ class PekkoActorCellInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.Argument(0) Envelope envelope) {
       return TaskAdviceHelper.makePropagatedContextCurrent(ENVELOPE_PROPAGATED_CONTEXT, envelope);
@@ -58,6 +59,7 @@ class PekkoActorCellInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SystemInvokeAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope enter(@Advice.Argument(0) SystemMessage systemMessage) {
       return TaskAdviceHelper.makePropagatedContextCurrent(

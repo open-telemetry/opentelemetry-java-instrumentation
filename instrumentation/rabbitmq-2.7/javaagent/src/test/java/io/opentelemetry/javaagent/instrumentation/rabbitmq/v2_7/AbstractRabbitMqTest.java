@@ -9,7 +9,6 @@ import com.rabbitmq.client.ConnectionFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
@@ -19,12 +18,11 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 abstract class AbstractRabbitMqTest {
-  protected static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+  protected static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.rabbitmq.experimental-span-attributes");
 
-  @Nullable
   static <T> T experimental(T value) {
-    return EXPERIMENTAL_ATTRIBUTES_ENABLED ? value : null;
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
   private static final Logger logger =

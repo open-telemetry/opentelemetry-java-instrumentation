@@ -8,7 +8,7 @@ evaluationDependsOn(":testing:agent-for-testing")
 
 dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
-  compileOnly("com.google.auto.service:auto-service")
+  compileOnly("com.google.auto.service:auto-service-annotations")
 
   testImplementation("org.testcontainers:testcontainers")
 }
@@ -16,6 +16,6 @@ dependencies {
 configurations.configureEach {
   if (name.endsWith("testruntimeclasspath", ignoreCase = true)) {
     // Added by agent, don't let Gradle bring it in when running tests.
-    exclude(module = "javaagent-bootstrap")
+    exclude("io.opentelemetry.javaagent", "javaagent-bootstrap")
   }
 }

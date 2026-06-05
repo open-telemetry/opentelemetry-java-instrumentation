@@ -95,7 +95,11 @@ public final class UrlParsingUtils {
    * @param value the string value to parse
    * @return the parsed integer, or null if parsing fails
    */
-  public static Integer parsePort(String value) {
+  @Nullable
+  public static Integer parsePort(@Nullable String value) {
+    if (value == null) {
+      return null;
+    }
     try {
       return Integer.parseInt(value);
     } catch (NumberFormatException e) {

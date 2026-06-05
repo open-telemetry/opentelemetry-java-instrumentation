@@ -43,7 +43,7 @@ tasks {
       includeTestsMatching("ConfiguredTraceAnnotationsTest")
     }
     include("**/ConfiguredTraceAnnotationsTest.*")
-    jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.extannotations.OuterClass\$InterestingMethod")
+    jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.external.annotations.OuterClass\$InterestingMethod")
   }
 
   val testDeclarativeConfigInclude by registering(Test::class) {
@@ -68,7 +68,7 @@ tasks {
     }
     include("**/TracedMethodsExclusionTest.*")
     jvmArgs(
-      "-Dotel.instrumentation.external-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.extannotations.TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
+      "-Dotel.instrumentation.external-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.external.annotations.TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
     )
   }
 

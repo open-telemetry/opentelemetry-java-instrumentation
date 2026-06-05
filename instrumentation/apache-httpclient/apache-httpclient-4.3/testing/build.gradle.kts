@@ -16,6 +16,4 @@ dependencies {
   api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("org.apache.httpcomponents:httpclient:4.3")
-
-  implementation("io.opentelemetry:opentelemetry-api")
 }

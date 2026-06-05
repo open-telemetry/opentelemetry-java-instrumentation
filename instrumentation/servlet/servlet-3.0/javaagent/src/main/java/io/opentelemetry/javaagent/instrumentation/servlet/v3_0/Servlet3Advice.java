@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Si
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
@@ -79,7 +79,7 @@ public class Servlet3Advice {
       if (context != null) {
         // Only trigger response customizer once, so only if server span was created here
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(contextToUpdate, response, new Servlet3HttpServerResponseMutator());
+            .customize(contextToUpdate, response, Servlet3HttpServerResponseMutator.INSTANCE);
       }
     }
 

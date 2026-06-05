@@ -11,6 +11,7 @@ import static java.util.Collections.emptyMap;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import net.bytebuddy.utility.JavaModule;
 
 /**
@@ -18,6 +19,12 @@ import net.bytebuddy.utility.JavaModule;
  * any time.
  */
 public interface ExperimentalInstrumentationModule {
+
+  /**
+   * Register virtual field. First argument for the consumer is dot class name of the type where the
+   * field is added and the second argument is the dot class name of the field type.
+   */
+  default void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {}
 
   /**
    * Returns a list of helper classes that will be defined in the class loader of the instrumented

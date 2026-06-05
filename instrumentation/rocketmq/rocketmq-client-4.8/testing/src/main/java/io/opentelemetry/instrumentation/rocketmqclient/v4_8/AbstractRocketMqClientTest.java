@@ -34,7 +34,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
@@ -62,8 +61,9 @@ abstract class AbstractRocketMqClientTest {
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.rocketmq-client.experimental-span-attributes");
 
-  @Nullable
-  static <T> T experimental(T value) {
+  private static final Logger logger = LoggerFactory.getLogger(AbstractRocketMqClientTest.class);
+
+  private static <T> T experimental(T value) {
     return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
@@ -78,8 +78,6 @@ abstract class AbstractRocketMqClientTest {
       val.isInstanceOf(Long.class);
     }
   }
-
-  private static final Logger logger = LoggerFactory.getLogger(AbstractRocketMqClientTest.class);
 
   private DefaultMQProducer producer;
 

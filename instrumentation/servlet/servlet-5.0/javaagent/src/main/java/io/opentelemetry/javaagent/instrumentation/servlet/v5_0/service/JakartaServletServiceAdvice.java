@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Si
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
@@ -84,7 +84,7 @@ public class JakartaServletServiceAdvice {
             .customize(
                 contextToUpdate,
                 (HttpServletResponse) response,
-                Servlet5HttpServerResponseMutator.INSTANCE);
+                new Servlet5HttpServerResponseMutator());
       }
     }
 

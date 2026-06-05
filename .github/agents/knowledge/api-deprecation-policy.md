@@ -11,6 +11,7 @@
 
 - Java symbols in published artifacts (classes, methods, fields in `:library`, `:testing`,
   `instrumentation-api*`).
+- Non-private `Experimental*` helpers in published artifacts, even under `.internal` packages.
 - User-facing configuration keys — `otel.instrumentation.<name>.enabled`, any
   `otel.instrumentation.*` property, and the equivalent declarative YAML keys.
 - Outgoing telemetry identity — anything users can match on in their backend, including

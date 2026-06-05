@@ -36,6 +36,7 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 
 public class PulsarSingletons {
+
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
   private static final OpenTelemetry telemetry = GlobalOpenTelemetry.get();
@@ -154,7 +155,11 @@ public class PulsarSingletons {
 
   @Nullable
   public static Context startAndEndConsumerReceive(
-      Context parent, Message<?> message, Timer timer, Consumer<?> consumer, Throwable throwable) {
+      Context parent,
+      @Nullable Message<?> message,
+      Timer timer,
+      Consumer<?> consumer,
+      @Nullable Throwable throwable) {
     if (message == null) {
       return null;
     }
@@ -192,7 +197,7 @@ public class PulsarSingletons {
       Messages<?> messages,
       Timer timer,
       Consumer<?> consumer,
-      Throwable throwable) {
+      @Nullable Throwable throwable) {
     if (messages == null || messages.size() == 0) {
       return null;
     }

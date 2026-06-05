@@ -124,7 +124,7 @@ Display name is mostly used for UI purposes, and has two main uses:
 - Providing a more user-friendly name for the instrumentation than the module name
   (e.g., "Apache CXF JAX-RS 2.x" instead of "jaxrs-2.0-cxf-3.2").
 - Collapsing multiple related modules into a single display name
-  (e.g., "Akka Actors" for both "akka-actor-2.3" and "akka-actor-fork-join-2.5").
+  (e.g., "Akka Actors" for both "akka-actor-2.3" and "akka-actor-forkjoin-2.5").
 
 ### Description (required)
 
@@ -189,8 +189,8 @@ List of possible options:
 * [JVM_RUNTIME_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md)
 * [GRAPHQL_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/graphql/graphql-spans.md)
 * [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
-* [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)
-* [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
+* [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md)
+* [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
 
 ### Features (optional)
 

@@ -11,7 +11,6 @@ import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.net.URL;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -37,34 +36,34 @@ class JarDetails {
   static final String JAR_EXTENSION = "jar";
   static final String WAR_EXTENSION = "war";
   static final String EAR_EXTENSION = "ear";
+  private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
   private static final Map<String, String> EMBEDDED_FORMAT_TO_EXTENSION =
       Stream.of(JAR_EXTENSION, WAR_EXTENSION, EAR_EXTENSION)
           .collect(
               collectingAndThen(
                   toMap(ext -> ('.' + ext + "!/"), identity()),
                   Collections::<String, String>unmodifiableMap));
-  private static final ThreadLocal<MessageDigest> SHA1 =
+  private static final ThreadLocal<MessageDigest> sha256 =
       ThreadLocal.withInitial(
           () -> {
             try {
-              return MessageDigest.getInstance("SHA1");
+              return MessageDigest.getInstance("SHA-256");
             } catch (NoSuchAlgorithmException e) {
               throw new IllegalStateException(e);
             }
           });
 
   private final URL url;
-  protected final JarFile jarFile;
   @Nullable private final Properties pom;
   @Nullable private final Manifest manifest;
-  private final String sha1Checksum;
+  private final String sha256Checksum;
 
-  private JarDetails(URL url, JarFile jarFile) throws IOException {
+  private JarDetails(
+      URL url, @Nullable Properties pom, @Nullable Manifest manifest, String sha256Checksum) {
     this.url = url;
-    this.jarFile = jarFile;
-    this.pom = getPom();
-    this.manifest = getManifest();
-    this.sha1Checksum = computeDigest(SHA1.get());
+    this.pom = pom;
+    this.manifest = manifest;
+    this.sha256Checksum = sha256Checksum;
   }
 
   static JarDetails forUrl(URL url) throws IOException {
@@ -75,18 +74,29 @@ class JarDetails {
         int index = urlLower.indexOf(entry.getKey());
         if (index > 0) {
           String targetEntry = urlString.substring(index + entry.getKey().length());
-          JarFile jarFile =
-              new JarFile(
-                  urlString.substring("jar:file:".length(), index + 1 + entry.getValue().length()));
-          JarEntry jarEntry = jarFile.getJarEntry(targetEntry);
-          if (jarEntry == null) {
-            throw new IOException("Embedded jar entry not found: " + targetEntry);
+          // Outer URL substring up to (excluding) the "!/" separator, e.g.
+          // "jar:file:/C:/Program%20Files/app.war". Strip the leading "jar:" and parse as a URI
+          // so percent-encoded characters in the path are decoded before opening the file.
+          String outerUrl =
+              urlString.substring("jar:".length(), index + 1 + entry.getValue().length());
+          try (JarFile jarFile = new JarFile(UrlPaths.toFile(outerUrl))) {
+            JarEntry jarEntry = jarFile.getJarEntry(targetEntry);
+            if (jarEntry == null) {
+              throw new IOException("Embedded jar entry not found: " + targetEntry);
+            }
+            return new JarDetails(
+                url,
+                getPom(jarFile, jarEntry),
+                getManifest(jarFile, jarEntry),
+                computeDigest(jarFile, jarEntry, sha256.get()));
           }
-          return new EmbeddedJarDetails(url, jarFile, jarEntry);
         }
       }
     }
-    return new JarDetails(url, new JarFile(url.getFile()));
+    try (JarFile jarFile = new JarFile(UrlPaths.toFile(url))) {
+      return new JarDetails(
+          url, getPom(jarFile), getManifest(jarFile), computeDigest(url, sha256.get()));
+    }
   }
 
   /**
@@ -175,41 +185,58 @@ class JarDetails {
     return name + " by " + vendor;
   }
 
-  /** Returns the SHA1 hash of this file, e.g. {@code 30d16ec2aef6d8094c5e2dce1d95034ca8b6cb42}. */
-  String computeSha1() {
-    return sha1Checksum;
+  /** Returns the lowercase hex-encoded SHA-256 digest of this file as a 64-character string. */
+  String computeSha256() {
+    return sha256Checksum;
   }
 
-  private String computeDigest(MessageDigest md) throws IOException {
-    try (InputStream inputStream = getInputStream()) {
+  private static String computeDigest(URL url, MessageDigest md) throws IOException {
+    try (InputStream inputStream = url.openStream()) {
+      return computeDigest(inputStream, md);
+    }
+  }
+
+  private static String computeDigest(JarFile jarFile, JarEntry jarEntry, MessageDigest md)
+      throws IOException {
+    try (InputStream inputStream = jarFile.getInputStream(jarEntry)) {
       return computeDigest(inputStream, md);
     }
   }
 
   private static String computeDigest(InputStream inputStream, MessageDigest md)
       throws IOException {
-    md.reset();
-    DigestInputStream dis = new DigestInputStream(inputStream, md);
-    byte[] buffer = new byte[8192];
-    while (dis.read(buffer) != -1) {}
-    byte[] digest = md.digest();
-    return String.format(Locale.ROOT, "%040x", new BigInteger(1, digest));
+    try (DigestInputStream digestInputStream = new DigestInputStream(inputStream, md)) {
+      byte[] buffer = new byte[8192];
+      while (digestInputStream.read(buffer) != -1) {}
+      return toHex(md.digest());
+    } finally {
+      md.reset();
+    }
   }
 
-  /**
-   * Returns An open input stream for the associated url. It is the caller's responsibility to close
-   * the stream on completion.
-   */
-  protected InputStream getInputStream() throws IOException {
-    return url.openStream();
+  static String toHex(byte[] bytes) {
+    char[] chars = new char[bytes.length * 2];
+    for (int i = 0; i < bytes.length; i++) {
+      int value = bytes[i] & 0xff;
+      chars[i * 2] = HEX_DIGITS[value >>> 4];
+      chars[i * 2 + 1] = HEX_DIGITS[value & 0x0f];
+    }
+    return new String(chars);
   }
 
   @Nullable
-  protected Manifest getManifest() {
+  private static Manifest getManifest(JarFile jarFile) {
     try {
       return jarFile.getManifest();
-    } catch (IOException e) {
+    } catch (IOException ignored) {
       return null;
+    }
+  }
+
+  @Nullable
+  private static Manifest getManifest(JarFile jarFile, JarEntry jarEntry) throws IOException {
+    try (JarInputStream jarInputStream = new JarInputStream(jarFile.getInputStream(jarEntry))) {
+      return jarInputStream.getManifest();
     }
   }
 
@@ -218,7 +245,7 @@ class JarDetails {
    * are found or there is an error reading the file, return null.
    */
   @Nullable
-  protected Properties getPom() throws IOException {
+  private static Properties getPom(JarFile jarFile) throws IOException {
     Properties pom = null;
     for (Enumeration<JarEntry> entries = jarFile.entries(); entries.hasMoreElements(); ) {
       JarEntry jarEntry = entries.nextElement();
@@ -238,51 +265,26 @@ class JarDetails {
     return pom;
   }
 
-  private static class EmbeddedJarDetails extends JarDetails {
-
-    private final JarEntry jarEntry;
-
-    private EmbeddedJarDetails(URL url, JarFile jarFile, JarEntry jarEntry) throws IOException {
-      super(url, jarFile);
-      this.jarEntry = jarEntry;
-    }
-
-    @Override
-    protected InputStream getInputStream() throws IOException {
-      return jarFile.getInputStream(jarEntry);
-    }
-
-    @Override
-    protected Manifest getManifest() {
-      try (JarInputStream jarFile = new JarInputStream(getInputStream())) {
-        return jarFile.getManifest();
-      } catch (IOException e) {
-        return null;
-      }
-    }
-
-    @Override
-    @Nullable
-    protected Properties getPom() throws IOException {
-      Properties pom = null;
-      // Need to navigate inside the embedded jar which can't be done via random access.
-      try (JarInputStream jarFile = new JarInputStream(getInputStream())) {
-        for (JarEntry entry = jarFile.getNextJarEntry();
-            entry != null;
-            entry = jarFile.getNextJarEntry()) {
-          if (entry.getName().startsWith("META-INF/maven")
-              && entry.getName().endsWith("pom.properties")) {
-            if (pom != null) {
-              // we've found multiple pom files. bail!
-              return null;
-            }
-            Properties props = new Properties();
-            props.load(jarFile);
-            pom = props;
+  @Nullable
+  private static Properties getPom(JarFile jarFile, JarEntry jarEntry) throws IOException {
+    Properties pom = null;
+    // Need to navigate inside the embedded jar which can't be done via random access.
+    try (JarInputStream jarInputStream = new JarInputStream(jarFile.getInputStream(jarEntry))) {
+      for (JarEntry entry = jarInputStream.getNextJarEntry();
+          entry != null;
+          entry = jarInputStream.getNextJarEntry()) {
+        if (entry.getName().startsWith("META-INF/maven")
+            && entry.getName().endsWith("pom.properties")) {
+          if (pom != null) {
+            // we've found multiple pom files. bail!
+            return null;
           }
+          Properties props = new Properties();
+          props.load(jarInputStream);
+          pom = props;
         }
-        return pom;
       }
+      return pom;
     }
   }
 }

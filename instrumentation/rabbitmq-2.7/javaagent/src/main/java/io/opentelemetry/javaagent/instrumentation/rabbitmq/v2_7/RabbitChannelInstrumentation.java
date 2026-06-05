@@ -74,18 +74,18 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
                         .or(namedOneOf("processAsync", "open", "close", "abort", "basicGet"))))
             .and(isPublic())
             .and(canThrow(IOException.class).or(canThrow(InterruptedException.class))),
-        RabbitChannelInstrumentation.class.getName() + "$ChannelMethodAdvice");
+        getClass().getName() + "$ChannelMethodAdvice");
     transformer.applyAdviceToMethod(
         named("basicPublish").and(takesArguments(6)),
-        RabbitChannelInstrumentation.class.getName() + "$ChannelPublishAdvice");
+        getClass().getName() + "$ChannelPublishAdvice");
     transformer.applyAdviceToMethod(
         named("basicGet").and(takesArgument(0, String.class)),
-        RabbitChannelInstrumentation.class.getName() + "$ChannelGetAdvice");
+        getClass().getName() + "$ChannelGetAdvice");
     transformer.applyAdviceToMethod(
         named("basicConsume")
             .and(takesArgument(0, String.class))
             .and(takesArgument(6, named("com.rabbitmq.client.Consumer"))),
-        RabbitChannelInstrumentation.class.getName() + "$ChannelConsumeAdvice");
+        getClass().getName() + "$ChannelConsumeAdvice");
   }
 
   // TODO Why do we start span here and not in ChannelPublishAdvice below?

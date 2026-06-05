@@ -25,14 +25,14 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
-val byteBuddyVersion = "1.18.8"
+val byteBuddyVersion = "1.18.9"
 val aetherVersion = "1.1.0"
 
 dependencies {
   implementation("com.google.guava:guava:33.6.0-jre")
   // we need to use byte buddy variant that does not shade asm
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
-    exclude(group = "net.bytebuddy", module = "byte-buddy")
+    exclude("net.bytebuddy", "byte-buddy")
   }
   implementation("net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}")
 
@@ -40,11 +40,11 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.1") {
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.2") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
     // causing "No XmlService implementation found" in Gradle's classloader
-    exclude(group = "org.codehaus.plexus", module = "plexus-utils")
-    exclude(group = "org.codehaus.plexus", module = "plexus-xml")
+    exclude("org.codehaus.plexus", "plexus-utils")
+    exclude("org.codehaus.plexus", "plexus-xml")
   }
 
   testImplementation("org.assertj:assertj-core:3.27.7")

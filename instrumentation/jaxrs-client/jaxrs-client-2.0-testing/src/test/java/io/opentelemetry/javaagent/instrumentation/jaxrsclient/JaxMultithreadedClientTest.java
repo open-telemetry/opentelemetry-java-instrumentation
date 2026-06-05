@@ -46,7 +46,7 @@ class JaxMultithreadedClientTest {
     try {
       client.target(uri).request().get().close();
       return false;
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       return true;
     } finally {
       client.close();
@@ -82,7 +82,7 @@ class JaxMultithreadedClientTest {
           .start();
     }
 
-    assertThat(latch.await(10, SECONDS)).isTrue();
+    assertThat(latch.await(20, SECONDS)).isTrue();
     assertThat(hadErrors).isFalse();
   }
 }

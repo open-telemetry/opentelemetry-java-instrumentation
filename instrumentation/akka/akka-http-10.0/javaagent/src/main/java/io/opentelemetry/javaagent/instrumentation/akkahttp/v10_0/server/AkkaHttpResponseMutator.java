@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import java.util.ArrayList;
 import java.util.List;
 
-final class AkkaHttpResponseMutator implements HttpServerResponseMutator<HttpResponse> {
+class AkkaHttpResponseMutator implements HttpServerResponseMutator<HttpResponse> {
 
   private final List<HttpHeader> headers = new ArrayList<>();
 

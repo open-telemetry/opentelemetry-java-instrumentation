@@ -25,6 +25,8 @@ public class Vertx5WebServer extends AbstractVertxWebServer {
   public void start(Promise<Void> startPromise) {
     int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
     Router router = buildRouter();
+    router.route("/child/*").subRouter(buildRouter());
+
     Router mainRouter = Router.router(vertx);
     mainRouter.route("/vertx-app/*").subRouter(router);
 

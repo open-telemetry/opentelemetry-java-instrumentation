@@ -11,8 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setPoolConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.attachConnectOptions;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.resolveAndStoreDbSystem;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -27,6 +25,7 @@ import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -76,17 +75,19 @@ class PoolInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Return Pool pool,
+        @Advice.Return @Nullable Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
         @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
 
-      setPoolConnectOptions(pool, sqlConnectOptions);
-      resolveAndStoreDbSystem(pool, sqlConnectOptions);
+      if (pool != null) {
+        setPoolConnectOptions(pool, sqlConnectOptions);
+        VertxSqlClientSingletons.resolveAndStoreDbSystem(pool, sqlConnectOptions);
+      }
       setSqlConnectOptions(null);
     }
   }
@@ -100,7 +101,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       // copy connect options stored on pool to new connection
       SqlConnectOptions sqlConnectOptions = getPoolSqlConnectOptions(pool);
 
-      return wrapContext(attachConnectOptions(future, sqlConnectOptions));
+      return wrapContext(VertxSqlClientSingletons.attachConnectOptions(future, sqlConnectOptions));
     }
   }
 }

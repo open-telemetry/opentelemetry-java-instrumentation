@@ -33,17 +33,18 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.redisson.Redisson;
@@ -66,18 +67,19 @@ public abstract class AbstractRedissonAsyncClientTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final GenericContainer<?> redisServer =
+  private static final String TEST_RECONNECT = "testReconnect";
+  private static final Duration TIMEOUT = Duration.ofSeconds(30);
+
+  private final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
-  private static String ip;
-
-  private static int port;
-
-  private static String address;
+  private String ip;
+  private int port;
+  private String address;
   private RedissonClient redisson;
 
   @BeforeAll
-  static void setupAll() throws UnknownHostException {
+  void setupAll() throws UnknownHostException {
     redisServer.start();
     ip = InetAddress.getByName(redisServer.getHost()).getHostAddress();
     port = redisServer.getMappedPort(6379);
@@ -85,12 +87,12 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @AfterAll
-  static void cleanupAll() {
+  void cleanupAll() {
     redisServer.stop();
   }
 
   @BeforeEach
-  void setup() throws InvocationTargetException, IllegalAccessException {
+  void setup(TestInfo testInfo) throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
       // Newer versions of redisson require scheme, older versions forbid it
@@ -100,6 +102,11 @@ public abstract class AbstractRedissonAsyncClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
+    if (testInfo.getTags().contains(TEST_RECONNECT)) {
+      // When verifying the futureCallback test case, simulate reconnection during Redis command
+      // execution.
+      singleServerConfig.setConnectionMinimumIdleSize(0);
+    }
     try {
       // disable connection ping if it exists
       singleServerConfig
@@ -121,10 +128,10 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @Test
-  void futureSet() throws ExecutionException, InterruptedException, TimeoutException {
+  void futureSet() {
     RBucket<String> keyObject = redisson.getBucket("foo");
     RFuture<Void> future = keyObject.setAsync("bar");
-    future.get(30, SECONDS);
+    assertThat(future.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
@@ -143,23 +150,24 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @Test
-  void futureWhenComplete() throws ExecutionException, InterruptedException, TimeoutException {
+  @Tag(TEST_RECONNECT)
+  void futureCallback() {
     RSet<String> set = redisson.getSet("set1");
     CompletionStage<Boolean> result =
         testing.runWithSpan(
             "parent",
             () -> {
               RFuture<Boolean> future = set.addAsync("s1");
-              return future.whenComplete(
-                  (res, throwable) -> {
+              return future.thenApply(
+                  res -> {
                     assertThat(Span.current().getSpanContext().isValid()).isTrue();
                     testing.runWithSpan("callback", () -> {});
+                    return res;
                   });
             });
-    result.toCompletableFuture().get(30, SECONDS);
+    assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", "SADD", "callback"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
@@ -203,7 +211,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @Test
-  void atomicBatchCommand() throws ExecutionException, InterruptedException, TimeoutException {
+  void atomicBatchCommand() {
     try {
       // available since 3.7.2
       Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
@@ -229,7 +237,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     testing.runWithSpan("callback", () -> {});
                   });
             });
-    result.toCompletableFuture().get(30, SECONDS);
+    assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent", "SADD", "callback"),

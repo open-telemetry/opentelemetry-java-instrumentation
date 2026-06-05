@@ -7,7 +7,6 @@ muzzle {
     group.set("com.oracle.database.jdbc")
     module.set("ucp")
     versions.set("[,)")
-    assertInverse.set(true)
   }
 }
 

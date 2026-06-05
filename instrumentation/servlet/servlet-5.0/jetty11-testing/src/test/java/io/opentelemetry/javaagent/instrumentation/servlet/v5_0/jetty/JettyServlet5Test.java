@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty;
 
+import io.opentelemetry.instrumentation.servlet.v5_0.AbstractServlet5Test;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -23,7 +23,7 @@ public abstract class JettyServlet5Test
     extends AbstractServlet5Test<Server, ServletContextHandler> {
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing =
+  private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
 
   @Override

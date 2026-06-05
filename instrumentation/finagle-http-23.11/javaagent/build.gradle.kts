@@ -32,11 +32,17 @@ dependencies {
 
   library("${scalified("com.twitter:finagle-http")}:$finagleVersion")
 
-  // should wire netty contexts
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+
+  // Exclude the Promise stub and its nested classes;
+  // this allows us to compile against these types in the instrumentation
+  // despite them being private in their original inner class;
+  // this is required for VirtualField to have a concrete type to find/get/set on.
+  compileOnly(project(":instrumentation:finagle-http-23.11:compile-stub"))
 
   implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
   implementation(project(":instrumentation:netty:netty-4.1:library"))
+  implementation(project(":instrumentation:netty:netty-common-4.0:javaagent"))
   implementation(project(":instrumentation:netty:netty-common-4.0:library"))
 }
 
@@ -45,6 +51,14 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
     jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+    jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
+
+    // force the netty event loop into constrained territory
+    systemProperty("io.netty.eventLoopThreads", "2")
+    // ensure concurrent tests are competing for netty workers
+    systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
+    // ensure concurrent tests are competing for offload pool workers
+    systemProperty("com.twitter.finagle.offload.numWorkers", "2")
   }
 
   test {
@@ -59,6 +73,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.http.client.emit-experimental-telemetry=true," +

@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
-import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -34,21 +33,24 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class WithSpanInstrumentation implements TypeInstrumentation {
 
-  private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
+  private final ElementMatcher.Junction<MethodDescription> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
   // this matcher matches all methods that should be excluded from transformation
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
   WithSpanInstrumentation() {
     annotatedMethodMatcher =
-        isAnnotatedWith(named("application.io.opentelemetry.instrumentation.annotations.WithSpan"));
+        isMethod()
+            .and(
+                isAnnotatedWith(
+                    named("application.io.opentelemetry.instrumentation.annotations.WithSpan")));
     annotatedParametersMatcher =
         hasParameters(
             whereAny(
                 isAnnotatedWith(
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.SpanAttribute"))));
-    // exclude all kotlin suspend methods, these are handle in kotlinx-coroutines instrumentation
+    // exclude all kotlin suspend methods, these are handled in kotlinx-coroutines instrumentation
     excludedMethodsMatcher =
         AnnotationExcludedMethods.configureExcludedMethods().or(isKotlinSuspendMethod());
   }
@@ -69,13 +71,12 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         tracedMethods.and(not(annotatedParametersMatcher));
 
     transformer.applyAdviceToMethod(
-        tracedMethodsWithoutParameters.and(isMethod()), getClass().getName() + "$WithSpanAdvice");
+        tracedMethodsWithoutParameters, getClass().getName() + "$WithSpanAdvice");
 
     // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
     // with @SpanAttribute to avoid unnecessarily copying the arguments into an array.
     transformer.applyAdviceToMethod(
-        tracedMethodsWithParameters.and(isMethod()),
-        getClass().getName() + "$WithSpanAttributesAdvice");
+        tracedMethodsWithParameters, getClass().getName() + "$WithSpanAttributesAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -122,7 +123,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object stopSpan(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable WithSpanAdviceScope adviceScope) {
       if (adviceScope != null) {

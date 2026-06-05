@@ -35,8 +35,7 @@ class RabbitCommandInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(),
-        RabbitCommandInstrumentation.class.getName() + "$CommandConstructorAdvice");
+        isConstructor(), getClass().getName() + "$CommandConstructorAdvice");
   }
 
   public static final class SpanHolder {

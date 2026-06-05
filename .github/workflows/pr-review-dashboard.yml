@@ -17,25 +17,27 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DASHBOARD_TITLE: "Pull Request Dashboard"
+      DASHBOARD_LABEL: "dashboard"
       DASHBOARD_OUTPUT: pull-request-dashboard.md
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Install Copilot CLI
-        run: npm install -g @github/copilot
+        run: |
+          npm ci --prefix .github/scripts/copilot-cli
+          echo "$GITHUB_WORKSPACE/.github/scripts/copilot-cli/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Generate dashboard
         env:
-          # Use the otelbot app token so the script can read approver/maintainer
-          # team membership via /orgs/.../teams/.../members (the default
-          # GITHUB_TOKEN cannot read org team membership).
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # needed for reading approver team membership (org:read)
+          OTELBOT_TOKEN: ${{ steps.otelbot-token.outputs.token }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
         run: |
           python3 .github/scripts/pull-request-dashboard.py \
@@ -45,15 +47,33 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Find the open issue with an exact title match. The search API
-          # does not support exact phrases, so filter the results in jq.
-          number=$(gh issue list \
-            --search "in:title $DASHBOARD_TITLE" \
-            --state open \
-            --limit 20 \
-            --json number,title \
-            --jq ".[] | select(.title == \"$DASHBOARD_TITLE\") | .number" \
-            | head -1)
+          set -euo pipefail
+
+          # Use GraphQL instead of the REST `/repos/{repo}/issues` list
+          # endpoint because that endpoint has been observed to omit pinned
+          # issues from its results, which would cause this step to create a
+          # duplicate dashboard issue instead of updating the existing one.
+          owner="${GITHUB_REPOSITORY%/*}"
+          name="${GITHUB_REPOSITORY#*/}"
+          number=$(gh api graphql --paginate \
+            -F owner="$owner" -F name="$name" -F label="$DASHBOARD_LABEL" \
+            -f query='
+              query ($owner: String!, $name: String!, $label: String!, $endCursor: String) {
+                repository(owner: $owner, name: $name) {
+                  issues(
+                    first: 100
+                    after: $endCursor
+                    states: OPEN
+                    filterBy: { labels: [$label] }
+                    orderBy: { field: CREATED_AT, direction: ASC }
+                  ) {
+                    pageInfo { hasNextPage endCursor }
+                    nodes { number title }
+                  }
+                }
+              }' \
+            --jq ".data.repository.issues.nodes[] | select(.title == \"$DASHBOARD_TITLE\") | .number" \
+            | sed -n '1p')
 
           if [[ -n "$number" ]]; then
             echo "Updating existing issue #$number"
@@ -62,5 +82,6 @@ jobs:
             echo "Creating new dashboard issue"
             gh issue create \
               --title "$DASHBOARD_TITLE" \
+              --label "$DASHBOARD_LABEL" \
               --body-file "$DASHBOARD_OUTPUT"
           fi

@@ -77,7 +77,6 @@ public abstract class AbstractGrpcStreamingTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @CartesianTest
   void conversation(
       @CartesianTest.Values(ints = {1, 2, 3}) int clientMessageCount,

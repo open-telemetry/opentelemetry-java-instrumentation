@@ -34,12 +34,12 @@ class AddingSpanAttributesInstrumentationTest {
             new ExtractAttributesUsingAddingSpanAttributes()
                 .withSpanTakesPrecedence("foo", "bar", null, "baz"));
 
-    List<AttributeAssertion> attributesAsertions =
+    List<AttributeAssertion> attributesAssertions =
         new ArrayList<>(
             SemconvCodeStabilityUtil.codeFunctionAssertions(
                 ExtractAttributesUsingAddingSpanAttributes.class, "withSpanTakesPrecedence"));
-    attributesAsertions.add(equalTo(stringKey("implicitName"), "foo"));
-    attributesAsertions.add(equalTo(stringKey("explicitName"), "bar"));
+    attributesAssertions.add(equalTo(stringKey("implicitName"), "foo"));
+    attributesAssertions.add(equalTo(stringKey("explicitName"), "bar"));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -50,7 +50,7 @@ class AddingSpanAttributesInstrumentationTest {
                             "ExtractAttributesUsingAddingSpanAttributes.withSpanTakesPrecedence")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
-                        .hasAttributesSatisfyingExactly(attributesAsertions)));
+                        .hasAttributesSatisfyingExactly(attributesAssertions)));
   }
 
   @Test
@@ -78,6 +78,40 @@ class AddingSpanAttributesInstrumentationTest {
     new ExtractAttributesUsingAddingSpanAttributes().withSpanAttributes("foo", "bar", null, "baz");
 
     assertThat(testing.waitForTraces(0)).isEmpty();
+  }
+
+  @Test
+  void constructorOnlyAddingSpanAttributesDoesNotTransformType() {
+    testing.runWithSpan(
+        "root", () -> new ConstructorOnlyAddingSpanAttributes("foo", "bar", null, "baz"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("root")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)));
+  }
+
+  @Test
+  void constructorAndMethodAddingSpanAttributesIgnoresConstructor() {
+    testing.runWithSpan(
+        "root",
+        () ->
+            new ConstructedWithAddingSpanAttributes("foo", "bar", null, "baz")
+                .addAttributes("method"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("root")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("methodAttribute"), "method"))));
   }
 
   @Test

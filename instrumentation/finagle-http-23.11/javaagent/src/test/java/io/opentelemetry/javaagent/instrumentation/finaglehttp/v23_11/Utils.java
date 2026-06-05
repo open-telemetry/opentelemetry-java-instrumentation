@@ -22,7 +22,6 @@ class Utils {
   static Http.Client createClient(ClientType clientType) {
     Http.Client client =
         Http.client()
-            .withNoHttp2()
             .withTransport()
             .readTimeout(Duration.fromMilliseconds(READ_TIMEOUT.toMillis()))
             .withTransport()

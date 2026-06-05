@@ -62,8 +62,8 @@ public abstract class AbstractVertxKafkaTest {
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  KafkaContainer kafka;
-  Vertx vertx;
+  private KafkaContainer kafka;
+  private Vertx vertx;
   protected KafkaProducer<String, String> kafkaProducer;
   protected KafkaConsumer<String, String> kafkaConsumer;
 

@@ -27,7 +27,7 @@ class KafkaStreamsReflectionUtil {
   private static Method getConsumerPollMethod(Class<?>... types) {
     try {
       return Consumer.class.getMethod("poll", types);
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }
@@ -126,7 +126,7 @@ class KafkaStreamsReflectionUtil {
     try {
       // Different class names for test and latestDepTest.
       builderClass = Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder");
-    } catch (Exception e) {
+    } catch (Exception ignored) {
       builderClass = Class.forName("org.apache.kafka.streams.StreamsBuilder");
     }
     return new StreamBuilder(builderClass.getConstructor().newInstance());

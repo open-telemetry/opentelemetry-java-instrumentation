@@ -34,12 +34,12 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
       ThreadLocal.withInitial(IdentityHashMap::new);
 
   @Nullable
-  private static final Class<?> directWithAttributesChannelClass =
+  private static final Class<?> DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS =
       getDirectWithAttributesChannelClass();
 
   @Nullable
-  private static final MethodHandle channelGetAttributeMh =
-      getChannelAttributeMh(directWithAttributesChannelClass);
+  private static final MethodHandle CHANNEL_GET_ATTRIBUTE_MH =
+      getChannelAttributeMh(DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS);
 
   @Nullable
   private static Class<?> getDirectWithAttributesChannelClass() {
@@ -240,23 +240,23 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   }
 
   private boolean createProducerSpan(MessageChannel messageChannel) {
-    if (!producerSpanEnabled || directWithAttributesChannelClass == null) {
+    if (!producerSpanEnabled || DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS == null) {
       return false;
     }
 
     messageChannel = unwrapProxy(messageChannel);
-    if (!directWithAttributesChannelClass.isInstance(messageChannel)) {
+    if (!DIRECT_WITH_ATTRIBUTES_CHANNEL_CLASS.isInstance(messageChannel)) {
       // we can only tell if it is an output channel for instances of DirectWithAttributesChannel
       // that are used by spring cloud stream
       return false;
     }
 
-    if (channelGetAttributeMh == null) {
+    if (CHANNEL_GET_ATTRIBUTE_MH == null) {
       return false;
     }
 
     try {
-      return "output".equals(channelGetAttributeMh.invoke(messageChannel, "type"));
+      return "output".equals(CHANNEL_GET_ATTRIBUTE_MH.invoke(messageChannel, "type"));
     } catch (Throwable ignored) {
       return false;
     }

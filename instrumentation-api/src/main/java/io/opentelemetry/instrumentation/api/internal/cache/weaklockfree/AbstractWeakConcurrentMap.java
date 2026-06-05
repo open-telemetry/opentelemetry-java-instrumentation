@@ -184,7 +184,15 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
     }
     return previous == null
         ? target.computeIfAbsent(
-            new WeakKey<>(key, weakTarget), ignored -> mappingFunction.apply(key))
+            new WeakKey<>(key, weakTarget),
+            ignored -> {
+              enterComputeIfAbsent();
+              try {
+                return mappingFunction.apply(key);
+              } finally {
+                exitComputeIfAbsent();
+              }
+            })
         : previous;
   }
 
@@ -236,6 +244,13 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
 
   /** Cleans all unused references. */
   public static void expungeStaleEntries() {
+    // Skip expunging stale entries if we are inside computeIfAbsent. This check prevents a deadlock
+    // when there are 2 threads calling computeIfAbsent, that locks the map, and both threads try
+    // to remove entry from the map locked by the other thread.
+    // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/18232
+    if (isInComputeIfAbsent()) {
+      return;
+    }
     // Skip expunging stale entries if we are running on a virtual thread.
     // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/17847
     // Stale entries are also expunged from the background thread, see the runCleanup method below.
@@ -247,6 +262,36 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
     while ((reference = REFERENCE_QUEUE.poll()) != null) {
       removeWeakKey((WeakKey<?>) reference);
     }
+  }
+
+  private static final ThreadLocal<Counter> COMPUTE_COUNTER = new ThreadLocal<>();
+
+  private static void enterComputeIfAbsent() {
+    Counter counter = COMPUTE_COUNTER.get();
+    if (counter == null) {
+      counter = new Counter();
+      COMPUTE_COUNTER.set(counter);
+    }
+    counter.count++;
+  }
+
+  private static void exitComputeIfAbsent() {
+    Counter counter = COMPUTE_COUNTER.get();
+    if (counter != null) {
+      counter.count--;
+      if (counter.count == 0) {
+        COMPUTE_COUNTER.remove();
+      }
+    }
+  }
+
+  private static boolean isInComputeIfAbsent() {
+    Counter counter = COMPUTE_COUNTER.get();
+    return counter != null && counter.count > 0;
+  }
+
+  private static final class Counter {
+    int count;
   }
 
   private static void removeWeakKey(WeakKey<?> weakKey) {

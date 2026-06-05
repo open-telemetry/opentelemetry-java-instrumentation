@@ -4,7 +4,7 @@ plugins {
 
 muzzle {
   pass {
-    group.set("org.hibernate")
+    group.set("org.hibernate.orm")
     module.set("hibernate-core")
     versions.set("[6.0.0.Final,)")
     assertInverse.set(true)
@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  library("org.hibernate:hibernate-core:6.0.0.Final")
+  library("org.hibernate.orm:hibernate-core:6.0.0.Final")
 
   implementation(project(":instrumentation:hibernate:hibernate-common-3.3:javaagent"))
 
@@ -49,11 +49,7 @@ testing {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
-        if (otelProps.testLatestDeps) {
-          implementation("org.hibernate:hibernate-core:6.+")
-        } else {
-          implementation("org.hibernate:hibernate-core:6.0.0.Final")
-        }
+        implementation("org.hibernate.orm:hibernate-core:${baseVersion("6.0.0.Final").orLatest("6.+")}")
       }
     }
 
@@ -68,11 +64,7 @@ testing {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
-        if (otelProps.testLatestDeps) {
-          implementation("org.hibernate:hibernate-core:7.+")
-        } else {
-          implementation("org.hibernate:hibernate-core:7.0.0.Final")
-        }
+        implementation("org.hibernate.orm:hibernate-core:${baseVersion("7.0.0.Final").orLatest("7.+")}")
       }
     }
   }

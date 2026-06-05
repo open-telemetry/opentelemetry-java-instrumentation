@@ -6,24 +6,24 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestRequest;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestResponse;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestRequest;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestResponse;
 import java.net.InetAddress;
 import javax.annotation.Nullable;
 import org.opensearch.client.Response;
 
-public class OpenSearchRestSingletons {
+class OpenSearchRestSingletons {
 
   private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter =
       OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-3.0");
 
-  public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
+  static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
     return instrumenter;
   }
 
   @Nullable
-  public static OpenSearchRestResponse convertResponse(@Nullable Response response) {
+  static OpenSearchRestResponse convertResponse(@Nullable Response response) {
     if (response == null) {
       return null;
     }

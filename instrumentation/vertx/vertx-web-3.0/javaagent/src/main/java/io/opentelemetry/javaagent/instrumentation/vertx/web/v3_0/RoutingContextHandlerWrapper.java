@@ -17,6 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.Nullable;
 
 /** This is used to wrap Vert.x Handlers to provide nice user-friendly SERVER span names */
 public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
@@ -38,7 +39,7 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     }
     HttpServerRoute.update(otelContext, HttpServerRouteSource.NESTED_CONTROLLER, route);
 
-    try (Scope ignore = RouteHolder.init(otelContext, route).makeCurrent()) {
+    try (Scope ignored = RouteHolder.init(otelContext, route).makeCurrent()) {
       handler.handle(context);
     } catch (Throwable t) {
       Span serverSpan = LocalRootSpan.fromContextOrNull(otelContext);
@@ -49,8 +50,18 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
     }
   }
 
+  @Nullable
   private static String getRoute(Context otelContext, RoutingContext routingContext) {
     String route = routingContext.currentRoute().getPath();
+    if (route == null) {
+      return RouteHolder.get(otelContext);
+    }
+    String mountPoint = routingContext.mountPoint();
+    if (mountPoint != null) {
+      return mountPoint.endsWith("/") && route.startsWith("/")
+          ? mountPoint.substring(0, mountPoint.length() - 1) + route
+          : mountPoint + route;
+    }
     String existingRoute = RouteHolder.get(otelContext);
     return existingRoute != null ? existingRoute + route : route;
   }

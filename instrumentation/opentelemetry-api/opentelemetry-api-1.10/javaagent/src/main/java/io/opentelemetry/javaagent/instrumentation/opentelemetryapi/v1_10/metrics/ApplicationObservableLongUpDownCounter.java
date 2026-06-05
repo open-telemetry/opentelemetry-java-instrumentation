@@ -22,7 +22,10 @@ public class ApplicationObservableLongUpDownCounter
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
-    agentUpDownCounter.close();
-    onClose.run();
+    try {
+      agentUpDownCounter.close();
+    } finally {
+      onClose.run();
+    }
   }
 }

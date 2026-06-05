@@ -47,13 +47,13 @@ class ElasticsearchRest5Test {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static ElasticsearchContainer elasticsearch;
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  static HttpHost httpHost;
+  private static ElasticsearchContainer elasticsearch;
 
-  static RestClient client;
+  private static HttpHost httpHost;
 
-  static ObjectMapper objectMapper;
+  private static RestClient client;
 
   @BeforeAll
   static void setup() {
@@ -64,7 +64,7 @@ class ElasticsearchRest5Test {
               .withEnv("xpack.security.enabled", "false");
     } else {
       elasticsearch =
-          new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16");
+          new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:6.8.16");
     }
     // limit memory usage
     elasticsearch.withEnv(
@@ -84,8 +84,6 @@ class ElasticsearchRest5Test {
                         .setSocketTimeout(Integer.MAX_VALUE))
             .build();
     cleanup.deferAfterAll(client);
-
-    objectMapper = new ObjectMapper();
   }
 
   @Test

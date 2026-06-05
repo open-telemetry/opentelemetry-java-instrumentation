@@ -11,7 +11,6 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -27,10 +26,7 @@ import javax.annotation.Nullable;
 
 public class RabbitSingletons {
 
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "rabbitmq")
-          .getBoolean("experimental_span_attributes/development", false);
-  private static final String instrumentationName = "io.opentelemetry.rabbitmq-2.7";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rabbitmq-2.7";
   private static final Instrumenter<ChannelAndMethod, Void> channelInstrumenter =
       createChannelInstrumenter(false);
   private static final Instrumenter<ChannelAndMethod, Void> channelPublishInstrumenter =
@@ -59,7 +55,7 @@ public class RabbitSingletons {
 
   private static Instrumenter<ChannelAndMethod, Void> createChannelInstrumenter(boolean publish) {
     return Instrumenter.<ChannelAndMethod, Void>builder(
-            GlobalOpenTelemetry.get(), instrumentationName, ChannelAndMethod::getMethod)
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, ChannelAndMethod::getMethod)
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(
                 new RabbitChannelAttributesGetter(), publish ? MessageOperation.PUBLISH : null))
@@ -77,12 +73,12 @@ public class RabbitSingletons {
         buildMessagingAttributesExtractor(
             new RabbitReceiveAttributesGetter(), MessageOperation.RECEIVE));
     extractors.add(NetworkAttributesExtractor.create(new RabbitReceiveNetAttributesGetter()));
-    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+    if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
     }
 
     return Instrumenter.<ReceiveRequest, GetResponse>builder(
-            GlobalOpenTelemetry.get(), instrumentationName, ReceiveRequest::spanName)
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, ReceiveRequest::spanName)
         .addAttributesExtractors(extractors)
         .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
         .addSpanLinksExtractor(
@@ -99,12 +95,12 @@ public class RabbitSingletons {
             new RabbitDeliveryAttributesGetter(), MessageOperation.PROCESS));
     extractors.add(NetworkAttributesExtractor.create(new RabbitDeliveryNetAttributesGetter()));
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
-    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+    if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
     }
 
     return Instrumenter.<DeliveryRequest, Void>builder(
-            GlobalOpenTelemetry.get(), instrumentationName, DeliveryRequest::spanName)
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, DeliveryRequest::spanName)
         .addAttributesExtractors(extractors)
         .buildConsumerInstrumenter(new DeliveryRequestGetter());
   }

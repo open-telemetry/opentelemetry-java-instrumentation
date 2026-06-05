@@ -70,7 +70,7 @@ class HttpSecurityInstrumentationTest {
   private static Class<?> getObjectPostProcessorClass() throws ClassNotFoundException {
     try {
       return Class.forName("org.springframework.security.config.ObjectPostProcessor");
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException ignored) {
       // this was marked deprecated for removal in 6.4.2
       return Class.forName("org.springframework.security.config.annotation.ObjectPostProcessor");
     }

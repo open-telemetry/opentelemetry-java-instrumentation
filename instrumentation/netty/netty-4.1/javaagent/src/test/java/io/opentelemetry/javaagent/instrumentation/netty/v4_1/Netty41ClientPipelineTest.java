@@ -50,7 +50,7 @@ class Netty41ClientPipelineTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @RegisterExtension
-  static InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @BeforeAll
   static void setUp() {

@@ -13,9 +13,6 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
-
   bootstrap(project(":instrumentation:rmi:bootstrap"))
   testInstrumentation(project(":instrumentation:rmi:javaagent"))
 

@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.V
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpConnection;
 import io.vertx.core.net.HostAndPort;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -24,23 +25,36 @@ public class VertxClientSingletons {
       VertxClientInstrumenterFactory.create(
           "io.opentelemetry.vertx-http-client-5.0", new Vertx5HttpAttributesGetter());
 
-  private static final VirtualField<HttpClientRequest, HostAndPort> authorityField =
+  private static final VirtualField<HttpClientRequest, HostAndPort> AUTHORITY_FIELD =
       VirtualField.find(HttpClientRequest.class, HostAndPort.class);
 
   public static final VirtualField<HttpClientRequest, Contexts> CONTEXTS =
       VirtualField.find(HttpClientRequest.class, Contexts.class);
+
+  private static final VirtualField<HttpClientResponse, HttpConnection> CONNECTION_FIELD =
+      VirtualField.find(HttpClientResponse.class, HttpConnection.class);
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
     return instrumenter;
   }
 
   public static void setAuthority(HttpClientRequest request, @Nullable HostAndPort authority) {
-    authorityField.set(request, authority);
+    AUTHORITY_FIELD.set(request, authority);
   }
 
   @Nullable
   public static HostAndPort getAuthority(HttpClientRequest request) {
-    return authorityField.get(request);
+    return AUTHORITY_FIELD.get(request);
+  }
+
+  public static void setConnection(
+      HttpClientResponse response, @Nullable HttpConnection connection) {
+    CONNECTION_FIELD.set(response, connection);
+  }
+
+  @Nullable
+  public static HttpConnection getConnection(HttpClientResponse response) {
+    return CONNECTION_FIELD.get(response);
   }
 
   public static <T> Future<T> wrapFuture(Future<T> future) {

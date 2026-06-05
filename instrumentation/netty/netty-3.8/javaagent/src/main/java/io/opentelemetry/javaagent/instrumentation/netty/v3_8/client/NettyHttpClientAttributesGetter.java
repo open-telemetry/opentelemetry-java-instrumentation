@@ -33,7 +33,7 @@ final class NettyHttpClientAttributesGetter
         return getScheme(requestAndChannel) + "://" + hostHeader + target;
       }
       return uri.toString();
-    } catch (URISyntaxException e) {
+    } catch (URISyntaxException ignored) {
       return null;
     }
   }

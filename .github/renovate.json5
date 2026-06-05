@@ -1,7 +1,7 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "github>grafana/flint#v0.21.0",
+    "github>grafana/flint#v0.22.4",
     'config:best-practices',
     'helpers:pinGitHubActionDigestsToSemver',
     ':semanticCommits',
@@ -374,7 +374,7 @@
     {
       // pinned version to Jetty 8 (Servlet 3.0) for compatibility
       matchFileNames: [
-        'examples/distro/instrumentation/servlet-3/build.gradle',
+        'examples/distro/instrumentation/servlet-3/build.gradle.kts',
       ],
       matchUpdateTypes: [
         'major',

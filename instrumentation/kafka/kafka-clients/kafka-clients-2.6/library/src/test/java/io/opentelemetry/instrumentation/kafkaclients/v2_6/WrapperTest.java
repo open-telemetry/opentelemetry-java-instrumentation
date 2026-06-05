@@ -21,18 +21,26 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
+import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class WrapperTest extends AbstractWrapperTest {
 
   @Override
@@ -86,7 +94,6 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(1))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(
       boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
@@ -112,7 +119,6 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> processAttributes(
       String greeting, boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
@@ -138,7 +144,6 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -155,5 +160,32 @@ class WrapperTest extends AbstractWrapperTest {
               MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
+  }
+
+  @Test
+  void testConsumerError() {
+    KafkaTelemetryBuilder telemetryBuilder = KafkaTelemetry.builder(testing.getOpenTelemetry());
+    configure(telemetryBuilder);
+    KafkaTelemetry telemetry = telemetryBuilder.build();
+
+    Consumer<?, ?> mockConsumer = mock();
+    when(mockConsumer.poll(Duration.ofSeconds(10))).thenThrow(new IllegalStateException());
+    Consumer<?, ?> wrappedConsumer = telemetry.wrap(mockConsumer);
+    assertThatThrownBy(() -> wrappedConsumer.poll(Duration.ofSeconds(10)))
+        .isInstanceOf(IllegalStateException.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("unknown receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(new IllegalStateException())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "kafka"),
+                            equalTo(MESSAGING_OPERATION, "receive"),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0))));
   }
 }
