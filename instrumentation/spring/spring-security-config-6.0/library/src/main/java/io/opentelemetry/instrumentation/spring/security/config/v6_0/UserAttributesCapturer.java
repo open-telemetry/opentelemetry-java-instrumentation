@@ -49,7 +49,7 @@ public class UserAttributesCapturer {
   /**
    * Determines if {@code enduser.role}, or {@code user.roles} in v3 preview, should be captured.
    */
-  private boolean roleEnabled;
+  private boolean rolesEnabled;
 
   /** Determines if {@code enduser.scope} should be captured when v3 preview is disabled. */
   private boolean scopeEnabled;
@@ -101,13 +101,13 @@ public class UserAttributesCapturer {
 
       List<String> roles = null;
       StringBuilder scopeBuilder = null;
-      if (roleEnabled || scopeEnabled) {
+      if (rolesEnabled || scopeEnabled) {
         for (GrantedAuthority authority : authentication.getAuthorities()) {
           String authorityString = authority.getAuthority();
           if (authorityString == null) {
             continue;
           }
-          if (roleEnabled && authorityString.startsWith(roleGrantedAuthorityPrefix)) {
+          if (rolesEnabled && authorityString.startsWith(roleGrantedAuthorityPrefix)) {
             roles = appendSuffix(roleGrantedAuthorityPrefix, authorityString, roles);
           } else if (scopeEnabled
               && !v3Preview
@@ -160,8 +160,8 @@ public class UserAttributesCapturer {
     this.nameEnabled = nameEnabled;
   }
 
-  public void setRoleEnabled(boolean roleEnabled) {
-    this.roleEnabled = roleEnabled;
+  public void setRolesEnabled(boolean rolesEnabled) {
+    this.rolesEnabled = rolesEnabled;
   }
 
   public void setScopeEnabled(boolean scopeEnabled) {
@@ -184,8 +184,8 @@ public class UserAttributesCapturer {
     return nameEnabled;
   }
 
-  boolean isRoleEnabled() {
-    return roleEnabled;
+  boolean isRolesEnabled() {
+    return rolesEnabled;
   }
 
   boolean isScopeEnabled() {

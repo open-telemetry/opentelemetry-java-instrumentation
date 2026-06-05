@@ -23,8 +23,8 @@ public class UserAttributesCapturerSingletons {
 
   private static UserAttributesCapturer createUserAttributesCapturerFromConfig() {
     UserAttributesCapturer capturer = new UserAttributesCapturer();
-    capturer.setNameEnabled(AgentCommonConfig.get().getUserConfig().isIdEnabled());
-    capturer.setRoleEnabled(AgentCommonConfig.get().getUserConfig().isRoleEnabled());
+    capturer.setNameEnabled(AgentCommonConfig.get().getUserConfig().isNameEnabled());
+    capturer.setRolesEnabled(AgentCommonConfig.get().getUserConfig().isRolesEnabled());
     capturer.setScopeEnabled(AgentCommonConfig.get().getUserConfig().isScopeEnabled());
 
     DeclarativeConfigProperties springSecurityConfig =

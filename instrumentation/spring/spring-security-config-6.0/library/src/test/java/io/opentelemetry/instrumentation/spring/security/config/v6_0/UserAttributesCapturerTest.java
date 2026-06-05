@@ -59,7 +59,7 @@ class UserAttributesCapturerTest {
   void allEnabledButNoRoles() {
     UserAttributesCapturer capturer = new UserAttributesCapturer();
     capturer.setNameEnabled(true);
-    capturer.setRoleEnabled(true);
+    capturer.setRolesEnabled(true);
     capturer.setScopeEnabled(true);
 
     Authentication authentication =
@@ -85,7 +85,7 @@ class UserAttributesCapturerTest {
   void allEnabledButNoScopes() {
     UserAttributesCapturer capturer = new UserAttributesCapturer();
     capturer.setNameEnabled(true);
-    capturer.setRoleEnabled(true);
+    capturer.setRolesEnabled(true);
     capturer.setScopeEnabled(true);
 
     Authentication authentication =
@@ -134,9 +134,9 @@ class UserAttributesCapturerTest {
   }
 
   @Test
-  void onlyRoleEnabled() {
+  void onlyRolesEnabled() {
     UserAttributesCapturer capturer = new UserAttributesCapturer();
-    capturer.setRoleEnabled(true);
+    capturer.setRolesEnabled(true);
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -188,7 +188,7 @@ class UserAttributesCapturerTest {
   void allEnabledAndAlternatePrefix() {
     UserAttributesCapturer capturer = new UserAttributesCapturer();
     capturer.setNameEnabled(true);
-    capturer.setRoleEnabled(true);
+    capturer.setRolesEnabled(true);
     capturer.setScopeEnabled(true);
     capturer.setRoleGrantedAuthorityPrefix("role_");
     capturer.setScopeGrantedAuthorityPrefix("scope_");

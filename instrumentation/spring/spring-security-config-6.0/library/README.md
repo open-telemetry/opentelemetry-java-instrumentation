@@ -32,7 +32,7 @@ class MyWebSecurityConfig {
     UserAttributesCapturer capturer = new UserAttributesCapturer();
     // Set properties of capturer.  Defaults shown.
     capturer.setNameEnabled(false);
-    capturer.setRoleEnabled(false);
+    capturer.setRolesEnabled(false);
     capturer.setScopeEnabled(false);
     capturer.setRoleGrantedAuthorityPrefix("ROLE_");
     capturer.setScopeGrantedAuthorityPrefix("SCOPE_");
@@ -67,7 +67,7 @@ class MyWebFluxSecurityConfig {
     UserAttributesCapturer capturer = new UserAttributesCapturer();
     // Set properties of capturer.  Defaults shown.
     capturer.setNameEnabled(false);
-    capturer.setRoleEnabled(false);
+    capturer.setRolesEnabled(false);
     capturer.setScopeEnabled(false);
     capturer.setRoleGrantedAuthorityPrefix("ROLE_");
     capturer.setScopeGrantedAuthorityPrefix("SCOPE_");

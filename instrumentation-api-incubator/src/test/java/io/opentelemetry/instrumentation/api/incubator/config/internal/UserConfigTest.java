@@ -27,8 +27,8 @@ class UserConfigTest {
 
     UserConfig userConfig = new UserConfig(commonConfig, false);
 
-    assertThat(userConfig.isIdEnabled()).isFalse();
-    assertThat(userConfig.isRoleEnabled()).isTrue();
+    assertThat(userConfig.isNameEnabled()).isFalse();
+    assertThat(userConfig.isRolesEnabled()).isTrue();
     assertThat(userConfig.isScopeEnabled()).isTrue();
   }
 
@@ -44,8 +44,8 @@ class UserConfigTest {
 
     UserConfig userConfig = new UserConfig(commonConfig, true);
 
-    assertThat(userConfig.isIdEnabled()).isFalse();
-    assertThat(userConfig.isRoleEnabled()).isTrue();
+    assertThat(userConfig.isNameEnabled()).isFalse();
+    assertThat(userConfig.isRolesEnabled()).isTrue();
     assertThat(userConfig.isScopeEnabled()).isFalse();
   }
 }

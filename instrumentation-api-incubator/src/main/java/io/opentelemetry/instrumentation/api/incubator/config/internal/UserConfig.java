@@ -51,7 +51,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 public class UserConfig {
 
   private final boolean nameEnabled;
-  private final boolean roleEnabled;
+  private final boolean rolesEnabled;
   private final boolean scopeEnabled;
 
   UserConfig(DeclarativeConfigProperties commonConfig, boolean v3Preview) {
@@ -66,11 +66,11 @@ public class UserConfig {
      */
     if (v3Preview) {
       this.nameEnabled = commonConfig.get("user").get("name").getBoolean("enabled", false);
-      this.roleEnabled = commonConfig.get("user").get("roles").getBoolean("enabled", false);
+      this.rolesEnabled = commonConfig.get("user").get("roles").getBoolean("enabled", false);
       this.scopeEnabled = false;
     } else {
       this.nameEnabled = commonConfig.get("enduser").get("id").getBoolean("enabled", false);
-      this.roleEnabled = commonConfig.get("enduser").get("role").getBoolean("enabled", false);
+      this.rolesEnabled = commonConfig.get("enduser").get("role").getBoolean("enabled", false);
       this.scopeEnabled = commonConfig.get("enduser").get("scope").getBoolean("enabled", false);
     }
   }
@@ -83,7 +83,7 @@ public class UserConfig {
    * corresponds to the {@code enduser.*} attributes.
    */
   public boolean isAnyEnabled() {
-    return this.nameEnabled || this.roleEnabled || this.scopeEnabled;
+    return this.nameEnabled || this.rolesEnabled || this.scopeEnabled;
   }
 
   /**
@@ -92,7 +92,7 @@ public class UserConfig {
    * <p>In v3 preview mode, this controls the {@code user.name} attribute; otherwise it controls the
    * {@code enduser.id} attribute.
    */
-  public boolean isIdEnabled() {
+  public boolean isNameEnabled() {
     return this.nameEnabled;
   }
 
@@ -102,8 +102,8 @@ public class UserConfig {
    * <p>In v3 preview mode, this controls the {@code user.roles} attribute; otherwise it controls
    * the {@code enduser.role} attribute.
    */
-  public boolean isRoleEnabled() {
-    return this.roleEnabled;
+  public boolean isRolesEnabled() {
+    return this.rolesEnabled;
   }
 
   /**

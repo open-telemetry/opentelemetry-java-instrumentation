@@ -48,15 +48,15 @@ public final class EnduserAttributesCapturer extends UserAttributesCapturer {
    */
   @Deprecated
   public boolean isEnduserRoleEnabled() {
-    return isRoleEnabled();
+    return isRolesEnabled();
   }
 
   /**
-   * @deprecated Use {@link UserAttributesCapturer#setRoleEnabled(boolean)} instead.
+   * @deprecated Use {@link UserAttributesCapturer#setRolesEnabled(boolean)} instead.
    */
   @Deprecated
   public void setEnduserRoleEnabled(boolean enduserRoleEnabled) {
-    setRoleEnabled(enduserRoleEnabled);
+    setRolesEnabled(enduserRoleEnabled);
   }
 
   /**
