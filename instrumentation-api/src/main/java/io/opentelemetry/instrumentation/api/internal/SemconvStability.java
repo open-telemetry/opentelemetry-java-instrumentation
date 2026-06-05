@@ -22,7 +22,6 @@ import java.util.Set;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@SuppressWarnings("deprecation")
 public final class SemconvStability {
 
   private static final boolean v3Preview;
@@ -54,16 +53,18 @@ public final class SemconvStability {
     emitOldCodeSemconv = shouldEmitOld("code", v3Preview, optInValues);
     emitStableCodeSemconv = shouldEmitStable("code", v3Preview, optInValues);
 
-    emitOldServicePeerSemconv = shouldEmitOld("service.peer", v3Preview, v3Preview ? previewValues : optInValues);
-    emitStableServicePeerSemconv = shouldEmitStable("service.peer", v3Preview, v3Preview ? previewValues : optInValues);
+    Set<String> nonstableOptInValues = v3Preview ? previewValues : optInValues;
+    emitOldServicePeerSemconv = shouldEmitOld("service.peer", false, nonstableOptInValues);
+    emitStableServicePeerSemconv = shouldEmitStable("service.peer", false, nonstableOptInValues);
 
-    emitOldRpcSemconv = shouldEmitOld("rpc", v3Preview, v3Preview ? previewValues : optInValues);
-    emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, v3Preview ? previewValues : optInValues);
+    emitOldRpcSemconv = shouldEmitOld("rpc", false, nonstableOptInValues);
+    emitStableRpcSemconv = shouldEmitStable("rpc", false, nonstableOptInValues);
 
     emitOldMessagingSemconv = shouldEmitOld("messaging", false, previewValues);
     emitStableMessagingSemconv = shouldEmitStable("messaging", false, previewValues);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated config property fallback
   private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry, String flag) {
     // Try declarative config via GlobalOpenTelemetry first
     DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
@@ -83,18 +84,15 @@ public final class SemconvStability {
     return values;
   }
 
-  @Deprecated // to be removed in 3.0
-  public static boolean v3Preview() {
+  public static boolean v3Preview() { // to be removed in 3.0
     return v3Preview;
   }
 
-  @Deprecated // to be removed in 3.0
-  public static boolean emitOldDatabaseSemconv() {
+  public static boolean emitOldDatabaseSemconv() { // to be removed in 3.0
     return emitOldDatabaseSemconv;
   }
 
-  @Deprecated // to be removed in 3.0
-  public static boolean emitStableDatabaseSemconv() {
+  public static boolean emitStableDatabaseSemconv() { // to be removed in 3.0
     return emitStableDatabaseSemconv;
   }
 
@@ -131,13 +129,11 @@ public final class SemconvStability {
     return dbSystemName != null ? dbSystemName : oldDbSystem;
   }
 
-  @Deprecated // to be removed in 3.0
-  public static boolean emitOldCodeSemconv() {
+  public static boolean emitOldCodeSemconv() { // to be removed in 3.0
     return emitOldCodeSemconv;
   }
 
-  @Deprecated // to be removed in 3.0
-  public static boolean emitStableCodeSemconv() {
+  public static boolean emitStableCodeSemconv() { // to be removed in 3.0
     return emitStableCodeSemconv;
   }
 
