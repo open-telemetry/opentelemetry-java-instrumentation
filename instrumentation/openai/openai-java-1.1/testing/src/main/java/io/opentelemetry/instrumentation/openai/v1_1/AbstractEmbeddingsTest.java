@@ -258,9 +258,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                   satisfies(
                                       GEN_AI_REQUEST_ENCODING_FORMATS,
                                       val -> val.isIn(singletonList("base64"), null)));
-                          if (emitExceptionAsSpanEvents()) {
-                            span.hasException(thrown);
-                          }
+                          span.hasException(emitExceptionAsSpanEvents() ? thrown : null);
                         })));
 
     if (emitExceptionAsLogs()) {
