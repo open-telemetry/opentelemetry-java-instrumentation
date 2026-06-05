@@ -115,8 +115,9 @@ public final class LoggingEventMapper {
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(builder.captureMdcAttributes.size());
       for (String key : builder.captureMdcAttributes) {
-        // "!" prefixed entries are exclusions, which only apply together with "*"; ignore them here
-        if (!OTEL_EVENT_NAME.getKey().equals(key) && !key.startsWith("!")) {
+        // "!" is only treated as exclusion syntax when "*" is present; with no "*" here, keys are
+        // captured literally (including any beginning with "!") for backward compatibility
+        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
           keys.add(getAttributeKey(key));
         }
       }

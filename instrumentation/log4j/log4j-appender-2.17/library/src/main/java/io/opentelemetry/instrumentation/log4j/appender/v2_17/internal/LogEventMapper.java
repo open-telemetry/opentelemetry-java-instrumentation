@@ -95,8 +95,9 @@ public final class LogEventMapper<T> {
     } else {
       List<AttributeKey<String>> keys = new ArrayList<>(captureContextDataAttributes.size());
       for (String key : captureContextDataAttributes) {
-        // "!" prefixed entries are exclusions, which only apply together with "*"; ignore them here
-        if (!OTEL_EVENT_NAME.getKey().equals(key) && !key.startsWith("!")) {
+        // "!" is only treated as exclusion syntax when "*" is present; with no "*" here, keys are
+        // captured literally (including any beginning with "!") for backward compatibility
+        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
           keys.add(getContextDataAttributeKey(key));
         }
       }

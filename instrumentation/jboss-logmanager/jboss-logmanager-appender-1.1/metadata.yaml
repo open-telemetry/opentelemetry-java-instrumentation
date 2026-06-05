@@ -16,7 +16,8 @@ configurations:
     description: >
       Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
       comma-separated list of specific keys. When using "*", prefix a key with "!" to exclude it
-      (e.g. "*,!foo" captures all MDC attributes except "foo").
+      (e.g. "*,!foo" captures all MDC attributes except "foo"). Without "*", a key beginning
+      with "!" is captured literally.
     type: list
     default: ''
     examples:
