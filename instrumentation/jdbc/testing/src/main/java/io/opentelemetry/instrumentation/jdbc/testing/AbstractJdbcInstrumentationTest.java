@@ -36,7 +36,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -52,7 +51,6 @@ import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -78,7 +76,6 @@ import javax.sql.DataSource;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.assertj.core.api.ThrowingConsumer;
-import org.awaitility.Awaitility;
 import org.h2.jdbcx.JdbcDataSource;
 import org.hsqldb.jdbc.JDBCDriver;
 import org.junit.jupiter.api.BeforeAll;
@@ -459,28 +456,17 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
-      assertExceptionLog();
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("db.client.operation.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                          equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     }
-  }
-
-  private void assertExceptionLog() {
-    Awaitility.await()
-        .untilAsserted(
-            () -> {
-              List<LogRecordData> logs =
-                  testing().logRecords().stream()
-                      .filter(log -> "db.client.operation.exception".equals(log.getEventName()))
-                      .collect(toList());
-
-              assertThat(logs).hasSize(1);
-              assertThat(logs.get(0))
-                  .hasSeverity(Severity.WARN)
-                  .hasEventName("db.client.operation.exception")
-                  .hasAttributesSatisfyingExactly(
-                      satisfies(EXCEPTION_TYPE, val -> val.isNotNull()),
-                      satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
-            });
   }
 
   static Stream<Arguments> preparedStatementStream() throws SQLException {
