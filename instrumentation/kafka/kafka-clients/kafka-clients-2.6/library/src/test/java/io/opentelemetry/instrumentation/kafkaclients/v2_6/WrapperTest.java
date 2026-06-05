@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -178,10 +179,10 @@ class WrapperTest extends AbstractWrapperTest {
     KafkaTelemetry telemetry = telemetryBuilder.build();
 
     Consumer<?, ?> mockConsumer = mock();
-    when(mockConsumer.poll(Duration.ofSeconds(10))).thenThrow(new IllegalStateException());
+    IllegalStateException error = new IllegalStateException("test");
+    when(mockConsumer.poll(Duration.ofSeconds(10))).thenThrow(error);
     Consumer<?, ?> wrappedConsumer = telemetry.wrap(mockConsumer);
-    assertThatThrownBy(() -> wrappedConsumer.poll(Duration.ofSeconds(10)))
-        .isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(() -> wrappedConsumer.poll(Duration.ofSeconds(10))).isSameAs(error);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -196,30 +197,31 @@ class WrapperTest extends AbstractWrapperTest {
                           equalTo(MESSAGING_OPERATION, "receive"),
                           equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0));
                   if (emitExceptionAsSpanEvents()) {
-                    span.hasException(new IllegalStateException());
+                    span.hasException(error);
                   }
                 }));
 
     if (emitExceptionAsLogs()) {
-      assertReceiveExceptionLog();
+      Awaitility.await()
+          .untilAsserted(
+              () -> {
+                List<LogRecordData> logs =
+                    testing.logRecords().stream()
+                        .filter(log -> "messaging.receive.exception".equals(log.getEventName()))
+                        .collect(toList());
+                assertThat(logs).hasSize(1);
+                assertThat(logs.get(0))
+                    .hasSeverity(Severity.WARN)
+                    .hasEventName("messaging.receive.exception")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                        satisfies(
+                            EXCEPTION_STACKTRACE,
+                            val ->
+                                val.contains(error.getClass().getName())
+                                    .contains("WrapperTest.testConsumerError")));
+              });
     }
-  }
-
-  private static void assertReceiveExceptionLog() {
-    Awaitility.await()
-        .untilAsserted(
-            () -> {
-              List<LogRecordData> logs =
-                  testing.logRecords().stream()
-                      .filter(log -> "messaging.receive.exception".equals(log.getEventName()))
-                      .collect(toList());
-              assertThat(logs).hasSize(1);
-              assertThat(logs.get(0))
-                  .hasSeverity(Severity.WARN)
-                  .hasEventName("messaging.receive.exception")
-                  .hasAttributesSatisfyingExactly(
-                      satisfies(EXCEPTION_TYPE, val -> val.isNotNull()),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
-            });
   }
 }
