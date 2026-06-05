@@ -20,6 +20,12 @@ public class ExternalAnnotationInstrumentationModule extends InstrumentationModu
   }
 
   @Override
+  public int order() {
+    // Run after other instrumentations.
+    return 1000;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ExternalAnnotationInstrumentation());
   }

@@ -12,26 +12,26 @@
 > - **POM Project URL**: [https://github.com/raphw/weak-lock-free](https://github.com/raphw/weak-lock-free)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.21`
+**3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.22`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-annotations-2.21.jar/META-INF/LICENSE](jackson-annotations-2.21.jar/META-INF/LICENSE)
-    - [jackson-annotations-2.21.jar/META-INF/NOTICE](jackson-annotations-2.21.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-annotations-2.22.jar/META-INF/LICENSE](jackson-annotations-2.22.jar/META-INF/LICENSE)
+    - [jackson-annotations-2.22.jar/META-INF/NOTICE](jackson-annotations-2.22.jar/META-INF/NOTICE)
 
-**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.21.3`
+**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.22.0`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.21.3.jar/META-INF/LICENSE](jackson-core-2.21.3.jar/META-INF/LICENSE)
-    - [jackson-core-2.21.3.jar/META-INF/NOTICE](jackson-core-2.21.3.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.22.0.jar/META-INF/LICENSE](jackson-core-2.22.0.jar/META-INF/LICENSE)
+    - [jackson-core-2.22.0.jar/META-INF/NOTICE](jackson-core-2.22.0.jar/META-INF/NOTICE)
 
-**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.21.3`
+**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.22.0`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-databind-2.21.3.jar/META-INF/LICENSE](jackson-databind-2.21.3.jar/META-INF/LICENSE)
-    - [jackson-databind-2.21.3.jar/META-INF/NOTICE](jackson-databind-2.21.3.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-databind-2.22.0.jar/META-INF/LICENSE](jackson-databind-2.22.0.jar/META-INF/LICENSE)
+    - [jackson-databind-2.22.0.jar/META-INF/NOTICE](jackson-databind-2.22.0.jar/META-INF/NOTICE)
 
 **6** **Group:** `com.googlecode.concurrentlinkedhashmap` **Name:** `concurrentlinkedhashmap-lru` **Version:** `1.4.2`
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
