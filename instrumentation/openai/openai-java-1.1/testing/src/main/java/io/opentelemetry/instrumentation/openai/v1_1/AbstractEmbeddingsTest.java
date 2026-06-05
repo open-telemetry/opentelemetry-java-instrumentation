@@ -24,7 +24,6 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiProviderNameIncubatingValues.OPENAI;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -40,10 +39,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
-import java.util.List;
 import java.util.concurrent.CompletionException;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -268,7 +264,16 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                         })));
 
     if (emitExceptionAsLogs()) {
-      assertClientExceptionLog();
+      getTesting()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("gen_ai.client.operation.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
+                          equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     }
 
     getTesting()
@@ -287,24 +292,5 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
-  }
-
-  private void assertClientExceptionLog() {
-    Awaitility.await()
-        .untilAsserted(
-            () -> {
-              List<LogRecordData> logs =
-                  getTesting().logRecords().stream()
-                      .filter(log -> "gen_ai.client.operation.exception".equals(log.getEventName()))
-                      .collect(toList());
-              assertThat(logs).hasSize(1);
-              assertThat(logs.get(0))
-                  .hasSeverity(Severity.WARN)
-                  .hasEventName("gen_ai.client.operation.exception")
-                  .hasAttributesSatisfyingExactly(
-                      satisfies(EXCEPTION_TYPE, val -> val.isNotNull()),
-                      satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
-            });
   }
 }
