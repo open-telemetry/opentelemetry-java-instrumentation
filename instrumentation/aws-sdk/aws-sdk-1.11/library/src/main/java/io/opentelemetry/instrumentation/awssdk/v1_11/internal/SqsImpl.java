@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v1_11;
+package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -22,7 +22,11 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-final class SqsImpl {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class SqsImpl {
   static {
     // Force loading of SQS class; this ensures that an exception is thrown at this point when the
     // SQS library is not present, which will cause SqsAccess to have enabled=false in library mode.

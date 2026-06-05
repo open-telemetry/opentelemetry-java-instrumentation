@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v1_11;
+package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_AGENT;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_LAMBDA_ARN;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_LAMBDA_NAME;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_QUEUE_NAME;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.internal.AwsExperimentalAttributes.AWS_AGENT;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.internal.AwsExperimentalAttributes.AWS_LAMBDA_ARN;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.internal.AwsExperimentalAttributes.AWS_LAMBDA_NAME;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.internal.AwsExperimentalAttributes.AWS_QUEUE_NAME;
 
 import com.amazonaws.Request;
 import com.amazonaws.Response;

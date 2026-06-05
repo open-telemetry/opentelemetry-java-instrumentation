@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v1_11;
+package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -20,10 +20,13 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import javax.annotation.Nullable;
 
-/** Tracing Request Handler. */
-final class TracingRequestHandler extends RequestHandler2 {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class TracingRequestHandler extends RequestHandler2 {
 
-  static final HandlerContextKey<Context> CONTEXT =
+  public static final HandlerContextKey<Context> CONTEXT =
       new HandlerContextKey<>(Context.class.getName());
   private static final ContextKey<Context> PARENT_CONTEXT_KEY =
       ContextKey.named(TracingRequestHandler.class.getName() + ".ParentContext");
@@ -41,7 +44,7 @@ final class TracingRequestHandler extends RequestHandler2 {
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
 
-  TracingRequestHandler(
+  public TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
       Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
