@@ -34,9 +34,6 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    filter {
-      includeTestsMatching("AwsLambdaTest")
-    }
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
   }
