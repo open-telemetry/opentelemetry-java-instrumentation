@@ -17,9 +17,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -36,7 +33,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -75,7 +71,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
@@ -88,7 +83,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -670,7 +664,14 @@ public abstract class AbstractGrpcTest {
                                 })));
 
     if (emitExceptionAsLogs() && status.getCause() != null) {
-      assertServerExceptionLog(status.getCause());
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.ERROR)
+                      .hasEventName("rpc.server.call.exception")
+                      .hasException(status.getCause())
+                      .hasTotalAttributeCount(3));
     }
 
     assertMetrics(server, status.getCode());
@@ -807,45 +808,17 @@ public abstract class AbstractGrpcTest {
                                 })));
 
     if (emitExceptionAsLogs()) {
-      assertServerExceptionLog(status.asRuntimeException());
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.ERROR)
+                      .hasEventName("rpc.server.call.exception")
+                      .hasException(status.asRuntimeException())
+                      .hasTotalAttributeCount(3));
     }
 
     assertMetrics(server, Status.Code.UNKNOWN);
-  }
-
-  private void assertServerExceptionLog(Throwable expectedException) {
-    assertExceptionLog(expectedException, "rpc.server.call.exception", Severity.ERROR);
-  }
-
-  private void assertClientExceptionLog(Throwable expectedException) {
-    assertExceptionLog(expectedException, "rpc.client.call.exception", Severity.WARN);
-  }
-
-  private void assertExceptionLog(
-      Throwable expectedException, String expectedEventName, Severity expectedSeverity) {
-    Awaitility.await()
-        .untilAsserted(
-            () -> {
-              List<LogRecordData> logs =
-                  testing().logRecords().stream()
-                      .filter(log -> expectedEventName.equals(log.getEventName()))
-                      .collect(toList());
-
-              assertThat(logs).hasSize(1);
-              assertThat(logs.get(0))
-                  .hasSeverity(expectedSeverity)
-                  .hasEventName(expectedEventName)
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, expectedException.getClass().getName()),
-                      satisfies(
-                          EXCEPTION_MESSAGE,
-                          val -> {
-                            if (expectedException.getMessage() != null) {
-                              val.isEqualTo(expectedException.getMessage());
-                            }
-                          }),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
-            });
   }
 
   private static Stream<Arguments> provideErrorArguments() {
@@ -1242,7 +1215,14 @@ public abstract class AbstractGrpcTest {
                                             equalTo(MESSAGE_ID, 1L)))));
 
     if (emitExceptionAsLogs()) {
-      assertClientExceptionLog(thrown);
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("rpc.client.call.exception")
+                      .hasException(thrown)
+                      .hasTotalAttributeCount(3));
     }
   }
 
