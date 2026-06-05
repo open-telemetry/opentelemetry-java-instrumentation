@@ -20,10 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
  * Bridges an explicitly supplied parent context for {@code azure-core-tracing-opentelemetry}.
  *
  * <p>When a user passes a parent context to an Azure SDK call, the value is stored on the {@link
- * com.azure.core.util.Context} under the {@code "trace-context"} key as the application's
- * (unshaded) {@code io.opentelemetry.context.Context}. The bundled {@code OpenTelemetryTracer}
- * reads that value back and expects it to be the agent's (shaded) context. Convert it here so the
- * tracer does not need to reach into agent internals reflectively.
+ * com.azure.core.util.Context} under {@link
+ * com.azure.core.util.tracing.Tracer#PARENT_TRACE_CONTEXT_KEY} as the application's (unshaded)
+ * {@code io.opentelemetry.context.Context}. The bundled {@code OpenTelemetryTracer} reads that
+ * value back and expects it to be the agent's (shaded) context. Convert it here so the tracer does
+ * not need to reach into agent internals reflectively.
  */
 class AzureContextInstrumentation implements TypeInstrumentation {
 
