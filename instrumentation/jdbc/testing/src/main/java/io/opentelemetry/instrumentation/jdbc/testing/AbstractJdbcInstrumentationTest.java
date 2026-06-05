@@ -16,15 +16,11 @@ import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServ
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -36,7 +32,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -52,7 +47,6 @@ import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -78,7 +72,6 @@ import javax.sql.DataSource;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.assertj.core.api.ThrowingConsumer;
-import org.awaitility.Awaitility;
 import org.h2.jdbcx.JdbcDataSource;
 import org.hsqldb.jdbc.JDBCDriver;
 import org.junit.jupiter.api.BeforeAll;
@@ -459,28 +452,21 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
-      assertExceptionLog();
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("db.client.operation.exception")
+                      .hasException(error)
+                      .hasTotalAttributeCount(3),
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("exception")
+                      .hasException(error)
+                      .hasTotalAttributeCount(3));
     }
-  }
-
-  private void assertExceptionLog() {
-    Awaitility.await()
-        .untilAsserted(
-            () -> {
-              List<LogRecordData> logs =
-                  testing().logRecords().stream()
-                      .filter(log -> "db.client.operation.exception".equals(log.getEventName()))
-                      .collect(toList());
-
-              assertThat(logs).hasSize(1);
-              assertThat(logs.get(0))
-                  .hasSeverity(Severity.WARN)
-                  .hasEventName("db.client.operation.exception")
-                  .hasAttributesSatisfyingExactly(
-                      satisfies(EXCEPTION_TYPE, val -> val.isNotNull()),
-                      satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
-            });
   }
 
   static Stream<Arguments> preparedStatementStream() throws SQLException {
