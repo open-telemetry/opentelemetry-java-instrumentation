@@ -649,18 +649,21 @@ public abstract class AbstractGrpcTest {
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
+                                  assertThat(events)
+                                      .hasSize(
+                                          status.getCause() != null && emitExceptionAsSpanEvents()
+                                              ? 2
+                                              : 1);
                                   assertThat(events).isNotEmpty();
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MESSAGE_ID, 1L));
-                                  if (status.getCause() == null || !emitExceptionAsSpanEvents()) {
-                                    assertThat(events).hasSize(1);
-                                  } else {
-                                    assertThat(events).hasSize(2);
-                                    span.hasException(status.getCause());
-                                  }
+                                  span.hasException(
+                                      status.getCause() != null && emitExceptionAsSpanEvents()
+                                          ? status.getCause()
+                                          : null);
                                 })));
 
     if (emitExceptionAsLogs() && status.getCause() != null) {
@@ -794,17 +797,16 @@ public abstract class AbstractGrpcTest {
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
+                                  assertThat(events).hasSize(emitExceptionAsSpanEvents() ? 2 : 1);
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MESSAGE_ID, 1L));
-                                  if (emitExceptionAsSpanEvents()) {
-                                    assertThat(events).hasSize(2);
-                                    span.hasException(status.asRuntimeException());
-                                  } else {
-                                    assertThat(events).hasSize(1);
-                                  }
+                                  span.hasException(
+                                      emitExceptionAsSpanEvents()
+                                          ? status.asRuntimeException()
+                                          : null);
                                 })));
 
     if (emitExceptionAsLogs()) {
@@ -1152,6 +1154,7 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfying(
                                 events -> {
+                                  assertThat(events).hasSize(emitExceptionAsSpanEvents() ? 3 : 2);
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
@@ -1161,12 +1164,7 @@ public abstract class AbstractGrpcTest {
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MESSAGE_ID, 1L));
-                                  if (emitExceptionAsSpanEvents()) {
-                                    assertThat(events).hasSize(3);
-                                    span.hasException(thrown);
-                                  } else {
-                                    assertThat(events).hasSize(2);
-                                  }
+                                  span.hasException(emitExceptionAsSpanEvents() ? thrown : null);
                                 }),
                     span ->
                         span.hasName("example.Greeter/SayMultipleHello")
