@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai.internal;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
@@ -21,17 +20,14 @@ public final class GenAiExceptionEventExtractors {
    * emitting exceptions as logs is enabled via the {@code otel.semconv.exception.signal.preview}
    * flag.
    */
-  @CanIgnoreReturnValue
-  public static <REQUEST, RESPONSE>
-      InstrumenterBuilder<REQUEST, RESPONSE> setGenAiClientExceptionEventExtractor(
-          InstrumenterBuilder<REQUEST, RESPONSE> builder) {
+  public static <REQUEST> void setGenAiClientExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder) {
     Experimental.setExceptionEventExtractor(
         builder,
         (logRecordBuilder, context, request) -> {
           logRecordBuilder.setEventName("gen_ai.client.operation.exception");
           logRecordBuilder.setSeverity(Severity.WARN);
         });
-    return builder;
   }
 
   private GenAiExceptionEventExtractors() {}
