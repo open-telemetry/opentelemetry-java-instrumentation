@@ -313,7 +313,9 @@ public class TelemetryConverter {
                     TraceState.getDefault())) // logs proto doesn't have trace state
             .setSeverity(fromProto(logRecord.getSeverityNumber()))
             .setSeverityText(logRecord.getSeverityText())
-            .setAttributes(fromProto(logRecord.getAttributesList()));
+            .setAttributes(fromProto(logRecord.getAttributesList()))
+            .setTotalAttributeCount(
+                logRecord.getAttributesCount() + logRecord.getDroppedAttributesCount());
     if (canUseValue) {
       builder.setBodyValue(getBodyValue(logRecord.getBody()));
     } else {
@@ -340,7 +342,9 @@ public class TelemetryConverter {
             .setSeverity(fromProto(logRecord.getSeverityNumber()))
             .setSeverityText(logRecord.getSeverityText())
             .setEventName(logRecord.getEventName())
-            .setBodyValue(getBodyValue(logRecord.getBody()));
+            .setBodyValue(getBodyValue(logRecord.getBody()))
+            .setTotalAttributeCount(
+                logRecord.getAttributesCount() + logRecord.getDroppedAttributesCount());
     if (hasExtendedAttributes) {
       builder.setExtendedAttributes(fromProtoExtended(logRecord.getAttributesList()));
     } else {
