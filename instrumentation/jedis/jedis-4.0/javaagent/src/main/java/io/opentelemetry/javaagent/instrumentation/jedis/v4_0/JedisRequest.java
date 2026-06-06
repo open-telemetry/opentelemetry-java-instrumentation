@@ -42,7 +42,6 @@ public abstract class JedisRequest {
     return new AutoValue_JedisRequest(
         command,
         args,
-        connection,
         connectionInfo != null ? connectionInfo.getServerAddress() : null,
         connectionInfo != null ? connectionInfo.getServerPort() : null,
         JedisRequestContext.databaseIndex(
@@ -78,9 +77,6 @@ public abstract class JedisRequest {
   public abstract ProtocolCommand getCommand();
 
   public abstract List<byte[]> getArgs();
-
-  @Nullable
-  abstract Object getConnection();
 
   @Nullable
   public abstract String getServerAddress();
