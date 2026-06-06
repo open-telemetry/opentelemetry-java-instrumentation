@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
@@ -21,11 +20,9 @@ public final class MessagingExceptionEventExtractors {
    * emitting exceptions as logs is enabled via the {@code otel.semconv.exception.signal.preview}
    * flag.
    */
-  @CanIgnoreReturnValue
-  public static <REQUEST, RESPONSE>
-      InstrumenterBuilder<REQUEST, RESPONSE> setMessagingCreateExceptionEventExtractor(
-          InstrumenterBuilder<REQUEST, RESPONSE> builder) {
-    return setExceptionEventExtractor(builder, "messaging.create.exception", Severity.WARN);
+  public static <REQUEST> void setMessagingCreateExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder) {
+    setExceptionEventExtractor(builder, "messaging.create.exception", Severity.WARN);
   }
 
   /**
@@ -33,11 +30,9 @@ public final class MessagingExceptionEventExtractors {
    * emitting exceptions as logs is enabled via the {@code otel.semconv.exception.signal.preview}
    * flag.
    */
-  @CanIgnoreReturnValue
-  public static <REQUEST, RESPONSE>
-      InstrumenterBuilder<REQUEST, RESPONSE> setMessagingSendExceptionEventExtractor(
-          InstrumenterBuilder<REQUEST, RESPONSE> builder) {
-    return setExceptionEventExtractor(builder, "messaging.send.exception", Severity.WARN);
+  public static <REQUEST> void setMessagingSendExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder) {
+    setExceptionEventExtractor(builder, "messaging.send.exception", Severity.WARN);
   }
 
   /**
@@ -45,11 +40,9 @@ public final class MessagingExceptionEventExtractors {
    * emitting exceptions as logs is enabled via the {@code otel.semconv.exception.signal.preview}
    * flag.
    */
-  @CanIgnoreReturnValue
-  public static <REQUEST, RESPONSE>
-      InstrumenterBuilder<REQUEST, RESPONSE> setMessagingReceiveExceptionEventExtractor(
-          InstrumenterBuilder<REQUEST, RESPONSE> builder) {
-    return setExceptionEventExtractor(builder, "messaging.receive.exception", Severity.WARN);
+  public static <REQUEST> void setMessagingReceiveExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder) {
+    setExceptionEventExtractor(builder, "messaging.receive.exception", Severity.WARN);
   }
 
   /**
@@ -57,11 +50,9 @@ public final class MessagingExceptionEventExtractors {
    * emitting exceptions as logs is enabled via the {@code otel.semconv.exception.signal.preview}
    * flag.
    */
-  @CanIgnoreReturnValue
-  public static <REQUEST, RESPONSE>
-      InstrumenterBuilder<REQUEST, RESPONSE> setMessagingSettleExceptionEventExtractor(
-          InstrumenterBuilder<REQUEST, RESPONSE> builder) {
-    return setExceptionEventExtractor(builder, "messaging.settle.exception", Severity.WARN);
+  public static <REQUEST> void setMessagingSettleExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder) {
+    setExceptionEventExtractor(builder, "messaging.settle.exception", Severity.WARN);
   }
 
   /**
@@ -69,24 +60,19 @@ public final class MessagingExceptionEventExtractors {
    * emitting exceptions as logs is enabled via the {@code otel.semconv.exception.signal.preview}
    * flag.
    */
-  @CanIgnoreReturnValue
-  public static <REQUEST, RESPONSE>
-      InstrumenterBuilder<REQUEST, RESPONSE> setMessagingProcessExceptionEventExtractor(
-          InstrumenterBuilder<REQUEST, RESPONSE> builder) {
-    return setExceptionEventExtractor(builder, "messaging.process.exception", Severity.ERROR);
+  public static <REQUEST> void setMessagingProcessExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder) {
+    setExceptionEventExtractor(builder, "messaging.process.exception", Severity.ERROR);
   }
 
-  @CanIgnoreReturnValue
-  private static <REQUEST, RESPONSE>
-      InstrumenterBuilder<REQUEST, RESPONSE> setExceptionEventExtractor(
-          InstrumenterBuilder<REQUEST, RESPONSE> builder, String eventName, Severity severity) {
+  private static <REQUEST> void setExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder, String eventName, Severity severity) {
     Experimental.setExceptionEventExtractor(
         builder,
         (logRecordBuilder, context, request) -> {
           logRecordBuilder.setEventName(eventName);
           logRecordBuilder.setSeverity(severity);
         });
-    return builder;
   }
 
   private MessagingExceptionEventExtractors() {}
