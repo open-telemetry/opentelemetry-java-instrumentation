@@ -7,6 +7,7 @@ package redis.clients.jedis;
 
 import javax.annotation.Nullable;
 
+// This helper is in the Jedis package in order to access package-private socket factory state.
 public class DefaultJedisSocketFactoryUtil {
 
   @Nullable

@@ -39,7 +39,7 @@ class JedisSingletons {
     return instrumenter;
   }
 
-  // Redis span names follow DB span-name fallback except db.namespace is not used.
+  // Redis span names follow DB span-name fallback except that db.namespace is not used.
   private static String spanName(JedisDbAttributesGetter getter, JedisRequest request) {
     String operationName = getter.getDbOperationName(request);
     if (!emitStableDatabaseSemconv()) {
