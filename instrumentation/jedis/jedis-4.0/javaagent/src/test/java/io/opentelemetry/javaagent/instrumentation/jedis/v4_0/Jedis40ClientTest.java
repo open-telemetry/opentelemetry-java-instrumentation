@@ -194,7 +194,7 @@ class Jedis40ClientTest {
   }
 
   @Test
-  void selectCommandKeepsConnectionDatabaseIndex() {
+  void selectCommandDoesNotChangeConfiguredDatabaseIndex() {
     jedis.select(1);
     jedis.set("foo", "bar");
 
