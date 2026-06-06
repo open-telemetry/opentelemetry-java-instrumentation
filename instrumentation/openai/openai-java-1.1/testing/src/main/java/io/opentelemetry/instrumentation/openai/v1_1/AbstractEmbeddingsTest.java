@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -31,15 +30,11 @@ import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.errors.OpenAIIoException;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
-import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
-import java.util.List;
 import java.util.concurrent.CompletionException;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -260,17 +255,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                         GEN_AI_REQUEST_ENCODING_FORMATS,
                                         val -> val.isIn(singletonList("base64"), null))))));
 
-    if (emitExceptionAsLogs()) {
-      getTesting()
-          .waitAndAssertLogRecords(
-              maybeWithTransportExceptionLog(
-                  logRecord ->
-                      logRecord
-                          .hasSeverity(Severity.WARN)
-                          .hasEventName("gen_ai.client.operation.exception")
-                          .hasException(thrown)
-                          .hasTotalAttributeCount(3)));
-    }
+    getTesting().waitAndAssertLogRecords(genAiClientExceptionLogs(thrown));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -288,10 +273,5 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
-  }
-
-  protected List<Consumer<LogRecordDataAssert>> maybeWithTransportExceptionLog(
-      Consumer<LogRecordDataAssert> logRecord) {
-    return singletonList(logRecord);
   }
 }

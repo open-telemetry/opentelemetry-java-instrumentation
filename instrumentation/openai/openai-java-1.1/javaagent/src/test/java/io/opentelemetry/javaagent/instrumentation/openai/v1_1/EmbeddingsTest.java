@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.util.Collections.singletonList;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
@@ -55,10 +56,8 @@ class EmbeddingsTest extends AbstractEmbeddingsTest {
   }
 
   @Override
-  protected List<Consumer<LogRecordDataAssert>> maybeWithTransportExceptionLog(
-      Consumer<LogRecordDataAssert> logRecord) {
-    List<Consumer<LogRecordDataAssert>> result = new ArrayList<>();
-    result.add(
+  protected List<Consumer<LogRecordDataAssert>> transportExceptionLogs() {
+    return singletonList(
         transportLog ->
             transportLog
                 .hasSeverity(Severity.WARN)
@@ -68,7 +67,5 @@ class EmbeddingsTest extends AbstractEmbeddingsTest {
                     satisfies(
                         EXCEPTION_MESSAGE, val -> val.startsWith("Failed to connect to localhost")),
                     satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
-    result.add(logRecord);
-    return result;
   }
 }
