@@ -83,13 +83,13 @@ public abstract class AbstractAwsLambdaTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("my_function")
-                          .hasKind(SpanKind.SERVER)
-                          .hasStatus(StatusData.error())
-                          .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"));
-                      span.hasException(emitExceptionAsSpanEvents() ? thrown : null);
-                    }));
+                    span ->
+                        span.hasName("my_function")
+                            .hasKind(SpanKind.SERVER)
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
 
     if (emitExceptionAsLogs()) {
       testing()
