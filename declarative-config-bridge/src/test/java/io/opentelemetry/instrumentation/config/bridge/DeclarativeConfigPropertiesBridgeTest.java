@@ -9,8 +9,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import java.time.Duration;
 import java.util.HashMap;

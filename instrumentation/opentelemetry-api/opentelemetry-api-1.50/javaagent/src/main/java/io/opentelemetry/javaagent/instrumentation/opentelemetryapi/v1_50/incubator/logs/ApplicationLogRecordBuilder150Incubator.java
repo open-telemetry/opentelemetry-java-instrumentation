@@ -195,7 +195,8 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
               agentAttributes.put(
                   agentKey,
                   convertExtendedAttributesValue(
-                      (application.io.opentelemetry.api.incubator.common.ExtendedAttributes) value));
+                      (application.io.opentelemetry.api.incubator.common.ExtendedAttributes)
+                          value));
             } else {
               agentAttributes.put(agentKey, value);
             }
