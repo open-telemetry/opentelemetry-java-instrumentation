@@ -21,7 +21,7 @@ public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-4.0";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
-  private static final VirtualField<Connection, JedisConnectionInfo> connectionInfo =
+  private static final VirtualField<Connection, JedisConnectionInfo> CONNECTION_INFO =
       VirtualField.find(Connection.class, JedisConnectionInfo.class);
 
   static {
@@ -43,12 +43,12 @@ public class JedisSingletons {
 
   @Nullable
   public static JedisConnectionInfo connectionInfo(Connection connection) {
-    return connectionInfo.get(connection);
+    return CONNECTION_INFO.get(connection);
   }
 
   public static void setConnectionInfo(
       Connection connection, JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
-    connectionInfo.set(connection, JedisConnectionInfo.create(socketFactory, clientConfig));
+    CONNECTION_INFO.set(connection, JedisConnectionInfo.create(socketFactory, clientConfig));
   }
 
   // Redis span names follow DB span-name fallback except db.namespace is not used.
