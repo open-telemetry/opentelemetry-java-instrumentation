@@ -22,8 +22,6 @@ configurations.testRuntimeClasspath {
 tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", otelProps.testLatestDeps)
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  // to suppress non-fatal errors on jdk17
-  jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
 }

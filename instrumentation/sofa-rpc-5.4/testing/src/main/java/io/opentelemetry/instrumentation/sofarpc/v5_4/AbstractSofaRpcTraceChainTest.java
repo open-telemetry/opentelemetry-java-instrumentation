@@ -158,9 +158,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofa_rpc" : null),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofa_rpc" : null),
+                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv() ? GenericService.class.getName() : null),
@@ -186,9 +186,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofa_rpc" : null),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofa_rpc" : null),
+                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -210,9 +210,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(2))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofa_rpc" : null),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofa_rpc" : null),
+                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -240,9 +240,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(3))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofa_rpc" : null),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofa_rpc" : null),
+                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -275,14 +275,14 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService"),
                                                   equalTo(RPC_METHOD, "hello")),
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.MiddleService"),
@@ -302,7 +302,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE, GenericService.class.getName()),
                                                   equalTo(RPC_METHOD, "$invoke"),
@@ -315,7 +315,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                                       AbstractSofaRpcTest::assertNetworkType)),
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService"),
@@ -344,13 +344,13 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello")),
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.MiddleService/hello"))))));
@@ -369,7 +369,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "com.alipay.sofa.rpc.api.GenericService/$invoke"),
@@ -379,7 +379,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                                       val -> val.isInstanceOf(Long.class))),
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"),
@@ -438,9 +438,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofa_rpc" : null),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofa_rpc" : null),
+                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv() ? GenericService.class.getName() : null),
@@ -466,9 +466,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofa_rpc" : null),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofa_rpc" : null),
+                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -497,9 +497,9 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasKind(SpanKind.SERVER)
                             .hasNoParent() // No parent because CLIENT span was skipped
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofa_rpc" : null),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofa_rpc" : null),
+                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -532,7 +532,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.MiddleService"),
@@ -541,7 +541,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                           // calls
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService"),
@@ -561,7 +561,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE, GenericService.class.getName()),
                                                   equalTo(RPC_METHOD, "$invoke"),
@@ -589,13 +589,13 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.MiddleService/hello")),
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"))))));
@@ -614,7 +614,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofa_rpc"),
+                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "com.alipay.sofa.rpc.api.GenericService/$invoke"),

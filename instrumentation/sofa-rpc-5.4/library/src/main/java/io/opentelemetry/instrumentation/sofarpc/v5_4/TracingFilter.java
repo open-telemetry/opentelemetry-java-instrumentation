@@ -18,14 +18,11 @@ import com.alipay.sofa.rpc.filter.FilterInvoker;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 
 final class TracingFilter extends Filter {
 
-  private static final VirtualField<SofaRequest, Context> ASYNC_CONTEXT =
-      VirtualField.find(SofaRequest.class, Context.class);
-  private static final VirtualField<SofaRequest, SofaRpcRequest> ASYNC_REQUEST =
-      VirtualField.find(SofaRequest.class, SofaRpcRequest.class);
+  private static final String OTEL_CONTEXT_KEY = "otel.context";
+  private static final String OTEL_REQUEST_KEY = "otel.request";
 
   private final Instrumenter<SofaRpcRequest, SofaResponse> instrumenter;
   private final boolean isClientSide;
@@ -36,8 +33,7 @@ final class TracingFilter extends Filter {
   }
 
   @Override
-  @SuppressWarnings("ThrowsUncheckedException")
-  public SofaResponse invoke(FilterInvoker invoker, SofaRequest request) throws SofaRpcException {
+  public SofaResponse invoke(FilterInvoker invoker, SofaRequest request) {
     if (shouldSkipLocalCall(invoker)) {
       return invoker.invoke(request);
     }
@@ -56,8 +52,8 @@ final class TracingFilter extends Filter {
       response = invoker.invoke(request);
       if (isClientSide && request.isAsync()) {
         isSynchronous = false;
-        ASYNC_CONTEXT.set(request, context);
-        ASYNC_REQUEST.set(request, sofaRpcRequest);
+        request.addRequestProp(OTEL_CONTEXT_KEY, context);
+        request.addRequestProp(OTEL_REQUEST_KEY, sofaRpcRequest);
       }
     } catch (Throwable t) {
       instrumenter.end(context, sofaRpcRequest, null, t);
@@ -119,24 +115,20 @@ final class TracingFilter extends Filter {
 
   @Override
   // Suppress rawtypes warning: SOFARPC Filter interface uses raw ConsumerConfig type
-  @SuppressWarnings({"rawtypes", "ThrowsUncheckedException"})
+  @SuppressWarnings("rawtypes")
   public void onAsyncResponse(
-      ConsumerConfig config, SofaRequest request, SofaResponse response, Throwable exception)
-      throws SofaRpcException {
+      ConsumerConfig config, SofaRequest request, SofaResponse response, Throwable exception) {
     if (!isClientSide) {
       return;
     }
-    Context context = ASYNC_CONTEXT.get(request);
-    if (context == null) {
+    Context context = (Context) request.getRequestProp(OTEL_CONTEXT_KEY);
+    SofaRpcRequest sofaRpcRequest = (SofaRpcRequest) request.getRequestProp(OTEL_REQUEST_KEY);
+    if (context == null || sofaRpcRequest == null) {
       return;
     }
-    SofaRpcRequest sofaRpcRequest = ASYNC_REQUEST.get(request);
-    if (sofaRpcRequest == null) {
-      sofaRpcRequest = SofaRpcRequest.create(request);
-    }
     Throwable error = exception != null ? exception : extractException(response);
-    ASYNC_CONTEXT.set(request, null);
-    ASYNC_REQUEST.set(request, null);
+    request.addRequestProp(OTEL_CONTEXT_KEY, null);
+    request.addRequestProp(OTEL_REQUEST_KEY, null);
     instrumenter.end(context, sofaRpcRequest, response, error);
   }
 }

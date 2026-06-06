@@ -13,13 +13,13 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
 
   @Override
   public String getRpcSystemName(SofaRpcRequest request) {
-    return "sofa_rpc";
+    return "sofarpc";
   }
 
   @Deprecated
   @Override
   public String getSystem(SofaRpcRequest request) {
-    return "sofa_rpc";
+    return "sofarpc";
   }
 
   @Override

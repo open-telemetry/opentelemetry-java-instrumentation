@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
 import com.alipay.sofa.rpc.config.ConsumerConfig;
-import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.ext.Extension;
@@ -26,17 +25,15 @@ public final class OpenTelemetryClientFilter extends Filter {
   }
 
   @Override
-  @SuppressWarnings("ThrowsUncheckedException")
-  public SofaResponse invoke(FilterInvoker invoker, SofaRequest request) throws SofaRpcException {
+  public SofaResponse invoke(FilterInvoker invoker, SofaRequest request) {
     return delegate.invoke(invoker, request);
   }
 
   @Override
   // Suppress rawtypes warning: SOFARPC Filter interface uses raw ConsumerConfig type
-  @SuppressWarnings({"rawtypes", "ThrowsUncheckedException"})
+  @SuppressWarnings("rawtypes")
   public void onAsyncResponse(
-      ConsumerConfig config, SofaRequest request, SofaResponse response, Throwable exception)
-      throws SofaRpcException {
+      ConsumerConfig config, SofaRequest request, SofaResponse response, Throwable exception) {
     delegate.onAsyncResponse(config, request, response, exception);
   }
 }

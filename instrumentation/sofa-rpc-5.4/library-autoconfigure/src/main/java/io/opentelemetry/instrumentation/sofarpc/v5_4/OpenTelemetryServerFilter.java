@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
-import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.ext.Extension;
@@ -25,8 +24,7 @@ public final class OpenTelemetryServerFilter extends Filter {
   }
 
   @Override
-  @SuppressWarnings("ThrowsUncheckedException")
-  public SofaResponse invoke(FilterInvoker invoker, SofaRequest request) throws SofaRpcException {
+  public SofaResponse invoke(FilterInvoker invoker, SofaRequest request) {
     return delegate.invoke(invoker, request);
   }
 }

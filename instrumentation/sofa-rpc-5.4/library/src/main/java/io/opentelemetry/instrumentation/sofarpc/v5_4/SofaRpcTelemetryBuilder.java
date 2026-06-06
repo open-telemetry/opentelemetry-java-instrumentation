@@ -24,25 +24,60 @@ import io.opentelemetry.instrumentation.sofarpc.v5_4.internal.SofaRpcClientNetwo
 import java.util.ArrayList;
 import java.util.List;
 
+/** A builder of {@link SofaRpcTelemetry}. */
 public final class SofaRpcTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.sofa-rpc-5.4";
 
   private final OpenTelemetry openTelemetry;
-  private final List<AttributesExtractor<SofaRpcRequest, SofaResponse>> attributesExtractors =
-      new ArrayList<>();
+  private final List<AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse>>
+      additionalExtractors = new ArrayList<>();
+  private final List<AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse>>
+      additionalClientExtractors = new ArrayList<>();
+  private final List<AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse>>
+      additionalServerExtractors = new ArrayList<>();
 
   SofaRpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
 
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items for both client and server spans. The {@link AttributesExtractor} will be executed after
+   * all default extractors.
+   */
   @CanIgnoreReturnValue
   public SofaRpcTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<SofaRpcRequest, SofaResponse> attributesExtractor) {
-    attributesExtractors.add(attributesExtractor);
+      AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse> attributesExtractor) {
+    additionalExtractors.add(attributesExtractor);
     return this;
   }
 
+  /**
+   * Adds an extra client-only {@link AttributesExtractor} to invoke to set attributes to
+   * instrumented items. The {@link AttributesExtractor} will be executed after all default
+   * extractors.
+   */
+  @CanIgnoreReturnValue
+  public SofaRpcTelemetryBuilder addClientAttributeExtractor(
+      AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse> attributesExtractor) {
+    additionalClientExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Adds an extra server-only {@link AttributesExtractor} to invoke to set attributes to
+   * instrumented items. The {@link AttributesExtractor} will be executed after all default
+   * extractors.
+   */
+  @CanIgnoreReturnValue
+  public SofaRpcTelemetryBuilder addServerAttributeExtractor(
+      AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse> attributesExtractor) {
+    additionalServerExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  /** Returns a new {@link SofaRpcTelemetry} with the settings of this builder. */
   @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
   public SofaRpcTelemetry build() {
     SofaRpcAttributesGetter rpcAttributesGetter = new SofaRpcAttributesGetter();
@@ -58,7 +93,8 @@ public final class SofaRpcTelemetryBuilder {
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
-            .addAttributesExtractors(attributesExtractors)
+            .addAttributesExtractors(additionalExtractors)
+            .addAttributesExtractors(additionalServerExtractors)
             .addOperationMetrics(RpcServerMetrics.get())
             .addContextCustomizer(
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
@@ -69,7 +105,8 @@ public final class SofaRpcTelemetryBuilder {
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
-            .addAttributesExtractors(attributesExtractors)
+            .addAttributesExtractors(additionalExtractors)
+            .addAttributesExtractors(additionalClientExtractors)
             .addOperationMetrics(RpcClientMetrics.get())
             .addContextCustomizer(
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));

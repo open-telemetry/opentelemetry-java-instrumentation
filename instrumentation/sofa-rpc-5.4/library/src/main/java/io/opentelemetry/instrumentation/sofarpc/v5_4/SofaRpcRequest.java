@@ -16,9 +16,8 @@ import javax.annotation.Nullable;
 public abstract class SofaRpcRequest {
 
   public static SofaRpcRequest create(SofaRequest request) {
-    RpcInternalContext context = RpcInternalContext.getContext();
+    RpcInternalContext context = RpcInternalContext.peekContext();
 
-    // Get network addresses from RpcInternalContext
     InetSocketAddress remoteAddress = context != null ? context.getRemoteAddress() : null;
     InetSocketAddress localAddress = context != null ? context.getLocalAddress() : null;
     ProviderInfo providerInfo = context != null ? context.getProviderInfo() : null;
