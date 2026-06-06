@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.faas.internal;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
@@ -21,17 +20,14 @@ public final class FaasExceptionEventExtractors {
    * emitting exceptions as logs is enabled via the {@code otel.semconv.exception.signal.preview}
    * flag.
    */
-  @CanIgnoreReturnValue
-  public static <REQUEST, RESPONSE>
-      InstrumenterBuilder<REQUEST, RESPONSE> setFaasInvocationExceptionEventExtractor(
-          InstrumenterBuilder<REQUEST, RESPONSE> builder) {
+  public static <REQUEST> void setFaasInvocationExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder) {
     Experimental.setExceptionEventExtractor(
         builder,
         (logRecordBuilder, context, request) -> {
           logRecordBuilder.setEventName("faas.invocation.exception");
           logRecordBuilder.setSeverity(Severity.ERROR);
         });
-    return builder;
   }
 
   private FaasExceptionEventExtractors() {}
