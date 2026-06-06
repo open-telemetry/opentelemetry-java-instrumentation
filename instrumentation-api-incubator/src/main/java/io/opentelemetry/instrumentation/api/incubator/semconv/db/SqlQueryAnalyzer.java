@@ -34,6 +34,9 @@ public final class SqlQueryAnalyzer {
   }
 
   public SqlQuery analyze(@Nullable String query, SqlDialect dialect) {
+    if (SemconvStability.v3Preview()) {
+      return analyzeWithSummary(query, dialect);
+    }
     if (!querySanitizationEnabled || query == null) {
       return SqlQuery.create(query, null, null);
     }
@@ -52,7 +55,7 @@ public final class SqlQueryAnalyzer {
     return AutoSqlSanitizer.sanitize(query, dialect);
   }
 
-  /** Analyze and extract query summary. */
+  // To be removed in 3.0 (or rather, inlined into analyze() above)
   public SqlQuery analyzeWithSummary(@Nullable String query, SqlDialect dialect) {
     if (!querySanitizationEnabled || query == null) {
       return SqlQuery.createWithSummary(query, null, null);
