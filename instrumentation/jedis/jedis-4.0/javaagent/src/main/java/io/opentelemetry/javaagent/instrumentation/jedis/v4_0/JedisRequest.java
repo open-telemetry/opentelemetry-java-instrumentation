@@ -11,7 +11,6 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
@@ -44,8 +43,7 @@ public abstract class JedisRequest {
         args,
         connectionInfo != null ? connectionInfo.getServerAddress() : null,
         connectionInfo != null ? connectionInfo.getServerPort() : null,
-        JedisRequestContext.databaseIndex(
-            connection, connectionInfo != null ? connectionInfo.getDatabaseIndex() : null));
+        connectionInfo != null ? connectionInfo.getDatabaseIndex() : null);
   }
 
   public static JedisRequest create(CommandArguments commandArguments) {
