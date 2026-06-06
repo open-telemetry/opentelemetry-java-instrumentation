@@ -73,6 +73,17 @@ public abstract class AbstractSofaRpcTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  // In library mode, SOFARPC resolves GenericService.$invoke("hello", ...) to the actual target
+  // method name "hello" before our filter runs. In javaagent mode, the filter intercepts before
+  // resolution, so the method name remains "$invoke".
+  protected String genericMethodName() {
+    return "hello";
+  }
+
+  private String genericServiceSpanName() {
+    return "com.alipay.sofa.rpc.api.GenericService/" + genericMethodName();
+  }
+
   ConsumerConfig<GenericService> configureGenericClient(int port) {
     ConsumerConfig<GenericService> consumer = new ConsumerConfig<>();
     consumer
@@ -163,21 +174,20 @@ public abstract class AbstractSofaRpcTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("com.alipay.sofa.rpc.api.GenericService/$invoke")
+                        span.hasName(genericServiceSpanName())
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv() ? GenericService.class.getName() : null),
                                 equalTo(
                                     RPC_METHOD,
                                     emitStableRpcSemconv()
-                                        ? "com.alipay.sofa.rpc.api.GenericService/$invoke"
-                                        : "$invoke"),
+                                        ? genericServiceSpanName()
+                                        : genericMethodName()),
                                 equalTo(
                                     maybeStablePeerService(),
                                     hasPeerService() ? "test-peer-service" : null),
@@ -196,8 +206,7 @@ public abstract class AbstractSofaRpcTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -253,7 +262,7 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE, GenericService.class.getName()),
-                                                  equalTo(RPC_METHOD, "$invoke"),
+                                                  equalTo(RPC_METHOD, genericMethodName()),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,
@@ -298,9 +307,7 @@ public abstract class AbstractSofaRpcTest {
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
                                                   equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "com.alipay.sofa.rpc.api.GenericService/$invoke"),
+                                                  equalTo(RPC_METHOD, genericServiceSpanName()),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,
@@ -341,21 +348,20 @@ public abstract class AbstractSofaRpcTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("com.alipay.sofa.rpc.api.GenericService/$invoke")
+                        span.hasName(genericServiceSpanName())
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv() ? GenericService.class.getName() : null),
                                 equalTo(
                                     RPC_METHOD,
                                     emitStableRpcSemconv()
-                                        ? "com.alipay.sofa.rpc.api.GenericService/$invoke"
-                                        : "$invoke"),
+                                        ? genericServiceSpanName()
+                                        : genericMethodName()),
                                 equalTo(
                                     maybeStablePeerService(),
                                     hasPeerService() ? "test-peer-service" : null),
@@ -374,8 +380,7 @@ public abstract class AbstractSofaRpcTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -431,7 +436,7 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE, GenericService.class.getName()),
-                                                  equalTo(RPC_METHOD, "$invoke"),
+                                                  equalTo(RPC_METHOD, genericMethodName()),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,
@@ -476,9 +481,7 @@ public abstract class AbstractSofaRpcTest {
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
                                                   equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "com.alipay.sofa.rpc.api.GenericService/$invoke"),
+                                                  equalTo(RPC_METHOD, genericServiceSpanName()),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,
@@ -550,8 +553,7 @@ public abstract class AbstractSofaRpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -586,8 +588,7 @@ public abstract class AbstractSofaRpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -733,8 +734,7 @@ public abstract class AbstractSofaRpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -769,8 +769,7 @@ public abstract class AbstractSofaRpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -821,8 +820,7 @@ public abstract class AbstractSofaRpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -857,8 +855,7 @@ public abstract class AbstractSofaRpcTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()

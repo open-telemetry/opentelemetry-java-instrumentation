@@ -24,4 +24,9 @@ class SofaRpcAgentTest extends AbstractSofaRpcTest {
   protected boolean hasPeerService() {
     return true;
   }
+
+  @Override
+  protected String genericMethodName() {
+    return "$invoke";
+  }
 }

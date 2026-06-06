@@ -48,6 +48,14 @@ public abstract class AbstractSofaRpcTraceChainTest {
 
   protected abstract boolean hasPeerService();
 
+  protected String genericMethodName() {
+    return "hello";
+  }
+
+  private String genericServiceSpanName() {
+    return "com.alipay.sofa.rpc.api.GenericService/" + genericMethodName();
+  }
+
   ConsumerConfig<HelloService> configureClient(int port) {
     ConsumerConfig<HelloService> consumer = new ConsumerConfig<>();
     consumer
@@ -154,21 +162,20 @@ public abstract class AbstractSofaRpcTraceChainTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("com.alipay.sofa.rpc.api.GenericService/$invoke")
+                        span.hasName(genericServiceSpanName())
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv() ? GenericService.class.getName() : null),
                                 equalTo(
                                     RPC_METHOD,
                                     emitStableRpcSemconv()
-                                        ? "com.alipay.sofa.rpc.api.GenericService/$invoke"
-                                        : "$invoke"),
+                                        ? genericServiceSpanName()
+                                        : genericMethodName()),
                                 equalTo(
                                     maybeStablePeerService(),
                                     hasPeerService() ? "test-peer-service" : null),
@@ -187,8 +194,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -211,8 +217,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasParent(trace.getSpan(2))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -241,8 +246,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasParent(trace.getSpan(3))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -305,7 +309,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                                   equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE, GenericService.class.getName()),
-                                                  equalTo(RPC_METHOD, "$invoke"),
+                                                  equalTo(RPC_METHOD, genericMethodName()),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,
@@ -370,9 +374,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
                                                   equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "com.alipay.sofa.rpc.api.GenericService/$invoke"),
+                                                  equalTo(RPC_METHOD, genericServiceSpanName()),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,
@@ -434,21 +436,20 @@ public abstract class AbstractSofaRpcTraceChainTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("com.alipay.sofa.rpc.api.GenericService/$invoke")
+                        span.hasName(genericServiceSpanName())
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv() ? GenericService.class.getName() : null),
                                 equalTo(
                                     RPC_METHOD,
                                     emitStableRpcSemconv()
-                                        ? "com.alipay.sofa.rpc.api.GenericService/$invoke"
-                                        : "$invoke"),
+                                        ? genericServiceSpanName()
+                                        : genericMethodName()),
                                 equalTo(
                                     maybeStablePeerService(),
                                     hasPeerService() ? "test-peer-service" : null),
@@ -467,8 +468,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -498,8 +498,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                             .hasNoParent() // No parent because CLIENT span was skipped
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
+                                equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "sofarpc" : null),
                                 equalTo(
                                     RPC_SERVICE,
                                     emitOldRpcSemconv()
@@ -564,7 +563,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                                   equalTo(RPC_SYSTEM, "sofarpc"),
                                                   equalTo(
                                                       RPC_SERVICE, GenericService.class.getName()),
-                                                  equalTo(RPC_METHOD, "$invoke"),
+                                                  equalTo(RPC_METHOD, genericMethodName()),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,
@@ -615,9 +614,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
                                                   equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "com.alipay.sofa.rpc.api.GenericService/$invoke"),
+                                                  equalTo(RPC_METHOD, genericServiceSpanName()),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,
