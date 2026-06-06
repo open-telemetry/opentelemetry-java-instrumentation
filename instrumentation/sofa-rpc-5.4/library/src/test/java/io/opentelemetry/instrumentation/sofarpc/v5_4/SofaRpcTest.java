@@ -18,8 +18,7 @@ class SofaRpcTest extends AbstractSofaRpcTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  private final SofaRpcTelemetry telemetry =
-      SofaRpcTelemetry.create(testing.getOpenTelemetry());
+  private final SofaRpcTelemetry telemetry = SofaRpcTelemetry.create(testing.getOpenTelemetry());
 
   @Override
   protected InstrumentationExtension testing() {

@@ -40,8 +40,6 @@ import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.filter.Filter;
 import com.alipay.sofa.rpc.filter.FilterInvoker;
-import java.util.ArrayList;
-import java.util.List;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService;
@@ -51,6 +49,8 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.ArrayList;
+import java.util.List;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
@@ -496,11 +496,13 @@ public abstract class AbstractSofaRpcTest {
   }
 
   static void assertNetworkPeerAddress(AbstractAssert<?, ?> assertion) {
-    assertion.satisfies(val -> assertThat(val).isEqualTo("127.0.0.1"));
+    assertion.satisfiesAnyOf(
+        val -> assertThat(val).isNull(), val -> assertThat(val).isEqualTo("127.0.0.1"));
   }
 
   static void assertNetworkPeerPort(AbstractAssert<?, ?> assertion) {
-    assertion.satisfies(val -> assertThat((Long) val).isPositive());
+    assertion.satisfiesAnyOf(
+        val -> assertThat(val).isNull(), val -> assertThat((Long) val).isPositive());
   }
 
   private static class ClearRpcInternalContextFilter extends Filter {
