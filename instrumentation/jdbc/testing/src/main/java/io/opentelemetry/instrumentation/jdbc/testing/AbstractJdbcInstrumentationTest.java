@@ -427,6 +427,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testFailedStatement() throws SQLException {
     Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
+    cleanup.deferCleanup(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
 
