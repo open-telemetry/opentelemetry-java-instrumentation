@@ -26,10 +26,11 @@ class JedisConnectionInfo {
   static JedisConnectionInfo create(
       @Nullable JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
     HostAndPort hostAndPort = DefaultJedisSocketFactoryUtil.getHostAndPort(socketFactory);
+    // Without a client config, Jedis leaves the new Redis connection on the default database 0.
     Long databaseIndex =
         clientConfig instanceof JedisClientConfig
             ? Long.valueOf(((JedisClientConfig) clientConfig).getDatabase())
-            : null;
+            : 0L;
     return new JedisConnectionInfo(
         hostAndPort != null ? hostAndPort.getHost() : null,
         hostAndPort != null ? hostAndPort.getPort() : null,

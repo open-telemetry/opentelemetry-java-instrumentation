@@ -91,7 +91,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -103,6 +103,7 @@ class Jedis40ClientTest {
         "io.opentelemetry.jedis-4.0",
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
+        DB_NAMESPACE,
         SERVER_ADDRESS,
         SERVER_PORT,
         NETWORK_PEER_ADDRESS,
@@ -126,7 +127,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -141,7 +142,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
-                            equalTo(DB_NAMESPACE, null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -166,7 +167,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -184,7 +185,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
-                            equalTo(DB_NAMESPACE, null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -193,7 +194,7 @@ class Jedis40ClientTest {
   }
 
   @Test
-  void selectCommandDoesNotChangeConfiguredDatabaseIndex() {
+  void selectCommandDoesNotChangeEstablishedDatabaseIndex() {
     jedis.select(1);
     jedis.set("foo", "bar");
 
@@ -208,7 +209,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT 1"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(DB_NAMESPACE, null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -223,7 +224,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, null),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
