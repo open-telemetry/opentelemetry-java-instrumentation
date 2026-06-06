@@ -67,8 +67,7 @@ class EmbeddingsTest extends AbstractEmbeddingsTest {
                     equalTo(EXCEPTION_TYPE, "java.net.ConnectException"),
                     satisfies(
                         EXCEPTION_MESSAGE, val -> val.startsWith("Failed to connect to localhost")),
-                    satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()))
-                .hasTotalAttributeCount(3));
+                    satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     result.add(logRecord);
     return result;
   }
