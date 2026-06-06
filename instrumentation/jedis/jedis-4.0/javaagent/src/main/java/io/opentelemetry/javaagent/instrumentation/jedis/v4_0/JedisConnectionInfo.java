@@ -14,10 +14,10 @@ import redis.clients.jedis.JedisSocketFactory;
 class JedisConnectionInfo {
   @Nullable private final String serverAddress;
   @Nullable private final Integer serverPort;
-  private final Long databaseIndex;
+  @Nullable private final Long databaseIndex;
 
   private JedisConnectionInfo(
-      @Nullable String serverAddress, @Nullable Integer serverPort, long databaseIndex) {
+      @Nullable String serverAddress, @Nullable Integer serverPort, @Nullable Long databaseIndex) {
     this.serverAddress = serverAddress;
     this.serverPort = serverPort;
     this.databaseIndex = databaseIndex;
@@ -26,10 +26,10 @@ class JedisConnectionInfo {
   static JedisConnectionInfo create(
       @Nullable JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
     HostAndPort hostAndPort = DefaultJedisSocketFactoryUtil.getHostAndPort(socketFactory);
-    long databaseIndex =
+    Long databaseIndex =
         clientConfig instanceof JedisClientConfig
             ? ((JedisClientConfig) clientConfig).getDatabase()
-            : 0;
+            : null;
     return new JedisConnectionInfo(
         hostAndPort != null ? hostAndPort.getHost() : null,
         hostAndPort != null ? hostAndPort.getPort() : null,
@@ -46,6 +46,7 @@ class JedisConnectionInfo {
     return serverPort;
   }
 
+  @Nullable
   Long getDatabaseIndex() {
     return databaseIndex;
   }
