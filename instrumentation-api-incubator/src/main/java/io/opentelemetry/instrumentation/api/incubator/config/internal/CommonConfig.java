@@ -96,24 +96,24 @@ public final class CommonConfig {
             logging,
             "trace_id_key",
             "trace_id",
-            "instrumentation/development: java: common: logging: trace_id_key",
-            "instrumentation/development: java: common: logging: trace_id",
+            "otel.instrumentation.common.logging.trace-id-key",
+            "otel.instrumentation.common.logging.trace-id",
             LoggingContextConstants.TRACE_ID);
     loggingSpanIdKey =
         getConfig(
             logging,
             "span_id_key",
             "span_id",
-            "instrumentation/development: java: common: logging: span_id_key",
-            "instrumentation/development: java: common: logging: span_id",
+            "otel.instrumentation.common.logging.span-id-key",
+            "otel.instrumentation.common.logging.span-id",
             LoggingContextConstants.SPAN_ID);
     loggingTraceFlagsKey =
         getConfig(
             logging,
             "trace_flags_key",
             "trace_flags",
-            "instrumentation/development: java: common: logging: trace_flags_key",
-            "instrumentation/development: java: common: logging: trace_flags",
+            "otel.instrumentation.common.logging.trace-flags-key",
+            "otel.instrumentation.common.logging.trace-flags",
             LoggingContextConstants.TRACE_FLAGS);
     v3Preview = commonConfig.getBoolean("v3_preview", false);
   }
@@ -122,8 +122,8 @@ public final class CommonConfig {
       DeclarativeConfigProperties config,
       String newDeclarativeKey,
       String oldDeclarativeKey,
-      String newDeclarativeProperty,
-      String oldDeclarativeProperty,
+      String newProperty,
+      String oldProperty,
       String defaultValue) {
     String value = config.getString(newDeclarativeKey);
     if (value != null) {
@@ -132,12 +132,12 @@ public final class CommonConfig {
     value = config.getString(oldDeclarativeKey);
     if (value != null) {
       logger.warning(
-          "The '"
-              + oldDeclarativeProperty
-              + "' declarative configuration is deprecated"
-              + " and will be removed in a future version. Use '"
-              + newDeclarativeProperty
-              + "' instead.");
+          "The "
+              + oldProperty
+              + " setting and the equivalent declarative configuration property"
+              + " are deprecated and will be removed in 3.0. Use "
+              + newProperty
+              + " or equivalent declarative configuration instead.");
       return value;
     }
     return defaultValue;
