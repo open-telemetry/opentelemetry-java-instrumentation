@@ -42,7 +42,7 @@ public class JedisSingletons {
   }
 
   @Nullable
-  public static JedisConnectionInfo connectionInfo(Connection connection) {
+  static JedisConnectionInfo connectionInfo(Connection connection) {
     return CONNECTION_INFO.get(connection);
   }
 
