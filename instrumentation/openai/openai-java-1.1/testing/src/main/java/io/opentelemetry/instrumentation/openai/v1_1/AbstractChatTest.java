@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
@@ -62,17 +64,20 @@ import com.openai.models.chat.completions.ChatCompletionToolMessageParam;
 import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -905,7 +910,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
                         span ->
-                            span.hasException(thrown)
+                            span.hasException(emitExceptionAsSpanEvents() ? thrown : null)
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, CHAT),
@@ -930,14 +935,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(stringKey("event.name"), "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))));
+    getTesting().waitAndAssertLogRecords(connectionErrorLogs(spanCtx, thrown));
   }
 
   @Test
@@ -1618,7 +1616,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
                         span ->
-                            span.hasException(thrown)
+                            span.hasException(emitExceptionAsSpanEvents() ? thrown : null)
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, CHAT),
@@ -1643,14 +1641,34 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(stringKey("event.name"), "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))));
+    getTesting().waitAndAssertLogRecords(connectionErrorLogs(spanCtx, thrown));
+  }
+
+  private List<Consumer<LogRecordDataAssert>> connectionErrorLogs(
+      SpanContext spanCtx, Throwable thrown) {
+    List<Consumer<LogRecordDataAssert>> assertions = new ArrayList<>();
+    assertions.add(
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                    equalTo(stringKey("event.name"), "gen_ai.user.message"))
+                .hasSpanContext(spanCtx)
+                .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))));
+    if (emitExceptionAsLogs()) {
+      assertions.addAll(
+          maybeWithTransportExceptionLog(
+              log ->
+                  log.hasSeverity(Severity.WARN)
+                      .hasEventName("gen_ai.client.operation.exception")
+                      .hasException(thrown)
+                      .hasTotalAttributeCount(3)));
+    }
+    return assertions;
+  }
+
+  protected List<Consumer<LogRecordDataAssert>> maybeWithTransportExceptionLog(
+      Consumer<LogRecordDataAssert> logRecord) {
+    return singletonList(logRecord);
   }
 
   protected static ChatCompletionMessageParam createUserMessage(String content) {
