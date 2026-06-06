@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
@@ -32,6 +33,11 @@ public class AnnotationInstrumentationModule extends InstrumentationModule
   public int order() {
     // Run after other instrumentations.
     return 1000;
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview();
   }
 
   @Override
