@@ -67,6 +67,7 @@ public final class CassandraTelemetryBuilder {
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
                     .setTableAttribute(DB_CASSANDRA_TABLE)
+                    .setSingleOperationAndCollection(true)
                     .setQuerySanitizationEnabled(querySanitizationEnabled)
                     .build())
             .addAttributesExtractor(new CassandraAttributesExtractor())

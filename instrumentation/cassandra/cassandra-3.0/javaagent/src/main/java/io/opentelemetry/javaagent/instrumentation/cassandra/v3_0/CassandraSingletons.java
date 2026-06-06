@@ -37,6 +37,7 @@ class CassandraSingletons {
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
                     .setTableAttribute(DB_CASSANDRA_TABLE)
+                    .setSingleOperationAndCollection(true)
                     .setQuerySanitizationEnabled(
                         DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "cassandra"))
                     .build())
