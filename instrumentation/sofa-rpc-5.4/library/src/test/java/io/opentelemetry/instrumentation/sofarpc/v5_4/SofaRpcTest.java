@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import static java.util.Arrays.asList;
+
 import com.alipay.sofa.rpc.filter.Filter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.List;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static java.util.Arrays.asList;
 
 class SofaRpcTest extends AbstractSofaRpcTest {
 
