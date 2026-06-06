@@ -6,10 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.internal.InstrumentationUtil;
+import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
@@ -21,7 +22,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 class InstrumentationUtilInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("application.io.opentelemetry.api.internal.InstrumentationUtil");
+    return namedOneOf(
+        "application.io.opentelemetry.api.internal.InstrumentationUtil",
+        "application.io.opentelemetry.api.impl.InstrumentationUtil");
   }
 
   @Override

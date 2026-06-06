@@ -16,8 +16,6 @@ import static java.util.stream.Collectors.toList;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.common.Value;
-import io.opentelemetry.api.incubator.common.ExtendedAttributes;
-import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -45,7 +43,6 @@ import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryPointData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableValueAtQuantile;
 import io.opentelemetry.sdk.testing.logs.TestLogRecordData;
-import io.opentelemetry.sdk.testing.logs.internal.TestExtendedLogRecordData;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -90,13 +87,10 @@ public class TelemetryConverter {
   // opentelemetry-api-1.27:javaagent tests use an older version of opentelemetry-api where Value
   // class is missing
   private static final boolean canUseValue = classAvailable("io.opentelemetry.api.common.Value");
+  private static final boolean canUseValueKey =
+      methodAvailable("io.opentelemetry.api.common.AttributeKey", "valueKey", String.class);
   // opentelemetry-api-1.50:javaagent tests use an older version where Value.empty() doesn't exist
   private static final Value<?> EMPTY_VALUE = computeEmptyValue();
-  private static final boolean hasExtendedLogRecordData =
-      classAvailable("io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData");
-  private static final boolean hasExtendedAttributes =
-      classAvailable("io.opentelemetry.api.incubator.common.ExtendedAttributes");
-
   public static List<SpanData> getSpanData(Collection<ResourceSpans> allResourceSpans) {
     List<SpanData> spans = new ArrayList<>();
     for (ResourceSpans resourceSpans : allResourceSpans) {
@@ -297,9 +291,6 @@ public class TelemetryConverter {
       LogRecord logRecord,
       io.opentelemetry.sdk.resources.Resource resource,
       InstrumentationScopeInfo instrumentationScopeInfo) {
-    if (hasExtendedLogRecordData) {
-      return createExtendedLogData(logRecord, resource, instrumentationScopeInfo);
-    }
     TestLogRecordData.Builder builder =
         TestLogRecordData.builder()
             .setResource(resource)
@@ -313,40 +304,13 @@ public class TelemetryConverter {
                     TraceState.getDefault())) // logs proto doesn't have trace state
             .setSeverity(fromProto(logRecord.getSeverityNumber()))
             .setSeverityText(logRecord.getSeverityText())
+            .setEventName(logRecord.getEventName())
             .setAttributes(fromProto(logRecord.getAttributesList()));
     if (canUseValue) {
       builder.setBodyValue(getBodyValue(logRecord.getBody()));
     } else {
       builder.setBody(logRecord.getBody().getStringValue());
     }
-    return builder.build();
-  }
-
-  private static LogRecordData createExtendedLogData(
-      LogRecord logRecord,
-      io.opentelemetry.sdk.resources.Resource resource,
-      InstrumentationScopeInfo instrumentationScopeInfo) {
-    TestExtendedLogRecordData.Builder builder =
-        TestExtendedLogRecordData.builder()
-            .setResource(resource)
-            .setInstrumentationScopeInfo(instrumentationScopeInfo)
-            .setTimestamp(logRecord.getTimeUnixNano(), NANOSECONDS)
-            .setSpanContext(
-                SpanContext.create(
-                    bytesToHex(logRecord.getTraceId().toByteArray()),
-                    bytesToHex(logRecord.getSpanId().toByteArray()),
-                    TraceFlags.fromByte((byte) logRecord.getFlags()),
-                    TraceState.getDefault())) // logs proto doesn't have trace state
-            .setSeverity(fromProto(logRecord.getSeverityNumber()))
-            .setSeverityText(logRecord.getSeverityText())
-            .setEventName(logRecord.getEventName())
-            .setBodyValue(getBodyValue(logRecord.getBody()));
-    if (hasExtendedAttributes) {
-      builder.setExtendedAttributes(fromProtoExtended(logRecord.getAttributesList()));
-    } else {
-      builder.setAttributes(fromProto(logRecord.getAttributesList()));
-    }
-
     return builder.build();
   }
 
@@ -500,77 +464,7 @@ public class TelemetryConverter {
     }
   }
 
-  @SuppressWarnings("deprecation") // need to support deprecated EXTENDED_ATTRIBUTES type
-  private static ExtendedAttributes fromProtoExtended(List<KeyValue> attributes) {
-    ExtendedAttributesBuilder converted = ExtendedAttributes.builder();
-    for (KeyValue attribute : attributes) {
-      String key = attribute.getKey();
-      AnyValue value = attribute.getValue();
-      switch (value.getValueCase()) {
-        case STRING_VALUE:
-          converted.put(key, value.getStringValue());
-          break;
-        case BOOL_VALUE:
-          converted.put(key, value.getBoolValue());
-          break;
-        case INT_VALUE:
-          converted.put(key, value.getIntValue());
-          break;
-        case DOUBLE_VALUE:
-          converted.put(key, value.getDoubleValue());
-          break;
-        case ARRAY_VALUE:
-          ArrayValue array = value.getArrayValue();
-          AnyValue.ValueCase arrayType = homogeneousArrayType(array);
-          if (arrayType == null) {
-            // Heterogeneous arrays, arrays with complex types, or empty arrays
-            converted.put(valueKey(key), anyValueToValue(value));
-          } else {
-            switch (arrayType) {
-              case STRING_VALUE:
-                converted.put(
-                    stringArrayKey(key),
-                    array.getValuesList().stream().map(AnyValue::getStringValue).collect(toList()));
-                break;
-              case BOOL_VALUE:
-                converted.put(
-                    booleanArrayKey(key),
-                    array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
-                break;
-              case INT_VALUE:
-                converted.put(
-                    longArrayKey(key),
-                    array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
-                break;
-              case DOUBLE_VALUE:
-                converted.put(
-                    doubleArrayKey(key),
-                    array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
-                break;
-              default:
-                // homogeneousArrayType only returns primitive types, this case won't be reached
-                throw new AssertionError("Unexpected array type: " + arrayType);
-            }
-          }
-          break;
-        case BYTES_VALUE:
-          converted.put(valueKey(key), Value.of(value.getBytesValue().toByteArray()));
-          break;
-        case KVLIST_VALUE:
-          converted.put(key, fromProtoExtended(value.getKvlistValue().getValuesList()));
-          break;
-        case VALUE_NOT_SET:
-          if (EMPTY_VALUE != null) {
-            converted.put(valueKey(key), EMPTY_VALUE);
-          }
-          break;
-        case STRING_VALUE_STRINDEX:
-          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
-      }
-    }
-    return converted.build();
-  }
-
+  @SuppressWarnings("UngroupedOverloads")
   private static Attributes fromProto(List<KeyValue> attributes) {
     AttributesBuilder converted = Attributes.builder();
     for (KeyValue attribute : attributes) {
@@ -594,7 +488,7 @@ public class TelemetryConverter {
           AnyValue.ValueCase arrayType = homogeneousArrayType(array);
           if (arrayType == null) {
             // Heterogeneous arrays, arrays with complex types, or empty arrays
-            converted.put(valueKey(key), anyValueToValue(value));
+            putValueAttribute(converted, key, anyValueToValue(value));
           } else {
             switch (arrayType) {
               case STRING_VALUE:
@@ -624,14 +518,14 @@ public class TelemetryConverter {
           }
           break;
         case BYTES_VALUE:
-          converted.put(valueKey(key), Value.of(value.getBytesValue().toByteArray()));
+          putValueAttribute(converted, key, Value.of(value.getBytesValue().toByteArray()));
           break;
         case KVLIST_VALUE:
-          converted.put(valueKey(key), anyValueToValue(value));
+          putValueAttribute(converted, key, anyValueToValue(value));
           break;
         case VALUE_NOT_SET:
           if (EMPTY_VALUE != null) {
-            converted.put(valueKey(key), EMPTY_VALUE);
+            putValueAttribute(converted, key, EMPTY_VALUE);
           }
           break;
         case STRING_VALUE_STRINDEX:
@@ -639,6 +533,12 @@ public class TelemetryConverter {
       }
     }
     return converted.build();
+  }
+
+  private static void putValueAttribute(AttributesBuilder converted, String key, Value<?> value) {
+    if (canUseValueKey) {
+      converted.put(valueKey(key), value);
+    }
   }
 
   private static StatusData fromProto(Status status) {
@@ -764,6 +664,16 @@ public class TelemetryConverter {
       Class.forName(className);
       return true;
     } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
+
+  private static boolean methodAvailable(
+      String className, String methodName, Class<?>... parameterTypes) {
+    try {
+      Class.forName(className).getMethod(methodName, parameterTypes);
+      return true;
+    } catch (ClassNotFoundException | NoSuchMethodException e) {
       return false;
     }
   }

@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
@@ -26,7 +27,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData;
 import io.opentelemetry.sdk.trace.IdGenerator;
 import java.time.Instant;
 import java.util.stream.Stream;
@@ -106,18 +106,24 @@ class LoggerTest {
                           assertThat(logRecordData.getBodyValue().getType())
                               .isEqualTo(ValueType.STRING);
                           assertThat(logRecordData.getBodyValue().getValue()).isEqualTo("body");
-                          assertThat(
-                                  ((ExtendedLogRecordData) logRecordData).getExtendedAttributes())
-                              .isEqualTo(
-                                  ExtendedAttributes.builder()
-                                      .put("key1", "value")
-                                      .put("key2", "value")
-                                      .put("key3", "value")
-                                      .put("key4", "value")
-                                      .put(
-                                          "key5",
-                                          ExtendedAttributes.builder().put("key6", "value").build())
-                                      .build());
+                          assertThat(logRecordData.getAttributes().get(stringKey("key1")))
+                              .isEqualTo("value");
+                          assertThat(logRecordData.getAttributes().get(stringKey("key2")))
+                              .isEqualTo("value");
+                          assertThat(logRecordData.getAttributes().get(stringKey("key3")))
+                              .isEqualTo("value");
+                          assertThat(logRecordData.getAttributes().get(stringKey("key4")))
+                              .isEqualTo("value");
+                          if (methodAvailable("valueKey", String.class)) {
+                            assertThat(logRecordData.getAttributes().asMap().entrySet())
+                                .anySatisfy(
+                                    entry -> {
+                                      assertThat(entry.getKey().getKey()).isEqualTo("key5");
+                                      assertThat(entry.getValue().toString())
+                                          .contains("key6")
+                                          .contains("value");
+                                    });
+                          }
                         }));
   }
 
@@ -161,5 +167,14 @@ class LoggerTest {
                 assertThat(testing.logRecords())
                     .satisfiesExactly(
                         logRecordData -> assertThat(logRecordData.getBodyValue()).isNull()));
+  }
+
+  private static boolean methodAvailable(String methodName, Class<?>... parameterTypes) {
+    try {
+      AttributeKey.class.getMethod(methodName, parameterTypes);
+      return true;
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
   }
 }
