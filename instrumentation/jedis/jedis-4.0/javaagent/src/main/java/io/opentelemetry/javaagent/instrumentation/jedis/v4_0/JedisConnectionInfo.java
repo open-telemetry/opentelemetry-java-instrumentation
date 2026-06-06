@@ -28,7 +28,7 @@ class JedisConnectionInfo {
     HostAndPort hostAndPort = DefaultJedisSocketFactoryUtil.getHostAndPort(socketFactory);
     Long databaseIndex =
         clientConfig instanceof JedisClientConfig
-            ? ((JedisClientConfig) clientConfig).getDatabase()
+            ? Long.valueOf(((JedisClientConfig) clientConfig).getDatabase())
             : null;
     return new JedisConnectionInfo(
         hostAndPort != null ? hostAndPort.getHost() : null,
