@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
@@ -69,15 +70,33 @@ class LogbackAppenderTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"logback-test.xml", "logback-test-no-mdc.xml"})
-  void shouldInitializeAppender(String configurationFile) {
+  @CsvSource({
+    "logback-test.xml, false",
+    "logback-test-no-mdc.xml, false",
+    "logback-test.xml, true",
+    "logback-test-no-mdc.xml, true"
+  })
+  void shouldInitializeAppender(String configurationFile, boolean declarativeConfig) {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:" + configurationFile);
-    properties.put(
-        "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
-    properties.put(
-        "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
-    properties.put("otel.instrumentation.logback-appender.experimental.capture-template", true);
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.0");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
+          "*");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+          false);
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_template/development",
+          true);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+      properties.put("otel.instrumentation.logback-appender.experimental.capture-template", true);
+    }
 
     SpringApplication app =
         new SpringApplication(
