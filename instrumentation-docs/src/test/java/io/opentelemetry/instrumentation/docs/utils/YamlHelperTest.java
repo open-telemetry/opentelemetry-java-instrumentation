@@ -77,41 +77,42 @@ class YamlHelperTest {
             .build());
 
     StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
+    try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
 
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
+        YamlHelper.generateInstrumentationYaml(modules, writer);
+        writer.flush();
 
-    String expectedYaml =
-        """
-        libraries:
-        - name: spring-web-6.0
-          display_name: Spring Web
-          description: Spring Web 6.0 instrumentation
-          semantic_conventions:
-          - DATABASE_CLIENT_METRICS
-          - DATABASE_CLIENT_SPANS
-          disabled_by_default: true
-          source_path: instrumentation/spring/spring-web/spring-web-6.0
-          minimum_java_version: 11
-          scope:
-            name: io.opentelemetry.spring-web-6.0
-            schema_url: http:://www.schema.org
-            attributes:
-              instrumentation.type: library
-              version.major: 6
-          javaagent_target_versions:
-          - org.springframework:spring-web:[6.0.0,)
-        - name: struts-2.3
-          source_path: instrumentation/struts/struts-2.3
-          scope:
-            name: io.opentelemetry.struts-2.3
-          has_standalone_library: true
-          javaagent_target_versions:
-          - org.apache.struts:struts2-core:2.1.0
-        """;
+        String expectedYaml =
+            """
+            libraries:
+            - name: spring-web-6.0
+              display_name: Spring Web
+              description: Spring Web 6.0 instrumentation
+              semantic_conventions:
+              - DATABASE_CLIENT_METRICS
+              - DATABASE_CLIENT_SPANS
+              disabled_by_default: true
+              source_path: instrumentation/spring/spring-web/spring-web-6.0
+              minimum_java_version: 11
+              scope:
+                name: io.opentelemetry.spring-web-6.0
+                schema_url: http:://www.schema.org
+                attributes:
+                  instrumentation.type: library
+                  version.major: 6
+              javaagent_target_versions:
+              - org.springframework:spring-web:[6.0.0,)
+            - name: struts-2.3
+              source_path: instrumentation/struts/struts-2.3
+              scope:
+                name: io.opentelemetry.struts-2.3
+              has_standalone_library: true
+              javaagent_target_versions:
+              - org.apache.struts:struts2-core:2.1.0
+            """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+        assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    }
   }
 
   @Test
