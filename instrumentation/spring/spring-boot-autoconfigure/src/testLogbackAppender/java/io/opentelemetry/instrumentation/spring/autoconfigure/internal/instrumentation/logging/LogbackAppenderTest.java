@@ -149,15 +149,27 @@ class LogbackAppenderTest {
     assertThat(testing.logRecords()).isEmpty();
   }
 
-  @Test
-  void mdcAppender() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void mdcAppender(boolean declarativeConfig) {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test.xml");
-    properties.put("otel.instrumentation.logback-appender.enabled", "false");
-    properties.put("otel.instrumentation.logback-mdc.add-baggage", "true");
-    properties.put("otel.instrumentation.common.logging.trace-id", "traceid");
-    properties.put("otel.instrumentation.common.logging.span-id", "spanid");
-    properties.put("otel.instrumentation.common.logging.trace-flags", "traceflags");
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.0");
+      properties.put(
+          "otel.distribution.spring_starter.instrumentation.disabled[0]", "logback_appender");
+      properties.put("otel.instrumentation/development.java.logback_mdc.add_baggage", "true");
+      properties.put("otel.instrumentation/development.java.common.logging.trace_id", "traceid");
+      properties.put("otel.instrumentation/development.java.common.logging.span_id", "spanid");
+      properties.put(
+          "otel.instrumentation/development.java.common.logging.trace_flags", "traceflags");
+    } else {
+      properties.put("otel.instrumentation.logback-appender.enabled", "false");
+      properties.put("otel.instrumentation.logback-mdc.add-baggage", "true");
+      properties.put("otel.instrumentation.common.logging.trace-id", "traceid");
+      properties.put("otel.instrumentation.common.logging.span-id", "spanid");
+      properties.put("otel.instrumentation.common.logging.trace-flags", "traceflags");
+    }
 
     SpringApplication app =
         new SpringApplication(
