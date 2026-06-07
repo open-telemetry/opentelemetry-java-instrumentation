@@ -5,7 +5,7 @@ plugins {
 val springAgent by configurations.creating
 
 dependencies {
-  library("org.hibernate:hibernate-core:6.0.0.Final")
+  library("org.hibernate.orm:hibernate-core:6.0.0.Final")
 
   testInstrumentation(project(":instrumentation:hibernate:hibernate-6.0:javaagent"))
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
