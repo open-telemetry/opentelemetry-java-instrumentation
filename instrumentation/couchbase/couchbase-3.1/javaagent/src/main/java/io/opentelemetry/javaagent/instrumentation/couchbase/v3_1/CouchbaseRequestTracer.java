@@ -26,6 +26,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v3_1.shaded.com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.time.Duration;
 import java.time.Instant;
 import reactor.core.publisher.Mono;
@@ -93,6 +94,10 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     }
 
     @Override
+    // This wrapper method delegates to the same RequestSpan overload, which is absent from
+    // Couchbase 3.1.0-3.1.2. Suppressing muzzle is safe because those older clients only call
+    // the string overload that exists in their RequestSpan API.
+    @NoMuzzle
     public void setAttribute(String key, boolean value) {
       if (emitOldDatabaseSemconv()) {
         delegate.setAttribute(key, value);
@@ -100,6 +105,10 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     }
 
     @Override
+    // This wrapper method delegates to the same RequestSpan overload, which is absent from
+    // Couchbase 3.1.0-3.1.2. Suppressing muzzle is safe because those older clients only call
+    // the string overload that exists in their RequestSpan API.
+    @NoMuzzle
     public void setAttribute(String key, long value) {
       if (emitStableDatabaseSemconv()) {
         String stableKey = stableKey(key);

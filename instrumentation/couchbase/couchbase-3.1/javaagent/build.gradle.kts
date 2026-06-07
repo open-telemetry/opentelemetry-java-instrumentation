@@ -22,6 +22,7 @@ sourceSets {
 }
 
 dependencies {
+  compileOnly(project(":muzzle")) // For @NoMuzzle
   compileOnly(
     project(
       path = ":instrumentation:couchbase:couchbase-3.1:tracing-opentelemetry-shaded",
