@@ -180,8 +180,7 @@ class LogbackAppenderTest {
       properties.put("otel.instrumentation/development.java.logback_mdc.add_baggage", "true");
       properties.put(
           "otel.instrumentation/development.java.common.logging.trace_id_key", "traceid");
-      properties.put(
-          "otel.instrumentation/development.java.common.logging.span_id_key", "spanid");
+      properties.put("otel.instrumentation/development.java.common.logging.span_id_key", "spanid");
       properties.put(
           "otel.instrumentation/development.java.common.logging.trace_flags_key", "traceflags");
     } else {
