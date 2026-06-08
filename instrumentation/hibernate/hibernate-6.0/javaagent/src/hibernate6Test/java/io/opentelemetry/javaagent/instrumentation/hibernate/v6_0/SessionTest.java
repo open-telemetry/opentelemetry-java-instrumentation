@@ -240,7 +240,7 @@ class SessionTest extends AbstractHibernateTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
+                span -> assertSessionSpan(span, trace.getSpan(0), expectedQuerySpanName(parameter)),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
@@ -764,6 +764,13 @@ class SessionTest extends AbstractHibernateTest {
                     queryBuildMethods.get(3),
                     null,
                     null))));
+  }
+
+  private static String expectedQuerySpanName(Parameter parameter) {
+    if (emitStableDatabaseSemconv() || !parameter.resource.startsWith("select ")) {
+      return parameter.resource;
+    }
+    return "SELECT " + parameter.resource.substring("select ".length());
   }
 
   private static class Parameter {
