@@ -166,7 +166,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                              emitStableDatabaseSemconv() ? parameter.clientSpanName : null),
+                                emitStableDatabaseSemconv() ? parameter.clientSpanName : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
