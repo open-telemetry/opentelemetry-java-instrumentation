@@ -88,6 +88,10 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** Appends an operation name (SELECT, INSERT, etc.) to the query summary. */
+  private void appendOperationToSummary() {
+    appendOperationToSummary(yytext());
+  }
+
   private void appendOperationToSummary(String operationName) {
     if (querySummaryBuilder.length() > 0) {
       querySummaryBuilder.append(' ');
@@ -180,7 +184,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleOperationTarget(String target) {}
     void handleOpenParen() {}
     void handleCloseParen() {}
-    void handleSelect(String operationText) {}
+    void handleSelect() {}
     boolean expectingOperationTarget() {
       return false;
     }
@@ -220,10 +224,10 @@ WHITESPACE           = [ \t\r\n]+
       }
     }
 
-    void handleSelect(String operationText) {
+    void handleSelect() {
       inEmbeddedSelect = true;
       selectParenLevel = parenLevel;
-      appendOperationToSummary(operationText);
+      appendOperationToSummary();
     }
 
     void handleFrom() {
@@ -318,7 +322,7 @@ WHITESPACE           = [ \t\r\n]+
       }
     }
 
-    void handleSelect(String operationText) {
+    void handleSelect() {
       // Reset FROM clause tracking for nested SELECT (e.g., after UNION/INTERSECT/EXCEPT)
       // This prevents column commas from being treated as implicit joins
       // Called when SELECT keyword is encountered while already in a Select operation
@@ -391,9 +395,9 @@ WHITESPACE           = [ \t\r\n]+
       expectingTableName = true;
     }
 
-    void handleSelect(String operationText) {
+    void handleSelect() {
       operation = new Select();
-      appendOperationToSummary(operationText);
+      appendOperationToSummary();
     }
 
     void handleIdentifier() {
@@ -412,11 +416,11 @@ WHITESPACE           = [ \t\r\n]+
       expectingTableName = true;
     }
 
-    void handleSelect(String operationText) {
+    void handleSelect() {
       // Once we've captured the DELETE table, any SELECT is a subquery
       if (identifierCaptured) {
         operation = new Select();
-        appendOperationToSummary(operationText);
+        appendOperationToSummary();
       }
     }
 
@@ -444,11 +448,11 @@ WHITESPACE           = [ \t\r\n]+
   private class Update extends Operation {
     boolean identifierCaptured = false;
 
-    void handleSelect(String operationText) {
+    void handleSelect() {
       // Once we've captured the UPDATE table, any SELECT is a subquery
       if (identifierCaptured) {
         operation = new Select();
-        appendOperationToSummary(operationText);
+        appendOperationToSummary();
       }
     }
 
@@ -683,17 +687,16 @@ WHITESPACE           = [ \t\r\n]+
       }
   "SELECT" {
           if (!insideComment) {
-            String operationText = yytext();
             // Confirm pending subquery if we see SELECT inside parens
             confirmPendingSubqueryIfNeeded();
             if (shouldStartMainOperation()) {
               setOperation(new Select());
-              appendOperationToSummary(operationText);
+              appendOperationToSummary();
             } else if (operation instanceof Select) {
               // nested SELECT (subquery) - append SELECT to summary
-              appendOperationToSummary(operationText);
+              appendOperationToSummary();
             }
-            operation.handleSelect(operationText);
+            operation.handleSelect();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -701,7 +704,7 @@ WHITESPACE           = [ \t\r\n]+
   "INSERT" {
           if (shouldStartMainOperation()) {
             setOperation(new Insert());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -712,7 +715,7 @@ WHITESPACE           = [ \t\r\n]+
   "DELETE" {
           if (shouldStartMainOperation()) {
             setOperation(new Delete());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -723,7 +726,7 @@ WHITESPACE           = [ \t\r\n]+
   "UPDATE" {
           if (shouldStartMainOperation()) {
             setOperation(new Update());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -734,7 +737,7 @@ WHITESPACE           = [ \t\r\n]+
   "CALL" {
           if (shouldStartNewOperation()) {
             setOperation(new Call());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -745,7 +748,7 @@ WHITESPACE           = [ \t\r\n]+
   "MERGE" {
           if (shouldStartNewOperation()) {
             setOperation(new Merge());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -756,7 +759,7 @@ WHITESPACE           = [ \t\r\n]+
   "CREATE" {
           if (shouldStartNewOperation()) {
             setOperation(new Create());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -767,7 +770,7 @@ WHITESPACE           = [ \t\r\n]+
   "DROP" {
           if (shouldStartNewOperation()) {
             setOperation(new Drop());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -778,7 +781,7 @@ WHITESPACE           = [ \t\r\n]+
   "ALTER" {
           if (shouldStartNewOperation()) {
             setOperation(new Alter());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -794,7 +797,7 @@ WHITESPACE           = [ \t\r\n]+
               setOperation(new Values());
               // Only append VALUES to summary if at top level (not inside a subquery or CTE body)
               if (operationStack.isEmpty()) {
-                appendOperationToSummary(yytext());
+                appendOperationToSummary();
               }
             }
           }
@@ -804,7 +807,7 @@ WHITESPACE           = [ \t\r\n]+
   "EXECUTE" | "EXEC" {
           if (shouldStartNewOperation()) {
             setOperation(new Execute());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -815,7 +818,7 @@ WHITESPACE           = [ \t\r\n]+
   "TRUNCATE" {
           if (shouldStartNewOperation()) {
             setOperation(new Truncate());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -823,7 +826,7 @@ WHITESPACE           = [ \t\r\n]+
   "REPLACE" {
           if (shouldStartNewOperation()) {
             setOperation(new Replace());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -831,7 +834,7 @@ WHITESPACE           = [ \t\r\n]+
   "LOCK" {
           if (shouldStartNewOperation()) {
             setOperation(new Lock());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -839,7 +842,7 @@ WHITESPACE           = [ \t\r\n]+
   "USE" {
           if (shouldStartNewOperation()) {
             setOperation(new Use());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -847,7 +850,7 @@ WHITESPACE           = [ \t\r\n]+
   "BEGIN" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -855,7 +858,7 @@ WHITESPACE           = [ \t\r\n]+
   "COMMIT" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -863,7 +866,7 @@ WHITESPACE           = [ \t\r\n]+
   "ROLLBACK" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -871,7 +874,7 @@ WHITESPACE           = [ \t\r\n]+
   "GRANT" {
           if (shouldStartNewOperation()) {
             setOperation(new Grant());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -879,7 +882,7 @@ WHITESPACE           = [ \t\r\n]+
   "REVOKE" {
           if (shouldStartNewOperation()) {
             setOperation(new Revoke());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -887,7 +890,7 @@ WHITESPACE           = [ \t\r\n]+
   "SHOW" {
           if (shouldStartNewOperation()) {
             setOperation(new Show());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -896,7 +899,7 @@ WHITESPACE           = [ \t\r\n]+
           // EXPLAIN is a prefix command - append to summary but don't set an operation,
           // so the inner statement (SELECT, INSERT, etc.) gets processed normally.
           if (!insideComment && operation == none) {
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
