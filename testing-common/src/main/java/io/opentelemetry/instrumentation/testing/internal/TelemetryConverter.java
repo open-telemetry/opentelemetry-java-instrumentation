@@ -687,7 +687,12 @@ public class TelemetryConverter {
     return invoke(converted, "put", new Class<?>[] {AttributeKey.class, Object.class}, key, value);
   }
 
-  @SuppressWarnings("UngroupedOverloads")
+  private static void putValueAttribute(AttributesBuilder converted, String key, Value<?> value) {
+    if (canUseValueKey) {
+      converted.put(valueKey(key), value);
+    }
+  }
+
   private static Attributes fromProto(List<KeyValue> attributes) {
     AttributesBuilder converted = Attributes.builder();
     for (KeyValue attribute : attributes) {
@@ -756,12 +761,6 @@ public class TelemetryConverter {
       }
     }
     return converted.build();
-  }
-
-  private static void putValueAttribute(AttributesBuilder converted, String key, Value<?> value) {
-    if (canUseValueKey) {
-      converted.put(valueKey(key), value);
-    }
   }
 
   private static StatusData fromProto(Status status) {
