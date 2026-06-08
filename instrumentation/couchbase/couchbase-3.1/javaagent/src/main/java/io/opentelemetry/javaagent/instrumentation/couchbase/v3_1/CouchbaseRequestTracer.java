@@ -99,6 +99,14 @@ public final class CouchbaseRequestTracer implements RequestTracer {
     // the string overload that exists in their RequestSpan API.
     @NoMuzzle
     public void setAttribute(String key, boolean value) {
+      if (emitStableDatabaseSemconv()) {
+        String stableKey = stableKey(key);
+        if (stableKey != null) {
+          delegate.setAttribute(stableKey, value);
+        } else if (captureExperimentalAttribute(key)) {
+          delegate.setAttribute(key, value);
+        }
+      }
       if (emitOldDatabaseSemconv()) {
         delegate.setAttribute(key, value);
       }
