@@ -266,7 +266,11 @@ class SessionTest extends AbstractHibernateTest {
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT Value" : null),
+                                emitStableDatabaseSemconv()
+                                    ? parameter.resource.endsWith(".Value")
+                                        ? "select Value"
+                                        : parameter.resource
+                                    : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -643,7 +647,7 @@ class SessionTest extends AbstractHibernateTest {
                 "createQuery",
                 new Parameter(
                     "createQuery",
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
+                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
                     queryBuildMethods.get(0),
                     null,
                     null))),
@@ -652,7 +656,7 @@ class SessionTest extends AbstractHibernateTest {
                 "getNamedQuery",
                 new Parameter(
                     "getNamedQuery",
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
+                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
                     queryBuildMethods.get(1),
                     null,
                     null))),
@@ -666,7 +670,7 @@ class SessionTest extends AbstractHibernateTest {
                 "createSelectionQuery",
                 new Parameter(
                     "createSelectionQuery",
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
+                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
                     queryBuildMethods.get(3),
                     null,
                     null))));
@@ -747,8 +751,9 @@ class SessionTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   private static SpanDataAssert assertClientSpan(
       SpanDataAssert span, SpanData parent, String verb) {
+    String stableVerb = verb.toLowerCase(Locale.ROOT);
     return span.hasName(
-            emitStableDatabaseSemconv() ? verb.concat(" Value") : verb.concat(" db1.Value"))
+            emitStableDatabaseSemconv() ? stableVerb.concat(" Value") : verb.concat(" db1.Value"))
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
@@ -758,7 +763,7 @@ class SessionTest extends AbstractHibernateTest {
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
             satisfies(
                 maybeStable(DB_STATEMENT), val -> val.startsWith(verb.toLowerCase(Locale.ROOT))),
-            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? verb + " Value" : null),
+            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? stableVerb + " Value" : null),
             equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : verb),
             equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));
   }

@@ -133,7 +133,7 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                           .hasAttributesSatisfyingExactly(
                               equalTo(stringKey("camel.uri"), experimental("direct://input"))),
                   span ->
-                      span.hasName("SELECT test.users")
+                      span.hasName("select test.users")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
@@ -148,7 +148,7 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               equalTo(
                                   DB_QUERY_TEXT,
                                   "select * from test.users where id=1 ALLOW FILTERING"),
-                              equalTo(DB_QUERY_SUMMARY, "SELECT test.users"))));
+                              equalTo(DB_QUERY_SUMMARY, "select test.users"))));
     } else {
       testing.waitAndAssertTraces(
           trace ->

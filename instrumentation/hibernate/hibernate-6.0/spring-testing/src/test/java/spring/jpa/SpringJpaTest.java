@@ -71,7 +71,7 @@ class SpringJpaTest {
                         .hasNoParent()
                         .hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("SELECT spring.jpa.Customer")
+                    span.hasName("select spring.jpa.Customer")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -81,7 +81,7 @@ class SpringJpaTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT Customer"
+                                ? "select Customer"
                                 : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
@@ -99,7 +99,7 @@ class SpringJpaTest {
                                         "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName(.*)from Customer(.*)")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT Customer" : null),
+                                emitStableDatabaseSemconv() ? "select Customer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -139,7 +139,7 @@ class SpringJpaTest {
                                 HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "CALL Customer_SEQ" : "CALL test")
+                    span.hasName(emitStableDatabaseSemconv() ? "call Customer_SEQ" : "CALL test")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -149,7 +149,7 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_STATEMENT), "call next value for Customer_SEQ"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "CALL Customer_SEQ" : null),
+                                emitStableDatabaseSemconv() ? "call Customer_SEQ" : null),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -168,7 +168,7 @@ class SpringJpaTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "INSERT Customer"
+                                ? "insert Customer"
                                 : "INSERT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
@@ -185,7 +185,7 @@ class SpringJpaTest {
                                     val.matches("insert into Customer \\(.*\\) values \\(.*\\)")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "INSERT Customer" : null),
+                                emitStableDatabaseSemconv() ? "insert Customer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT"),
@@ -218,7 +218,7 @@ class SpringJpaTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT Customer"
+                                ? "select Customer"
                                 : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -235,7 +235,7 @@ class SpringJpaTest {
                                         "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName (.*)from Customer (.*)where ([^.]+)\\.id( ?)=( ?)\\?")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT Customer" : null),
+                                emitStableDatabaseSemconv() ? "select Customer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -254,7 +254,7 @@ class SpringJpaTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "UPDATE Customer"
+                                ? "update Customer"
                                 : "UPDATE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -271,7 +271,7 @@ class SpringJpaTest {
                                         "update Customer set firstName=\\?,(.*)lastName=\\? where id=\\?")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "UPDATE Customer" : null),
+                                emitStableDatabaseSemconv() ? "update Customer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "UPDATE"),
@@ -298,7 +298,7 @@ class SpringJpaTest {
                                 assertThat(spanData.getName())
                                     .isIn(
                                         emitStableDatabaseSemconv()
-                                            ? asList("SELECT spring.jpa.Customer", "hibernate")
+                                            ? asList("select spring.jpa.Customer", "hibernate")
                                             : asList(
                                                 "SELECT spring.jpa.Customer", "Hibernate Query")))
                         .hasKind(INTERNAL)
@@ -310,7 +310,7 @@ class SpringJpaTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT Customer"
+                                ? "select Customer"
                                 : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
@@ -328,7 +328,7 @@ class SpringJpaTest {
                                         "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName (.*)from Customer (.*)(where ([^.]+)\\.lastName( ?)=( ?)\\?|)")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT Customer" : null),
+                                emitStableDatabaseSemconv() ? "select Customer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -361,7 +361,7 @@ class SpringJpaTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT Customer"
+                                ? "select Customer"
                                 : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
@@ -379,7 +379,7 @@ class SpringJpaTest {
                                         "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName (.*)from Customer (.*)(where ([^.]+)\\.lastName( ?)=( ?)\\?|)")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT Customer" : null),
+                                emitStableDatabaseSemconv() ? "select Customer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -413,7 +413,7 @@ class SpringJpaTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "DELETE Customer"
+                                ? "delete Customer"
                                 : "DELETE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -426,7 +426,7 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "DELETE Customer" : null),
+                                emitStableDatabaseSemconv() ? "delete Customer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "DELETE"),
