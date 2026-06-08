@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v1_11;
+package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -14,7 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
+class SnsAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v1_11;
+package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -32,7 +32,11 @@ import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
-final class AwsSdkInstrumenterFactory {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-1.11";
 
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
@@ -45,7 +49,7 @@ final class AwsSdkInstrumenterFactory {
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
 
-  AwsSdkInstrumenterFactory(
+  public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
@@ -71,7 +75,7 @@ final class AwsSdkInstrumenterFactory {
     return extractors;
   }
 
-  Instrumenter<Request<?>, Response<?>> requestInstrumenter() {
+  public Instrumenter<Request<?>, Response<?>> requestInstrumenter() {
     return createInstrumenter(
         openTelemetry,
         new AwsSdkSpanNameExtractor(),
@@ -94,7 +98,7 @@ final class AwsSdkInstrumenterFactory {
         .build();
   }
 
-  Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter() {
+  public Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter() {
     MessageOperation operation = MessageOperation.RECEIVE;
     SqsReceiveRequestAttributesGetter getter = new SqsReceiveRequestAttributesGetter();
     AttributesExtractor<SqsReceiveRequest, Response<?>> messagingAttributeExtractor =
@@ -109,7 +113,7 @@ final class AwsSdkInstrumenterFactory {
         messagingReceiveInstrumentationEnabled);
   }
 
-  Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter() {
+  public Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter() {
     MessageOperation operation = MessageOperation.PROCESS;
     SqsProcessRequestAttributesGetter getter = new SqsProcessRequestAttributesGetter();
     AttributesExtractor<SqsProcessRequest, Response<?>> messagingAttributeExtractor =
@@ -162,7 +166,7 @@ final class AwsSdkInstrumenterFactory {
     return result;
   }
 
-  Instrumenter<Request<?>, Response<?>> producerInstrumenter() {
+  public Instrumenter<Request<?>, Response<?>> producerInstrumenter() {
     MessageOperation operation = MessageOperation.PUBLISH;
     SqsAttributesGetter getter = new SqsAttributesGetter();
     AttributesExtractor<Request<?>, Response<?>> messagingAttributeExtractor =
@@ -177,7 +181,7 @@ final class AwsSdkInstrumenterFactory {
         true);
   }
 
-  Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter() {
+  public Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter() {
     return createInstrumenter(
         openTelemetry,
         new AwsSdkSpanNameExtractor(),

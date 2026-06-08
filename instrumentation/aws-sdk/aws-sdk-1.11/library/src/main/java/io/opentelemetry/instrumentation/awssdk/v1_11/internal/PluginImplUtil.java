@@ -3,13 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v1_11;
+package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import static java.util.logging.Level.FINE;
 
 import java.util.logging.Logger;
 
-final class PluginImplUtil {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class PluginImplUtil {
   private static final Logger logger = Logger.getLogger(PluginImplUtil.class.getName());
 
   /**
