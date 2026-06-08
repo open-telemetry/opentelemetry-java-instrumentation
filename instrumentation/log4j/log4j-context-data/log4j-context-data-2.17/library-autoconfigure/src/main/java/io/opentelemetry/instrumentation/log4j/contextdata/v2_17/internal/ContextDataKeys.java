@@ -10,6 +10,8 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -18,6 +20,7 @@ import java.util.logging.Logger;
  */
 public final class ContextDataKeys {
   private static final Logger logger = Logger.getLogger(ContextDataKeys.class.getName());
+  private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
 
   private final String traceIdKey;
   private final String spanIdKey;
@@ -67,7 +70,8 @@ public final class ContextDataKeys {
     }
     value = config.getString(oldDeclarativeKey);
     if (value != null) {
-      logger.warning(
+      logDeprecationWarning(
+          oldProperty,
           "The "
               + oldProperty
               + " setting and the equivalent declarative configuration property"
@@ -82,7 +86,8 @@ public final class ContextDataKeys {
     }
     value = ConfigPropertiesUtil.getString(oldProperty);
     if (value != null) {
-      logger.warning(
+      logDeprecationWarning(
+          oldProperty,
           "The '"
               + oldProperty
               + "' system property is deprecated and will be removed in 3.0. Use '"
@@ -91,6 +96,12 @@ public final class ContextDataKeys {
       return value;
     }
     return defaultValue;
+  }
+
+  private static void logDeprecationWarning(String deprecatedProperty, String message) {
+    if (warnedDeprecatedProperties.add(deprecatedProperty)) {
+      logger.warning(message);
+    }
   }
 
   private ContextDataKeys(String traceIdKey, String spanIdKey, String traceFlagsKey) {
