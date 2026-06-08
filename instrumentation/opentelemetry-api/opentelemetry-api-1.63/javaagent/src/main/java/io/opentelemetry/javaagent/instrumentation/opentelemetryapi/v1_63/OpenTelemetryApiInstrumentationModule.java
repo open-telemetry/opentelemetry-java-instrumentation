@@ -29,7 +29,7 @@ public class OpenTelemetryApiInstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 1.63
-    return hasClassesNamed("io.opentelemetry.api.impl.InstrumentationUtil")
+    return hasClassesNamed("application.io.opentelemetry.api.impl.InstrumentationUtil")
         .and(
             // added in 1.42
             // disable when incubating api is present
