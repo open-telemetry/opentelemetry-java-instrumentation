@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractCouchbaseTest {
   private static final Logger logger = LoggerFactory.getLogger(AbstractCouchbaseTest.class);
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+        Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
 
   protected static final String USERNAME = "Administrator";
   protected static final String PASSWORD = "password";

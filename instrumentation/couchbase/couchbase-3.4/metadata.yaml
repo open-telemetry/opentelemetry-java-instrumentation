@@ -8,8 +8,8 @@ semantic_conventions:
 configurations:
   - name: otel.instrumentation.couchbase.experimental-span-attributes
     declarative_name: java.couchbase.experimental_span_attributes/development
-    description: Enables Couchbase-specific span attributes.
+    description: Enables experimental span attributes emitted from the underlying Couchbase library.
     type: boolean
-    default: true # false under otel.instrumentation.common.v3-preview=true
+    default: false
 features:
   - AUTO_INSTRUMENTATION_SHIM
