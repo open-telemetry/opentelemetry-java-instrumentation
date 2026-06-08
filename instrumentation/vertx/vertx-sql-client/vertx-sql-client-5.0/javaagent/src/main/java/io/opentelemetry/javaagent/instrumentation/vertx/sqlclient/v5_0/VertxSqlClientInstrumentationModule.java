@@ -10,10 +10,12 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
+import java.util.function.BiConsumer;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
@@ -50,5 +52,17 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
         new QueryExecutorInstrumentation(),
         new QueryResultBuilderInstrumentation(),
         new TransactionImplInstrumentation());
+  }
+
+  @Override
+  public void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {
+    // we add the virtual field to CommandBase manually because it is in different package in 5.0
+    // and 5.1
+    // used in 5.0
+    virtualFieldRegistrar.accept(
+        "io.vertx.sqlclient.internal.command.CommandBase", Context.class.getName());
+    // used in 5.1
+    virtualFieldRegistrar.accept(
+        "io.vertx.sqlclient.spi.protocol.CommandBase", Context.class.getName());
   }
 }

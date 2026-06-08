@@ -24,7 +24,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -46,7 +45,7 @@ public abstract class AbstractXxlJobTest {
     trigger(jobThread, null);
   }
 
-  protected void trigger(JobThread jobThread, @Nullable String executorParams) {
+  protected void trigger(JobThread jobThread, String executorParams) {
     TriggerParam triggerParam = new TriggerParam();
     triggerParam.setExecutorTimeout(0);
     if (executorParams != null) {
@@ -149,7 +148,6 @@ public abstract class AbstractXxlJobTest {
 
   protected abstract IJobHandler getCustomizeFailedHandler();
 
-  @Nullable
   protected abstract IJobHandler getMethodHandler();
 
   protected abstract String getPackageName();

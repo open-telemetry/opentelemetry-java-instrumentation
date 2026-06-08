@@ -24,12 +24,12 @@ otelJava {
 dependencies {
   library("org.opensearch.client:opensearch-rest-client:3.0.0")
 
-  implementation(project(":instrumentation:opensearch:opensearch-rest-common:javaagent"))
+  implementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:opensearch:opensearch-rest-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
 
-  testImplementation(project(":instrumentation:opensearch:opensearch-rest-common:testing"))
+  testImplementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:testing"))
 }
 
 tasks {

@@ -3,9 +3,6 @@ name: Reusable - Native tests
 on:
   workflow_call:
     inputs:
-      skip-native-tests:
-        type: boolean
-        required: false
       test-latest-deps:
         type: boolean
         required: false
@@ -15,7 +12,6 @@ permissions:
 
 jobs:
   graalvm-native-tests:
-    if: "!inputs.skip-native-tests"
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -25,10 +21,10 @@ jobs:
           - 24
       fail-fast: false
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: read-java
         run: echo "version=$(cat .java-version)" >> "$GITHUB_OUTPUT"
-      - uses: graalvm/setup-graalvm@60c26726de13f8b90771df4bc1641a52a3159994 # v1.5.2.1
+      - uses: graalvm/setup-graalvm@329c42c5f4c343bceb505f0b28cc8499bc2bf174 # v1.5.4.1
         with:
           version: "latest"
           java-version: ${{ matrix.test-java-version }}

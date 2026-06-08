@@ -172,7 +172,6 @@ class TwitterUtilCoreInstrumentationTest {
                     .map(
                         fn1(
                             abc -> {
-                              threadsSeen.add(Thread.currentThread().getName());
                               testing.runWithSpan("stage-4-terminal", () -> {});
                               return abc + "d";
                             })));

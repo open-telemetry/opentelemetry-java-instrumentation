@@ -24,7 +24,6 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJmsTest {
@@ -63,12 +62,12 @@ public abstract class AbstractJmsTest {
 
   protected void assertConsumerSpan(
       SpanDataAssert span,
-      @Nullable SpanData producer,
-      @Nullable SpanData parent,
+      SpanData producer,
+      SpanData parent,
       String destinationName,
       String operation,
       boolean testHeaders,
-      @Nullable String msgId) {
+      String msgId) {
     span.hasName(destinationName + " " + operation).hasKind(CONSUMER);
     if (parent != null) {
       span.hasParent(parent);
@@ -83,7 +82,7 @@ public abstract class AbstractJmsTest {
   }
 
   protected List<AttributeAssertion> consumerAttributeAssertions(
-      String destinationName, boolean testHeaders, String operation, @Nullable String msgId) {
+      String destinationName, boolean testHeaders, String operation, String msgId) {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(

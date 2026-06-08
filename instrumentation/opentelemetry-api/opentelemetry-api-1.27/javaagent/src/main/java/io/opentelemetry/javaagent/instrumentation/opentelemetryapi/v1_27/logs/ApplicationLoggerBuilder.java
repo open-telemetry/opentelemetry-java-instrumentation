@@ -8,8 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.logs.LoggerBuilder;
 
-final class ApplicationLoggerBuilder
-    implements application.io.opentelemetry.api.logs.LoggerBuilder {
+class ApplicationLoggerBuilder implements application.io.opentelemetry.api.logs.LoggerBuilder {
 
   private final ApplicationLoggerFactory loggerFactory;
   private final LoggerBuilder agentBuilder;

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static java.util.Collections.singletonList;
 
-final class InterceptorsWithExperimentalAttributesTest extends AbstractInterceptorsTest {
+class InterceptorsWithExperimentalAttributesTest extends AbstractInterceptorsTest {
 
   private static final KafkaTelemetry kafkaTelemetry =
       KafkaTelemetry.builder(testing.getOpenTelemetry())

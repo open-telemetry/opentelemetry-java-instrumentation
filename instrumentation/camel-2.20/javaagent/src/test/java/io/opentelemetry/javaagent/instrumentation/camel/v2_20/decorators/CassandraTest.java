@@ -137,7 +137,7 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              satisfies(NETWORK_TYPE, val -> val.isInstanceOf(String.class)),
+                              equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, cassandraPort),
                               satisfies(

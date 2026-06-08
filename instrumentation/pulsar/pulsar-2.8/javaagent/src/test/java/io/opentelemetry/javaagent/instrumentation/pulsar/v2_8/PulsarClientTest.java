@@ -650,6 +650,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             processAttributes(topic2, msgId2.toString(), false))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumePartitionedTopicUsingBatchReceive() throws Exception {
     String topic = "persistent://public/default/testConsumePartitionedTopicUsingBatchReceive";
@@ -680,29 +681,17 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                     .hasUnit("{message}")
                     .hasDescription("Measures the number of received messages.")
                     .hasLongSumSatisfying(
-                        sum -> {
-                          sum.satisfies(
-                              pointData -> {
-                                pointData
-                                    .getPoints()
-                                    .forEach(
-                                        p -> {
-                                          assertThat(p.getValue()).isPositive();
-                                          if (p.getValue() == receivedMsg.size()) {
-                                            assertThat(
-                                                    p.getAttributes()
-                                                        .get(MESSAGING_DESTINATION_NAME))
-                                                .isEqualTo(topic);
-                                            assertThat(p.getAttributes().get(MESSAGING_SYSTEM))
-                                                .isEqualTo("pulsar");
-                                            assertThat(p.getAttributes().get(SERVER_PORT))
-                                                .isEqualTo(brokerPort);
-                                            assertThat(p.getAttributes().get(SERVER_ADDRESS))
-                                                .isEqualTo(brokerHost);
-                                          }
-                                        });
-                              });
-                        }));
+                        sum ->
+                            sum.containsPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValueSatisfying(v -> v.isEqualTo(receivedMsg.size()))
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(MESSAGING_OPERATION, "receive"),
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(SERVER_PORT, brokerPort),
+                                            equalTo(SERVER_ADDRESS, brokerHost)))));
   }
 
   @Test

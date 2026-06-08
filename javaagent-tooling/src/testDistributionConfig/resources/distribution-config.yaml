@@ -1,5 +1,10 @@
 file_format: "1.0"
 
+instrumentation/development:
+  java:
+    common:
+      v3_preview: true
+
 distribution:
   javaagent:
     indy/development: true

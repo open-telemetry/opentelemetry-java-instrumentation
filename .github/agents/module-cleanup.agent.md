@@ -107,6 +107,11 @@ For each file in scope:
 
 Auto-fix boundaries:
 
+- Not safe to fix automatically:
+  - adding a new `@SuppressWarnings("deprecation")` based only on static inspection, nearby
+    semconv usage, or sibling code that already has a suppression. Only add a new deprecation
+    suppression after observing an `OtelDeprecatedApiUsage` failure without it, or after verifying
+    the exact referenced symbol is deprecated and the suppression is required.
 - Safe to fix:
   - import cleanup or direct style-guide conformance
     **Extra step for shared/common modules**: when the modified file resides in a module
@@ -290,9 +295,13 @@ Auto-fix boundaries:
 - Never change:
   - literal type suffixes (e.g., `200` → `200L` or vice-versa) — Java widens
     automatically; both forms compile identically and the change is noise
-  - non-capturing lambdas or method references as allocation issues; do not flag,
-    fix, or justify changes to these as per-call allocations. On HotSpot /
-    OpenJDK 8+, these are cached at the call site.
+  - non-capturing lambdas or method references: never hoist an inline
+    non-capturing lambda or method reference into a `private static final` field,
+    regardless of justification (allocation, "pattern consistency", matching a
+    singletons style, or otherwise). On HotSpot / OpenJDK 8+, these are cached
+    at the `invokedynamic` call site, so the hoist is pure noise. The singleton
+    accessor pattern applies to stored singleton fields (e.g. `Instrumenter`),
+    not to arbitrary lambda expressions.
 
 Output content rules:
 
@@ -455,24 +464,9 @@ Do not begin Phase 5 until Phase 4 is fully closed out.
    (`git checkout -- .`), do not commit or push. If any reverted items were recorded as
   `Needs Manual Fix`, emit the final output with those items. Otherwise report
    "No issues found." and exit.
-2. Commit all changes in a single commit. The subject line must always be
-   `Cleanup for <module>` where `<module>` is the short module name (e.g.,
-   `apache-elasticjob-3.0 javaagent`). The body is a bulleted list of changes:
-
-   ```
-   git add -A && git commit -m "Cleanup for <module>" -m "- <change 1>
-   - <change 2>"
-   ```
-
-   Example:
-
-   ```
-   Cleanup for alibaba-druid-1.0 javaagent
-
-   - Move collectMetadata system property to withType<Test>().configureEach
-   ```
-
-   Create exactly one commit for all fixes — do not commit incrementally.
+2. Leave all changes uncommitted. Do not run `git commit`, do not pass
+   `--author`, and do not change git `user.name` or `user.email`. The caller
+   exports the working-tree diff and creates the commit after this session.
 3. Produce the final output in the format requested by the caller.
 
 The caller must define the final output format or schema. Follow that request exactly:

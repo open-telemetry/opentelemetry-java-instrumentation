@@ -9,6 +9,8 @@ import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.groupingBy;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -47,26 +49,17 @@ public class EmittedScopeParser {
       return null;
     }
 
-    EmittedScope.Scope scope =
-        scopes.stream()
-            .filter(
-                item ->
-                    item.getName() != null
-                        && item.getName().contains(module.getInstrumentationName()))
-            .min(Comparator.comparing(item -> item.getSchemaUrl() == null ? 1 : 0))
-            .orElse(null);
+    String defaultScopeName = module.getScopeInfo().getName();
+    EmittedScope.Scope scope = getMatchingScope(scopes, defaultScopeName);
     if (scope == null) {
       return null;
     }
 
-    String instrumentationName = "io.opentelemetry." + module.getInstrumentationName();
-    InstrumentationScopeInfoBuilder builder = InstrumentationScopeInfo.builder(instrumentationName);
-
-    // This will identify any module that might deviate from the standard naming convention
-    if (scope.getName() != null && !scope.getName().equals(instrumentationName)) {
-      logger.severe(
-          "Scope name mismatch. Expected: " + instrumentationName + ", got: " + scope.getName());
+    String scopeName = scope.getName();
+    if (scopeName == null) {
+      return null;
     }
+    InstrumentationScopeInfoBuilder builder = InstrumentationScopeInfo.builder(scopeName);
 
     if (scope.getSchemaUrl() != null) {
       builder.setSchemaUrl(scope.getSchemaUrl());
@@ -76,6 +69,46 @@ public class EmittedScopeParser {
     }
 
     return builder.build();
+  }
+
+  @Nullable
+  private static EmittedScope.Scope getMatchingScope(
+      Set<EmittedScope.Scope> scopes, String defaultScopeName) {
+    EmittedScope.Scope exactMatch =
+        scopes.stream()
+            .filter(scope -> defaultScopeName.equals(scope.getName()))
+            .min(Comparator.comparing(scope -> scope.getSchemaUrl() == null ? 1 : 0))
+            .orElse(null);
+    if (exactMatch != null) {
+      return exactMatch;
+    }
+
+    Map<String, List<EmittedScope.Scope>> nonSdkScopes =
+        scopes.stream()
+            .filter(scope -> isInstrumentationScope(scope.getName()))
+            .collect(groupingBy(scope -> requireNonNull(scope.getName())));
+
+    if (nonSdkScopes.size() == 1) {
+      return nonSdkScopes.values().stream()
+          .flatMap(List::stream)
+          .min(Comparator.comparing(scope -> scope.getSchemaUrl() == null ? 1 : 0))
+          .orElse(null);
+    }
+
+    if (nonSdkScopes.size() > 1) {
+      logger.warning(
+          "Unable to choose instrumentation scope for "
+              + defaultScopeName
+              + ". Candidates: "
+              + nonSdkScopes.keySet());
+    }
+    return null;
+  }
+
+  private static boolean isInstrumentationScope(@Nullable String scopeName) {
+    return scopeName != null
+        && scopeName.startsWith("io.opentelemetry.")
+        && !scopeName.startsWith("io.opentelemetry.sdk.");
   }
 
   /**

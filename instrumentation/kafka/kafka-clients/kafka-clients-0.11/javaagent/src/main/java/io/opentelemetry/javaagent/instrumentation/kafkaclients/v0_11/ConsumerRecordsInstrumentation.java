@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.wrappingEnabledSupplier;
+import static io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing.getWrappingEnabledSupplier;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -78,7 +78,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
       return TracingIterable.wrap(
-          iterable, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
+          iterable, consumerProcessInstrumenter(), getWrappingEnabledSupplier(), consumerContext);
     }
   }
 
@@ -97,7 +97,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
       return TracingList.wrap(
-          list, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
+          list, consumerProcessInstrumenter(), getWrappingEnabledSupplier(), consumerContext);
     }
   }
 
@@ -116,7 +116,7 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
       return TracingIterator.wrap(
-          iterator, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
+          iterator, consumerProcessInstrumenter(), getWrappingEnabledSupplier(), consumerContext);
     }
   }
 
@@ -135,7 +135,10 @@ class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
       return TracingListIterator.wrap(
-          listIterator, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
+          listIterator,
+          consumerProcessInstrumenter(),
+          getWrappingEnabledSupplier(),
+          consumerContext);
     }
   }
 }

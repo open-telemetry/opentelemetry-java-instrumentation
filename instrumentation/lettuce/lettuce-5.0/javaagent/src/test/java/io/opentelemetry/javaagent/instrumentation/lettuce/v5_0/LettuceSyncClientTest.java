@@ -40,8 +40,8 @@ import org.junit.jupiter.api.condition.OS;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class LettuceSyncClientTest extends AbstractLettuceClientTest {
-  private static int incorrectPort;
-  private static String dbUriNonExistent;
+  private int incorrectPort;
+  private String dbUriNonExistent;
 
   private static final ImmutableMap<String, String> testHashMap =
       ImmutableMap.of(
@@ -49,10 +49,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
           "lastname", "Doe",
           "age", "53");
 
-  private static RedisCommands<String, String> syncCommands;
+  private RedisCommands<String, String> syncCommands;
 
   @BeforeAll
-  static void setUp() throws UnknownHostException {
+  void setUp() throws UnknownHostException {
     redisServer.start();
     host = redisServer.getHost();
     ip = InetAddress.getByName(host).getHostAddress();
@@ -77,7 +77,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   }
 
   @AfterAll
-  static void cleanUp() {
+  void cleanUp() {
     connection.close();
     shutdown(redisClient);
     redisServer.stop();

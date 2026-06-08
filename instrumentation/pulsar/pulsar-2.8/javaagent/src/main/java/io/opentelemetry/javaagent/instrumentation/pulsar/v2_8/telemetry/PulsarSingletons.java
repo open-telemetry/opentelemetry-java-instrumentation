@@ -36,6 +36,7 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 
 public class PulsarSingletons {
+
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
   private static final OpenTelemetry telemetry = GlobalOpenTelemetry.get();

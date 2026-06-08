@@ -18,7 +18,7 @@ muzzle {
 dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
-  implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent"))
+  implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-common-3.1:javaagent"))
 
   compileOnly("org.springframework:spring-webmvc:3.1.0.RELEASE")
   compileOnly("javax.servlet:javax.servlet-api:3.1.0")
@@ -28,7 +28,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
 
-  testImplementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing"))
+  testImplementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-common-3.1:testing"))
   testImplementation("com.google.guava:guava")
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")

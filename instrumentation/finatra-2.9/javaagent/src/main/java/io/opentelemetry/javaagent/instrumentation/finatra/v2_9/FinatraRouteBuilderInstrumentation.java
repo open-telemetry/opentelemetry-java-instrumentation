@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra.v2_9;
 
-import static io.opentelemetry.javaagent.instrumentation.finatra.v2_9.FinatraSingletons.setCallbackClass;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -36,7 +35,7 @@ class FinatraRouteBuilderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Return Route route, @Advice.FieldValue("callback") Function1<?, ?> callback) {
-      setCallbackClass(route, callback.getClass());
+      FinatraSingletons.setCallbackClass(route, callback.getClass());
     }
   }
 }

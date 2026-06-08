@@ -46,7 +46,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.redisson.Redisson;
@@ -75,17 +77,18 @@ public abstract class AbstractRedissonClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final GenericContainer<?> redisServer =
+  private static final String TEST_RECONNECT = "testReconnect";
+
+  private final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
-  private static String ip;
-
-  private static int port;
-  private static String address;
+  private String ip;
+  private int port;
+  private String address;
   private RedissonClient redisson;
 
   @BeforeAll
-  static void setupAll() throws UnknownHostException {
+  void setupAll() throws UnknownHostException {
     redisServer.start();
     ip = InetAddress.getByName(redisServer.getHost()).getHostAddress();
     port = redisServer.getMappedPort(6379);
@@ -93,12 +96,12 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @AfterAll
-  static void cleanupAll() {
+  void cleanupAll() {
     redisServer.stop();
   }
 
   @BeforeEach
-  void setup() throws InvocationTargetException, IllegalAccessException {
+  void setup(TestInfo testInfo) throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
       // Newer versions of redisson require scheme, older versions forbid it
@@ -115,6 +118,12 @@ public abstract class AbstractRedissonClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
+    if (testInfo.getTags().contains(TEST_RECONNECT)) {
+      // When verifying the stringCommandLazyConnection test case, simulate reconnection during
+      // Redis
+      // command execution.
+      singleServerConfig.setConnectionMinimumIdleSize(0);
+    }
     try {
       // disable connection ping if it exists
       singleServerConfig
@@ -133,6 +142,44 @@ public abstract class AbstractRedissonClientTest {
     if (redisson != null) {
       redisson.shutdown();
     }
+  }
+
+  @Test
+  @Tag(TEST_RECONNECT)
+  void stringCommandLazyConnection() {
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          RBucket<String> keyObject = redisson.getBucket("foo");
+          keyObject.set("bar");
+          keyObject.get();
+        });
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SET")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "GET foo"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   @Test
@@ -207,8 +254,7 @@ public abstract class AbstractRedissonClientTest {
     // Adapt different method signature:
     // `BatchResult<?> execute()` and `List<?> execute()`
     invokeExecute(batch);
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("SET", "GET"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -224,6 +270,38 @@ public abstract class AbstractRedissonClientTest {
 
   private static void invokeExecute(RBatch batch) throws ReflectiveOperationException {
     batch.getClass().getMethod("execute").invoke(batch);
+  }
+
+  @Test
+  void largeBatchCommand() throws ReflectiveOperationException {
+    RBatch batch = createBatch(redisson);
+    assertThat(batch).isNotNull();
+    StringBuilder bucketNameBuilder = new StringBuilder("bucket");
+    for (int i = 0; i < 20_000; i++) {
+      bucketNameBuilder.append("a");
+    }
+    String bucketName = bucketNameBuilder.toString();
+    // run 4 command but only 2 will be added to the query text because of the max length limit
+    for (int i = 0; i < 4; i++) {
+      batch.getBucket(bucketName).setAsync("v" + i);
+    }
+    // Adapt different method signature:
+    // `BatchResult<?> execute()` and `List<?> execute()`
+    invokeExecute(batch);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "SET " + bucketName + " ?;SET " + bucketName + " ?"))));
   }
 
   @Test

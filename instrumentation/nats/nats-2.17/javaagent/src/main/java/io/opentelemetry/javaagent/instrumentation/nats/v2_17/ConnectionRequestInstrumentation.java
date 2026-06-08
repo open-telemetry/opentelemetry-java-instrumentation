@@ -179,7 +179,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(inline = false)
     public static Message onExit(@Advice.Enter Message message) {
       return message;
     }
@@ -270,7 +270,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(inline = false)
     public static Message onExit(@Advice.Enter Message response) {
       return response;
     }
@@ -292,7 +292,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(inline = false)
     public static CompletableFuture<Message> onExit(
         @Advice.Enter CompletableFuture<Message> future) {
       return future;
@@ -349,7 +349,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(inline = false)
     public static CompletableFuture<Message> onExit(
         @Advice.Return CompletableFuture<Message> originalResult,
         @Advice.Enter CompletableFuture<Message> future) {
@@ -374,7 +374,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(inline = false)
     public static CompletableFuture<Message> onExit(
         @Advice.Enter CompletableFuture<Message> future) {
       return future;

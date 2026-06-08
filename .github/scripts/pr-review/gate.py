@@ -20,7 +20,7 @@ import re
 import sys
 from pathlib import Path
 
-from common import gh_json, progress
+from common import gh, gh_json, progress
 
 
 REVIEW_RE = re.compile(r"^/review(?:\s+(\S+))?\s*$")
@@ -72,13 +72,15 @@ def commenter_has_write_access(repo: str, login: str) -> bool:
     # on transient gh/API failures, which is the safer default for a gate
     # that controls whether the reviewer agent runs.
     try:
-        result = gh_json(
+        # `gh api ... -q .permission` returns a bare string (e.g. "admin"),
+        # not JSON, so we use `gh` directly and read stdout rather than
+        # `gh_json` (which would JSONDecodeError on the bare token).
+        result = gh(
             ["api", f"repos/{repo}/collaborators/{login}/permission", "-q", ".permission"],
         )
     except Exception:
         return False
-    # gh_json returns parsed JSON; with -q the output is a bare string.
-    return result in {"admin", "write"}
+    return result.stdout.strip() in {"admin", "write"}
 
 
 class SkipRun(Exception):

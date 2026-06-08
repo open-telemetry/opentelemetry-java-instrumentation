@@ -1,0 +1,73 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16;
+
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16.ElasticsearchApiClientSingletons.ENDPOINT_DEFINITION;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+import org.elasticsearch.client.Request;
+
+// starting from 8.9
+class RestClientHttpClientInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("co.elastic.clients.transport.rest_client.RestClientHttpClient");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        namedOneOf("performRequest", "performRequestAsync").and(takesArgument(0, String.class)),
+        getClass().getName() + "$PerformRequestAdvice");
+    transformer.applyAdviceToMethod(
+        named("createRestRequest").and(returns(named("org.elasticsearch.client.Request"))),
+        getClass().getName() + "$CreateRestRequestAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class PerformRequestAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope onEnter(@Advice.Argument(0) String endpointId) {
+      return EndpointId.storeInContext(Context.current(), endpointId).makeCurrent();
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CreateRestRequestAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Return Request request) {
+      String endpointId = EndpointId.get(Context.current());
+      if (endpointId == null) {
+        return;
+      }
+      if (endpointId.startsWith("es/") && endpointId.length() > 3) {
+        endpointId = endpointId.substring(3);
+      }
+      ENDPOINT_DEFINITION.set(request, ElasticsearchEndpointMap.get(endpointId));
+    }
+  }
+}

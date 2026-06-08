@@ -37,17 +37,19 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractHibernateTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  protected static SessionFactory sessionFactory;
-  protected static List<Value> prepopulated;
+  protected SessionFactory sessionFactory;
+  protected List<Value> prepopulated;
 
   @BeforeAll
-  static void setUp() {
+  void setUp() {
     sessionFactory = new AnnotationConfiguration().configure().buildSessionFactory();
 
     // Pre-populate the DB, so delete/update can be tested.
@@ -63,7 +65,7 @@ abstract class AbstractHibernateTest {
   }
 
   @AfterAll
-  static void cleanUp() {
+  void cleanUp() {
     if (sessionFactory != null) {
       sessionFactory.close();
     }
