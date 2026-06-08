@@ -71,7 +71,10 @@ class SpringJpaTest {
                         .hasNoParent()
                         .hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("select spring.jpa.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "select spring.jpa.Customer"
+                                : "SELECT spring.jpa.Customer")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

@@ -192,7 +192,9 @@ class EntityManagerTest extends AbstractHibernateTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("select " + Value.class.getName())
+                    span.hasName(
+                            (emitStableDatabaseSemconv() ? "select " : "SELECT ")
+                                + Value.class.getName())
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.unset())

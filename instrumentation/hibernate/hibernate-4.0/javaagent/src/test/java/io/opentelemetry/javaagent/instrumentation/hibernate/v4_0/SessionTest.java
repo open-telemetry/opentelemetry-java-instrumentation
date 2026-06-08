@@ -860,7 +860,7 @@ class SessionTest extends AbstractHibernateTest {
                   sessionId2.set(trace.getSpan(2).getAttributes().get(HIBERNATE_SESSION_ID));
                 },
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "INSERT Value" : "INSERT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "insert Value" : "INSERT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
@@ -873,7 +873,7 @@ class SessionTest extends AbstractHibernateTest {
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "INSERT Value" : null),
+                                emitStableDatabaseSemconv() ? "insert Value" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT"),
@@ -903,7 +903,7 @@ class SessionTest extends AbstractHibernateTest {
                                 HIBERNATE_SESSION_ID,
                                 trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "INSERT Value" : "INSERT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "insert Value" : "INSERT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(6))
                         .hasAttributesSatisfyingExactly(
@@ -916,7 +916,7 @@ class SessionTest extends AbstractHibernateTest {
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "INSERT Value" : null),
+                                emitStableDatabaseSemconv() ? "insert Value" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT"),
@@ -924,7 +924,7 @@ class SessionTest extends AbstractHibernateTest {
                                 maybeStable(DB_SQL_TABLE),
                                 emitStableDatabaseSemconv() ? null : "Value")),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "DELETE Value" : "DELETE db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "delete Value" : "DELETE db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(6))
                         .hasAttributesSatisfyingExactly(
@@ -937,7 +937,7 @@ class SessionTest extends AbstractHibernateTest {
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("delete")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "DELETE Value" : null),
+                                emitStableDatabaseSemconv() ? "delete Value" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "DELETE"),
