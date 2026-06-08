@@ -171,12 +171,14 @@ class QueryTest extends AbstractHibernateTest {
         Arguments.of(
             named(
                 "query/list",
-                new Parameter("SELECT Value", sess -> sess.createQuery("from Value").list()))),
+                new Parameter(
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT Value",
+                    sess -> sess.createQuery("from Value").list()))),
         Arguments.of(
             named(
                 "query/uniqueResult",
                 new Parameter(
-                    "SELECT Value",
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT Value",
                     sess ->
                         sess.createQuery("from Value where id = :id")
                             .setParameter("id", 1L)
@@ -184,11 +186,15 @@ class QueryTest extends AbstractHibernateTest {
         Arguments.of(
             named(
                 "iterate",
-                new Parameter("SELECT Value", sess -> sess.createQuery("from Value").iterate()))),
+                new Parameter(
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT Value",
+                    sess -> sess.createQuery("from Value").iterate()))),
         Arguments.of(
             named(
                 "query/scroll",
-                new Parameter("SELECT Value", sess -> sess.createQuery("from Value").scroll()))));
+                new Parameter(
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT Value",
+                    sess -> sess.createQuery("from Value").scroll()))));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
@@ -217,7 +223,7 @@ class QueryTest extends AbstractHibernateTest {
                         .hasNoParent()
                         .hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("SELECT Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "select Value" : "SELECT Value")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

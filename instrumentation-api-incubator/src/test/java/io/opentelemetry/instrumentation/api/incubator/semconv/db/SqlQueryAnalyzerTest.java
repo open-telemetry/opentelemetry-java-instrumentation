@@ -523,7 +523,7 @@ class SqlQueryAnalyzerTest {
             "SELECT TABLE"),
 
         // hibernate/jpa query language
-        Arguments.of("FROM TABLE WHERE FIELD=1234", "FROM TABLE WHERE FIELD=?", "SELECT TABLE"));
+        Arguments.of("from TABLE WHERE FIELD=1234", "from TABLE WHERE FIELD=?", "select TABLE"));
   }
 
   private static Function<String, SqlQuery> expect(
@@ -674,9 +674,9 @@ class SqlQueryAnalyzerTest {
             "EXPLAIN SELECT * FROM users", expect("SELECT", "users", "EXPLAIN SELECT users")),
 
         // hibernate/jpa
-        Arguments.of("FROM schema.table", expect("SELECT", "schema.table", "SELECT schema.table")),
+        Arguments.of("from schema.table", expect("SELECT", "schema.table", "select schema.table")),
         Arguments.of(
-            "/* update comment */ from table1", expect("SELECT", "table1", "SELECT table1")),
+            "/* update comment */ from table1", expect("SELECT", "table1", "select table1")),
 
         // Insert
         Arguments.of(" insert into table where lalala", expect("INSERT", "table", "insert table")),

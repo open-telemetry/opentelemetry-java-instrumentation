@@ -724,7 +724,7 @@ class SessionTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsStateQuery")
-  void testAttachesStateToQueryCreated(Consumer<Session> queryBuilder) {
+  void testAttachesStateToQueryCreated(String sessionSpanName, Consumer<Session> queryBuilder) {
 
     testing.runWithSpan(
         "parent",
@@ -741,7 +741,7 @@ class SessionTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SELECT Value")
+                    span.hasName(sessionSpanName)
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -795,18 +795,14 @@ class SessionTest extends AbstractHibernateTest {
   private static Stream<Arguments> provideArgumentsStateQuery() {
     return Stream.of(
         Arguments.of(
-            named(
-                "createQuery",
-                ((Consumer<Session>) session -> session.createQuery("from Value").list()))),
+            named("createQuery", emitStableDatabaseSemconv() ? "select Value" : "SELECT Value"),
+            ((Consumer<Session>) session -> session.createQuery("from Value").list())),
         Arguments.of(
-            named(
-                "getNamedQuery",
-                ((Consumer<Session>) session -> session.getNamedQuery("TestNamedQuery").list()))),
+            named("getNamedQuery", emitStableDatabaseSemconv() ? "select Value" : "SELECT Value"),
+            ((Consumer<Session>) session -> session.getNamedQuery("TestNamedQuery").list())),
         Arguments.of(
-            named(
-                "createSQLQuery",
-                (Consumer<Session>)
-                    session -> session.createSQLQuery("SELECT * FROM Value").list())));
+            named("createSQLQuery", "SELECT Value"),
+            (Consumer<Session>) session -> session.createSQLQuery("SELECT * FROM Value").list()));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation

@@ -974,7 +974,7 @@ WHITESPACE           = [ \t\r\n]+
               // hql/jpql queries may skip SELECT and start with FROM clause
               // treat such queries as SELECT queries
               setOperation(new Select());
-              appendOperationToSummary("SELECT");
+              appendOperationToSummary("select");
             }
             operation.handleFrom();
           }

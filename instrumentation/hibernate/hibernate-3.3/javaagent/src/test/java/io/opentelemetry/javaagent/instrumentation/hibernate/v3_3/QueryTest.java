@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalT
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
-import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.hibernate.Query;
@@ -53,8 +52,7 @@ class QueryTest extends AbstractHibernateTest {
             // With Transaction
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertSessionSpan(span, trace.getSpan(0), expectedSessionSpanName(parameters)),
+                span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
                 span -> assertClientSpan(span, trace.getSpan(1)),
                 span ->
                     assertSpanWithSessionId(
@@ -66,9 +64,8 @@ class QueryTest extends AbstractHibernateTest {
             // Without Transaction
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertSessionSpan(span, trace.getSpan(0), expectedSessionSpanName(parameters)),
-                span -> assertClientSpan(span, trace.getSpan(1), "SELECT"));
+                span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
+                span -> assertClientSpan(span, trace.getSpan(1), "select"));
           }
         });
   }
@@ -79,7 +76,9 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.list",
                 new Parameter(
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
+                    emitStableDatabaseSemconv()
+                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
+                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     false,
                     sess -> {
                       Query q =
@@ -92,7 +91,9 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.executeUpdate",
                 new Parameter(
-                    "UPDATE io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
+                    emitStableDatabaseSemconv()
+                        ? "update io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
+                        : "UPDATE io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     true,
                     sess -> {
                       Query q =
@@ -105,7 +106,9 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.uniqueResult",
                 new Parameter(
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
+                    emitStableDatabaseSemconv()
+                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
+                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     false,
                     sess -> {
                       Query q =
@@ -118,7 +121,9 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.iterate",
                 new Parameter(
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
+                    emitStableDatabaseSemconv()
+                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
+                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     false,
                     sess -> {
                       Query q =
@@ -130,7 +135,9 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.scroll",
                 new Parameter(
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
+                    emitStableDatabaseSemconv()
+                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
+                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     false,
                     sess -> {
                       Query q =
@@ -138,15 +145,6 @@ class QueryTest extends AbstractHibernateTest {
                               "from io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value");
                       q.scroll();
                     }))));
-  }
-
-  private static String expectedSessionSpanName(Parameter parameters) {
-    if (!emitStableDatabaseSemconv() || !parameters.expectedSpanName.startsWith("UPDATE ")) {
-      return parameters.expectedSpanName;
-    }
-    int firstSpace = parameters.expectedSpanName.indexOf(' ');
-    return parameters.expectedSpanName.substring(0, firstSpace).toLowerCase(Locale.ROOT)
-        + parameters.expectedSpanName.substring(firstSpace);
   }
 
   private static class Parameter {

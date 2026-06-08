@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -118,7 +119,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Session." + parameter.methodName + " " + parameter.resource),
-                span -> assertClientSpan(span, trace.getSpan(1), "SELECT"),
+                span -> assertClientSpan(span, trace.getSpan(1), "select"),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -286,8 +287,8 @@ class SessionTest extends AbstractHibernateTest {
                         trace.getSpan(0),
                         "Transaction.commit",
                         trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
-                span -> assertClientSpan(span, trace.getSpan(5), "INSERT"),
-                span -> assertClientSpan(span, trace.getSpan(5), "DELETE")));
+                span -> assertClientSpan(span, trace.getSpan(5), "insert"),
+                span -> assertClientSpan(span, trace.getSpan(5), "delete")));
   }
 
   private static Stream<Arguments> provideArguments() {
@@ -528,7 +529,9 @@ class SessionTest extends AbstractHibernateTest {
                 "createQuery",
                 new Parameter(
                     "createQuery",
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
+                    emitStableDatabaseSemconv()
+                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
+                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     null,
                     null,
                     (Session session) ->
@@ -539,7 +542,7 @@ class SessionTest extends AbstractHibernateTest {
                 "getNamedQuery",
                 new Parameter(
                     "getNamedQuery",
-                    "SELECT Value",
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT Value",
                     null,
                     null,
                     (Session session) -> session.getNamedQuery("TestNamedQuery")))),
@@ -579,7 +582,7 @@ class SessionTest extends AbstractHibernateTest {
     trace.hasSpansSatisfyingExactly(
         span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
         span -> assertSessionSpan(span, trace.getSpan(0), "Session." + methodName + " " + resource),
-        span -> assertClientSpan(span, trace.getSpan(1), "SELECT"),
+        span -> assertClientSpan(span, trace.getSpan(1), "select"),
         span ->
             assertSpanWithSessionId(
                 span,

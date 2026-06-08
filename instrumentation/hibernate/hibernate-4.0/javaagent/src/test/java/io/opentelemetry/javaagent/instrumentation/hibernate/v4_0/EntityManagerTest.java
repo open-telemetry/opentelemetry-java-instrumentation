@@ -370,7 +370,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasNoParent()
                         .hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("SELECT Value")
+                    span.hasName(parameter.sessionSpanName)
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -378,10 +378,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                                 HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? parameter.stableClientSpanName
-                                : "SELECT db1.Value")
+                    span.hasName(parameter.clientSpanName)
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -437,7 +434,7 @@ class EntityManagerTest extends AbstractHibernateTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "select Value" : "SELECT Value")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.unset())
@@ -453,16 +450,24 @@ class EntityManagerTest extends AbstractHibernateTest {
         Arguments.of(
             named(
                 "createQuery",
-                new QueryParameter("select Value", em -> em.createQuery("from Value")))),
+                new QueryParameter(
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT Value",
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
+                    em -> em.createQuery("from Value")))),
         Arguments.of(
             named(
                 "getNamedQuery",
-                new QueryParameter("select Value", em -> em.createNamedQuery("TestNamedQuery")))),
+                new QueryParameter(
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT Value",
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
+                    em -> em.createNamedQuery("TestNamedQuery")))),
         Arguments.of(
             named(
                 "createSQLQuery",
                 new QueryParameter(
-                    "SELECT Value", em -> em.createNativeQuery("SELECT * FROM Value")))));
+                    "SELECT Value",
+                    emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value",
+                    em -> em.createNativeQuery("SELECT * FROM Value")))));
   }
 
   private static class Parameter {
@@ -484,11 +489,16 @@ class EntityManagerTest extends AbstractHibernateTest {
   }
 
   private static class QueryParameter {
-    final String stableClientSpanName;
+    final String sessionSpanName;
+    final String clientSpanName;
     final Function<EntityManager, Query> queryBuildMethod;
 
-    QueryParameter(String stableClientSpanName, Function<EntityManager, Query> queryBuildMethod) {
-      this.stableClientSpanName = stableClientSpanName;
+    QueryParameter(
+        String sessionSpanName,
+        String clientSpanName,
+        Function<EntityManager, Query> queryBuildMethod) {
+      this.sessionSpanName = sessionSpanName;
+      this.clientSpanName = clientSpanName;
       this.queryBuildMethod = queryBuildMethod;
     }
   }
