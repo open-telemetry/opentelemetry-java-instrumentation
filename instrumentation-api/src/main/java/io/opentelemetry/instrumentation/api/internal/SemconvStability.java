@@ -65,7 +65,7 @@ public final class SemconvStability {
   }
 
   @SuppressWarnings("deprecation") // using deprecated config property fallback
-  static boolean resolveV3Preview(OpenTelemetry openTelemetry) {
+  private static boolean resolveV3Preview(OpenTelemetry openTelemetry) {
     Boolean value = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview");
     if (value != null) {
       return value;
