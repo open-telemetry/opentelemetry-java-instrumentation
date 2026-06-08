@@ -34,12 +34,14 @@ import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.impl.ContextDataFactory;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
+import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 import org.apache.logging.log4j.util.StringMap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
 class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
@@ -58,6 +60,7 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   @AfterEach
   void cleanup() {
     OpenTelemetryAppender.resetForTest();
+    StatusLogger.getLogger().clear();
   }
 
   @Override
@@ -118,6 +121,7 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     contextData.putValue(contextDataKeys.getTraceIdKey(), traceId);
     contextData.putValue(contextDataKeys.getSpanIdKey(), spanId);
     contextData.putValue(contextDataKeys.getTraceFlags(), traceFlags);
+    StatusLogger.getLogger().clear();
 
     appender.append(
         Log4jLogEvent.newBuilder()
@@ -125,6 +129,8 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setLevel(Level.INFO)
             .setMessage(new FormattedMessage("log message 1", (Object) null))
             .setContextData(contextData)
+            .setThreadId(Thread.currentThread().getId() + 1)
+            .setThreadName("application-thread")
             .build());
 
     SpanContext spanContext =
@@ -132,27 +138,31 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             traceId, spanId, TraceFlags.fromHex(traceFlags, 0), TraceState.getDefault());
     testing.waitAndAssertLogRecords(
         logRecord -> logRecord.hasBody("log message 1").hasSpanContext(spanContext));
+    assertThat(StatusLogger.getLogger().getStatusData())
+        .extracting(statusData -> statusData.getMessage().getFormattedMessage())
+        .anySatisfy(
+            message ->
+                assertThat(message)
+                    .contains(
+                        "recovering span context from Log4j context data",
+                        OpenTelemetryAppenderContextDataInjector.class.getName()));
   }
 
   @Test
+  @SetSystemProperty(
+      key = OpenTelemetryAppenderContextDataInjector.DELEGATE_CONTEXT_DATA_INJECTOR_PROPERTY,
+      value =
+          "io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderTest$TestContextDataInjector")
   void contextDataInjectorDelegatesToConfiguredInjector() {
-    System.setProperty(
-        OpenTelemetryAppenderContextDataInjector.DELEGATE_CONTEXT_DATA_INJECTOR_PROPERTY,
-        TestContextDataInjector.class.getName());
-    try {
-      OpenTelemetryAppenderContextDataInjector injector =
-          new OpenTelemetryAppenderContextDataInjector();
+    OpenTelemetryAppenderContextDataInjector injector =
+        new OpenTelemetryAppenderContextDataInjector();
 
-      StringMap contextData =
-          injector.injectContextData(emptyList(), ContextDataFactory.createContextData());
-      Object otelContext = contextData.getValue(OTEL_CONTEXT_DATA_KEY);
+    StringMap contextData =
+        injector.injectContextData(emptyList(), ContextDataFactory.createContextData());
+    Object otelContext = contextData.getValue(OTEL_CONTEXT_DATA_KEY);
 
-      assertThat((String) contextData.getValue("delegate-key")).isEqualTo("delegate-value");
-      assertThat(otelContext).isInstanceOf(Context.class);
-    } finally {
-      System.clearProperty(
-          OpenTelemetryAppenderContextDataInjector.DELEGATE_CONTEXT_DATA_INJECTOR_PROPERTY);
-    }
+    assertThat((String) contextData.getValue("delegate-key")).isEqualTo("delegate-value");
+    assertThat(otelContext).isInstanceOf(Context.class);
   }
 
   private static class ContextCapturingLogRecordProcessor implements LogRecordProcessor {
