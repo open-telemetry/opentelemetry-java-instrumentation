@@ -96,6 +96,8 @@ public class TelemetryConverter {
   private static final boolean canUseValue = classAvailable("io.opentelemetry.api.common.Value");
   private static final boolean canUseValueKey =
       methodAvailable("io.opentelemetry.api.common.AttributeKey", "valueKey", String.class);
+  private static final boolean canSetEventName =
+      methodAvailable("io.opentelemetry.sdk.testing.logs.TestLogRecordData$Builder", "setEventName", String.class);
   // opentelemetry-api-1.50:javaagent tests use an older version where Value.empty() doesn't exist
   private static final Value<?> EMPTY_VALUE = computeEmptyValue();
   private static final boolean hasExtendedLogRecordData =
@@ -320,10 +322,12 @@ public class TelemetryConverter {
                     TraceState.getDefault())) // logs proto doesn't have trace state
             .setSeverity(fromProto(logRecord.getSeverityNumber()))
             .setSeverityText(logRecord.getSeverityText())
-            .setEventName(logRecord.getEventName())
             .setAttributes(fromProto(logRecord.getAttributesList()))
             .setTotalAttributeCount(
                 logRecord.getAttributesCount() + logRecord.getDroppedAttributesCount());
+    if (canSetEventName) {
+      builder.setEventName(logRecord.getEventName());
+    }
     if (canUseValue) {
       builder.setBodyValue(getBodyValue(logRecord.getBody()));
     } else {
