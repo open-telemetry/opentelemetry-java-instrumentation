@@ -21,7 +21,7 @@ public final class ContextDataKeys {
 
   private final String traceIdKey;
   private final String spanIdKey;
-  private final String traceFlags;
+  private final String traceFlagsKey;
 
   public static ContextDataKeys create(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties logging =
@@ -93,10 +93,10 @@ public final class ContextDataKeys {
     return defaultValue;
   }
 
-  private ContextDataKeys(String traceIdKey, String spanIdKey, String traceFlags) {
+  private ContextDataKeys(String traceIdKey, String spanIdKey, String traceFlagsKey) {
     this.traceIdKey = traceIdKey;
     this.spanIdKey = spanIdKey;
-    this.traceFlags = traceFlags;
+    this.traceFlagsKey = traceFlagsKey;
   }
 
   public String getTraceIdKey() {
@@ -107,7 +107,7 @@ public final class ContextDataKeys {
     return spanIdKey;
   }
 
-  public String getTraceFlags() {
-    return traceFlags;
+  public String getTraceFlagsKey() {
+    return traceFlagsKey;
   }
 }
