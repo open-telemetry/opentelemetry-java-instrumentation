@@ -76,14 +76,14 @@ class LogbackAppenderInstaller {
 
   private static void addOpenTelemetryAppender(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
-    ch.qos.logback.classic.Logger logger =
+    ch.qos.logback.classic.Logger logbackLogger =
         (ch.qos.logback.classic.Logger)
             LoggerFactory.getILoggerFactory().getLogger(Logger.ROOT_LOGGER_NAME);
     OpenTelemetryAppender openTelemetryAppender = new OpenTelemetryAppender();
     initializeOpenTelemetryAppenderFromProperties(
         applicationEnvironmentPreparedEvent, openTelemetryAppender);
     openTelemetryAppender.start();
-    logger.addAppender(openTelemetryAppender);
+    logbackLogger.addAppender(openTelemetryAppender);
   }
 
   private static void initializeOpenTelemetryAppenderFromProperties(
@@ -180,20 +180,21 @@ class LogbackAppenderInstaller {
 
   private static void addMdcAppender(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
-    ch.qos.logback.classic.Logger logger =
+    ch.qos.logback.classic.Logger logbackLogger =
         (ch.qos.logback.classic.Logger)
             LoggerFactory.getILoggerFactory().getLogger(Logger.ROOT_LOGGER_NAME);
     io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender openTelemetryAppender =
         new io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender();
     initializeMdcAppenderFromProperties(applicationEnvironmentPreparedEvent, openTelemetryAppender);
     openTelemetryAppender.start();
-    logger.addAppender(openTelemetryAppender);
+    logbackLogger.addAppender(openTelemetryAppender);
     // move existing appenders under otel mdc appender, so they could observe the added mdc values
-    for (Iterator<Appender<ILoggingEvent>> i = logger.iteratorForAppenders(); i.hasNext(); ) {
+    for (Iterator<Appender<ILoggingEvent>> i = logbackLogger.iteratorForAppenders();
+        i.hasNext(); ) {
       Appender<ILoggingEvent> appender = i.next();
       if (appender != openTelemetryAppender) {
         openTelemetryAppender.addAppender(appender);
-        logger.detachAppender(appender);
+        logbackLogger.detachAppender(appender);
       }
     }
   }
@@ -317,8 +318,8 @@ class LogbackAppenderInstaller {
       return Optional.empty();
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
-    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
-      Iterator<Appender<ILoggingEvent>> appenderIterator = logger.iteratorForAppenders();
+    for (ch.qos.logback.classic.Logger logbackLogger : loggerContext.getLoggerList()) {
+      Iterator<Appender<ILoggingEvent>> appenderIterator = logbackLogger.iteratorForAppenders();
       while (appenderIterator.hasNext()) {
         Appender<ILoggingEvent> appender = appenderIterator.next();
         Optional<T> result = findAppender(appenderClass, appender);
