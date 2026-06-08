@@ -259,8 +259,8 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @MethodSource("operationCaseArgs")
   void querySummaryPreservesOperationCase(String original, String expectedQuerySummary) {
-    SqlQuery result = ANALYZER.analyzeWithSummary(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-
+    assumeTrue(emitStableDatabaseSemconv());
+    SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
   }
 
