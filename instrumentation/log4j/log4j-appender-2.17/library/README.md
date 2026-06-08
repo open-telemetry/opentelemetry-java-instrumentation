@@ -142,7 +142,15 @@ configuration:
 </Configuration>
 ```
 
-If your application already configures a custom `log4j2.ContextDataInjector`, it will need to be
-replaced or wrapped so that the OpenTelemetry `Context` is added to the Log4j event context data.
+If your application already configures a custom `log4j2.ContextDataInjector`, configure it as the
+OpenTelemetry injector's delegate:
+
+```properties
+log4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector
+otel.instrumentation.log4j-appender.context-data-injector.delegate=com.example.CustomContextDataInjector
+```
+
+The OpenTelemetry injector will call the delegate injector first, then add the OpenTelemetry
+`Context` to the Log4j event context data.
 
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes

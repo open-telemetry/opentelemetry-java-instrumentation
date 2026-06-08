@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataKeys.OTEL_CONTEXT_DATA_KEY;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -25,10 +27,14 @@ import io.opentelemetry.sdk.logs.ReadWriteLogRecord;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
+import java.util.List;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.ContextDataInjector;
+import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.impl.ContextDataFactory;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
+import org.apache.logging.log4j.util.ReadOnlyStringMap;
 import org.apache.logging.log4j.util.StringMap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -128,6 +134,27 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
         logRecord -> logRecord.hasBody("log message 1").hasSpanContext(spanContext));
   }
 
+  @Test
+  void contextDataInjectorDelegatesToConfiguredInjector() {
+    System.setProperty(
+        OpenTelemetryAppenderContextDataInjector.DELEGATE_CONTEXT_DATA_INJECTOR_PROPERTY,
+        TestContextDataInjector.class.getName());
+    try {
+      OpenTelemetryAppenderContextDataInjector injector =
+          new OpenTelemetryAppenderContextDataInjector();
+
+      StringMap contextData =
+          injector.injectContextData(emptyList(), ContextDataFactory.createContextData());
+      Object otelContext = contextData.getValue(OTEL_CONTEXT_DATA_KEY);
+
+      assertThat((String) contextData.getValue("delegate-key")).isEqualTo("delegate-value");
+      assertThat(otelContext).isInstanceOf(Context.class);
+    } finally {
+      System.clearProperty(
+          OpenTelemetryAppenderContextDataInjector.DELEGATE_CONTEXT_DATA_INJECTOR_PROPERTY);
+    }
+  }
+
   private static class ContextCapturingLogRecordProcessor implements LogRecordProcessor {
 
     private Context context = Context.root();
@@ -149,6 +176,20 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
     private Context getContext() {
       return context;
+    }
+  }
+
+  public static class TestContextDataInjector implements ContextDataInjector {
+
+    @Override
+    public StringMap injectContextData(List<Property> properties, StringMap reusable) {
+      reusable.putValue("delegate-key", "delegate-value");
+      return reusable;
+    }
+
+    @Override
+    public ReadOnlyStringMap rawContextData() {
+      return ContextDataFactory.createContextData();
     }
   }
 }

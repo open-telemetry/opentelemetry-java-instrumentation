@@ -3,9 +3,6 @@
 This module provides a Log4j2 `ContextDataProvider` that injects trace context from active spans
 into log context.
 
-This module exposes trace context values such as `trace_id`, `span_id`, and `trace_flags` through
-Log4j context data so they can be referenced from Log4j layouts and appenders.
-
 ## Quickstart
 
 ### Add these dependencies to your project

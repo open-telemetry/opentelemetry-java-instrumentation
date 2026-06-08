@@ -14,15 +14,21 @@ import org.apache.logging.log4j.core.ContextDataInjector;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.impl.ContextDataFactory;
 import org.apache.logging.log4j.core.impl.ThreadContextDataInjector;
+import org.apache.logging.log4j.core.util.Loader;
 import org.apache.logging.log4j.spi.CopyOnWrite;
 import org.apache.logging.log4j.spi.DefaultThreadContextMap;
 import org.apache.logging.log4j.spi.ReadOnlyThreadContextMap;
+import org.apache.logging.log4j.status.StatusLogger;
+import org.apache.logging.log4j.util.PropertiesUtil;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 import org.apache.logging.log4j.util.StringMap;
 
 public final class OpenTelemetryAppenderContextDataInjector implements ContextDataInjector {
 
-  private final ContextDataInjector delegate = createDefaultInjector();
+  static final String DELEGATE_CONTEXT_DATA_INJECTOR_PROPERTY =
+      "otel.instrumentation.log4j-appender.context-data-injector.delegate";
+
+  private final ContextDataInjector delegate = createDelegateInjector();
 
   @Override
   public StringMap injectContextData(List<Property> properties, StringMap reusable) {
@@ -39,7 +45,24 @@ public final class OpenTelemetryAppenderContextDataInjector implements ContextDa
     return delegate.rawContextData();
   }
 
-  private static ContextDataInjector createDefaultInjector() {
+  private static ContextDataInjector createDelegateInjector() {
+    String className =
+        PropertiesUtil.getProperties().getStringProperty(DELEGATE_CONTEXT_DATA_INJECTOR_PROPERTY);
+    if (className != null) {
+      try {
+        if (className.equals(OpenTelemetryAppenderContextDataInjector.class.getName())) {
+          throw new IllegalArgumentException("Delegate injector cannot be this injector");
+        }
+        return Loader.newCheckedInstanceOf(className, ContextDataInjector.class);
+      } catch (Exception e) {
+        StatusLogger.getLogger()
+            .warn(
+                "Could not create ContextDataInjector delegate for '{}', using default: {}",
+                className,
+                e.toString());
+      }
+    }
+
     ReadOnlyThreadContextMap threadContextMap = ThreadContext.getThreadContextMap();
     if (threadContextMap == null || threadContextMap instanceof DefaultThreadContextMap) {
       return new ThreadContextDataInjector.ForDefaultThreadContextMap();
