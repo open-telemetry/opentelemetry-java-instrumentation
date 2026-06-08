@@ -133,7 +133,7 @@ class EntityManagerTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAttachesStateParameters")
-  void testAttachesStateToQuery(Parameter parameter) {
+  void testAttachesStateToQuery(QueryParameter parameter) {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -150,10 +150,9 @@ class EntityManagerTest extends AbstractHibernateTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> assertSessionSpan(span, trace.getSpan(0), parameter.sessionSpanName),
                 span ->
-                  assertSessionSpan(span, trace.getSpan(0), parameter.sessionSpanName),
-                span ->
-                  span.hasName(parameter.clientSpanName)
+                    span.hasName(parameter.clientSpanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -287,57 +286,36 @@ class EntityManagerTest extends AbstractHibernateTest {
         Arguments.of(
             named(
                 "createQuery",
-                new Parameter(
-                    "createQuery",
-                  emitStableDatabaseSemconv()
-                    ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
-                    : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                  emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
+                new QueryParameter(
+                    emitStableDatabaseSemconv()
+                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
+                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
                     queryBuildMethods.get(0)))),
         Arguments.of(
             named(
                 "getNamedQuery",
-                new Parameter(
-                    "getNamedQuery",
-                  emitStableDatabaseSemconv()
-                    ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
-                    : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                  emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
+                new QueryParameter(
+                    emitStableDatabaseSemconv()
+                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
+                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                    emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
                     queryBuildMethods.get(1)))),
         Arguments.of(
             named(
                 "createSQLQuery",
-                new Parameter(
-                    "createSQLQuery",
+                new QueryParameter(
                     "SELECT Value",
-                  emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value",
+                    emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value",
                     queryBuildMethods.get(2)))));
   }
 
   private static class Parameter {
     final String methodName;
     final String resource;
-    final String sessionSpanName;
-    final String clientSpanName;
     final boolean attach;
     final boolean flushOnCommit;
     final BiConsumer<EntityManager, Value> sessionMethodTest;
-    final Function<EntityManager, Query> queryBuildMethod;
-
-    Parameter(
-        String methodName,
-        String sessionSpanName,
-        String clientSpanName,
-        Function<EntityManager, Query> queryBuildMethod) {
-      this.methodName = methodName;
-      this.resource = sessionSpanName;
-      this.sessionSpanName = sessionSpanName;
-      this.clientSpanName = clientSpanName;
-      this.attach = false;
-      this.flushOnCommit = false;
-      this.sessionMethodTest = null;
-      this.queryBuildMethod = queryBuildMethod;
-    }
 
     Parameter(
         String methodName,
@@ -347,12 +325,24 @@ class EntityManagerTest extends AbstractHibernateTest {
         BiConsumer<EntityManager, Value> sessionMethodTest) {
       this.methodName = methodName;
       this.resource = resource;
-      this.sessionSpanName = resource;
-      this.clientSpanName = null;
       this.attach = attach;
       this.flushOnCommit = flushOnCommit;
       this.sessionMethodTest = sessionMethodTest;
-      this.queryBuildMethod = null;
+    }
+  }
+
+  private static class QueryParameter {
+    final String sessionSpanName;
+    final String clientSpanName;
+    final Function<EntityManager, Query> queryBuildMethod;
+
+    QueryParameter(
+        String sessionSpanName,
+        String clientSpanName,
+        Function<EntityManager, Query> queryBuildMethod) {
+      this.sessionSpanName = sessionSpanName;
+      this.clientSpanName = clientSpanName;
+      this.queryBuildMethod = queryBuildMethod;
     }
   }
 
