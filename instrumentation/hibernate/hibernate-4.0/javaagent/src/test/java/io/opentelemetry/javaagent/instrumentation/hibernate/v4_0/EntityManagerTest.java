@@ -349,14 +349,14 @@ class EntityManagerTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsAttachesState")
-  void testAttachesStateToQuery(Function<EntityManager, Query> queryBuildMethod) {
+  void testAttachesStateToQuery(QueryParameter parameter) {
     testing.runWithSpan(
         "parent",
         () -> {
           EntityManager entityManager = entityManagerFactory.createEntityManager();
           EntityTransaction entityTransaction = entityManager.getTransaction();
           entityTransaction.begin();
-          queryBuildMethod.apply(entityManager).getResultList();
+          parameter.queryBuildMethod.apply(entityManager).getResultList();
           entityTransaction.commit();
           entityManager.close();
         });
@@ -378,7 +378,10 @@ class EntityManagerTest extends AbstractHibernateTest {
                                 HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? parameter.stableClientSpanName
+                                : "SELECT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -450,16 +453,16 @@ class EntityManagerTest extends AbstractHibernateTest {
         Arguments.of(
             named(
                 "createQuery",
-                (Function<EntityManager, Query>) em -> em.createQuery("from Value"))),
+                new QueryParameter("select Value", em -> em.createQuery("from Value")))),
         Arguments.of(
             named(
                 "getNamedQuery",
-                (Function<EntityManager, Query>) em -> em.createNamedQuery("TestNamedQuery"))),
+                new QueryParameter("select Value", em -> em.createNamedQuery("TestNamedQuery")))),
         Arguments.of(
             named(
                 "createSQLQuery",
-                (Function<EntityManager, Query>)
-                    em -> em.createNativeQuery("SELECT * FROM Value"))));
+                new QueryParameter(
+                    "SELECT Value", em -> em.createNativeQuery("SELECT * FROM Value")))));
   }
 
   private static class Parameter {
@@ -477,6 +480,16 @@ class EntityManagerTest extends AbstractHibernateTest {
       this.attach = attach;
       this.flushOnCommit = flushOnCommit;
       this.sessionMethodTest = sessionMethodTest;
+    }
+  }
+
+  private static class QueryParameter {
+    final String stableClientSpanName;
+    final Function<EntityManager, Query> queryBuildMethod;
+
+    QueryParameter(String stableClientSpanName, Function<EntityManager, Query> queryBuildMethod) {
+      this.stableClientSpanName = stableClientSpanName;
+      this.queryBuildMethod = queryBuildMethod;
     }
   }
 }

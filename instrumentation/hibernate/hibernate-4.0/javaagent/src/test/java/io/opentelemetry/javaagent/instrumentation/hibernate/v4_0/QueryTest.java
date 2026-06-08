@@ -63,7 +63,7 @@ class QueryTest extends AbstractHibernateTest {
                         .hasNoParent()
                         .hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("UPDATE Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "update Value" : "UPDATE Value")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

@@ -53,7 +53,8 @@ class QueryTest extends AbstractHibernateTest {
             // With Transaction
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), expectedSessionSpanName(parameters)),
+                span ->
+                    assertSessionSpan(span, trace.getSpan(0), expectedSessionSpanName(parameters)),
                 span -> assertClientSpan(span, trace.getSpan(1)),
                 span ->
                     assertSpanWithSessionId(
@@ -65,7 +66,8 @@ class QueryTest extends AbstractHibernateTest {
             // Without Transaction
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), expectedSessionSpanName(parameters)),
+                span ->
+                    assertSessionSpan(span, trace.getSpan(0), expectedSessionSpanName(parameters)),
                 span -> assertClientSpan(span, trace.getSpan(1), "SELECT"));
           }
         });
