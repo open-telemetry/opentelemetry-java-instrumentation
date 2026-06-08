@@ -31,7 +31,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
@@ -104,9 +103,7 @@ abstract class AbstractHibernateTest {
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   static void assertClientSpan(SpanDataAssert span, SpanData parent, String verb) {
-    String oldSemconvVerb = verb.toUpperCase(Locale.ROOT);
-
-    span.hasName(emitStableDatabaseSemconv() ? verb + " Value" : oldSemconvVerb + " db1.Value")
+    span.hasName(emitStableDatabaseSemconv() ? verb + " Value" : verb + " db1.Value")
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
@@ -114,9 +111,9 @@ abstract class AbstractHibernateTest {
             equalTo(maybeStable(DB_NAME), "db1"),
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
-            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith(verb)),
+            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWithIgnoringCase(verb)),
             equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? verb + " Value" : null),
-            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : oldSemconvVerb),
+            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : verb),
             equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));
   }
 

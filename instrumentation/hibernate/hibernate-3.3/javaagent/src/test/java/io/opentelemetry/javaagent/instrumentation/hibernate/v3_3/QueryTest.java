@@ -65,7 +65,11 @@ class QueryTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
-                span -> assertClientSpan(span, trace.getSpan(1), "select"));
+                span ->
+                  assertClientSpan(
+                    span,
+                    trace.getSpan(1),
+                    emitStableDatabaseSemconv() ? "select" : "SELECT"));
           }
         });
   }

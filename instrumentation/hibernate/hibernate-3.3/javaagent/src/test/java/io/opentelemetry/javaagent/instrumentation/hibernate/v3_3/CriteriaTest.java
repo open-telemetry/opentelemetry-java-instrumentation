@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
 
@@ -51,7 +52,11 @@ class CriteriaTest extends AbstractHibernateTest {
                         "Criteria."
                             + methodName
                             + " io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
-                span -> assertClientSpan(span, trace.getSpan(1), "select"),
+                span ->
+                    assertClientSpan(
+                        span,
+                        trace.getSpan(1),
+                        emitStableDatabaseSemconv() ? "select" : "SELECT"),
                 span ->
                     assertSpanWithSessionId(
                         span,

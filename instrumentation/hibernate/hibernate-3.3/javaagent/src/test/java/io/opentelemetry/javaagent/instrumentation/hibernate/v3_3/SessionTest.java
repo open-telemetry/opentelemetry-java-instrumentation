@@ -119,7 +119,11 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Session." + parameter.methodName + " " + parameter.resource),
-                span -> assertClientSpan(span, trace.getSpan(1), "select"),
+                span ->
+                    assertClientSpan(
+                        span,
+                        trace.getSpan(1),
+                        emitStableDatabaseSemconv() ? "select" : "SELECT"),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -287,8 +291,16 @@ class SessionTest extends AbstractHibernateTest {
                         trace.getSpan(0),
                         "Transaction.commit",
                         trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
-                span -> assertClientSpan(span, trace.getSpan(5), "insert"),
-                span -> assertClientSpan(span, trace.getSpan(5), "delete")));
+                span ->
+                    assertClientSpan(
+                        span,
+                        trace.getSpan(5),
+                        emitStableDatabaseSemconv() ? "insert" : "INSERT"),
+                span ->
+                    assertClientSpan(
+                        span,
+                        trace.getSpan(5),
+                        emitStableDatabaseSemconv() ? "delete" : "DELETE")));
   }
 
   private static Stream<Arguments> provideArguments() {
@@ -582,7 +594,9 @@ class SessionTest extends AbstractHibernateTest {
     trace.hasSpansSatisfyingExactly(
         span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
         span -> assertSessionSpan(span, trace.getSpan(0), "Session." + methodName + " " + resource),
-        span -> assertClientSpan(span, trace.getSpan(1), "select"),
+        span ->
+            assertClientSpan(
+                span, trace.getSpan(1), emitStableDatabaseSemconv() ? "select" : "SELECT"),
         span ->
             assertSpanWithSessionId(
                 span,

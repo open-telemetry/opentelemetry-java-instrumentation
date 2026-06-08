@@ -32,7 +32,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -135,7 +134,11 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Session." + parameter.methodName + " " + parameter.resource),
-                span -> assertClientSpan(span, trace.getSpan(1), "SELECT"),
+                span ->
+                    assertClientSpan(
+                        span,
+                        trace.getSpan(1),
+                        emitStableDatabaseSemconv() ? "select" : "SELECT"),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -320,7 +323,11 @@ class SessionTest extends AbstractHibernateTest {
                   sessionId2.set(
                       trace.getSpan(2).getAttributes().get(stringKey("hibernate.session_id")));
                 },
-                span -> assertClientSpan(span, trace.getSpan(2), "INSERT"),
+                span ->
+                    assertClientSpan(
+                        span,
+                        trace.getSpan(2),
+                        emitStableDatabaseSemconv() ? "insert" : "INSERT"),
                 span -> {
                   assertSessionSpan(
                       span,
@@ -338,8 +345,16 @@ class SessionTest extends AbstractHibernateTest {
                 span ->
                     assertSpanWithSessionId(
                         span, trace.getSpan(0), "Transaction.commit", sessionId1.get()),
-                span -> assertClientSpan(span, trace.getSpan(6), "INSERT"),
-                span -> assertClientSpan(span, trace.getSpan(6), "DELETE")));
+                span ->
+                    assertClientSpan(
+                        span,
+                        trace.getSpan(6),
+                        emitStableDatabaseSemconv() ? "insert" : "INSERT"),
+                span ->
+                    assertClientSpan(
+                        span,
+                        trace.getSpan(6),
+                        emitStableDatabaseSemconv() ? "delete" : "DELETE")));
 
     if (ExperimentalTestHelper.EXPERIMENTAL_ATTRIBUTES) {
       assertThat(sessionId2.get()).isNotEqualTo(sessionId1.get());
@@ -764,9 +779,9 @@ class SessionTest extends AbstractHibernateTest {
                 "createSelectionQuery",
                 new Parameter(
                     "createSelectionQuery",
-                                        emitStableDatabaseSemconv()
-                                                ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
-                                                : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                    emitStableDatabaseSemconv()
+                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
+                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                     queryBuildMethods.get(3),
                     null,
                     null))));
@@ -847,9 +862,7 @@ class SessionTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   private static SpanDataAssert assertClientSpan(
       SpanDataAssert span, SpanData parent, String verb) {
-    String stableVerb = verb.toLowerCase(Locale.ROOT);
-    return span.hasName(
-            emitStableDatabaseSemconv() ? stableVerb.concat(" Value") : verb.concat(" db1.Value"))
+        return span.hasName(emitStableDatabaseSemconv() ? verb.concat(" Value") : verb.concat(" db1.Value"))
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
@@ -857,9 +870,8 @@ class SessionTest extends AbstractHibernateTest {
             equalTo(maybeStable(DB_NAME), "db1"),
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
-            satisfies(
-                maybeStable(DB_STATEMENT), val -> val.startsWith(verb.toLowerCase(Locale.ROOT))),
-            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? stableVerb + " Value" : null),
+            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWithIgnoringCase(verb)),
+            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? verb + " Value" : null),
             equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : verb),
             equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));
   }
