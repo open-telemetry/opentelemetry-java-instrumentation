@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.p
 
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.ProducerData;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
+import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
@@ -38,8 +39,7 @@ public class PulsarRequest extends BasePulsarRequest {
     this.message = message;
     // for producer spans message id is not available when the PulsarRequest is created, so we will
     // try to get it later when it's available
-    MessageId id = message.getMessageId();
-    this.messageId = id != null ? id.toString() : null;
+    this.messageId = extractMessageId(message);
   }
 
   public Message<?> getMessage() {
@@ -51,7 +51,51 @@ public class PulsarRequest extends BasePulsarRequest {
     if (messageId != null) {
       return messageId;
     }
+    return extractMessageId(message);
+  }
+
+  @Nullable
+  private static String extractMessageId(Message<?> message) {
     MessageId id = message.getMessageId();
-    return id != null ? id.toString() : null;
+    if (id != null) {
+      return id.toString();
+    }
+    id = invokeMessageIdMethod(message, "getInnerMessageId");
+    if (id != null) {
+      return id.toString();
+    }
+    Message<?> innerMessage = invokeMessageMethod(message, "getMessage");
+    if (innerMessage != null) {
+      MessageId innerId = innerMessage.getMessageId();
+      if (innerId != null) {
+        return innerId.toString();
+      }
+    }
+    return null;
+  }
+
+  @Nullable
+  private static MessageId invokeMessageIdMethod(Message<?> message, String methodName) {
+    try {
+      Method method = message.getClass().getMethod(methodName);
+      Object result = method.invoke(message);
+      return result instanceof MessageId ? (MessageId) result : null;
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
+  }
+
+  // Reflection can only tell us this is some Message<?> implementation; erasing to Message<?> is
+  // safe because we only call getMessageId() on the returned value.
+  @SuppressWarnings("unchecked")
+  @Nullable
+  private static Message<?> invokeMessageMethod(Message<?> message, String methodName) {
+    try {
+      Method method = message.getClass().getMethod(methodName);
+      Object result = method.invoke(message);
+      return result instanceof Message ? (Message<?>) result : null;
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
   }
 }
