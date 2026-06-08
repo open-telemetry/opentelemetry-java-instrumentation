@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataKeys.OTEL_CONTEXT_DATA_KEY;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
@@ -69,6 +70,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
   private final boolean captureCodeAttributes;
+  private final boolean v3Preview;
 
   /**
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
@@ -225,16 +227,16 @@ public class OpenTelemetryAppender extends AbstractAppender {
     boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     this.mapper =
-        new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE,
+        createMapper(
             captureExperimentalAttributes,
             captureCodeAttributes,
             captureMapMessageAttributes,
             captureMarkerAttribute,
-            splitAndFilterBlanksAndNulls(captureContextDataAttributes),
+            captureContextDataAttributes,
             v3Preview);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
+    this.v3Preview = v3Preview;
     if (numLogsCapturedBeforeOtelInstall != 0) {
       this.eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     } else {
@@ -250,6 +252,23 @@ public class OpenTelemetryAppender extends AbstractAppender {
         .map(String::trim)
         .filter(s -> !s.isEmpty())
         .collect(toList());
+  }
+
+  private static LogEventMapper<ReadOnlyStringMap> createMapper(
+      boolean captureExperimentalAttributes,
+      boolean captureCodeAttributes,
+      boolean captureMapMessageAttributes,
+      boolean captureMarkerAttribute,
+      @Nullable String captureContextDataAttributes,
+      boolean v3Preview) {
+    return new LogEventMapper<>(
+        ContextDataAccessorImpl.INSTANCE,
+        captureExperimentalAttributes,
+        captureCodeAttributes,
+        captureMapMessageAttributes,
+        captureMarkerAttribute,
+        splitAndFilterBlanksAndNulls(captureContextDataAttributes),
+        v3Preview);
   }
 
   /**
@@ -325,28 +344,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     LogRecordBuilder builder =
         openTelemetry.getLogsBridge().loggerBuilder(instrumentationName).build().logRecordBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
-    Context context = Context.current();
-    // when using async logger we'll be executing on a different thread than what started logging
-    // reconstruct the context from context data
-    if (context == Context.root()) {
-      ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
-      ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
-      String traceId = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceIdKey());
-      String spanId = contextDataAccessor.getValue(contextData, contextDataKeys.getSpanIdKey());
-      String traceFlags =
-          contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlags());
-      if (traceId != null && spanId != null && traceFlags != null) {
-        context =
-            Context.root()
-                .with(
-                    Span.wrap(
-                        SpanContext.create(
-                            traceId,
-                            spanId,
-                            TraceFlags.fromHex(traceFlags, 0),
-                            TraceState.getDefault())));
-      }
-    }
+    Context context = getContext(openTelemetry, contextData);
 
     mapper.mapLogEvent(
         builder,
@@ -369,18 +367,57 @@ public class OpenTelemetryAppender extends AbstractAppender {
     builder.emit();
   }
 
+  private Context getContext(OpenTelemetry openTelemetry, ReadOnlyStringMap contextData) {
+    Object context = contextData.getValue(OTEL_CONTEXT_DATA_KEY);
+    if (context instanceof Context) {
+      return (Context) context;
+    }
+    Context currentContext = Context.current();
+    if (v3Preview) {
+      return currentContext;
+    }
+
+    // when using async logger we'll be executing on a different thread than what started logging
+    // reconstruct the context from context data
+    ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
+    ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
+    String traceId = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceIdKey());
+    String spanId = contextDataAccessor.getValue(contextData, contextDataKeys.getSpanIdKey());
+    String traceFlags = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlags());
+    if (traceId != null && spanId != null && traceFlags != null) {
+      return Context.root()
+          .with(
+              Span.wrap(
+                  SpanContext.create(
+                      traceId,
+                      spanId,
+                      TraceFlags.fromHex(traceFlags, 0),
+                      TraceState.getDefault())));
+    }
+    return currentContext;
+  }
+
   private enum ContextDataAccessorImpl implements ContextDataAccessor<ReadOnlyStringMap> {
     INSTANCE;
 
     @Override
     @Nullable
     public String getValue(ReadOnlyStringMap contextData, String key) {
-      return contextData.getValue(key);
+      Object value = contextData.getValue(key);
+      if (value instanceof String) {
+        return (String) value;
+      }
+      return null;
     }
 
     @Override
     public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, String> action) {
-      contextData.forEach(action::accept);
+      contextData.forEach(
+          (key, value) -> {
+            if (!OTEL_CONTEXT_DATA_KEY.equals(key) && value instanceof String) {
+              action.accept(key, (String) value);
+            }
+          });
     }
   }
 }
