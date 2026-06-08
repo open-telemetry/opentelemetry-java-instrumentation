@@ -94,6 +94,14 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
     @Override
     public void attribute(String key, boolean value) {
+      if (emitStableDatabaseSemconv()) {
+        String stableKey = stableKey(key);
+        if (stableKey != null) {
+          delegate.attribute(stableKey, value);
+        } else if (captureExperimentalAttribute(key)) {
+          delegate.attribute(key, value);
+        }
+      }
       if (emitOldDatabaseSemconv()) {
         delegate.attribute(key, value);
       }
