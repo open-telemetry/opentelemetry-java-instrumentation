@@ -89,7 +89,11 @@ WHITESPACE           = [ \t\r\n]+
 
   /** Appends an operation name (SELECT, INSERT, etc.) to the query summary. */
   private void appendOperationToSummary() {
-    appendOperationToSummary(yytext());
+    if (querySummaryBuilder.length() > 0) {
+      querySummaryBuilder.append(' ');
+    }
+    // yytext() allocates a String; append directly from JFlex's buffer.
+    querySummaryBuilder.append(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
   }
 
   private void appendOperationToSummary(String operationName) {
