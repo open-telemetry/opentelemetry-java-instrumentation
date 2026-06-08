@@ -97,7 +97,10 @@ public class TelemetryConverter {
   private static final boolean canUseValueKey =
       methodAvailable("io.opentelemetry.api.common.AttributeKey", "valueKey", String.class);
   private static final boolean canSetEventName =
-      methodAvailable("io.opentelemetry.sdk.testing.logs.TestLogRecordData$Builder", "setEventName", String.class);
+      methodAvailable(
+          "io.opentelemetry.sdk.testing.logs.TestLogRecordData$Builder",
+          "setEventName",
+          String.class);
   // opentelemetry-api-1.50:javaagent tests use an older version where Value.empty() doesn't exist
   private static final Value<?> EMPTY_VALUE = computeEmptyValue();
   private static final boolean hasExtendedLogRecordData =
