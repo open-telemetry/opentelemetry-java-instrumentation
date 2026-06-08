@@ -43,7 +43,7 @@ public final class SemconvStability {
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
-    v3Preview = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
+    v3Preview = resolveV3Preview(openTelemetry);
     Set<String> optInValues = resolveOptInValues(openTelemetry, "opt_in");
     Set<String> previewValues = resolveOptInValues(openTelemetry, "preview");
 
@@ -62,6 +62,15 @@ public final class SemconvStability {
 
     emitOldMessagingSemconv = shouldEmitOld("messaging", false, previewValues);
     emitStableMessagingSemconv = shouldEmitStable("messaging", false, previewValues);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated config property fallback
+  static boolean resolveV3Preview(OpenTelemetry openTelemetry) {
+    Boolean value = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview");
+    if (value != null) {
+      return value;
+    }
+    return ConfigPropertiesUtil.getBoolean("otel.semconv-stability.v3-preview", false);
   }
 
   @SuppressWarnings("deprecation") // using deprecated config property fallback
