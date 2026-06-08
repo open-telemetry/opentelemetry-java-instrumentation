@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.List;
 import javax.sql.DataSource;
@@ -52,8 +53,10 @@ public final class JdbcInstrumenterFactory {
             openTelemetry,
             ConfigPropertiesUtil.getBoolean(
                 "otel.instrumentation.common.db.query-sanitization.enabled",
-                ConfigPropertiesUtil.getBoolean(
-                    "otel.instrumentation.common.db-statement-sanitizer.enabled", true)));
+                SemconvStability.v3Preview()
+                    ? true
+                    : ConfigPropertiesUtil.getBoolean(
+                        "otel.instrumentation.common.db-statement-sanitizer.enabled", true)));
     return createStatementInstrumenter(
         openTelemetry, emptyList(), true, querySanitizationEnabled, captureQueryParameters);
   }
