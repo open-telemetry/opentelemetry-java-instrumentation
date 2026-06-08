@@ -151,17 +151,9 @@ class EntityManagerTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        emitStableDatabaseSemconv()
-                            ? parameter.stableSessionSpanName
-                            : parameter.resource),
+                  assertSessionSpan(span, trace.getSpan(0), parameter.sessionSpanName),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? parameter.stableClientSpanName
-                                : "SELECT db1.Value")
+                  span.hasName(parameter.clientSpanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -175,9 +167,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv()
-                                    ? parameter.stableClientSpanName
-                                    : null),
+                              emitStableDatabaseSemconv() ? parameter.clientSpanName : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -299,18 +289,20 @@ class EntityManagerTest extends AbstractHibernateTest {
                 "createQuery",
                 new Parameter(
                     "createQuery",
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    "select Value",
+                  emitStableDatabaseSemconv()
+                    ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
+                    : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                  emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
                     queryBuildMethods.get(0)))),
         Arguments.of(
             named(
                 "getNamedQuery",
                 new Parameter(
                     "getNamedQuery",
-                    "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    "select Value",
+                  emitStableDatabaseSemconv()
+                    ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
+                    : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                  emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
                     queryBuildMethods.get(1)))),
         Arguments.of(
             named(
@@ -318,16 +310,15 @@ class EntityManagerTest extends AbstractHibernateTest {
                 new Parameter(
                     "createSQLQuery",
                     "SELECT Value",
-                    "SELECT Value",
-                    "SELECT Value",
+                  emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value",
                     queryBuildMethods.get(2)))));
   }
 
   private static class Parameter {
     final String methodName;
     final String resource;
-    final String stableSessionSpanName;
-    final String stableClientSpanName;
+    final String sessionSpanName;
+    final String clientSpanName;
     final boolean attach;
     final boolean flushOnCommit;
     final BiConsumer<EntityManager, Value> sessionMethodTest;
@@ -335,14 +326,13 @@ class EntityManagerTest extends AbstractHibernateTest {
 
     Parameter(
         String methodName,
-        String resource,
-        String stableSessionSpanName,
-        String stableClientSpanName,
+        String sessionSpanName,
+        String clientSpanName,
         Function<EntityManager, Query> queryBuildMethod) {
       this.methodName = methodName;
-      this.resource = resource;
-      this.stableSessionSpanName = stableSessionSpanName;
-      this.stableClientSpanName = stableClientSpanName;
+      this.resource = sessionSpanName;
+      this.sessionSpanName = sessionSpanName;
+      this.clientSpanName = clientSpanName;
       this.attach = false;
       this.flushOnCommit = false;
       this.sessionMethodTest = null;
@@ -357,8 +347,8 @@ class EntityManagerTest extends AbstractHibernateTest {
         BiConsumer<EntityManager, Value> sessionMethodTest) {
       this.methodName = methodName;
       this.resource = resource;
-      this.stableSessionSpanName = resource;
-      this.stableClientSpanName = null;
+      this.sessionSpanName = resource;
+      this.clientSpanName = null;
       this.attach = attach;
       this.flushOnCommit = flushOnCommit;
       this.sessionMethodTest = sessionMethodTest;

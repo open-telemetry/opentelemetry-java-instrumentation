@@ -251,7 +251,7 @@ class SessionTest extends AbstractHibernateTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), expectedQuerySpanName(parameter)),
+                span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
@@ -647,7 +647,9 @@ class SessionTest extends AbstractHibernateTest {
                 "createQuery",
                 new Parameter(
                     "createQuery",
-                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
+                    emitStableDatabaseSemconv()
+                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value"
+                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
                     queryBuildMethods.get(0),
                     null,
                     null))),
@@ -656,7 +658,9 @@ class SessionTest extends AbstractHibernateTest {
                 "getNamedQuery",
                 new Parameter(
                     "getNamedQuery",
-                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
+                    emitStableDatabaseSemconv()
+                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value"
+                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
                     queryBuildMethods.get(1),
                     null,
                     null))),
@@ -670,17 +674,12 @@ class SessionTest extends AbstractHibernateTest {
                 "createSelectionQuery",
                 new Parameter(
                     "createSelectionQuery",
-                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
+                                        emitStableDatabaseSemconv()
+                                                ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value"
+                                                : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value",
                     queryBuildMethods.get(3),
                     null,
                     null))));
-  }
-
-  private static String expectedQuerySpanName(Parameter parameter) {
-    if (emitStableDatabaseSemconv() || !parameter.resource.startsWith("select ")) {
-      return parameter.resource;
-    }
-    return "SELECT " + parameter.resource.substring("select ".length());
   }
 
   private static class Parameter {
