@@ -160,7 +160,8 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
     AttributeKey<T> agentKey = convertExtendedAttributeKey(key);
     if (agentKey != null) {
       if (key.getType() == EXTENDED_ATTRIBUTES) {
-        // This cast is safe: for EXTENDED_ATTRIBUTES we convert application ExtendedAttributes to an agent Value<?>, and the generic type is erased at runtime.
+        // This cast is safe: for EXTENDED_ATTRIBUTES we convert application ExtendedAttributes to
+        // an agent Value<?>, and the generic type is erased at runtime.
         value =
             (T)
                 convertExtendedAttributesValue(

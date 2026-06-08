@@ -34,6 +34,9 @@ public class OpenTelemetryApiIncubatorInstrumentationModule
             // added in 1.40
             "application.io.opentelemetry.api.incubator.logs.ExtendedLogger")
         .and(
+            // removed in 1.47
+            not(hasClassesNamed("application.io.opentelemetry.api.incubator.events.EventLogger")))
+        .and(
             // added in 1.50
             not(
                 hasClassesNamed(
