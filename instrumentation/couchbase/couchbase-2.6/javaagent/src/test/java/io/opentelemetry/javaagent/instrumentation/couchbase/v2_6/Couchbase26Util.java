@@ -25,7 +25,7 @@ import java.util.List;
 public class Couchbase26Util {
 
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
-        Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
 
   public static DefaultCouchbaseEnvironment.Builder envBuilder(
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
