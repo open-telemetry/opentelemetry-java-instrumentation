@@ -334,7 +334,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       String traceId = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceIdKey());
       String spanId = contextDataAccessor.getValue(contextData, contextDataKeys.getSpanIdKey());
       String traceFlags =
-          contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlags());
+          contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlagsKey());
       if (traceId != null && spanId != null && traceFlags != null) {
         context =
             Context.root()

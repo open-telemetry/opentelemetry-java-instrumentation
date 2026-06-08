@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -21,6 +22,7 @@ import java.util.logging.Logger;
  */
 public final class CommonConfig {
   private static final Logger logger = Logger.getLogger(CommonConfig.class.getName());
+  private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
 
   private final List<String> clientRequestHeaders;
   private final List<String> clientResponseHeaders;
@@ -131,13 +133,15 @@ public final class CommonConfig {
     }
     value = config.getString(oldDeclarativeKey);
     if (value != null) {
-      logger.warning(
-          "The "
-              + oldProperty
-              + " setting and the equivalent declarative configuration property"
-              + " are deprecated and will be removed in 3.0. Use "
-              + newProperty
-              + " or equivalent declarative configuration instead.");
+      if (warnedDeprecatedProperties.add(oldProperty)) {
+        logger.warning(
+            "The "
+                + oldProperty
+                + " setting and the equivalent declarative configuration property"
+                + " are deprecated and will be removed in 3.0. Use "
+                + newProperty
+                + " or equivalent declarative configuration instead.");
+      }
       return value;
     }
     return defaultValue;
