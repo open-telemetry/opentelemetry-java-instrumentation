@@ -236,6 +236,7 @@ readonly INSTRUMENTATIONS=(
   "rediscala-1.8:javaagent:test"
   "rediscala-1.8:javaagent:testStableSemconv"
   "redisson:redisson-3.0:javaagent:test"
+  "redisson:redisson-3.0:javaagent:testStableSemconv"
   "redisson:redisson-3.17:javaagent:test"
   "redisson:redisson-3.17:javaagent:testStableSemconv"
   "restlet:restlet-1.1:library:test"

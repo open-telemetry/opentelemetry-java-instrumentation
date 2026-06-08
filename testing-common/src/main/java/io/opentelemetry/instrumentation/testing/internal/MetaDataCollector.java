@@ -68,7 +68,8 @@ public class MetaDataCollector {
   }
 
   private static String extractInstrumentationPath(String path) {
-    Matcher matcher = MODULE_PATTERN.matcher(path);
+    String normalizedPath = path.replace('\\', '/');
+    Matcher matcher = MODULE_PATTERN.matcher(normalizedPath);
     if (!matcher.find()) {
       throw new IllegalArgumentException("Invalid path: " + path);
     }
