@@ -121,9 +121,7 @@ class SessionTest extends AbstractHibernateTest {
                         "Session." + parameter.methodName + " " + parameter.resource),
                 span ->
                     assertClientSpan(
-                        span,
-                        trace.getSpan(1),
-                        emitStableDatabaseSemconv() ? "select" : "SELECT"),
+                        span, trace.getSpan(1), emitStableDatabaseSemconv() ? "select" : "SELECT"),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -293,9 +291,7 @@ class SessionTest extends AbstractHibernateTest {
                         trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
                 span ->
                     assertClientSpan(
-                        span,
-                        trace.getSpan(5),
-                        emitStableDatabaseSemconv() ? "insert" : "INSERT"),
+                        span, trace.getSpan(5), emitStableDatabaseSemconv() ? "insert" : "INSERT"),
                 span ->
                     assertClientSpan(
                         span,

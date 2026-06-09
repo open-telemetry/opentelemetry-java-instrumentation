@@ -54,9 +54,7 @@ class CriteriaTest extends AbstractHibernateTest {
                             + " io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
                 span ->
                     assertClientSpan(
-                        span,
-                        trace.getSpan(1),
-                        emitStableDatabaseSemconv() ? "select" : "SELECT"),
+                        span, trace.getSpan(1), emitStableDatabaseSemconv() ? "select" : "SELECT"),
                 span ->
                     assertSpanWithSessionId(
                         span,
