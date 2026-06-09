@@ -675,6 +675,7 @@ class SqlQueryAnalyzerTest {
 
         // hibernate/jpa
         Arguments.of("from schema.table", expect("SELECT", "schema.table", "select schema.table")),
+        Arguments.of("FROM schema.table", expect("SELECT", "schema.table", "SELECT schema.table")),
         Arguments.of(
             "/* update comment */ from table1", expect("SELECT", "table1", "select table1")),
 

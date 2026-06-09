@@ -974,7 +974,9 @@ WHITESPACE           = [ \t\r\n]+
               // hql/jpql queries may skip SELECT and start with FROM clause
               // treat such queries as SELECT queries
               setOperation(new Select());
-              appendOperationToSummary("select");
+              // Derive the synthetic SELECT case from the matched FROM token.
+              appendOperationToSummary(
+                  Character.isUpperCase(zzBuffer[zzStartRead]) ? "SELECT" : "select");
             }
             operation.handleFrom();
           }
