@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -36,6 +38,7 @@ public class VertxSqlInstrumenterFactory {
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(attributesGetter, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
 
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

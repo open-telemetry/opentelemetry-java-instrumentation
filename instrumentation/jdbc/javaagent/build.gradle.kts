@@ -111,6 +111,20 @@ tasks {
     jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("SlickTest")
+      excludeTestsMatching("SqlCommenterTest")
+      excludeTestsMatching("PreparedStatementParametersTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
   test {
     filter {
       excludeTestsMatching("SlickTest")
@@ -126,6 +140,7 @@ tasks {
     dependsOn(testStableSemconv)
     dependsOn(testSlickStableSemconv)
     dependsOn(testCaptureParameters)
+    dependsOn(testExceptionSignalLogs)
   }
 }
 
