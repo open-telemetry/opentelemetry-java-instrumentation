@@ -1064,7 +1064,7 @@ class SqlQueryAnalyzerTest {
                 "create table users (password VARCHAR(?))",
                 "CREATE table",
                 "users",
-                "CREATE table users")),
+                "create table users")),
         Arguments.of(
             "ALTER TABLE users ADD COLUMN password VARCHAR(255)",
             expect(
@@ -1078,7 +1078,7 @@ class SqlQueryAnalyzerTest {
                 "alter table users ADD COLUMN password VARCHAR(?)",
                 "ALTER table",
                 "users",
-                "ALTER table users")),
+                "alter table users")),
         Arguments.of(
             "ALTER TABLE user ADD COLUMN name VARCHAR(255)",
             expect(
