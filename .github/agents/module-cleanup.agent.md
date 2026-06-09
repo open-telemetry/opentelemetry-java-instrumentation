@@ -370,8 +370,8 @@ Execute these steps strictly in order — do not reorder:
    ./gradlew :<module-path>:check -PtestLatestDeps=true
    ```
 
-    Run these as two separate serial executions. Do not start the second command until the
-    first command has fully completed and its final exit status is known.
+   Run these as two separate serial executions. Do not start the second command until the
+   first command has fully completed and its final exit status is known.
 
    The first run exercises the default test suites (`test`, `testExperimental`, and any other
    custom test tasks wired into `check`). The second run activates `latestDepTest`, which

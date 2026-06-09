@@ -232,8 +232,7 @@ class EmittedScopeParserTest {
   }
 
   @Test
-  void testGetScopeUsesSingleNonSdkScopeWhenDefaultDoesNotMatch(@TempDir Path tempDir)
-      throws IOException {
+  void testGetScopeMatchesVersionStrippedModuleName(@TempDir Path tempDir) throws IOException {
     Path instrumentationDir = tempDir.resolve("test-instrumentation");
     Path telemetryDir = instrumentationDir.resolve(".telemetry");
     Files.createDirectories(telemetryDir);
@@ -259,6 +258,38 @@ class EmittedScopeParserTest {
 
     assertThat(scopeInfo).isNotNull();
     assertThat(scopeInfo.getName()).isEqualTo("io.opentelemetry.oshi");
+  }
+
+  @Test
+  void testGetScopeIgnoresBorrowedScopeFromAnotherInstrumentation(@TempDir Path tempDir)
+      throws IOException {
+    // reactor-netty-0.9 emits no telemetry of its own; its tests exercise netty-4.1.
+    Path instrumentationDir = tempDir.resolve("test-instrumentation");
+    Path telemetryDir = instrumentationDir.resolve(".telemetry");
+    Files.createDirectories(telemetryDir);
+
+    String scopeContent =
+        """
+        scopes:
+          - name: io.opentelemetry.sdk.metrics
+            version: null
+            schemaUrl: null
+          - name: io.opentelemetry.netty-4.1
+            version: 2.14.0
+            schemaUrl: null
+        """;
+
+    Files.writeString(telemetryDir.resolve("scope-abc123.yaml"), scopeContent);
+
+    FileManager fileManager = new FileManager(tempDir + "/");
+    InstrumentationModule module =
+        new InstrumentationModule.Builder("reactor-netty-0.9")
+            .srcPath("test-instrumentation")
+            .build();
+
+    InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
+
+    assertThat(scopeInfo).isNull();
   }
 
   @Test

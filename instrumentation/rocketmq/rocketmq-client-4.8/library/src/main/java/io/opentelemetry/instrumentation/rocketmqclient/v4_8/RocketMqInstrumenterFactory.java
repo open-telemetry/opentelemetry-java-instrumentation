@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor.constant;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -52,6 +54,7 @@ class RocketMqInstrumenterFactory {
       instrumenterBuilder.addAttributesExtractor(
           new RocketMqProducerExperimentalAttributeExtractor());
     }
+    setMessagingSendExceptionEventExtractor(instrumenterBuilder);
 
     return instrumenterBuilder.buildProducerInstrumenter(new MapSetter());
   }
@@ -95,6 +98,7 @@ class RocketMqInstrumenterFactory {
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new RocketMqConsumerExperimentalAttributeExtractor());
     }
+    setMessagingProcessExceptionEventExtractor(builder);
 
     if (batch) {
       SpanLinksExtractor<MessageExt> spanLinksExtractor =
