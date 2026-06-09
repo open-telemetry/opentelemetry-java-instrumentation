@@ -205,12 +205,20 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     OpenTelemetryAppenderContextDataInjector injector =
         new OpenTelemetryAppenderContextDataInjector();
 
-    StringMap contextData =
-        injector.injectContextData(emptyList(), ContextDataFactory.createContextData());
-    Object otelContext = contextData.getValue(OTEL_CONTEXT_DATA_KEY);
+    Context context = Context.current().with(TEST_CONTEXT_KEY, "context-value");
+    try (Scope ignored = context.makeCurrent()) {
+      StringMap contextData =
+          injector.injectContextData(emptyList(), ContextDataFactory.createContextData());
+      Context otelContext = contextData.getValue(OTEL_CONTEXT_DATA_KEY);
+      ReadOnlyStringMap rawContextData = injector.rawContextData();
+      Context rawOtelContext = rawContextData.getValue(OTEL_CONTEXT_DATA_KEY);
 
-    assertThat((String) contextData.getValue("delegate-key")).isEqualTo("delegate-value");
-    assertThat(otelContext).isInstanceOf(Context.class);
+      assertThat((String) contextData.getValue("delegate-key")).isEqualTo("delegate-value");
+      assertThat(otelContext.get(TEST_CONTEXT_KEY)).isEqualTo("context-value");
+      assertThat((String) rawContextData.getValue("raw-delegate-key"))
+          .isEqualTo("raw-delegate-value");
+      assertThat(rawOtelContext.get(TEST_CONTEXT_KEY)).isEqualTo("context-value");
+    }
   }
 
   private static class ContextCapturingLogRecordProcessor implements LogRecordProcessor {
@@ -269,7 +277,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
     @Override
     public ReadOnlyStringMap rawContextData() {
-      return ContextDataFactory.createContextData();
+      StringMap rawContextData = ContextDataFactory.createContextData();
+      rawContextData.putValue("raw-delegate-key", "raw-delegate-value");
+      return rawContextData;
     }
   }
 }
