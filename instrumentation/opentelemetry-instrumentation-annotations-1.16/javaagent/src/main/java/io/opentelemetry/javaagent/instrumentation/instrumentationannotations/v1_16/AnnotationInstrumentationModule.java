@@ -28,9 +28,8 @@ public class AnnotationInstrumentationModule extends V3PreviewFallbackEnabledIns
 
   @Override
   public int order() {
-    // Run first to ensure other automatic instrumentation is added after and therefore is executed
-    // earlier in the instrumented method and create the span to attach attributes to.
-    return -1000;
+    // Run after other instrumentations.
+    return 1000;
   }
 
   @Override

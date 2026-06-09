@@ -53,6 +53,14 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     // The agent context debug mechanism isn't compatible with the bridge approach which may add a
@@ -74,7 +82,7 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental, testStableSemconv, testBothSemconv)
+    dependsOn(testExperimental, testStableSemconv, testBothSemconv, testExceptionSignalLogs)
   }
 }
 

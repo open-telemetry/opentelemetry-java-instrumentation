@@ -6,8 +6,8 @@ pluginManagement {
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.3.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
-    id("com.github.bjornvester.xjc") version "1.9.0"
-    id("org.graalvm.buildtools.native") version "1.1.0"
+    id("com.github.bjornvester.xjc") version "1.9.1"
+    id("org.graalvm.buildtools.native") version "1.1.1"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.4.1"
+  id("com.gradle.develocity") version "4.4.2"
 }
 
 dependencyResolutionManagement {
@@ -183,7 +183,7 @@ include(":smoke-tests-otel-starter:spring-boot-reactive-common")
 
 include(":instrumentation:activej-http-6.0:javaagent")
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
-include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
+include(":instrumentation:akka:akka-actor-forkjoin-2.5:javaagent")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:library")
@@ -278,8 +278,8 @@ include(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing")
-include(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent")
-include(":instrumentation:elasticsearch:elasticsearch-transport-common:testing")
+include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent")
+include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing")
 include(":instrumentation:executors:bootstrap")
 include(":instrumentation:executors:javaagent")
 include(":instrumentation:executors:jdk21-testing")
@@ -532,14 +532,14 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.61:testing")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
-include(":instrumentation:opentelemetry-instrumentation-api:javaagent")
-include(":instrumentation:opentelemetry-instrumentation-api:testing")
+include(":instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent")
+include(":instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:testing")
 include(":instrumentation:oracle-ucp-11.2:javaagent")
 include(":instrumentation:oracle-ucp-11.2:library")
 include(":instrumentation:oracle-ucp-11.2:testing")
-include(":instrumentation:oshi:javaagent")
-include(":instrumentation:oshi:library")
-include(":instrumentation:oshi:testing")
+include(":instrumentation:oshi-5.0:javaagent")
+include(":instrumentation:oshi-5.0:library")
+include(":instrumentation:oshi-5.0:testing")
 include(":instrumentation:payara-5.2020:javaagent")
 include(":instrumentation:pekko:pekko-actor-1.0:javaagent")
 include(":instrumentation:pekko:pekko-http-1.0:javaagent")
@@ -553,15 +553,15 @@ include(":instrumentation:play:play-ws:play-ws-common-1.0:testing")
 include(":instrumentation:powerjob-4.0:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent-unit-tests")
-include(":instrumentation:quarkus-resteasy-reactive:javaagent")
-include(":instrumentation:quarkus-resteasy-reactive:quarkus-common-testing")
-includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-common-plugin")
-includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-2.0-plugin")
-include(":instrumentation:quarkus-resteasy-reactive:quarkus-2.0-testing")
-includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-3.0-plugin")
-include(":instrumentation:quarkus-resteasy-reactive:quarkus-3.0-testing")
-includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus-3.9-plugin")
-include(":instrumentation:quarkus-resteasy-reactive:quarkus-3.9-testing")
+include(":instrumentation:quarkus-resteasy-reactive-1.11:javaagent")
+include(":instrumentation:quarkus-resteasy-reactive-1.11:quarkus-common-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive-1.11/quarkus-common-plugin")
+includeBuild("instrumentation/quarkus-resteasy-reactive-1.11/quarkus-2.0-plugin")
+include(":instrumentation:quarkus-resteasy-reactive-1.11:quarkus-2.0-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive-1.11/quarkus-3.0-plugin")
+include(":instrumentation:quarkus-resteasy-reactive-1.11:quarkus-3.0-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive-1.11/quarkus-3.9-plugin")
+include(":instrumentation:quarkus-resteasy-reactive-1.11:quarkus-3.9-testing")
 include(":instrumentation:quartz-2.0:javaagent")
 include(":instrumentation:quartz-2.0:library")
 include(":instrumentation:quartz-2.0:testing")
@@ -615,7 +615,7 @@ include(":instrumentation:rxjava:rxjava-3.1.1:javaagent")
 include(":instrumentation:rxjava:rxjava-3.1.1:library")
 include(":instrumentation:rxjava:rxjava-common-3.0:library")
 include(":instrumentation:rxjava:rxjava-common-3.0:testing")
-include(":instrumentation:scala-fork-join-2.8:javaagent")
+include(":instrumentation:scala-forkjoin-2.8:javaagent")
 include(":instrumentation:servlet:servlet-2.2:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent-testing")
@@ -699,7 +699,7 @@ include(":instrumentation:thrift-0.13:testing")
 include(":instrumentation:tomcat:tomcat-7.0:javaagent")
 include(":instrumentation:tomcat:tomcat-10.0:javaagent")
 include(":instrumentation:tomcat:tomcat-common-7.0:javaagent")
-include(":instrumentation:tomcat:tomcat-jdbc:javaagent")
+include(":instrumentation:tomcat:tomcat-jdbc-8.5:javaagent")
 include(":instrumentation:twilio-6.6:javaagent")
 include(":instrumentation:undertow-1.4:bootstrap")
 include(":instrumentation:undertow-1.4:javaagent")

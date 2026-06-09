@@ -29,6 +29,9 @@ public class JmxMetricInsight {
   private static final Logger logger = Logger.getLogger(JmxMetricInsight.class.getName());
 
   private static final String INSTRUMENTATION_SCOPE = "io.opentelemetry.jmx";
+  // version file is generated from the gradle module name; look it up explicitly so the legacy
+  // scope name still resolves to a version
+  private static final String VERSION_LOOKUP_NAME = "io.opentelemetry.jmx-metrics";
 
   private static final ComponentLoader defaultComponentLoader =
       ComponentLoader.forClassLoader(JmxMetricInsight.class.getClassLoader());
@@ -95,7 +98,8 @@ public class JmxMetricInsight {
         }
       }
 
-      MetricRegistrar registrar = new MetricRegistrar(openTelemetry, INSTRUMENTATION_SCOPE);
+      MetricRegistrar registrar =
+          new MetricRegistrar(openTelemetry, INSTRUMENTATION_SCOPE, VERSION_LOOKUP_NAME);
       BeanFinder finder = new BeanFinder(conf, registrar, handlers, discoveryDelay);
       finder.discoverBeans(connections);
 

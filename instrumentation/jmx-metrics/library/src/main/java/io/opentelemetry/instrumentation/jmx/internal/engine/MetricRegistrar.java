@@ -16,8 +16,10 @@ import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
 import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import java.util.Collection;
 import java.util.Optional;
@@ -36,8 +38,14 @@ class MetricRegistrar implements AutoCloseable {
   private final Meter meter;
   private final Collection<AutoCloseable> instruments = ConcurrentHashMap.newKeySet();
 
-  MetricRegistrar(OpenTelemetry openTelemetry, String instrumentationScope) {
-    meter = openTelemetry.getMeter(instrumentationScope);
+  MetricRegistrar(
+      OpenTelemetry openTelemetry, String instrumentationScope, String versionLookupName) {
+    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationScope);
+    String version = EmbeddedInstrumentationProperties.findVersion(versionLookupName);
+    if (version != null) {
+      meterBuilder.setInstrumentationVersion(version);
+    }
+    meter = meterBuilder.build();
   }
 
   /**

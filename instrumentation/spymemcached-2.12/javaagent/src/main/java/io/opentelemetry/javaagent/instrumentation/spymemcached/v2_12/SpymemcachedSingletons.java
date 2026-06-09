@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -13,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import javax.annotation.Nullable;
@@ -29,8 +32,8 @@ public class SpymemcachedSingletons {
     ServerAttributesExtractor<SpymemcachedRequest, Void> serverAttributesExtractor =
         ServerAttributesExtractor.create(serverAttributesGetter);
 
-    instrumenter =
-        Instrumenter.builder(
+    InstrumenterBuilder<SpymemcachedRequest, Object> builder =
+        Instrumenter.<SpymemcachedRequest, Object>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
@@ -55,8 +58,10 @@ public class SpymemcachedSingletons {
                 })
             .addContextCustomizer(
                 (context, request, attributes) -> SpymemcachedRequestHolder.init(context, request))
-            .addOperationMetrics(DbClientMetrics.get())
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<SpymemcachedRequest, Object> instrumenter() {

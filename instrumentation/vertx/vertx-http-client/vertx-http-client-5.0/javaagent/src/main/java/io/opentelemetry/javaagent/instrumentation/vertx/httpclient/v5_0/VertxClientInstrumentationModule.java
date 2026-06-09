@@ -25,7 +25,7 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 5.0
-    return hasClassesNamed("io.vertx.core.http.impl.HttpClientConnectionInternal");
+    return hasClassesNamed("io.vertx.core.http.HttpClientConnection");
   }
 
   @Override
@@ -33,7 +33,8 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
     return asList(
         new HttpRequestInstrumentation(),
         new HttpClientRequestBaseInstrumentation(),
-        new ResourceManagerInstrumentation(),
+        new HttpClientResponseImplInstrumentation(),
+        new HttpClientImplInstrumentation(),
         new TaskQueueInstrumentation());
   }
 }

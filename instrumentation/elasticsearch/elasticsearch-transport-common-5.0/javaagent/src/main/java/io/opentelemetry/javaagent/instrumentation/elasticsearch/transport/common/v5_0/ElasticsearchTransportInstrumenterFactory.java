@@ -1,0 +1,48 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
+
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import org.elasticsearch.action.ActionResponse;
+
+public class ElasticsearchTransportInstrumenterFactory {
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "elasticsearch")
+          .getBoolean("experimental_span_attributes/development", false);
+
+  public static Instrumenter<ElasticTransportRequest, ActionResponse> create(
+      String instrumentationName,
+      AttributesExtractor<ElasticTransportRequest, ActionResponse> experimentalAttributesExtractor,
+      ElasticsearchTransportAttributesGetter dbClientAttributesGetter) {
+
+    InstrumenterBuilder<ElasticTransportRequest, ActionResponse> instrumenterBuilder =
+        Instrumenter.<ElasticTransportRequest, ActionResponse>builder(
+                GlobalOpenTelemetry.get(),
+                instrumentationName,
+                DbClientSpanNameExtractor.create(dbClientAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(instrumenterBuilder);
+
+    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      instrumenterBuilder.addAttributesExtractor(experimentalAttributesExtractor);
+    }
+
+    return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
+  }
+
+  private ElasticsearchTransportInstrumenterFactory() {}
+}
