@@ -730,7 +730,7 @@ class SqlQueryAnalyzerTest {
                 "metrics.users",
                 "INSERT",
                 "metrics.users",
-                "INSERT metrics.users")),
+                "insert metrics.users")),
         Arguments.of(
             "insert insert into table where lalala", // invalid SQL
             expect("INSERT", "table", "insert table")),
@@ -1345,7 +1345,7 @@ class SqlQueryAnalyzerTest {
             "create table ks.users ( id UUID PRIMARY KEY, name text )",
             "CREATE table",
             "ks.users",
-            "CREATE table ks.users"),
+            "create table ks.users"),
         Arguments.of("CREATE KEYSPACE sync_test", "CREATE", null, "CREATE KEYSPACE"),
         Arguments.of("USE sync_test", "USE", null, "USE sync_test"),
         Arguments.of(
