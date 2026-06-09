@@ -88,6 +88,14 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** Appends an operation name (SELECT, INSERT, etc.) to the query summary. */
+  private void appendOperationToSummary() {
+    if (querySummaryBuilder.length() > 0) {
+      querySummaryBuilder.append(' ');
+    }
+    // yytext() allocates a String; append directly from JFlex's buffer.
+    querySummaryBuilder.append(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
+  }
+
   private void appendOperationToSummary(String operationName) {
     if (querySummaryBuilder.length() > 0) {
       querySummaryBuilder.append(' ');
@@ -257,7 +265,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleSelect() {
       inEmbeddedSelect = true;
       selectParenLevel = parenLevel;
-      appendOperationToSummary("SELECT");
+      appendOperationToSummary();
     }
 
     void handleFrom() {
@@ -427,7 +435,7 @@ WHITESPACE           = [ \t\r\n]+
 
     void handleSelect() {
       operation = new Select();
-      appendOperationToSummary("SELECT");
+      appendOperationToSummary();
     }
 
     void handleIdentifier() {
@@ -450,7 +458,7 @@ WHITESPACE           = [ \t\r\n]+
       // Once we've captured the DELETE table, any SELECT is a subquery
       if (identifierCaptured) {
         operation = new Select();
-        appendOperationToSummary("SELECT");
+        appendOperationToSummary();
       }
     }
 
@@ -482,7 +490,7 @@ WHITESPACE           = [ \t\r\n]+
       // Once we've captured the UPDATE table, any SELECT is a subquery
       if (identifierCaptured) {
         operation = new Select();
-        appendOperationToSummary("SELECT");
+        appendOperationToSummary();
       }
     }
 
@@ -740,10 +748,10 @@ WHITESPACE           = [ \t\r\n]+
             confirmPendingSubqueryIfNeeded();
             if (shouldStartMainOperation()) {
               setOperation(new Select());
-              appendOperationToSummary("SELECT");
+              appendOperationToSummary();
             } else if (operation instanceof Select) {
               // nested SELECT (subquery) - append SELECT to summary
-              appendOperationToSummary("SELECT");
+              appendOperationToSummary();
             }
             operation.handleSelect();
           }
@@ -753,7 +761,7 @@ WHITESPACE           = [ \t\r\n]+
   "INSERT" {
           if (shouldStartMainOperation()) {
             setOperation(new Insert());
-            appendOperationToSummary("INSERT");
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -764,7 +772,7 @@ WHITESPACE           = [ \t\r\n]+
   "DELETE" {
           if (shouldStartMainOperation()) {
             setOperation(new Delete());
-            appendOperationToSummary("DELETE");
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -775,7 +783,7 @@ WHITESPACE           = [ \t\r\n]+
   "UPDATE" {
           if (shouldStartMainOperation()) {
             setOperation(new Update());
-            appendOperationToSummary("UPDATE");
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -786,7 +794,7 @@ WHITESPACE           = [ \t\r\n]+
   "CALL" {
           if (shouldStartNewOperation()) {
             setOperation(new Call());
-            appendOperationToSummary("CALL");
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -797,7 +805,7 @@ WHITESPACE           = [ \t\r\n]+
   "MERGE" {
           if (shouldStartNewOperation()) {
             setOperation(new Merge());
-            appendOperationToSummary("MERGE");
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -808,7 +816,7 @@ WHITESPACE           = [ \t\r\n]+
   "CREATE" {
           if (shouldStartNewOperation()) {
             setOperation(new Create());
-            appendOperationToSummary("CREATE");
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -819,7 +827,7 @@ WHITESPACE           = [ \t\r\n]+
   "DROP" {
           if (shouldStartNewOperation()) {
             setOperation(new Drop());
-            appendOperationToSummary("DROP");
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -830,7 +838,7 @@ WHITESPACE           = [ \t\r\n]+
   "ALTER" {
           if (shouldStartNewOperation()) {
             setOperation(new Alter());
-            appendOperationToSummary("ALTER");
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -846,7 +854,7 @@ WHITESPACE           = [ \t\r\n]+
               setOperation(new Values());
               // Only append VALUES to summary if at top level (not inside a subquery or CTE body)
               if (operationStack.isEmpty()) {
-                appendOperationToSummary("VALUES");
+                appendOperationToSummary();
               }
             }
           }
@@ -856,7 +864,7 @@ WHITESPACE           = [ \t\r\n]+
   "EXECUTE" | "EXEC" {
           if (shouldStartNewOperation()) {
             setOperation(new Execute());
-            appendOperationToSummary(yytext());
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -867,7 +875,7 @@ WHITESPACE           = [ \t\r\n]+
   "TRUNCATE" {
           if (shouldStartNewOperation()) {
             setOperation(new Truncate());
-            appendOperationToSummary("TRUNCATE");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -875,7 +883,7 @@ WHITESPACE           = [ \t\r\n]+
   "REPLACE" {
           if (shouldStartNewOperation()) {
             setOperation(new Replace());
-            appendOperationToSummary("REPLACE");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -883,7 +891,7 @@ WHITESPACE           = [ \t\r\n]+
   "LOCK" {
           if (shouldStartNewOperation()) {
             setOperation(new Lock());
-            appendOperationToSummary("LOCK");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -891,7 +899,7 @@ WHITESPACE           = [ \t\r\n]+
   "USE" {
           if (shouldStartNewOperation()) {
             setOperation(new Use());
-            appendOperationToSummary("USE");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -899,7 +907,7 @@ WHITESPACE           = [ \t\r\n]+
   "BEGIN" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            appendOperationToSummary("BEGIN");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -907,7 +915,7 @@ WHITESPACE           = [ \t\r\n]+
   "COMMIT" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            appendOperationToSummary("COMMIT");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -915,7 +923,7 @@ WHITESPACE           = [ \t\r\n]+
   "ROLLBACK" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            appendOperationToSummary("ROLLBACK");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -923,7 +931,7 @@ WHITESPACE           = [ \t\r\n]+
   "GRANT" {
           if (shouldStartNewOperation()) {
             setOperation(new Grant());
-            appendOperationToSummary("GRANT");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -931,7 +939,7 @@ WHITESPACE           = [ \t\r\n]+
   "REVOKE" {
           if (shouldStartNewOperation()) {
             setOperation(new Revoke());
-            appendOperationToSummary("REVOKE");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -939,7 +947,7 @@ WHITESPACE           = [ \t\r\n]+
   "SHOW" {
           if (shouldStartNewOperation()) {
             setOperation(new Show());
-            appendOperationToSummary("SHOW");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -955,7 +963,7 @@ WHITESPACE           = [ \t\r\n]+
           // EXPLAIN is a prefix command - append to summary but don't set an operation,
           // so the inner statement (SELECT, INSERT, etc.) gets processed normally.
           if (!insideComment && operation == none) {
-            appendOperationToSummary("EXPLAIN");
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -966,7 +974,9 @@ WHITESPACE           = [ \t\r\n]+
               // hql/jpql queries may skip SELECT and start with FROM clause
               // treat such queries as SELECT queries
               setOperation(new Select());
-              appendOperationToSummary("SELECT");
+              // Derive the synthetic SELECT case from the matched FROM token.
+              appendOperationToSummary(
+                  Character.isUpperCase(zzBuffer[zzStartRead]) ? "SELECT" : "select");
             }
             operation.handleFrom();
           }

@@ -71,11 +71,11 @@ dependencies {
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.11.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.9")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.10")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:5.1.0")
-  implementation("net.ltgt.gradle:gradle-nullaway-plugin:3.0.0")
+  implementation("net.ltgt.gradle:gradle-nullaway-plugin:3.1.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
   // Used by otel.spring-native-test-conventions for typed access to the metadata repository
   // extension. Provided at runtime by smoke-test modules that apply this plugin via settings.

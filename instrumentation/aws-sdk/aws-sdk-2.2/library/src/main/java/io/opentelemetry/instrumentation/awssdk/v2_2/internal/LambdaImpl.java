@@ -28,7 +28,11 @@ import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 // manipulate it abstracts that away. The client context field is documented in
 // https://docs.aws.amazon.com/lambda/latest/api/API_Invoke.html#API_Invoke_RequestParameters
 
-final class LambdaImpl {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class LambdaImpl {
   static {
     // Force loading of InvokeRequest; this ensures that an exception is thrown at this point when
     // the Lambda library is not present, which will cause DirectLambdaAccess to have

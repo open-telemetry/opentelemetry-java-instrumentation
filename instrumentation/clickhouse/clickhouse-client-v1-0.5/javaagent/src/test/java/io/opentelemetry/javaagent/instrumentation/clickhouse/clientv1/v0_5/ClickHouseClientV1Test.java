@@ -106,7 +106,7 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test_table"
+                                ? "select test_table"
                                 : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
@@ -118,7 +118,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test_table" : null),
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
@@ -162,7 +162,7 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "INSERT test_table"
+                                ? "insert test_table"
                                 : "INSERT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -176,14 +176,14 @@ class ClickHouseClientV1Test {
                                 "insert into " + TABLE_NAME + " values(?)(?)(?)"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "INSERT test_table" : null),
+                                emitStableDatabaseSemconv() ? "insert test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test_table"
+                                ? "select test_table"
                                 : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -195,7 +195,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test_table" : null),
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
@@ -222,7 +222,7 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test_table"
+                                ? "select test_table"
                                 : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -234,7 +234,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test_table" : null),
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
@@ -262,7 +262,7 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT non_existent_table"
+                                ? "select non_existent_table"
                                 : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
@@ -275,7 +275,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_STATEMENT), "select * from non_existent_table"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT non_existent_table" : null),
+                                emitStableDatabaseSemconv() ? "select non_existent_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -301,7 +301,7 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test_table"
+                                ? "select test_table"
                                 : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -312,7 +312,7 @@ class ClickHouseClientV1Test {
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test_table" : null),
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
@@ -336,7 +336,7 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test_table"
+                                ? "select test_table"
                                 : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -350,7 +350,7 @@ class ClickHouseClientV1Test {
                                 "select * from " + TABLE_NAME + " limit ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test_table" : null),
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
@@ -377,7 +377,7 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "INSERT test_table"
+                                ? "insert test_table"
                                 : "INSERT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -391,14 +391,14 @@ class ClickHouseClientV1Test {
                                 "insert into " + TABLE_NAME + " values(?)(?)(?)"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "INSERT test_table" : null),
+                                emitStableDatabaseSemconv() ? "insert test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test_table"
+                                ? "select test_table"
                                 : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -412,7 +412,7 @@ class ClickHouseClientV1Test {
                                 "select * from " + TABLE_NAME + " limit ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test_table" : null),
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
@@ -454,7 +454,7 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "INSERT test_table"
+                                ? "insert test_table"
                                 : "INSERT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -468,14 +468,14 @@ class ClickHouseClientV1Test {
                                 "insert into " + TABLE_NAME + " values(:val1)(:val2)(:val3)"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "INSERT test_table" : null),
+                                emitStableDatabaseSemconv() ? "insert test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test_table"
+                                ? "select test_table"
                                 : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -489,7 +489,7 @@ class ClickHouseClientV1Test {
                                 "select * from " + TABLE_NAME + " where s=:val"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test_table" : null),
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));
@@ -524,7 +524,7 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test_table"
+                                ? "select test_table"
                                 : "SELECT " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -538,7 +538,7 @@ class ClickHouseClientV1Test {
                                 "select * from " + TABLE_NAME + " where s={s:String}"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test_table" : null),
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"))));

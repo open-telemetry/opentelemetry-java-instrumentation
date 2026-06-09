@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.jmx;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import java.io.IOException;
@@ -26,6 +28,8 @@ public final class JmxTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final MetricConfiguration metricConfiguration;
   private long discoveryDelayMs;
+  private ComponentLoader componentLoader =
+      ComponentLoader.forClassLoader(JmxTelemetryBuilder.class.getClassLoader());
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -84,7 +88,15 @@ public final class JmxTelemetryBuilder {
     }
   }
 
+  /** Sets the {@link ClassLoader} to be used to load SPI implementations. */
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder setServiceClassLoader(ClassLoader serviceClassLoader) {
+    requireNonNull(serviceClassLoader, "serviceClassLoader");
+    this.componentLoader = ComponentLoader.forClassLoader(serviceClassLoader);
+    return this;
+  }
+
   public JmxTelemetry build() {
-    return new JmxTelemetry(openTelemetry, discoveryDelayMs, metricConfiguration);
+    return new JmxTelemetry(openTelemetry, discoveryDelayMs, metricConfiguration, componentLoader);
   }
 }
