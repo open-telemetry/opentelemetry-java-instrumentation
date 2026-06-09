@@ -23,6 +23,21 @@ import org.apache.logging.log4j.util.PropertiesUtil;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 import org.apache.logging.log4j.util.StringMap;
 
+/**
+ * Injects the full OpenTelemetry {@link Context} into Log4j event context data for async logger
+ * handoff.
+ *
+ * <p>This uses Log4j's ContextDataInjector extension point instead of ContextDataProvider because
+ * the appender needs to carry the {@link Context} object itself, not only string key/value pairs.
+ * Although Log4j 2.17 added ContextDataProvider.supplyStringMap(), Log4j does not call it for every
+ * thread context map. In web-app mode, which is enabled by default when the Servlet API is on the
+ * classpath, Log4j disables thread locals and uses DefaultThreadContextMap. That path calls
+ * ContextDataProvider.supplyContextData(), which is limited to Map&lt;String, String&gt;.
+ *
+ * <p>By delegating to Log4j's selected injector first and then adding the {@link Context} object to
+ * the resulting {@link StringMap}, this works for DefaultThreadContextMap, copy-on-write, and
+ * garbage-free thread context maps.
+ */
 public final class OpenTelemetryAppenderContextDataInjector implements ContextDataInjector {
 
   static final String DELEGATE_CONTEXT_DATA_INJECTOR_PROPERTY =
