@@ -153,4 +153,8 @@ otel.instrumentation.log4j-appender.context-data-injector.delegate=com.example.C
 The OpenTelemetry injector will call the delegate injector first, then add the OpenTelemetry
 `Context` to the Log4j event context data.
 
+This adds an internal `otel.internal.context` context data entry to carry the OpenTelemetry `Context`.
+Applications that render all Log4j context data, for example with `%X` or JSON layouts, should
+exclude this key from log output because its value is not stable and may change without notice.
+
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes

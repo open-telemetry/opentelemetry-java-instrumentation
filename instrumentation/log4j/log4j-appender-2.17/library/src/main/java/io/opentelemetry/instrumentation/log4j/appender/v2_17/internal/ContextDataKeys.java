@@ -11,7 +11,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
  */
 public final class ContextDataKeys {
 
-  public static final String OTEL_CONTEXT_DATA_KEY = "otel.context";
+  public static final String OTEL_CONTEXT_DATA_KEY = "otel.internal.context";
 
   private ContextDataKeys() {}
 }
