@@ -201,7 +201,7 @@ Auto-fix boundaries:
   - try-with-resources wrapping most of a test body for an `AutoCloseable` that only
     needs cleanup at test end — convert to `AutoCleanupExtension` with `deferCleanup(...)`.
     Add a `@RegisterExtension static final AutoCleanupExtension cleanup =
-AutoCleanupExtension.create();` field if one does not already exist, then replace
+    AutoCleanupExtension.create();` field if one does not already exist, then replace
     the try-with-resources with `cleanup.deferCleanup(resource);` and un-indent the body.
     Keep try-with-resources for semantically scoped resources whose lifetime must end
     mid-test (e.g., `Scope` / `Context.makeCurrent()`, `MockedStatic`, short-lived
