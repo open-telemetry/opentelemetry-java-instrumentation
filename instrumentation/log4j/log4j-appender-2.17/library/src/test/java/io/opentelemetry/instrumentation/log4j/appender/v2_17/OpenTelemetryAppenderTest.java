@@ -167,7 +167,7 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
   private static class ContextCapturingLogRecordProcessor implements LogRecordProcessor {
 
-    private Context context = Context.root();
+    private volatile Context context = Context.root();
 
     @Override
     public void onEmit(Context context, ReadWriteLogRecord logRecord) {
