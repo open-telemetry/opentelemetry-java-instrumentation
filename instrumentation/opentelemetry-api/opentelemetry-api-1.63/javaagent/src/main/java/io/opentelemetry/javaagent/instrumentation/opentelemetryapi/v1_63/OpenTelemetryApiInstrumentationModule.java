@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_63;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -29,11 +28,7 @@ public class OpenTelemetryApiInstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 1.63
-    return hasClassesNamed("application.io.opentelemetry.api.impl.InstrumentationUtil")
-        .and(
-            // added in 1.42
-            // disable when incubating api is present
-            not(hasClassesNamed("application.io.opentelemetry.api.incubator.logs.ExtendedLogger")));
+    return hasClassesNamed("application.io.opentelemetry.api.impl.InstrumentationUtil");
   }
 
   @Override
