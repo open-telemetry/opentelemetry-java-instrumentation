@@ -37,6 +37,17 @@
       groupName: 'weekly update',
     },
     {
+      // do not update these workflow lockfiles
+      matchManagers: [
+        'github-actions',
+      ],
+      matchFileNames: [
+        '.github/workflows/module-cleanup.lock.yml',
+        '.github/workflows/pr-review.lock.yml',
+      ],
+      enabled: false,
+    },
+    {
       // keep Kotlin Gradle plugin updates out of the catch-all patch PR because CodeQL often
       // fails on them, which blocks unrelated patch updates
       matchDepNames: [
