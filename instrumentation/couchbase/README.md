@@ -2,4 +2,4 @@
 
 | System property                                               | Type    | Default | Description                                                             |
 |---------------------------------------------------------------|---------|---------|-------------------------------------------------------------------------|
-| `otel.instrumentation.couchbase.experimental-span-attributes` | Boolean | `false` | Enables the capture of experimental span attributes (for 2.x versions). |
+| `otel.instrumentation.couchbase.experimental-span-attributes` | Boolean | `false` | Enables experimental span attributes emitted from the underlying Couchbase library. |
