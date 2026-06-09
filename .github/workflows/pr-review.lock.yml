@@ -103,7 +103,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@28ffccfcaa92868c8160807f95519789a590defc # v0.74.0
+        uses: github/gh-aw-actions/setup@abd5e7232716b7981093950afa3930c4a6afe2a4 # v0.79.0
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
@@ -140,7 +140,7 @@ jobs:
             const { main } = require('${{ runner.temp }}/gh-aw/actions/generate_aw_info.cjs');
             await main(core, context);
       - name: Checkout .github and .agents folders
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
           sparse-checkout: |
@@ -373,7 +373,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@28ffccfcaa92868c8160807f95519789a590defc # v0.74.0
+        uses: github/gh-aw-actions/setup@abd5e7232716b7981093950afa3930c4a6afe2a4 # v0.79.0
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
@@ -392,7 +392,7 @@ jobs:
             echo "GH_AW_SAFE_OUTPUTS_TOOLS_PATH=${RUNNER_TEMP}/gh-aw/safeoutputs/tools.json"
           } >> "$GITHUB_OUTPUT"
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - name: Merge remote .github folder
@@ -937,7 +937,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@28ffccfcaa92868c8160807f95519789a590defc # v0.74.0
+        uses: github/gh-aw-actions/setup@abd5e7232716b7981093950afa3930c4a6afe2a4 # v0.79.0
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
@@ -1069,7 +1069,7 @@ jobs:
           GH_HOST="${GITHUB_SERVER_URL#https://}"
           GH_HOST="${GH_HOST#http://}"
           echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -1114,7 +1114,7 @@ jobs:
           GH_HOST="${GITHUB_SERVER_URL#https://}"
           GH_HOST="${GH_HOST#http://}"
           echo "GH_HOST=${GH_HOST}" >> "$GITHUB_ENV"
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -1170,7 +1170,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@28ffccfcaa92868c8160807f95519789a590defc # v0.74.0
+        uses: github/gh-aw-actions/setup@abd5e7232716b7981093950afa3930c4a6afe2a4 # v0.79.0
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
@@ -1218,7 +1218,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@28ffccfcaa92868c8160807f95519789a590defc # v0.74.0
+        uses: github/gh-aw-actions/setup@abd5e7232716b7981093950afa3930c4a6afe2a4 # v0.79.0
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
