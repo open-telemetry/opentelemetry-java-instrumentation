@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LATEST_JAVA_VERSION: 25 # renovate(java-version)
+      PROJECT: ${{ inputs.project }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
@@ -53,17 +54,17 @@ jobs:
 
       - name: Build Java 8 Docker image
         if: "!inputs.skip-java-8"
-        run: ./gradlew ${{ inputs.project }}:jibDockerBuild -Ptag=${{ env.TAG }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew "$PROJECT:jibDockerBuild" -Ptag="$TAG" -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 11 Docker image
         if: "!inputs.skip-java-11"
-        run: ./gradlew ${{ inputs.project }}:jibDockerBuild -Ptag=${{ env.TAG }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew "$PROJECT:jibDockerBuild" -Ptag="$TAG" -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 17 Docker image
-        run: ./gradlew ${{ inputs.project }}:jibDockerBuild -Ptag=${{ env.TAG }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew "$PROJECT:jibDockerBuild" -Ptag="$TAG" -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 21 Docker image
-        run: ./gradlew ${{ inputs.project }}:jibDockerBuild -Ptag=${{ env.TAG }} -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew "$PROJECT:jibDockerBuild" -Ptag="$TAG" -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java ${{ env.LATEST_JAVA_VERSION }} Docker image
-        run: ./gradlew ${{ inputs.project }}:jibDockerBuild -Ptag=${{ env.TAG }} -PtargetJDK=${{ env.LATEST_JAVA_VERSION }} -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew "$PROJECT:jibDockerBuild" -Ptag="$TAG" -PtargetJDK="$LATEST_JAVA_VERSION" -Djib.httpTimeout=120000 -Djib.console=plain
