@@ -57,7 +57,7 @@ jobs:
       - name: Check for diff
         id: diffcheck
         run: |
-          git add docs/instrumentation-list.yaml
+          git add docs/instrumentation-list.yaml docs/declarative-configuration-example.yaml
           if ! git diff --cached --quiet; then
             echo "has_diff=true" >> $GITHUB_OUTPUT
           else
