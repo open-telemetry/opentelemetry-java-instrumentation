@@ -28,12 +28,15 @@ import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.ContextDataInjector;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.impl.ContextDataFactory;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
+import org.apache.logging.log4j.status.StatusData;
+import org.apache.logging.log4j.status.StatusListener;
 import org.apache.logging.log4j.status.StatusLogger;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
 import org.apache.logging.log4j.util.StringMap;
@@ -60,7 +63,6 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   @AfterEach
   void cleanup() {
     OpenTelemetryAppender.resetForTest();
-    StatusLogger.getLogger().clear();
   }
 
   @Override
@@ -163,31 +165,35 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     contextData.putValue(contextDataKeys.getTraceIdKey(), traceId);
     contextData.putValue(contextDataKeys.getSpanIdKey(), spanId);
     contextData.putValue(contextDataKeys.getTraceFlags(), traceFlags);
-    StatusLogger.getLogger().clear();
 
-    appender.append(
-        Log4jLogEvent.newBuilder()
-            .setLoggerName("TestLogger")
-            .setLevel(Level.INFO)
-            .setMessage(new FormattedMessage("log message 1", (Object) null))
-            .setContextData(contextData)
-            .setThreadId(Thread.currentThread().getId() + 1)
-            .setThreadName("application-thread")
-            .build());
+    StatusMessageCollector statusMessages = new StatusMessageCollector();
+    StatusLogger.getLogger().registerListener(statusMessages);
+    try {
+      appender.append(
+          Log4jLogEvent.newBuilder()
+              .setLoggerName("TestLogger")
+              .setLevel(Level.INFO)
+              .setMessage(new FormattedMessage("log message 1", (Object) null))
+              .setContextData(contextData)
+              .setThreadId(Thread.currentThread().getId() + 1)
+              .setThreadName("application-thread")
+              .build());
 
-    SpanContext spanContext =
-        SpanContext.create(
-            traceId, spanId, TraceFlags.fromHex(traceFlags, 0), TraceState.getDefault());
-    testing.waitAndAssertLogRecords(
-        logRecord -> logRecord.hasBody("log message 1").hasSpanContext(spanContext));
-    assertThat(StatusLogger.getLogger().getStatusData())
-        .extracting(statusData -> statusData.getMessage().getFormattedMessage())
-        .anySatisfy(
-            message ->
-                assertThat(message)
-                    .contains(
-                        "recovering span context from Log4j context data",
-                        OpenTelemetryAppenderContextDataInjector.class.getName()));
+      SpanContext spanContext =
+          SpanContext.create(
+              traceId, spanId, TraceFlags.fromHex(traceFlags, 0), TraceState.getDefault());
+      testing.waitAndAssertLogRecords(
+          logRecord -> logRecord.hasBody("log message 1").hasSpanContext(spanContext));
+      assertThat(statusMessages.getMessages())
+          .anySatisfy(
+              message ->
+                  assertThat(message)
+                      .contains(
+                          "recovering span context from Log4j context data",
+                          OpenTelemetryAppenderContextDataInjector.class.getName()));
+    } finally {
+      StatusLogger.getLogger().removeListener(statusMessages);
+    }
   }
 
   @Test
@@ -228,6 +234,28 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
     private Context getContext() {
       return context;
+    }
+  }
+
+  private static class StatusMessageCollector implements StatusListener {
+
+    private final List<String> messages = new CopyOnWriteArrayList<>();
+
+    @Override
+    public void log(StatusData data) {
+      messages.add(data.getMessage().getFormattedMessage());
+    }
+
+    @Override
+    public Level getStatusLevel() {
+      return Level.WARN;
+    }
+
+    @Override
+    public void close() {}
+
+    private List<String> getMessages() {
+      return messages;
     }
   }
 
