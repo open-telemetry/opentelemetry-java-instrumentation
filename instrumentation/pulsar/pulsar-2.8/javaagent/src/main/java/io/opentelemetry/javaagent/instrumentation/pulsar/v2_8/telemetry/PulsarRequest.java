@@ -39,7 +39,8 @@ public class PulsarRequest extends BasePulsarRequest {
     this.message = message;
     // for producer spans message id is not available when the PulsarRequest is created, so we will
     // try to get it later when it's available
-    this.messageId = extractMessageId(message);
+    MessageId id = message.getMessageId();
+    this.messageId = id != null ? id.toString() : null;
   }
 
   public Message<?> getMessage() {
@@ -80,7 +81,7 @@ public class PulsarRequest extends BasePulsarRequest {
       Method method = message.getClass().getMethod(methodName);
       Object result = method.invoke(message);
       return result instanceof MessageId ? (MessageId) result : null;
-    } catch (ReflectiveOperationException ignored) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
@@ -94,7 +95,7 @@ public class PulsarRequest extends BasePulsarRequest {
       Method method = message.getClass().getMethod(methodName);
       Object result = method.invoke(message);
       return result instanceof Message ? (Message<?>) result : null;
-    } catch (ReflectiveOperationException ignored) {
+    } catch (Throwable ignored) {
       return null;
     }
   }
