@@ -8,7 +8,7 @@ from Spring Security `Authentication` objects.
 This module honors the [common `otel.instrumentation.common.enduser.*` properties](https://opentelemetry.io/docs/zero-code/java/agent/instrumentation/#capturing-enduser-attributes)
 and the following properties:
 
-| Property                                                                      | Type    | Default  | Description                                                                                             |
-|-------------------------------------------------------------------------------|---------|----------|---------------------------------------------------------------------------------------------------------|
-| `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix`  | String  | `ROLE_`  | Prefix of granted authorities identifying roles to capture in the `enduser.role` semantic attribute.    |
-| `otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix` | String  | `SCOPE_` | Prefix of granted authorities identifying scopes to capture in the `enduser.scopes` semantic attribute. |
+| Property                                                                      | Type   | Default  | Description                                                                                             |
+| ----------------------------------------------------------------------------- | ------ | -------- | ------------------------------------------------------------------------------------------------------- |
+| `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix`  | String | `ROLE_`  | Prefix of granted authorities identifying roles to capture in the `enduser.role` semantic attribute.    |
+| `otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix` | String | `SCOPE_` | Prefix of granted authorities identifying scopes to capture in the `enduser.scopes` semantic attribute. |

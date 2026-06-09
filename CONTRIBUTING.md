@@ -10,27 +10,27 @@ and discuss your ideas or propose the changes you wish to make.
 
 When your PR introduces a breaking change:
 
-* Add the `breaking change` label to your PR
+- Add the `breaking change` label to your PR
   - If you can't add labels directly, post a comment containing only `/breaking-change` and the label will be added automatically
-* Provide migration notes in the PR description:
+- Provide migration notes in the PR description:
   - What is changing and why
   - How users should update their code/configuration
   - Code examples showing before/after usage (if applicable)
 
 **When to Use:**
 
-* API changes that break backward compatibility
-* Configuration changes that require user action
-* Behavioral changes that might affect existing users
-* Removal of deprecated features
+- API changes that break backward compatibility
+- Configuration changes that require user action
+- Behavioral changes that might affect existing users
+- Removal of deprecated features
 
 ## Deprecations
 
 When your PR deprecates functionality:
 
-* Add the `deprecation` label to your PR
+- Add the `deprecation` label to your PR
   - If you can't add labels directly, post a comment containing only `/deprecation` and the label will be added automatically
-* Provide deprecation details in the PR description:
+- Provide deprecation details in the PR description:
   - What is being deprecated and why
   - What should be used instead (if applicable)
   - Timeline for removal (if known)

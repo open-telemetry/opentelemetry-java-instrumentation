@@ -113,65 +113,65 @@ builder methods.
 
 These metrics are collected via JMX on all Java versions:
 
-| Metric | Description |
-| -------- | ----------- |
-| `jvm.class.count` | Number of classes currently loaded |
-| `jvm.class.loaded` | Number of classes loaded since JVM start |
-| `jvm.class.unloaded` | Number of classes unloaded since JVM start |
-| `jvm.cpu.recent_utilization` | Recent CPU utilization for the process |
-| `jvm.cpu.time` | CPU time used by the process |
-| `jvm.gc.duration` | Duration of JVM garbage collection actions |
-| `jvm.memory.committed` | Measure of memory committed |
-| `jvm.memory.limit` | Measure of max obtainable memory |
-| `jvm.memory.used` | Measure of memory used |
+| Metric                          | Description                                                                                     |
+| ------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `jvm.class.count`               | Number of classes currently loaded                                                              |
+| `jvm.class.loaded`              | Number of classes loaded since JVM start                                                        |
+| `jvm.class.unloaded`            | Number of classes unloaded since JVM start                                                      |
+| `jvm.cpu.recent_utilization`    | Recent CPU utilization for the process                                                          |
+| `jvm.cpu.time`                  | CPU time used by the process                                                                    |
+| `jvm.gc.duration`               | Duration of JVM garbage collection actions                                                      |
+| `jvm.memory.committed`          | Measure of memory committed                                                                     |
+| `jvm.memory.limit`              | Measure of max obtainable memory                                                                |
+| `jvm.memory.used`               | Measure of memory used                                                                          |
 | `jvm.memory.used_after_last_gc` | Measure of memory used, as measured after the most recent garbage collection event on this pool |
-| `jvm.thread.count` | Number of executing platform threads |
+| `jvm.thread.count`              | Number of executing platform threads                                                            |
 
 ### Experimental Metrics
 
 #### JMX-based (all Java versions)
 
-| Metric | Description |
-| -------- | ----------- |
-| `jvm.buffer.count` | Number of buffers in the pool |
-| `jvm.buffer.memory.limit` | Measure of total memory capacity of buffers |
-| `jvm.buffer.memory.used` | Measure of memory used by buffers |
-| `jvm.memory.init` | Measure of initial memory requested |
-| `jvm.system.cpu.utilization` | System-wide CPU utilization |
+| Metric                       | Description                                 |
+| ---------------------------- | ------------------------------------------- |
+| `jvm.buffer.count`           | Number of buffers in the pool               |
+| `jvm.buffer.memory.limit`    | Measure of total memory capacity of buffers |
+| `jvm.buffer.memory.used`     | Measure of memory used by buffers           |
+| `jvm.memory.init`            | Measure of initial memory requested         |
+| `jvm.system.cpu.utilization` | System-wide CPU utilization                 |
 
 #### JFR-based (Java 17+ only)
 
-| Metric | Description |
-| -------- | ----------- |
-| `jvm.cpu.context_switch` | Context switch rate |
-| `jvm.cpu.longlock` | Long lock contention |
-| `jvm.memory.allocation` | Memory allocation rate |
-| `jvm.network.io` | Network I/O bytes |
-| `jvm.network.time` | Network I/O time |
+| Metric                   | Description            |
+| ------------------------ | ---------------------- |
+| `jvm.cpu.context_switch` | Context switch rate    |
+| `jvm.cpu.longlock`       | Long lock contention   |
+| `jvm.memory.allocation`  | Memory allocation rate |
+| `jvm.network.io`         | Network I/O bytes      |
+| `jvm.network.time`       | Network I/O time       |
 
 #### JFR-based (Overlap with JMX)
 
 When `experimental.prefer-jfr=true`, the following metrics are sourced from JFR instead of JMX
 (the JMX-based registration is suppressed to avoid duplicates):
 
-| Metric |
-| -------- |
-| `jvm.buffer.count` |
-| `jvm.buffer.memory.limit` |
-| `jvm.buffer.memory.used` |
-| `jvm.class.count` |
-| `jvm.class.loaded` |
-| `jvm.class.unloaded` |
-| `jvm.cpu.count` |
-| `jvm.cpu.recent_utilization` |
-| `jvm.gc.duration` |
-| `jvm.memory.committed` |
-| `jvm.memory.init` |
-| `jvm.memory.limit` |
-| `jvm.memory.used` |
+| Metric                          |
+| ------------------------------- |
+| `jvm.buffer.count`              |
+| `jvm.buffer.memory.limit`       |
+| `jvm.buffer.memory.used`        |
+| `jvm.class.count`               |
+| `jvm.class.loaded`              |
+| `jvm.class.unloaded`            |
+| `jvm.cpu.count`                 |
+| `jvm.cpu.recent_utilization`    |
+| `jvm.gc.duration`               |
+| `jvm.memory.committed`          |
+| `jvm.memory.init`               |
+| `jvm.memory.limit`              |
+| `jvm.memory.used`               |
 | `jvm.memory.used_after_last_gc` |
-| `jvm.system.cpu.utilization` |
-| `jvm.thread.count` |
+| `jvm.system.cpu.utilization`    |
+| `jvm.thread.count`              |
 
 ## Garbage Collector Dependent Metrics
 

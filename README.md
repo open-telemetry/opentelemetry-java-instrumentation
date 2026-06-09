@@ -4,15 +4,15 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-telemetry/opentelemetry-java-instrumentation/badge)](https://scorecard.dev/viewer/?uri=github.com/open-telemetry/opentelemetry-java-instrumentation)
 [![Slack](https://img.shields.io/badge/slack-@cncf/otel--java-blue.svg?logo=slack)](https://cloud-native.slack.com/archives/C014L2KCTE3)
 
-* [About](#about)
-* [Getting Started](#getting-started)
-* [Configuring the Agent](#configuring-the-agent)
-* [Supported libraries, frameworks, and application servers](#supported-libraries-frameworks-and-application-servers)
-* [Creating agent extensions](#creating-agent-extensions)
-* [Manually instrumenting](#manually-instrumenting)
-* [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
-* [Troubleshooting](#troubleshooting)
-* [Contributing](#contributing)
+- [About](#about)
+- [Getting Started](#getting-started)
+- [Configuring the Agent](#configuring-the-agent)
+- [Supported libraries, frameworks, and application servers](#supported-libraries-frameworks-and-application-servers)
+- [Creating agent extensions](#creating-agent-extensions)
+- [Manually instrumenting](#manually-instrumenting)
+- [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 
 ## About
 
@@ -74,10 +74,10 @@ For a detailed list of agent configuration options, see the [agent configuration
 For a detailed list of additional SDK configuration environment variables and system properties,
 see the [SDK configuration docs][config-sdk].
 
-*Note: Config parameter names are very likely to change over time, so please check
+_Note: Config parameter names are very likely to change over time, so please check
 back here when trying out a new version!
 Please [report any bugs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues)
-or unexpected behavior you find.*
+or unexpected behavior you find._
 
 ## Supported libraries, frameworks, and application servers
 
@@ -165,9 +165,6 @@ For more information about the emeritus role, see the [community repository](htt
 </a>
 
 [config-agent]: https://opentelemetry.io/docs/zero-code/java/agent/configuration/
-
 [config-sdk]: https://opentelemetry.io/docs/languages/java/configuration/
-
 [manual]: https://opentelemetry.io/docs/languages/java/instrumentation/#manual-instrumentation
-
 [suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/

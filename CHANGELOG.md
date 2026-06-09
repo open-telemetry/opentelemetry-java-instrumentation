@@ -298,8 +298,8 @@ for more details.
   ([#16750](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16750))
 - Fix unsafe deserialization in RMI instrumentation that could lead to remote code execution
   ([CVE-2026-33701](https://github.com/open-telemetry/opentelemetry-java-instrumentation/security/advisories/GHSA-xw7x-h9fj-p2c7),
-   [#16986](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16986),
-   also released in 2.26.1)
+  [#16986](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16986),
+  also released in 2.26.1)
 - Fix boot loader class injection for `httpurlconnection`, `methods`, and `rmi` instrumentations to
   use `MethodHandles.Lookup` instead of unsafe fallback on JDK 23+.
   ([#17050](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17050))
@@ -365,7 +365,7 @@ for more details.
 
 - Fix unsafe deserialization in RMI instrumentation that could lead to remote code execution
   ([CVE-2026-33701](https://github.com/open-telemetry/opentelemetry-java-instrumentation/security/advisories/GHSA-xw7x-h9fj-p2c7),
-   [#16979](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16979))
+  [#16979](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16979))
 
 ## Version 2.26.0 (2026-03-14)
 
@@ -387,15 +387,15 @@ for more details.
   ([#16205](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16205))
 - Merge network/server getter methods into DB attribute getters
   ([#16264](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16264),
-   [#16268](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16268))
+  [#16268](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16268))
 - Rename SQL sanitizer classes to SQL analyzer
   ([#16269](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16269))
 - Rename internal common module packages to follow new naming convention
   ([#16284](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16284),
-   [#16308](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16308),
-   [#16327](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16327),
-   [#16341](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16341),
-   [#16373](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16373))
+  [#16308](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16308),
+  [#16327](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16327),
+  [#16341](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16341),
+  [#16373](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16373))
 
 ### 🚫 Deprecations
 
@@ -500,10 +500,10 @@ for more details.
   ([#15981](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15981))
 - Remove previously deprecated methods
   ([#15892](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15892),
-   [#15929](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15929),
-   [#15943](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15943),
-   [#15944](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15944),
-   [#15945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15945))
+  [#15929](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15929),
+  [#15943](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15943),
+  [#15944](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15944),
+  [#15945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15945))
 
 ### 🚫 Deprecations
 
@@ -626,29 +626,29 @@ for more details.
   ([#15684](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15684))
 - Improve support for experimental declarative configuration
   ([#15656](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15656),
-   [#15688](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15688),
-   [#15697](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15697),
-   [#15698](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15698),
-   [#15704](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15704),
-   [#15707](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15707),
-   [#15713](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15713),
-   [#15714](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15714),
-   [#15722](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15722),
-   [#15727](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15727),
-   [#15732](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15732),
-   [#15733](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15733),
-   [#15734](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15734),
-   [#15735](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15735),
-   [#15740](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15740),
-   [#15741](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15741),
-   [#15742](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15742),
-   [#15752](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15752),
-   [#15756](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15756),
-   [#15787](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15787),
-   [#15791](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15791),
-   [#15792](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15792),
-   [#15841](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15841),
-   [#15856](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15856))
+  [#15688](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15688),
+  [#15697](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15697),
+  [#15698](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15698),
+  [#15704](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15704),
+  [#15707](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15707),
+  [#15713](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15713),
+  [#15714](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15714),
+  [#15722](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15722),
+  [#15727](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15727),
+  [#15732](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15732),
+  [#15733](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15733),
+  [#15734](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15734),
+  [#15735](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15735),
+  [#15740](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15740),
+  [#15741](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15741),
+  [#15742](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15742),
+  [#15752](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15752),
+  [#15756](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15756),
+  [#15787](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15787),
+  [#15791](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15791),
+  [#15792](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15792),
+  [#15841](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15841),
+  [#15856](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15856))
 - AWS Bedrock: support model IDs with regional prefixes (e.g., `us.`, `global.`) for
   inference profiles
   ([#15751](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15751))
@@ -658,7 +658,7 @@ for more details.
   ([#15825](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15825))
 - Support more of stable database semconv under opt-in flag
   ([#15836](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15836),
-   [#15854](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15854))
+  [#15854](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15854))
 - Move `SpanStatusExtractor.extract()` before `OperationListener.onEnd()` in `Instrumenter`
   ([#15844](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15844))
 
@@ -708,7 +708,7 @@ for more details.
   ([#14917](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14917))
 - Failsafe: add support for `RetryPolicy`
   ([#15255](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15255),
-   [#15537](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15537))
+  [#15537](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15537))
 - GraphQL: add option to disable capturing query documents
   ([#15384](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15384))
 - JMX metrics: allow any classpath resource path in rules
@@ -733,7 +733,7 @@ for more details.
   ([#15500](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15500))
 - Spring WebFlux: support Spring Boot 4
   ([#15502](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15502),
-   [#15574](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15574))
+  [#15574](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15574))
 - Spring WebMVC: support Spring Boot 4
   ([#15525](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15525))
 - Spring Cloud Gateway: support Spring Boot 4
@@ -833,7 +833,7 @@ for more details.
 
 - Avoid Unsafe usage on Java 23+
   ([#14855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14855),
-   [#15091](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15091))
+  [#15091](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15091))
 - Update Azure SDK instrumentation so `az.namespace` can be used for sampling
   ([#15068](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15068))
 - Spring Boot Starter: Add cache to reduce environment variable lookups
@@ -846,12 +846,12 @@ for more details.
   ([#15227](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15227))
 - Added support for Spring Framework 7.0
   ([#15287](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15287),
-   [#15299](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15299),
-   [#15301](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15301),
-   [#15304](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15304),
-   [#15311](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15311),
-   [#15362](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15362),
-   [#15371](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15371))
+  [#15299](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15299),
+  [#15301](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15301),
+  [#15304](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15304),
+  [#15311](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15311),
+  [#15362](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15362),
+  [#15371](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15371))
 - Added span status customizer to incubating InstrumenterCustomizer API
   ([#15288](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15288))
 - Added configuration options for sqlcommenter
@@ -905,7 +905,7 @@ for more details.
     `otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes`
   - Logback appender configuration property: `captureLogstashAttributes` → `captureLogstashMarkerAttributes`
   - Logback appender API: `setCaptureLogstashAttributes()` → `setCaptureLogstashMarkerAttributes()`
-  ([#14959](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14959))
+    ([#14959](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14959))
 
 ### 🌟 New javaagent instrumentation
 
@@ -1044,7 +1044,7 @@ for more details.
   ([#14480](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14480))
 - Declarative config: make bridge usable by Spring starter and contrib
   ([#14497](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14497),
-   [#14548](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14548))
+  [#14548](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14548))
 - Reduce log level for main jar detection
   ([#14528](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14528))
 
@@ -1352,9 +1352,9 @@ for more details.
 - AWS Bedrock instrumentation, following
   [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
-   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
-   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
-   [#13410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13410))
+  [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
+  [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
+  [#13410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13410))
 - ActiveJ HTTP server
   ([#13335](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13335))
 - Spring Pulsar
@@ -1365,9 +1365,9 @@ for more details.
 - AWS Bedrock instrumentation, following
   [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
-   [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
-   [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
-   [#13410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13410))
+  [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
+  [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
+  [#13410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13410))
 
 ### 📈 Enhancements
 
@@ -1435,7 +1435,7 @@ for more details.
 - In preparation for stabilizing HTTP library instrumentation, the classes and methods
   that were deprecated in the prior two releases have now been removed
   ([#13135](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13135),
-   [#13150](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13150))
+  [#13150](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13150))
 - Deprecated Dubbo instrumentation method was removed
   ([#13076](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13076))
 
@@ -1582,7 +1582,7 @@ In preparation for stabilizing HTTP library instrumentation soon:
   ([#12763](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12763))
 - Add database client metrics (when using experimental database semconv stability opt-in)
   ([#12806](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12806),
-   [#12818](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12818))
+  [#12818](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12818))
 - Add dynamodb instrumenter for aws v1_11 sdk
   ([#12756](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12756))
 - Remove public suffixes list from the agent
@@ -2758,7 +2758,7 @@ too disruptive to adopt right away.
   ([#8779](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8779))
 - Make `server.socket.*` attributes on the HTTP server side opt-in
   ([#8747](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8747))
-- Fill additional db.* attributes on DataSource#getConnection()
+- Fill additional db.\* attributes on DataSource#getConnection()
   ([#8966](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8966))
 - Lettuce instrumentation - optimization to avoid extra toString()
   ([#8984](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/8984))

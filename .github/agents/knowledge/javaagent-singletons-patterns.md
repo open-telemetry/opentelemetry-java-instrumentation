@@ -111,7 +111,7 @@ class MyInstrumentation implements TypeInstrumentation {
 
 - Exposed lower camel collaborator fields such as `public static final Instrumenter ...`.
 - Private + accessor wrappers around uppercase constant-like fields when a direct `public static
-  final` field would be clearer and matches the naming guidance, including semantic keys/handles
+final` field would be clearer and matches the naming guidance, including semantic keys/handles
   and immutable value constants.
 - Accessor methods named `getInstrumenter()`, `getHelper()`, `getSetter()`, and similar when they
   simply return a backing field. Do not flag `get*`-prefixed methods that take arguments or

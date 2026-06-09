@@ -25,12 +25,12 @@ modules). Skip them on production sources.
 
 Prefer built-in AssertJ collection/string/map assertions over manual extraction:
 
-| Anti-pattern | Idiomatic |
-| --- | --- |
-| `assertThat(list.size()).isEqualTo(N)` | `assertThat(list).hasSize(N)` |
-| `assertThat(list.isEmpty()).isTrue()` / `.hasSize(0)` | `assertThat(list).isEmpty()` |
-| `assertThat(list.contains(x)).isTrue()` | `assertThat(list).contains(x)` |
-| per-index `get(i)` checks of every element | `assertThat(list).containsExactly(a, b, ...)` |
+| Anti-pattern                                          | Idiomatic                                     |
+| ----------------------------------------------------- | --------------------------------------------- |
+| `assertThat(list.size()).isEqualTo(N)`                | `assertThat(list).hasSize(N)`                 |
+| `assertThat(list.isEmpty()).isTrue()` / `.hasSize(0)` | `assertThat(list).isEmpty()`                  |
+| `assertThat(list.contains(x)).isTrue()`               | `assertThat(list).contains(x)`                |
+| per-index `get(i)` checks of every element            | `assertThat(list).containsExactly(a, b, ...)` |
 
 `containsExactly` already verifies size, so a separate `hasSize` is redundant.
 Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
