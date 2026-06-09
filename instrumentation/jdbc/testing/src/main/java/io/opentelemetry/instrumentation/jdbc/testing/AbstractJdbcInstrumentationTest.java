@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -46,6 +45,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -74,6 +74,7 @@ import org.apache.derby.jdbc.EmbeddedDriver;
 import org.assertj.core.api.ThrowingConsumer;
 import org.h2.jdbcx.JdbcDataSource;
 import org.hsqldb.jdbc.JDBCDriver;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -82,6 +83,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.sqlite.JDBC;
+import org.sqlite.SQLiteDataSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJdbcInstrumentationTest {
@@ -108,12 +111,14 @@ public abstract class AbstractJdbcInstrumentationTest {
       ImmutableMap.of(
           "h2", "jdbc:h2:mem:" + DATABASE_NAME,
           "derby", "jdbc:derby:memory:" + DATABASE_NAME,
-          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
+          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME,
+          "sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
   private static final Map<String, String> JDBC_DRIVER_CLASS_NAMES =
       ImmutableMap.of(
           "h2", "org.h2.Driver",
           "derby", "org.apache.derby.jdbc.EmbeddedDriver",
-          "hsqldb", "org.hsqldb.jdbc.JDBCDriver");
+          "hsqldb", "org.hsqldb.jdbc.JDBCDriver",
+          "sqlite", "org.sqlite.JDBC");
   private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
   private static final Properties connectionProps = new Properties();
   // JDBC Connection pool name (i.e. HikariCP) -> Map<databaseName, Datasource>
@@ -123,6 +128,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     jdbcUserNames.put("derby", "APP");
     jdbcUserNames.put("h2", null);
     jdbcUserNames.put("hsqldb", "SA");
+    jdbcUserNames.put("sqlite", null);
 
     connectionProps.put("databaseName", "someDb");
     connectionProps.put("OPEN_NEW", "true"); // So H2 doesn't complain about username/password.
@@ -243,6 +249,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "hsqldb:mem:",
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
         Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "SELECT 3",
+            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
+        Arguments.of(
             "h2",
             new org.h2.Driver().connect(JDBC_URLS.get("h2"), connectionProps),
             null,
@@ -269,6 +284,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
+        Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), connectionProps),
+            null,
+            "SELECT 3",
+            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
         Arguments.of(
             "h2",
             cpDatasources.get("tomcat").get("h2").getConnection(),
@@ -297,6 +321,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "hsqldb:mem:",
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
         Arguments.of(
+            "sqlite",
+            cpDatasources.get("tomcat").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
+        Arguments.of(
             "h2",
             cpDatasources.get("hikari").get("h2").getConnection(),
             null,
@@ -324,6 +357,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "hsqldb:mem:",
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
         Arguments.of(
+            "sqlite",
+            cpDatasources.get("hikari").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
+        Arguments.of(
             "h2",
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
@@ -350,6 +392,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("c3p0").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
         // stored procedure test
         Arguments.of(
             "h2",
@@ -493,6 +544,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
         Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "SELECT 3",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
+        Arguments.of(
             "h2",
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
@@ -512,6 +572,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("tomcat").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
         Arguments.of(
             "h2",
             cpDatasources.get("hikari").get("h2").getConnection(),
@@ -533,6 +602,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
         Arguments.of(
+            "sqlite",
+            cpDatasources.get("hikari").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
+        Arguments.of(
             "h2",
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
@@ -552,6 +630,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("c3p0").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
         // stored procedure test
         Arguments.of(
             "h2",
@@ -701,6 +788,9 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    // SQLite does not support CallableStatement, so skip this test for SQLite.
+    Assumptions.assumeFalse(system.equalsIgnoreCase("sqlite"));
+
     Connection connection = wrap(conn);
     CallableStatement statement = connection.prepareCall(query);
     cleanup.deferCleanup(statement);
@@ -777,6 +867,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "hsqldb:mem:",
             "PUBLIC.S_HSQLDB"),
         Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "CREATE TABLE S_SQLITE (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_SQLITE"
+                : "CREATE TABLE jdbcunittest.S_SQLITE",
+            "sqlite:memory:",
+            "S_SQLITE"),
+        Arguments.of(
             "h2",
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
@@ -804,6 +904,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "CREATE TABLE PUBLIC.S_HSQLDB_TOMCAT",
             "hsqldb:mem:",
             "PUBLIC.S_HSQLDB_TOMCAT"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("tomcat").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE S_SQLITE_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_SQLITE_TOMCAT"
+                : "CREATE TABLE jdbcunittest.S_SQLITE_TOMCAT",
+            "sqlite:memory:",
+            "S_SQLITE_TOMCAT"),
         Arguments.of(
             "h2",
             cpDatasources.get("hikari").get("h2").getConnection(),
@@ -833,6 +943,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "hsqldb:mem:",
             "PUBLIC.S_HSQLDB_HIKARI"),
         Arguments.of(
+            "sqlite",
+            cpDatasources.get("hikari").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE S_SQLITE_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_SQLITE_HIKARI"
+                : "CREATE TABLE jdbcunittest.S_SQLITE_HIKARI",
+            "sqlite:memory:",
+            "S_SQLITE_HIKARI"),
+        Arguments.of(
             "h2",
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
@@ -859,7 +979,17 @@ public abstract class AbstractJdbcInstrumentationTest {
             "CREATE TABLE PUBLIC.S_HSQLDB_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))",
             "CREATE TABLE PUBLIC.S_HSQLDB_C3P0",
             "hsqldb:mem:",
-            "PUBLIC.S_HSQLDB_C3P0"));
+            "PUBLIC.S_HSQLDB_C3P0"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("c3p0").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE S_SQLITE_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_SQLITE_C3P0"
+                : "CREATE TABLE jdbcunittest.S_SQLITE_C3P0",
+            "sqlite:memory:",
+            "S_SQLITE_C3P0"));
   }
 
   @ParameterizedTest
@@ -929,6 +1059,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "derby:memory:",
             "PS_DERBY"),
         Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "CREATE TABLE PS_SQLITE (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_SQLITE"
+                : "CREATE TABLE jdbcunittest.PS_SQLITE",
+            "sqlite:memory:",
+            "PS_SQLITE"),
+        Arguments.of(
             "h2",
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
@@ -948,6 +1088,16 @@ public abstract class AbstractJdbcInstrumentationTest {
                 : "CREATE TABLE jdbcunittest.PS_DERBY_TOMCAT",
             "derby:memory:",
             "PS_DERBY_TOMCAT"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("tomcat").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE PS_SQLITE_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_SQLITE_TOMCAT"
+                : "CREATE TABLE jdbcunittest.PS_SQLITE_TOMCAT",
+            "sqlite:memory:",
+            "PS_SQLITE_TOMCAT"),
         Arguments.of(
             "h2",
             cpDatasources.get("hikari").get("h2").getConnection(),
@@ -969,6 +1119,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "derby:memory:",
             "PS_DERBY_HIKARI"),
         Arguments.of(
+            "sqlite",
+            cpDatasources.get("hikari").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE PS_SQLITE_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_SQLITE_HIKARI"
+                : "CREATE TABLE jdbcunittest.PS_SQLITE_HIKARI",
+            "sqlite:memory:",
+            "PS_SQLITE_HIKARI"),
+        Arguments.of(
             "h2",
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
@@ -987,7 +1147,17 @@ public abstract class AbstractJdbcInstrumentationTest {
                 ? "CREATE TABLE PS_DERBY_C3P0"
                 : "CREATE TABLE jdbcunittest.PS_DERBY_C3P0",
             "derby:memory:",
-            "PS_DERBY_C3P0"));
+            "PS_DERBY_C3P0"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("c3p0").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE PS_SQLITE_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_SQLITE_C3P0"
+                : "CREATE TABLE jdbcunittest.PS_SQLITE_C3P0",
+            "sqlite:memory:",
+            "PS_SQLITE_C3P0"));
   }
 
   @ParameterizedTest
@@ -1062,7 +1232,17 @@ public abstract class AbstractJdbcInstrumentationTest {
             "CREATE TABLE PUBLIC.PS_LARGE_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))",
             "CREATE TABLE PUBLIC.PS_LARGE_HSQLDB",
             "hsqldb:mem:",
-            "PUBLIC.PS_LARGE_HSQLDB"));
+            "PUBLIC.PS_LARGE_HSQLDB"),
+        Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "CREATE TABLE PS_LARGE_SQLITE (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_LARGE_SQLITE"
+                : "CREATE TABLE jdbcunittest.PS_LARGE_SQLITE",
+            "sqlite:memory:",
+            "PS_LARGE_SQLITE"));
   }
 
   @ParameterizedTest
@@ -1078,7 +1258,8 @@ public abstract class AbstractJdbcInstrumentationTest {
       throws SQLException {
     Connection connection = wrap(conn);
 
-    if (testLatestDeps()) {
+    // SQLite is only tested with a current driver that supports JDBC 4.2 large updates.
+    if (testLatestDeps() || "sqlite".equals(system)) {
       testPreparedStatementUpdateImpl(
           system,
           connection,
@@ -1211,7 +1392,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     try {
       connection = new TestConnection(true);
     } catch (Exception ignored) {
-      connection = driver.connect(jdbcUrl, null);
+      connection = driver.connect(jdbcUrl, new Properties());
     }
     connection = wrap(connection);
     cleanup.deferCleanup(connection);
@@ -1278,12 +1459,21 @@ public abstract class AbstractJdbcInstrumentationTest {
             "derby",
             "APP",
             "derby:memory:"),
+        Arguments.of(
+            new SQLiteDataSource(),
+            (Consumer<DataSource>) ds -> ((SQLiteDataSource) ds).setUrl(JDBC_URLS.get("sqlite")),
+            "sqlite",
+            null,
+            "sqlite:memory:"),
         Arguments.of(cpDatasources.get("hikari").get("h2"), null, "h2", null, "h2:mem:"),
         Arguments.of(
             cpDatasources.get("hikari").get("derby"), null, "derby", "APP", "derby:memory:"),
-        Arguments.of(cpDatasources.get("c3p0").get("h2"), null, "h2", null, "h2:mem:"),
         Arguments.of(
-            cpDatasources.get("c3p0").get("derby"), null, "derby", "APP", "derby:memory:"));
+            cpDatasources.get("hikari").get("sqlite"), null, "sqlite", null, "sqlite:memory:"),
+        Arguments.of(cpDatasources.get("c3p0").get("h2"), null, "h2", null, "h2:mem:"),
+        Arguments.of(cpDatasources.get("c3p0").get("derby"), null, "derby", "APP", "derby:memory:"),
+        Arguments.of(
+            cpDatasources.get("c3p0").get("sqlite"), null, "sqlite", null, "sqlite:memory:"));
   }
 
   @ParameterizedTest(autoCloseArguments = false)
@@ -1319,14 +1509,27 @@ public abstract class AbstractJdbcInstrumentationTest {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
                       asList(
-                          span1 -> span1.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                          span1 ->
-                              span1
-                                  .hasName(
+                          span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                          span ->
+                              span.hasName(
                                       originalDatasourceClass.getSimpleName() + ".getConnection")
                                   .hasKind(SpanKind.INTERNAL)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(attributesAssertions)));
+              // sqlite-jdbc executes extra statements during connection init
+              if (ds instanceof SQLiteDataSource
+                  && testing() instanceof AgentInstrumentationExtension) {
+                assertions.add(
+                    span ->
+                        span.hasName("jdbcunittest")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1)));
+                assertions.add(
+                    span ->
+                        span.hasName("jdbcunittest")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1)));
+              }
               trace.hasSpansSatisfyingExactly(assertions);
             });
   }
@@ -1685,10 +1888,12 @@ public abstract class AbstractJdbcInstrumentationTest {
             "APP",
             "derby:memory:"),
         Arguments.of(
-            "hsqldb",
-            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
-            "SA",
-            "hsqldb:mem:"));
+            "hsqldb", new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null), "SA", "hsqldb:mem:"),
+        Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "sqlite:memory:"));
   }
 
   @ParameterizedTest
@@ -1718,7 +1923,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     statement.addBatch("INSERT INTO simple_batch_test_large VALUES(1)");
     statement.addBatch("INSERT INTO simple_batch_test_large VALUES(2)");
 
-    if (testLatestDeps()) {
+    if (testLatestDeps() || "sqlite".equals(system)) {
       assertThat(statement.executeLargeBatch()).isEqualTo(new long[] {1, 1});
     } else {
       // Older drivers don't support JDBC 4.2, expect UnsupportedOperationException
@@ -2126,10 +2331,12 @@ public abstract class AbstractJdbcInstrumentationTest {
             "APP",
             "derby:memory:"),
         Arguments.of(
-            "hsqldb",
-            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
-            "SA",
-            "hsqldb:mem:"));
+            "hsqldb", new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null), "SA", "hsqldb:mem:"),
+        Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "sqlite:memory:"));
   }
 
   private PreparedStatement wrapPreparedStatement(PreparedStatement statement) {

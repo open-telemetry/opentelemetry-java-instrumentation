@@ -1681,6 +1681,43 @@ class JdbcConnectionUrlParserTest {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 
+  private static Stream<Arguments> sqliteArguments() {
+    return args(
+        arg("jdbc:sqlite:").setShortUrl("sqlite:memory:").setSystem("sqlite").build(),
+        arg("jdbc:sqlite:memory:").setShortUrl("sqlite:memory:").setSystem("sqlite").build(),
+        arg("jdbc:sqlite:file:mydb?mode=memory")
+            .setShortUrl("sqlite:memory:")
+            .setSystem("sqlite")
+            .setName("mydb")
+            .build(),
+        arg("jdbc:sqlite:/tmp/app.db")
+            .setShortUrl("sqlite:file:")
+            .setSystem("sqlite")
+            .setName("app.db")
+            .build(),
+        arg("jdbc:sqlite:file:app.db")
+            .setShortUrl("sqlite:file:")
+            .setSystem("sqlite")
+            .setName("app.db")
+            .build(),
+        arg("jdbc:sqlite:resource:db")
+            .setShortUrl("sqlite:resource:")
+            .setSystem("sqlite")
+            .setName("db")
+            .build(),
+        arg("jdbc:sqlite:resource:dir/db")
+            .setShortUrl("sqlite:resource:")
+            .setSystem("sqlite")
+            .setName("db")
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("sqliteArguments")
+  void testSqliteParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {
     DbInfo info = parse(argument.url, argument.properties);
     DbInfo expected = argument.dbInfo;
