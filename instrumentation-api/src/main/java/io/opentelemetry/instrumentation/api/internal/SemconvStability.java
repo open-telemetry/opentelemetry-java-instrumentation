@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -17,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -43,25 +46,85 @@ public final class SemconvStability {
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
+    DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
     v3Preview = resolveV3Preview(openTelemetry);
+    Set<String> stabilityOptInValues = resolveStabilityOptInValues(generalConfig);
     Set<String> optInValues = resolveOptInValues(openTelemetry, "opt_in");
     Set<String> previewValues = resolveOptInValues(openTelemetry, "preview");
 
-    emitOldDatabaseSemconv = shouldEmitOld("database", v3Preview, optInValues);
-    emitStableDatabaseSemconv = shouldEmitStable("database", v3Preview, optInValues);
+    SemconvSelection databaseSelection =
+        resolveSemconvSelection(
+            generalConfig, "db", "database", v3Preview, stabilityOptInValues, optInValues);
+    emitOldDatabaseSemconv = databaseSelection.emitOld();
+    emitStableDatabaseSemconv = databaseSelection.emitStable();
 
-    emitOldCodeSemconv = shouldEmitOld("code", v3Preview, optInValues);
-    emitStableCodeSemconv = shouldEmitStable("code", v3Preview, optInValues);
+    SemconvSelection codeSelection =
+        resolveSemconvSelection(
+            generalConfig, "code", "code", v3Preview, stabilityOptInValues, optInValues);
+    emitOldCodeSemconv = codeSelection.emitOld();
+    emitStableCodeSemconv = codeSelection.emitStable();
 
     Set<String> nonstableOptInValues = v3Preview ? previewValues : optInValues;
     emitOldServicePeerSemconv = shouldEmitOld("service.peer", false, nonstableOptInValues);
     emitStableServicePeerSemconv = shouldEmitStable("service.peer", false, nonstableOptInValues);
 
-    emitOldRpcSemconv = shouldEmitOld("rpc", false, nonstableOptInValues);
-    emitStableRpcSemconv = shouldEmitStable("rpc", false, nonstableOptInValues);
+    SemconvSelection rpcSelection =
+        resolveSemconvSelection(
+            generalConfig, "rpc", "rpc", false, stabilityOptInValues, nonstableOptInValues);
+    emitOldRpcSemconv = rpcSelection.emitOld();
+    emitStableRpcSemconv = rpcSelection.emitStable();
 
-    emitOldMessagingSemconv = shouldEmitOld("messaging", false, previewValues);
-    emitStableMessagingSemconv = shouldEmitStable("messaging", false, previewValues);
+    SemconvSelection messagingSelection =
+        resolveSemconvSelection(
+            generalConfig, "messaging", "messaging", false, stabilityOptInValues, previewValues);
+    emitOldMessagingSemconv = messagingSelection.emitOld();
+    emitStableMessagingSemconv = messagingSelection.emitStable();
+  }
+
+  static Set<String> resolveStabilityOptInValues(DeclarativeConfigProperties generalConfig) {
+    String value = generalConfig.getString("stability_opt_in_list");
+    if (value == null || value.trim().isEmpty()) {
+      return emptySet();
+    }
+    return asList(value.split(",")).stream()
+        .map(String::trim)
+        .filter(v -> !v.isEmpty())
+        .collect(toSet());
+  }
+
+  static SemconvSelection resolveSemconvSelection(
+      DeclarativeConfigProperties generalConfig,
+      String domainConfigName,
+      String legacyKey,
+      boolean v3Preview,
+      Set<String> stabilityOptInValues,
+      Set<String> legacyFallbackValues) {
+    SemconvSelection domainSelection =
+        resolveDomainSemconvSelection(generalConfig, domainConfigName);
+    if (domainSelection != null) {
+      return domainSelection;
+    }
+    if (!stabilityOptInValues.isEmpty()) {
+      return SemconvSelection.fromFallback(legacyKey, v3Preview, stabilityOptInValues);
+    }
+    return SemconvSelection.fromFallback(legacyKey, v3Preview, legacyFallbackValues);
+  }
+
+  @Nullable
+  static SemconvSelection resolveDomainSemconvSelection(
+      DeclarativeConfigProperties generalConfig, String domainConfigName) {
+    DeclarativeConfigProperties semconvConfig = generalConfig.get(domainConfigName).get("semconv");
+    Integer version = semconvConfig.getInt("version");
+    if (version == null) {
+      return null;
+    }
+    if (version == 0) {
+      return new SemconvSelection(true, false);
+    }
+    if (version == 1) {
+      return new SemconvSelection(semconvConfig.getBoolean("dual_emit", false), true);
+    }
+    return null;
   }
 
   @SuppressWarnings("deprecation") // using deprecated config property fallback
@@ -203,6 +266,29 @@ public final class SemconvStability {
 
   public static boolean emitStableMessagingSemconv() {
     return emitStableMessagingSemconv;
+  }
+
+  static final class SemconvSelection {
+    private final boolean emitOld;
+    private final boolean emitStable;
+
+    private SemconvSelection(boolean emitOld, boolean emitStable) {
+      this.emitOld = emitOld;
+      this.emitStable = emitStable;
+    }
+
+    static SemconvSelection fromFallback(String key, boolean v3Preview, Set<String> values) {
+      return new SemconvSelection(
+          shouldEmitOld(key, v3Preview, values), shouldEmitStable(key, v3Preview, values));
+    }
+
+    boolean emitOld() {
+      return emitOld;
+    }
+
+    boolean emitStable() {
+      return emitStable;
+    }
   }
 
   private SemconvStability() {}
