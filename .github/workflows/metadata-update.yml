@@ -64,21 +64,13 @@ jobs:
             echo "has_diff=false" >> $GITHUB_OUTPUT
           fi
 
-      # the CLA approved bot is only available on the upstream repo; forks fall back to the
-      # default github-actions bot and GITHUB_TOKEN
+      # we need to create the bot token after the workflow is completed to avoid 1 hour expiration
       - name: Use CLA approved github bot
-        if: steps.diffcheck.outputs.has_diff == 'true' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
+        if: steps.diffcheck.outputs.has_diff == 'true'
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - name: Use default github-actions bot (fork)
-        if: steps.diffcheck.outputs.has_diff == 'true' && github.repository != 'open-telemetry/opentelemetry-java-instrumentation'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      # we need to create the bot token after the workflow is completed to avoid 1 hour expiration
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        if: steps.diffcheck.outputs.has_diff == 'true' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
+        if: steps.diffcheck.outputs.has_diff == 'true'
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
@@ -95,7 +87,7 @@ jobs:
       - name: Commit and push changes
         if: steps.diffcheck.outputs.has_diff == 'true'
         env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token || github.token }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
@@ -107,7 +99,7 @@ jobs:
         if: steps.diffcheck.outputs.has_diff == 'true'
         id: createpr
         env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token || github.token }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           PR_EXISTS=$(gh pr list --state open --head "$BRANCH_NAME" --label automation --json url -q '.[0].url')
@@ -126,18 +118,12 @@ jobs:
       - name: Add label to PR
         if: steps.createpr.outputs.new_pr == 'true'
         env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token || github.token }}
-          IS_UPSTREAM: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           PR_URL=$(gh pr list --state open --head "$BRANCH_NAME" --json url -q '.[0].url')
           if [ -n "$PR_URL" ]; then
-            # jaydeluca is only assignable on the upstream repo
-            if [ "$IS_UPSTREAM" = "true" ]; then
-              gh pr edit "$PR_URL" --add-label "automation" --add-assignee jaydeluca
-            else
-              gh pr edit "$PR_URL" --add-label "automation"
-            fi
+            gh pr edit "$PR_URL" --add-label "automation" --add-assignee jaydeluca
           else
             echo "No open PR found for branch $BRANCH_NAME."
           fi
