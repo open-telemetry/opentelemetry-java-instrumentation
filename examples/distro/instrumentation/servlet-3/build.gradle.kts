@@ -37,7 +37,7 @@ dependencies {
     exclude("org.eclipse.jetty", "jetty-server")
   }
 
-  testImplementation("com.squareup.okhttp3:okhttp:5.3.2")
+  testImplementation("com.squareup.okhttp3:okhttp:5.4.0")
   testImplementation("javax.servlet:javax.servlet-api:3.0.1")
   testImplementation("org.eclipse.jetty:jetty-server:8.2.0.v20160908")
   testImplementation("org.eclipse.jetty:jetty-servlet:8.2.0.v20160908")

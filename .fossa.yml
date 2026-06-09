@@ -225,9 +225,6 @@ targets:
       target: ':instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:opentelemetry-instrumentation-api:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:oracle-ucp-11.2:javaagent'
     - type: gradle
       path: ./
@@ -282,7 +279,7 @@ targets:
       target: ':instrumentation:runtime-telemetry:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:scala-fork-join-2.8:javaagent'
+      target: ':instrumentation:scala-forkjoin-2.8:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spark-2.3:javaagent'
@@ -327,7 +324,7 @@ targets:
       target: ':instrumentation:akka:akka-actor-2.3:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:akka:akka-actor-fork-join-2.5:javaagent'
+      target: ':instrumentation:akka:akka-actor-forkjoin-2.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:akka:akka-http-10.0:javaagent'
@@ -850,6 +847,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'

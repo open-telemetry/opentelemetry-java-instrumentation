@@ -124,7 +124,7 @@ Display name is mostly used for UI purposes, and has two main uses:
 - Providing a more user-friendly name for the instrumentation than the module name
   (e.g., "Apache CXF JAX-RS 2.x" instead of "jaxrs-2.0-cxf-3.2").
 - Collapsing multiple related modules into a single display name
-  (e.g., "Akka Actors" for both "akka-actor-2.3" and "akka-actor-fork-join-2.5").
+  (e.g., "Akka Actors" for both "akka-actor-2.3" and "akka-actor-forkjoin-2.5").
 
 ### Description (required)
 
