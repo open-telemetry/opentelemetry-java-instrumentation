@@ -8,7 +8,11 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.common.ComponentLoader;
+import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.management.MBeanServerConnection;
@@ -29,15 +33,14 @@ public class JmxMetricInsight {
   // scope name still resolves to a version
   private static final String VERSION_LOOKUP_NAME = "io.opentelemetry.jmx-metrics";
 
+  private static final ComponentLoader defaultComponentLoader =
+      ComponentLoader.forClassLoader(JmxMetricInsight.class.getClassLoader());
+
   private final OpenTelemetry openTelemetry;
   private final long discoveryDelay;
 
   public static JmxMetricInsight createService(OpenTelemetry ot, long discoveryDelay) {
     return new JmxMetricInsight(ot, discoveryDelay);
-  }
-
-  public static Logger getLogger() {
-    return logger;
   }
 
   private JmxMetricInsight(OpenTelemetry openTelemetry, long discoveryDelay) {
@@ -50,8 +53,8 @@ public class JmxMetricInsight {
    *
    * @param conf metric configuration
    */
-  public void startLocal(MetricConfiguration conf) {
-    start(conf, () -> MBeanServerFactory.findMBeanServer(null));
+  public AutoCloseable startLocal(MetricConfiguration conf) {
+    return start(conf, () -> MBeanServerFactory.findMBeanServer(null), defaultComponentLoader);
   }
 
   /**
@@ -61,9 +64,9 @@ public class JmxMetricInsight {
    * @param connections supplier for list of remote connections
    */
   @SuppressWarnings("unused") // used by jmx-scraper with remote connection
-  public void startRemote(
+  public AutoCloseable startRemote(
       MetricConfiguration conf, Supplier<List<? extends MBeanServerConnection>> connections) {
-    start(conf, connections);
+    return start(conf, connections, defaultComponentLoader);
   }
 
   /**
@@ -72,18 +75,44 @@ public class JmxMetricInsight {
    * @param conf metric configuration
    * @param connections supplier for list of connections (remote or local)
    */
-  public void start(
-      MetricConfiguration conf, Supplier<List<? extends MBeanServerConnection>> connections) {
+  public AutoCloseable start(
+      MetricConfiguration conf,
+      Supplier<List<? extends MBeanServerConnection>> connections,
+      ComponentLoader componentLoader) {
     if (conf.isEmpty()) {
       logger.log(
           FINE,
           "Empty JMX configuration, no metrics will be collected for InstrumentationScope "
               + INSTRUMENTATION_SCOPE);
+      return () -> {};
     } else {
+      Map<String, ExperimentalJmxMetricHandler> handlers = new HashMap<>();
+      for (ExperimentalJmxMetricHandler handler :
+          componentLoader.load(ExperimentalJmxMetricHandler.class)) {
+        String name = handler.getName();
+        if (handlers.putIfAbsent(name, handler) != null) {
+          logger.warning(
+              "Multiple JmxMetricHandlers with the same name found: "
+                  + name
+                  + ". Only one will be used.");
+        }
+      }
+
       MetricRegistrar registrar =
           new MetricRegistrar(openTelemetry, INSTRUMENTATION_SCOPE, VERSION_LOOKUP_NAME);
-      BeanFinder finder = new BeanFinder(registrar, discoveryDelay);
-      finder.discoverBeans(conf, connections);
+      BeanFinder finder = new BeanFinder(conf, registrar, handlers, discoveryDelay);
+      finder.discoverBeans(connections);
+
+      return () -> {
+        try {
+          finder.shutdown();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw e;
+        } finally {
+          registrar.close();
+        }
+      };
     }
   }
 }
