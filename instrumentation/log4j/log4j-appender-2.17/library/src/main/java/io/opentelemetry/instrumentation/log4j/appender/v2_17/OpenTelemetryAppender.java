@@ -445,7 +445,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, String> action) {
       contextData.forEach(
           (key, value) -> {
-            if (!OTEL_CONTEXT_DATA_KEY.equals(key) && value instanceof String) {
+            if (value instanceof String) {
               action.accept(key, (String) value);
             }
           });
