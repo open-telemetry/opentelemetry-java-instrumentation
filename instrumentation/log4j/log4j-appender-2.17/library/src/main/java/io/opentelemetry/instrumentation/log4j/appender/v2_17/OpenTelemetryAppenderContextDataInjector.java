@@ -57,9 +57,9 @@ public final class OpenTelemetryAppenderContextDataInjector implements ContextDa
       } catch (Exception e) {
         StatusLogger.getLogger()
             .warn(
-                "Could not create ContextDataInjector delegate for '{}', using default: {}",
+                "Could not create ContextDataInjector delegate for '{}', using default",
                 className,
-                e.toString());
+                e);
       }
     }
 
