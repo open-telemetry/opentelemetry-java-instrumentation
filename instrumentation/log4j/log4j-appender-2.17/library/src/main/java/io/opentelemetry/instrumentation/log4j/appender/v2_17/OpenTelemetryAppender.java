@@ -377,35 +377,36 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return (Context) context;
     }
     Context currentContext = Context.current();
-    if (v3Preview) {
+    if (currentContext != Context.root()) {
       return currentContext;
     }
 
-    // when using async logger we'll be executing on a different thread than what started logging
-    // reconstruct the context from context data
-    ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
-    ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
-    String traceId = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceIdKey());
-    String spanId = contextDataAccessor.getValue(contextData, contextDataKeys.getSpanIdKey());
-    String traceFlags = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlags());
-    if (traceId != null && spanId != null && traceFlags != null) {
-      warnIfUsingLegacyContextDataForAsyncLoggers(event);
-      return Context.root()
-          .with(
-              Span.wrap(
-                  SpanContext.create(
-                      traceId,
-                      spanId,
-                      TraceFlags.fromHex(traceFlags, 0),
-                      TraceState.getDefault())));
+    if (!v3Preview) {
+      // when using async logger we'll be executing on a different thread than what started logging
+      // reconstruct the context from context data
+      ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
+      ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
+      String traceId = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceIdKey());
+      String spanId = contextDataAccessor.getValue(contextData, contextDataKeys.getSpanIdKey());
+      String traceFlags =
+          contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlags());
+      if (traceId != null && spanId != null && traceFlags != null) {
+        warnIfUsingLegacyContextDataForAsyncLoggers(event);
+        return Context.root()
+            .with(
+                Span.wrap(
+                    SpanContext.create(
+                        traceId,
+                        spanId,
+                        TraceFlags.fromHex(traceFlags, 0),
+                        TraceState.getDefault())));
+      }
     }
     return currentContext;
   }
 
   private void warnIfUsingLegacyContextDataForAsyncLoggers(LogEvent event) {
-    long eventThreadId = event.getThreadId();
-    // Only warn when Log4j captured this event on a different thread from the appender thread.
-    if (eventThreadId <= 0 || eventThreadId == Thread.currentThread().getId()) {
+    if (!wasLoggedOnDifferentThread(event)) {
       return;
     }
     if (legacyContextDataWarningLogged.getAndSet(true)) {
@@ -419,6 +420,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
                 + "log4j2.ContextDataInjector="
                 + OpenTelemetryAppenderContextDataInjector.class.getName()
                 + " to propagate the full OpenTelemetry Context for async loggers.");
+  }
+
+  private static boolean wasLoggedOnDifferentThread(LogEvent event) {
+    long eventThreadId = event.getThreadId();
+    // Only treat this as async handoff when Log4j captured a usable, different thread id.
+    return eventThreadId > 0 && eventThreadId != Thread.currentThread().getId();
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<ReadOnlyStringMap> {
