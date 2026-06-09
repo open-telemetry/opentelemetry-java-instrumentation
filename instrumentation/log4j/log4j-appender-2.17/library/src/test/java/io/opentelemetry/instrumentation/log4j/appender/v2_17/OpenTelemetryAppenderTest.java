@@ -102,6 +102,48 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
+  void logWithCarriedContextFromContextData() {
+    ContextCapturingLogRecordProcessor logRecordProcessor =
+        new ContextCapturingLogRecordProcessor();
+    InMemoryLogRecordExporter logRecordExporter = InMemoryLogRecordExporter.create();
+    OpenTelemetrySdk openTelemetry =
+        OpenTelemetrySdk.builder()
+            .setLoggerProvider(
+                SdkLoggerProvider.builder()
+                    .addLogRecordProcessor(logRecordProcessor)
+                    .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
+                    .build())
+            .build();
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(openTelemetry)
+            .build();
+    appender.start();
+
+    try {
+      StringMap contextData = ContextDataFactory.createContextData();
+      contextData.putValue(
+          OTEL_CONTEXT_DATA_KEY, Context.current().with(TEST_CONTEXT_KEY, "context-value"));
+
+      appender.append(
+          Log4jLogEvent.newBuilder()
+              .setLoggerName("TestLogger")
+              .setLevel(Level.INFO)
+              .setMessage(new FormattedMessage("log message 1", (Object) null))
+              .setContextData(contextData)
+              .build());
+
+      await()
+          .untilAsserted(
+              () -> assertThat(logRecordExporter.getFinishedLogRecordItems()).hasSize(1));
+      assertThat(logRecordProcessor.getContext().get(TEST_CONTEXT_KEY)).isEqualTo("context-value");
+    } finally {
+      openTelemetry.close();
+    }
+  }
+
+  @Test
   void logWithSpanContextFromContextData() {
     assumeFalse(Boolean.getBoolean("otel.instrumentation.common.v3-preview"));
 
