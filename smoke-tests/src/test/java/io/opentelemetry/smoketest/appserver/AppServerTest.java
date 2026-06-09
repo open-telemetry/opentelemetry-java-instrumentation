@@ -51,12 +51,60 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
     var jdk = appServer.jdk();
     isWindows = TestContainerManager.useWindowsContainers();
 
+    // In reduced mode (PR builds), only run a representative subset of the full matrix.
+    // The full matrix runs on merge to main.
+    skipIfNotReduced(appServer);
+
     // ibm-semeru-runtimes doesn't publish windows images
     // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
     assumeFalse(isWindows && jdk.endsWith("-openj9"));
 
     serverVersion = appServer.version();
     startWithoutCleanup(new AppServerImage(jdk, serverVersion, isWindows));
+  }
+
+  // Reduced smoke test rules for PR builds. The full matrix runs on merge to main.
+  // Tomcat covers all JDKs (hotspot), TomEE covers all JDKs (openj9),
+  // Websphere is already minimal, other servers test only minimum JDK on hotspot.
+  private void skipIfNotReduced(AppServer appServer) {
+    if (!Boolean.getBoolean("reducedSmokeTests")) {
+      return;
+    }
+    String jdk = appServer.jdk();
+    boolean isOpenj9 = jdk.contains("-openj9");
+
+    if (this instanceof TomcatSmokeTest) {
+      assumeFalse(isOpenj9, "Reduced mode: Tomcat runs hotspot only");
+      return;
+    }
+    if (this instanceof TomeeSmokeTest) {
+      assumeTrue(isOpenj9, "Reduced mode: TomEE runs openj9 only");
+      return;
+    }
+    if (this instanceof WebsphereSmokeTest) {
+      return;
+    }
+    // All other servers: hotspot only, minimum JDK per server version
+    assumeFalse(isOpenj9, "Reduced mode: hotspot only");
+    assumeTrue(isMinimumJdk(appServer), "Reduced mode: only minimum JDK per server version");
+  }
+
+  private boolean isMinimumJdk(AppServer appServer) {
+    int myJdk = parseJdkVersion(appServer.jdk());
+    for (Class<?> sibling : getClass().getEnclosingClass().getDeclaredClasses()) {
+      AppServer other = sibling.getAnnotation(AppServer.class);
+      if (other != null
+          && other.version().equals(appServer.version())
+          && !other.jdk().contains("-openj9")
+          && parseJdkVersion(other.jdk()) < myJdk) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static int parseJdkVersion(String jdk) {
+    return Integer.parseInt(jdk.split("-")[0]);
   }
 
   @AfterAll

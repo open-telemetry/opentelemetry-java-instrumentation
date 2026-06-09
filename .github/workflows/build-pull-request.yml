@@ -93,7 +93,12 @@ jobs:
     needs: [resolve-native, resolve-servlet-images]
     uses: ./.github/workflows/reusable-pr-build.yml
     with:
+      # `test native` is applied automatically by .github/labeler.yml when the
+      # PR diff touches native-relevant paths. `test openj9`, `test windows`,
+      # and `test full smoke` are manual force-enables that are picked up on
+      # the next PR sync/open/reopen event.
       skip-native-tests: ${{ !(needs.resolve-native.outputs.run-native-tests == 'true' || contains(github.event.pull_request.labels.*.name, 'test native')) }}
       skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
+      reduced-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test full smoke') }}
       skip-servlet-images: ${{ needs.resolve-servlet-images.outputs.build-servlet-images != 'true' }}
