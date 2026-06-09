@@ -179,8 +179,8 @@ Auto-fix boundaries:
     `named("execute")`). Do not remove `isMethod()` when the name could be empty —
     `named("")` matches constructors and static initializers.
   - redundant `this.` qualifier on advice class references inside `transform()` — prefer
-    `getClass().getName() + "$InnerClassName"`, not `this.getClass().getName() +
-"$InnerClassName"`
+    `getClass().getName() + "$InnerClassName"`, not
+    `this.getClass().getName() + "$InnerClassName"`
   - singleton-to-instance-creation conversion for stateless telemetry interface
     implementations (`TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
     `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`) — replace
