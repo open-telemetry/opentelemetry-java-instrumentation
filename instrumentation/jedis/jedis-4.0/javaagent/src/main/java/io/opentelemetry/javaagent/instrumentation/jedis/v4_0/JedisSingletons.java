@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -28,12 +28,20 @@ public class JedisSingletons {
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
+    JedisDbAttributesGetter spanNameAttributesGetter =
+        new JedisDbAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(JedisRequest request) {
+            return null;
+          }
+        };
 
     InstrumenterBuilder<JedisRequest, Void> builder =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                request -> spanName(dbAttributesGetter, request))
+                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
@@ -53,22 +61,6 @@ public class JedisSingletons {
   public static void setConnectionInfo(
       Connection connection, JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
     CONNECTION_INFO.set(connection, JedisConnectionInfo.create(socketFactory, clientConfig));
-  }
-
-  // Redis span names follow DB span-name fallback except db.namespace is not used.
-  private static String spanName(JedisDbAttributesGetter getter, JedisRequest request) {
-    String operationName = getter.getDbOperationName(request);
-    if (!emitStableDatabaseSemconv()) {
-      return operationName;
-    }
-    String serverAddress = getter.getServerAddress(request);
-    if (serverAddress == null) {
-      return operationName;
-    }
-    Integer serverPort = getter.getServerPort(request);
-    return serverPort != null
-        ? operationName + " " + serverAddress + ":" + serverPort
-        : operationName + " " + serverAddress;
   }
 
   private JedisSingletons() {}
