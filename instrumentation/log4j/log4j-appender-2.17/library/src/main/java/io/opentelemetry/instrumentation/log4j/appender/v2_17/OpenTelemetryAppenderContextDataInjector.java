@@ -61,8 +61,12 @@ public final class OpenTelemetryAppenderContextDataInjector implements ContextDa
 
   @Override
   public ReadOnlyStringMap rawContextData() {
+    Context context = Context.current();
+    if (context == Context.root()) {
+      return delegate.rawContextData();
+    }
     StringMap contextData = ContextDataFactory.createContextData(delegate.rawContextData());
-    contextData.putValue(OTEL_CONTEXT_DATA_KEY, Context.current());
+    contextData.putValue(OTEL_CONTEXT_DATA_KEY, context);
     return contextData;
   }
 

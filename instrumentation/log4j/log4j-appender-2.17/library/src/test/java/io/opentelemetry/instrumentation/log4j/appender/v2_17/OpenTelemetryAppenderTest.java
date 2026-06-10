@@ -211,6 +211,11 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     assertThat(rootContextData).isSameAs(TestContextDataInjector.CONTEXT_DATA);
     assertThat(rootOtelContext).isNull();
 
+    ReadOnlyStringMap rootRawContextData = injector.rawContextData();
+    Object rootRawOtelContext = rootRawContextData.getValue(OTEL_CONTEXT_DATA_KEY);
+    assertThat(rootRawContextData).isSameAs(TestContextDataInjector.RAW_CONTEXT_DATA);
+    assertThat(rootRawOtelContext).isNull();
+
     Context context = Context.current().with(TEST_CONTEXT_KEY, "context-value");
     try (Scope ignored = context.makeCurrent()) {
       StringMap contextData =
@@ -276,10 +281,13 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   public static class TestContextDataInjector implements ContextDataInjector {
 
     private static final StringMap CONTEXT_DATA = ContextDataFactory.createContextData();
+    private static final StringMap RAW_CONTEXT_DATA = ContextDataFactory.createContextData();
 
     static {
       CONTEXT_DATA.putValue("delegate-key", "delegate-value");
       CONTEXT_DATA.freeze();
+      RAW_CONTEXT_DATA.putValue("raw-delegate-key", "raw-delegate-value");
+      RAW_CONTEXT_DATA.freeze();
     }
 
     @Override
@@ -289,9 +297,7 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
     @Override
     public ReadOnlyStringMap rawContextData() {
-      StringMap rawContextData = ContextDataFactory.createContextData();
-      rawContextData.putValue("raw-delegate-key", "raw-delegate-value");
-      return rawContextData;
+      return RAW_CONTEXT_DATA;
     }
   }
 }
