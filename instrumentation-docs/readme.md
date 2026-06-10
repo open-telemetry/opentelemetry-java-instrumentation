@@ -88,12 +88,12 @@ Using these structures as examples:
 
 Results in the following:
 
-* Name - the full name of the instrumentation module
-  * `clickhouse-client-05`, `jaxrs-1.0`, `spring-cloud-gateway-2.0`
-* Namespace - direct parent. if none, use name and strip version
-  * `clickhouse-client`, `jaxrs`, `spring-cloud-gateway`
-* Group - top most parent
-  * `clickhouse-client`, `jaxrs`, `spring`
+- Name - the full name of the instrumentation module
+  - `clickhouse-client-05`, `jaxrs-1.0`, `spring-cloud-gateway-2.0`
+- Namespace - direct parent. if none, use name and strip version
+  - `clickhouse-client`, `jaxrs`, `spring-cloud-gateway`
+- Group - top most parent
+  - `clickhouse-client`, `jaxrs`, `spring`
 
 This information is also referenced in `InstrumentationModule` code for each module:
 
@@ -107,75 +107,75 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 
 ## Instrumentation metadata
 
-* classification
-  * `library` - Instrumentation that targets a library
-  * `internal` - Instrumentation that is used internally by the OpenTelemetry Java Agent
-  * `custom` - Utilities that are used to create custom instrumentation
-* name
-  * Identifier for instrumentation module, used to enable/disable
-  * Configured in `InstrumentationModule` code for each module
-* semantic_conventions
-  * The semantic conventions that the instrumentation module adheres to
-  * Options are:
-    * HTTP_CLIENT_SPANS
-    * HTTP_CLIENT_METRICS
-    * HTTP_SERVER_SPANS
-    * HTTP_SERVER_METRICS
-    * RPC_CLIENT_SPANS
-    * RPC_CLIENT_METRICS
-    * RPC_SERVER_SPANS
-    * RPC_SERVER_METRICS
-    * MESSAGING_SPANS
-    * DATABASE_CLIENT_SPANS
-    * DATABASE_CLIENT_METRICS
-    * DATABASE_POOL_METRICS
-    * JVM_RUNTIME_METRICS
-    * GRAPHQL_SERVER_SPANS
-    * FAAS_SERVER_SPANS
-    * GENAI_CLIENT_SPANS
-    * GENAI_CLIENT_METRIC
-* features
-  * The specific functionality that the instrumentation provides
-  * Options are:
-    * HTTP_ROUTE
-    * CONTEXT_PROPAGATION
-    * AUTO_INSTRUMENTATION_SHIM
-    * CONTROLLER_SPANS
-    * VIEW_SPANS
-    * LOGGING_BRIDGE
-    * RESOURCE_DETECTOR
-* library_link
-  * URL to the library or framework's main website or documentation, or if those don't exist, the
-  GitHub repository.
-* source_path
-  * Path to the source code of the instrumentation module
-* minimum_java_version
-  * Minimum Java version required by the instrumentation module. If not specified, it is assumed to
+- classification
+  - `library` - Instrumentation that targets a library
+  - `internal` - Instrumentation that is used internally by the OpenTelemetry Java Agent
+  - `custom` - Utilities that are used to create custom instrumentation
+- name
+  - Identifier for instrumentation module, used to enable/disable
+  - Configured in `InstrumentationModule` code for each module
+- semantic_conventions
+  - The semantic conventions that the instrumentation module adheres to
+  - Options are:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    - RPC_CLIENT_SPANS
+    - RPC_CLIENT_METRICS
+    - RPC_SERVER_SPANS
+    - RPC_SERVER_METRICS
+    - MESSAGING_SPANS
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    - DATABASE_POOL_METRICS
+    - JVM_RUNTIME_METRICS
+    - GRAPHQL_SERVER_SPANS
+    - FAAS_SERVER_SPANS
+    - GENAI_CLIENT_SPANS
+    - GENAI_CLIENT_METRIC
+- features
+  - The specific functionality that the instrumentation provides
+  - Options are:
+    - HTTP_ROUTE
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
+    - CONTROLLER_SPANS
+    - VIEW_SPANS
+    - LOGGING_BRIDGE
+    - RESOURCE_DETECTOR
+- library_link
+  - URL to the library or framework's main website or documentation, or if those don't exist, the
+    GitHub repository.
+- source_path
+  - Path to the source code of the instrumentation module
+- minimum_java_version
+  - Minimum Java version required by the instrumentation module. If not specified, it is assumed to
     be Java 8
-* description
-  * Short description of what the instrumentation does
-* has_standalone_library
-  * Whether the instrumentation module has a standalone library that can be used outside of the agent
-* has_javaagent
-  * Whether the instrumentation module has a javaagent component that can be used with the OpenTelemetry Java Agent
-* target_versions
-  * List of supported versions by the module, broken down by `library` or `javaagent` support
-* scope (See [instrumentation-scope](https://opentelemetry.io/docs/specs/otel/common/instrumentation-scope/)
+- description
+  - Short description of what the instrumentation does
+- has_standalone_library
+  - Whether the instrumentation module has a standalone library that can be used outside of the agent
+- has_javaagent
+  - Whether the instrumentation module has a javaagent component that can be used with the OpenTelemetry Java Agent
+- target_versions
+  - List of supported versions by the module, broken down by `library` or `javaagent` support
+- scope (See [instrumentation-scope](https://opentelemetry.io/docs/specs/otel/common/instrumentation-scope/)
   docs)
-  * name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
-  * schema_url: Location of the telemetry schema that the instrumentation’s emitted telemetry
+  - name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
+  - schema_url: Location of the telemetry schema that the instrumentation’s emitted telemetry
     conforms to. (See [telemetry schema docs](https://opentelemetry.io/docs/specs/otel/schemas/#schema-url))
-  * attributes: The instrumentation scope’s optional attributes provide additional information
+  - attributes: The instrumentation scope’s optional attributes provide additional information
     about the scope.
-* configuration settings
-  * List of settings that are available for the instrumentation module
-  * Each setting has a name (flat property format), optional declarative_name (YAML path format), description, type, default value, and optional examples
-* metrics
-  * List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes.
-  * Separate lists for the metrics emitted by default vs via configuration options.
-* spans
-  * List of spans kinds the instrumentation module generates, including the attributes and their types.
-  * Separate lists for the spans emitted by default vs via configuration options.
+- configuration settings
+  - List of settings that are available for the instrumentation module
+  - Each setting has a name (flat property format), optional declarative_name (YAML path format), description, type, default value, and optional examples
+- metrics
+  - List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes.
+  - Separate lists for the metrics emitted by default vs via configuration options.
+- spans
+  - List of spans kinds the instrumentation module generates, including the attributes and their types.
+  - Separate lists for the spans emitted by default vs via configuration options.
 
 ## Methodology
 

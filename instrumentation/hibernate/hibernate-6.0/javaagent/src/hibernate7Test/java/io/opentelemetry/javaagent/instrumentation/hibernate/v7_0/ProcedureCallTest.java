@@ -111,7 +111,7 @@ class ProcedureCallTest {
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "CALL TEST_PROC" : "CALL test.TEST_PROC")
+                            emitStableDatabaseSemconv() ? "call TEST_PROC" : "CALL test.TEST_PROC")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -124,7 +124,7 @@ class ProcedureCallTest {
                             equalTo(maybeStable(DB_STATEMENT), "{call TEST_PROC()}"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "CALL TEST_PROC" : null),
+                                emitStableDatabaseSemconv() ? "call TEST_PROC" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "CALL"),

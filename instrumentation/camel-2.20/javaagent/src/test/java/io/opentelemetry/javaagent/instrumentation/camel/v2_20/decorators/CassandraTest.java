@@ -133,11 +133,11 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                           .hasAttributesSatisfyingExactly(
                               equalTo(stringKey("camel.uri"), experimental("direct://input"))),
                   span ->
-                      span.hasName("SELECT test.users")
+                      span.hasName("select test.users")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              satisfies(NETWORK_TYPE, val -> val.isInstanceOf(String.class)),
+                              equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, cassandraPort),
                               satisfies(
@@ -148,7 +148,7 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               equalTo(
                                   DB_QUERY_TEXT,
                                   "select * from test.users where id=1 ALLOW FILTERING"),
-                              equalTo(DB_QUERY_SUMMARY, "SELECT test.users"))));
+                              equalTo(DB_QUERY_SUMMARY, "select test.users"))));
     } else {
       testing.waitAndAssertTraces(
           trace ->

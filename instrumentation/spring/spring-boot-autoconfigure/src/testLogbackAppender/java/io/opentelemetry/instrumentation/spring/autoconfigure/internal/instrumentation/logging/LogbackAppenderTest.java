@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
@@ -69,15 +70,33 @@ class LogbackAppenderTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"logback-test.xml", "logback-test-no-mdc.xml"})
-  void shouldInitializeAppender(String configurationFile) {
+  @CsvSource({
+    "logback-test.xml, false",
+    "logback-test-no-mdc.xml, false",
+    "logback-test.xml, true",
+    "logback-test-no-mdc.xml, true"
+  })
+  void shouldInitializeAppender(String configurationFile, boolean declarativeConfig) {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:" + configurationFile);
-    properties.put(
-        "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
-    properties.put(
-        "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
-    properties.put("otel.instrumentation.logback-appender.experimental.capture-template", true);
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.0");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
+          "*");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+          false);
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_template/development",
+          true);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+      properties.put("otel.instrumentation.logback-appender.experimental.capture-template", true);
+    }
 
     SpringApplication app =
         new SpringApplication(
@@ -149,15 +168,27 @@ class LogbackAppenderTest {
     assertThat(testing.logRecords()).isEmpty();
   }
 
-  @Test
-  void mdcAppender() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void mdcAppender(boolean declarativeConfig) {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test.xml");
-    properties.put("otel.instrumentation.logback-appender.enabled", "false");
-    properties.put("otel.instrumentation.logback-mdc.add-baggage", "true");
-    properties.put("otel.instrumentation.common.logging.trace-id", "traceid");
-    properties.put("otel.instrumentation.common.logging.span-id", "spanid");
-    properties.put("otel.instrumentation.common.logging.trace-flags", "traceflags");
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.0");
+      properties.put(
+          "otel.distribution.spring_starter.instrumentation.disabled[0]", "logback_appender");
+      properties.put("otel.instrumentation/development.java.logback_mdc.add_baggage", "true");
+      properties.put("otel.instrumentation/development.java.common.logging.trace_id", "traceid");
+      properties.put("otel.instrumentation/development.java.common.logging.span_id", "spanid");
+      properties.put(
+          "otel.instrumentation/development.java.common.logging.trace_flags", "traceflags");
+    } else {
+      properties.put("otel.instrumentation.logback-appender.enabled", "false");
+      properties.put("otel.instrumentation.logback-mdc.add-baggage", "true");
+      properties.put("otel.instrumentation.common.logging.trace-id", "traceid");
+      properties.put("otel.instrumentation.common.logging.span-id", "spanid");
+      properties.put("otel.instrumentation.common.logging.trace-flags", "traceflags");
+    }
 
     SpringApplication app =
         new SpringApplication(

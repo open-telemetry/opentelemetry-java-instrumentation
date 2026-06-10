@@ -98,8 +98,8 @@ name string**.
     presence condition that happens via a different artifact, use
     `// added in X.Y (via groupId:artifactId A.B)`.
   - For `javax.servlet:javax.servlet-api` and `jakarta.servlet:jakarta.servlet-api`, use the
-    shorthand `Servlet` instead of the full Maven coordinate, for example `// added in Servlet
-    5.0` or `// added in X.Y (via Servlet 5.0)`.
+    shorthand `Servlet` instead of the full Maven coordinate, for example
+    `// added in Servlet 5.0` or `// added in X.Y (via Servlet 5.0)`.
 - **Positive ceiling class** in `hasClassesNamed(...)`: use `// removed in Y.Z`.
   When the landmark class comes from a different artifact than the instrumentation's usual
   library module, choose the form based on what the comment is documenting:
@@ -108,8 +108,8 @@ name string**.
   - If the comment is documenting the main library-module boundary through a class that is
     supplied by a different artifact, use `// removed in Y.Z (via groupId:artifactId A.B)`.
   - For `javax.servlet:javax.servlet-api` and `jakarta.servlet:jakarta.servlet-api`, use the
-    shorthand `Servlet` instead of the full Maven coordinate, for example `// removed in Servlet
-    5.0` or `// removed in Y.Z (via Servlet 5.0)`.
+    shorthand `Servlet` instead of the full Maven coordinate, for example
+    `// removed in Servlet 5.0` or `// removed in Y.Z (via Servlet 5.0)`.
 - **Negated exclusion class** in `not(hasClassesNamed(...))` or
   `.and(not(hasClassesNamed(...)))`: use `// added in Y.Z`, because that class's first
   appearance is what starts excluding `Y.Z+`.
@@ -121,8 +121,8 @@ name string**.
     landmark class is supplied by a different artifact, use
     `// added in Y.Z (via groupId:artifactId A.B)`.
   - For `javax.servlet:javax.servlet-api` and `jakarta.servlet:jakarta.servlet-api`, use the
-    shorthand `Servlet` instead of the full Maven coordinate, for example `// added in Servlet
-    5.0` or `// added in Y.Z (via Servlet 5.0)`.
+    shorthand `Servlet` instead of the full Maven coordinate, for example
+    `// added in Servlet 5.0` or `// added in Y.Z (via Servlet 5.0)`.
 
 You may add brief parenthetical context, but only when it adds interesting, non-duplicative
 signal beyond the version role itself, for example native instrumentation notes, backport
@@ -395,10 +395,10 @@ full coordinate.
     instead of the full Maven coordinate.
   - Single positive class serving as both floor and ceiling → include both boundaries, for
     example `// added in X.Y, removed in Y.Z`.
-  Do not use `// added in` for a **positive** ceiling class, because the upper bound depends on
-  when that class disappeared, not when it first appeared. Conversely, do use `// added in`
-  for a **negated** exclusion class, because its first appearance is what starts the excluded
-  range.
+    Do not use `// added in` for a **positive** ceiling class, because the upper bound depends on
+    when that class disappeared, not when it first appeared. Conversely, do use `// added in`
+    for a **negated** exclusion class, because its first appearance is what starts the excluded
+    range.
 - **Single-class landmark comments are required.** When the entire return expression is a
   single `hasClassesNamed(...)` call with one class (no chaining), use the compact form with
   the version comment above the statement or expression. When matchers are chained (e.g.,

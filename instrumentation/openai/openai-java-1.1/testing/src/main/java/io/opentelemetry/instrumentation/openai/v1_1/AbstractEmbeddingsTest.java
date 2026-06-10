@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
@@ -242,7 +244,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                         span ->
                             span.hasName("embeddings text-embedding-3-small")
                                 .hasKind(SpanKind.CLIENT)
-                                .hasException(thrown)
+                                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
@@ -252,6 +254,8 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     satisfies(
                                         GEN_AI_REQUEST_ENCODING_FORMATS,
                                         val -> val.isIn(singletonList("base64"), null))))));
+
+    getTesting().waitAndAssertLogRecords(genAiClientExceptionLogs(thrown));
 
     getTesting()
         .waitAndAssertMetrics(

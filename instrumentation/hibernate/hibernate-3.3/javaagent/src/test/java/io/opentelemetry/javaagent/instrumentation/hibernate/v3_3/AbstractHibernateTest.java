@@ -31,7 +31,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
@@ -112,8 +111,7 @@ abstract class AbstractHibernateTest {
             equalTo(maybeStable(DB_NAME), "db1"),
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
-            satisfies(
-                maybeStable(DB_STATEMENT), val -> val.startsWith(verb.toLowerCase(Locale.ROOT))),
+            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWithIgnoringCase(verb)),
             equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? verb + " Value" : null),
             equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : verb),
             equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));
