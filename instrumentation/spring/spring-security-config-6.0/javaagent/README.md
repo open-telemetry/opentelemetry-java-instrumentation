@@ -16,8 +16,8 @@ When `otel.instrumentation.common.v3-preview` is enabled, it honors
 
 It also supports the following properties:
 
-| Property                                                                      | Type   | Default | Description                                                                                                                    |
-|-------------------------------------------------------------------------------|--------|---------|--------------------------------------------------------------------------------------------------------------------------------|
+| Property                                                                      | Type   | Default  | Description                                                                                                                                                                                                                       |
+| ----------------------------------------------------------------------------- | ------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix`  | String | `ROLE_` | Prefix of granted authorities identifying roles to capture in the `enduser.role` semantic attribute. This property is not honored when v3 preview is enabled; use the `user.roles` variant instead. |
 | `otel.instrumentation.spring-security.user.roles.granted-authority-prefix`    | String | `ROLE_` | Prefix of granted authorities identifying roles to capture in the `user.roles` semantic attribute when v3 preview is enabled. This property is not honored when v3 preview is disabled; use the `enduser.role` variant instead. |
 | `otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix` | String | `SCOPE_` | Prefix of granted authorities identifying scopes to capture in the `enduser.scope` semantic attribute. This property and the associated attribute are not supported when v3 preview is enabled. |

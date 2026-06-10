@@ -3,7 +3,7 @@
 Here is the list of metrics based on MBeans exposed by Tomcat.
 
 | Metric Name                 | Type          | Unit      | Attributes                                          | Description                                            |
-|-----------------------------|---------------|-----------|-----------------------------------------------------|--------------------------------------------------------|
+| --------------------------- | ------------- | --------- | --------------------------------------------------- | ------------------------------------------------------ |
 | tomcat.session.active.count | UpDownCounter | {session} | tomcat.context                                      | The number of currently active sessions.               |
 | tomcat.session.active.limit | UpDownCounter | {session} | tomcat.context                                      | Maximum possible number of active sessions.            |
 | tomcat.error.count          | Counter       | {error}   | tomcat.request.processor.name                       | The number of errors.                                  |

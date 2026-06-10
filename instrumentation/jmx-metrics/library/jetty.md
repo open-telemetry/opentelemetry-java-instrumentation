@@ -12,7 +12,7 @@ The metrics captured and their respective attributes depend on the Jetty version
 Those metrics require the following Jetty modules to be enabled : `jmx`, `http`, `statistics`, `sessions` and at least one of `ee8-deploy`, `ee9-deploy` or `ee10-deploy`.
 
 | Metric Name             | Type          | Unit        | Attributes    | Description                               |
-|-------------------------|---------------|-------------|---------------|-------------------------------------------|
+| ----------------------- | ------------- | ----------- | ------------- | ----------------------------------------- |
 | jetty.thread.count      | UpDownCounter | {thread}    |               | The current number of threads             |
 | jetty.thread.limit      | UpDownCounter | {thread}    |               | The maximum number of threads in the pool |
 | jetty.thread.busy.count | UpDownCounter | {thread}    |               | The current number of busy threads        |
@@ -28,7 +28,7 @@ Those metrics require the following Jetty modules to be enabled : `jmx`, `http`,
 Those metrics require the following Jetty modules to be enabled : `jmx`, `http` and `stats`.
 
 | Metric Name                 | Type          | Unit        | Attributes    | Description                               |
-|-----------------------------|---------------|-------------|---------------|-------------------------------------------|
+| --------------------------- | ------------- | ----------- | ------------- | ----------------------------------------- |
 | jetty.thread.count          | UpDownCounter | {thread}    |               | The current number of threads             |
 | jetty.thread.limit          | UpDownCounter | {thread}    |               | The maximum number of threads in the pool |
 | jetty.thread.busy.count     | UpDownCounter | {thread}    |               | The current number of busy threads        |
