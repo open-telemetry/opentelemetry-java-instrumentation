@@ -23,23 +23,18 @@ class MultiQuery {
     this.querySummary = querySummary;
   }
 
-  static MultiQuery analyzeWithSummary(
-      Collection<String> rawQueryTexts, SqlDialect dialect, boolean querySanitizationEnabled) {
-    UniqueValue uniqueStoredProcedureName = new UniqueValue();
-    Set<String> uniqueQueryTexts = new LinkedHashSet<>();
-    UniqueValue uniqueQuerySummary = new UniqueValue();
+  static MultiQuery analyzeWithSummary(Collection<String> rawQueryTexts, SqlDialect dialect) {
+    Builder builder = builder();
     for (String rawQueryText : rawQueryTexts) {
       SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
-      uniqueStoredProcedureName.set(analyzedQuery.getStoredProcedureName());
-      uniqueQueryTexts.add(querySanitizationEnabled ? analyzedQuery.getQueryText() : rawQueryText);
-      uniqueQuerySummary.set(analyzedQuery.getQuerySummary());
+      builder.add(analyzedQuery, rawQueryText);
     }
 
-    String querySummary = uniqueQuerySummary.getValue();
-    return new MultiQuery(
-        uniqueStoredProcedureName.getValue(),
-        uniqueQueryTexts,
-        querySummary == null ? "BATCH" : "BATCH " + querySummary);
+    return builder.build();
+  }
+
+  static Builder builder() {
+    return new Builder();
   }
 
   @Nullable
@@ -54,6 +49,26 @@ class MultiQuery {
 
   public Set<String> getQueryTexts() {
     return queryTexts;
+  }
+
+  static class Builder {
+    private final UniqueValue uniqueStoredProcedureName = new UniqueValue();
+    private final Set<String> uniqueQueryTexts = new LinkedHashSet<>();
+    private final UniqueValue uniqueQuerySummary = new UniqueValue();
+
+    void add(SqlQuery analyzedQuery, @Nullable String queryText) {
+      uniqueStoredProcedureName.set(analyzedQuery.getStoredProcedureName());
+      uniqueQueryTexts.add(queryText);
+      uniqueQuerySummary.set(analyzedQuery.getQuerySummary());
+    }
+
+    MultiQuery build() {
+      String querySummary = uniqueQuerySummary.getValue();
+      return new MultiQuery(
+          uniqueStoredProcedureName.getValue(),
+          uniqueQueryTexts,
+          querySummary == null ? "BATCH" : "BATCH " + querySummary);
+    }
   }
 
   private static class UniqueValue {
