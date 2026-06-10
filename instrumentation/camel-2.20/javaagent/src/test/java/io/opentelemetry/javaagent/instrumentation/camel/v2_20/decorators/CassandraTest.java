@@ -147,7 +147,7 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DB_SYSTEM_NAME, CASSANDRA),
                               equalTo(DB_NAMESPACE, "test"),
-                              equalTo(DB_OPERATION_NAME, "SELECT"),
+                              equalTo(DB_OPERATION_NAME, "select"),
                               equalTo(DB_COLLECTION_NAME, "test.users"),
                               equalTo(
                                   DB_QUERY_TEXT,
