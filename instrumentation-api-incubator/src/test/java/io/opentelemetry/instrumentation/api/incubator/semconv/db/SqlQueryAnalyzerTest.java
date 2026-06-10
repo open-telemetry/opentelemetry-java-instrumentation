@@ -1020,7 +1020,7 @@ class SqlQueryAnalyzerTest {
                 null,
                 null,
                 "TRUNCATE TABLE",
-                null,
+                "users",
                 "TRUNCATE TABLE users")),
         Arguments.of(
             "TRUNCATE users",
@@ -1032,7 +1032,7 @@ class SqlQueryAnalyzerTest {
                 null,
                 null,
                 "TRUNCATE TABLE",
-                null,
+                "schema.table",
                 "TRUNCATE TABLE schema.table")),
 
         // REPLACE statement (MySQL)

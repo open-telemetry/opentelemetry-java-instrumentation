@@ -618,6 +618,9 @@ WHITESPACE           = [ \t\r\n]+
       }
       if (!identifierCaptured) {
         appendTargetToSummary();
+        if (tableCaptured) {
+          recordCollectionName();
+        }
         identifierCaptured = true;
       }
     }
