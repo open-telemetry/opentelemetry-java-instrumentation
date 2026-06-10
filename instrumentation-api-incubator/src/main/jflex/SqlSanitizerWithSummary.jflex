@@ -119,6 +119,10 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
+  private void recordOperationName() {
+    recordOperationName(yytext());
+  }
+
   private void refineOperationName(String operationTarget) {
     if (operationName != null) {
       operationName = operationName + " " + operationTarget;
@@ -611,7 +615,7 @@ WHITESPACE           = [ \t\r\n]+
       if (text.equalsIgnoreCase("TABLE")) {
         if (!tableCaptured) {
           appendTargetToSummary();
-          refineOperationName("TABLE");
+          refineOperationName(text);
           tableCaptured = true;
         }
         return;
@@ -790,7 +794,7 @@ WHITESPACE           = [ \t\r\n]+
             confirmPendingSubqueryIfNeeded();
             if (shouldStartMainOperation()) {
               setOperation(new Select());
-              recordOperationName("SELECT");
+              recordOperationName();
               appendOperationToSummary();
             } else if (operation instanceof Select) {
               // nested SELECT (subquery) - append SELECT to summary
@@ -804,7 +808,7 @@ WHITESPACE           = [ \t\r\n]+
   "INSERT" {
           if (shouldStartMainOperation()) {
             setOperation(new Insert());
-            recordOperationName("INSERT");
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -816,7 +820,7 @@ WHITESPACE           = [ \t\r\n]+
   "DELETE" {
           if (shouldStartMainOperation()) {
             setOperation(new Delete());
-            recordOperationName("DELETE");
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -828,7 +832,7 @@ WHITESPACE           = [ \t\r\n]+
   "UPDATE" {
           if (shouldStartMainOperation()) {
             setOperation(new Update());
-            recordOperationName("UPDATE");
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -840,7 +844,7 @@ WHITESPACE           = [ \t\r\n]+
   "CALL" {
           if (shouldStartNewOperation()) {
             setOperation(new Call());
-            recordOperationName("CALL");
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -852,7 +856,7 @@ WHITESPACE           = [ \t\r\n]+
   "MERGE" {
           if (shouldStartNewOperation()) {
             setOperation(new Merge());
-            recordOperationName("MERGE");
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -864,7 +868,7 @@ WHITESPACE           = [ \t\r\n]+
   "CREATE" {
           if (shouldStartNewOperation()) {
             setOperation(new Create());
-            recordOperationName("CREATE");
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -876,7 +880,7 @@ WHITESPACE           = [ \t\r\n]+
   "DROP" {
           if (shouldStartNewOperation()) {
             setOperation(new Drop());
-            recordOperationName("DROP");
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -888,7 +892,7 @@ WHITESPACE           = [ \t\r\n]+
   "ALTER" {
           if (shouldStartNewOperation()) {
             setOperation(new Alter());
-            recordOperationName("ALTER");
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -905,7 +909,7 @@ WHITESPACE           = [ \t\r\n]+
               setOperation(new Values());
               // Only append VALUES to summary if at top level (not inside a subquery or CTE body)
               if (operationStack.isEmpty()) {
-                recordOperationName("VALUES");
+                recordOperationName();
                 appendOperationToSummary();
               }
             }
@@ -916,7 +920,7 @@ WHITESPACE           = [ \t\r\n]+
   "EXECUTE" | "EXEC" {
           if (shouldStartNewOperation()) {
             setOperation(new Execute());
-            recordOperationName(yytext());
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -928,7 +932,7 @@ WHITESPACE           = [ \t\r\n]+
   "TRUNCATE" {
           if (shouldStartNewOperation()) {
             setOperation(new Truncate());
-            recordOperationName("TRUNCATE");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -937,7 +941,7 @@ WHITESPACE           = [ \t\r\n]+
   "REPLACE" {
           if (shouldStartNewOperation()) {
             setOperation(new Replace());
-            recordOperationName("REPLACE");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -946,7 +950,7 @@ WHITESPACE           = [ \t\r\n]+
   "LOCK" {
           if (shouldStartNewOperation()) {
             setOperation(new Lock());
-            recordOperationName("LOCK");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -955,7 +959,7 @@ WHITESPACE           = [ \t\r\n]+
   "USE" {
           if (shouldStartNewOperation()) {
             setOperation(new Use());
-            recordOperationName("USE");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -964,7 +968,7 @@ WHITESPACE           = [ \t\r\n]+
   "BEGIN" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            recordOperationName("BEGIN");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -973,7 +977,7 @@ WHITESPACE           = [ \t\r\n]+
   "COMMIT" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            recordOperationName("COMMIT");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -982,7 +986,7 @@ WHITESPACE           = [ \t\r\n]+
   "ROLLBACK" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            recordOperationName("ROLLBACK");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -991,7 +995,7 @@ WHITESPACE           = [ \t\r\n]+
   "GRANT" {
           if (shouldStartNewOperation()) {
             setOperation(new Grant());
-            recordOperationName("GRANT");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -1000,7 +1004,7 @@ WHITESPACE           = [ \t\r\n]+
   "REVOKE" {
           if (shouldStartNewOperation()) {
             setOperation(new Revoke());
-            recordOperationName("REVOKE");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -1009,7 +1013,7 @@ WHITESPACE           = [ \t\r\n]+
   "SHOW" {
           if (shouldStartNewOperation()) {
             setOperation(new Show());
-            recordOperationName("SHOW");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -1026,7 +1030,7 @@ WHITESPACE           = [ \t\r\n]+
           // EXPLAIN is a prefix command - append to summary but don't set an operation,
           // so the inner statement (SELECT, INSERT, etc.) gets processed normally.
           if (!insideComment && operation == none) {
-            recordOperationName("EXPLAIN");
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -1038,10 +1042,10 @@ WHITESPACE           = [ \t\r\n]+
               // hql/jpql queries may skip SELECT and start with FROM clause
               // treat such queries as SELECT queries
               setOperation(new Select());
-                recordOperationName("SELECT");
               // Derive the synthetic SELECT case from the matched FROM token.
-              appendOperationToSummary(
-                  Character.isUpperCase(zzBuffer[zzStartRead]) ? "SELECT" : "select");
+              String operationName = Character.isUpperCase(zzBuffer[zzStartRead]) ? "SELECT" : "select";
+              recordOperationName(operationName);
+              appendOperationToSummary(operationName);
             }
             operation.handleFrom();
           }
