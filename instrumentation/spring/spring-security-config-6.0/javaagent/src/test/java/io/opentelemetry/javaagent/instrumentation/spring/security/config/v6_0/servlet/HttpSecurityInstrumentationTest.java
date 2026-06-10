@@ -9,7 +9,7 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import io.opentelemetry.instrumentation.spring.security.config.v6_0.servlet.EnduserAttributesCapturingServletFilter;
+import io.opentelemetry.instrumentation.spring.security.config.v6_0.servlet.UserAttributesCapturingServletFilter;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +31,7 @@ class HttpSecurityInstrumentationTest {
 
   /**
    * Ensures that {@link HttpSecurityInstrumentation} registers a {@link
-   * EnduserAttributesCapturingServletFilter} in the filter chain.
+   * UserAttributesCapturingServletFilter} in the filter chain.
    *
    * <p>Usage of the filter is covered in other unit tests.
    */
@@ -47,7 +47,7 @@ class HttpSecurityInstrumentationTest {
             item ->
                 item.getClass()
                     .getName()
-                    .endsWith(EnduserAttributesCapturingServletFilter.class.getSimpleName()))
+                    .endsWith(UserAttributesCapturingServletFilter.class.getSimpleName()))
         .hasSize(1);
   }
 

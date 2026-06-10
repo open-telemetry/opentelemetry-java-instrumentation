@@ -28,14 +28,14 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class EnduserAttributesCapturerTest {
+class UserAttributesCapturerTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
   void nothingEnabled() {
-    EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
+    UserAttributesCapturer capturer = new UserAttributesCapturer();
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -57,10 +57,10 @@ class EnduserAttributesCapturerTest {
 
   @Test
   void allEnabledButNoRoles() {
-    EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserIdEnabled(true);
-    capturer.setEnduserRoleEnabled(true);
-    capturer.setEnduserScopeEnabled(true);
+    UserAttributesCapturer capturer = new UserAttributesCapturer();
+    capturer.setNameEnabled(true);
+    capturer.setRolesEnabled(true);
+    capturer.setScopeEnabled(true);
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -83,10 +83,10 @@ class EnduserAttributesCapturerTest {
 
   @Test
   void allEnabledButNoScopes() {
-    EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserIdEnabled(true);
-    capturer.setEnduserRoleEnabled(true);
-    capturer.setEnduserScopeEnabled(true);
+    UserAttributesCapturer capturer = new UserAttributesCapturer();
+    capturer.setNameEnabled(true);
+    capturer.setRolesEnabled(true);
+    capturer.setScopeEnabled(true);
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -109,9 +109,9 @@ class EnduserAttributesCapturerTest {
   }
 
   @Test
-  void onlyEnduserIdEnabled() {
-    EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserIdEnabled(true);
+  void onlyNameEnabled() {
+    UserAttributesCapturer capturer = new UserAttributesCapturer();
+    capturer.setNameEnabled(true);
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -134,9 +134,9 @@ class EnduserAttributesCapturerTest {
   }
 
   @Test
-  void onlyEnduserRoleEnabled() {
-    EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserRoleEnabled(true);
+  void onlyRolesEnabled() {
+    UserAttributesCapturer capturer = new UserAttributesCapturer();
+    capturer.setRolesEnabled(true);
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -160,9 +160,9 @@ class EnduserAttributesCapturerTest {
   }
 
   @Test
-  void onlyEnduserScopeEnabled() {
-    EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserScopeEnabled(true);
+  void onlyScopeEnabled() {
+    UserAttributesCapturer capturer = new UserAttributesCapturer();
+    capturer.setScopeEnabled(true);
 
     Authentication authentication =
         new PreAuthenticatedAuthenticationToken(
@@ -186,10 +186,10 @@ class EnduserAttributesCapturerTest {
 
   @Test
   void allEnabledAndAlternatePrefix() {
-    EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserIdEnabled(true);
-    capturer.setEnduserRoleEnabled(true);
-    capturer.setEnduserScopeEnabled(true);
+    UserAttributesCapturer capturer = new UserAttributesCapturer();
+    capturer.setNameEnabled(true);
+    capturer.setRolesEnabled(true);
+    capturer.setScopeEnabled(true);
     capturer.setRoleGrantedAuthorityPrefix("role_");
     capturer.setScopeGrantedAuthorityPrefix("scope_");
 
@@ -217,13 +217,13 @@ class EnduserAttributesCapturerTest {
   }
 
   private static void test(
-      EnduserAttributesCapturer capturer,
+      UserAttributesCapturer capturer,
       Authentication authentication,
       Consumer<SpanDataAssert> assertions) {
     testing.runWithHttpServerSpan(
         () -> {
           Context otelContext = Context.current();
-          capturer.captureEnduserAttributes(otelContext, authentication);
+          capturer.captureUserAttributes(otelContext, authentication);
         });
 
     testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(assertions));

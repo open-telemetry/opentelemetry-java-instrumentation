@@ -70,7 +70,7 @@ public final class SemconvStability {
     if (value != null) {
       return value;
     }
-    return ConfigPropertiesUtil.getBoolean("otel.semconv-stability.v3-preview", false);
+    return ConfigPropertiesUtil.getBoolean("otel.instrumentation.common.v3-preview", false);
   }
 
   @SuppressWarnings("deprecation") // using deprecated config property fallback
