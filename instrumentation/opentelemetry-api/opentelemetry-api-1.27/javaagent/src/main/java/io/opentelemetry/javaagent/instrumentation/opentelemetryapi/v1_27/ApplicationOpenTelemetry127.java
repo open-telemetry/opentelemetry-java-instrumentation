@@ -119,21 +119,27 @@ public class ApplicationOpenTelemetry127 implements application.io.opentelemetry
   }
 
   private static ApplicationLoggerFactory getLoggerFactory() {
-    // this class is defined in opentelemetry-api-1.50
+    // this class is defined in opentelemetry-api-1.63
     ApplicationLoggerFactory loggerFactory =
         getLoggerFactory(
-            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs.ApplicationLoggerFactory150Incubator");
+            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_63.incubator.logs.ApplicationLoggerFactory163Incubator");
+    if (loggerFactory == null) {
+      // this class is defined in opentelemetry-api-1.63
+      loggerFactory =
+          getLoggerFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_63.logs.ApplicationLoggerFactory163");
+    }
+    // this class is defined in opentelemetry-api-1.50
+    if (loggerFactory == null) {
+      loggerFactory =
+          getLoggerFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs.ApplicationLoggerFactory150Incubator");
+    }
     if (loggerFactory == null) {
       // this class is defined in opentelemetry-api-1.50
       loggerFactory =
           getLoggerFactory(
               "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.logs.ApplicationLoggerFactory150");
-    }
-    if (loggerFactory == null) {
-      // this class is defined in opentelemetry-api-1.47
-      loggerFactory =
-          getLoggerFactory(
-              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.logs.ApplicationLoggerFactory147Incubator");
     }
     if (loggerFactory == null) {
       // this class is defined in opentelemetry-api-1.42

@@ -3,11 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.logs;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_63.incubator.logs;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -24,10 +29,10 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData;
 import io.opentelemetry.sdk.trace.IdGenerator;
 import java.time.Instant;
 import java.util.stream.Stream;
+import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -39,8 +44,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class LoggerTest {
 
   @RegisterExtension
-  private static final AgentInstrumentationExtension testing =
-      AgentInstrumentationExtension.create();
+  static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private String instrumentationName;
   private Logger logger;
@@ -79,6 +83,7 @@ class LoggerTest {
         .setBody("body")
         .setAttribute(stringKey("key"), "value")
         .setAllAttributes(Attributes.builder().put("key", "value").build())
+        .setException(new RuntimeException("exception"))
         .emit();
 
     await()
@@ -89,8 +94,7 @@ class LoggerTest {
                         logRecordData -> {
                           assertThat(logRecordData.getInstrumentationScopeInfo().getName())
                               .isEqualTo(instrumentationName);
-                          assertThat(((ExtendedLogRecordData) logRecordData).getEventName())
-                              .isEqualTo("eventName");
+                          assertThat(logRecordData.getEventName()).isEqualTo("eventName");
                           assertThat(logRecordData.getInstrumentationScopeInfo().getVersion())
                               .isEqualTo("1.2.3");
                           assertThat(logRecordData.getTimestampEpochNanos()).isGreaterThan(0);
@@ -100,8 +104,14 @@ class LoggerTest {
                           assertThat(logRecordData.getBodyValue().getType())
                               .isEqualTo(ValueType.STRING);
                           assertThat(logRecordData.getBodyValue().getValue()).isEqualTo("body");
-                          assertThat(logRecordData.getAttributes())
-                              .isEqualTo(Attributes.builder().put("key", "value").build());
+                          assertThat(logRecordData)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(stringKey("key"), "value"),
+                                  equalTo(EXCEPTION_MESSAGE, "exception"),
+                                  equalTo(EXCEPTION_TYPE, RuntimeException.class.getName()),
+                                  satisfies(
+                                      EXCEPTION_STACKTRACE,
+                                      AbstractCharSequenceAssert::isNotEmpty));
                         }));
   }
 

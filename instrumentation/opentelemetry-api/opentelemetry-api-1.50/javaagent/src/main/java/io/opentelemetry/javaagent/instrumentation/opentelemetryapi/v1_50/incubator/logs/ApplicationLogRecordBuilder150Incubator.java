@@ -6,12 +6,23 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs;
 
 import static application.io.opentelemetry.api.incubator.common.ExtendedAttributeType.EXTENDED_ATTRIBUTES;
+import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleKey;
+import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.common.AttributeKey.valueKey;
 import static java.util.logging.Level.FINE;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
-import io.opentelemetry.api.incubator.common.ExtendedAttributes;
-import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.common.KeyValue;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
@@ -19,6 +30,8 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.Br
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.LogBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.logs.ApplicationLogRecordBuilder150;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -144,13 +157,14 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   @SuppressWarnings("unchecked") // converting ExtendedAttributeKey loses generic type
   public <T> application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setAttribute(
       application.io.opentelemetry.api.incubator.common.ExtendedAttributeKey<T> key, T value) {
-    ExtendedAttributeKey<T> agentKey = convertExtendedAttributeKey(key);
+    AttributeKey<T> agentKey = convertExtendedAttributeKey(key);
     if (agentKey != null) {
       if (key.getType() == EXTENDED_ATTRIBUTES) {
-        // this cast is safe because T is ExtendedAttributes in this case
+        // This cast is safe: for EXTENDED_ATTRIBUTES we convert application ExtendedAttributes to
+        // an agent Value<?>, and the generic type is erased at runtime.
         value =
             (T)
-                convertExtendedAttributes(
+                convertExtendedAttributesValue(
                     (application.io.opentelemetry.api.incubator.common.ExtendedAttributes) value);
       }
       agentLogRecordBuilder.setAttribute(agentKey, value);
@@ -171,19 +185,22 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
     "rawtypes", // converting ExtendedAttributeKey loses generic type
     "deprecation" // need to support applications still using EXTENDED_ATTRIBUTES
   })
-  private static ExtendedAttributes convertExtendedAttributes(
+  private static Attributes convertExtendedAttributes(
       application.io.opentelemetry.api.incubator.common.ExtendedAttributes applicationAttributes) {
-    ExtendedAttributesBuilder agentAttributes = ExtendedAttributes.builder();
+    AttributesBuilder agentAttributes = Attributes.builder();
     applicationAttributes.forEach(
         (key, value) -> {
-          ExtendedAttributeKey agentKey = convertExtendedAttributeKey(key);
+          AttributeKey agentKey = convertExtendedAttributeKey(key);
           if (agentKey != null) {
             if (key.getType() == EXTENDED_ATTRIBUTES) {
-              value =
-                  convertExtendedAttributes(
-                      (application.io.opentelemetry.api.incubator.common.ExtendedAttributes) value);
+              agentAttributes.put(
+                  agentKey,
+                  convertExtendedAttributesValue(
+                      (application.io.opentelemetry.api.incubator.common.ExtendedAttributes)
+                          value));
+            } else {
+              agentAttributes.put(agentKey, value);
             }
-            agentAttributes.put(agentKey, value);
           }
         });
     return agentAttributes.build();
@@ -193,29 +210,88 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
     "rawtypes", // converting ExtendedAttributeKey loses generic type
     "deprecation" // need to support applications still using EXTENDED_ATTRIBUTES
   })
-  private static ExtendedAttributeKey convertExtendedAttributeKey(
+  private static AttributeKey convertExtendedAttributeKey(
       application.io.opentelemetry.api.incubator.common.ExtendedAttributeKey applicationKey) {
     switch (applicationKey.getType()) {
       case STRING:
-        return ExtendedAttributeKey.stringKey(applicationKey.getKey());
+        return stringKey(applicationKey.getKey());
       case BOOLEAN:
-        return ExtendedAttributeKey.booleanKey(applicationKey.getKey());
+        return booleanKey(applicationKey.getKey());
       case LONG:
-        return ExtendedAttributeKey.longKey(applicationKey.getKey());
+        return longKey(applicationKey.getKey());
       case DOUBLE:
-        return ExtendedAttributeKey.doubleKey(applicationKey.getKey());
+        return doubleKey(applicationKey.getKey());
       case STRING_ARRAY:
-        return ExtendedAttributeKey.stringArrayKey(applicationKey.getKey());
+        return stringArrayKey(applicationKey.getKey());
       case BOOLEAN_ARRAY:
-        return ExtendedAttributeKey.booleanArrayKey(applicationKey.getKey());
+        return booleanArrayKey(applicationKey.getKey());
       case LONG_ARRAY:
-        return ExtendedAttributeKey.longArrayKey(applicationKey.getKey());
+        return longArrayKey(applicationKey.getKey());
       case DOUBLE_ARRAY:
-        return ExtendedAttributeKey.doubleArrayKey(applicationKey.getKey());
+        return doubleArrayKey(applicationKey.getKey());
       case EXTENDED_ATTRIBUTES:
-        return ExtendedAttributeKey.extendedAttributesKey(applicationKey.getKey());
+        return valueKey(applicationKey.getKey());
     }
     logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
     return null;
+  }
+
+  @SuppressWarnings("deprecation") // need to support applications still using EXTENDED_ATTRIBUTES
+  private static Value<?> convertExtendedAttributesValue(
+      application.io.opentelemetry.api.incubator.common.ExtendedAttributes applicationAttributes) {
+    List<KeyValue> values = new ArrayList<>();
+    applicationAttributes.forEach(
+        (key, value) -> {
+          Value<?> agentValue = convertExtendedAttributeValue(key, value);
+          if (agentValue != null) {
+            values.add(KeyValue.of(key.getKey(), agentValue));
+          }
+        });
+    return Value.of(values.toArray(new KeyValue[0]));
+  }
+
+  @Nullable
+  @SuppressWarnings({"deprecation", "unchecked"}) // need to support deprecated EXTENDED_ATTRIBUTES
+  private static Value<?> convertExtendedAttributeValue(
+      application.io.opentelemetry.api.incubator.common.ExtendedAttributeKey<?> key, Object value) {
+    switch (key.getType()) {
+      case STRING:
+        return Value.of((String) value);
+      case BOOLEAN:
+        return Value.of((Boolean) value);
+      case LONG:
+        return Value.of((Long) value);
+      case DOUBLE:
+        return Value.of((Double) value);
+      case STRING_ARRAY:
+        return convertArrayValue((List<String>) value);
+      case BOOLEAN_ARRAY:
+        return convertArrayValue((List<Boolean>) value);
+      case LONG_ARRAY:
+        return convertArrayValue((List<Long>) value);
+      case DOUBLE_ARRAY:
+        return convertArrayValue((List<Double>) value);
+      case EXTENDED_ATTRIBUTES:
+        return convertExtendedAttributesValue(
+            (application.io.opentelemetry.api.incubator.common.ExtendedAttributes) value);
+    }
+    logger.log(FINE, "unexpected attribute key type: {0}", key.getType());
+    return null;
+  }
+
+  private static Value<?> convertArrayValue(List<?> values) {
+    List<Value<?>> result = new ArrayList<>();
+    for (Object value : values) {
+      if (value instanceof String) {
+        result.add(Value.of((String) value));
+      } else if (value instanceof Boolean) {
+        result.add(Value.of((Boolean) value));
+      } else if (value instanceof Long) {
+        result.add(Value.of((Long) value));
+      } else if (value instanceof Double) {
+        result.add(Value.of((Double) value));
+      }
+    }
+    return Value.of(result);
   }
 }
