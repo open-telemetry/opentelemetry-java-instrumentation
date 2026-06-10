@@ -1263,11 +1263,7 @@ class SqlQueryAnalyzerTest {
         Arguments.of(
             "create table ks.users ( id UUID PRIMARY KEY, name text )",
             expect(
-                "CREATE table",
-                "ks.users",
-                "create table",
-                "ks.users",
-                "create table ks.users")),
+                "CREATE table", "ks.users", "create table", "ks.users", "create table ks.users")),
         Arguments.of("CREATE KEYSPACE sync_test", expect("CREATE", null, "CREATE KEYSPACE")),
         Arguments.of(
             "CREATE TABLE IF NOT EXISTS table",
@@ -1370,6 +1366,7 @@ class SqlQueryAnalyzerTest {
       assertThat(result.getQuerySummary()).isNull();
     }
   }
+
   private static Stream<Arguments> doubleQuotesAsIdentifiersArgs() {
     return Stream.of(
         // When dialect treats double quotes as identifiers, quoted text is preserved in query
