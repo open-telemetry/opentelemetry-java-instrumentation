@@ -19,7 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // testing deprecated old semconv operation
+@SuppressWarnings("deprecation") // testing deprecated old db semconv accessors
 class SqlQueryAnalyzerTest {
 
   private static final SqlQueryAnalyzer ANALYZER = SqlQueryAnalyzer.create(true);
@@ -1258,6 +1258,18 @@ class SqlQueryAnalyzerTest {
             "CREATE TABLE `table`",
             expect("CREATE TABLE", "table", "CREATE TABLE", "`table`", "CREATE TABLE `table`")),
         Arguments.of(
+            "CREATE TABLE ks.users ( id UUID PRIMARY KEY, name text )",
+            expect("CREATE TABLE", "ks.users", "CREATE TABLE ks.users")),
+        Arguments.of(
+            "create table ks.users ( id UUID PRIMARY KEY, name text )",
+            expect(
+                "CREATE table",
+                "ks.users",
+                "create table",
+                "ks.users",
+                "create table ks.users")),
+        Arguments.of("CREATE KEYSPACE sync_test", expect("CREATE", null, "CREATE KEYSPACE")),
+        Arguments.of(
             "CREATE TABLE IF NOT EXISTS table",
             expect("CREATE TABLE", "table", "CREATE TABLE table")),
         Arguments.of(
@@ -1358,55 +1370,6 @@ class SqlQueryAnalyzerTest {
       assertThat(result.getQuerySummary()).isNull();
     }
   }
-
-  @ParameterizedTest
-  @MethodSource("stableMetadataArgs")
-  void stableOperationAndCollectionMetadata(
-      String sql,
-      String expectedOperationName,
-      String expectedCollectionName,
-      String expectedSummary) {
-    assumeTrue(emitStableDatabaseSemconv());
-
-    SqlQuery result = ANALYZER.analyzeWithSummary(sql, DOUBLE_QUOTES_ARE_IDENTIFIERS);
-
-    assertThat(result.getOperationName()).isEqualTo(expectedOperationName);
-    assertThat(result.getCollectionName()).isEqualTo(expectedCollectionName);
-    assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
-  }
-
-  private static Stream<Arguments> stableMetadataArgs() {
-    return Stream.of(
-        Arguments.of("SELECT * FROM users", "SELECT", "users", "SELECT users"),
-        Arguments.of(
-            "INSERT INTO ks.users (id, name) values (uuid(), 'alice')",
-            "INSERT",
-            "ks.users",
-            "INSERT ks.users"),
-        Arguments.of(
-            "CREATE TABLE ks.users ( id UUID PRIMARY KEY, name text )",
-            "CREATE TABLE",
-            "ks.users",
-            "CREATE TABLE ks.users"),
-        Arguments.of(
-            "create table ks.users ( id UUID PRIMARY KEY, name text )",
-            "create table",
-            "ks.users",
-            "create table ks.users"),
-        Arguments.of("CREATE KEYSPACE sync_test", "CREATE", null, "CREATE KEYSPACE"),
-        Arguments.of("USE sync_test", "USE", null, "USE sync_test"),
-        Arguments.of(
-            "SELECT * FROM users JOIN orders ON users.id = orders.user_id",
-            "SELECT",
-            "users",
-            "SELECT users orders"),
-        Arguments.of(
-            "SELECT * FROM users; SELECT * FROM orders",
-            "SELECT",
-            "users",
-            "SELECT users; SELECT orders"));
-  }
-
   private static Stream<Arguments> doubleQuotesAsIdentifiersArgs() {
     return Stream.of(
         // When dialect treats double quotes as identifiers, quoted text is preserved in query
