@@ -205,6 +205,12 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     OpenTelemetryAppenderContextDataInjector injector =
         new OpenTelemetryAppenderContextDataInjector();
 
+    StringMap rootContextData =
+        injector.injectContextData(emptyList(), ContextDataFactory.createContextData());
+    Object rootOtelContext = rootContextData.getValue(OTEL_CONTEXT_DATA_KEY);
+    assertThat(rootContextData).isSameAs(TestContextDataInjector.CONTEXT_DATA);
+    assertThat(rootOtelContext).isNull();
+
     Context context = Context.current().with(TEST_CONTEXT_KEY, "context-value");
     try (Scope ignored = context.makeCurrent()) {
       StringMap contextData =
@@ -269,10 +275,16 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
   public static class TestContextDataInjector implements ContextDataInjector {
 
+    private static final StringMap CONTEXT_DATA = ContextDataFactory.createContextData();
+
+    static {
+      CONTEXT_DATA.putValue("delegate-key", "delegate-value");
+      CONTEXT_DATA.freeze();
+    }
+
     @Override
     public StringMap injectContextData(List<Property> properties, StringMap reusable) {
-      reusable.putValue("delegate-key", "delegate-value");
-      return reusable;
+      return CONTEXT_DATA;
     }
 
     @Override
