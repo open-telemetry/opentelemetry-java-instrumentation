@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.logs;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -15,8 +15,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.common.ValueType;
-import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
-import io.opentelemetry.api.incubator.common.ExtendedAttributes;
 import io.opentelemetry.api.incubator.logs.ExtendedLogger;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
@@ -38,11 +36,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // testing deprecated EXTENDED_ATTRIBUTES feature
 class LoggerTest {
 
   @RegisterExtension
-  static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final AgentInstrumentationExtension testing =
+      AgentInstrumentationExtension.create();
 
   private String instrumentationName;
   private Logger logger;
@@ -79,13 +77,8 @@ class LoggerTest {
         .setSeverity(Severity.DEBUG)
         .setSeverityText("debug")
         .setBody("body")
-        .setAttribute(stringKey("key1"), "value")
-        .setAttribute(ExtendedAttributeKey.stringKey("key2"), "value")
-        .setAllAttributes(Attributes.builder().put("key3", "value").build())
-        .setAllAttributes(ExtendedAttributes.builder().put("key4", "value").build())
-        .setAttribute(
-            ExtendedAttributeKey.extendedAttributesKey("key5"),
-            ExtendedAttributes.builder().put("key6", "value").build())
+        .setAttribute(stringKey("key"), "value")
+        .setAllAttributes(Attributes.builder().put("key", "value").build())
         .emit();
 
     await()
@@ -96,7 +89,8 @@ class LoggerTest {
                         logRecordData -> {
                           assertThat(logRecordData.getInstrumentationScopeInfo().getName())
                               .isEqualTo(instrumentationName);
-                          assertThat(logRecordData.getEventName()).isEqualTo("eventName");
+                          assertThat(((ExtendedLogRecordData) logRecordData).getEventName())
+                              .isEqualTo("eventName");
                           assertThat(logRecordData.getInstrumentationScopeInfo().getVersion())
                               .isEqualTo("1.2.3");
                           assertThat(logRecordData.getTimestampEpochNanos()).isGreaterThan(0);
@@ -106,18 +100,8 @@ class LoggerTest {
                           assertThat(logRecordData.getBodyValue().getType())
                               .isEqualTo(ValueType.STRING);
                           assertThat(logRecordData.getBodyValue().getValue()).isEqualTo("body");
-                          assertThat(
-                                  ((ExtendedLogRecordData) logRecordData).getExtendedAttributes())
-                              .isEqualTo(
-                                  ExtendedAttributes.builder()
-                                      .put("key1", "value")
-                                      .put("key2", "value")
-                                      .put("key3", "value")
-                                      .put("key4", "value")
-                                      .put(
-                                          "key5",
-                                          ExtendedAttributes.builder().put("key6", "value").build())
-                                      .build());
+                          assertThat(logRecordData.getAttributes())
+                              .isEqualTo(Attributes.builder().put("key", "value").build());
                         }));
   }
 

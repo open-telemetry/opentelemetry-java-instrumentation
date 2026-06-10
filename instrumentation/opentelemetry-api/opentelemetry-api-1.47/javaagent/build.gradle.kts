@@ -19,6 +19,10 @@ configurations.configureEach {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.47.0")
       force("io.opentelemetry:opentelemetry-api-incubator:1.47.0-alpha")
+      // use older SDK test artifacts that work with opentelemetry-api-incubator:1.47.0-alpha
+      force("io.opentelemetry:opentelemetry-sdk:1.47.0")
+      force("io.opentelemetry:opentelemetry-sdk-logs:1.47.0")
+      force("io.opentelemetry:opentelemetry-sdk-testing:1.47.0")
     }
   }
 }

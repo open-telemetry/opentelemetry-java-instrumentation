@@ -70,6 +70,7 @@ import io.opentelemetry.testing.internal.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.testing.internal.proto.trace.v1.Span;
 import io.opentelemetry.testing.internal.proto.trace.v1.Status;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -102,11 +103,21 @@ public class TelemetryConverter {
               "io.opentelemetry.sdk.testing.logs.TestLogRecordData$Builder",
               "setEventName",
               String.class);
-  // opentelemetry-api-1.50:javaagent tests use an older version where Value.empty() doesn't exist
-  private static final Value<?> EMPTY_VALUE = computeEmptyValue();
   private static final boolean hasExtendedLogRecordData =
       classAvailable("io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData")
           && classAvailable(TEST_EXTENDED_LOG_RECORD_DATA_CLASS_NAME);
+  private static final boolean canSetExtendedEventName =
+      hasExtendedLogRecordData
+          && canUseValue
+          && methodAvailable(
+              TEST_EXTENDED_LOG_RECORD_DATA_CLASS_NAME + "$Builder", "setEventName", String.class);
+  private static final boolean canSetExtendedBodyValue =
+      hasExtendedLogRecordData
+          && canUseValue
+          && methodAvailable(
+              TEST_EXTENDED_LOG_RECORD_DATA_CLASS_NAME + "$Builder", "setBodyValue", Value.class);
+  // opentelemetry-api-1.50:javaagent tests use an older version where Value.empty() doesn't exist
+  private static final Value<?> EMPTY_VALUE = computeEmptyValue();
   private static final boolean hasExtendedAttributes =
       classAvailable(EXTENDED_ATTRIBUTES_CLASS_NAME);
 
@@ -383,14 +394,25 @@ public class TelemetryConverter {
     builder =
         invoke(
             builder, "setSeverityText", new Class<?>[] {String.class}, logRecord.getSeverityText());
-    builder =
-        invoke(builder, "setEventName", new Class<?>[] {String.class}, logRecord.getEventName());
-    builder =
-        invoke(
-            builder,
-            "setBodyValue",
-            new Class<?>[] {Value.class},
-            getBodyValue(logRecord.getBody()));
+    if (canSetExtendedEventName) {
+      builder =
+          invoke(builder, "setEventName", new Class<?>[] {String.class}, logRecord.getEventName());
+    }
+    if (canSetExtendedBodyValue) {
+      builder =
+          invoke(
+              builder,
+              "setBodyValue",
+              new Class<?>[] {Value.class},
+              getBodyValue(logRecord.getBody()));
+    } else {
+      builder =
+          invoke(
+              builder,
+              "setBody",
+              new Class<?>[] {String.class},
+              logRecord.getBody().getStringValue());
+    }
     builder =
         invoke(
             builder,
@@ -893,7 +915,7 @@ public class TelemetryConverter {
     try {
       Class.forName(className);
       return true;
-    } catch (ClassNotFoundException e) {
+    } catch (ClassNotFoundException | LinkageError e) {
       return false;
     }
   }
@@ -908,7 +930,9 @@ public class TelemetryConverter {
 
   private static Object invokeStatic(String className, String methodName) {
     try {
-      return Class.forName(className).getMethod(methodName).invoke(null);
+      Method method = Class.forName(className).getMethod(methodName);
+      method.setAccessible(true);
+      return method.invoke(null);
     } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException e) {
       throw new IllegalStateException("Could not invoke " + className + "." + methodName, e);
     } catch (InvocationTargetException e) {
@@ -919,7 +943,9 @@ public class TelemetryConverter {
   private static Object invoke(
       Object target, String methodName, Class<?>[] parameterTypes, Object... args) {
     try {
-      return target.getClass().getMethod(methodName, parameterTypes).invoke(target, args);
+      Method method = target.getClass().getMethod(methodName, parameterTypes);
+      method.setAccessible(true);
+      return method.invoke(target, args);
     } catch (NoSuchMethodException | IllegalAccessException e) {
       throw new IllegalStateException(
           "Could not invoke " + target.getClass().getName() + "." + methodName, e);
@@ -945,7 +971,7 @@ public class TelemetryConverter {
     try {
       Class.forName(className).getMethod(methodName, parameterTypes);
       return true;
-    } catch (ClassNotFoundException | NoSuchMethodException e) {
+    } catch (ClassNotFoundException | NoSuchMethodException | LinkageError e) {
       return false;
     }
   }
