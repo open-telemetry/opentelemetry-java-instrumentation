@@ -127,8 +127,6 @@ final class TracingFilter extends Filter {
       return;
     }
     Throwable error = exception != null ? exception : extractException(response);
-    request.removeRequestProp(OTEL_CONTEXT_KEY);
-    request.removeRequestProp(OTEL_REQUEST_KEY);
     instrumenter.end(context, sofaRpcRequest, response, error);
   }
 }
