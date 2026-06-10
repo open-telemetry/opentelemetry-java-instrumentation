@@ -14,20 +14,34 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
+import redis.clients.jedis.Connection;
+import redis.clients.jedis.JedisSocketFactory;
 
 public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-4.0";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
+  private static final VirtualField<Connection, JedisConnectionInfo> CONNECTION_INFO =
+      VirtualField.find(Connection.class, JedisConnectionInfo.class);
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
+    JedisDbAttributesGetter spanNameAttributesGetter =
+        new JedisDbAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(JedisRequest request) {
+            return null;
+          }
+        };
 
     InstrumenterBuilder<JedisRequest, Void> builder =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
@@ -37,6 +51,16 @@ public class JedisSingletons {
 
   public static Instrumenter<JedisRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  @Nullable
+  static JedisConnectionInfo connectionInfo(Connection connection) {
+    return CONNECTION_INFO.get(connection);
+  }
+
+  public static void setConnectionInfo(
+      Connection connection, JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
+    CONNECTION_INFO.set(connection, JedisConnectionInfo.create(socketFactory, clientConfig));
   }
 
   private JedisSingletons() {}
