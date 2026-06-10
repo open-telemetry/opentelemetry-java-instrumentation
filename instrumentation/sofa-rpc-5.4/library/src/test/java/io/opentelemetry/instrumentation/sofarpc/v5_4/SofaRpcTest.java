@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.alipay.sofa.rpc.filter.Filter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -32,11 +32,11 @@ class SofaRpcTest extends AbstractSofaRpcTest {
 
   @Override
   protected List<Filter> clientFilters() {
-    return asList(telemetry.newClientFilter());
+    return singletonList(telemetry.newClientFilter());
   }
 
   @Override
   protected List<Filter> serverFilters() {
-    return asList(telemetry.newServerFilter());
+    return singletonList(telemetry.newServerFilter());
   }
 }
