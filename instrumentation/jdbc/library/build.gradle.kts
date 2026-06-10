@@ -17,6 +17,7 @@ dependencies {
   testLibrary("com.h2database:h2:1.3.169")
   testLibrary("org.apache.derby:derby:10.6.1.0")
   testLibrary("org.hsqldb:hsqldb:2.0.0")
+  testLibrary("org.xerial:sqlite-jdbc:3.53.1.0")
 
   testLibrary("org.apache.tomcat:tomcat-jdbc:7.0.19")
   testLibrary("org.apache.tomcat:tomcat-juli:7.0.19") // tomcat jdbc needs this
@@ -70,8 +71,15 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+  }
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testExceptionSignalLogs)
   }
 }
 

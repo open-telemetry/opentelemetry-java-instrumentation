@@ -21,7 +21,7 @@ Each configuration entry includes:
 Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.java` for latest):
 
 | Flat Property                                                                   | Declarative YAML Key                                              |
-|---------------------------------------------------------------------------------|-------------------------------------------------------------------|
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | `otel.instrumentation.http.client.capture-request-headers`                      | `general.http.client.request_captured_headers`                    |
 | `otel.instrumentation.http.client.capture-response-headers`                     | `general.http.client.response_captured_headers`                   |
 | `otel.instrumentation.http.server.capture-request-headers`                      | `general.http.server.request_captured_headers`                    |
@@ -55,7 +55,7 @@ For `otel.instrumentation.*` properties not in SPECIAL_MAPPINGS:
 Examples:
 
 | Flat Property                                                                | Declarative YAML Key                                        |
-|------------------------------------------------------------------------------|-------------------------------------------------------------|
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | `otel.instrumentation.grpc.emit-message-events`                              | `java.grpc.emit_message_events`                             |
 | `otel.instrumentation.grpc.experimental-span-attributes`                     | `java.grpc.experimental_span_attributes/development`        |
 | `otel.instrumentation.aws-sdk.experimental-span-attributes`                  | `java.aws_sdk.experimental_span_attributes/development`     |
@@ -134,7 +134,7 @@ FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
 ## Validation Outcomes
 
 | Issue                        | Action                                  |
-|------------------------------|-----------------------------------------|
+| ---------------------------- | --------------------------------------- |
 | Config not used              | Flag for removal                        |
 | Default/type mismatch        | Update metadata.yaml to match code      |
 | Missing config (in code)     | Add to metadata.yaml                    |

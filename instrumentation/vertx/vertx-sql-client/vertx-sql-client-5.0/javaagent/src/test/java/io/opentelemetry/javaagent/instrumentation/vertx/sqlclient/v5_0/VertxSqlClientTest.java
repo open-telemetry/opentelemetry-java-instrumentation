@@ -138,7 +138,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -150,7 +150,7 @@ class VertxSqlClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "select * from test"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test" : null),
+                                emitStableDatabaseSemconv() ? "select test" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -250,7 +250,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -262,7 +262,7 @@ class VertxSqlClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "select * from test where id = $1"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test" : null),
+                                emitStableDatabaseSemconv() ? "select test" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -291,7 +291,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "INSERT test" : "INSERT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "insert test" : "INSERT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -305,7 +305,7 @@ class VertxSqlClientTest {
                                 "insert into test values ($1, $2) returning *"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "INSERT test" : null),
+                                emitStableDatabaseSemconv() ? "insert test" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT"),
@@ -392,7 +392,7 @@ class VertxSqlClientTest {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
                         span.hasName(
-                                emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
+                                emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -404,7 +404,7 @@ class VertxSqlClientTest {
                                 equalTo(maybeStable(DB_STATEMENT), "select * from test"),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "SELECT test" : null),
+                                    emitStableDatabaseSemconv() ? "select test" : null),
                                 equalTo(
                                     maybeStable(DB_OPERATION),
                                     emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -469,7 +469,7 @@ class VertxSqlClientTest {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
                         span.hasName(
-                                emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
+                                emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -482,7 +482,7 @@ class VertxSqlClientTest {
                                     maybeStable(DB_STATEMENT), "select * from test where id = $1"),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "SELECT test" : null),
+                                    emitStableDatabaseSemconv() ? "select test" : null),
                                 equalTo(
                                     maybeStable(DB_OPERATION),
                                     emitStableDatabaseSemconv() ? null : "SELECT"),

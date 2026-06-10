@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
@@ -27,14 +29,16 @@ public class JedisSingletons {
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
 
-    instrumenter =
+    InstrumenterBuilder<JedisRequest, Void> builder =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 request -> spanName(dbAttributesGetter, request))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addOperationMetrics(DbClientMetrics.get())
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<JedisRequest, Void> instrumenter() {

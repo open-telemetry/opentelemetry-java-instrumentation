@@ -20,7 +20,7 @@ jobs:
       DASHBOARD_LABEL: "dashboard"
       DASHBOARD_OUTPUT: pull-request-dashboard.md
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
@@ -49,11 +49,30 @@ jobs:
         run: |
           set -euo pipefail
 
-          number=$(gh api \
-            --paginate \
-            "repos/$GITHUB_REPOSITORY/issues?state=open&labels=$DASHBOARD_LABEL&per_page=100" \
-            --jq '.[] | select(.pull_request == null and .title == env.DASHBOARD_TITLE) | .number' \
-            | sort -n \
+          # Use GraphQL instead of the REST `/repos/{repo}/issues` list
+          # endpoint because that endpoint has been observed to omit pinned
+          # issues from its results, which would cause this step to create a
+          # duplicate dashboard issue instead of updating the existing one.
+          owner="${GITHUB_REPOSITORY%/*}"
+          name="${GITHUB_REPOSITORY#*/}"
+          number=$(gh api graphql --paginate \
+            -F owner="$owner" -F name="$name" -F label="$DASHBOARD_LABEL" \
+            -f query='
+              query ($owner: String!, $name: String!, $label: String!, $endCursor: String) {
+                repository(owner: $owner, name: $name) {
+                  issues(
+                    first: 100
+                    after: $endCursor
+                    states: OPEN
+                    filterBy: { labels: [$label] }
+                    orderBy: { field: CREATED_AT, direction: ASC }
+                  ) {
+                    pageInfo { hasNextPage endCursor }
+                    nodes { number title }
+                  }
+                }
+              }' \
+            --jq ".data.repository.issues.nodes[] | select(.title == \"$DASHBOARD_TITLE\") | .number" \
             | sed -n '1p')
 
           if [[ -n "$number" ]]; then

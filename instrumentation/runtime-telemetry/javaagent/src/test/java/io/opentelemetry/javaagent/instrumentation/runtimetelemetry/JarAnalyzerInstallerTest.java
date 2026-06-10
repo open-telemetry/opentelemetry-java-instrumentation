@@ -46,10 +46,10 @@ class JarAnalyzerInstallerTest {
             logRecord ->
                 assertThat(logRecord.getAttributes())
                     .containsEntry("package.type", "jar")
-                    .containsEntry("package.checksum_algorithm", "SHA1")
+                    .containsEntry("package.checksum_algorithm", "SHA-256")
                     .hasEntrySatisfying(
                         stringKey("package.checksum"),
-                        value -> assertThat(value).matches("[0-9a-f]{40}"))
+                        value -> assertThat(value).matches("[0-9a-f]{64}"))
                     .hasEntrySatisfying(
                         stringKey("package.path"), value -> assertThat(value).isNotNull())
                     .satisfies(

@@ -5,8 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
@@ -27,9 +35,12 @@ import org.testcontainers.couchbase.BucketDefinition;
 import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.couchbase.CouchbaseService;
 
-// Couchbase instrumentation is owned upstream so we don't assert on the contents of the spans, only
-// that the instrumentation is properly registered by the agent, meaning some spans were generated.
+// Couchbase instrumentation is owned upstream, so limited testing is performed here.
+@SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient32Test {
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -80,7 +91,20 @@ class CouchbaseClient32Test {
                   if (testLatestDeps()) {
                     span.hasStatus(StatusData.error());
                   }
+                  span.hasAttributesSatisfyingExactly(
+                      equalTo(maybeStable(DB_SYSTEM), "couchbase"),
+                      equalTo(maybeStable(DB_NAME), "test"),
+                      equalTo(maybeStable(DB_OPERATION), "get"),
+                      equalTo(maybeStable(stringKey("db.couchbase.collection")), "_default"),
+                      equalTo(stringKey("db.couchbase.document_id"), oldOrExperimental("id")),
+                      equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
+                      equalTo(longKey("db.couchbase.retries"), oldOrExperimental(0L)),
+                      equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")));
                 },
                 span -> span.hasName("dispatch_to_server")));
+  }
+
+  private static <T> T oldOrExperimental(T value) {
+    return emitOldDatabaseSemconv() || EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 }

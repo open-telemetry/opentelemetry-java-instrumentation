@@ -22,11 +22,22 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     // TODO run tests both with and without genai message capture
 
     systemProperty("otel.instrumentation.genai.capture-message-content", "true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs)
   }
 }

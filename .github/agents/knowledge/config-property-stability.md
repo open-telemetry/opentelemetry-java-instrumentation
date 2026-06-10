@@ -30,10 +30,10 @@ declarative API.
 
 ### Two User-Facing Surfaces
 
-| Surface | Experimental marker | Stable marker |
-| --- | --- | --- |
+| Surface       | Experimental marker             | Stable marker                 |
+| ------------- | ------------------------------- | ----------------------------- |
 | Flat property | word `experimental` in the name | no `experimental` in the name |
-| YAML key | `/development` suffix | no suffix |
+| YAML key      | `/development` suffix           | no suffix                     |
 
 The bridge translates between them (underscores ↔ hyphens, `/development` ↔ `experimental.`
 prefix, `SPECIAL_MAPPINGS` for legacy renames that don't follow the mechanical rule).
@@ -42,10 +42,10 @@ prefix, `SPECIAL_MAPPINGS` for legacy renames that don't follow the mechanical r
 
 Defined in [VERSIONING.md](../../../VERSIONING.md):
 
-| Tier | Flat property pattern | YAML key pattern | Breaking changes allowed? |
-| --- | --- | --- | --- |
-| **Stable** | No `experimental` in name, not under `otel.javaagent.testing.*` | No `/development` suffix | ❌ Deprecate in minor, **remove only in 3.0** |
-| **Experimental** | Contains `experimental` anywhere | Has `/development` suffix | ✅ Deprecate in one release, remove in next |
+| Tier             | Flat property pattern                                           | YAML key pattern          | Breaking changes allowed?                     |
+| ---------------- | --------------------------------------------------------------- | ------------------------- | --------------------------------------------- |
+| **Stable**       | No `experimental` in name, not under `otel.javaagent.testing.*` | No `/development` suffix  | ❌ Deprecate in minor, **remove only in 3.0** |
+| **Experimental** | Contains `experimental` anywhere                                | Has `/development` suffix | ✅ Deprecate in one release, remove in next   |
 
 `otel.javaagent.testing.*` — always allowed to break, regardless of marker.
 
@@ -92,13 +92,13 @@ if (value == null) {
 
 ## Naming Conventions
 
-| Rule | Flat property | YAML key |
-| --- | --- | --- |
-| Prefix | `otel.instrumentation.<module>.` or `otel.instrumentation.common.` | Under `instrumentation/development → java → <module>` or `common` |
-| Word separator | hyphens (kebab-case) | underscores (snake_case) |
-| Experimental marker | `experimental` in name | `/development` suffix |
-| Boolean toggle | `.enabled` suffix | `enabled` leaf key |
-| Env var form | dots/hyphens → ALL_CAPS underscores | N/A |
+| Rule                | Flat property                                                      | YAML key                                                          |
+| ------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Prefix              | `otel.instrumentation.<module>.` or `otel.instrumentation.common.` | Under `instrumentation/development → java → <module>` or `common` |
+| Word separator      | hyphens (kebab-case)                                               | underscores (snake_case)                                          |
+| Experimental marker | `experimental` in name                                             | `/development` suffix                                             |
+| Boolean toggle      | `.enabled` suffix                                                  | `enabled` leaf key                                                |
+| Env var form        | dots/hyphens → ALL_CAPS underscores                                | N/A                                                               |
 
 ## Structured Config (YAML-Only)
 

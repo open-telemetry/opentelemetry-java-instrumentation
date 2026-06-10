@@ -50,7 +50,7 @@ public abstract class AbstractApacheHttpClientTest {
   }
 
   CloseableHttpClient getClient(URI uri) {
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       return clientWithReadTimeout;
     }
     return client;
