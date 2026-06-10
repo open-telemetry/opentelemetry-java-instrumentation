@@ -76,6 +76,8 @@ WHITESPACE           = [ \t\r\n]+
 
   private final StringBuilder builder = new StringBuilder();
   private final StringBuilder querySummaryBuilder = new StringBuilder();
+  private String operationName = null;
+  private String collectionName = null;
   private String storedProcedureName = null;
   private String dollarTag = null;
 
@@ -109,6 +111,28 @@ WHITESPACE           = [ \t\r\n]+
       querySummaryBuilder.append(' ');
     }
     querySummaryBuilder.append(yytext());
+  }
+
+  private void recordOperationName(String operationName) {
+    if (this.operationName == null) {
+      this.operationName = operationName;
+    }
+  }
+
+  private void recordOperationName() {
+    recordOperationName(yytext());
+  }
+
+  private void refineOperationName(String operationTarget) {
+    if (operationName != null) {
+      operationName = operationName + " " + operationTarget;
+    }
+  }
+
+  private void recordCollectionName() {
+    if (collectionName == null) {
+      collectionName = yytext();
+    }
   }
 
   private int parenLevel = 0;
@@ -233,6 +257,7 @@ WHITESPACE           = [ \t\r\n]+
       operationTarget = target;
       expectingOperationTarget = false;
       appendOperationToSummary(operationTarget);
+      refineOperationName(operationTarget);
     }
 
     boolean isCapturingIdentifier() {
@@ -255,9 +280,13 @@ WHITESPACE           = [ \t\r\n]+
     void handleIdentifier() {
       if (!identifierCaptured && !inEmbeddedSelect) {
         appendTargetToSummary();
+        if (operationTarget.equalsIgnoreCase("TABLE")) {
+          recordCollectionName();
+        }
         identifierCaptured = true;
       } else if (inEmbeddedSelect && expectingTableName && parenLevel == selectParenLevel) {
         appendTargetToSummary();
+        recordCollectionName();
         expectingTableName = false;
       }
     }
@@ -387,6 +416,7 @@ WHITESPACE           = [ \t\r\n]+
       if (captureSingleTable && identifierCount == 1) {
         if (!isCteReference) {
           appendTargetToSummary();
+          recordCollectionName();
         }
         captureSingleTable = false;
         identifierCount = 0;
@@ -397,6 +427,7 @@ WHITESPACE           = [ \t\r\n]+
       if (captureTableList && identifierCount == 1) {
         if (!isCteReference) {
           appendTargetToSummary();
+          recordCollectionName();
         }
         captureTableList = false;
         // Don't reset identifierCount - keep counting for implicit join detection
@@ -441,6 +472,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleIdentifier() {
       if (expectingTableName) {
         appendTargetToSummary();
+        recordCollectionName();
         expectingTableName = false;
       }
     }
@@ -465,6 +497,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleIdentifier() {
       if (expectingTableName) {
         appendTargetToSummary();
+        recordCollectionName();
         expectingTableName = false;
         identifierCaptured = true;
       }
@@ -497,6 +530,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleIdentifier() {
       if (!identifierCaptured) {
         appendTargetToSummary();
+        recordCollectionName();
         identifierCaptured = true;
       }
     }
@@ -508,6 +542,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleIdentifier() {
       if (!identifierCaptured) {
         appendTargetToSummary();
+        recordCollectionName();
         identifierCaptured = true;
       }
     }
@@ -580,12 +615,16 @@ WHITESPACE           = [ \t\r\n]+
       if (text.equalsIgnoreCase("TABLE")) {
         if (!tableCaptured) {
           appendTargetToSummary();
+          refineOperationName(text);
           tableCaptured = true;
         }
         return;
       }
       if (!identifierCaptured) {
         appendTargetToSummary();
+        if (tableCaptured) {
+          recordCollectionName();
+        }
         identifierCaptured = true;
       }
     }
@@ -603,6 +642,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleIdentifier() {
       if (!tableCaptured) {
         appendTargetToSummary();
+        recordCollectionName();
         tableCaptured = true;
         expectingTableName = false;
       }
@@ -626,6 +666,7 @@ WHITESPACE           = [ \t\r\n]+
       }
       if (!identifierCaptured) {
         appendTargetToSummary();
+        recordCollectionName();
         identifierCaptured = true;
       }
     }
@@ -720,7 +761,12 @@ WHITESPACE           = [ \t\r\n]+
       summary = summary.substring(0, summary.length() - 1);
     }
 
-    return SqlQuery.createWithSummary(normalizedStatement, storedProcedureName, summary);
+    return SqlQuery.createWithSummary(
+      normalizedStatement,
+      operationName,
+      collectionName,
+      storedProcedureName,
+      summary);
   }
 
 %}
@@ -748,6 +794,7 @@ WHITESPACE           = [ \t\r\n]+
             confirmPendingSubqueryIfNeeded();
             if (shouldStartMainOperation()) {
               setOperation(new Select());
+              recordOperationName();
               appendOperationToSummary();
             } else if (operation instanceof Select) {
               // nested SELECT (subquery) - append SELECT to summary
@@ -761,6 +808,7 @@ WHITESPACE           = [ \t\r\n]+
   "INSERT" {
           if (shouldStartMainOperation()) {
             setOperation(new Insert());
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -772,6 +820,7 @@ WHITESPACE           = [ \t\r\n]+
   "DELETE" {
           if (shouldStartMainOperation()) {
             setOperation(new Delete());
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -783,6 +832,7 @@ WHITESPACE           = [ \t\r\n]+
   "UPDATE" {
           if (shouldStartMainOperation()) {
             setOperation(new Update());
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -794,6 +844,7 @@ WHITESPACE           = [ \t\r\n]+
   "CALL" {
           if (shouldStartNewOperation()) {
             setOperation(new Call());
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -805,6 +856,7 @@ WHITESPACE           = [ \t\r\n]+
   "MERGE" {
           if (shouldStartNewOperation()) {
             setOperation(new Merge());
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -816,6 +868,7 @@ WHITESPACE           = [ \t\r\n]+
   "CREATE" {
           if (shouldStartNewOperation()) {
             setOperation(new Create());
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -827,6 +880,7 @@ WHITESPACE           = [ \t\r\n]+
   "DROP" {
           if (shouldStartNewOperation()) {
             setOperation(new Drop());
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -838,6 +892,7 @@ WHITESPACE           = [ \t\r\n]+
   "ALTER" {
           if (shouldStartNewOperation()) {
             setOperation(new Alter());
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -854,6 +909,7 @@ WHITESPACE           = [ \t\r\n]+
               setOperation(new Values());
               // Only append VALUES to summary if at top level (not inside a subquery or CTE body)
               if (operationStack.isEmpty()) {
+                recordOperationName();
                 appendOperationToSummary();
               }
             }
@@ -864,6 +920,7 @@ WHITESPACE           = [ \t\r\n]+
   "EXECUTE" | "EXEC" {
           if (shouldStartNewOperation()) {
             setOperation(new Execute());
+            recordOperationName();
             appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
@@ -875,6 +932,7 @@ WHITESPACE           = [ \t\r\n]+
   "TRUNCATE" {
           if (shouldStartNewOperation()) {
             setOperation(new Truncate());
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -883,6 +941,7 @@ WHITESPACE           = [ \t\r\n]+
   "REPLACE" {
           if (shouldStartNewOperation()) {
             setOperation(new Replace());
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -891,6 +950,7 @@ WHITESPACE           = [ \t\r\n]+
   "LOCK" {
           if (shouldStartNewOperation()) {
             setOperation(new Lock());
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -899,6 +959,7 @@ WHITESPACE           = [ \t\r\n]+
   "USE" {
           if (shouldStartNewOperation()) {
             setOperation(new Use());
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -907,6 +968,7 @@ WHITESPACE           = [ \t\r\n]+
   "BEGIN" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -915,6 +977,7 @@ WHITESPACE           = [ \t\r\n]+
   "COMMIT" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -923,6 +986,7 @@ WHITESPACE           = [ \t\r\n]+
   "ROLLBACK" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -931,6 +995,7 @@ WHITESPACE           = [ \t\r\n]+
   "GRANT" {
           if (shouldStartNewOperation()) {
             setOperation(new Grant());
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -939,6 +1004,7 @@ WHITESPACE           = [ \t\r\n]+
   "REVOKE" {
           if (shouldStartNewOperation()) {
             setOperation(new Revoke());
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -947,6 +1013,7 @@ WHITESPACE           = [ \t\r\n]+
   "SHOW" {
           if (shouldStartNewOperation()) {
             setOperation(new Show());
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -963,6 +1030,7 @@ WHITESPACE           = [ \t\r\n]+
           // EXPLAIN is a prefix command - append to summary but don't set an operation,
           // so the inner statement (SELECT, INSERT, etc.) gets processed normally.
           if (!insideComment && operation == none) {
+            recordOperationName();
             appendOperationToSummary();
           }
           appendCurrentFragment();
@@ -975,8 +1043,9 @@ WHITESPACE           = [ \t\r\n]+
               // treat such queries as SELECT queries
               setOperation(new Select());
               // Derive the synthetic SELECT case from the matched FROM token.
-              appendOperationToSummary(
-                  Character.isUpperCase(zzBuffer[zzStartRead]) ? "SELECT" : "select");
+              String operationName = Character.isUpperCase(zzBuffer[zzStartRead]) ? "SELECT" : "select";
+              recordOperationName(operationName);
+              appendOperationToSummary(operationName);
             }
             operation.handleFrom();
           }

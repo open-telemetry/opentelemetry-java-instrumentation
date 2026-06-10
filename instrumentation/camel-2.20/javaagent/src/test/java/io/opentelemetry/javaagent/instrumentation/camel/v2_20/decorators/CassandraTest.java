@@ -10,7 +10,9 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -145,6 +147,8 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DB_SYSTEM_NAME, CASSANDRA),
                               equalTo(DB_NAMESPACE, "test"),
+                              equalTo(DB_OPERATION_NAME, "select"),
+                              equalTo(DB_COLLECTION_NAME, "test.users"),
                               equalTo(
                                   DB_QUERY_TEXT,
                                   "select * from test.users where id=1 ALLOW FILTERING"),
