@@ -10,11 +10,28 @@ import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.p
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.ProducerData;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
 import java.lang.reflect.Method;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 
 public class PulsarRequest extends BasePulsarRequest {
+  private static final ClassValue<Optional<Method>> INNER_MESSAGE_ID_METHOD =
+      new ClassValue<Optional<Method>>() {
+        @Override
+        protected Optional<Method> computeValue(Class<?> type) {
+          return findMethod(type, "getInnerMessageId");
+        }
+      };
+
+  private static final ClassValue<Optional<Method>> INNER_MESSAGE_METHOD =
+      new ClassValue<Optional<Method>>() {
+        @Override
+        protected Optional<Method> computeValue(Class<?> type) {
+          return findMethod(type, "getMessage");
+        }
+      };
+
   private final Message<?> message;
   private final String messageId;
 
@@ -78,8 +95,15 @@ public class PulsarRequest extends BasePulsarRequest {
   @Nullable
   private static MessageId invokeMessageIdMethod(Message<?> message, String methodName) {
     try {
-      Method method = message.getClass().getMethod(methodName);
-      Object result = method.invoke(message);
+      Optional<Method> method =
+          "getInnerMessageId".equals(methodName)
+              ? INNER_MESSAGE_ID_METHOD.get(message.getClass())
+              : findMethod(message.getClass(), methodName);
+      Method cachedMethod = method.orElse(null);
+      if (cachedMethod == null) {
+        return null;
+      }
+      Object result = cachedMethod.invoke(message);
       return result instanceof MessageId ? (MessageId) result : null;
     } catch (Throwable ignored) {
       return null;
@@ -92,11 +116,26 @@ public class PulsarRequest extends BasePulsarRequest {
   @Nullable
   private static Message<?> invokeMessageMethod(Message<?> message, String methodName) {
     try {
-      Method method = message.getClass().getMethod(methodName);
-      Object result = method.invoke(message);
+      Optional<Method> method =
+          "getMessage".equals(methodName)
+              ? INNER_MESSAGE_METHOD.get(message.getClass())
+              : findMethod(message.getClass(), methodName);
+      Method cachedMethod = method.orElse(null);
+      if (cachedMethod == null) {
+        return null;
+      }
+      Object result = cachedMethod.invoke(message);
       return result instanceof Message ? (Message<?>) result : null;
     } catch (Throwable ignored) {
       return null;
+    }
+  }
+
+  private static Optional<Method> findMethod(Class<?> type, String methodName) {
+    try {
+      return Optional.of(type.getMethod(methodName));
+    } catch (Throwable ignored) {
+      return Optional.empty();
     }
   }
 }
