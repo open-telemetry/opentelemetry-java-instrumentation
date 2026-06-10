@@ -30,12 +30,12 @@ public final class SofaRpcTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.sofa-rpc-5.4";
 
   private final OpenTelemetry openTelemetry;
-  private final List<AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse>>
-      additionalExtractors = new ArrayList<>();
-  private final List<AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse>>
-      additionalClientExtractors = new ArrayList<>();
-  private final List<AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse>>
-      additionalServerExtractors = new ArrayList<>();
+  private final List<AttributesExtractor<SofaRpcRequest, SofaResponse>> additionalExtractors =
+      new ArrayList<>();
+  private final List<AttributesExtractor<SofaRpcRequest, SofaResponse>> additionalClientExtractors =
+      new ArrayList<>();
+  private final List<AttributesExtractor<SofaRpcRequest, SofaResponse>> additionalServerExtractors =
+      new ArrayList<>();
 
   SofaRpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -48,7 +48,7 @@ public final class SofaRpcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SofaRpcTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse> attributesExtractor) {
+      AttributesExtractor<SofaRpcRequest, SofaResponse> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
   }
@@ -60,7 +60,7 @@ public final class SofaRpcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SofaRpcTelemetryBuilder addClientAttributeExtractor(
-      AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse> attributesExtractor) {
+      AttributesExtractor<SofaRpcRequest, SofaResponse> attributesExtractor) {
     additionalClientExtractors.add(attributesExtractor);
     return this;
   }
@@ -72,7 +72,7 @@ public final class SofaRpcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SofaRpcTelemetryBuilder addServerAttributeExtractor(
-      AttributesExtractor<? super SofaRpcRequest, ? super SofaResponse> attributesExtractor) {
+      AttributesExtractor<SofaRpcRequest, SofaResponse> attributesExtractor) {
     additionalServerExtractors.add(attributesExtractor);
     return this;
   }
