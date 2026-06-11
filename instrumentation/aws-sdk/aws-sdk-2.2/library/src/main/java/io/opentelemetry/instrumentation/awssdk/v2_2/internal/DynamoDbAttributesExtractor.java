@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
@@ -14,7 +15,11 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nullable;
+import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
@@ -47,6 +52,39 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
     if (emitOldDatabaseSemconv()) {
       attributes.put(DB_OPERATION, operation);
     }
+    if (emitStableDatabaseSemconv()) {
+      String tableName = extractTableName(executionAttributes);
+      if (tableName != null) {
+        attributes.put(DB_COLLECTION_NAME, tableName);
+      }
+    }
+  }
+
+  @Nullable
+  private static String extractTableName(ExecutionAttributes executionAttributes) {
+    SdkRequest request =
+        executionAttributes.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
+    if (request == null) {
+      return null;
+    }
+    // Single-table operations expose TableName directly.
+    Optional<String> tableName = request.getValueForField("TableName", String.class);
+    if (tableName.isPresent() && !tableName.get().isEmpty()) {
+      return tableName.get();
+    }
+    // Batch operations (BatchGetItem, BatchWriteItem) key RequestItems by table name.
+    // Emit db.collection.name only when the batch targets exactly one table; omit it otherwise,
+    // as the attribute is defined as a single collection identifier.
+    Optional<?> requestItems = request.getValueForField("RequestItems", Object.class);
+    if (requestItems.isPresent() && requestItems.get() instanceof Map) {
+      // The instanceof check above guarantees Map, only the generic parameters are unchecked.
+      @SuppressWarnings("unchecked")
+      Set<String> tables = ((Map<String, ?>) requestItems.get()).keySet();
+      if (tables.size() == 1) {
+        return tables.iterator().next();
+      }
+    }
+    return null;
   }
 
   @Override
