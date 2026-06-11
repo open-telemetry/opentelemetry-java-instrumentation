@@ -141,6 +141,9 @@ targets:
       target: ':instrumentation:gwt-2.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:hbase-client-2.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:helidon-4.3:javaagent'
     - type: gradle
       path: ./
