@@ -22,9 +22,6 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class CassandraRequest {
 
-  /**
-   * @deprecated use {@link #create(Session, String)} instead
-   */
   @Deprecated
   public static CassandraRequest create(
       Session session, String queryText, boolean parameterizedQuery) {
