@@ -40,7 +40,10 @@ public class OpenTelemetryApiIncubatorInstrumentationModule
             // added in 1.50
             not(
                 hasClassesNamed(
-                    "application.io.opentelemetry.api.incubator.common.ExtendedAttributes")));
+                    "application.io.opentelemetry.api.incubator.common.ExtendedAttributes")))
+        .and(
+            // added in 1.63
+            not(hasClassesNamed("application.io.opentelemetry.api.impl.InstrumentationUtil")));
   }
 
   @Override
