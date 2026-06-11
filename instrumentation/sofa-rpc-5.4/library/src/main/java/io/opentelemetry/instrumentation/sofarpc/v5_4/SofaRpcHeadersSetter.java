@@ -8,8 +8,7 @@ package io.opentelemetry.instrumentation.sofarpc.v5_4;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 
-enum SofaRpcHeadersSetter implements TextMapSetter<SofaRpcRequest> {
-  INSTANCE;
+final class SofaRpcHeadersSetter implements TextMapSetter<SofaRpcRequest> {
 
   @Override
   public void set(@Nullable SofaRpcRequest request, String key, String value) {

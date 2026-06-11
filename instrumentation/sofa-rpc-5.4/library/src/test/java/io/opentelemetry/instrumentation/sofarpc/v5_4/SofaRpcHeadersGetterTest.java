@@ -30,7 +30,7 @@ class SofaRpcHeadersGetterTest {
 
     SofaRpcRequest request = SofaRpcRequest.create(sofaRequest);
 
-    Iterator<String> iterator = SofaRpcHeadersGetter.INSTANCE.keys(request).iterator();
+    Iterator<String> iterator = new SofaRpcHeadersGetter().keys(request).iterator();
     assertThat(iterator.hasNext()).isTrue();
     assertThat(iterator.next()).isEqualTo("key");
     assertThat(iterator.hasNext()).isFalse();
@@ -42,7 +42,7 @@ class SofaRpcHeadersGetterTest {
 
     SofaRpcRequest request = SofaRpcRequest.create(sofaRequest);
 
-    Iterator<String> iterator = SofaRpcHeadersGetter.INSTANCE.keys(request).iterator();
+    Iterator<String> iterator = new SofaRpcHeadersGetter().keys(request).iterator();
     assertThat(iterator.hasNext()).isFalse();
   }
 
@@ -52,7 +52,7 @@ class SofaRpcHeadersGetterTest {
 
     SofaRpcRequest request = SofaRpcRequest.create(sofaRequest);
 
-    Iterator<String> iterator = SofaRpcHeadersGetter.INSTANCE.keys(request).iterator();
+    Iterator<String> iterator = new SofaRpcHeadersGetter().keys(request).iterator();
     assertThat(iterator.hasNext()).isFalse();
   }
 
@@ -62,7 +62,7 @@ class SofaRpcHeadersGetterTest {
 
     SofaRpcRequest request = SofaRpcRequest.create(sofaRequest);
 
-    assertThat(SofaRpcHeadersGetter.INSTANCE.get(request, "key")).isEqualTo("value");
+    assertThat(new SofaRpcHeadersGetter().get(request, "key")).isEqualTo("value");
   }
 
   @Test
@@ -72,7 +72,7 @@ class SofaRpcHeadersGetterTest {
     SofaRpcRequest request = SofaRpcRequest.create(sofaRequest);
 
     // Should return null for non-String values
-    assertThat(SofaRpcHeadersGetter.INSTANCE.get(request, "key")).isNull();
+    assertThat(new SofaRpcHeadersGetter().get(request, "key")).isNull();
   }
 
   @Test
@@ -81,6 +81,6 @@ class SofaRpcHeadersGetterTest {
 
     SofaRpcRequest request = SofaRpcRequest.create(sofaRequest);
 
-    assertThat(SofaRpcHeadersGetter.INSTANCE.get(request, "key")).isNull();
+    assertThat(new SofaRpcHeadersGetter().get(request, "key")).isNull();
   }
 }
