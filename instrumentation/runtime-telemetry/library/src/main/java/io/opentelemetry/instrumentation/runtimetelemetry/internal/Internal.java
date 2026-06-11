@@ -371,10 +371,10 @@ public final class Internal {
     }
 
     // Apply capture_gc_cause
-    boolean captureGcCause = config.getBoolean("capture_gc_cause", false);
-    if (captureGcCause) {
+    boolean captureGcCause = config.getBoolean("capture_gc_cause", true);
+    if (!captureGcCause) {
       logger.warning(
-          "otel.instrumentation.runtime-telemetry.capture-gc-cause is deprecated and will be"
+          "Disabling otel.instrumentation.runtime-telemetry.capture-gc-cause is deprecated and will be"
               + " removed in 3.0. GC cause will always be captured.");
     }
     Internal.setCaptureGcCause(builder, captureGcCause);
