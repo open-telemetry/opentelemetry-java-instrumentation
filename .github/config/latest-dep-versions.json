@@ -493,6 +493,7 @@
     "org.springframework.boot:spring-boot-starter-test#2.1.+": "2.1.18.RELEASE",
     "org.springframework.boot:spring-boot-starter-test#3.+": "3.5.15",
     "org.springframework.boot:spring-boot-starter-test#3.3.+": "3.3.13",
+    "org.springframework.boot:spring-boot-starter-test#4.0.+": "4.0.7",
     "org.springframework.boot:spring-boot-starter-tomcat#+": "2.7.18",
     "org.springframework.boot:spring-boot-starter-tomcat#2.+": "2.7.18",
     "org.springframework.boot:spring-boot-starter-web#+": "4.1.0",
