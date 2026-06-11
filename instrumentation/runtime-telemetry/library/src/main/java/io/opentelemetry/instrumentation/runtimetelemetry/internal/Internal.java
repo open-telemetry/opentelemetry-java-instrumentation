@@ -372,17 +372,11 @@ public final class Internal {
     }
 
     // Apply capture_gc_cause
-    String rawValue = config.getString("capture_gc_cause");
+    boolean captureGcCause = config.getBoolean("capture_gc_cause", SemconvStability.v3Preview());
 
-    boolean captureGcCause;
-    if (rawValue != null) {
-      captureGcCause = Boolean.parseBoolean(rawValue);
-      if (!captureGcCause) {
-        logger.warning(
-            "Setting otel.instrumentation.runtime-telemetry.capture-gc-cause is deprecated...");
-      }
-    } else {
-      captureGcCause = SemconvStability.v3Preview();
+    if (!captureGcCause && config.getString("capture_gc_cause") != null) {
+      logger.warning(
+          "Setting otel.instrumentation.runtime-telemetry.capture-gc-cause=false is deprecated and will be removed in 3.0. GC cause will always be captured.");
     }
 
     Internal.setCaptureGcCause(builder, captureGcCause);
