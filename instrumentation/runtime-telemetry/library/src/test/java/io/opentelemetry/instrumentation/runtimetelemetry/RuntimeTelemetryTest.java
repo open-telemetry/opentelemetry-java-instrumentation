@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,7 +49,8 @@ class RuntimeTelemetryTest {
   }
 
   @Test
-  void testCaptureGcCauseDefaultsToTrue() {
+  @SuppressWarnings("ResultOfMethodCallIgnored")
+  void testCaptureGcCauseDefault_V3PreviewEnabled() {
     OpenTelemetry openTelemetry = OpenTelemetry.noop();
     DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
     DeclarativeConfigProperties java17Config = mock(DeclarativeConfigProperties.class);
@@ -67,7 +69,9 @@ class RuntimeTelemetryTest {
           }
         });
 
-    try (MockedStatic<DeclarativeConfigUtil> utilities = mockStatic(DeclarativeConfigUtil.class)) {
+    try (MockedStatic<DeclarativeConfigUtil> utilities = mockStatic(DeclarativeConfigUtil.class);
+        MockedStatic<SemconvStability> stability = mockStatic(SemconvStability.class)) {
+
       utilities
           .when(
               () ->
@@ -81,10 +85,57 @@ class RuntimeTelemetryTest {
                       openTelemetry, "runtime_telemetry_java17"))
           .thenReturn(java17Config);
 
+      stability.when(SemconvStability::v3Preview).thenReturn(true);
+
       Internal.configure(openTelemetry, true);
     }
 
     assertThat(capturedValue.get()).isTrue();
+  }
+
+  @Test
+  @SuppressWarnings("ResultOfMethodCallIgnored")
+  void testCaptureGcCauseDefault_V3PreviewDisabled() {
+    OpenTelemetry openTelemetry = OpenTelemetry.noop();
+    DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
+    DeclarativeConfigProperties java17Config = mock(DeclarativeConfigProperties.class);
+
+    when(config.getBoolean(anyString(), anyBoolean()))
+        .thenAnswer(invocation -> invocation.getArgument(1));
+    when(java17Config.getBoolean(anyString(), anyBoolean()))
+        .thenAnswer(invocation -> invocation.getArgument(1));
+
+    AtomicBoolean capturedValue = new AtomicBoolean(true);
+    Internal.internalSetCaptureGcCause(
+        (builder, capture) -> {
+          capturedValue.set(capture);
+          if (originalCallback != null) {
+            originalCallback.accept(builder, capture);
+          }
+        });
+
+    try (MockedStatic<DeclarativeConfigUtil> utilities = mockStatic(DeclarativeConfigUtil.class);
+        MockedStatic<SemconvStability> stability = mockStatic(SemconvStability.class)) {
+
+      utilities
+          .when(
+              () ->
+                  DeclarativeConfigUtil.getInstrumentationConfig(
+                      openTelemetry, "runtime_telemetry"))
+          .thenReturn(config);
+      utilities
+          .when(
+              () ->
+                  DeclarativeConfigUtil.getInstrumentationConfig(
+                      openTelemetry, "runtime_telemetry_java17"))
+          .thenReturn(java17Config);
+
+      stability.when(SemconvStability::v3Preview).thenReturn(false);
+
+      Internal.configure(openTelemetry, true);
+    }
+
+    assertThat(capturedValue.get()).isFalse();
   }
 
   @Test
@@ -95,7 +146,7 @@ class RuntimeTelemetryTest {
 
     when(config.getBoolean("enabled", true)).thenReturn(true);
     when(config.getBoolean("capture_gc_cause", true)).thenReturn(false);
-
+    when(config.getBoolean("capture_gc_cause", false)).thenReturn(false);
     when(java17Config.getBoolean("enabled", false)).thenReturn(false);
     when(java17Config.getBoolean("enable_all", false)).thenReturn(false);
 

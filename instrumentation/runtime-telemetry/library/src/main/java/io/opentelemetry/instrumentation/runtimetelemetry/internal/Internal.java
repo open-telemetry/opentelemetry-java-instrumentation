@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
 import java.util.function.BiConsumer;
@@ -371,12 +372,19 @@ public final class Internal {
     }
 
     // Apply capture_gc_cause
-    boolean captureGcCause = config.getBoolean("capture_gc_cause", true);
-    if (!captureGcCause) {
-      logger.warning(
-          "Setting otel.instrumentation.runtime-telemetry.capture-gc-cause is deprecated and will be"
-              + " removed in 3.0. GC cause will always be captured.");
+    String rawValue = config.getString("capture_gc_cause");
+
+    boolean captureGcCause;
+    if (rawValue != null) {
+      captureGcCause = Boolean.parseBoolean(rawValue);
+      if (!captureGcCause) {
+        logger.warning(
+            "Setting otel.instrumentation.runtime-telemetry.capture-gc-cause is deprecated...");
+      }
+    } else {
+      captureGcCause = SemconvStability.v3Preview();
     }
+
     Internal.setCaptureGcCause(builder, captureGcCause);
   }
 
