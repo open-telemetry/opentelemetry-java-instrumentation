@@ -5,6 +5,8 @@
     "co.elastic.clients:elasticsearch-java#+": "9.4.2",
     "co.elastic.clients:elasticsearch-java#8.9.+": "8.9.2",
     "com.alibaba:druid#+": "1.2.28",
+    "com.alibaba.nacos:nacos-client#+": "2.5.2",
+    "com.alibaba.nacos:nacos-client#2.+": "2.5.2",
     "com.amazonaws:aws-java-sdk-core#+": "1.12.797",
     "com.amazonaws:aws-java-sdk-dynamodb#+": "1.12.797",
     "com.amazonaws:aws-java-sdk-ec2#+": "1.12.797",
