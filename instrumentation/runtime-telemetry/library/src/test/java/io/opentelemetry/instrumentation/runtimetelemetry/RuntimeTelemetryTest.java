@@ -96,7 +96,6 @@ class RuntimeTelemetryTest {
       Internal.configure(openTelemetry, true);
     }
 
-    // Verify it successfully respects explicit user opt-out to false
     assertThat(capturedValue.get()).isFalse();
   }
 }
