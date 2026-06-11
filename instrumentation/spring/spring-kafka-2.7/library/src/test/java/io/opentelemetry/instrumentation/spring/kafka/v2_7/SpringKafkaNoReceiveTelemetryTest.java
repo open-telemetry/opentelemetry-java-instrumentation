@@ -47,8 +47,9 @@ class SpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaNoReceiveTele
     SmartInitializingSingleton producerInstrumentation(
         List<ProducerFactory<?, ?>> producerFactories) {
       KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(testing.getOpenTelemetry());
-      return () -> producerFactories.forEach(
-          producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap));
+      return () ->
+          producerFactories.forEach(
+              producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap));
     }
 
     @Bean
