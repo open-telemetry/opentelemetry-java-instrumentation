@@ -128,6 +128,67 @@ public abstract class AbstractCassandraTest {
   }
 
   @Test
+  void simpleStatementWithValues() {
+    CqlSession session = getSession(null);
+    cleanup.deferCleanup(session);
+
+    session.execute("DROP KEYSPACE IF EXISTS simple_values_test");
+    session.execute(
+        "CREATE KEYSPACE simple_values_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    session.execute("CREATE TABLE simple_values_test.users ( name text PRIMARY KEY, age int )");
+    testing().clearData();
+
+    session.execute(
+        SimpleStatement.newInstance(
+            "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)", 1));
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("INSERT simple_values_test.users")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                satisfies(
+                                    NETWORK_TYPE,
+                                    emitStableDatabaseSemconv()
+                                        ? val -> val.isNull()
+                                        : val -> val.isIn("ipv4", "ipv6")),
+                                equalTo(SERVER_ADDRESS, cassandraHost),
+                                equalTo(SERVER_PORT, cassandraPort),
+                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                                equalTo(NETWORK_PEER_PORT, cassandraPort),
+                                equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv()
+                                        ? "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)"
+                                        : "INSERT INTO simple_values_test.users (name, age) values (?, ?)"),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv()
+                                        ? "INSERT simple_values_test.users"
+                                        : null),
+                                equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                                equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                                equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                                satisfies(
+                                    maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(
+                                    maybeStable(DB_CASSANDRA_IDEMPOTENCE),
+                                    val -> val.isInstanceOf(Boolean.class)),
+                                equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                                equalTo(
+                                    maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
+                                equalTo(
+                                    maybeStable(DB_CASSANDRA_TABLE),
+                                    "simple_values_test.users"))));
+  }
+
+  @Test
   void batchStatementWithSameQuery() {
     CqlSession session = getSession(null);
     cleanup.deferCleanup(session);
@@ -159,7 +220,11 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")),
+                                satisfies(
+                                    NETWORK_TYPE,
+                                    emitStableDatabaseSemconv()
+                                        ? val -> val.isNull()
+                                        : val -> val.isIn("ipv4", "ipv6")),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
@@ -201,13 +266,13 @@ public abstract class AbstractCassandraTest {
         "CREATE KEYSPACE batch_mixed_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
     session.execute("CREATE TABLE batch_mixed_test.users ( name text PRIMARY KEY, age int )");
     PreparedStatement insertStatement =
-        session.prepare("INSERT INTO batch_mixed_test.users (name, age) values (?, ?)");
+        session.prepare("INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?)");
     testing().clearData();
 
     BatchStatement batchStatement =
         BatchStatement.newInstance(
             DefaultBatchType.LOGGED,
-            insertStatement.bind("alice", 1),
+            insertStatement.bind(1),
             SimpleStatement.newInstance(
                 "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
     session.execute(batchStatement);
@@ -221,7 +286,11 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")),
+                                satisfies(
+                                    NETWORK_TYPE,
+                                    emitStableDatabaseSemconv()
+                                        ? val -> val.isNull()
+                                        : val -> val.isIn("ipv4", "ipv6")),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
@@ -230,7 +299,7 @@ public abstract class AbstractCassandraTest {
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
                                     emitStableDatabaseSemconv()
-                                        ? "INSERT INTO batch_mixed_test.users (name, age) values (?, ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?"
+                                        ? "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?"
                                         : null),
                                 equalTo(
                                     DB_OPERATION_BATCH_SIZE,

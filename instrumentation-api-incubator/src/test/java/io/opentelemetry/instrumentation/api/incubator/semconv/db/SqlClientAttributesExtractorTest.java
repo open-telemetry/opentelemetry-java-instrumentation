@@ -369,7 +369,7 @@ class SqlClientAttributesExtractorTest {
     request.put("db.namespace", "potatoes");
     request.put(
         "db.query.texts",
-        asList("INSERT INTO potato VALUES(?)", "UPDATE potato SET name='bob' WHERE id=1"));
+        asList("INSERT INTO potato VALUES('alice', ?)", "UPDATE potato SET name='bob' WHERE id=1"));
     request.put("db.query.parameterized", asList(true, false));
     request.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
 
@@ -393,7 +393,7 @@ class SqlClientAttributesExtractorTest {
               entry(DB_NAMESPACE, "potatoes"),
               entry(
                   DB_QUERY_TEXT,
-                  "INSERT INTO potato VALUES(?); UPDATE potato SET name=? WHERE id=?"),
+                  "INSERT INTO potato VALUES('alice', ?); UPDATE potato SET name=? WHERE id=?"),
               entry(DB_QUERY_SUMMARY, "BATCH"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     } else if (emitOldDatabaseSemconv()) {
@@ -404,7 +404,7 @@ class SqlClientAttributesExtractorTest {
               entry(DB_NAMESPACE, "potatoes"),
               entry(
                   DB_QUERY_TEXT,
-                  "INSERT INTO potato VALUES(?); UPDATE potato SET name=? WHERE id=?"),
+                  "INSERT INTO potato VALUES('alice', ?); UPDATE potato SET name=? WHERE id=?"),
               entry(DB_QUERY_SUMMARY, "BATCH"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     }

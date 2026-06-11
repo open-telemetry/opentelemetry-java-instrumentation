@@ -355,12 +355,12 @@ class CassandraClientTest {
         "CREATE KEYSPACE batch_mixed_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
     session.execute("CREATE TABLE batch_mixed_test.users ( name text PRIMARY KEY, age int )");
     PreparedStatement insertStatement =
-        session.prepare("INSERT INTO batch_mixed_test.users (name, age) values (?, ?)");
+        session.prepare("INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?)");
     testing.clearData();
 
     BatchStatement batchStatement =
         new BatchStatement()
-            .add(insertStatement.bind("alice", 1))
+            .add(insertStatement.bind(1))
             .add(
                 new SimpleStatement(
                     "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
@@ -374,7 +374,7 @@ class CassandraClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
                             equalTo(SERVER_ADDRESS, cassandraHost),
                             equalTo(SERVER_PORT, cassandraPort),
                             equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
@@ -383,7 +383,7 @@ class CassandraClientTest {
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 emitStableDatabaseSemconv()
-                                    ? "INSERT INTO batch_mixed_test.users (name, age) values (?, ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?"
+                                    ? "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?"
                                     : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),

@@ -36,54 +36,55 @@ public abstract class CassandraRequest {
     if (statement instanceof BatchStatement) {
       return create(session, (BatchStatement) statement);
     }
-    return create(session, singleton(getQuery(statement)), statement instanceof BoundStatement, null, null);
+    return create(session, singleton(getQuery(statement)), hasQueryValues(statement), null, null);
   }
 
   private static CassandraRequest create(Session session, BatchStatement batchStatement) {
     List<String> queryTexts = new ArrayList<>();
-    List<Boolean> parameterizedQueries = null;
-    boolean allParameterized = true;
+    List<Boolean> mixedParameterizedQueries = null;
+    boolean allQueriesParameterized = true;
     Boolean firstParameterizedQuery = null;
     int queryIndex = 0;
     for (BatchableStatement<?> batchEntry : batchStatement) {
       queryTexts.add(getQuery(batchEntry));
-      boolean parameterizedQuery = batchEntry instanceof BoundStatement;
+      boolean parameterizedQuery = hasQueryValues(batchEntry);
       if (!parameterizedQuery) {
-        allParameterized = false;
+        allQueriesParameterized = false;
       }
       if (firstParameterizedQuery == null) {
         firstParameterizedQuery = parameterizedQuery;
-      } else if (parameterizedQuery != firstParameterizedQuery && parameterizedQueries == null) {
-        parameterizedQueries = new ArrayList<>(batchStatement.size());
+      } else if (parameterizedQuery != firstParameterizedQuery
+          && mixedParameterizedQueries == null) {
+        mixedParameterizedQueries = new ArrayList<>(batchStatement.size());
         for (int previousQueryIndex = 0; previousQueryIndex < queryIndex; previousQueryIndex++) {
-          parameterizedQueries.add(firstParameterizedQuery);
+          mixedParameterizedQueries.add(firstParameterizedQuery);
         }
       }
-      if (parameterizedQueries != null) {
-        parameterizedQueries.add(parameterizedQuery);
+      if (mixedParameterizedQueries != null) {
+        mixedParameterizedQueries.add(parameterizedQuery);
       }
       queryIndex++;
     }
-    boolean parameterizedQuery = allParameterized;
-    if (parameterizedQueries == null && firstParameterizedQuery != null) {
-      parameterizedQuery = firstParameterizedQuery;
+    boolean allQueriesParameterizedResult = allQueriesParameterized;
+    if (mixedParameterizedQueries == null && firstParameterizedQuery != null) {
+      allQueriesParameterizedResult = firstParameterizedQuery;
     }
     return create(
         session,
         queryTexts,
-        parameterizedQuery,
-        parameterizedQueries,
+        allQueriesParameterizedResult,
+        mixedParameterizedQueries,
         Long.valueOf(batchStatement.size()));
   }
 
   private static CassandraRequest create(
       Session session,
       Collection<String> queryTexts,
-      boolean parameterizedQuery,
-      @Nullable List<Boolean> parameterizedQueries,
+      boolean allQueriesParameterized,
+      @Nullable List<Boolean> mixedParameterizedQueries,
       @Nullable Long batchSize) {
     return new AutoValue_CassandraRequest(
-        session, queryTexts, parameterizedQuery, parameterizedQueries, batchSize);
+        session, queryTexts, allQueriesParameterized, mixedParameterizedQueries, batchSize);
   }
 
   private static String getQuery(Statement<?> statement) {
@@ -95,6 +96,18 @@ public abstract class CassandraRequest {
     }
 
     return query == null ? "" : query;
+  }
+
+  private static boolean hasQueryValues(Statement<?> statement) {
+    if (statement instanceof BoundStatement) {
+      return true;
+    }
+    if (statement instanceof SimpleStatement) {
+      SimpleStatement simpleStatement = (SimpleStatement) statement;
+      return !simpleStatement.getPositionalValues().isEmpty()
+          || !simpleStatement.getNamedValues().isEmpty();
+    }
+    return false;
   }
 
   /**
@@ -112,13 +125,17 @@ public abstract class CassandraRequest {
    */
   @Deprecated
   public String getQueryText() {
-    return getQueryTexts().isEmpty() ? "" : getQueryTexts().iterator().next();
+    if (getBatchSize() != null) {
+      // Preserve previous public API behavior: BatchStatement query text was not captured.
+      return "";
+    }
+    return getQueryTexts().iterator().next();
   }
 
-  abstract boolean parameterizedQuery();
+  abstract boolean allQueriesParameterized();
 
   @Nullable
-  abstract List<Boolean> getParameterizedQueries();
+  abstract List<Boolean> mixedParameterizedQueries();
 
   /**
    * Returns whether all queries in this request are parameterized.
@@ -127,14 +144,14 @@ public abstract class CassandraRequest {
    */
   @Deprecated
   public boolean isParameterizedQuery() {
-    return parameterizedQuery();
+    return allQueriesParameterized();
   }
 
   boolean isParameterizedQuery(int queryIndex) {
-    List<Boolean> parameterizedQueries = getParameterizedQueries();
-    return parameterizedQueries == null
-        ? parameterizedQuery()
-        : parameterizedQueries.get(queryIndex);
+    List<Boolean> mixedParameterizedQueries = mixedParameterizedQueries();
+    return mixedParameterizedQueries == null
+        ? allQueriesParameterized()
+        : mixedParameterizedQueries.get(queryIndex);
   }
 
   @Nullable
