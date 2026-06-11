@@ -103,14 +103,14 @@ public abstract class AbstractHbaseTest {
   private static final String ROW_5 = "row5";
   private static final String SCAN_ROW = "scan-row";
 
-  protected abstract InstrumentationExtension testing();
-
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private final String hostname = getHostName();
   protected final GenericContainer<?> hbaseContainer = createHbaseContainer(hostname);
 
   protected Connection connection;
+
+  protected abstract InstrumentationExtension testing();
 
   private static String getHostName() {
     try {

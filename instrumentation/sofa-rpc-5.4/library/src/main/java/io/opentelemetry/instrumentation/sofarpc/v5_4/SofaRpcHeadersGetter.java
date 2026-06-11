@@ -12,8 +12,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-enum SofaRpcHeadersGetter implements TextMapGetter<SofaRpcRequest> {
-  INSTANCE;
+final class SofaRpcHeadersGetter implements TextMapGetter<SofaRpcRequest> {
 
   @Override
   public Iterable<String> keys(SofaRpcRequest request) {

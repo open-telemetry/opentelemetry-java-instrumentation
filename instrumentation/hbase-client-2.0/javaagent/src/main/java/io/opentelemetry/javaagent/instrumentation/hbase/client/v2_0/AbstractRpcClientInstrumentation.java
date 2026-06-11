@@ -79,7 +79,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable RequestAndContext requestAndContext) {
       resetRequestAndContext();
       if (requestAndContext == null) {

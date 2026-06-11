@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4;
 
+import static io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4.SofaRpcSingletons.serverFilter;
+
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.ext.Extension;
@@ -19,7 +21,7 @@ public class OpenTelemetryServerFilter extends Filter {
   private final Filter delegate;
 
   public OpenTelemetryServerFilter() {
-    delegate = SofaRpcSingletons.serverFilter();
+    delegate = serverFilter();
   }
 
   @Override

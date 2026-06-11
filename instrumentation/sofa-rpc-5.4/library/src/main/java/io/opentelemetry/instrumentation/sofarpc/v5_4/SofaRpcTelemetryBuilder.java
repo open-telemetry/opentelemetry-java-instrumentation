@@ -112,7 +112,7 @@ public final class SofaRpcTelemetryBuilder {
                 RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
 
     return new SofaRpcTelemetry(
-        serverInstrumenterBuilder.buildServerInstrumenter(SofaRpcHeadersGetter.INSTANCE),
-        clientInstrumenterBuilder.buildClientInstrumenter(SofaRpcHeadersSetter.INSTANCE));
+        serverInstrumenterBuilder.buildServerInstrumenter(new SofaRpcHeadersGetter()),
+        clientInstrumenterBuilder.buildClientInstrumenter(new SofaRpcHeadersSetter()));
   }
 }
