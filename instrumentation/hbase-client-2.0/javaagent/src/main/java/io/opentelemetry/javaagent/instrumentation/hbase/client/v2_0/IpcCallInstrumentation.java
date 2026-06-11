@@ -39,7 +39,7 @@ class IpcCallInstrumentation implements TypeInstrumentation {
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(value = 0, optional = true) @Nullable IOException timeoutError,
         @Advice.FieldValue(value = "error") @Nullable IOException callError) {
-      IOException error = "setTimeout".equals(methodName) ? timeoutError : callError;
+      IOException error = methodName.equals("setTimeout") ? timeoutError : callError;
       RequestAndContext requestAndContext =
           OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
       if (requestAndContext == null) {
