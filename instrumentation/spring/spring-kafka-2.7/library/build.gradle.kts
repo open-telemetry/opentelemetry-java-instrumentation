@@ -22,10 +22,6 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
-
-  // tests don't work with spring boot 4 yet
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:3.+") // documented limitation
 }
 
 tasks.test {

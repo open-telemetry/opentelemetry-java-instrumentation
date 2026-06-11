@@ -28,8 +28,8 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.glassfish.jaxb:jaxb-runtime:2.3.3")
 
-  latestDepTestLibrary("org.hibernate:hibernate-core:5.+") // documented limitation
-  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+") // documented limitation
+  latestDepTestLibrary("org.hibernate:hibernate-core:5.+") // see hibernate-6.0 module
+  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+") // see hibernate-6.0 module
 }
 
 tasks {

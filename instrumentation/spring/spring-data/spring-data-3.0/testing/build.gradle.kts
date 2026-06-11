@@ -21,8 +21,8 @@ dependencies {
   testImplementation("com.h2database:h2:1.4.197")
   testImplementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
 
-  // latest version of spring data is not yet compatible with spring 7 yet
-  latestDepTestLibrary("org.springframework:spring-test:6.+") // documented limitation
+  // latest Spring Data is not yet compatible with Spring Framework 7.
+  latestDepTestLibrary("org.springframework:spring-test:6.+") // related dependency
 }
 
 otelJava {
