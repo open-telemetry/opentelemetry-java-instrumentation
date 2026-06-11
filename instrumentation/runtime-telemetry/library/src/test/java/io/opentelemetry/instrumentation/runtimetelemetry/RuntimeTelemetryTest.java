@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -47,6 +49,15 @@ class RuntimeTelemetryTest {
 
   @Test
   void testCaptureGcCauseDefaultsToTrue() {
+    OpenTelemetry openTelemetry = OpenTelemetry.noop();
+    DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
+    DeclarativeConfigProperties java17Config = mock(DeclarativeConfigProperties.class);
+
+    when(config.getBoolean(anyString(), anyBoolean()))
+        .thenAnswer(invocation -> invocation.getArgument(1));
+    when(java17Config.getBoolean(anyString(), anyBoolean()))
+        .thenAnswer(invocation -> invocation.getArgument(1));
+
     AtomicBoolean capturedValue = new AtomicBoolean(false);
     Internal.internalSetCaptureGcCause(
         (builder, capture) -> {
@@ -56,7 +67,22 @@ class RuntimeTelemetryTest {
           }
         });
 
-    Internal.configure(OpenTelemetry.noop(), true);
+    try (MockedStatic<DeclarativeConfigUtil> utilities = mockStatic(DeclarativeConfigUtil.class)) {
+      utilities
+          .when(
+              () ->
+                  DeclarativeConfigUtil.getInstrumentationConfig(
+                      openTelemetry, "runtime_telemetry"))
+          .thenReturn(config);
+      utilities
+          .when(
+              () ->
+                  DeclarativeConfigUtil.getInstrumentationConfig(
+                      openTelemetry, "runtime_telemetry_java17"))
+          .thenReturn(java17Config);
+
+      Internal.configure(openTelemetry, true);
+    }
 
     assertThat(capturedValue.get()).isTrue();
   }
@@ -69,6 +95,9 @@ class RuntimeTelemetryTest {
 
     when(config.getBoolean("enabled", true)).thenReturn(true);
     when(config.getBoolean("capture_gc_cause", true)).thenReturn(false);
+
+    when(java17Config.getBoolean("enabled", false)).thenReturn(false);
+    when(java17Config.getBoolean("enable_all", false)).thenReturn(false);
 
     AtomicBoolean capturedValue = new AtomicBoolean(true);
     Internal.internalSetCaptureGcCause(
