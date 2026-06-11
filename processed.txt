@@ -575,3 +575,4 @@ hbase-client-2.0:testing
 sofa-rpc-5.4:javaagent
 sofa-rpc-5.4:library
 sofa-rpc-5.4:library-autoconfigure
+sofa-rpc-5.4:testing
