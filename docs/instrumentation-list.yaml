@@ -3169,6 +3169,10 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.name
+        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.system.name
@@ -3184,7 +3188,11 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.collection.name
+        type: STRING
       - name: db.namespace
+        type: STRING
+      - name: db.operation.name
         type: STRING
       - name: db.query.summary
         type: STRING
@@ -3265,6 +3273,10 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.name
+        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.system.name
@@ -3292,7 +3304,11 @@ libraries:
         type: BOOLEAN
       - name: cassandra.speculative_execution.count
         type: LONG
+      - name: db.collection.name
+        type: STRING
       - name: db.namespace
+        type: STRING
+      - name: db.operation.name
         type: STRING
       - name: db.query.summary
         type: STRING
@@ -3381,6 +3397,10 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.name
+        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.system.name
@@ -3408,7 +3428,11 @@ libraries:
         type: BOOLEAN
       - name: cassandra.speculative_execution.count
         type: LONG
+      - name: db.collection.name
+        type: STRING
       - name: db.namespace
+        type: STRING
+      - name: db.operation.name
         type: STRING
       - name: db.query.summary
         type: STRING
@@ -7478,6 +7502,10 @@ libraries:
         type: LONG
       - name: network.type
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.semconv-stability.opt-in=database
     metrics:
     - name: db.client.operation.duration
@@ -7486,6 +7514,8 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -7494,9 +7524,15 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -7506,6 +7542,10 @@ libraries:
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
         type: LONG
 - name: jetty-8.0
   display_name: Eclipse Jetty
@@ -15063,8 +15103,8 @@ libraries:
 - name: spring-security-config-6.0
   display_name: Spring Security
   description: |
-    This instrumentation does not emit any telemetry on its own. Instead, it captures enduser attributes, and is only enabled when at least one of the `enduser` configurations is enabled.
-    NOTE: The `enduser` attributes have been deprecated and will be removed in 3.0+ of the java agent.
+    This instrumentation does not emit any telemetry on its own. Instead, it captures identity attributes, and is only enabled when at least one common identity configuration is enabled.
+    NOTE: The `enduser` attributes have been deprecated. When `otel.instrumentation.common.v3-preview` is enabled, `enduser.id` is emitted as `user.name`, `enduser.role` is emitted as the string array `user.roles`, and `enduser.scope` is not emitted.
   library_link: https://spring.io/projects/spring-security
   source_path: instrumentation/spring/spring-security-config-6.0
   minimum_java_version: 17
@@ -15077,29 +15117,55 @@ libraries:
   configurations:
   - name: otel.instrumentation.common.enduser.id.enabled
     declarative_name: java.common.enduser.id.enabled
-    description: Enables capturing the enduser.id attribute.
+    description: Enables capturing the enduser.id attribute. This property and the
+      associated attribute are not supported when v3 preview is enabled.
     type: boolean
     default: false
   - name: otel.instrumentation.common.enduser.role.enabled
     declarative_name: java.common.enduser.role.enabled
-    description: Enables capturing the enduser.role attribute.
+    description: Enables capturing the enduser.role attribute. This property and the
+      associated attribute are not supported when v3 preview is enabled.
     type: boolean
     default: false
   - name: otel.instrumentation.common.enduser.scope.enabled
     declarative_name: java.common.enduser.scope.enabled
-    description: Enables capturing the enduser.scope attribute.
+    description: Enables capturing the enduser.scope attribute when v3 preview is
+      not enabled. This property is not honored when v3 preview is enabled.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.user.name.enabled
+    declarative_name: java.common.user.name.enabled
+    description: Enables capturing the user.name attribute when v3 preview is enabled.
+      This property and the associated attribute are not supported when v3 preview
+      is disabled.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.user.roles.enabled
+    declarative_name: java.common.user.roles.enabled
+    description: Enables capturing the user.roles attribute when v3 preview is enabled.
+      This property and the associated attribute are not supported when v3 preview
+      is disabled.
     type: boolean
     default: false
   - name: otel.instrumentation.spring-security.enduser.role.granted-authority-prefix
     declarative_name: java.spring_security.enduser.role.granted_authority_prefix
     description: Prefix of granted authorities identifying roles to capture in the
-      `enduser.role` semantic attribute.
+      `enduser.role` semantic attribute. This property is not honored when v3 preview
+      is enabled; use the `user.roles` variant instead.
+    type: string
+    default: ROLE_
+  - name: otel.instrumentation.spring-security.user.roles.granted-authority-prefix
+    declarative_name: java.spring_security.user.roles.granted_authority_prefix
+    description: Prefix of granted authorities identifying roles to capture in the
+      `user.roles` semantic attribute when v3 preview is enabled. This property is
+      not honored when v3 preview is disabled; use the `enduser.role` variant instead.
     type: string
     default: ROLE_
   - name: otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix
     declarative_name: java.spring_security.enduser.scope.granted_authority_prefix
     description: Prefix of granted authorities identifying scopes to capture in the
-      `enduser.scope` semantic attribute.
+      `enduser.scope` semantic attribute. This property and the associated attribute
+      are not supported when v3 preview is enabled.
     type: string
     default: SCOPE_
 - name: spring-web-3.1
