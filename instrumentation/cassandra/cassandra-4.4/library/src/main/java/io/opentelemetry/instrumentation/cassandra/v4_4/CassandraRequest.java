@@ -36,7 +36,7 @@ public abstract class CassandraRequest {
     if (statement instanceof BatchStatement) {
       return create(session, (BatchStatement) statement);
     }
-    return create(session, getQuery(statement), statement instanceof BoundStatement);
+    return create(session, singleton(getQuery(statement)), statement instanceof BoundStatement, null, null);
   }
 
   private static CassandraRequest create(Session session, BatchStatement batchStatement) {
