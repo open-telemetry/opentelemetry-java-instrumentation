@@ -88,6 +88,7 @@ public final class OpenTelemetryAppenderContextDataInjector implements ContextDa
       }
     }
 
+    // Mirror Log4j's ContextDataInjectorFactory#createDefaultInjector() selection.
     ReadOnlyThreadContextMap threadContextMap = ThreadContext.getThreadContextMap();
     if (threadContextMap == null || threadContextMap instanceof DefaultThreadContextMap) {
       return new ThreadContextDataInjector.ForDefaultThreadContextMap();
