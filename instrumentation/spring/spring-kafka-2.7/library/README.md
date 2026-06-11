@@ -32,7 +32,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-spring-kafka-2.7:
 The instrumentation library provides interceptors that can be added to Spring Kafka message
 listener containers and producers to provide spans and context propagation.
 
-For Spring Boot 3.x, instrument producers with:
+For Spring Boot 2.x and 3.x, instrument producers with:
 
 ```java
 import io.opentelemetry.api.OpenTelemetry;
