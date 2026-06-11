@@ -56,7 +56,7 @@ class MultiQuery {
     private final Set<String> uniqueQueryTexts = new LinkedHashSet<>();
     private final UniqueValue uniqueQuerySummary = new UniqueValue();
 
-    void add(SqlQuery analyzedQuery, @Nullable String queryText) {
+    void add(SqlQuery analyzedQuery, String queryText) {
       uniqueStoredProcedureName.set(analyzedQuery.getStoredProcedureName());
       uniqueQueryTexts.add(queryText);
       uniqueQuerySummary.set(analyzedQuery.getQuerySummary());
