@@ -5,31 +5,20 @@
 
 package io.opentelemetry.instrumentation.spring.security.config.v6_0.webflux;
 
-import static java.util.Objects.requireNonNull;
-
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 
 /**
- * Customizes a {@link ServerHttpSecurity} by inserting a {@link
- * EnduserAttributesCapturingWebFilter} after all the filters that populate the {@link
- * org.springframework.security.core.context.SecurityContext} in the {@link
- * org.springframework.security.core.context.ReactiveSecurityContextHolder}.
+ * Customizes a {@link ServerHttpSecurity} by inserting a filter that captures identity semantic
+ * attributes.
+ *
+ * @deprecated Use {@link UserAttributesServerHttpSecurityCustomizer} instead.
  */
+@Deprecated
 public final class EnduserAttributesServerHttpSecurityCustomizer
-    implements Customizer<ServerHttpSecurity> {
-
-  private final EnduserAttributesCapturer capturer;
+    extends UserAttributesServerHttpSecurityCustomizer {
 
   public EnduserAttributesServerHttpSecurityCustomizer(EnduserAttributesCapturer capturer) {
-    this.capturer = requireNonNull(capturer, "capturer must not be null");
-  }
-
-  @Override
-  public void customize(ServerHttpSecurity serverHttpSecurity) {
-    serverHttpSecurity.addFilterBefore(
-        new EnduserAttributesCapturingWebFilter(capturer), SecurityWebFiltersOrder.LOGOUT);
+    super(capturer);
   }
 }

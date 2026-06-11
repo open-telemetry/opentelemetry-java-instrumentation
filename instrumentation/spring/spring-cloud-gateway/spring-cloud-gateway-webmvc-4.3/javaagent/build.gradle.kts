@@ -24,6 +24,9 @@ dependencies {
 
   testLibrary("org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc:5.0.0")
   testLibrary("org.springframework.boot:spring-boot-starter-test:4.0.0")
+
+  // latest spring cloud release is not compatible with spring boot 4.1
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:4.0.+") // documented limitation
 }
 
 tasks.test {

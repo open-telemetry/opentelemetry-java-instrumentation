@@ -16,11 +16,12 @@ class EnduserAttributesServerHttpSecurityCustomizerTest {
 
   /**
    * Ensures that the {@link EnduserAttributesServerHttpSecurityCustomizer} registers a {@link
-   * EnduserAttributesCapturingWebFilter} in the filter chain.
+   * UserAttributesCapturingWebFilter} in the filter chain.
    *
    * <p>Usage of the filter is covered in other unit tests.
    */
   @Test
+  @SuppressWarnings("deprecation") // using deprecated customizer
   void ensureFilterRegistered() {
 
     ServerHttpSecurity serverHttpSecurity = ServerHttpSecurity.http();
@@ -33,7 +34,7 @@ class EnduserAttributesServerHttpSecurityCustomizerTest {
     SecurityWebFilterChain securityWebFilterChain = serverHttpSecurity.build();
 
     assertThat(securityWebFilterChain.getWebFilters().collectList().block())
-        .filteredOn(EnduserAttributesCapturingWebFilter.class::isInstance)
+        .filteredOn(UserAttributesCapturingWebFilter.class::isInstance)
         .hasSize(1);
   }
 }

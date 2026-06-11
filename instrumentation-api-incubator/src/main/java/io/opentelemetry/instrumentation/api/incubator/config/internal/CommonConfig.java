@@ -29,7 +29,7 @@ public final class CommonConfig {
   private final List<String> serverRequestHeaders;
   private final List<String> serverResponseHeaders;
   private final Set<String> knownHttpRequestMethods;
-  private final EnduserConfig enduserConfig;
+  private final UserConfig userConfig;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
   private final Set<String> sensitiveQueryParameters;
@@ -91,7 +91,8 @@ public final class CommonConfig {
             .get("http")
             .get("server")
             .getBoolean("emit_experimental_telemetry/development", false);
-    enduserConfig = new EnduserConfig(commonConfig);
+    v3Preview = commonConfig.getBoolean("v3_preview", false);
+    userConfig = new UserConfig(commonConfig, v3Preview);
     DeclarativeConfigProperties logging = commonConfig.get("logging");
     loggingTraceIdKey =
         getConfig(
@@ -117,7 +118,6 @@ public final class CommonConfig {
             "otel.instrumentation.common.logging.trace-flags-key",
             "otel.instrumentation.common.logging.trace-flags",
             LoggingContextConstants.TRACE_FLAGS);
-    v3Preview = commonConfig.getBoolean("v3_preview", false);
   }
 
   private static String getConfig(
@@ -167,8 +167,8 @@ public final class CommonConfig {
     return knownHttpRequestMethods;
   }
 
-  public EnduserConfig getEnduserConfig() {
-    return enduserConfig;
+  public UserConfig getUserConfig() {
+    return userConfig;
   }
 
   public boolean shouldEmitExperimentalHttpClientTelemetry() {

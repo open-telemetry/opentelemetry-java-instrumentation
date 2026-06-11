@@ -141,6 +141,9 @@ targets:
       target: ':instrumentation:gwt-2.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:hbase-client-2.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:helidon-4.3:javaagent'
     - type: gradle
       path: ./
@@ -277,6 +280,15 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:scala-forkjoin-2.8:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:sofa-rpc-5.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:sofa-rpc-5.4:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:sofa-rpc-5.4:library-autoconfigure'
     - type: gradle
       path: ./
       target: ':instrumentation:spark-2.3:javaagent'
@@ -844,6 +856,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.63:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent'

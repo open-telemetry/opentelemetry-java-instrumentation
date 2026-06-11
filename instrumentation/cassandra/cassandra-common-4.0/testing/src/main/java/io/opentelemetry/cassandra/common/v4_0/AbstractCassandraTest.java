@@ -10,6 +10,8 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -100,12 +102,19 @@ public abstract class AbstractCassandraTest {
     CqlSession session = getSession(null);
     cleanup.deferCleanup(session);
 
-    session.execute("DROP KEYSPACE IF EXISTS non_existent");
+    session.execute("DROP KEYSPACE IF EXISTS metrics_test");
+    session.execute(
+        "CREATE KEYSPACE metrics_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    testing().clearData();
+
+    session.execute("CREATE TABLE metrics_test.users ( id UUID PRIMARY KEY, name text )");
 
     assertDurationMetric(
         testing(),
         getInstrumentationName(),
         DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_COLLECTION_NAME,
         DB_QUERY_SUMMARY,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT,
@@ -130,7 +139,11 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")),
+                                satisfies(
+                                    NETWORK_TYPE,
+                                    emitStableDatabaseSemconv()
+                                        ? val -> val.isNull()
+                                        : val -> val.isIn("ipv4", "ipv6")),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
@@ -141,9 +154,7 @@ public abstract class AbstractCassandraTest {
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? parameter.spanName : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : parameter.operation),
+                                equalTo(maybeStable(DB_OPERATION), parameter.operation),
                                 equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
                                 equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
                                 satisfies(
@@ -154,9 +165,7 @@ public abstract class AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
                                 equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
-                                equalTo(
-                                    maybeStable(DB_CASSANDRA_TABLE),
-                                    emitStableDatabaseSemconv() ? null : parameter.table))));
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -185,7 +194,11 @@ public abstract class AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")),
+                                satisfies(
+                                    NETWORK_TYPE,
+                                    emitStableDatabaseSemconv()
+                                        ? val -> val.isNull()
+                                        : val -> val.isIn("ipv4", "ipv6")),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
@@ -196,9 +209,7 @@ public abstract class AbstractCassandraTest {
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? parameter.spanName : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : parameter.operation),
+                                equalTo(maybeStable(DB_OPERATION), parameter.operation),
                                 equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
                                 equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
                                 satisfies(
@@ -209,9 +220,7 @@ public abstract class AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
                                 equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
-                                equalTo(
-                                    maybeStable(DB_CASSANDRA_TABLE),
-                                    emitStableDatabaseSemconv() ? null : parameter.table)),
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)

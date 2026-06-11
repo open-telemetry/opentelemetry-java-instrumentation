@@ -17,8 +17,8 @@ import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.DistributionModel;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.DistributionPropertyModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionPropertyModel;
 import java.io.IOException;
 import java.util.logging.Logger;
 

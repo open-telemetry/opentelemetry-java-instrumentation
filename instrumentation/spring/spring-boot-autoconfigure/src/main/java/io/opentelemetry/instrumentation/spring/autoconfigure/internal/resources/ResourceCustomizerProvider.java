@@ -10,9 +10,9 @@ import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.ExperimentalResourceDetectionModel;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.ExperimentalResourceDetectorModel;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.ResourceModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalResourceDetectionModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalResourceDetectorModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ResourceModel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

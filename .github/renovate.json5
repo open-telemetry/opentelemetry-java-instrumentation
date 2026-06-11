@@ -1,7 +1,7 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "github>grafana/flint#v0.22.4",
+    "github>grafana/flint#v0.22.5",
     'config:best-practices',
     'helpers:pinGitHubActionDigestsToSemver',
     ':semanticCommits',
@@ -35,6 +35,17 @@
         '* 0-7 * * 2', // weekly, before 8am on Tuesday
       ],
       groupName: 'weekly update',
+    },
+    {
+      // do not update these workflow lockfiles
+      matchManagers: [
+        'github-actions',
+      ],
+      matchFileNames: [
+        '.github/workflows/module-cleanup.lock.yml',
+        '.github/workflows/pr-review.lock.yml',
+      ],
+      enabled: false,
     },
     {
       // keep Kotlin Gradle plugin updates out of the catch-all patch PR because CodeQL often
