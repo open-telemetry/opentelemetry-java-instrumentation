@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -26,9 +27,12 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 import static org.junit.jupiter.api.Named.named;
 
+import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SimpleStatement;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -289,6 +293,104 @@ class CassandraClientTest {
         NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  void batchStatementWithSameQuery() {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+
+    session.execute("DROP KEYSPACE IF EXISTS batch_same_test");
+    session.execute(
+        "CREATE KEYSPACE batch_same_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    session.execute("CREATE TABLE batch_same_test.users ( name text PRIMARY KEY, age int )");
+    PreparedStatement preparedStatement =
+        session.prepare("INSERT INTO batch_same_test.users (name, age) values (?, ?)");
+    testing.waitForTraces(3);
+    testing.clearData();
+
+    BatchStatement batchStatement =
+        new BatchStatement()
+            .add(preparedStatement.bind("alice", 1))
+            .add(preparedStatement.bind("bob", 2));
+    session.execute(batchStatement);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "BATCH INSERT batch_same_test.users"
+                                : "DB Query")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT INTO batch_same_test.users (name, age) values (?, ?)"
+                                    : null),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv()
+                                    ? "BATCH INSERT batch_same_test.users"
+                                    : null))));
+  }
+
+  @Test
+  void batchStatementWithDifferentQueries() {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+
+    session.execute("DROP KEYSPACE IF EXISTS batch_mixed_test");
+    session.execute(
+        "CREATE KEYSPACE batch_mixed_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    session.execute("CREATE TABLE batch_mixed_test.users ( name text PRIMARY KEY, age int )");
+    PreparedStatement insertStatement =
+        session.prepare("INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?)");
+    testing.waitForTraces(3);
+    testing.clearData();
+
+    BatchStatement batchStatement =
+        new BatchStatement()
+            .add(insertStatement.bind(1))
+            .add(
+                new SimpleStatement(
+                    "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
+    session.execute(batchStatement);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "BATCH" : "DB Query")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?"
+                                    : null),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
+                            equalTo(
+                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "BATCH" : null))));
   }
 
   private static Stream<Arguments> provideSyncParameters() {

@@ -109,11 +109,11 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       if (isBatch) {
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
-      boolean parameterizedQuery = getter.isParameterizedQuery(request);
-      boolean shouldSanitize = querySanitizationEnabled && !parameterizedQuery;
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
+        boolean shouldSanitize =
+            querySanitizationEnabled && !getter.isParameterizedQuery(request, 0);
         attributes.put(DB_QUERY_TEXT, shouldSanitize ? analyzedQuery.getQueryText() : rawQueryText);
         String querySummary = analyzedQuery.getQuerySummary();
         attributes.put(
@@ -125,9 +125,16 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         }
         attributes.put(DB_STORED_PROCEDURE_NAME, analyzedQuery.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
-        MultiQuery multiQuery =
-            MultiQuery.analyzeWithSummary(
-                getter.getRawQueryTexts(request), dialect, shouldSanitize);
+        MultiQuery.Builder builder = MultiQuery.builder();
+        int queryIndex = 0;
+        for (String rawQueryText : rawQueryTexts) {
+          SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
+          boolean shouldSanitize =
+              querySanitizationEnabled && !getter.isParameterizedQuery(request, queryIndex);
+          builder.add(analyzedQuery, shouldSanitize ? analyzedQuery.getQueryText() : rawQueryText);
+          queryIndex++;
+        }
+        MultiQuery multiQuery = builder.build();
         attributes.put(DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
         attributes.put(DB_QUERY_SUMMARY, multiQuery.getQuerySummary());
         attributes.put(DB_STORED_PROCEDURE_NAME, multiQuery.getStoredProcedureName());

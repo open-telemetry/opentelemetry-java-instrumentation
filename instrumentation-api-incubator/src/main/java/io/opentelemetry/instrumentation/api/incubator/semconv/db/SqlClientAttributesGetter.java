@@ -71,9 +71,25 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
    * query does not need to be sanitized. See <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sanitization-of-dbquerytext">sanitization
    * of db.query.text</a>.
+   *
+   * @deprecated use {@link #isParameterizedQuery(Object, int)} instead
    */
-  // TODO: make this required to implement
+  @Deprecated
   default boolean isParameterizedQuery(REQUEST request) {
     return false;
+  }
+
+  /**
+   * Returns whether the query at {@code queryIndex} in {@link #getRawQueryTexts(Object)} is
+   * parameterized.
+   *
+   * <p>The {@code queryIndex} is zero-based and follows the iteration order of {@link
+   * #getRawQueryTexts(Object)}. This supports batch operations where individual entries may have
+   * different parameterization.
+   */
+  // TODO: make this required to implement
+  @SuppressWarnings("deprecation")
+  default boolean isParameterizedQuery(REQUEST request, int queryIndex) {
+    return isParameterizedQuery(request);
   }
 }
