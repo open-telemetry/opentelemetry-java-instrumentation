@@ -22,7 +22,7 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   if (otelProps.testLatestDeps) {
-    testLibrary("org.springframework.boot:spring-boot-starter-kafka:latest.release")
+    testImplementation("org.springframework.boot:spring-boot-starter-kafka:latest.release")
   } else {
     testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
   }
