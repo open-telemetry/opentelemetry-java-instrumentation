@@ -135,6 +135,8 @@ tasks {
         disable("AddNullMarkedToClass")
         disable("AddNullMarkedToPackageInfo")
 
+        disable("ReferenceEquality")
+
         if (otelProps.testLatestDeps) {
           // Some latest dep tests are compiled for java 17 although the base version uses an older
           // version. Disable rules that suggest using new language features.
@@ -158,6 +160,7 @@ tasks {
           disable("OtelCanIgnoreReturnValueSuggester")
           disable("OtelInternalJavadoc")
           disable("SuppressWarningsWithoutExplanation")
+          disable("ExposedPrivateType")
         }
       }
     }

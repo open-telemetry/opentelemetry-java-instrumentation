@@ -139,7 +139,7 @@ final class OpenTelemetryTimer extends AbstractTimer
 
   // if micrometer histograms are not being used then there's no need to keep any local state
   // OpenTelemetry metrics bridge does not support reading measurements
-  enum NoopMeasurements implements Measurements {
+  private enum NoopMeasurements implements Measurements {
     INSTANCE;
 
     @Override
