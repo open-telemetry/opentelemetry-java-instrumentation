@@ -98,7 +98,8 @@ class VertxSqlClientAttributesGetter
   }
 
   @Override
-  public boolean isParameterizedQuery(VertxSqlClientRequest request) {
+  public boolean isParameterizedQuery(VertxSqlClientRequest request, int queryIndex) {
+    // Vert.x SQL client does not support mixed parameterization within a single request.
     return request.isParameterizedQuery();
   }
 

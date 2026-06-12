@@ -90,7 +90,8 @@ public final class R2dbcSqlAttributesGetter
   }
 
   @Override
-  public boolean isParameterizedQuery(DbExecution request) {
+  public boolean isParameterizedQuery(DbExecution request, int queryIndex) {
+    // R2DBC does not support mixed parameterization within a single request.
     return request.isParameterizedQuery();
   }
 }

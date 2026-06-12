@@ -36,6 +36,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -107,6 +108,16 @@ class SqlClientAttributesExtractorTest {
     @Override
     public Collection<String> getRawQueryTexts(Map<String, Object> map) {
       return (Collection<String>) map.get("db.query.texts");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean isParameterizedQuery(Map<String, Object> map, int queryIndex) {
+      List<Boolean> parameterizedQueries = (List<Boolean>) map.get("db.query.parameterized");
+      if (parameterizedQueries == null) {
+        return super.isParameterizedQuery(map, queryIndex);
+      }
+      return parameterizedQueries.get(queryIndex);
     }
   }
 
@@ -345,6 +356,56 @@ class SqlClientAttributesExtractorTest {
               entry(DB_NAMESPACE, "potatoes"),
               entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
+    }
+
+    assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldExtractMixedParameterizedMultiQueryBatchAttributes() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.namespace", "potatoes");
+    request.put(
+        "db.query.texts",
+        asList("INSERT INTO potato VALUES('alice', ?)", "UPDATE potato SET name='bob' WHERE id=1"));
+    request.put("db.query.parameterized", asList(true, false));
+    request.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.create(new TestMultiAttributesGetter());
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, request, null, null);
+
+    // then
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DB_NAME, "potatoes"),
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(
+                  DB_QUERY_TEXT,
+                  "INSERT INTO potato VALUES('alice', ?); UPDATE potato SET name=? WHERE id=?"),
+              entry(DB_QUERY_SUMMARY, "BATCH"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
+    } else if (emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build()).containsOnly(entry(DB_NAME, "potatoes"));
+    } else if (emitStableDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(
+                  DB_QUERY_TEXT,
+                  "INSERT INTO potato VALUES('alice', ?); UPDATE potato SET name=? WHERE id=?"),
+              entry(DB_QUERY_SUMMARY, "BATCH"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     }
 
