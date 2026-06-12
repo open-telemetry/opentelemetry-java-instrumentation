@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppen
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
 import java.util.Iterator;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,11 +169,9 @@ class LogbackAppenderInstaller {
     }
 
     String mdcAttributeProperty =
-        applicationEnvironmentPreparedEvent
-            .getEnvironment()
-            .getProperty(
-                "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
-                String.class);
+        getLoggingProperty(
+            applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes");
     if (mdcAttributeProperty != null) {
       openTelemetryAppender.setCaptureMdcAttributes(mdcAttributeProperty);
     }
@@ -217,48 +216,77 @@ class LogbackAppenderInstaller {
     }
 
     String traceIdKey =
-        applicationEnvironmentPreparedEvent
-            .getEnvironment()
-            .getProperty("otel.instrumentation.common.logging.trace-id", String.class);
+        getLoggingProperty(
+            applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.common.logging.trace-id");
     if (traceIdKey != null) {
       openTelemetryAppender.setTraceIdKey(traceIdKey);
     }
 
     String spanIdKey =
-        applicationEnvironmentPreparedEvent
-            .getEnvironment()
-            .getProperty("otel.instrumentation.common.logging.span-id", String.class);
+        getLoggingProperty(
+            applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.common.logging.span-id");
     if (spanIdKey != null) {
       openTelemetryAppender.setSpanIdKey(spanIdKey);
     }
 
     String traceFlagsKey =
-        applicationEnvironmentPreparedEvent
-            .getEnvironment()
-            .getProperty("otel.instrumentation.common.logging.trace-flags", String.class);
+        getLoggingProperty(
+            applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.common.logging.trace-flags");
     if (traceFlagsKey != null) {
       openTelemetryAppender.setTraceFlagsKey(traceFlagsKey);
     }
   }
 
+  @Nullable
+  private static String getLoggingProperty(ConfigurableEnvironment environment, String property) {
+    return environment.getProperty(getEnvironmentPropertyName(environment, property), String.class);
+  }
+
   /** Evaluates a boolean property, taking into account whether declarative config is in use. */
+  @Nullable
   private static Boolean evaluateBooleanProperty(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
     ConfigurableEnvironment environment = applicationEnvironmentPreparedEvent.getEnvironment();
-    String key = property;
+    return environment.getProperty(
+        getEnvironmentPropertyName(environment, property), Boolean.class);
+  }
+
+  private static String getEnvironmentPropertyName(
+      ConfigurableEnvironment environment, String property) {
     if (EarlyConfig.isDeclarativeConfig(environment)) {
       if (property.startsWith("otel.instrumentation.")) {
-        key =
-            String.format(
-                    "otel.instrumentation/development.java.%s",
-                    property.substring("otel.instrumentation.".length()))
-                .replace('-', '_');
+        return "otel.instrumentation/development.java."
+            + toDeclarativeInstrumentationPropertyName(
+                property.substring("otel.instrumentation.".length()));
       } else {
         throw new IllegalStateException(
             "No mapping found for property name: " + property + ". Please report this bug.");
       }
     }
-    return environment.getProperty(key, Boolean.class);
+    return property;
+  }
+
+  private static String toDeclarativeInstrumentationPropertyName(String instrumentationProperty) {
+    StringBuilder declarativeProperty = new StringBuilder();
+    boolean nextSegmentIsDevelopment = false;
+    for (String segment : instrumentationProperty.split("\\.")) {
+      if (segment.equals("experimental")) {
+        nextSegmentIsDevelopment = true;
+        continue;
+      }
+      if (declarativeProperty.length() > 0) {
+        declarativeProperty.append('.');
+      }
+      declarativeProperty.append(segment.replace('-', '_'));
+      if (nextSegmentIsDevelopment || segment.startsWith("experimental-")) {
+        declarativeProperty.append("/development");
+        nextSegmentIsDevelopment = false;
+      }
+    }
+    return declarativeProperty.toString();
   }
 
   private static <T> Optional<T> findAppender(Class<T> appenderClass) {

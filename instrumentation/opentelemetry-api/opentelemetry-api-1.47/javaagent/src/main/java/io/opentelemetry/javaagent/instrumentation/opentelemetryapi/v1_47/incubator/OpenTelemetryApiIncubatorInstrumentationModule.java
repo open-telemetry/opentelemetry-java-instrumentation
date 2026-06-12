@@ -13,11 +13,14 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.V3PreviewFallbackEnabledInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class OpenTelemetryApiIncubatorInstrumentationModule extends InstrumentationModule
+@SuppressWarnings("deprecation") // using v3 preview fallback helper until 3.0
+public class OpenTelemetryApiIncubatorInstrumentationModule
+    extends V3PreviewFallbackEnabledInstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenTelemetryApiIncubatorInstrumentationModule() {
     super("opentelemetry-api", "opentelemetry-api-1.47", "opentelemetry-api-incubator-1.47");
@@ -31,10 +34,16 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
             // added in 1.40
             "application.io.opentelemetry.api.incubator.logs.ExtendedLogger")
         .and(
+            // removed in 1.47
+            not(hasClassesNamed("application.io.opentelemetry.api.incubator.events.EventLogger")))
+        .and(
             // added in 1.50
             not(
                 hasClassesNamed(
-                    "application.io.opentelemetry.api.incubator.common.ExtendedAttributes")));
+                    "application.io.opentelemetry.api.incubator.common.ExtendedAttributes")))
+        .and(
+            // added in 1.63
+            not(hasClassesNamed("application.io.opentelemetry.api.impl.InstrumentationUtil")));
   }
 
   @Override

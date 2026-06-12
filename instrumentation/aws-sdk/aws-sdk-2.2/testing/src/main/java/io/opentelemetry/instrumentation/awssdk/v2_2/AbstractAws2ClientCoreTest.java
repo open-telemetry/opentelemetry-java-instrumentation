@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -60,6 +63,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -223,8 +227,17 @@ public abstract class AbstractAws2ClientCoreTest {
                       }
                     }));
 
-    assertDurationMetric(
-        getTesting(), "io.opentelemetry.aws-sdk-2.2", DB_SYSTEM_NAME, DB_OPERATION_NAME);
+    if ("ListTables".equals(operation)) {
+      assertDurationMetric(
+          getTesting(), "io.opentelemetry.aws-sdk-2.2", DB_SYSTEM_NAME, DB_OPERATION_NAME);
+    } else {
+      assertDurationMetric(
+          getTesting(),
+          "io.opentelemetry.aws-sdk-2.2",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_COLLECTION_NAME);
+    }
   }
 
   private static CreateTableRequest createTableRequest() {
@@ -296,6 +309,9 @@ public abstract class AbstractAws2ClientCoreTest {
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
                 equalTo(maybeStable(DB_OPERATION), operation)));
+    if (emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(DB_COLLECTION_NAME, "sometable"));
+    }
     assertions.addAll(extraAttributes);
     span.hasName("DynamoDb." + operation)
         .hasKind(SpanKind.CLIENT)
@@ -491,6 +507,50 @@ public abstract class AbstractAws2ClientCoreTest {
     Object response =
         call.apply(wrapClient(DynamoDbClient.class, DynamoDbAsyncClient.class, client));
     validateOperationResponse(operation, response);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // uses deprecated semconv
+  void testBatchGetItemWithMultipleTablesOmitsDbCollectionName() {
+    DynamoDbClientBuilder builder = DynamoDbClient.builder();
+    configureSdkClient(builder);
+    DynamoDbClient client =
+        builder
+            .endpointOverride(server.httpUri())
+            .region(Region.AP_NORTHEAST_1)
+            .credentialsProvider(CREDENTIALS_PROVIDER)
+            .build();
+    server.enqueue(
+        HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, "{\"ConsumedCapacity\":[]}"));
+
+    client.batchGetItem(
+        b ->
+            b.requestItems(
+                ImmutableMap.of(
+                    "table1",
+                    KeysAndAttributes.builder()
+                        .keys(
+                            singletonList(
+                                ImmutableMap.of("key", AttributeValue.builder().s("v1").build())))
+                        .build(),
+                    "table2",
+                    KeysAndAttributes.builder()
+                        .keys(
+                            singletonList(
+                                ImmutableMap.of("key", AttributeValue.builder().s("v2").build())))
+                        .build())));
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("DynamoDb.BatchGetItem")
+                            .satisfies(
+                                s ->
+                                    assertThat(s.getAttributes().asMap())
+                                        .containsKey(stringArrayKey("aws.dynamodb.table_names"))
+                                        .doesNotContainKey(DB_COLLECTION_NAME))));
   }
 
   private static String getResponseContent(String operation) {

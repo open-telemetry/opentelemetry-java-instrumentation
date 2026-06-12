@@ -34,8 +34,9 @@ jobs:
       packages: write
     env:
       LATEST_JAVA_VERSION: 25 # renovate(java-version)
+      PROJECT: ${{ inputs.project }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -47,7 +48,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Login to GitHub package registry
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -63,17 +64,17 @@ jobs:
 
       - name: Build Java 8 Docker image
         if: "!inputs.skip-java-8"
-        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 11 Docker image
         if: "!inputs.skip-java-11"
-        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 17 Docker image
-        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 21 Docker image
-        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java ${{ env.LATEST_JAVA_VERSION }} Docker image
-        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=${{ env.LATEST_JAVA_VERSION }} -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK="$LATEST_JAVA_VERSION" -Djib.httpTimeout=120000 -Djib.console=plain

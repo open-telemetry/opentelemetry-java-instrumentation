@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.common;
 
-import io.opentelemetry.javaagent.instrumentation.jaxrs.HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.HandlerData;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;

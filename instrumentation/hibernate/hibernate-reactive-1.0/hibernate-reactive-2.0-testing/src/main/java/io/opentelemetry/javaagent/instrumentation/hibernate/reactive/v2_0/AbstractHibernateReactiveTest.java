@@ -287,7 +287,7 @@ public abstract class AbstractHibernateReactiveTest {
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT tempdb.Value")
+                            emitStableDatabaseSemconv() ? "select Value" : "SELECT tempdb.Value")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -301,7 +301,7 @@ public abstract class AbstractHibernateReactiveTest {
                                 "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$1"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT Value" : null),
+                                emitStableDatabaseSemconv() ? "select Value" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),

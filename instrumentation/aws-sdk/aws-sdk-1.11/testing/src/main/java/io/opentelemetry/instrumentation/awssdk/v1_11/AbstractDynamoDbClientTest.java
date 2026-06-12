@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -28,6 +29,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -53,10 +55,15 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
 
     List<AttributeAssertion> additionalAttributes =
-        asList(
-            equalTo(maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
-            equalTo(maybeStable(DB_OPERATION), "CreateTable"),
-            equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")));
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
+                equalTo(maybeStable(DB_OPERATION), "CreateTable"),
+                equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable"))));
+    if (emitStableDatabaseSemconv()) {
+      additionalAttributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
+    }
 
     Object response = client.createTable(new CreateTableRequest("sometable", null));
     assertRequestWithMockedResponse(
@@ -67,6 +74,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         "io.opentelemetry.aws-sdk-1.11",
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
+        DB_COLLECTION_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
   }

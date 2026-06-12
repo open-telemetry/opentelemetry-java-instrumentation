@@ -249,7 +249,7 @@ public abstract class AbstractThriftTest {
     return assertClientSpan(span, method, port, false);
   }
 
-  @SuppressWarnings({"deprecation"}) // using deprecated semconv
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertClientSpan(
       SpanDataAssert span, String method, int port, boolean hasError) {
     span.hasName(CustomService.class.getName() + "/" + method)

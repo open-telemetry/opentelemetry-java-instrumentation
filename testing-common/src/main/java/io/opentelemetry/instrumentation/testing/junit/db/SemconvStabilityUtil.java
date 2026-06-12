@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.db;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -49,6 +50,7 @@ public class SemconvStabilityUtil {
     map.put(DB_OPERATION, DB_OPERATION_NAME);
     map.put(DB_SQL_TABLE, DB_COLLECTION_NAME);
     map.put(DB_CASSANDRA_TABLE, DB_COLLECTION_NAME);
+    map.put(stringKey("db.couchbase.collection"), DB_COLLECTION_NAME);
     map.put(DB_MONGODB_COLLECTION, DB_COLLECTION_NAME);
     map.put(DB_SYSTEM, DB_SYSTEM_NAME);
 

@@ -30,7 +30,7 @@ jobs:
       pull-requests: write # for adding label and assignee to PR
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false # we'll use a bot token for pushing changes
 
@@ -64,13 +64,21 @@ jobs:
             echo "has_diff=false" >> $GITHUB_OUTPUT
           fi
 
-      # we need to create the bot token after the workflow is completed to avoid 1 hour expiration
+      # the CLA approved bot is only available on the upstream repo; forks fall back to the
+      # default github-actions bot and GITHUB_TOKEN
       - name: Use CLA approved github bot
-        if: steps.diffcheck.outputs.has_diff == 'true'
+        if: steps.diffcheck.outputs.has_diff == 'true' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
-        if: steps.diffcheck.outputs.has_diff == 'true'
+      - name: Use default github-actions bot (fork)
+        if: steps.diffcheck.outputs.has_diff == 'true' && github.repository != 'open-telemetry/opentelemetry-java-instrumentation'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # we need to create the bot token after the workflow is completed to avoid 1 hour expiration
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        if: steps.diffcheck.outputs.has_diff == 'true' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
@@ -87,7 +95,7 @@ jobs:
       - name: Commit and push changes
         if: steps.diffcheck.outputs.has_diff == 'true'
         env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token || github.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
@@ -99,10 +107,10 @@ jobs:
         if: steps.diffcheck.outputs.has_diff == 'true'
         id: createpr
         env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token || github.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
-          PR_EXISTS=$(gh pr list --state open --head "$BRANCH_NAME" --label automation --json url -q '.[0].url')
+          PR_EXISTS=$(gh pr list --state open --head "$BRANCH_NAME" --json url -q '.[0].url')
           if [ -z "$PR_EXISTS" ]; then
             gh pr create \
               --title "chore: update instrumentation list [automated]" \
@@ -115,17 +123,20 @@ jobs:
             echo "new_pr=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Add label to PR
+      - name: Add label and assignee to PR
         if: steps.createpr.outputs.new_pr == 'true'
         env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token || github.token }}
+          IS_UPSTREAM: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           PR_URL=$(gh pr list --state open --head "$BRANCH_NAME" --json url -q '.[0].url')
-          if [ -n "$PR_URL" ]; then
-            gh pr edit "$PR_URL" --add-label "automation" --add-assignee jaydeluca
-          else
+          if [ -z "$PR_URL" ]; then
             echo "No open PR found for branch $BRANCH_NAME."
+            exit 0
+          fi
+          if [ "$IS_UPSTREAM" = "true" ]; then
+            gh pr edit "$PR_URL" --add-assignee jaydeluca --add-label "automation"
           fi
 
   workflow-notification:

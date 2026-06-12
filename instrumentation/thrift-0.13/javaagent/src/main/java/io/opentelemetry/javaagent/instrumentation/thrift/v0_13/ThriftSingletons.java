@@ -23,6 +23,7 @@ public final class ThriftSingletons {
   private static final Instrumenter<ThriftRequest, ThriftResponse> serverInstrumenter =
       ThriftInstrumenterFactory.createServerInstrumenter(
           GlobalOpenTelemetry.get(), UnaryOperator.identity(), emptyList(), emptyList());
+  private static final ContextPropagators propagators = GlobalOpenTelemetry.get().getPropagators();
 
   public static Instrumenter<ThriftRequest, ThriftResponse> clientInstrumenter() {
     return clientInstrumenter;
@@ -32,8 +33,8 @@ public final class ThriftSingletons {
     return serverInstrumenter;
   }
 
-  public static ContextPropagators getPropagators() {
-    return GlobalOpenTelemetry.get().getPropagators();
+  public static ContextPropagators propagators() {
+    return propagators;
   }
 
   private ThriftSingletons() {}

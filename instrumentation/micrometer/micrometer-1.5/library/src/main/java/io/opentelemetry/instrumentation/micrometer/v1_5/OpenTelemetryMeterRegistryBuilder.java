@@ -15,6 +15,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import java.util.concurrent.TimeUnit;
 
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
@@ -95,11 +97,12 @@ public final class OpenTelemetryMeterRegistryBuilder {
             ? DistributionStatisticConfigModifier.IDENTITY
             : DistributionStatisticConfigModifier.DISABLE_HISTOGRAM_GAUGES;
 
+    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
+    String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
+    if (version != null) {
+      meterBuilder.setInstrumentationVersion(version);
+    }
     return new OpenTelemetryMeterRegistry(
-        clock,
-        baseTimeUnit,
-        namingConvention,
-        modifier,
-        openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME));
+        clock, baseTimeUnit, namingConvention, modifier, meterBuilder.build());
   }
 }

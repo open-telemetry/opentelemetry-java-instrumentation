@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
@@ -61,18 +63,22 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @Nullable private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean querySanitizationEnabled;
   private final boolean captureQueryParameters;
+  private final boolean singleOperationAndCollection;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST, RESPONSE> getter,
       @Nullable AttributeKey<String> oldSemconvTableAttribute,
       boolean querySanitizationEnabled,
-      boolean captureQueryParameters) {
+      boolean captureQueryParameters,
+      boolean singleOperationAndCollection) {
     this.getter = getter;
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     // capturing query parameters disables query sanitization
     this.querySanitizationEnabled = !captureQueryParameters && querySanitizationEnabled;
     this.captureQueryParameters = captureQueryParameters;
-    internalNetworkExtractor = new InternalNetworkAttributesExtractor<>(getter, true, false);
+    this.singleOperationAndCollection = singleOperationAndCollection;
+    internalNetworkExtractor =
+        new InternalNetworkAttributesExtractor<>(getter, emitOldDatabaseSemconv(), false);
     serverAttributesExtractor = ServerAttributesExtractor.create(getter);
   }
 
@@ -113,6 +119,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         attributes.put(
             DB_QUERY_SUMMARY,
             isBatch && querySummary != null ? "BATCH " + querySummary : querySummary);
+        if (singleOperationAndCollection) {
+          attributes.put(DB_OPERATION_NAME, analyzedQuery.getOperationName());
+          attributes.put(DB_COLLECTION_NAME, analyzedQuery.getCollectionName());
+        }
         attributes.put(DB_STORED_PROCEDURE_NAME, analyzedQuery.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =

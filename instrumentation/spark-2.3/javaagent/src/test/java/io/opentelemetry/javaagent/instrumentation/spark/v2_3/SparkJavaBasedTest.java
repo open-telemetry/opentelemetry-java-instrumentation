@@ -44,7 +44,7 @@ class SparkJavaBasedTest {
   static void setup() {
     port = PortUtils.findOpenPort();
     TestSparkJavaApplication.initSpark(port);
-    client = WebClient.of("http://localhost:" + port);
+    client = WebClient.of("h1c://localhost:" + port);
   }
 
   @AfterAll

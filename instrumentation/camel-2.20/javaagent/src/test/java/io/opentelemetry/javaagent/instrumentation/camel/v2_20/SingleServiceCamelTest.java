@@ -58,9 +58,10 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
 
   @Test
   void singleCamelServiceSpan() {
+    URI h1RequestUrl = h1Address.resolve("/camelService");
     URI requestUrl = address.resolve("/camelService");
 
-    client.post(requestUrl.toString(), "testContent").aggregate().join();
+    client.post(h1RequestUrl.toString(), "testContent").aggregate().join();
 
     testing.waitAndAssertTraces(
         trace ->

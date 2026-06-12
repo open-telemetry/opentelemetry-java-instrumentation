@@ -1755,6 +1755,9 @@ public final class BedrockRuntimeImpl {
 
   private static Document deserializeDocument(String json) {
     JsonNode node = JSON_PARSER.parse(json);
+    if (node == null) {
+      return Document.mapBuilder().build();
+    }
     return node.visit(DOCUMENT_UNMARSHALLER);
   }
 
