@@ -98,12 +98,23 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
   private static String getStableOperationName(
       @Nullable String operation, @Nullable Long batchSize) {
     if ("BatchGetItem".equals(operation)) {
-      return isBatch(batchSize) ? "BATCH GetItem" : "GetItem";
+      return getStableBatchOperationName(batchSize, "GetItem", operation);
     }
     if ("BatchWriteItem".equals(operation)) {
-      return isBatch(batchSize) ? "BATCH WriteItem" : "WriteItem";
+      return getStableBatchOperationName(batchSize, "WriteItem", operation);
     }
     return operation;
+  }
+
+  private static String getStableBatchOperationName(
+      @Nullable Long batchSize, String itemOperation, String batchOperation) {
+    if (batchSize == null || batchSize == 0) {
+      return batchOperation;
+    }
+    if (batchSize == 1) {
+      return itemOperation;
+    }
+    return "BATCH " + itemOperation;
   }
 
   @Nullable
