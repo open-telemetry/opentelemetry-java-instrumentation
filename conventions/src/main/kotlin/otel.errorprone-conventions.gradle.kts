@@ -109,9 +109,6 @@ tasks {
         disable("JdkObsolete")
         disable("JavaUtilDate")
 
-        // TODO: Remove this, we use this pattern in several tests and it will mean some moving.
-        disable("DefaultPackage")
-
         // we use modified Otel* checks which ignore *Advice classes
         disable("PrivateConstructorForUtilityClass")
         disable("CanIgnoreReturnValueSuggester")
