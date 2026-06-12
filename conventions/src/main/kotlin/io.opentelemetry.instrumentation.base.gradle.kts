@@ -72,9 +72,9 @@ fun lookupPinnedVersion(group: String?, name: String, version: String?): String?
 
 val versionScheme = GenericVersionScheme()
 
-// Pinned latest-dep versions prefer stable releases, which can be lower than a module's declared
-// test baseline when the newer supported line only has pre-releases. For example, ActiveJ's
-// declared 6.0-rc2 uses APIs that are not present in the pinned latest stable 5.5.
+// Pinned latest-dep versions resolve "latest" to the latest stable release, which can be lower
+// than a module's declared test baseline when the newer supported line only has pre-releases.
+// For example, ActiveJ's declared 6.0-rc2 uses APIs not present in latest stable 5.5.
 fun pinnedVersionAtLeastDeclared(pinnedVersion: String?, declaredVersion: String?): String? {
   if (pinnedVersion == null || declaredVersion == null || declaredVersion == "latest.release" ||
     declaredVersion.contains("+") ||
