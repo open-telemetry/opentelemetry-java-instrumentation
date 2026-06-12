@@ -95,6 +95,15 @@ tasks {
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    exclude("**/server/**")
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+
+  val testControllerTelemetryStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    include("**/server/**")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty(
@@ -117,12 +126,20 @@ tasks {
   }
 
   check {
-    dependsOn(testControllerTelemetry, testStableSemconv, testExceptionSignalLogs)
+    dependsOn(
+      testControllerTelemetry,
+      testStableSemconv,
+      testControllerTelemetryStableSemconv,
+      testExceptionSignalLogs
+    )
   }
 
   if (otelProps.collectMetadata) {
     test {
       finalizedBy(testControllerTelemetry)
+    }
+    testStableSemconv.configure {
+      finalizedBy(testControllerTelemetryStableSemconv)
     }
   }
 }
