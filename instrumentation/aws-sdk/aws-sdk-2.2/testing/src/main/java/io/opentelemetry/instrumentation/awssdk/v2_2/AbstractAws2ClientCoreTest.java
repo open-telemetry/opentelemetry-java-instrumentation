@@ -308,7 +308,7 @@ public abstract class AbstractAws2ClientCoreTest {
                 equalTo(AWS_REQUEST_ID, "UNKNOWN"),
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
-                equalTo(maybeStable(DB_OPERATION), operation)));
+                equalTo(maybeStable(DB_OPERATION), expectedDbOperationName(operation))));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(DB_COLLECTION_NAME, "sometable"));
     }
@@ -551,6 +551,20 @@ public abstract class AbstractAws2ClientCoreTest {
                                     assertThat(s.getAttributes().asMap())
                                         .containsKey(stringArrayKey("aws.dynamodb.table_names"))
                                         .doesNotContainKey(DB_COLLECTION_NAME))));
+  }
+
+  private static String expectedDbOperationName(String operation) {
+    if (!emitStableDatabaseSemconv()) {
+      return operation;
+    }
+    switch (operation) {
+      case "BatchGetItem":
+        return "BATCH GetItem";
+      case "BatchWriteItem":
+        return "BATCH WriteItem";
+      default:
+        return operation;
+    }
   }
 
   private static String getResponseContent(String operation) {

@@ -17,7 +17,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -47,7 +46,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
     }
     String operation = executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
     if (emitStableDatabaseSemconv()) {
-      attributes.put(DB_OPERATION_NAME, operation);
+      attributes.put(DB_OPERATION_NAME, getStableOperationName(operation));
     }
     if (emitOldDatabaseSemconv()) {
       attributes.put(DB_OPERATION, operation);
@@ -58,6 +57,17 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
         attributes.put(DB_COLLECTION_NAME, tableName);
       }
     }
+  }
+
+  @Nullable
+  private static String getStableOperationName(@Nullable String operation) {
+    if ("BatchGetItem".equals(operation)) {
+      return "BATCH GetItem";
+    }
+    if ("BatchWriteItem".equals(operation)) {
+      return "BATCH WriteItem";
+    }
+    return operation;
   }
 
   @Nullable
@@ -77,14 +87,24 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
     // as the attribute is defined as a single collection identifier.
     Optional<?> requestItems = request.getValueForField("RequestItems", Object.class);
     if (requestItems.isPresent() && requestItems.get() instanceof Map) {
-      // The instanceof check above guarantees Map, only the generic parameters are unchecked.
-      @SuppressWarnings("unchecked")
-      Set<String> tables = ((Map<String, ?>) requestItems.get()).keySet();
-      if (tables.size() == 1) {
-        return tables.iterator().next();
-      }
+      return getSingleCollectionName((Map<?, ?>) requestItems.get());
     }
     return null;
+  }
+
+  @Nullable
+  private static String getSingleCollectionName(Map<?, ?> requestItems) {
+    String collectionName = null;
+    for (Object candidate : requestItems.keySet()) {
+      if (!(candidate instanceof String)) {
+        return null;
+      }
+      if (collectionName != null && !collectionName.equals(candidate)) {
+        return null;
+      }
+      collectionName = (String) candidate;
+    }
+    return collectionName;
   }
 
   @Override
