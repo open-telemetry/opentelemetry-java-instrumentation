@@ -377,10 +377,9 @@ class ReferenceCollectorTest {
             entry(VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName()));
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource
-  public void shouldNotCollectVirtualFieldsForInvalidScenario(
-      @SuppressWarnings("unused") String desc, String adviceClassName) {
+  public void shouldNotCollectVirtualFieldsForInvalidScenario(String adviceClassName) {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
 
     assertThatExceptionOfType(MuzzleCompilationException.class)
@@ -394,19 +393,19 @@ class ReferenceCollectorTest {
   @SuppressWarnings("unused")
   private static List<Arguments> shouldNotCollectVirtualFieldsForInvalidScenario() {
     return asList(
-        Arguments.of(
+        Arguments.argumentSet(
             "passing arbitrary variables or parameters to VirtualField.find()",
             VirtualFieldTestClasses.NotUsingClassRefAdvice.class.getName()),
-        Arguments.of(
+        Arguments.argumentSet(
             "storing class ref in a local var",
             VirtualFieldTestClasses.PassingVariableAdvice.class.getName()),
-        Arguments.of(
+        Arguments.argumentSet(
             "using array type as the field owner type",
             VirtualFieldTestClasses.UsingArrayAsOwnerAdvice.class.getName()),
-        Arguments.of(
+        Arguments.argumentSet(
             "using primitive type as the field owner type",
             VirtualFieldTestClasses.UsingPrimitiveAsOwnerAdvice.class.getName()),
-        Arguments.of(
+        Arguments.argumentSet(
             "using primitive type as the field type",
             VirtualFieldTestClasses.UsingPrimitiveAsFieldAdvice.class.getName()));
   }

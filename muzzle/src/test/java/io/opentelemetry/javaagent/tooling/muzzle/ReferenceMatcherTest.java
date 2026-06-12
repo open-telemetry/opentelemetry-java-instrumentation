@@ -161,49 +161,49 @@ class ReferenceMatcherTest {
 
   private static Stream<Arguments> methodMatchProvider() {
     return Stream.of(
-        Arguments.of(
+        Arguments.argumentSet(
             "match method declared in class",
             "method",
             Type.getMethodType(Type.getType(String.class), Type.getType(String.class)),
             emptySet(),
             Nested.B.class,
             null),
-        Arguments.of(
+        Arguments.argumentSet(
             "match method declared in superclass",
             "hashCode",
             Type.getMethodType(Type.INT_TYPE),
             emptySet(),
             Nested.B.class,
             null),
-        Arguments.of(
+        Arguments.argumentSet(
             "match method declared in interface",
             "someMethod",
             Type.getMethodType(Type.VOID_TYPE),
             emptySet(),
             Nested.SomeInterface.class,
             null),
-        Arguments.of(
+        Arguments.argumentSet(
             "match private method",
             "privateStuff",
             Type.getMethodType(Type.VOID_TYPE),
             singleton(PRIVATE_OR_HIGHER),
             Nested.B.class,
             null),
-        Arguments.of(
+        Arguments.argumentSet(
             "fail match private in supertype",
             "privateStuff",
             Type.getMethodType(Type.VOID_TYPE),
             singleton(PROTECTED_OR_HIGHER),
             Nested.B2.class,
             Mismatch.MissingFlag.class),
-        Arguments.of(
+        Arguments.argumentSet(
             "static method mismatch",
             "staticMethod",
             Type.getMethodType(Type.VOID_TYPE),
             singleton(NON_STATIC),
             Nested.B.class,
             Mismatch.MissingFlag.class),
-        Arguments.of(
+        Arguments.argumentSet(
             "missing method mismatch",
             "missingMethod",
             Type.getMethodType(Type.VOID_TYPE),
@@ -212,10 +212,9 @@ class ReferenceMatcherTest {
             Mismatch.MissingMethod.class));
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("methodMatchProvider")
   void methodMatch(
-      String testName,
       String methodName,
       Type methodType,
       Set<Flag> methodFlags,
@@ -244,56 +243,56 @@ class ReferenceMatcherTest {
 
   private static Stream<Arguments> fieldMatchProvider() {
     return Stream.of(
-        Arguments.of(
+        Arguments.argumentSet(
             "mismatch missing field",
             "missingField",
             Type.getType(String.class),
             emptySet(),
             Nested.A.class,
             Mismatch.MissingField.class),
-        Arguments.of(
+        Arguments.argumentSet(
             "mismatch field type signature",
             "privateField",
             Type.getType(String.class),
             emptySet(),
             Nested.A.class,
             Mismatch.MissingField.class),
-        Arguments.of(
+        Arguments.argumentSet(
             "match private field",
             "privateField",
             Type.getType(Object.class),
             singleton(PRIVATE_OR_HIGHER),
             Nested.A.class,
             null),
-        Arguments.of(
+        Arguments.argumentSet(
             "mismatch private field in supertype",
             "privateField",
             Type.getType(Object.class),
             singleton(PROTECTED_OR_HIGHER),
             Nested.A2.class,
             Mismatch.MissingFlag.class),
-        Arguments.of(
+        Arguments.argumentSet(
             "mismatch static field",
             "protectedField",
             Type.getType(Object.class),
             singleton(STATIC),
             Nested.A.class,
             Mismatch.MissingFlag.class),
-        Arguments.of(
+        Arguments.argumentSet(
             "match static field",
             "staticB",
             Type.getType(Nested.B.class),
             new HashSet<>(asList(STATIC, PROTECTED_OR_HIGHER)),
             Nested.A.class,
             null),
-        Arguments.of(
+        Arguments.argumentSet(
             "match primitive int",
             "number",
             Type.INT_TYPE,
             singleton(PACKAGE_OR_HIGHER),
             Nested.Primitives.class,
             null),
-        Arguments.of(
+        Arguments.argumentSet(
             "match primitive boolean",
             "flag",
             Type.BOOLEAN_TYPE,
@@ -302,10 +301,9 @@ class ReferenceMatcherTest {
             null));
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("fieldMatchProvider")
   void fieldMatch(
-      String testName,
       String fieldName,
       Type fieldType,
       Set<Flag> fieldFlags,

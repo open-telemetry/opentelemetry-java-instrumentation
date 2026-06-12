@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.resources.internal;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.IOException;
@@ -22,10 +21,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class ManifestResourceExtractorTest {
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("extractResourceCases")
-  void extractResource(
-      String name, String expectedName, String expectedVersion, String resourceName)
+  void extractResource(String expectedName, String expectedVersion, String resourceName)
       throws IOException {
     try (InputStream input = openClasspathResource(resourceName)) {
       Resource resource =
@@ -54,9 +52,9 @@ class ManifestResourceExtractorTest {
 
   private static Stream<Arguments> extractResourceCases() {
     return Stream.of(
-        arguments("name ok", "demo", "0.0.1-SNAPSHOT", "MANIFEST.MF"),
-        arguments("name - no resource", null, null, null),
-        arguments("name - empty resource", null, null, "empty-MANIFEST.MF"));
+        Arguments.argumentSet("name ok", "demo", "0.0.1-SNAPSHOT", "MANIFEST.MF"),
+        Arguments.argumentSet("name - no resource", null, null, null),
+        Arguments.argumentSet("name - empty resource", null, null, "empty-MANIFEST.MF"));
   }
 
   private static InputStream openClasspathResource(String resource) {

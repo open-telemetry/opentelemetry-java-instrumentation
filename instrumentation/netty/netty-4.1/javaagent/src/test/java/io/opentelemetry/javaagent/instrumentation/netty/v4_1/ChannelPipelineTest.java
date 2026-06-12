@@ -39,19 +39,19 @@ class ChannelPipelineTest {
 
   static Stream<Arguments> removeMethodProvider() {
     return Stream.of(
-        Arguments.of(
+        Arguments.argumentSet(
             "by instance",
             (BiConsumer<ChannelPipeline, ChannelHandler>)
                 (pipeline, handler) -> pipeline.remove(handler)),
-        Arguments.of(
+        Arguments.argumentSet(
             "by class",
             (BiConsumer<ChannelPipeline, ChannelHandler>)
                 (pipeline, handler) -> pipeline.remove(handler.getClass())),
-        Arguments.of(
+        Arguments.argumentSet(
             "by name",
             (BiConsumer<ChannelPipeline, ChannelHandler>)
                 (pipeline, handler) -> pipeline.remove("http")),
-        Arguments.of(
+        Arguments.argumentSet(
             "first",
             (BiConsumer<ChannelPipeline, ChannelHandler>)
                 (pipeline, handler) -> pipeline.removeFirst()));
@@ -67,11 +67,10 @@ class ChannelPipelineTest {
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1373
   // and https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4040
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("removeMethodProvider")
   @DisplayName("Test remove our handler")
-  void testRemoveOurHandler(
-      String testName, BiConsumer<ChannelPipeline, ChannelHandler> removeMethod) {
+  void testRemoveOurHandler(BiConsumer<ChannelPipeline, ChannelHandler> removeMethod) {
     // when no handlers
     assertThat(channelPipeline.first()).isNull();
     assertThat(channelPipeline.last()).isNull();
@@ -96,17 +95,17 @@ class ChannelPipelineTest {
 
   static Stream<Arguments> replaceMethodProvider() {
     return Stream.of(
-        Arguments.of(
+        Arguments.argumentSet(
             "by instance",
             (ReplaceMethod)
                 (pipeline, oldName, oldHandler, newName, newHandler) ->
                     pipeline.replace(oldHandler, newName, newHandler)),
-        Arguments.of(
+        Arguments.argumentSet(
             "by class",
             (ReplaceMethod)
                 (pipeline, oldName, oldHandler, newName, newHandler) ->
                     pipeline.replace(oldHandler.getClass(), newName, newHandler)),
-        Arguments.of(
+        Arguments.argumentSet(
             "by name",
             (ReplaceMethod)
                 (pipeline, oldName, oldHandler, newName, newHandler) ->
@@ -125,10 +124,10 @@ class ChannelPipelineTest {
 
   // regression test for
   //   https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4040
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("replaceMethodProvider")
   @DisplayName("Test remove our handler")
-  void testReplaceHandlerDesc(String desc, ReplaceMethod replaceMethod) {
+  void testReplaceHandlerDesc(ReplaceMethod replaceMethod) {
     // no handlers initially
     assertThat(channelPipeline.first()).isNull();
     assertThat(channelPipeline.last()).isNull();
