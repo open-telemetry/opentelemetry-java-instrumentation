@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 final class RequestAccess {
@@ -98,6 +99,12 @@ final class RequestAccess {
   }
 
   @Nullable
+  static Map<?, ?> getRequestItems(Object request) {
+    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
+    return invokeOrNull(access.getRequestItems, request, Map.class);
+  }
+
+  @Nullable
   static String getSnsTopicArn(Object request) {
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getTopicArn, request);
@@ -133,6 +140,7 @@ final class RequestAccess {
   @Nullable private final MethodHandle getLambdaResourceMappingId;
   @Nullable private final MethodHandle getQueueUrl;
   @Nullable private final MethodHandle getQueueName;
+  @Nullable private final MethodHandle getRequestItems;
   @Nullable private final MethodHandle getSecretArn;
   @Nullable private final MethodHandle getStreamName;
   @Nullable private final MethodHandle getTableName;
@@ -147,6 +155,7 @@ final class RequestAccess {
     getQueueName = findAccessorOrNull(clz, "getQueueName");
     getStreamName = findAccessorOrNull(clz, "getStreamName");
     getTableName = findAccessorOrNull(clz, "getTableName");
+    getRequestItems = findAccessorOrNull(clz, "getRequestItems", Map.class);
     getTopicArn = findAccessorOrNull(clz, "getTopicArn");
     getTargetArn = findAccessorOrNull(clz, "getTargetArn");
 

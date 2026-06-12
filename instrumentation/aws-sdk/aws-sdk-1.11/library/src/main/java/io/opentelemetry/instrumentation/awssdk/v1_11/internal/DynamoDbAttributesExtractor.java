@@ -19,6 +19,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
@@ -46,7 +47,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
 
     String operation = getOperationName(request.getOriginalRequest());
     if (emitStableDatabaseSemconv()) {
-      attributes.put(DB_OPERATION_NAME, operation);
+      attributes.put(DB_OPERATION_NAME, getStableOperationName(operation));
     }
     if (emitOldDatabaseSemconv()) {
       attributes.put(DB_OPERATION, operation);
@@ -56,9 +57,46 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     if (tableName != null) {
       attributes.put(AWS_DYNAMODB_TABLE_NAMES, singletonList(tableName));
     }
-    if (emitStableDatabaseSemconv() && tableName != null) {
-      attributes.put(DB_COLLECTION_NAME, tableName);
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(
+          DB_COLLECTION_NAME, getCollectionName(request.getOriginalRequest(), tableName));
     }
+  }
+
+  @Nullable
+  private static String getCollectionName(Object request, @Nullable String tableName) {
+    if (tableName != null) {
+      return tableName;
+    }
+
+    Map<?, ?> requestItems = RequestAccess.getRequestItems(request);
+    return requestItems != null ? getSingleCollectionName(requestItems) : null;
+  }
+
+  @Nullable
+  private static String getSingleCollectionName(Map<?, ?> requestItems) {
+    String collectionName = null;
+    for (Object candidate : requestItems.keySet()) {
+      if (!(candidate instanceof String)) {
+        return null;
+      }
+      if (collectionName != null && !collectionName.equals(candidate)) {
+        return null;
+      }
+      collectionName = (String) candidate;
+    }
+    return collectionName;
+  }
+
+  @Nullable
+  private static String getStableOperationName(@Nullable String operation) {
+    if ("BatchGetItem".equals(operation)) {
+      return "BATCH GetItem";
+    }
+    if ("BatchWriteItem".equals(operation)) {
+      return "BATCH WriteItem";
+    }
+    return operation;
   }
 
   @Nullable

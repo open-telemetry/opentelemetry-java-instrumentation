@@ -21,10 +21,14 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.AWS_DYNAMODB;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -45,12 +49,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void sendRequestWithMockedResponse() throws ReflectiveOperationException {
-    AmazonDynamoDBClientBuilder clientBuilder = AmazonDynamoDBClientBuilder.standard();
-    AmazonDynamoDB client =
-        configureClient(clientBuilder)
-            .withEndpointConfiguration(endpoint)
-            .withCredentials(credentialsProvider)
-            .build();
+    AmazonDynamoDB client = createClient();
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
 
@@ -77,5 +76,55 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         DB_COLLECTION_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @Test
+  void batchGetItemWithSingleTableUsesStableBatchAttributes() throws ReflectiveOperationException {
+    AmazonDynamoDB client = createClient();
+
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, "{}"));
+
+    List<AttributeAssertion> additionalAttributes =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
+                equalTo(
+                    maybeStable(DB_OPERATION),
+                    emitStableDatabaseSemconv() ? "BATCH GetItem" : "BatchGetItem")));
+    if (emitStableDatabaseSemconv()) {
+      additionalAttributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
+    }
+
+    Object response =
+        client.batchGetItem(
+            new BatchGetItemRequest()
+                .withRequestItems(
+                    singletonMap(
+                        "sometable",
+                        new KeysAndAttributes()
+                            .withKeys(
+                                singletonList(
+                                    singletonMap("key", new AttributeValue().withS("value")))))));
+    assertRequestWithMockedResponse(
+        response, client, "DynamoDBv2", "BatchGetItem", "POST", additionalAttributes);
+
+    assertDurationMetric(
+        testing(),
+        "io.opentelemetry.aws-sdk-1.11",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_COLLECTION_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+  }
+
+  private AmazonDynamoDB createClient() {
+    AmazonDynamoDBClientBuilder clientBuilder = AmazonDynamoDBClientBuilder.standard();
+    return configureClient(clientBuilder)
+        .withEndpointConfiguration(endpoint)
+        .withCredentials(credentialsProvider)
+        .build();
   }
 }
