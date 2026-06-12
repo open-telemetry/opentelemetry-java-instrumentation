@@ -170,15 +170,37 @@ public abstract class AbstractThriftTest {
     return transport.getServerSocket().getLocalPort();
   }
 
+  protected int startNonblockingSyncServer() throws Exception {
+    return startNonblockingSyncServer(true);
+  }
+
+  protected int startNonblockingSyncServer(boolean configure) throws Exception {
+    CustomHandler handler = new CustomHandler();
+    TProcessor processor = new CustomService.Processor<CustomService.Iface>(handler);
+    if (configure) {
+      processor = configure(processor, CustomHandler.class.getName());
+    }
+
+    TNonblockingServerSocket transport = new TNonblockingServerSocket(0, 30000);
+    TNonblockingServer.Args tnbArgs = new TNonblockingServer.Args(transport);
+    tnbArgs.processor(processor);
+
+    TServer server = new TNonblockingServer(tnbArgs);
+    new Thread(server::serve).start();
+    cleanup.deferCleanup(server::stop);
+
+    return transport.getPort();
+  }
+
   protected int startAsyncServer() throws Exception {
     return startAsyncServer(true);
   }
 
   protected int startAsyncServer(boolean configure) throws Exception {
-    CustomHandler handler = new CustomHandler();
-    TProcessor processor = new CustomService.Processor<CustomService.Iface>(handler);
+    CustomAsyncHandler handler = new CustomAsyncHandler();
+    TProcessor processor = new CustomService.AsyncProcessor<CustomService.AsyncIface>(handler);
     if (configure) {
-      processor = configure(processor, CustomHandler.class.getName());
+      processor = configure(processor, CustomAsyncHandler.class.getName());
     }
 
     TNonblockingServerSocket transport = new TNonblockingServerSocket(0, 30000);
@@ -276,14 +298,13 @@ public abstract class AbstractThriftTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected SpanDataAssert assertServerSpan(SpanDataAssert span, String method, int port) {
-    return span.hasName(CustomHandler.class.getName() + "/" + method)
+  protected SpanDataAssert assertServerSpan(
+      SpanDataAssert span, String className, String method, int port, String errorType) {
+    return span.hasName(className + "/" + method)
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
-            equalTo(
-                RPC_METHOD,
-                emitStableRpcSemconv() ? CustomHandler.class.getName() + "/" + method : method),
-            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? CustomHandler.class.getName() : null),
+            equalTo(RPC_METHOD, emitStableRpcSemconv() ? className + "/" + method : method),
+            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
             equalTo(SERVER_PORT, port),
@@ -292,20 +313,31 @@ public abstract class AbstractThriftTest {
             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
             equalTo(NETWORK_LOCAL_ADDRESS, "127.0.0.1"),
-            equalTo(NETWORK_LOCAL_PORT, port));
+            equalTo(NETWORK_LOCAL_PORT, port),
+            equalTo(ERROR_TYPE, emitStableRpcSemconv() ? errorType : null));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected SpanDataAssert assertServerSpan(SpanDataAssert span, String method, int port) {
+    return assertServerSpan(span, CustomHandler.class.getName(), method, port, null);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected SpanDataAssert assertServerSpan(
+      SpanDataAssert span, String className, String method, String errorType) {
+    return span.hasName(className + "/" + method)
+        .hasKind(SpanKind.SERVER)
+        .hasAttributesSatisfyingExactly(
+            equalTo(RPC_METHOD, emitStableRpcSemconv() ? className + "/" + method : method),
+            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
+            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
+            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null),
+            equalTo(ERROR_TYPE, emitStableRpcSemconv() ? errorType : null));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertServerSpan(SpanDataAssert span, String method) {
-    return span.hasName(CustomHandler.class.getName() + "/" + method)
-        .hasKind(SpanKind.SERVER)
-        .hasAttributesSatisfyingExactly(
-            equalTo(
-                RPC_METHOD,
-                emitStableRpcSemconv() ? CustomHandler.class.getName() + "/" + method : method),
-            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? CustomHandler.class.getName() : null),
-            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
-            equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "apache_thrift" : null));
+    return assertServerSpan(span, CustomHandler.class.getName(), method, null);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -532,12 +564,12 @@ public abstract class AbstractThriftTest {
   }
 
   @Test
-  void async() throws Exception {
+  void clientAsync() throws Exception {
     // with thrift 0.13 fails on Java 8 due to java.lang.NoSuchMethodError:
     // java.nio.ByteBuffer.rewind()Ljava/nio/ByteBuffer;
     assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
 
-    int port = startAsyncServer();
+    int port = startNonblockingSyncServer();
     CustomService.AsyncIface asyncClient = createAsyncClient(port);
 
     CompletableFuture<String> completableFuture = new CompletableFuture<>();
@@ -581,12 +613,12 @@ public abstract class AbstractThriftTest {
   }
 
   @Test
-  void asyncMany() throws Exception {
+  void clientAsyncMany() throws Exception {
     // with thrift 0.13 fails on Java 8 due to java.lang.NoSuchMethodError:
     // java.nio.ByteBuffer.rewind()Ljava/nio/ByteBuffer;
     assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
 
-    int port = startAsyncServer();
+    int port = startNonblockingSyncServer();
 
     List<CompletableFuture<String>> results = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
@@ -634,12 +666,12 @@ public abstract class AbstractThriftTest {
   }
 
   @Test
-  void asyncWithError() throws Exception {
+  void clientAsyncWithError() throws Exception {
     // with thrift 0.13 fails on Java 8 due to java.lang.NoSuchMethodError:
     // java.nio.ByteBuffer.rewind()Ljava/nio/ByteBuffer;
     assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
 
-    int port = startAsyncServer();
+    int port = startNonblockingSyncServer();
     CustomService.AsyncIface asyncClient = createAsyncClient(port);
 
     CompletableFuture<String> completableFuture = new CompletableFuture<>();
@@ -702,8 +734,8 @@ public abstract class AbstractThriftTest {
   }
 
   @Test
-  void oneWayAsync() throws Exception {
-    int port = startAsyncServer();
+  void clientOneWayAsync() throws Exception {
+    int port = startNonblockingSyncServer();
     CustomService.AsyncIface asyncClient = createAsyncClient(port);
 
     CompletableFuture<String> completableFuture = new CompletableFuture<>();
