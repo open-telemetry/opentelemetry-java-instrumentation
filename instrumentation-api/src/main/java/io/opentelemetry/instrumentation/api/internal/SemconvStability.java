@@ -49,8 +49,8 @@ public final class SemconvStability {
     DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
     v3Preview = resolveV3Preview(openTelemetry);
     Set<String> stabilityOptInValues = resolveStabilityOptInValues(generalConfig);
-    Set<String> optInValues = resolveOptInValues(openTelemetry, "opt_in");
-    Set<String> previewValues = resolveOptInValues(openTelemetry, "preview");
+    Set<String> optInValues = resolveOptInValues(openTelemetry);
+    Set<String> previewValues = resolvePreviewValues(openTelemetry);
 
     SemconvSelection databaseSelection =
         resolveSemconvSelection(
@@ -64,13 +64,12 @@ public final class SemconvStability {
     emitOldCodeSemconv = codeSelection.emitOld();
     emitStableCodeSemconv = codeSelection.emitStable();
 
-    Set<String> nonstableOptInValues = v3Preview ? previewValues : optInValues;
-    emitOldServicePeerSemconv = shouldEmitOld("service.peer", false, nonstableOptInValues);
-    emitStableServicePeerSemconv = shouldEmitStable("service.peer", false, nonstableOptInValues);
+    emitOldServicePeerSemconv = shouldEmitOld("service.peer", v3Preview, previewValues);
+    emitStableServicePeerSemconv = shouldEmitStable("service.peer", v3Preview, previewValues);
 
     SemconvSelection rpcSelection =
         resolveSemconvSelection(
-            generalConfig, "rpc", "rpc", false, stabilityOptInValues, nonstableOptInValues);
+            generalConfig, "rpc", "rpc", v3Preview, stabilityOptInValues, previewValues);
     emitOldRpcSemconv = rpcSelection.emitOld();
     emitStableRpcSemconv = rpcSelection.emitStable();
 
@@ -137,18 +136,33 @@ public final class SemconvStability {
   }
 
   @SuppressWarnings("deprecation") // using deprecated config property fallback
-  private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry, String flag) {
-    // Try declarative config via GlobalOpenTelemetry first
+  private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
     Set<String> values =
         new HashSet<>(
             generalConfig
                 .get("semconv_stability")
-                .getScalarList(flag, String.class, new ArrayList<>()));
+                .getScalarList("opt_in", String.class, new ArrayList<>()));
     if (values.isEmpty()) {
-      // Fall back to system property / env var
-      String value =
-          ConfigPropertiesUtil.getString("otel.semconv-stability." + flag.replace('_', '-'));
+      String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
+      if (value != null) {
+        return new HashSet<>(asList(value.split(",")));
+      }
+    }
+    return values;
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated config property fallback
+  private static Set<String> resolvePreviewValues(OpenTelemetry openTelemetry) {
+    // preview is Java-specific, so it lives under java.common rather than general
+    DeclarativeConfigProperties commonConfig = getInstrumentationConfig(openTelemetry, "common");
+    Set<String> values =
+        new HashSet<>(
+            commonConfig
+                .get("semconv_stability")
+                .getScalarList("preview", String.class, new ArrayList<>()));
+    if (values.isEmpty()) {
+      String value = ConfigPropertiesUtil.getString("otel.semconv-stability.preview");
       if (value != null) {
         return new HashSet<>(asList(value.split(",")));
       }
