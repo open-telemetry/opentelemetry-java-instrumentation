@@ -6,25 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -593,79 +588,66 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
     latch.await(1, MINUTES);
 
-    await()
-        .atMost(Duration.ofSeconds(20))
-        .untilAsserted(
-            () -> {
-              List<SpanData> spans = testing.spans();
-              SpanData topic1Producer = findSpan(spans, topic1 + " publish", SpanKind.PRODUCER);
-              SpanData topic2Producer = findSpan(spans, topic2 + " publish", SpanKind.PRODUCER);
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    AtomicReference<SpanData> producerSpan2 = new AtomicReference<>();
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent1", topic1 + " receive", "parent2", topic2 + " receive"),
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName(topic1 + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(topic1, msgId1.toString(), false)));
 
-              assertThat(topic1Producer)
-                  .hasAttributesSatisfyingExactly(sendAttributes(topic1, msgId1.toString(), false));
-              assertThat(topic2Producer)
-                  .hasAttributesSatisfyingExactly(sendAttributes(topic2, msgId2.toString(), false));
+          producerSpan.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(topic1 + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic1, msgId1.toString(), false)),
+                span ->
+                    span.hasName(topic1 + " process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(topic1, msgId1.toString(), false))),
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName(topic2 + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(topic2, msgId2.toString(), false)));
 
-              assertThat(spans)
-                  .filteredOn(span -> span.getName().equals(topic1 + " receive"))
-                  .anySatisfy(
-                      span -> assertReceiveSpan(span, topic1Producer, topic1, msgId1.toString()));
-              assertThat(spans)
-                  .filteredOn(span -> span.getName().equals(topic2 + " receive"))
-                  .anySatisfy(
-                      span -> assertReceiveSpan(span, topic2Producer, topic2, msgId2.toString()));
-
-              assertThat(spans)
-                  .filteredOn(span -> span.getName().equals(topic1 + " process"))
-                  .singleElement()
-                  .satisfies(
-                      span ->
-                          assertThat(span)
-                              .hasKind(SpanKind.CONSUMER)
-                              .hasLinks(LinkData.create(topic1Producer.getSpanContext()))
-                              .hasAttributesSatisfyingExactly(
-                                  processAttributes(topic1, msgId1.toString(), false)));
-              assertThat(spans)
-                  .filteredOn(span -> span.getName().equals(topic2 + " process"))
-                  .singleElement()
-                  .satisfies(
-                      span ->
-                          assertThat(span)
-                              .hasKind(SpanKind.CONSUMER)
-                              .hasLinks(LinkData.create(topic2Producer.getSpanContext()))
-                              .hasAttributesSatisfyingExactly(
-                                  processAttributes(topic2, msgId2.toString(), false)));
-            });
-  }
-
-  private static SpanData findSpan(List<SpanData> spans, String name, SpanKind kind) {
-    return spans.stream()
-        .filter(span -> span.getName().equals(name) && span.getKind() == kind)
-        .findFirst()
-        .orElseThrow(() -> new AssertionError("Could not find span " + name));
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  private static void assertReceiveSpan(
-      SpanData span, SpanData producerSpan, String topic, String messageId) {
-    assertThat(span)
-        .hasKind(SpanKind.CONSUMER)
-        .hasNoParent()
-        .hasLinks(LinkData.create(producerSpan.getSpanContext()));
-
-    Attributes attributes = span.getAttributes();
-    assertThat(attributes.get(MESSAGING_SYSTEM)).isEqualTo("pulsar");
-    assertThat(attributes.get(MESSAGING_DESTINATION_NAME)).isEqualTo(topic);
-    assertThat(attributes.get(MESSAGING_OPERATION)).isEqualTo("receive");
-    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo(brokerHost);
-    assertThat(attributes.get(SERVER_PORT)).isEqualTo(brokerPort);
-    assertThat(
-            attributes.get(MESSAGING_MESSAGE_ID) != null
-                || attributes.get(MESSAGING_BATCH_MESSAGE_COUNT) != null)
-        .isTrue();
-    if (attributes.get(MESSAGING_MESSAGE_ID) != null) {
-      assertThat(attributes.get(MESSAGING_MESSAGE_ID)).isEqualTo(messageId);
-    }
+          producerSpan2.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(topic2 + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(topic2, msgId2.toString(), false)),
+                span ->
+                    span.hasName(topic2 + " process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(topic2, msgId2.toString(), false))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
