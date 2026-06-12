@@ -72,16 +72,30 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  test {
+    exclude("**/server/**")
+  }
+
+  val testControllerTelemetry by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    include("**/server/**")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true"
+    )
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
     systemProperty(
       "metadataConfig",
@@ -93,6 +107,7 @@ tasks {
   val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     systemProperty(
       "metadataConfig",
@@ -102,7 +117,13 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testExceptionSignalLogs)
+    dependsOn(testControllerTelemetry, testStableSemconv, testExceptionSignalLogs)
+  }
+
+  if (otelProps.collectMetadata) {
+    test {
+      finalizedBy(testControllerTelemetry)
+    }
   }
 }
 

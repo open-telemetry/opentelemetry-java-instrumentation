@@ -15389,7 +15389,7 @@ libraries:
     type: boolean
     default: false
   telemetry:
-  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+  - when: default
     metrics:
     - name: http.client.request.duration
       description: Duration of HTTP client requests.
@@ -15422,6 +15422,8 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+    spans:
     - span_kind: INTERNAL
       attributes:
       - name: code.function
