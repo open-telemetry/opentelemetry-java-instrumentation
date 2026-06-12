@@ -56,12 +56,73 @@ class SemconvStabilityTest {
     boolean v3Preview = false;
 
     // otel.semconv-stability.opt-in=database
-    SemconvSelection database =
+    SemconvMode database =
         new SemconvSelectionResolver(general, v3Preview, stableOptIn("database"), noPreview())
             .database();
 
-    assertThat(database.emitOld()).isTrue();
-    assertThat(database.emitStable()).isTrue();
+    assertThat(database).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
+  }
+
+  @Test
+  void experimentalIsTreatedAsStableForSupportedDomainVersion() {
+    // general:
+    //   db:
+    //     semconv:
+    //       version: 1
+    //       experimental: true
+    DeclarativeConfigProperties general = general(domainSemconv("db", 1, true, false));
+    boolean v3Preview = false;
+
+    SemconvMode database =
+        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
+
+    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
+  }
+
+  @Test
+  void unsupportedExplicitDomainVersionFallsBackToDefault() {
+    // general:
+    //   rpc:
+    //     semconv:
+    //       version: 1
+    //   messaging:
+    //     semconv:
+    //       version: 1
+    DeclarativeConfigProperties general =
+        general(domainSemconv("rpc", 1), domainSemconv("messaging", 1));
+    boolean v3Preview = false;
+
+    SemconvSelectionResolver resolver =
+        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview());
+    SemconvMode rpc = resolver.rpc();
+    SemconvMode messaging = resolver.messaging();
+
+    assertThat(rpc).isEqualTo(SemconvMode.V0_STABLE);
+    assertThat(messaging).isEqualTo(SemconvMode.V0_STABLE);
+  }
+
+  @Test
+  void experimentalDomainVersionAppliesToPreviewDomains() {
+    // general:
+    //   rpc:
+    //     semconv:
+    //       version: 1
+    //       experimental: true
+    //   messaging:
+    //     semconv:
+    //       version: 1
+    //       experimental: true
+    DeclarativeConfigProperties general =
+        general(domainSemconv("rpc", 1, true, false), domainSemconv("messaging", 1, true, false));
+    boolean v3Preview = true;
+
+    SemconvSelectionResolver resolver =
+        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview());
+    SemconvMode rpc = resolver.rpc();
+    SemconvMode messaging = resolver.messaging();
+
+    assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
   }
 
   @Test
@@ -76,11 +137,10 @@ class SemconvStabilityTest {
     DeclarativeConfigProperties general = general(domainSemconv("db", 0));
     boolean v3Preview = true;
 
-    SemconvSelection database =
+    SemconvMode database =
         new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
 
-    assertThat(database.emitOld()).isFalse();
-    assertThat(database.emitStable()).isTrue();
+    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test
@@ -92,11 +152,10 @@ class SemconvStabilityTest {
     DeclarativeConfigProperties general = general(domainSemconv("db", 0));
     boolean v3Preview = false;
 
-    SemconvSelection database =
+    SemconvMode database =
         new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
 
-    assertThat(database.emitOld()).isTrue();
-    assertThat(database.emitStable()).isFalse();
+    assertThat(database).isEqualTo(SemconvMode.V0_STABLE);
   }
 
   @Test
@@ -112,13 +171,11 @@ class SemconvStabilityTest {
 
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvSelection database = resolver.database();
-    SemconvSelection code = resolver.code();
+    SemconvMode database = resolver.database();
+    SemconvMode code = resolver.code();
 
-    assertThat(database.emitOld()).isFalse();
-    assertThat(database.emitStable()).isTrue();
-    assertThat(code.emitOld()).isFalse();
-    assertThat(code.emitStable()).isTrue();
+    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
+    assertThat(code).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test
@@ -135,13 +192,11 @@ class SemconvStabilityTest {
 
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvSelection database = resolver.database();
-    SemconvSelection code = resolver.code();
+    SemconvMode database = resolver.database();
+    SemconvMode code = resolver.code();
 
-    assertThat(database.emitOld()).isTrue();
-    assertThat(database.emitStable()).isTrue();
-    assertThat(code.emitOld()).isTrue();
-    assertThat(code.emitStable()).isTrue();
+    assertThat(database).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
+    assertThat(code).isEqualTo(SemconvMode.V1_STABLE.withDualEmit());
   }
 
   @Test
@@ -158,13 +213,11 @@ class SemconvStabilityTest {
 
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvSelection database = resolver.database();
-    SemconvSelection code = resolver.code();
+    SemconvMode database = resolver.database();
+    SemconvMode code = resolver.code();
 
-    assertThat(database.emitOld()).isFalse();
-    assertThat(database.emitStable()).isTrue();
-    assertThat(code.emitOld()).isFalse();
-    assertThat(code.emitStable()).isTrue();
+    assertThat(database).isEqualTo(SemconvMode.V1_STABLE);
+    assertThat(code).isEqualTo(SemconvMode.V1_STABLE);
   }
 
   @Test
@@ -182,16 +235,13 @@ class SemconvStabilityTest {
 
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvSelection rpc = resolver.rpc();
-    SemconvSelection servicePeer = resolver.servicePeer();
-    SemconvSelection messaging = resolver.messaging();
+    SemconvMode rpc = resolver.rpc();
+    SemconvMode servicePeer = resolver.servicePeer();
+    SemconvMode messaging = resolver.messaging();
 
-    assertThat(rpc.emitOld()).isFalse();
-    assertThat(rpc.emitStable()).isTrue();
-    assertThat(servicePeer.emitOld()).isFalse();
-    assertThat(servicePeer.emitStable()).isTrue();
-    assertThat(messaging.emitOld()).isFalse();
-    assertThat(messaging.emitStable()).isTrue();
+    assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+    assertThat(servicePeer).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
   }
 
   @Test
@@ -209,16 +259,13 @@ class SemconvStabilityTest {
 
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(general, v3Preview, stableOptIn, noPreview());
-    SemconvSelection rpc = resolver.rpc();
-    SemconvSelection servicePeer = resolver.servicePeer();
-    SemconvSelection messaging = resolver.messaging();
+    SemconvMode rpc = resolver.rpc();
+    SemconvMode servicePeer = resolver.servicePeer();
+    SemconvMode messaging = resolver.messaging();
 
-    assertThat(rpc.emitOld()).isTrue();
-    assertThat(rpc.emitStable()).isFalse();
-    assertThat(servicePeer.emitOld()).isTrue();
-    assertThat(servicePeer.emitStable()).isFalse();
-    assertThat(messaging.emitOld()).isTrue();
-    assertThat(messaging.emitStable()).isFalse();
+    assertThat(rpc).isEqualTo(SemconvMode.V0_STABLE);
+    assertThat(servicePeer).isEqualTo(SemconvMode.V0_STABLE);
+    assertThat(messaging).isEqualTo(SemconvMode.V0_STABLE);
   }
 
   @ParameterizedTest
@@ -235,16 +282,13 @@ class SemconvStabilityTest {
 
     SemconvSelectionResolver resolver =
         new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), preview);
-    SemconvSelection rpc = resolver.rpc();
-    SemconvSelection servicePeer = resolver.servicePeer();
-    SemconvSelection messaging = resolver.messaging();
+    SemconvMode rpc = resolver.rpc();
+    SemconvMode servicePeer = resolver.servicePeer();
+    SemconvMode messaging = resolver.messaging();
 
-    assertThat(rpc.emitOld()).isFalse();
-    assertThat(rpc.emitStable()).isTrue();
-    assertThat(servicePeer.emitOld()).isFalse();
-    assertThat(servicePeer.emitStable()).isTrue();
-    assertThat(messaging.emitOld()).isFalse();
-    assertThat(messaging.emitStable()).isTrue();
+    assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+    assertThat(servicePeer).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
   }
 
   @SafeVarargs
@@ -274,9 +318,18 @@ class SemconvStabilityTest {
   }
 
   private static Entry<String, Object> domainSemconv(String domain, int version, boolean dualEmit) {
+    return domainSemconv(domain, version, false, dualEmit);
+  }
+
+  private static Entry<String, Object> domainSemconv(
+      String domain, int version, boolean experimental, boolean dualEmit) {
     return structured(
         domain,
-        structured("semconv", property("version", version), property("dual_emit", dualEmit)));
+        structured(
+            "semconv",
+            property("version", version),
+            property("experimental", experimental),
+            property("dual_emit", dualEmit)));
   }
 
   private static Set<String> stableOptIn(String... values) {

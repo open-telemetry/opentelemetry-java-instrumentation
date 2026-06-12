@@ -44,25 +44,25 @@ public final class SemconvStability {
     SemconvSelectionResolver semconvSelection =
         new SemconvSelectionResolver(openTelemetry, generalConfig, v3Preview);
 
-    SemconvSelection databaseSelection = semconvSelection.database();
-    emitOldDatabaseSemconv = databaseSelection.emitOld();
-    emitStableDatabaseSemconv = databaseSelection.emitStable();
+    SemconvMode databaseSelection = semconvSelection.database();
+    emitOldDatabaseSemconv = emitOld(databaseSelection);
+    emitStableDatabaseSemconv = emitStable(databaseSelection);
 
-    SemconvSelection codeSelection = semconvSelection.code();
-    emitOldCodeSemconv = codeSelection.emitOld();
-    emitStableCodeSemconv = codeSelection.emitStable();
+    SemconvMode codeSelection = semconvSelection.code();
+    emitOldCodeSemconv = emitOld(codeSelection);
+    emitStableCodeSemconv = emitStable(codeSelection);
 
-    SemconvSelection servicePeerSelection = semconvSelection.servicePeer();
-    emitOldServicePeerSemconv = servicePeerSelection.emitOld();
-    emitStableServicePeerSemconv = servicePeerSelection.emitStable();
+    SemconvMode servicePeerSelection = semconvSelection.servicePeer();
+    emitOldServicePeerSemconv = emitOld(servicePeerSelection);
+    emitStableServicePeerSemconv = emitStable(servicePeerSelection);
 
-    SemconvSelection rpcSelection = semconvSelection.rpc();
-    emitOldRpcSemconv = rpcSelection.emitOld();
-    emitStableRpcSemconv = rpcSelection.emitStable();
+    SemconvMode rpcSelection = semconvSelection.rpc();
+    emitOldRpcSemconv = emitOld(rpcSelection);
+    emitStableRpcSemconv = emitStable(rpcSelection);
 
-    SemconvSelection messagingSelection = semconvSelection.messaging();
-    emitOldMessagingSemconv = messagingSelection.emitOld();
-    emitStableMessagingSemconv = messagingSelection.emitStable();
+    SemconvMode messagingSelection = semconvSelection.messaging();
+    emitOldMessagingSemconv = emitOld(messagingSelection);
+    emitStableMessagingSemconv = emitStable(messagingSelection);
   }
 
   @SuppressWarnings("deprecation") // using deprecated config property fallback
@@ -158,6 +158,14 @@ public final class SemconvStability {
     return openTelemetry instanceof ExtendedOpenTelemetry
         ? ((ExtendedOpenTelemetry) openTelemetry).getInstrumentationConfig(instrumentationName)
         : empty();
+  }
+
+  private static boolean emitOld(SemconvMode mode) {
+    return mode.version() == 0 || mode.dualEmit();
+  }
+
+  private static boolean emitStable(SemconvMode mode) {
+    return mode.version() >= 1;
   }
 
   public static boolean emitOldMessagingSemconv() {

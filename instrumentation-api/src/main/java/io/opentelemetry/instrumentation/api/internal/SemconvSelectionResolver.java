@@ -17,9 +17,9 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 class SemconvSelectionResolver {
-  // General declarative config, used for explicit general.<domain>.semconv.version and
-  // general.<domain>.semconv.dual_emit settings.
-  private final DeclarativeConfigProperties generalConfig;
+  // Structured config, used for explicit general.<domain>.semconv.version,
+  // general.<domain>.semconv.experimental, and general.<domain>.semconv.dual_emit settings.
+  private final DeclarativeConfigProperties structuredConfig;
 
   // Stable opt-in values, used when no explicit per-domain semconv config is present. Combines
   // general.stability_opt_in_list with OpenTelemetry-backed / ConfigPropertiesUtil-backed
@@ -45,69 +45,161 @@ class SemconvSelectionResolver {
   }
 
   SemconvSelectionResolver(
-      DeclarativeConfigProperties generalConfig,
+      DeclarativeConfigProperties structuredConfig,
       boolean v3Preview,
       Set<String> stableFlags,
       Set<String> previewFlags) {
-    this.generalConfig = generalConfig;
+    this.structuredConfig = structuredConfig;
     this.v3Preview = v3Preview;
     this.stableFlags = stableFlags;
     this.previewFlags = previewFlags;
   }
 
-  SemconvSelection database() {
+  SemconvMode database() {
+    SemconvDomain.Builder domain = SemconvDomain.builder("db").flagKey("database");
     if (v3Preview) {
-      return stableOnly();
+      domain.defaultMode(SemconvMode.V1_STABLE);
+    } else {
+      domain
+          .defaultMode(SemconvMode.V0_STABLE)
+          .otherSupportedModes(SemconvMode.V1_STABLE, SemconvMode.V1_STABLE.withDualEmit());
     }
-    return resolveSemconvSelection("db", "database", stableFlags);
+    return resolveSemconvSelection(domain.build());
   }
 
-  SemconvSelection code() {
+  SemconvMode code() {
+    SemconvDomain.Builder domain = SemconvDomain.builder("code");
     if (v3Preview) {
-      return stableOnly();
+      domain.defaultMode(SemconvMode.V1_STABLE);
+    } else {
+      domain
+          .defaultMode(SemconvMode.V0_STABLE)
+          .otherSupportedModes(SemconvMode.V1_STABLE, SemconvMode.V1_STABLE.withDualEmit());
     }
-    return resolveSemconvSelection("code", "code", stableFlags);
+    return resolveSemconvSelection(domain.build());
   }
 
-  SemconvSelection rpc() {
-    return resolveSemconvSelection("rpc", "rpc", effectivePreviewFlags());
+  SemconvMode rpc() {
+    return resolveSemconvSelection(
+        SemconvDomain.builder("rpc")
+            .defaultMode(SemconvMode.V0_STABLE)
+            .otherSupportedModes(
+                SemconvMode.V1_EXPERIMENTAL, SemconvMode.V1_EXPERIMENTAL.withDualEmit())
+            .build());
   }
 
-  SemconvSelection messaging() {
-    return resolveSemconvSelection("messaging", "messaging", effectivePreviewFlags());
+  SemconvMode messaging() {
+    return resolveSemconvSelection(
+        SemconvDomain.builder("messaging")
+            .defaultMode(SemconvMode.V0_STABLE)
+            .otherSupportedModes(
+                SemconvMode.V1_EXPERIMENTAL, SemconvMode.V1_EXPERIMENTAL.withDualEmit())
+            .build());
   }
 
-  // service.peer does not have an explicit general.<domain>.semconv config.
-  SemconvSelection servicePeer() {
-    return fromFlags("service.peer", effectivePreviewFlags());
+  SemconvMode servicePeer() {
+    return resolveSemconvSelection(
+        SemconvDomain.builder("service.peer")
+            .withoutStructuredConfig()
+            .defaultMode(SemconvMode.V0_STABLE)
+            .otherSupportedModes(
+                SemconvMode.V1_EXPERIMENTAL, SemconvMode.V1_EXPERIMENTAL.withDualEmit())
+            .build());
   }
 
-  static Set<String> resolveGeneralStableFlags(DeclarativeConfigProperties generalConfig) {
-    String value = generalConfig.getString("stability_opt_in_list");
-    if (value == null || value.trim().isEmpty()) {
-      return emptySet();
+  private SemconvMode resolveSemconvSelection(SemconvDomain domain) {
+    SemconvMode semconvMode = resolveFromStructuredConfig(domain);
+    if (semconvMode != null) {
+      return semconvMode;
     }
-    return parseCommaSeparatedSet(value);
-  }
-
-  static Set<String> parseCommaSeparatedSet(String value) {
-    return asList(value.split(",")).stream()
-        .map(String::trim)
-        .filter(v -> !v.isEmpty())
-        .collect(toSet());
-  }
-
-  private SemconvSelection resolveSemconvSelection(
-      String domainConfigName, String legacyKey, Set<String> fallbackValues) {
-    SemconvSelection domainSelection = resolveDomainSemconvSelection(domainConfigName);
-    if (domainSelection != null) {
-      return domainSelection;
+    semconvMode = resolveFromFlags(domain);
+    if (semconvMode != null) {
+      return semconvMode;
     }
-    return fromFlags(legacyKey, fallbackValues);
+    return domain.defaultMode();
   }
 
-  private static SemconvSelection stableOnly() {
-    return SemconvSelection.of(false, true);
+  @Nullable
+  private SemconvMode resolveFromStructuredConfig(SemconvDomain domain) {
+    if (!domain.hasStructuredConfig()) {
+      return null;
+    }
+    DeclarativeConfigProperties semconvConfig =
+        structuredConfig.get(domain.configName()).get("semconv");
+    Integer version = semconvConfig.getInt("version");
+    if (version == null) {
+      return null;
+    }
+    if (version == 0) {
+      if (!domain.supportedModes().contains(SemconvMode.V0_STABLE)) {
+        return null;
+      }
+      return SemconvMode.V0_STABLE;
+    }
+    if (version == 1) {
+      SemconvMode requestedMode = requestedModeV1(semconvConfig, domain.supportedModes());
+      if (requestedMode == null) {
+        return null;
+      }
+      if (semconvConfig.getBoolean("dual_emit", false)
+          && domain.supportedModes().contains(requestedMode.withDualEmit())) {
+        return requestedMode.withDualEmit();
+      }
+      return requestedMode;
+    }
+    return null;
+  }
+
+  @Nullable
+  private static SemconvMode requestedModeV1(
+      DeclarativeConfigProperties semconvConfig, Set<SemconvMode> supportedModes) {
+    if (semconvConfig.getBoolean("experimental", false)
+        && supportedModes.contains(SemconvMode.V1_EXPERIMENTAL)) {
+      return SemconvMode.V1_EXPERIMENTAL;
+    }
+    if (supportedModes.contains(SemconvMode.V1_STABLE)) {
+      return SemconvMode.V1_STABLE;
+    }
+    return null;
+  }
+
+  @Nullable
+  private SemconvMode resolveFromFlags(SemconvDomain domain) {
+    SemconvMode flagTarget = flagTarget(domain.supportedModes());
+    if (flagTarget == null) {
+      return null;
+    }
+    Set<String> flags = flagsFor(domain.supportedModes());
+    if (flags.contains(domain.flagKey()) || flags.contains(domain.flagKey() + "/dup")) {
+      return fromFlags(domain.flagKey(), flags, flagTarget, domain.supportedModes());
+    }
+    return null;
+  }
+
+  @Nullable
+  private static SemconvMode flagTarget(Set<SemconvMode> supportedModes) {
+    if (supportedModes.contains(SemconvMode.V1_STABLE)) {
+      return SemconvMode.V1_STABLE;
+    }
+    if (supportedModes.contains(SemconvMode.V1_EXPERIMENTAL)) {
+      return SemconvMode.V1_EXPERIMENTAL;
+    }
+    return null;
+  }
+
+  private Set<String> flagsFor(Set<SemconvMode> supportedModes) {
+    if (supportedModes.contains(SemconvMode.V1_EXPERIMENTAL)) {
+      return effectivePreviewFlags();
+    }
+    return stableFlags;
+  }
+
+  private static SemconvMode fromFlags(
+      String key, Set<String> values, SemconvMode targetMode, Set<SemconvMode> supportedModes) {
+    if (values.contains(key + "/dup") && supportedModes.contains(targetMode.withDualEmit())) {
+      return targetMode.withDualEmit();
+    }
+    return targetMode;
   }
 
   private Set<String> effectivePreviewFlags() {
@@ -115,37 +207,6 @@ class SemconvSelectionResolver {
       return previewFlags;
     }
     return combine(stableFlags, previewFlags);
-  }
-
-  @Nullable
-  private SemconvSelection resolveDomainSemconvSelection(String domainConfigName) {
-    DeclarativeConfigProperties semconvConfig = generalConfig.get(domainConfigName).get("semconv");
-    Integer version = semconvConfig.getInt("version");
-    if (version == null) {
-      return null;
-    }
-    if (version == 0) {
-      return SemconvSelection.of(true, false);
-    }
-    if (version == 1) {
-      return SemconvSelection.of(semconvConfig.getBoolean("dual_emit", false), true);
-    }
-    return null;
-  }
-
-  private static SemconvSelection fromFlags(String key, Set<String> values) {
-    return SemconvSelection.of(shouldEmitOld(key, values), shouldEmitStable(key, values));
-  }
-
-  private static boolean shouldEmitOld(String key, Set<String> optInValues) {
-    if (optInValues.contains(key + "/dup")) {
-      return true;
-    }
-    return !optInValues.contains(key);
-  }
-
-  private static boolean shouldEmitStable(String key, Set<String> optInValues) {
-    return optInValues.contains(key) || optInValues.contains(key + "/dup");
   }
 
   private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry) {
@@ -160,6 +221,14 @@ class SemconvSelectionResolver {
     return combine(resolveGeneralStableFlags(generalConfig), resolveOptInValues(openTelemetry));
   }
 
+  static Set<String> resolveGeneralStableFlags(DeclarativeConfigProperties generalConfig) {
+    String value = generalConfig.getString("stability_opt_in_list");
+    if (value == null || value.trim().isEmpty()) {
+      return emptySet();
+    }
+    return parseCommaSeparatedSet(value);
+  }
+
   private static Set<String> resolvePreviewValues(OpenTelemetry openTelemetry) {
     // preview is Java-specific, so it lives under java.common rather than general
     DeclarativeConfigProperties commonConfig =
@@ -168,8 +237,7 @@ class SemconvSelectionResolver {
         commonConfig.get("semconv_stability"), "preview", "otel.semconv-stability.preview");
   }
 
-  // ConfigPropertiesUtil is intentionally used as the fallback for library instrumentation.
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // using deprecated config property fallback
   private static Set<String> resolveStringList(
       DeclarativeConfigProperties config, String key, String fallbackProperty) {
     Set<String> values = new HashSet<>(config.getScalarList(key, String.class, emptyList()));
@@ -178,6 +246,13 @@ class SemconvSelectionResolver {
     }
     String value = ConfigPropertiesUtil.getString(fallbackProperty);
     return value == null ? emptySet() : parseCommaSeparatedSet(value);
+  }
+
+  static Set<String> parseCommaSeparatedSet(String value) {
+    return asList(value.split(",")).stream()
+        .map(String::trim)
+        .filter(v -> !v.isEmpty())
+        .collect(toSet());
   }
 
   private static Set<String> combine(Set<String> first, Set<String> second) {
