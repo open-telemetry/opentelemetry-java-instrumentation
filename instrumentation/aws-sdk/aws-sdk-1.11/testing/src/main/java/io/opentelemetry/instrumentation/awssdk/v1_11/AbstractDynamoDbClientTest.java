@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -80,7 +81,8 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  void batchGetItemWithSingleTableUsesStableBatchAttributes() throws ReflectiveOperationException {
+    void batchGetItemWithMultipleItemsUsesStableBatchAttributes()
+            throws ReflectiveOperationException {
     AmazonDynamoDB client = createClient();
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, "{}"));
@@ -92,10 +94,54 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
                     maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
                 equalTo(
                     maybeStable(DB_OPERATION),
-                    emitStableDatabaseSemconv() ? "BATCH GetItem" : "BatchGetItem")));
-    if (emitStableDatabaseSemconv()) {
-      additionalAttributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
-    }
+                    emitStableDatabaseSemconv() ? "BATCH GetItem" : "BatchGetItem"),
+                equalTo(
+                    DB_OPERATION_BATCH_SIZE,
+                    emitStableDatabaseSemconv() ? Long.valueOf(2) : null),
+                equalTo(DB_COLLECTION_NAME, emitStableDatabaseSemconv() ? "sometable" : null)));
+
+    Object response =
+        client.batchGetItem(
+            new BatchGetItemRequest()
+                .withRequestItems(
+                    singletonMap(
+                        "sometable",
+                        new KeysAndAttributes()
+                            .withKeys(
+                                asList(
+                                    singletonMap("key", new AttributeValue().withS("value")),
+                                    singletonMap(
+                                        "key", new AttributeValue().withS("anotherValue")))))));
+    assertRequestWithMockedResponse(
+        response, client, "DynamoDBv2", "BatchGetItem", "POST", additionalAttributes);
+
+    assertDurationMetric(
+        testing(),
+        "io.opentelemetry.aws-sdk-1.11",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_COLLECTION_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @Test
+    void batchGetItemWithSingleItemUsesStableItemOperation()
+      throws ReflectiveOperationException {
+    AmazonDynamoDB client = createClient();
+
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, "{}"));
+
+    List<AttributeAssertion> additionalAttributes =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
+                equalTo(
+                    maybeStable(DB_OPERATION),
+                    emitStableDatabaseSemconv() ? "GetItem" : "BatchGetItem"),
+                equalTo(DB_COLLECTION_NAME, emitStableDatabaseSemconv() ? "sometable" : null)));
 
     Object response =
         client.batchGetItem(

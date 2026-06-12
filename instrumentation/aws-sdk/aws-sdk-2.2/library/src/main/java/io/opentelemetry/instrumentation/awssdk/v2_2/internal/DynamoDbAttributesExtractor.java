@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
@@ -15,6 +16,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -33,6 +35,8 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String AWS_DYNAMODB = "aws.dynamodb";
 
+  private final MethodHandleFactory methodHandleFactory = new MethodHandleFactory();
+
   @Override
   public void onStart(
       AttributesBuilder attributes,
@@ -45,8 +49,12 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
       attributes.put(DB_SYSTEM, DYNAMODB);
     }
     String operation = executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
+    long batchSize = extractBatchSize(operation, executionAttributes);
     if (emitStableDatabaseSemconv()) {
-      attributes.put(DB_OPERATION_NAME, getStableOperationName(operation));
+      attributes.put(DB_OPERATION_NAME, getStableOperationName(operation, batchSize));
+      if (isBatch(batchSize)) {
+        attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
+      }
     }
     if (emitOldDatabaseSemconv()) {
       attributes.put(DB_OPERATION, operation);
@@ -60,14 +68,70 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
   }
 
   @Nullable
-  private static String getStableOperationName(@Nullable String operation) {
+  private static String getStableOperationName(@Nullable String operation, long batchSize) {
     if ("BatchGetItem".equals(operation)) {
-      return "BATCH GetItem";
+      return isBatch(batchSize) ? "BATCH GetItem" : "GetItem";
     }
     if ("BatchWriteItem".equals(operation)) {
-      return "BATCH WriteItem";
+      return isBatch(batchSize) ? "BATCH WriteItem" : "WriteItem";
     }
     return operation;
+  }
+
+  private long extractBatchSize(
+      @Nullable String operation, ExecutionAttributes executionAttributes) {
+    if (!"BatchGetItem".equals(operation) && !"BatchWriteItem".equals(operation)) {
+      return 0;
+    }
+
+    SdkRequest request =
+        executionAttributes.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
+    if (request == null) {
+      return 0;
+    }
+    Optional<?> requestItems = request.getValueForField("RequestItems", Object.class);
+    if (!requestItems.isPresent() || !(requestItems.get() instanceof Map)) {
+      return 0;
+    }
+
+    Map<?, ?> requestItemsMap = (Map<?, ?>) requestItems.get();
+    return "BatchGetItem".equals(operation)
+        ? countBatchGetItems(requestItemsMap)
+        : countBatchWriteItems(requestItemsMap);
+  }
+
+  private long countBatchGetItems(Map<?, ?> requestItems) {
+    long count = 0;
+    for (Object keysAndAttributes : requestItems.values()) {
+      Object keys = next(keysAndAttributes, "Keys");
+      if (keys instanceof Collection) {
+        count += ((Collection<?>) keys).size();
+      }
+    }
+    return count;
+  }
+
+  private static long countBatchWriteItems(Map<?, ?> requestItems) {
+    long count = 0;
+    for (Object writeRequests : requestItems.values()) {
+      if (writeRequests instanceof Collection) {
+        count += ((Collection<?>) writeRequests).size();
+      }
+    }
+    return count;
+  }
+
+  private static boolean isBatch(long batchSize) {
+    return batchSize > 1;
+  }
+
+  @Nullable
+  private Object next(Object current, String fieldName) {
+    try {
+      return methodHandleFactory.forField(current.getClass(), fieldName).invoke(current);
+    } catch (Throwable ignored) {
+      return null;
+    }
   }
 
   @Nullable

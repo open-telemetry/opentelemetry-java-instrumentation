@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -293,6 +294,16 @@ public abstract class AbstractAws2ClientCoreTest {
   @SuppressWarnings("deprecation") // uses deprecated semconv
   private static void assertDynamoDbRequest(
       SpanDataAssert span, String operation, List<AttributeAssertion> extraAttributes) {
+        assertDynamoDbRequest(
+                span, operation, extraAttributes, expectedDbOperationNameForSingleItemRequest(operation));
+  }
+
+  @SuppressWarnings("deprecation") // uses deprecated semconv
+  private static void assertDynamoDbRequest(
+      SpanDataAssert span,
+      String operation,
+      List<AttributeAssertion> extraAttributes,
+      String expectedStableOperationName) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -308,7 +319,9 @@ public abstract class AbstractAws2ClientCoreTest {
                 equalTo(AWS_REQUEST_ID, "UNKNOWN"),
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
-                equalTo(maybeStable(DB_OPERATION), expectedDbOperationName(operation))));
+                equalTo(
+                    maybeStable(DB_OPERATION),
+                    emitStableDatabaseSemconv() ? expectedStableOperationName : operation)));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(DB_COLLECTION_NAME, "sometable"));
     }
@@ -553,18 +566,144 @@ public abstract class AbstractAws2ClientCoreTest {
                                         .doesNotContainKey(DB_COLLECTION_NAME))));
   }
 
-  private static String expectedDbOperationName(String operation) {
-    if (!emitStableDatabaseSemconv()) {
-      return operation;
-    }
-    switch (operation) {
-      case "BatchGetItem":
-        return "BATCH GetItem";
-      case "BatchWriteItem":
-        return "BATCH WriteItem";
-      default:
-        return operation;
-    }
+  @Test
+  @SuppressWarnings("deprecation") // uses deprecated semconv
+  void testBatchGetItemWithMultipleItemsUsesStableBatchAttributes() {
+    DynamoDbClientBuilder builder = DynamoDbClient.builder();
+    configureSdkClient(builder);
+    DynamoDbClient client =
+        builder
+            .endpointOverride(server.httpUri())
+            .region(Region.AP_NORTHEAST_1)
+            .credentialsProvider(CREDENTIALS_PROVIDER)
+            .build();
+    server.enqueue(
+        HttpResponse.of(
+            HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, getResponseContent("BatchGetItem")));
+
+    client.batchGetItem(
+        b ->
+            b.requestItems(
+                ImmutableMap.of(
+                    "sometable",
+                    KeysAndAttributes.builder()
+                        .keys(
+                            asList(
+                                ImmutableMap.of(
+                                    "key", AttributeValue.builder().s("value").build()),
+                                ImmutableMap.of(
+                                    "key", AttributeValue.builder().s("anotherValue").build())))
+                        .build())));
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        assertDynamoDbRequest(
+                            span,
+                            "BatchGetItem",
+                            asList(
+                                equalTo(
+                                    AWS_DYNAMODB_CONSUMED_CAPACITY,
+                                    singletonList(
+                                        "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")),
+                                equalTo(
+                                    DB_OPERATION_BATCH_SIZE,
+                                    emitStableDatabaseSemconv() ? Long.valueOf(2) : null)),
+                            "BATCH GetItem")));
+
+    assertDurationMetric(
+        getTesting(),
+        "io.opentelemetry.aws-sdk-2.2",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_COLLECTION_NAME);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // uses deprecated semconv
+  void testBatchWriteItemWithMultipleItemsUsesStableBatchAttributes() {
+    DynamoDbClientBuilder builder = DynamoDbClient.builder();
+    configureSdkClient(builder);
+    DynamoDbClient client =
+        builder
+            .endpointOverride(server.httpUri())
+            .region(Region.AP_NORTHEAST_1)
+            .credentialsProvider(CREDENTIALS_PROVIDER)
+            .build();
+    server.enqueue(
+        HttpResponse.of(
+            HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, getResponseContent("BatchWriteItem")));
+
+    client.batchWriteItem(
+        b ->
+            b.requestItems(
+                ImmutableMap.of(
+                    "sometable",
+                    asList(
+                        WriteRequest.builder()
+                            .putRequest(
+                                PutRequest.builder()
+                                    .item(
+                                        ImmutableMap.of(
+                                            "key",
+                                            AttributeValue.builder().s("value").build()))
+                                    .build())
+                            .build(),
+                        WriteRequest.builder()
+                            .putRequest(
+                                PutRequest.builder()
+                                    .item(
+                                        ImmutableMap.of(
+                                            "key",
+                                            AttributeValue.builder().s("anotherValue").build()))
+                                    .build())
+                            .build()))));
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        assertDynamoDbRequest(
+                            span,
+                            "BatchWriteItem",
+                            asList(
+                                equalTo(
+                                    AWS_DYNAMODB_CONSUMED_CAPACITY,
+                                    singletonList(
+                                        "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")),
+                                equalTo(
+                                    AWS_DYNAMODB_ITEM_COLLECTION_METRICS,
+                                    "[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]"),
+                                equalTo(
+                                    DB_OPERATION_BATCH_SIZE,
+                                    emitStableDatabaseSemconv() ? Long.valueOf(2) : null)),
+                            "BATCH WriteItem")));
+
+    assertDurationMetric(
+        getTesting(),
+        "io.opentelemetry.aws-sdk-2.2",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_COLLECTION_NAME);
+  }
+
+    private static String expectedDbOperationNameForSingleItemRequest(String operation) {
+        if (!emitStableDatabaseSemconv()) {
+            return operation;
+        }
+        // The parameterized Batch* requests contain one item. Stable DB semconv treats those as
+        // logical item operations; dedicated multi-item tests pass the BATCH operation name directly.
+        switch (operation) {
+            case "BatchGetItem":
+                return "GetItem";
+            case "BatchWriteItem":
+                return "WriteItem";
+            default:
+                return operation;
+        }
   }
 
   private static String getResponseContent(String operation) {
