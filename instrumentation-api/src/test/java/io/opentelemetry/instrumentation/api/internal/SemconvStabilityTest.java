@@ -33,6 +33,12 @@ class SemconvStabilityTest {
   }
 
   @Test
+  void parseCommaSeparatedSet_ignoresBlankEntries() {
+    assertThat(SemconvStability.parseCommaSeparatedSet("rpc, messaging, ,database/dup,"))
+        .containsExactlyInAnyOrder("rpc", "messaging", "database/dup");
+  }
+
+  @Test
   void domainSemconvSelection_takesPrecedenceOverStabilityList() {
     DeclarativeConfigProperties config =
         new TestDeclarativeConfigProperties(

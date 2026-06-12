@@ -85,6 +85,10 @@ public final class SemconvStability {
     if (value == null || value.trim().isEmpty()) {
       return emptySet();
     }
+    return parseCommaSeparatedSet(value);
+  }
+
+  static Set<String> parseCommaSeparatedSet(String value) {
     return asList(value.split(",")).stream()
         .map(String::trim)
         .filter(v -> !v.isEmpty())
@@ -146,7 +150,7 @@ public final class SemconvStability {
     if (values.isEmpty()) {
       String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
       if (value != null) {
-        return new HashSet<>(asList(value.split(",")));
+        return parseCommaSeparatedSet(value);
       }
     }
     return values;
@@ -164,7 +168,7 @@ public final class SemconvStability {
     if (values.isEmpty()) {
       String value = ConfigPropertiesUtil.getString("otel.semconv-stability.preview");
       if (value != null) {
-        return new HashSet<>(asList(value.split(",")));
+        return parseCommaSeparatedSet(value);
       }
     }
     return values;
