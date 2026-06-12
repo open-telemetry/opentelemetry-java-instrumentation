@@ -21,6 +21,7 @@ import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEven
 import org.springframework.core.env.ConfigurableEnvironment;
 
 class LogbackAppenderInstaller {
+  private static final Logger logger = LoggerFactory.getLogger(LogbackAppenderInstaller.class);
 
   static void install(ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
     Optional<io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender>
@@ -75,14 +76,14 @@ class LogbackAppenderInstaller {
 
   private static void addOpenTelemetryAppender(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
-    ch.qos.logback.classic.Logger logger =
+    ch.qos.logback.classic.Logger logbackLogger =
         (ch.qos.logback.classic.Logger)
             LoggerFactory.getILoggerFactory().getLogger(Logger.ROOT_LOGGER_NAME);
     OpenTelemetryAppender openTelemetryAppender = new OpenTelemetryAppender();
     initializeOpenTelemetryAppenderFromProperties(
         applicationEnvironmentPreparedEvent, openTelemetryAppender);
     openTelemetryAppender.start();
-    logger.addAppender(openTelemetryAppender);
+    logbackLogger.addAppender(openTelemetryAppender);
   }
 
   private static void initializeOpenTelemetryAppenderFromProperties(
@@ -179,20 +180,21 @@ class LogbackAppenderInstaller {
 
   private static void addMdcAppender(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
-    ch.qos.logback.classic.Logger logger =
+    ch.qos.logback.classic.Logger logbackLogger =
         (ch.qos.logback.classic.Logger)
             LoggerFactory.getILoggerFactory().getLogger(Logger.ROOT_LOGGER_NAME);
     io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender openTelemetryAppender =
         new io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender();
     initializeMdcAppenderFromProperties(applicationEnvironmentPreparedEvent, openTelemetryAppender);
     openTelemetryAppender.start();
-    logger.addAppender(openTelemetryAppender);
+    logbackLogger.addAppender(openTelemetryAppender);
     // move existing appenders under otel mdc appender, so they could observe the added mdc values
-    for (Iterator<Appender<ILoggingEvent>> i = logger.iteratorForAppenders(); i.hasNext(); ) {
+    for (Iterator<Appender<ILoggingEvent>> i = logbackLogger.iteratorForAppenders();
+        i.hasNext(); ) {
       Appender<ILoggingEvent> appender = i.next();
       if (appender != openTelemetryAppender) {
         openTelemetryAppender.addAppender(appender);
-        logger.detachAppender(appender);
+        logbackLogger.detachAppender(appender);
       }
     }
   }
@@ -218,6 +220,7 @@ class LogbackAppenderInstaller {
     String traceIdKey =
         getLoggingProperty(
             applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.common.logging.trace-id-key",
             "otel.instrumentation.common.logging.trace-id");
     if (traceIdKey != null) {
       openTelemetryAppender.setTraceIdKey(traceIdKey);
@@ -226,6 +229,7 @@ class LogbackAppenderInstaller {
     String spanIdKey =
         getLoggingProperty(
             applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.common.logging.span-id-key",
             "otel.instrumentation.common.logging.span-id");
     if (spanIdKey != null) {
       openTelemetryAppender.setSpanIdKey(spanIdKey);
@@ -234,10 +238,29 @@ class LogbackAppenderInstaller {
     String traceFlagsKey =
         getLoggingProperty(
             applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.common.logging.trace-flags-key",
             "otel.instrumentation.common.logging.trace-flags");
     if (traceFlagsKey != null) {
       openTelemetryAppender.setTraceFlagsKey(traceFlagsKey);
     }
+  }
+
+  @Nullable
+  private static String getLoggingProperty(
+      ConfigurableEnvironment environment, String newProperty, String oldProperty) {
+    String value = getLoggingProperty(environment, newProperty);
+    if (value != null) {
+      return value;
+    }
+    value = getLoggingProperty(environment, oldProperty);
+    if (value != null) {
+      logger.warn(
+          "The '{}' property is deprecated and will be removed in 3.0. Use '{}' instead.",
+          oldProperty,
+          newProperty);
+      return value;
+    }
+    return null;
   }
 
   @Nullable
@@ -295,8 +318,8 @@ class LogbackAppenderInstaller {
       return Optional.empty();
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
-    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
-      Iterator<Appender<ILoggingEvent>> appenderIterator = logger.iteratorForAppenders();
+    for (ch.qos.logback.classic.Logger logbackLogger : loggerContext.getLoggerList()) {
+      Iterator<Appender<ILoggingEvent>> appenderIterator = logbackLogger.iteratorForAppenders();
       while (appenderIterator.hasNext()) {
         Appender<ILoggingEvent> appender = appenderIterator.next();
         Optional<T> result = findAppender(appenderClass, appender);
