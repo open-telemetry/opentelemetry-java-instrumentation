@@ -9,6 +9,13 @@ muzzle {
     versions.set("[0.9.16,)")
     assertInverse.set(true)
   }
+
+  // Allow IncludeExcludePredicate from opentelemetry-sdk-common
+  pass {
+    group.set("io.opentelemetry")
+    module.set("opentelemetry-sdk-common")
+    versions.set("[1.59.0,)")
+  }
 }
 
 dependencies {
