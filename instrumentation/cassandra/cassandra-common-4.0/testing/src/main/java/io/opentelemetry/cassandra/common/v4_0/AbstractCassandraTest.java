@@ -197,7 +197,7 @@ public abstract class AbstractCassandraTest {
     session.execute("CREATE TABLE batch_same_test.users ( name text PRIMARY KEY, age int )");
     PreparedStatement preparedStatement =
         session.prepare("INSERT INTO batch_same_test.users (name, age) values (?, ?)");
-    testing().waitForTraces(4);
+    testing().waitForTraces(3);
     testing().clearData();
 
     BatchStatement batchStatement =
@@ -266,7 +266,7 @@ public abstract class AbstractCassandraTest {
     session.execute("CREATE TABLE batch_mixed_test.users ( name text PRIMARY KEY, age int )");
     PreparedStatement insertStatement =
         session.prepare("INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?)");
-    testing().waitForTraces(4);
+    testing().waitForTraces(3);
     testing().clearData();
 
     BatchStatement batchStatement =
