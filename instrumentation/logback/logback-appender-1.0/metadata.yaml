@@ -64,12 +64,22 @@ configurations:
     declarative_name: java.logback_appender.capture_mdc_attributes/development
     description: >
       Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
-      comma-separated list of specific keys. When using "*", prefix a key with "!" to exclude it
-      (e.g. "*,!foo" captures all MDC attributes except "foo"). Without "*", a key beginning
-      with "!" is captured literally.
+      comma-separated list of specific keys. Entries support glob wildcards ("*" and "?"). Use
+      exclude-mdc-attributes to exclude specific keys.
     type: list
     default: ''
     examples:
       - "custom-mdc-key"
       - "key1,key2,key3"
-      - "*,!foo"
+      - "*"
+  - name: otel.instrumentation.logback-appender.experimental.exclude-mdc-attributes
+    declarative_name: java.logback_appender.exclude_mdc_attributes/development
+    description: >
+      Comma-separated list of MDC attribute keys to exclude from capture, supporting glob wildcards
+      ("*" and "?"). Excludes only take effect alongside a non-empty capture-mdc-attributes list
+      (e.g. capture-mdc-attributes="*" with exclude-mdc-attributes="secret*").
+    type: list
+    default: ''
+    examples:
+      - "secret*"
+      - "key1,key2"

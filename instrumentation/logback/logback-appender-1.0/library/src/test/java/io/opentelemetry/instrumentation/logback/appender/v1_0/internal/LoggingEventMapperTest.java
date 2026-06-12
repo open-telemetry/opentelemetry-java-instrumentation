@@ -10,7 +10,6 @@ import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
@@ -82,10 +81,13 @@ class LoggingEventMapperTest {
   }
 
   @Test
-  void testAllWithExclusion() {
-    // given
+  void testAllWithExclude() {
+    // given - "*" captures everything except the configured excludes
     LoggingEventMapper mapper =
-        LoggingEventMapper.builder().setCaptureMdcAttributes(asList("*", "!key2")).build();
+        LoggingEventMapper.builder()
+            .setCaptureMdcAttributes(singletonList("*"))
+            .setExcludeMdcAttributes(singletonList("key2"))
+            .build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -101,23 +103,42 @@ class LoggingEventMapperTest {
   }
 
   @Test
-  void testExclusionSyntaxRequiresWildcard() {
-    // given - without "*", a key beginning with "!" is captured literally (backward compatibility),
-    // it is only treated as exclusion syntax when "*" is present
+  void testGlobIncludeAndExclude() {
+    // given - includes/excludes support glob wildcards
     LoggingEventMapper mapper =
-        LoggingEventMapper.builder().setCaptureMdcAttributes(asList("key2", "!key1")).build();
+        LoggingEventMapper.builder()
+            .setCaptureMdcAttributes(singletonList("user.*"))
+            .setExcludeMdcAttributes(singletonList("user.secret*"))
+            .build();
     Map<String, String> contextData = new HashMap<>();
-    contextData.put("key2", "value2");
-    contextData.put("!key1", "literalValue");
+    contextData.put("user.id", "value1");
+    contextData.put("user.secretToken", "value2");
+    contextData.put("other", "value3");
     LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when
     mapper.captureMdcAttributes(builder, contextData);
 
-    // then - both configured keys are captured literally
-    verify(builder).setAttribute(stringKey("key2"), "value2");
-    verify(builder).setAttribute(stringKey("!key1"), "literalValue");
+    // then - only user.id matches the include glob and not the exclude glob
+    verify(builder).setAttribute(stringKey("user.id"), "value1");
     verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testExcludeRequiresInclude() {
+    // given - excludes have no effect without a non-empty include list
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder().setExcludeMdcAttributes(singletonList("key2")).build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put("key2", "value2");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMdcAttributes(builder, contextData);
+
+    // then - nothing is captured
+    verifyNoInteractions(builder);
   }
 
   @Test

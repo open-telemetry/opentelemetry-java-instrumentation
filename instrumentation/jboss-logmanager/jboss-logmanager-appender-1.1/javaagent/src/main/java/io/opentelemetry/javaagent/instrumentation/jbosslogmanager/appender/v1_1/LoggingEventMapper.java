@@ -9,8 +9,6 @@ import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableSet;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -20,11 +18,11 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.util.ArrayList;
-import java.util.HashSet;
+import io.opentelemetry.sdk.common.internal.IncludeExcludePredicate;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.logmanager.Level;
 import org.jboss.logmanager.Logger;
@@ -40,40 +38,23 @@ public class LoggingEventMapper {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jboss_logmanager")
           .getBoolean("experimental_log_attributes/development", false);
 
-  private final List<AttributeKey<String>> captureMdcAttributeKeys;
-
-  // cached as an optimization
-  private final boolean captureAllMdcAttributes;
-  private final Set<String> excludedMdcAttributeKeys;
+  @Nullable private final Predicate<String> mdcAttributeFilter;
 
   private LoggingEventMapper() {
     List<String> captureMdcAttributes =
         DeclarativeConfigUtil.getInstrumentationConfig(
                 GlobalOpenTelemetry.get(), "jboss_logmanager")
             .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    this.captureAllMdcAttributes = captureMdcAttributes.contains("*");
-    if (captureAllMdcAttributes) {
-      this.captureMdcAttributeKeys = emptyList();
-      Set<String> excluded = new HashSet<>();
-      for (String key : captureMdcAttributes) {
-        // an entry of "!<key>" excludes <key>; a bare "!" is ignored
-        if (key.startsWith("!") && key.length() > 1) {
-          excluded.add(key.substring(1));
-        }
-      }
-      this.excludedMdcAttributeKeys = unmodifiableSet(excluded);
-    } else {
-      List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
-      for (String key : captureMdcAttributes) {
-        // "!" is only treated as exclusion syntax when "*" is present; with no "*" here, keys are
-        // captured literally (including any beginning with "!") for backward compatibility
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          keys.add(getMdcAttributeKey(key));
-        }
-      }
-      this.captureMdcAttributeKeys = keys;
-      this.excludedMdcAttributeKeys = emptySet();
-    }
+    List<String> excludeMdcAttributes =
+        DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.get(), "jboss_logmanager")
+            .getScalarList("exclude_mdc_attributes/development", String.class, emptyList());
+    // an empty include list captures nothing; excludes only take effect alongside includes
+    this.mdcAttributeFilter =
+        captureMdcAttributes.isEmpty()
+            ? null
+            : IncludeExcludePredicate.createPatternMatching(
+                captureMdcAttributes, excludeMdcAttributes);
   }
 
   public void capture(Logger logger, ExtLogRecord record) {
@@ -130,19 +111,15 @@ public class LoggingEventMapper {
       builder.setEventName(otelEventName);
     }
 
-    if (captureAllMdcAttributes) {
-      for (Map.Entry<String, String> entry : context.entrySet()) {
-        String key = entry.getKey();
-        if (!OTEL_EVENT_NAME.getKey().equals(key) && !excludedMdcAttributeKeys.contains(key)) {
-          builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
-        }
-      }
+    if (mdcAttributeFilter == null) {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
-      String value = context.get(attributeKey.getKey());
-      builder.setAttribute(attributeKey, value);
+    for (Map.Entry<String, String> entry : context.entrySet()) {
+      String key = entry.getKey();
+      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributeFilter.test(key)) {
+        builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
+      }
     }
   }
 

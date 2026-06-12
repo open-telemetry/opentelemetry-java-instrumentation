@@ -12,19 +12,15 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.util.ArrayList;
-import java.util.HashSet;
+import io.opentelemetry.sdk.common.internal.IncludeExcludePredicate;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
@@ -62,9 +58,7 @@ public final class LogEventMapper<T> {
   private final boolean captureCodeAttributes;
   private final boolean captureMapMessageAttributes;
   private final boolean captureMarkerAttribute;
-  private final List<AttributeKey<String>> captureContextDataAttributeKeys;
-  private final boolean captureAllContextDataAttributes;
-  private final Set<String> excludedContextDataAttributeKeys;
+  @Nullable private final Predicate<String> contextDataAttributeFilter;
   private final boolean v3Preview;
 
   public LogEventMapper(
@@ -74,6 +68,7 @@ public final class LogEventMapper<T> {
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       List<String> captureContextDataAttributes,
+      List<String> excludeContextDataAttributes,
       boolean v3Preview) {
 
     this.contextDataAccessor = contextDataAccessor;
@@ -81,29 +76,12 @@ public final class LogEventMapper<T> {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMapMessageAttributes = captureMapMessageAttributes;
     this.captureMarkerAttribute = captureMarkerAttribute;
-    this.captureAllContextDataAttributes = captureContextDataAttributes.contains("*");
-    if (captureAllContextDataAttributes) {
-      this.captureContextDataAttributeKeys = emptyList();
-      Set<String> excluded = new HashSet<>();
-      for (String key : captureContextDataAttributes) {
-        // an entry of "!<key>" excludes <key>; a bare "!" is ignored
-        if (key.startsWith("!") && key.length() > 1) {
-          excluded.add(key.substring(1));
-        }
-      }
-      this.excludedContextDataAttributeKeys = unmodifiableSet(excluded);
-    } else {
-      List<AttributeKey<String>> keys = new ArrayList<>(captureContextDataAttributes.size());
-      for (String key : captureContextDataAttributes) {
-        // "!" is only treated as exclusion syntax when "*" is present; with no "*" here, keys are
-        // captured literally (including any beginning with "!") for backward compatibility
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          keys.add(getContextDataAttributeKey(key));
-        }
-      }
-      this.captureContextDataAttributeKeys = keys;
-      this.excludedContextDataAttributeKeys = emptySet();
-    }
+    // an empty include list captures nothing; excludes only take effect alongside includes
+    this.contextDataAttributeFilter =
+        captureContextDataAttributes.isEmpty()
+            ? null
+            : IncludeExcludePredicate.createPatternMatching(
+                captureContextDataAttributes, excludeContextDataAttributes);
     this.v3Preview = v3Preview;
   }
 
@@ -241,22 +219,17 @@ public final class LogEventMapper<T> {
       builder.setEventName(otelEventName);
     }
 
-    if (captureAllContextDataAttributes) {
-      contextDataAccessor.forEach(
-          contextData,
-          (key, value) -> {
-            if (!OTEL_EVENT_NAME.getKey().equals(key)
-                && !excludedContextDataAttributeKeys.contains(key)) {
-              builder.setAttribute(getContextDataAttributeKey(key), value);
-            }
-          });
+    if (contextDataAttributeFilter == null) {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : captureContextDataAttributeKeys) {
-      String value = contextDataAccessor.getValue(contextData, attributeKey.getKey());
-      builder.setAttribute(attributeKey, value);
-    }
+    contextDataAccessor.forEach(
+        contextData,
+        (key, value) -> {
+          if (!OTEL_EVENT_NAME.getKey().equals(key) && contextDataAttributeFilter.test(key)) {
+            builder.setAttribute(getContextDataAttributeKey(key), value);
+          }
+        });
   }
 
   public static AttributeKey<String> getContextDataAttributeKey(String key) {

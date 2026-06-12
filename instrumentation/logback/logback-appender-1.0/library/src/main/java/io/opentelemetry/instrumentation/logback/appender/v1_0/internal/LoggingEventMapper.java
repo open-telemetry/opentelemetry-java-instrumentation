@@ -12,9 +12,7 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
-import static java.util.Collections.unmodifiableSet;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
@@ -29,18 +27,18 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import io.opentelemetry.sdk.common.internal.IncludeExcludePredicate;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.MapEntriesAppendingMarker;
@@ -79,9 +77,7 @@ public final class LoggingEventMapper {
       AttributeKey.stringArrayKey("log.body.parameters");
 
   private final boolean captureExperimentalAttributes;
-  private final List<AttributeKey<String>> captureMdcAttributeKeys;
-  private final boolean captureAllMdcAttributes;
-  private final Set<String> excludedMdcAttributeKeys;
+  @Nullable private final Predicate<String> mdcAttributeFilter;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
@@ -101,29 +97,12 @@ public final class LoggingEventMapper {
     this.captureArguments = builder.captureArguments;
     this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
-    this.captureAllMdcAttributes = builder.captureMdcAttributes.contains("*");
-    if (captureAllMdcAttributes) {
-      this.captureMdcAttributeKeys = emptyList();
-      Set<String> excluded = new HashSet<>();
-      for (String key : builder.captureMdcAttributes) {
-        // an entry of "!<key>" excludes <key>; a bare "!" is ignored
-        if (key.startsWith("!") && key.length() > 1) {
-          excluded.add(key.substring(1));
-        }
-      }
-      this.excludedMdcAttributeKeys = unmodifiableSet(excluded);
-    } else {
-      List<AttributeKey<String>> keys = new ArrayList<>(builder.captureMdcAttributes.size());
-      for (String key : builder.captureMdcAttributes) {
-        // "!" is only treated as exclusion syntax when "*" is present; with no "*" here, keys are
-        // captured literally (including any beginning with "!") for backward compatibility
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          keys.add(getAttributeKey(key));
-        }
-      }
-      this.captureMdcAttributeKeys = keys;
-      this.excludedMdcAttributeKeys = emptySet();
-    }
+    // an empty include list captures nothing; excludes only take effect alongside includes
+    this.mdcAttributeFilter =
+        builder.captureMdcAttributes.isEmpty()
+            ? null
+            : IncludeExcludePredicate.createPatternMatching(
+                builder.captureMdcAttributes, builder.excludeMdcAttributes);
   }
 
   public static Builder builder() {
@@ -286,19 +265,15 @@ public final class LoggingEventMapper {
       builder.setEventName(otelEventName);
     }
 
-    if (captureAllMdcAttributes) {
-      for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
-        String key = entry.getKey();
-        if (!OTEL_EVENT_NAME.getKey().equals(key) && !excludedMdcAttributeKeys.contains(key)) {
-          builder.setAttribute(getAttributeKey(key), entry.getValue());
-        }
-      }
+    if (mdcAttributeFilter == null) {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
-      String value = mdcProperties.get(attributeKey.getKey());
-      builder.setAttribute(attributeKey, value);
+    for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
+      String key = entry.getKey();
+      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributeFilter.test(key)) {
+        builder.setAttribute(getAttributeKey(key), entry.getValue());
+      }
     }
   }
 
@@ -713,6 +688,7 @@ public final class LoggingEventMapper {
   public static final class Builder {
     private boolean captureExperimentalAttributes;
     private List<String> captureMdcAttributes = emptyList();
+    private List<String> excludeMdcAttributes = emptyList();
     private boolean captureCodeAttributes;
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
@@ -733,6 +709,12 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setCaptureMdcAttributes(List<String> captureMdcAttributes) {
       this.captureMdcAttributes = captureMdcAttributes;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setExcludeMdcAttributes(List<String> excludeMdcAttributes) {
+      this.excludeMdcAttributes = excludeMdcAttributes;
       return this;
     }
 

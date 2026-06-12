@@ -49,6 +49,8 @@ public class Log4jHelper {
         config.getBoolean("capture_marker_attribute/development", false);
     List<String> captureContextDataAttributes =
         config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
+    List<String> excludeContextDataAttributes =
+        config.getScalarList("exclude_mdc_attributes/development", String.class, emptyList());
     boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     mapper =
@@ -59,6 +61,7 @@ public class Log4jHelper {
             captureMapMessageAttributes,
             captureMarkerAttribute,
             captureContextDataAttributes,
+            excludeContextDataAttributes,
             v3Preview);
   }
 
