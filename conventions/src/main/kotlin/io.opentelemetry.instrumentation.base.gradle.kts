@@ -74,7 +74,8 @@ val versionScheme = GenericVersionScheme()
 
 // Pinned latest-dep versions resolve "latest" to the latest stable release, which can be lower
 // than a module's declared test baseline when the newer supported line only has pre-releases.
-// For example, ActiveJ's declared 6.0-rc2 uses APIs not present in latest stable 5.5.
+// This currently affects ActiveJ: the instrumentation supports 6.0-rc2 and later, but there
+// are no stable 6.x releases yet, so latest stable is still 5.5.
 fun pinnedVersionAtLeastDeclared(pinnedVersion: String?, declaredVersion: String?): String? {
   if (pinnedVersion == null || declaredVersion == null || declaredVersion == "latest.release" ||
     declaredVersion.contains("+") ||
