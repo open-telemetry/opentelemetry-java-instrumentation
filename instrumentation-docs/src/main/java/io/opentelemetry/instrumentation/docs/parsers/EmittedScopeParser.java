@@ -9,8 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.groupingBy;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -74,41 +72,34 @@ public class EmittedScopeParser {
   @Nullable
   private static EmittedScope.Scope getMatchingScope(
       Set<EmittedScope.Scope> scopes, String defaultScopeName) {
-    EmittedScope.Scope exactMatch =
-        scopes.stream()
-            .filter(scope -> defaultScopeName.equals(scope.getName()))
-            .min(Comparator.comparing(scope -> scope.getSchemaUrl() == null ? 1 : 0))
-            .orElse(null);
+    EmittedScope.Scope exactMatch = findScopeByName(scopes, defaultScopeName);
     if (exactMatch != null) {
       return exactMatch;
     }
 
-    Map<String, List<EmittedScope.Scope>> nonSdkScopes =
-        scopes.stream()
-            .filter(scope -> isInstrumentationScope(scope.getName()))
-            .collect(groupingBy(scope -> requireNonNull(scope.getName())));
-
-    if (nonSdkScopes.size() == 1) {
-      return nonSdkScopes.values().stream()
-          .flatMap(List::stream)
-          .min(Comparator.comparing(scope -> scope.getSchemaUrl() == null ? 1 : 0))
-          .orElse(null);
+    String baseScopeName = stripTrailingVersion(defaultScopeName);
+    if (!baseScopeName.equals(defaultScopeName)) {
+      return findScopeByName(scopes, baseScopeName);
     }
 
-    if (nonSdkScopes.size() > 1) {
-      logger.warning(
-          "Unable to choose instrumentation scope for "
-              + defaultScopeName
-              + ". Candidates: "
-              + nonSdkScopes.keySet());
-    }
     return null;
   }
 
-  private static boolean isInstrumentationScope(@Nullable String scopeName) {
-    return scopeName != null
-        && scopeName.startsWith("io.opentelemetry.")
-        && !scopeName.startsWith("io.opentelemetry.sdk.");
+  @Nullable
+  private static EmittedScope.Scope findScopeByName(
+      Set<EmittedScope.Scope> scopes, String scopeName) {
+    return scopes.stream()
+        .filter(scope -> scopeName.equals(scope.getName()))
+        .min(Comparator.comparingInt(scope -> scope.getSchemaUrl() == null ? 1 : 0))
+        .orElse(null);
+  }
+
+  /**
+   * Removes a trailing version suffix (e.g. {@code -5.0}, {@code -8.5}, {@code -3.1.6}) from a
+   * scope name. Returns the input unchanged if it has no such suffix.
+   */
+  private static String stripTrailingVersion(String scopeName) {
+    return scopeName.replaceFirst("-\\d+(\\.\\d+)*$", "");
   }
 
   /**

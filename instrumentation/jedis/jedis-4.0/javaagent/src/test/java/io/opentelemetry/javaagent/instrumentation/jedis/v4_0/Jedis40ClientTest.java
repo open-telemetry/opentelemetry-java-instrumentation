@@ -6,13 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
@@ -32,6 +36,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
+import redis.clients.jedis.DefaultJedisClientConfig;
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -45,6 +51,8 @@ class Jedis40ClientTest {
   private static final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
+  private static String host;
+
   private static String ip;
 
   private static int port;
@@ -56,13 +64,15 @@ class Jedis40ClientTest {
     redisServer.start();
     cleanup.deferAfterAll(redisServer::stop);
     port = redisServer.getMappedPort(6379);
-    ip = InetAddress.getByName(redisServer.getHost()).getHostAddress();
-    jedis = new Jedis(redisServer.getHost(), port);
+    host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
+    jedis = new Jedis(host, port);
     cleanup.deferAfterAll(jedis);
   }
 
   @BeforeEach
   void reset() {
+    jedis.select(0);
     jedis.flushAll();
     testing.clearData();
   }
@@ -75,12 +85,15 @@ class Jedis40ClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
@@ -90,6 +103,9 @@ class Jedis40ClientTest {
         "io.opentelemetry.jedis-4.0",
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
+        DB_NAMESPACE,
+        SERVER_ADDRESS,
+        SERVER_PORT,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT);
   }
@@ -105,24 +121,30 @@ class Jedis40ClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET")
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
@@ -139,24 +161,99 @@ class Jedis40ClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("RANDOMKEY")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "RANDOMKEY " + host + ":" + port
+                                : "RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @Test
+  void selectCommandDoesNotChangeEstablishedDatabaseIndex() {
+    jedis.select(1);
+    jedis.set("foo", "bar");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "SELECT " + host + ":" + port : "SELECT")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT 1"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+  }
+
+  @Test
+  void configuredDatabaseIndex() {
+    try (Jedis databaseOne =
+        new Jedis(
+            new HostAndPort(host, port), DefaultJedisClientConfig.builder().database(1).build())) {
+      testing.clearData();
+      databaseOne.set("foo", "bar");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));

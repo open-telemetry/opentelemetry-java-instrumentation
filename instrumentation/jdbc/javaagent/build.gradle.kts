@@ -23,6 +23,7 @@ dependencies {
   testLibrary("com.h2database:h2:1.3.169")
   testLibrary("org.apache.derby:derby:10.6.1.0")
   testLibrary("org.hsqldb:hsqldb:2.0.0")
+  testLibrary("org.xerial:sqlite-jdbc:3.53.1.0")
 
   testLibrary("org.apache.tomcat:tomcat-jdbc:7.0.19")
   testLibrary("org.apache.tomcat:tomcat-juli:7.0.19") // tomcat jdbc needs this
@@ -111,6 +112,20 @@ tasks {
     jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("SlickTest")
+      excludeTestsMatching("SqlCommenterTest")
+      excludeTestsMatching("PreparedStatementParametersTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
   test {
     filter {
       excludeTestsMatching("SlickTest")
@@ -126,6 +141,7 @@ tasks {
     dependsOn(testStableSemconv)
     dependsOn(testSlickStableSemconv)
     dependsOn(testCaptureParameters)
+    dependsOn(testExceptionSignalLogs)
   }
 }
 

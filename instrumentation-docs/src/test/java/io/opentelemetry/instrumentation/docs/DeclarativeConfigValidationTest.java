@@ -125,6 +125,13 @@ class DeclarativeConfigValidationTest {
       case INT -> new TestValue("42", 42);
       case LIST -> new TestValue("item1,item2,item3", List.of("item1", "item2", "item3"));
       case MAP -> new TestValue("key1=value1,key2=value2", "key1=value1,key2=value2");
+      // The only structured_list config is the common peer-service-mapping. Its flat form is a
+      // host=service map, which the bridge turns into a list of {peer, service_name} entries.
+      // readPeerServiceMappingAsMap below rebuilds the host->service map from those entries, so the
+      // comparison exercises getStructuredList (what the consumer uses) rather than a string
+      // lookup.
+      case STRUCTURED_LIST ->
+          new TestValue("host1=svc1,host2=svc2", Map.of("host1", "svc1", "host2", "svc2"));
     };
   }
 
@@ -157,7 +164,28 @@ class DeclarativeConfigValidationTest {
       case INT -> current.getInt(lastSegment);
       case LIST -> current.getScalarList(lastSegment, String.class);
       case MAP -> current.getString(lastSegment);
+      case STRUCTURED_LIST -> readPeerServiceMappingAsMap(current, lastSegment);
     };
+  }
+
+  /**
+   * Reads the peer-service-mapping structured list through the bridge (the same {@code
+   * getStructuredList} call {@code ServicePeerResolver} makes) and collapses its {@code {peer,
+   * service_name}} entries back into a {@code host -> service} map, so it can be compared against
+   * the flat-property value the test fed in. This is specific to peer-service-mapping, which is
+   * currently the only {@code structured_list} config.
+   */
+  private static Object readPeerServiceMappingAsMap(
+      DeclarativeConfigProperties current, String lastSegment) {
+    List<DeclarativeConfigProperties> entries = current.getStructuredList(lastSegment);
+    if (entries == null) {
+      return null;
+    }
+    Map<String, String> mapping = new HashMap<>();
+    for (DeclarativeConfigProperties entry : entries) {
+      mapping.put(entry.getString("peer"), entry.getString("service_name"));
+    }
+    return mapping;
   }
 
   private record ValidationResult(

@@ -1,0 +1,48 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0;
+
+import static net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+/**
+ * Returns AgentContextStorage as the implementation of ContextStorage in the application classpath.
+ * We do this instead of using the normal service loader mechanism to make sure there is no
+ * dependency on a system property or possibility of a user overriding this since it's required for
+ * instrumentation in the agent to work properly.
+ */
+class ContextInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("application.io.opentelemetry.context.ArrayBasedContext");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isStatic().and(named("root")), ContextInstrumentation.class.getName() + "$WrapRootAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class WrapRootAdvice {
+
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static application.io.opentelemetry.context.Context methodExit(
+        @Advice.Return application.io.opentelemetry.context.Context root) {
+      return AgentContextStorage.wrapRootContext(root);
+    }
+  }
+}

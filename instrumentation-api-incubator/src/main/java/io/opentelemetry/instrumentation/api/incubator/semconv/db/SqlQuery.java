@@ -19,10 +19,19 @@ public abstract class SqlQuery {
       @Nullable String queryText,
       @Nullable String storedProcedureName,
       @Nullable String querySummary) {
+    return createWithSummary(queryText, null, null, storedProcedureName, querySummary);
+  }
+
+  /** Creates a SqlQuery for stable semconv (uses querySummary). */
+  static SqlQuery createWithSummary(
+      @Nullable String queryText,
+      @Nullable String operationName,
+      @Nullable String collectionName,
+      @Nullable String storedProcedureName,
+      @Nullable String querySummary) {
     String truncatedQuerySummary = truncateQuerySummary(querySummary);
-    // In stable semconv: operationName and collectionName are always null
     return new AutoValue_SqlQuery(
-        queryText, null, null, storedProcedureName, truncatedQuerySummary);
+        queryText, operationName, collectionName, storedProcedureName, truncatedQuerySummary);
   }
 
   /**
@@ -59,6 +68,7 @@ public abstract class SqlQuery {
   public abstract String getQueryText();
 
   @Nullable
+  @Deprecated // to be changed to package-private in 3.0
   public abstract String getOperationName();
 
   /**
@@ -67,6 +77,7 @@ public abstract class SqlQuery {
    * @see #getStoredProcedureName()
    */
   @Nullable
+  @Deprecated // to be changed to package-private in 3.0
   public abstract String getCollectionName();
 
   /** Returns the stored procedure name for CALL operations, or null for other operations. */

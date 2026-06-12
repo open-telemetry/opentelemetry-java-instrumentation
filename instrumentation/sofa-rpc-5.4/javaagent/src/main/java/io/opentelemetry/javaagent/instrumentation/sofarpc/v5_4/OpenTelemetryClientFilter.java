@@ -1,0 +1,40 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4;
+
+import static io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4.SofaRpcSingletons.clientFilter;
+
+import com.alipay.sofa.rpc.config.ConsumerConfig;
+import com.alipay.sofa.rpc.core.request.SofaRequest;
+import com.alipay.sofa.rpc.core.response.SofaResponse;
+import com.alipay.sofa.rpc.ext.Extension;
+import com.alipay.sofa.rpc.filter.AutoActive;
+import com.alipay.sofa.rpc.filter.Filter;
+import com.alipay.sofa.rpc.filter.FilterInvoker;
+
+@Extension(value = "openTelemetryClient", order = -25000)
+@AutoActive(consumerSide = true)
+public class OpenTelemetryClientFilter extends Filter {
+
+  private final Filter delegate;
+
+  public OpenTelemetryClientFilter() {
+    delegate = clientFilter();
+  }
+
+  @Override
+  public SofaResponse invoke(FilterInvoker invoker, SofaRequest request) {
+    return delegate.invoke(invoker, request);
+  }
+
+  @Override
+  // Suppress rawtypes warning: SOFARPC Filter interface uses raw ConsumerConfig type
+  @SuppressWarnings("rawtypes")
+  public void onAsyncResponse(
+      ConsumerConfig config, SofaRequest request, SofaResponse response, Throwable exception) {
+    delegate.onAsyncResponse(config, request, response, exception);
+  }
+}

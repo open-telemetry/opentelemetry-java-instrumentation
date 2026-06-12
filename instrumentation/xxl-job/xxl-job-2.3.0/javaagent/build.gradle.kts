@@ -28,7 +28,7 @@ dependencies {
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
 
   // latest version is tested in a separate test suite
-  latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // documented limitation
+  latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // see test suite below
 }
 
 testing {

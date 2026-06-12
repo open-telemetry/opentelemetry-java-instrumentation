@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -25,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
@@ -169,10 +173,10 @@ class WrapperTest extends AbstractWrapperTest {
     KafkaTelemetry telemetry = telemetryBuilder.build();
 
     Consumer<?, ?> mockConsumer = mock();
-    when(mockConsumer.poll(Duration.ofSeconds(10))).thenThrow(new IllegalStateException());
+    IllegalStateException error = new IllegalStateException("test");
+    when(mockConsumer.poll(Duration.ofSeconds(10))).thenThrow(error);
     Consumer<?, ?> wrappedConsumer = telemetry.wrap(mockConsumer);
-    assertThatThrownBy(() -> wrappedConsumer.poll(Duration.ofSeconds(10)))
-        .isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(() -> wrappedConsumer.poll(Duration.ofSeconds(10))).isSameAs(error);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -182,10 +186,20 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalStateException())
+                        .hasException(emitExceptionAsSpanEvents() ? error : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_OPERATION, "receive"),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0))));
+
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          logRecord ->
+              logRecord
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("messaging.receive.exception")
+                  .hasException(error)
+                  .hasTotalAttributeCount(3));
+    }
   }
 }

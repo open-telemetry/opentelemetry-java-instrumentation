@@ -149,38 +149,38 @@ Auto-fix boundaries:
     determine each class's **role** (floor vs ceiling) and add the matching comment.
     First check: does a **newer** sibling instrumentation module exist for this library
     (e.g., `mongo-4.0` next to `mongo-3.7`)? If so, look at what the newer module checks
-    in *its* `classLoaderMatcher()`. Classes that are present in the newer module's check
+    in _its_ `classLoaderMatcher()`. Classes that are present in the newer module's check
     but absent from the current module's check (or vice versa) reveal a version boundary —
     the class was likely added or removed between versions.
     Then determine the comment form for each class:
-  **Positive floor class** (proves "at least version X"): look up when the class was
-  **introduced** → comment `// added in X.Y`.
-  **Positive ceiling class** (proves "not yet version Y"): look up when the class was
-  **removed** → comment `// removed in Y.Z` (meaning: its presence here ensures we
-  don't match version Y.Z+ where a different module takes over).
-  **Negated exclusion class** in `not(hasClassesNamed(...))`: look up when the class was
-  **introduced** → comment `// added in Y.Z`, because that first appearance begins the
-  excluded version range.
-  **Single positive class that provides both bounds**: include both facts in one comment,
-  e.g. `// added in X.Y, removed in Y.Z`.
-  A ceiling class might have been *introduced* much earlier than the module's target version.
-  Do not use `// added in` for a positive ceiling class — that is misleading. The relevant
-  fact is when it was **removed**. But for a negated exclusion class, `// added in` is the
-  correct form because the class's introduction is exactly what starts excluding newer versions.
-  Validate the version in the comment before adding or requesting it. Do not guess the
-  version from the module name alone; confirm it with repository or upstream evidence.
-  Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,
-  module directory names, existing code comments, Javadoc/release notes.
-  Do NOT add a `classLoaderMatcher()` override where one does not already exist —
-  this method is only for version-boundary detection when muzzle is insufficient,
-  not for optimization (use `TypeInstrumentation.classLoaderOptimization()` instead)
+    **Positive floor class** (proves "at least version X"): look up when the class was
+    **introduced** → comment `// added in X.Y`.
+    **Positive ceiling class** (proves "not yet version Y"): look up when the class was
+    **removed** → comment `// removed in Y.Z` (meaning: its presence here ensures we
+    don't match version Y.Z+ where a different module takes over).
+    **Negated exclusion class** in `not(hasClassesNamed(...))`: look up when the class was
+    **introduced** → comment `// added in Y.Z`, because that first appearance begins the
+    excluded version range.
+    **Single positive class that provides both bounds**: include both facts in one comment,
+    e.g. `// added in X.Y, removed in Y.Z`.
+    A ceiling class might have been _introduced_ much earlier than the module's target version.
+    Do not use `// added in` for a positive ceiling class — that is misleading. The relevant
+    fact is when it was **removed**. But for a negated exclusion class, `// added in` is the
+    correct form because the class's introduction is exactly what starts excluding newer versions.
+    Validate the version in the comment before adding or requesting it. Do not guess the
+    version from the module name alone; confirm it with repository or upstream evidence.
+    Sources: muzzle `versions.set(...)` ranges, sibling module `classLoaderMatcher()` checks,
+    module directory names, existing code comments, Javadoc/release notes.
+    Do NOT add a `classLoaderMatcher()` override where one does not already exist —
+    this method is only for version-boundary detection when muzzle is insufficient,
+    not for optimization (use `TypeInstrumentation.classLoaderOptimization()` instead)
   - redundant `isMethod()` in method matchers inside `transform()` when the matcher already
     names a specific, non-empty method (e.g., `isMethod().and(named("execute"))` →
     `named("execute")`). Do not remove `isMethod()` when the name could be empty —
     `named("")` matches constructors and static initializers.
   - redundant `this.` qualifier on advice class references inside `transform()` — prefer
-    `getClass().getName() + "$InnerClassName"`, not `this.getClass().getName() +
-    "$InnerClassName"`
+    `getClass().getName() + "$InnerClassName"`, not
+    `this.getClass().getName() + "$InnerClassName"`
   - singleton-to-instance-creation conversion for stateless telemetry interface
     implementations (`TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
     `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`) — replace
@@ -200,8 +200,9 @@ Auto-fix boundaries:
     setup)
   - try-with-resources wrapping most of a test body for an `AutoCloseable` that only
     needs cleanup at test end — convert to `AutoCleanupExtension` with `deferCleanup(...)`.
-    Add a `@RegisterExtension static final AutoCleanupExtension cleanup =
-    AutoCleanupExtension.create();` field if one does not already exist, then replace
+    Add a
+    `@RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();`
+    field if one does not already exist, then replace
     the try-with-resources with `cleanup.deferCleanup(resource);` and un-indent the body.
     Keep try-with-resources for semantically scoped resources whose lifetime must end
     mid-test (e.g., `Scope` / `Context.makeCurrent()`, `MockedStatic`, short-lived
@@ -263,7 +264,7 @@ Auto-fix boundaries:
     the upstream nullability contract table in `knowledge/general-rules.md` before
     removing any null check on an overriding method. If the interface declares the
     parameter `@Nullable`, keep the null check and add `@Nullable` to the implementing
-    class parameter to match. Conversely, if an implementation is *missing* a null
+    class parameter to match. Conversely, if an implementation is _missing_ a null
     check or `@Nullable` annotation for a parameter that is `@Nullable` upstream,
     add both the annotation and the null guard.
     **Exception — pure delegation**: when the entire body of a `TextMapGetter.get()`,
@@ -370,15 +371,14 @@ Execute these steps strictly in order — do not reorder:
    ./gradlew :<module-path>:check -PtestLatestDeps=true
    ```
 
-    Run these as two separate serial executions. Do not start the second command until the
-    first command has fully completed and its final exit status is known.
+   Run these as two separate serial executions. Do not start the second command until the
+   first command has fully completed and its final exit status is known.
 
    The first run exercises the default test suites (`test`, `testExperimental`, and any other
    custom test tasks wired into `check`). The second run activates `latestDepTest`, which
    replaces `library` and `testLibrary` dependency versions with `latest.release`.
    This is mandatory, not optional — fixes that break tests must be caught and corrected
    before committing. If a test fails:
-
    1. Diagnose the root cause. Determine whether the failure is caused by one of the
       cleanup fixes applied in Phase 3.
    2. If the failure is caused by a cleanup fix and a correct alternative fix is obvious,
@@ -420,6 +420,7 @@ Execute these steps strictly in order — do not reorder:
    Do not move on to step 2 until every required `:check` run from this step, including
    sibling-module validation and any re-runs after fixes or reverts, has fully completed
    and you have observed the final exit status for each run.
+
 2. **Run muzzle validation when muzzle config changed.** If any cleanup fix touched Gradle
    muzzle configuration (for example `muzzle {}`, version ranges, `assertInverse.set(true)`,
    or module wiring affecting muzzle), run the relevant module's `:muzzle` task:
@@ -430,7 +431,6 @@ Execute these steps strictly in order — do not reorder:
 
    This is mandatory, not optional — muzzle failures indicate the change is incorrect.
    If a muzzle task fails:
-
    1. Diagnose the root cause. Determine whether the failure is caused by a cleanup fix
       applied in Phase 3 (e.g., an `assertInverse.set(true)` that was added but the
       instrumentation actually passes on versions outside the declared range).
@@ -446,6 +446,7 @@ Execute these steps strictly in order — do not reorder:
    Do not move on to step 3 until every required `:muzzle` run from this step, including
    any re-runs after fixes or reverts, has fully completed and you have observed the final
    exit status for each run.
+
 3. **Last, after all validation is done**, run `./gradlew spotlessApply` to fix formatting
    across all modified files.
    `spotlessApply` must be the final build command — never run it before tests or muzzle.
@@ -462,7 +463,7 @@ Do not begin Phase 5 until Phase 4 is fully closed out.
    and confirm non-empty output. If the only remaining diffs are whitespace changes — or if
    all cleanup fixes were reverted during validation — **stop here**: reset the working tree
    (`git checkout -- .`), do not commit or push. If any reverted items were recorded as
-  `Needs Manual Fix`, emit the final output with those items. Otherwise report
+   `Needs Manual Fix`, emit the final output with those items. Otherwise report
    "No issues found." and exit.
 2. Leave all changes uncommitted. Do not run `git commit`, do not pass
    `--author`, and do not change git `user.name` or `user.email`. The caller

@@ -45,11 +45,6 @@ dependencies {
 
   testLibrary("com.typesafe.play:play-java_$scalaVersion:$playVersion")
   testLibrary("com.typesafe.play:play-test_$scalaVersion:$playVersion")
-
-  // later versions are tested with suites
-  latestDepTestLibrary("com.typesafe.play:play_$scalaVersion:2.7.+") // documented limitation
-  latestDepTestLibrary("com.typesafe.play:play-java_$scalaVersion:2.7.+") // documented limitation
-  latestDepTestLibrary("com.typesafe.play:play-test_$scalaVersion:2.7.+") // documented limitation
 }
 
 testing {

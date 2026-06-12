@@ -59,7 +59,10 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new EmptyTypeInstrumentation(), new AzureHttpClientInstrumentation());
+    return asList(
+        new EmptyTypeInstrumentation(),
+        new AzureContextInstrumentation(),
+        new AzureHttpClientInstrumentation());
   }
 
   private static class EmptyTypeInstrumentation implements TypeInstrumentation {

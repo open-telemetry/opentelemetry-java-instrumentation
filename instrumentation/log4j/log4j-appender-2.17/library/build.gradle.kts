@@ -6,6 +6,7 @@ dependencies {
   library("org.apache.logging.log4j:log4j-core:2.17.0")
   annotationProcessor("org.apache.logging.log4j:log4j-core:2.17.0")
 
+  // to be removed in 3.0
   implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure"))
 
   testImplementation(project(":instrumentation:log4j:log4j-appender-2.17:testing"))
@@ -26,7 +27,10 @@ tasks {
   val testAsyncLogger by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
+    jvmArgs(
+      "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
+      "-Dlog4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector",
+    )
   }
 
   val testStableSemconv by registering(Test::class) {

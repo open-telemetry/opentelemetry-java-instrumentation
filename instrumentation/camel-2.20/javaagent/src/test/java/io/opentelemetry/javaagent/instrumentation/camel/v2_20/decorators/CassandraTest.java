@@ -10,7 +10,9 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -133,11 +135,11 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                           .hasAttributesSatisfyingExactly(
                               equalTo(stringKey("camel.uri"), experimental("direct://input"))),
                   span ->
-                      span.hasName("SELECT test.users")
+                      span.hasName("select test.users")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              satisfies(NETWORK_TYPE, val -> val.isInstanceOf(String.class)),
+                              equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, cassandraPort),
                               satisfies(
@@ -145,10 +147,12 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DB_SYSTEM_NAME, CASSANDRA),
                               equalTo(DB_NAMESPACE, "test"),
+                              equalTo(DB_OPERATION_NAME, "select"),
+                              equalTo(DB_COLLECTION_NAME, "test.users"),
                               equalTo(
                                   DB_QUERY_TEXT,
                                   "select * from test.users where id=1 ALLOW FILTERING"),
-                              equalTo(DB_QUERY_SUMMARY, "SELECT test.users"))));
+                              equalTo(DB_QUERY_SUMMARY, "select test.users"))));
     } else {
       testing.waitAndAssertTraces(
           trace ->

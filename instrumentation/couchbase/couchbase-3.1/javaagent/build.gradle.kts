@@ -22,6 +22,7 @@ sourceSets {
 }
 
 dependencies {
+  compileOnly(project(":muzzle")) // For @NoMuzzle
   compileOnly(
     project(
       path = ":instrumentation:couchbase:couchbase-3.1:tracing-opentelemetry-shaded",
@@ -55,8 +56,21 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  val testStableSemconvExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs(
+      "-Dotel.semconv-stability.opt-in=database",
+      "-Dotel.instrumentation.couchbase.experimental-span-attributes=true",
+    )
+    systemProperty(
+      "metadataConfig",
+      "otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true",
+    )
+  }
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testStableSemconvExperimental)
   }
 
   if (otelProps.denyUnsafe) {
