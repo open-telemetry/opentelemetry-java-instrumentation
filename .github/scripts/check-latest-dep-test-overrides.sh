@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-# all missing version coverage should be documented in supported-libraries.md or annotated
-# with an approved exception
+# all missing version coverage should be documented in supported-libraries.md
+# (otherwise add one of the required annotations below)
 
 if grep -r --include build.gradle.kts latestDepTestLibrary instrumentation \
     | grep -v -e :+\" -e :latest.release\" \
