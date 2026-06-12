@@ -49,7 +49,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
       attributes.put(DB_SYSTEM, DYNAMODB);
     }
     String operation = executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
-    long batchSize = extractBatchSize(operation, executionAttributes);
+    Long batchSize = extractBatchSize(operation, executionAttributes);
     if (emitStableDatabaseSemconv()) {
       attributes.put(DB_OPERATION_NAME, getStableOperationName(operation, batchSize));
       if (isBatch(batchSize)) {
@@ -68,7 +68,8 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
   }
 
   @Nullable
-  private static String getStableOperationName(@Nullable String operation, long batchSize) {
+  private static String getStableOperationName(
+      @Nullable String operation, @Nullable Long batchSize) {
     if ("BatchGetItem".equals(operation)) {
       return isBatch(batchSize) ? "BATCH GetItem" : "GetItem";
     }
@@ -78,20 +79,21 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
     return operation;
   }
 
-  private long extractBatchSize(
+  @Nullable
+  private Long extractBatchSize(
       @Nullable String operation, ExecutionAttributes executionAttributes) {
     if (!"BatchGetItem".equals(operation) && !"BatchWriteItem".equals(operation)) {
-      return 0;
+      return null;
     }
 
     SdkRequest request =
         executionAttributes.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
     if (request == null) {
-      return 0;
+      return null;
     }
     Optional<?> requestItems = request.getValueForField("RequestItems", Object.class);
     if (!requestItems.isPresent() || !(requestItems.get() instanceof Map)) {
-      return 0;
+      return null;
     }
 
     Map<?, ?> requestItemsMap = (Map<?, ?>) requestItems.get();
@@ -121,8 +123,8 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
     return count;
   }
 
-  private static boolean isBatch(long batchSize) {
-    return batchSize > 1;
+  private static boolean isBatch(@Nullable Long batchSize) {
+    return batchSize != null && batchSize > 1;
   }
 
   @Nullable
