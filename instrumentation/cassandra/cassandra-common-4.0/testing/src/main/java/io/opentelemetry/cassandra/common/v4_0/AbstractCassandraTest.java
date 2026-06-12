@@ -181,11 +181,9 @@ public abstract class AbstractCassandraTest {
                                     maybeStable(DB_CASSANDRA_IDEMPOTENCE),
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                                equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
                                 equalTo(
-                                    maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
-                                equalTo(
-                                    maybeStable(DB_CASSANDRA_TABLE),
-                                    "simple_values_test.users"))));
+                                    maybeStable(DB_CASSANDRA_TABLE), "simple_values_test.users"))));
   }
 
   @Test
