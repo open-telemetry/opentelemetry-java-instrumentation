@@ -44,7 +44,6 @@ dependencies {
   testLibrary("com.typesafe.play:play-test_2.11:2.5.0")
 
   latestDepTestLibrary("com.typesafe.play:play-java_2.11:2.5.+") // see play-2.6 module
-  latestDepTestLibrary("com.typesafe.play:play-java-ws_2.11:2.5.+") // see play-2.6 module
   latestDepTestLibrary("com.typesafe.play:play-test_2.11:2.5.+") // see play-2.6 module
 }
 

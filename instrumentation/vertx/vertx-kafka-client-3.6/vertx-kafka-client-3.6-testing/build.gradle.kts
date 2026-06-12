@@ -12,8 +12,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent"))
 
-  latestDepTestLibrary("io.vertx:vertx-kafka-client:3.+") // documented limitation
-  latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // documented limitation
+  latestDepTestLibrary("io.vertx:vertx-kafka-client:3.+") // see vertx-kafka-client-4-testing module
+  latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // see vertx-kafka-client-4-testing module
 }
 
 testing {

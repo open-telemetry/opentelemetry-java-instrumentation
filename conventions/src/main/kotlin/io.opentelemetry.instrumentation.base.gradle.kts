@@ -2,6 +2,7 @@
 
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
+import org.eclipse.aether.util.version.GenericVersionScheme
 
 plugins {
   `java-library`
@@ -17,8 +18,9 @@ val otelProps = the<OtelPropsExtension>()
  * - library: A dependency on the instrumented library. Results in the dependency being added to
  *     compileOnly and testImplementation. If the build is run with -PtestLatestDeps=true, the
  *     version when added to testImplementation will be overridden by `+`, the latest version
- *     possible. For simple libraries without different behavior between versions, it is possible
- *     to have a single dependency on library only.
+ *     possible, but never below the declared library version. For simple libraries without
+ *     different behavior between versions, it is possible to have a single dependency on library
+ *     only.
  *
  * - testLibrary: A dependency on a library for testing. This will usually be used to either
  *     a) use a different version of the library for compilation and testing and b) to add a helper
@@ -68,6 +70,30 @@ fun lookupPinnedVersion(group: String?, name: String, version: String?): String?
   )
 }
 
+val versionScheme = GenericVersionScheme()
+
+// Pinned latest-dep versions resolve "latest" to the latest stable release, which can be lower
+// than a module's declared test baseline when the newer supported line only has pre-releases.
+// This currently affects ActiveJ: the instrumentation supports 6.0-rc2 and later, but there
+// are no stable 6.x releases yet, so latest stable is still 5.5.
+fun pinnedVersionAtLeastDeclared(pinnedVersion: String?, declaredVersion: String?): String? {
+  if (pinnedVersion == null || declaredVersion == null || declaredVersion == "latest.release" ||
+    declaredVersion.contains("+") ||
+    declaredVersion.startsWith("[") ||
+    declaredVersion.startsWith("(")) {
+    return pinnedVersion
+  }
+  return try {
+    if (versionScheme.parseVersion(declaredVersion) > versionScheme.parseVersion(pinnedVersion)) {
+      declaredVersion
+    } else {
+      pinnedVersion
+    }
+  } catch (e: RuntimeException) {
+    pinnedVersion
+  }
+}
+
 @CacheableRule
 abstract class TestLatestDepsRule : ComponentMetadataRule {
   override fun execute(context: ComponentMetadataContext) {
@@ -105,8 +131,9 @@ configurations {
       if (otelProps.testLatestDeps) {
         val extDep = this as ExternalDependency
         val pinnedVersion = lookupPinnedVersion(extDep.group, extDep.name, "latest.release")
+        val resolvedVersion = pinnedVersionAtLeastDeclared(pinnedVersion, extDep.version)
         (dep as ExternalDependency).version {
-          require(pinnedVersion ?: "latest.release")
+          require(resolvedVersion ?: "latest.release")
         }
       }
       testImplementation.dependencies.add(dep)
