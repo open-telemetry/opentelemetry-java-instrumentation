@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class SemconvStabilityTest {
@@ -126,35 +125,30 @@ class SemconvStabilityTest {
     }
 
     @Override
-    @Nullable
     public String getString(String name) {
       Object value = values.get(name);
       return value instanceof String ? (String) value : null;
     }
 
     @Override
-    @Nullable
     public Boolean getBoolean(String name) {
       Object value = values.get(name);
       return value instanceof Boolean ? (Boolean) value : null;
     }
 
     @Override
-    @Nullable
     public Integer getInt(String name) {
       Object value = values.get(name);
       return value instanceof Integer ? (Integer) value : null;
     }
 
     @Override
-    @Nullable
     public Long getLong(String name) {
       Object value = values.get(name);
       return value instanceof Long ? (Long) value : null;
     }
 
     @Override
-    @Nullable
     public Double getDouble(String name) {
       Object value = values.get(name);
       return value instanceof Double ? (Double) value : null;
