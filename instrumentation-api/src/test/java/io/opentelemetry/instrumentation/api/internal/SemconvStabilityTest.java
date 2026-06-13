@@ -126,15 +126,16 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void v3PreviewForcesStableEvenWithExplicitDomainConfig() {
+  void unsupportedExplicitDomainVersionZeroFallsBackWhenV3PreviewIsEnabled() {
     // general:
     //   db:
     //     semconv:
     //       version: 0
+    //       dual_emit: true
     // java:
     //   common:
     //     v3_preview: true
-    DeclarativeConfigProperties general = general(domainSemconv("db", 0));
+    DeclarativeConfigProperties general = general(domainSemconv("db", 0, true));
     boolean v3Preview = true;
 
     SemconvMode database =
@@ -144,12 +145,32 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void explicitDomainVersionZeroMeansLegacyOnlyWhenV3PreviewIsDisabled() {
+  void unsupportedExplicitDomainDualEmitFallsBackWhenV3PreviewIsEnabled() {
+    // general:
+    //   db:
+    //     semconv:
+    //       version: 1
+    //       dual_emit: true
+    // java:
+    //   common:
+    //     v3_preview: true
+    DeclarativeConfigProperties general = general(domainSemconv("db", 1, true));
+    boolean v3Preview = true;
+
+    SemconvMode dualEmitDatabase =
+        new SemconvSelectionResolver(general, v3Preview, noStableOptIn(), noPreview()).database();
+
+    assertThat(dualEmitDatabase).isEqualTo(SemconvMode.V1_STABLE);
+  }
+
+  @Test
+  void explicitDomainVersionZeroMeansOldOnlyEvenWithDualEmit() {
     // general:
     //   db:
     //     semconv:
     //       version: 0
-    DeclarativeConfigProperties general = general(domainSemconv("db", 0));
+    //       dual_emit: true
+    DeclarativeConfigProperties general = general(domainSemconv("db", 0, true));
     boolean v3Preview = false;
 
     SemconvMode database =
