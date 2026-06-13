@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
@@ -63,7 +65,19 @@ public final class R2dbcSqlAttributesGetter
 
   @Override
   public Collection<String> getRawQueryTexts(DbExecution request) {
-    return request.getRawQueryTexts();
+    Collection<String> rawQueryTexts = request.getRawQueryTexts();
+    return emitStableDatabaseSemconv() ? rawQueryTexts : singleton(join("; ", rawQueryTexts));
+  }
+
+  private static String join(String delimiter, Collection<String> collection) {
+    StringBuilder builder = new StringBuilder();
+    for (String string : collection) {
+      if (builder.length() != 0) {
+        builder.append(delimiter);
+      }
+      builder.append(string);
+    }
+    return builder.toString();
   }
 
   @Override
