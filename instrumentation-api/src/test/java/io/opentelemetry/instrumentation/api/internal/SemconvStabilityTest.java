@@ -29,7 +29,7 @@ class SemconvStabilityTest {
   @Test
   void resolveGeneralStableFlags_parsesCommaSeparatedList() {
     // general:
-    //   stability_opt_in_list: [database/dup, code, messaging]
+    //   stability_opt_in_list: "database/dup, code, messaging"
     DeclarativeConfigProperties general =
         general(stabilityOptInList(" database/dup, code , messaging "));
 
