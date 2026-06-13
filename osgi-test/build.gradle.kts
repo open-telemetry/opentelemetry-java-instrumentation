@@ -1,6 +1,7 @@
 import aQute.bnd.gradle.Bundle
 import aQute.bnd.gradle.Resolve
 import aQute.bnd.gradle.TestOSGi
+import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import java.util.jar.JarFile
 
@@ -43,7 +44,12 @@ dependencies {
 /** Typed dependency scope for an OSGi test suite, avoiding stringly-typed invoke() calls. */
 class OsgiSuiteDependencies(private val sourceSet: SourceSet, private val handler: DependencyHandler) {
   fun implementation(notation: Any) = handler.add(sourceSet.implementationConfigurationName, notation)
+  fun compileOnly(notation: Any) = handler.add(sourceSet.compileOnlyConfigurationName, notation)
   fun runtimeOnly(notation: Any) = handler.add(sourceSet.runtimeOnlyConfigurationName, notation)
+
+  fun implementation(notation: String, configure: ExternalModuleDependency.() -> Unit) {
+    (handler.add(sourceSet.implementationConfigurationName, notation) as ExternalModuleDependency).configure()
+  }
 }
 
 /**
@@ -58,6 +64,9 @@ class OsgiSuiteDependencies(private val sourceSet: SourceSet, private val handle
  *   (noop test implementations). Generates Provide-Capability + Require-Capability registrar so
  *   SPI Fly picks them up.
  * @param minJavaVersion If set, skips the suite when `testJavaVersion` is below this value.
+ * @param resolveOnly When true, the suite stops at BND resolution (proving the bundle's OSGi wiring
+ *   is satisfiable) and does not boot the container. Use when the instrumented library's own OSGi
+ *   bundles have runtime packaging quirks that are provided/handled by the target platform.
  */
 fun registerOsgiSuite(
   suiteName: String,
@@ -65,8 +74,9 @@ fun registerOsgiSuite(
   extraRunsystempackages: List<String> = emptyList(),
   serviceLoaderProvides: List<String> = emptyList(),
   minJavaVersion: Int? = null,
+  resolveOnly: Boolean = false,
   configureDependencies: OsgiSuiteDependencies.() -> Unit = {},
-): TaskProvider<TestOSGi> {
+): TaskProvider<out Task> {
   val sourceSet = sourceSets.create("test${suiteName.replaceFirstChar { it.uppercase() }}")
   OsgiSuiteDependencies(sourceSet, dependencies).configureDependencies()
 
@@ -189,6 +199,10 @@ fun registerOsgiSuite(
     outputs.cacheIf { false }
   }
 
+  if (resolveOnly) {
+    return resolveTask
+  }
+
   return tasks.register<TestOSGi>("testOSGi${suiteName.replaceFirstChar { it.uppercase() }}") {
     description = "OSGi Test $suiteName.bndrun"
     group = JavaBasePlugin.VERIFICATION_GROUP
@@ -215,14 +229,29 @@ val apiSuiteTask = registerOsgiSuite("api") {
   implementation(project(":instrumentation-annotations"))
 }
 
+// Suite: apacheHttpClient - a representative library instrumentation bundle, exercised against the
+// stock Apache HttpComponents OSGi bundles - the exact same bundles AEM/Sling provide
+// (org.apache.httpcomponents.httpclient/httpcore), with commons-logging and Config Admin.
+val apacheHttpClientSuiteTask = registerOsgiSuite("apacheHttpClient") {
+  implementation(project(":instrumentation:apache-httpclient:apache-httpclient-4.3:library"))
+  // httpclient-osgi/httpcore-osgi are the real OSGi bundles (BSN org.apache.httpcomponents.*) - the
+  // same ones AEM ships. Pull them non-transitively: their POMs also drag in the plain httpclient/
+  // httpcore jars, which are NOT bundles and would shadow the OSGi bundles in the resolver.
+  implementation("org.apache.httpcomponents:httpclient-osgi:4.5.14") { isTransitive = false }
+  implementation("org.apache.httpcomponents:httpcore-osgi:4.4.16") { isTransitive = false }
+  // httpclient imports commons-logging in [1.1,1.3); pin to 1.2 (an OSGi bundle) since
+  // dependencyManagement otherwise forces 1.3.6, which is outside that range. In AEM this package
+  // is provided by jcl-over-slf4j.
+  implementation("commons-logging:commons-logging") {
+    version { strictly("1.2") }
+  }
+  runtimeOnly("org.apache.felix:org.apache.felix.configadmin:1.9.26")
+}
+
 // Suite: logbackAppender - a representative library instrumentation bundle, resolving against
 // instrumentation-api and the instrumented library. logback-classic is itself an OSGi bundle.
 // Also verifies the bundle resolves WITHOUT Logstash present, proving the net.logstash.logback
 // optional-import tuning.
-//
-// (apache-httpclient-4.3 is intentionally not exercised as a runtime suite: the Apache
-// HttpComponents 4.x jars are not OSGi bundles, so its instrumented target can't be resolved in an
-// OSGi container. Its generated bundle metadata is still verified via manifest inspection.)
 val logbackAppenderSuiteTask = registerOsgiSuite("logbackAppender") {
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
   implementation("ch.qos.logback:logback-classic")
@@ -251,6 +280,7 @@ tasks {
     actions.clear()
     dependsOn(
       apiSuiteTask,
+      apacheHttpClientSuiteTask,
       logbackAppenderSuiteTask,
       resourcesSuiteTask,
     )
