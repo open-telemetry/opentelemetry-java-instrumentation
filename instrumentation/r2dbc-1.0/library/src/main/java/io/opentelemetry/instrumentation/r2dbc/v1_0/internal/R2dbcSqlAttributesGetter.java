@@ -72,7 +72,7 @@ public final class R2dbcSqlAttributesGetter
     // collection.
     return emitStableDatabaseSemconv() || rawQueryTexts.size() == 1
         ? rawQueryTexts
-        : singleton(join("; ", rawQueryTexts));
+        : singleton(join(";\n", rawQueryTexts));
   }
 
   private static String join(String delimiter, Collection<String> collection) {
