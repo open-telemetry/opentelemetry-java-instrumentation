@@ -102,25 +102,35 @@ class InfluxDbClient24Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("CREATE DATABASE " + dbName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "createDatabase " + dbName
+                                : "CREATE DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), "CREATE DATABASE"))),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv()
+                                    ? "createDatabase"
+                                    : "CREATE DATABASE"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("WRITE " + dbName)
+                        span.hasName(
+                            emitStableDatabaseSemconv() ? "write " + dbName : "WRITE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), "WRITE"))),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "write" : "WRITE"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -141,14 +151,21 @@ class InfluxDbClient24Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("DROP DATABASE " + dbName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "deleteDatabase " + dbName
+                                : "DROP DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), "DROP DATABASE"))));
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv()
+                                    ? "deleteDatabase"
+                                    : "DROP DATABASE"))));
   }
 
   @Test

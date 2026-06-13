@@ -106,10 +106,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       DbClientAttributesGetter<REQUEST, ?> getter,
       REQUEST request,
       @Nullable String operation,
-      @Nullable String collectionName,
       @Nullable String storedProcedureName) {
 
-    String target = collectionName;
+    String target = getter.getDbCollectionName(request);
     if (target == null) {
       target = storedProcedureName;
     }
@@ -164,10 +163,10 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
           return querySummary;
         }
         String operationName = getter.getDbOperationName(request);
-        return computeSpanNameStable(getter, request, operationName, null, null);
+        return computeSpanNameStable(getter, request, operationName, null);
       }
       String dbName = getter.getDbName(request);
-      String operationName = getter.getDbOperationName(request);
+      String operationName = getter.getDbOperation(request);
       return computeSpanName(dbName, operationName, null, null);
     }
   }
@@ -193,11 +192,10 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
           if (querySummary != null) {
             return querySummary;
           }
-          String operationName = getter.getDbOperationName(request);
-          return computeSpanNameStable(getter, request, operationName, null, null);
+          return computeSpanNameStable(getter, request, null, null);
         }
         String dbName = getter.getDbName(request);
-        String operationName = getter.getDbOperationName(request);
+        String operationName = getter.getDbOperation(request);
         return computeSpanName(dbName, operationName, null, null);
       }
 
@@ -224,7 +222,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
           return batch ? "BATCH " + querySummary : querySummary;
         }
         return computeSpanNameStable(
-            getter, request, batch ? "BATCH" : null, null, analyzedQuery.getStoredProcedureName());
+            getter, request, batch ? "BATCH" : null, analyzedQuery.getStoredProcedureName());
       }
 
       MultiQuery multiQuery = MultiQuery.analyzeWithSummary(rawQueryTexts, dialect);
@@ -232,8 +230,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       if (querySummary != null) {
         return querySummary;
       }
-      return computeSpanNameStable(
-          getter, request, null, null, multiQuery.getStoredProcedureName());
+      return computeSpanNameStable(getter, request, null, multiQuery.getStoredProcedureName());
     }
 
     private boolean isBatch(REQUEST request) {
@@ -277,7 +274,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         operationName = analyzedQuery.getOperationName();
       }
       if (operationName == null) {
-        operationName = getter.getDbOperationName(request);
+        operationName = getter.getDbOperation(request);
       }
       return computeSpanName(dbName, operationName, null, null);
     }

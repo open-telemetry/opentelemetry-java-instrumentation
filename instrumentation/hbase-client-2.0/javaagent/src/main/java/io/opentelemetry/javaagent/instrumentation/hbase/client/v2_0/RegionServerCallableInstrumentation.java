@@ -36,7 +36,7 @@ class RegionServerCallableInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.FieldValue(value = "tableName") TableName table) {
       if (table != null) {
-        setTableName(table.getNameAsString());
+        setTableName(table);
       }
     }
 
