@@ -85,7 +85,7 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))));
 
@@ -108,13 +108,13 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET")
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo"))));
   }
@@ -150,14 +150,14 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo")),
@@ -180,13 +180,16 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("RANDOMKEY")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "RANDOMKEY " + host + ":" + port
+                                : "RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));

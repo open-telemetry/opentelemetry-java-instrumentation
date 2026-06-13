@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
-final class VertxRedisClientAttributesGetter
+class VertxRedisClientAttributesGetter
     implements DbClientAttributesGetter<VertxRedisClientRequest, Void> {
 
   private static final RedisCommandSanitizer sanitizer =
