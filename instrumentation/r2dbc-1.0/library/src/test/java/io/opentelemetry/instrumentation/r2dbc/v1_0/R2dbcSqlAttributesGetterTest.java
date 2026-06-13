@@ -40,9 +40,11 @@ class R2dbcSqlAttributesGetterTest {
     if (emitStableDatabaseSemconv()) {
       assertThat(rawQueryTexts)
           .containsExactly("INSERT INTO person VALUES(1)", "INSERT INTO person VALUES(2)");
+      assertThat(getter.getDbOperationBatchSize(dbExecution)).isEqualTo(2);
     } else {
       assertThat(rawQueryTexts)
           .containsExactly("INSERT INTO person VALUES(1); INSERT INTO person VALUES(2)");
+      assertThat(getter.getDbOperationBatchSize(dbExecution)).isNull();
     }
   }
 }

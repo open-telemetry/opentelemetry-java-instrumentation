@@ -66,6 +66,9 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public Collection<String> getRawQueryTexts(DbExecution request) {
     Collection<String> rawQueryTexts = request.getRawQueryTexts();
+    // In old-only mode, return a single joined query to preserve the legacy db.statement and
+    // db.operation extraction behavior. In database/dup mode, favor stable multi-query batch
+    // attributes because the shared SQL extractor can only use one raw query collection.
     return emitStableDatabaseSemconv() ? rawQueryTexts : singleton(join("; ", rawQueryTexts));
   }
 
@@ -83,7 +86,9 @@ public final class R2dbcSqlAttributesGetter
   @Override
   @Nullable
   public Long getDbOperationBatchSize(DbExecution request) {
-    return request.getBatchSize();
+    // Batch size is a stable database semconv signal. Keep it hidden from old-only mode so legacy
+    // extraction does not start treating existing requests as batches.
+    return emitStableDatabaseSemconv() ? request.getBatchSize() : null;
   }
 
   @Nullable
