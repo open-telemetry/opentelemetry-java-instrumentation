@@ -66,10 +66,13 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public Collection<String> getRawQueryTexts(DbExecution request) {
     Collection<String> rawQueryTexts = request.getRawQueryTexts();
-    // In old-only mode, return a single joined query to preserve the legacy db.statement and
-    // db.operation extraction behavior. In database/dup mode, favor stable multi-query batch
-    // attributes because the shared SQL extractor can only use one raw query collection.
-    return emitStableDatabaseSemconv() ? rawQueryTexts : singleton(join("; ", rawQueryTexts));
+    // In old-only mode, join multi-query batches into a single query to preserve the legacy
+    // db.statement and db.operation extraction behavior. In database/dup mode, favor stable
+    // multi-query batch attributes because the shared SQL extractor can only use one raw query
+    // collection.
+    return emitStableDatabaseSemconv() || rawQueryTexts.size() == 1
+        ? rawQueryTexts
+        : singleton(join("; ", rawQueryTexts));
   }
 
   private static String join(String delimiter, Collection<String> collection) {

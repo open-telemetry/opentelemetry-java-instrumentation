@@ -23,6 +23,23 @@ class R2dbcSqlAttributesGetterTest {
   private final R2dbcSqlAttributesGetter getter = new R2dbcSqlAttributesGetter();
 
   @Test
+  void rawQueryTextsForSingleQuery() {
+    QueryExecutionInfo queryExecutionInfo =
+        MockQueryExecutionInfo.builder()
+            .queryInfo(new QueryInfo("INSERT INTO person VALUES(1)"))
+            .connectionInfo(MockConnectionInfo.builder().build())
+            .build();
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db");
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
+
+    Collection<String> rawQueryTexts = getter.getRawQueryTexts(dbExecution);
+
+    assertThat(rawQueryTexts).isSameAs(dbExecution.getRawQueryTexts());
+    assertThat(rawQueryTexts).containsExactly("INSERT INTO person VALUES(1)");
+  }
+
+  @Test
   void rawQueryTextsForBatch() {
     QueryExecutionInfo queryExecutionInfo =
         MockQueryExecutionInfo.builder()
