@@ -113,7 +113,7 @@ class SemconvStabilityTest {
   @Test
   void explicitDomainConfigTakesPrecedenceWhenV3PreviewIsDisabled() {
     // general:
-    //   stability_opt_in_list: [database]
+    //   stability_opt_in_list: "database"
     //   db:
     //     semconv:
     //       version: 1
@@ -249,7 +249,7 @@ class SemconvStabilityTest {
   @Test
   void stableOptInAppliesToDatabaseAndCode() {
     // general:
-    //   stability_opt_in_list: [database, code]
+    //   stability_opt_in_list: "database, code"
     //
     // Same resolver input is also produced by bridged otel.semconv-stability.opt-in=database,code.
     DeclarativeConfigProperties general = general(stabilityOptInList("database, code"));
@@ -269,7 +269,7 @@ class SemconvStabilityTest {
   @Test
   void stableOptInDupDualEmitsDatabaseAndCodeWhenV3PreviewIsDisabled() {
     // general:
-    //   stability_opt_in_list: [database/dup, code/dup]
+    //   stability_opt_in_list: "database/dup, code/dup"
     // java:
     //   common:
     //     v3_preview: false
@@ -290,7 +290,7 @@ class SemconvStabilityTest {
   @Test
   void stableOptInDupEmitsStableDatabaseAndCodeWhenV3PreviewIsEnabled() {
     // general:
-    //   stability_opt_in_list: [database/dup, code/dup]
+    //   stability_opt_in_list: "database/dup, code/dup"
     // java:
     //   common:
     //     v3_preview: true
@@ -311,7 +311,7 @@ class SemconvStabilityTest {
   @Test
   void stableOptInAppliesToPreviewDomainsWhenV3PreviewIsDisabled() {
     // general:
-    //   stability_opt_in_list: [rpc, service.peer, messaging]
+    //   stability_opt_in_list: "rpc, service.peer, messaging"
     // java:
     //   common:
     //     v3_preview: false
@@ -335,7 +335,7 @@ class SemconvStabilityTest {
   @Test
   void v3PreviewIgnoresStableOptInForPreviewDomains() {
     // general:
-    //   stability_opt_in_list: [rpc, service.peer, messaging]
+    //   stability_opt_in_list: "rpc, service.peer, messaging"
     // java:
     //   common:
     //     v3_preview: true
