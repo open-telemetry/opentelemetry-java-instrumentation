@@ -294,8 +294,8 @@ public abstract class AbstractAws2ClientCoreTest {
   @SuppressWarnings("deprecation") // uses deprecated semconv
   private static void assertDynamoDbRequest(
       SpanDataAssert span, String operation, List<AttributeAssertion> extraAttributes) {
-        assertDynamoDbRequest(
-                span, operation, extraAttributes, expectedDbOperationNameForSingleItemRequest(operation));
+    assertDynamoDbRequest(
+        span, operation, extraAttributes, expectedDbOperationNameForSingleItemRequest(operation));
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
@@ -589,8 +589,7 @@ public abstract class AbstractAws2ClientCoreTest {
                     KeysAndAttributes.builder()
                         .keys(
                             asList(
-                                ImmutableMap.of(
-                                    "key", AttributeValue.builder().s("value").build()),
+                                ImmutableMap.of("key", AttributeValue.builder().s("value").build()),
                                 ImmutableMap.of(
                                     "key", AttributeValue.builder().s("anotherValue").build())))
                         .build())));
@@ -647,8 +646,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                 PutRequest.builder()
                                     .item(
                                         ImmutableMap.of(
-                                            "key",
-                                            AttributeValue.builder().s("value").build()))
+                                            "key", AttributeValue.builder().s("value").build()))
                                     .build())
                             .build(),
                         WriteRequest.builder()
@@ -690,20 +688,20 @@ public abstract class AbstractAws2ClientCoreTest {
         DB_COLLECTION_NAME);
   }
 
-    private static String expectedDbOperationNameForSingleItemRequest(String operation) {
-        if (!emitStableDatabaseSemconv()) {
-            return operation;
-        }
-        // The parameterized Batch* requests contain one item. Stable DB semconv treats those as
-        // logical item operations; dedicated multi-item tests pass the BATCH operation name directly.
-        switch (operation) {
-            case "BatchGetItem":
-                return "GetItem";
-            case "BatchWriteItem":
-                return "WriteItem";
-            default:
-                return operation;
-        }
+  private static String expectedDbOperationNameForSingleItemRequest(String operation) {
+    if (!emitStableDatabaseSemconv()) {
+      return operation;
+    }
+    // The parameterized Batch* requests contain one item. Stable DB semconv treats those as
+    // logical item operations; dedicated multi-item tests pass the BATCH operation name directly.
+    switch (operation) {
+      case "BatchGetItem":
+        return "GetItem";
+      case "BatchWriteItem":
+        return "WriteItem";
+      default:
+        return operation;
+    }
   }
 
   private static String getResponseContent(String operation) {
