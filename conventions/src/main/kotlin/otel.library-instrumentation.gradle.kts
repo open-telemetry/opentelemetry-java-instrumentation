@@ -3,6 +3,7 @@ plugins {
 
   id("otel.jacoco-conventions")
   id("otel.java-conventions")
+  id("otel.osgi-conventions")
   id("otel.publish-conventions")
 }
 

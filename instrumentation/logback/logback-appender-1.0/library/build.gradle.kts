@@ -3,6 +3,12 @@ plugins {
   id("org.graalvm.buildtools.native")
 }
 
+otelJava {
+  // Logstash support is optional; the encoder is a compileOnly dependency and may be absent at
+  // runtime in an OSGi container.
+  osgiOptionalPackages.add("net.logstash.logback")
+}
+
 dependencies {
   compileOnly(project(":muzzle"))
 

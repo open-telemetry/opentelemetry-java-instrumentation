@@ -148,6 +148,7 @@ include(":instrumentation-annotations-support-testing")
 // misc
 include(":dependencyManagement")
 include(":instrumentation-docs")
+include(":osgi-test")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:dependencies-shaded-for-testing")
