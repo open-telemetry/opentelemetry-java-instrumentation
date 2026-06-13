@@ -14,7 +14,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
-final class InfluxDbQueryAttributesGetter implements SqlClientAttributesGetter<InfluxDbQuery, Void> {
+final class InfluxDbQueryAttributesGetter
+    implements SqlClientAttributesGetter<InfluxDbQuery, Void> {
 
   @Override
   public Collection<String> getRawQueryTexts(InfluxDbQuery request) {

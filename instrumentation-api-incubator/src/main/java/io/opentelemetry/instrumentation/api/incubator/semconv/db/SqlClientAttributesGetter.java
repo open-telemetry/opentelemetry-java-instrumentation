@@ -23,11 +23,11 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
     extends DbClientAttributesGetter<REQUEST, RESPONSE> {
 
   /**
-    * DO NOT USE OR OVERRIDE THIS METHOD.
-    *
-    * <p>{@link SqlClientAttributesExtractor} will try to populate {@code db.operation.name} based on
-    * {@link #getRawQueryTexts(REQUEST)} when {@link
-    * SqlClientAttributesExtractorBuilder#setSingleOperationAndCollection(boolean)} is enabled.
+   * DO NOT USE OR OVERRIDE THIS METHOD.
+   *
+   * <p>{@link SqlClientAttributesExtractor} will try to populate {@code db.operation.name} based on
+   * {@link #getRawQueryTexts(REQUEST)} when {@link
+   * SqlClientAttributesExtractorBuilder#setSingleOperationAndCollection(boolean)} is enabled.
    */
   @Override
   @Nullable
@@ -57,9 +57,9 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
 
   /**
    * DO NOT USE OR OVERRIDE THIS METHOD.
-    *
-    * <p>{@link SqlClientAttributesExtractor} will try to populate {@code db.collection.name} based
-    * on {@link #getRawQueryTexts(REQUEST)} when {@link
+   *
+   * <p>{@link SqlClientAttributesExtractor} will try to populate {@code db.collection.name} based
+   * on {@link #getRawQueryTexts(REQUEST)} when {@link
    * SqlClientAttributesExtractorBuilder#setSingleOperationAndCollection(boolean)} is enabled.
    */
   @Override

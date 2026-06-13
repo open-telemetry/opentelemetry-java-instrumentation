@@ -275,15 +275,15 @@ public abstract class AbstractHbaseTest {
                                     maybeStableDbSystemName(DB_SYSTEM_VALUE)),
                                 equalTo(maybeStable(DB_OPERATION), GET),
                                 equalTo(
-                                  maybeStable(DB_NAME),
-                                  emitStableDatabaseSemconv()
-                                    ? TABLE_NAME.getNamespaceAsString()
-                                    : TABLE_NAME.getNameAsString()),
+                                    maybeStable(DB_NAME),
+                                    emitStableDatabaseSemconv()
+                                        ? TABLE_NAME.getNamespaceAsString()
+                                        : TABLE_NAME.getNameAsString()),
                                 equalTo(
-                                  DB_COLLECTION_NAME,
-                                  emitStableDatabaseSemconv()
-                                    ? TABLE_NAME.getNameAsString()
-                                    : null),
+                                    DB_COLLECTION_NAME,
+                                    emitStableDatabaseSemconv()
+                                        ? TABLE_NAME.getNameAsString()
+                                        : null),
                                 equalTo(SERVER_ADDRESS, hostname),
                                 equalTo(SERVER_PORT, REGION_SERVER_PORT),
                                 equalTo(

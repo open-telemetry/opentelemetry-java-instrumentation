@@ -85,12 +85,9 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
       Context parentContext = currentContext();
 
       HttpUrl httpUrl = retrofit.baseUrl();
-      String database = query.getDatabase();
-      if ("".equals(database)) {
-        database = null;
-      }
       InfluxDbQuery influxDbQuery =
-          InfluxDbQuery.create(httpUrl.host(), httpUrl.port(), database, query.getCommand());
+          InfluxDbQuery.create(
+              httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
 
       if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
         return null;

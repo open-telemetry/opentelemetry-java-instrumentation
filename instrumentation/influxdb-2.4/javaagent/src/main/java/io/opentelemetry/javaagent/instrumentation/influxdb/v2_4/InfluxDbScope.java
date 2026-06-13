@@ -18,10 +18,7 @@ public class InfluxDbScope<REQUEST> {
   private final Scope scope;
 
   private InfluxDbScope(
-      Instrumenter<REQUEST, Void> instrumenter,
-      REQUEST request,
-      Context context,
-      Scope scope) {
+      Instrumenter<REQUEST, Void> instrumenter, REQUEST request, Context context, Scope scope) {
     this.instrumenter = instrumenter;
     this.request = request;
     this.context = context;
@@ -29,9 +26,7 @@ public class InfluxDbScope<REQUEST> {
   }
 
   public static <REQUEST> InfluxDbScope<REQUEST> start(
-      Instrumenter<REQUEST, Void> instrumenter,
-      Context parentContext,
-      REQUEST request) {
+      Instrumenter<REQUEST, Void> instrumenter, Context parentContext, REQUEST request) {
     Context context = instrumenter.start(parentContext, request);
     return new InfluxDbScope<>(instrumenter, request, context, context.makeCurrent());
   }

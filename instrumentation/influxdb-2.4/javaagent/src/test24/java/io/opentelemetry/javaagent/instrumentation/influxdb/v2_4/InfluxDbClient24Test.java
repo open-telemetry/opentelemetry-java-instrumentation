@@ -120,7 +120,7 @@ class InfluxDbClient24Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                        span.hasName(
+                    span.hasName(
                             emitStableDatabaseSemconv() ? "write " + dbName : "WRITE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(

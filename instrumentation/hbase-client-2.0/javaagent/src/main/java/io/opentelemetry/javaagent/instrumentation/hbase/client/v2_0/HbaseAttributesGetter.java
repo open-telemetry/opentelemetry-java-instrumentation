@@ -83,5 +83,4 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
   public Integer getServerPort(HbaseRequest request) {
     return request.getPort();
   }
-
 }

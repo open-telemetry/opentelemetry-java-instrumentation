@@ -29,9 +29,9 @@ public class InfluxDbSingletons {
 
     InstrumenterBuilder<InfluxDbQuery, Void> queryBuilder =
         Instrumenter.<InfluxDbQuery, Void>builder(
-          GlobalOpenTelemetry.get(),
-          INSTRUMENTATION_NAME,
-          DbClientSpanNameExtractor.createWithGenericOldSpanName(queryAttributesGetter))
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.createWithGenericOldSpanName(queryAttributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(queryAttributesGetter)
                     .setTableAttribute(null)
@@ -44,10 +44,10 @@ public class InfluxDbSingletons {
     InfluxDbAttributesGetter dbAttributesGetter = new InfluxDbAttributesGetter();
 
     InstrumenterBuilder<InfluxDbOperation, Void> modifyBuilder =
-  Instrumenter.<InfluxDbOperation, Void>builder(
-    GlobalOpenTelemetry.get(),
-    INSTRUMENTATION_NAME,
-    DbClientSpanNameExtractor.create(dbAttributesGetter))
+        Instrumenter.<InfluxDbOperation, Void>builder(
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(modifyBuilder);

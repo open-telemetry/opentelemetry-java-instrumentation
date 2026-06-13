@@ -34,9 +34,9 @@ class RegionServerCallableInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RpcCallAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.FieldValue(value = "tableName") TableName table) {
-      if (table != null) {
-        setTableName(table);
+    public static void onEnter(@Advice.FieldValue(value = "tableName") TableName tableName) {
+      if (tableName != null) {
+        setTableName(tableName);
       }
     }
 
