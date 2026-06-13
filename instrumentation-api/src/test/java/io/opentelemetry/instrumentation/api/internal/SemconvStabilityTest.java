@@ -66,6 +66,45 @@ class SemconvStabilityTest {
   }
 
   @Test
+  void resolveStringListUsesDeclarativeListBeforeFallback() {
+    // general:
+    //   semconv_stability:
+    //     opt_in: [database]
+    DeclarativeConfigProperties semconvStability = general(property("opt_in", asList("database")));
+
+    // otel.semconv-stability.opt-in=code
+    assertThat(
+            SemconvSelectionResolver.resolveStringListWithFallbackValue(
+                semconvStability, "opt_in", "code"))
+        .containsExactly("database");
+  }
+
+  @Test
+  void resolveStringListEmptyDeclarativeListDisablesFallback() {
+    // general:
+    //   semconv_stability:
+    //     opt_in: []
+    DeclarativeConfigProperties semconvStability = general(property("opt_in", emptyList()));
+
+    // otel.semconv-stability.opt-in=code
+    assertThat(
+            SemconvSelectionResolver.resolveStringListWithFallbackValue(
+                semconvStability, "opt_in", "code"))
+        .isEmpty();
+  }
+
+  @Test
+  void resolveStringListUsesFallbackWhenDeclarativeListIsAbsent() {
+    DeclarativeConfigProperties semconvStability = general();
+
+    // otel.semconv-stability.opt-in=database,code
+    assertThat(
+            SemconvSelectionResolver.resolveStringListWithFallbackValue(
+                semconvStability, "opt_in", "database, code"))
+        .containsExactlyInAnyOrder("database", "code");
+  }
+
+  @Test
   void parseCommaSeparatedSet_ignoresBlankEntries() {
     assertThat(SemconvSelectionResolver.parseCommaSeparatedSet("rpc, messaging, ,database/dup,"))
         .containsExactlyInAnyOrder("rpc", "messaging", "database/dup");

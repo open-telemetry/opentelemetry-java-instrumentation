@@ -248,12 +248,16 @@ class SemconvSelectionResolver {
   @SuppressWarnings("deprecation") // using deprecated config property fallback
   private static Set<String> resolveStringList(
       DeclarativeConfigProperties config, String key, String fallbackProperty) {
-    Set<String> values = new HashSet<>(config.getScalarList(key, String.class, emptyList()));
-    if (!values.isEmpty()) {
-      return values;
+    return resolveStringListWithFallbackValue(
+        config, key, ConfigPropertiesUtil.getString(fallbackProperty));
+  }
+
+  static Set<String> resolveStringListWithFallbackValue(
+      DeclarativeConfigProperties config, String key, @Nullable String fallbackValue) {
+    if (config.getPropertyKeys().contains(key)) {
+      return new HashSet<>(config.getScalarList(key, String.class, emptyList()));
     }
-    String value = ConfigPropertiesUtil.getString(fallbackProperty);
-    return value == null ? emptySet() : parseCommaSeparatedSet(value);
+    return fallbackValue == null ? emptySet() : parseCommaSeparatedSet(fallbackValue);
   }
 
   static Set<String> parseCommaSeparatedSet(String value) {
