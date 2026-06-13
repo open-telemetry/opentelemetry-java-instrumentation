@@ -38,6 +38,34 @@ class SemconvStabilityTest {
   }
 
   @Test
+  void stableOptInListTakesPrecedenceOverFallback() {
+    // general:
+    //   stability_opt_in_list: "database"
+    DeclarativeConfigProperties general = general(stabilityOptInList("database"));
+
+    assertThat(SemconvSelectionResolver.resolveStableOptInValues(general, stableOptIn("code")))
+        .containsExactly("database");
+  }
+
+  @Test
+  void emptyStableOptInListDisablesFallback() {
+    // general:
+    //   stability_opt_in_list: ""
+    DeclarativeConfigProperties general = general(stabilityOptInList(""));
+
+    assertThat(SemconvSelectionResolver.resolveStableOptInValues(general, stableOptIn("code")))
+        .isEmpty();
+  }
+
+  @Test
+  void absentStableOptInListUsesFallback() {
+    DeclarativeConfigProperties general = general();
+
+    assertThat(SemconvSelectionResolver.resolveStableOptInValues(general, stableOptIn("code")))
+        .containsExactly("code");
+  }
+
+  @Test
   void parseCommaSeparatedSet_ignoresBlankEntries() {
     assertThat(SemconvSelectionResolver.parseCommaSeparatedSet("rpc, messaging, ,database/dup,"))
         .containsExactlyInAnyOrder("rpc", "messaging", "database/dup");

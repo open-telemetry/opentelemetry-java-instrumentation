@@ -21,9 +21,9 @@ class SemconvSelectionResolver {
   // general.<domain>.semconv.experimental, and general.<domain>.semconv.dual_emit settings.
   private final DeclarativeConfigProperties structuredConfig;
 
-  // Stable opt-in values, used when no explicit per-domain semconv config is present. Combines
-  // general.stability_opt_in_list with OpenTelemetry-backed / ConfigPropertiesUtil-backed
-  // otel.semconv-stability.opt-in values.
+  // Stable opt-in values, used when no explicit per-domain semconv config is present. Reads
+  // general.stability_opt_in_list first, and falls back to OpenTelemetry-backed /
+  // ConfigPropertiesUtil-backed otel.semconv-stability.opt-in values.
   private final Set<String> stableFlags;
 
   // Preview flags for service.peer, rpc, and messaging. Reads through OpenTelemetry-backed
@@ -218,7 +218,15 @@ class SemconvSelectionResolver {
 
   private static Set<String> resolveStableOptInValues(
       OpenTelemetry openTelemetry, DeclarativeConfigProperties generalConfig) {
-    return combine(resolveGeneralStableFlags(generalConfig), resolveOptInValues(openTelemetry));
+    return resolveStableOptInValues(generalConfig, resolveOptInValues(openTelemetry));
+  }
+
+  static Set<String> resolveStableOptInValues(
+      DeclarativeConfigProperties generalConfig, Set<String> fallbackValues) {
+    if (generalConfig.getPropertyKeys().contains("stability_opt_in_list")) {
+      return resolveGeneralStableFlags(generalConfig);
+    }
+    return fallbackValues;
   }
 
   static Set<String> resolveGeneralStableFlags(DeclarativeConfigProperties generalConfig) {
