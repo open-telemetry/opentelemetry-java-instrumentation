@@ -38,7 +38,7 @@ public final class ThriftAsyncProcessFunctionInstrumentation implements TypeInst
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static AsyncMethodCallback<?> methodExit(
         @Advice.Argument(value = 0) AbstractNonblockingServer.AsyncFrameBuffer fb,
-        @Advice.Return(readOnly = false) AsyncMethodCallback<?> callback) {
+        @Advice.Return AsyncMethodCallback<?> callback) {
       ServerInProtocolDecorator serverInProtocolDecorator =
           (ServerInProtocolDecorator) fb.getInputProtocol();
       ServerOutProtocolDecorator serverOutProtocolDecorator =

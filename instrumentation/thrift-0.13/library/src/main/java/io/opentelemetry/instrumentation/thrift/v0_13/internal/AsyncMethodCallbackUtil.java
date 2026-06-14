@@ -47,17 +47,21 @@ public final class AsyncMethodCallbackUtil {
 
       @Override
       public void onComplete(T response) {
-        serverInProtocolDecorator.endSpan(null, serverOutProtocolDecorator.hasException());
+        Throwable error = null;
         try (Scope ignore = context.makeCurrent()) {
           callback.onComplete(response);
+        } catch (Throwable e) {
+          error = e;
         }
+        serverInProtocolDecorator.endSpan(error, serverOutProtocolDecorator.hasException());
       }
 
       @Override
       public void onError(Exception exception) {
-        serverInProtocolDecorator.endSpan(exception, serverOutProtocolDecorator.hasException());
         try (Scope ignore = context.makeCurrent()) {
           callback.onError(exception);
+        } finally {
+          serverInProtocolDecorator.endSpan(exception, serverOutProtocolDecorator.hasException());
         }
       }
     };
