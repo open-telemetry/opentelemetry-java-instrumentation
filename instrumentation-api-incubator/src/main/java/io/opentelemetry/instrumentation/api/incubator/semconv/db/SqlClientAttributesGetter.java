@@ -23,8 +23,11 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
     extends DbClientAttributesGetter<REQUEST, RESPONSE> {
 
   /**
-   * SqlClientAttributesExtractor will try to populate db.operation.name based on {@link
-   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the operation name.
+   * DO NOT USE OR OVERRIDE THIS METHOD.
+   *
+   * <p>{@link SqlClientAttributesExtractor} will try to populate {@code db.operation.name} based on
+   * {@link #getRawQueryTexts(REQUEST)} when {@link
+   * SqlClientAttributesExtractorBuilder#setSingleOperationAndCollection(boolean)} is enabled.
    */
   @Override
   @Nullable
@@ -49,6 +52,19 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   @Override
   @Nullable
   default String getDbQuerySummary(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * DO NOT USE OR OVERRIDE THIS METHOD.
+   *
+   * <p>{@link SqlClientAttributesExtractor} will try to populate {@code db.collection.name} based
+   * on {@link #getRawQueryTexts(REQUEST)} when {@link
+   * SqlClientAttributesExtractorBuilder#setSingleOperationAndCollection(boolean)} is enabled.
+   */
+  @Override
+  @Nullable
+  default String getDbCollectionName(REQUEST request) {
     return null;
   }
 
