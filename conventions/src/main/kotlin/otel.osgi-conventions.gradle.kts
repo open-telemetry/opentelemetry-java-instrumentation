@@ -10,32 +10,32 @@ plugins {
   id("biz.aQute.bnd.builder")
 }
 
-afterEvaluate {
-  val otelJava = the<OtelJavaExtension>()
+// Configured via tasks.named (not afterEvaluate): the action runs when the jar task is realized,
+// after each module's build script has set the otelJava properties below.
+tasks.named<Jar>("jar") {
+  val otelJava = project.the<OtelJavaExtension>()
   if (otelJava.osgiEnabled.get()) {
-    tasks.named<Jar>("jar") {
-      bundle {
-        // javax.annotation.* is always an optional import; modules can add more (typically
-        // corresponding to compileOnly dependencies). The trailing "*" imports everything else.
-        val optionalPackages = mutableListOf("javax.annotation")
-        optionalPackages.addAll(otelJava.osgiOptionalPackages.get())
-        val importPackages =
-          optionalPackages.joinToString(",") { "$it.*;resolution:=optional" } + ",*"
+    bundle {
+      // javax.annotation.* is always an optional import; modules can add more (typically
+      // corresponding to compileOnly dependencies). The trailing "*" imports everything else.
+      val optionalPackages = mutableListOf("javax.annotation")
+      optionalPackages.addAll(otelJava.osgiOptionalPackages.get())
+      val importPackages =
+        optionalPackages.joinToString(",") { "$it.*;resolution:=optional" } + ",*"
 
-        bnd(
-          mapOf(
-            "-exportcontents" to "io.opentelemetry.*",
-            "Import-Package" to importPackages,
-            // Auto-generate Provide/Require-Capability headers from META-INF/services entries
-            // (including AutoService-generated providers such as the resources module's
-            // ResourceProvider) so a ServiceLoader mediator (e.g. SPI Fly) can bridge them.
-            "-metainf-services" to "auto",
-            // reproducible builds (https://github.com/bndtools/bnd/issues/3521)
-            "-noextraheaders" to "true",
-            "-snapshot" to "SNAPSHOT",
-          ),
-        )
-      }
+      bnd(
+        mapOf(
+          "-exportcontents" to "io.opentelemetry.*",
+          "Import-Package" to importPackages,
+          // Auto-generate Provide/Require-Capability headers from META-INF/services entries
+          // (including AutoService-generated providers such as the resources module's
+          // ResourceProvider) so a ServiceLoader mediator (e.g. SPI Fly) can bridge them.
+          "-metainf-services" to "auto",
+          // reproducible builds (https://github.com/bndtools/bnd/issues/3521)
+          "-noextraheaders" to "true",
+          "-snapshot" to "SNAPSHOT",
+        ),
+      )
     }
   }
 }
