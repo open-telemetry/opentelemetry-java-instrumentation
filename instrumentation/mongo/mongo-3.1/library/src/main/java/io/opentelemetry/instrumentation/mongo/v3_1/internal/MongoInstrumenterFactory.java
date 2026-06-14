@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -22,6 +23,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
  */
 public final class MongoInstrumenterFactory {
 
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_MONGODB_COLLECTION =
+      AttributeKey.stringKey("db.mongodb.collection");
+
   static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
 
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
@@ -33,23 +38,25 @@ public final class MongoInstrumenterFactory {
         DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
   }
 
+  @SuppressWarnings("deprecation") // to support old database semantic conventions
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
 
-    MongoAttributesExtractor attributesExtractor = new MongoAttributesExtractor();
     MongoDbAttributesGetter dbAttributesGetter =
         new MongoDbAttributesGetter(querySanitizationEnabled, maxNormalizedQueryLength);
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
-        new MongoSpanNameExtractor(dbAttributesGetter, attributesExtractor);
+        new MongoSpanNameExtractor(dbAttributesGetter);
 
     InstrumenterBuilder<CommandStartedEvent, Void> builder =
         Instrumenter.<CommandStartedEvent, Void>builder(
                 openTelemetry, instrumentationName, spanNameExtractor)
-            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(attributesExtractor)
+            .addAttributesExtractor(
+                DbClientAttributesExtractor.builder(dbAttributesGetter)
+                    .setOldSemconvCollectionAttribute(DB_MONGODB_COLLECTION)
+                    .build())
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

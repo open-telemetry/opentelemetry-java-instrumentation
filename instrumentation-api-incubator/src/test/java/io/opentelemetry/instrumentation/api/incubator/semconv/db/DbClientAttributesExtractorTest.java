@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -33,6 +34,9 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class DbClientAttributesExtractorTest {
+
+  private static final AttributeKey<String> DB_OLD_COLLECTION =
+      AttributeKey.stringKey("db.old.collection");
 
   static class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>, Void> {
     @Override
@@ -82,6 +86,33 @@ class DbClientAttributesExtractorTest {
     @Override
     public String getDbOperation(Map<String, String> map) {
       return map.get("db.operation");
+    }
+  }
+
+  @SuppressWarnings("deprecation") // until old db semconv are dropped
+  @Test
+  void shouldExtractConfiguredOldCollectionAttribute() {
+    // given
+    Map<String, String> request = new HashMap<>();
+    request.put("db.collection.name", "potato");
+
+    AttributesExtractor<Map<String, String>, Void> underTest =
+        DbClientAttributesExtractor.builder(new TestAttributesGetter())
+            .setOldSemconvCollectionAttribute(DB_OLD_COLLECTION)
+            .build();
+
+    // when
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onStart(attributes, Context.root(), request);
+
+    // then
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(entry(DB_OLD_COLLECTION, "potato"), entry(DB_COLLECTION_NAME, "potato"));
+    } else if (emitOldDatabaseSemconv()) {
+      assertThat(attributes.build()).containsOnly(entry(DB_OLD_COLLECTION, "potato"));
+    } else if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.build()).containsOnly(entry(DB_COLLECTION_NAME, "potato"));
     }
   }
 

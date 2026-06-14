@@ -54,12 +54,13 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   private final DbClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
+  @Nullable private final AttributeKey<String> oldSemconvCollectionAttribute;
   private final boolean captureQueryParameters;
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    return new DbClientAttributesExtractor<>(getter, false);
+    return new DbClientAttributesExtractor<>(getter, null, false);
   }
 
   /**
@@ -72,8 +73,11 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   DbClientAttributesExtractor(
-      DbClientAttributesGetter<REQUEST, RESPONSE> getter, boolean captureQueryParameters) {
+      DbClientAttributesGetter<REQUEST, RESPONSE> getter,
+      @Nullable AttributeKey<String> oldSemconvCollectionAttribute,
+      boolean captureQueryParameters) {
     this.getter = getter;
+    this.oldSemconvCollectionAttribute = oldSemconvCollectionAttribute;
     this.captureQueryParameters = captureQueryParameters;
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(getter, emitOldDatabaseSemconv(), false);
@@ -84,6 +88,9 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     onStartCommon(attributes, getter, request, captureQueryParameters);
+    if (emitOldDatabaseSemconv() && oldSemconvCollectionAttribute != null) {
+      attributes.put(oldSemconvCollectionAttribute, getter.getDbCollectionName(request));
+    }
     serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
