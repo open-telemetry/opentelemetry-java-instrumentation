@@ -276,6 +276,31 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
+  void mixedBatchCommand() throws ReflectiveOperationException {
+    RBatch batch = createBatch(redisson);
+    assertThat(batch).isNotNull();
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch1").getAsync();
+    // Adapt different method signature:
+    // `BatchResult<?> execute()` and `List<?> execute()`
+    invokeExecute(batch);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "PIPELINE" : "DB Query")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "PIPELINE" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "SET batch1 ?;GET batch1"))));
+  }
+
+  @Test
   void largeBatchCommand() throws ReflectiveOperationException {
     RBatch batch = createBatch(redisson);
     assertThat(batch).isNotNull();
