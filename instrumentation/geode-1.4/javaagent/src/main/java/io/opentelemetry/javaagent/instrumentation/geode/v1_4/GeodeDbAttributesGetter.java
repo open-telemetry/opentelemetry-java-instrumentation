@@ -29,6 +29,20 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   @Nullable
   public String getDbNamespace(GeodeRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getDbCollectionName(GeodeRequest request) {
+    return request.getRegion().getName();
+  }
+
+  @Override
+  @Nullable
+  // Old database semconv still use db.name, so we must implement the deprecated hook.
+  @SuppressWarnings("deprecation")
+  public String getDbName(GeodeRequest request) {
     return request.getRegion().getName();
   }
 
