@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import org.apache.hadoop.hbase.TableName;
 
 final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseRequest, Void> {
 
@@ -21,7 +22,24 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
   @Nullable
   @Override
   public String getDbNamespace(HbaseRequest hbaseRequest) {
-    return hbaseRequest.getTable();
+    TableName tableName = hbaseRequest.getTableName();
+    return tableName == null ? null : tableName.getNamespaceAsString();
+  }
+
+  @Nullable
+  @Override
+  public String getDbCollectionName(HbaseRequest hbaseRequest) {
+    TableName tableName = hbaseRequest.getTableName();
+    return tableName == null ? null : tableName.getNameAsString();
+  }
+
+  @Nullable
+  @Override
+  // Old database semconv still use db.name, so we must implement the deprecated hook.
+  @SuppressWarnings("deprecation")
+  public String getDbName(HbaseRequest hbaseRequest) {
+    TableName tableName = hbaseRequest.getTableName();
+    return tableName == null ? null : tableName.getNameAsString();
   }
 
   @Nullable
