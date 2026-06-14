@@ -141,10 +141,12 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       }
     }
 
-    // calling this last so explicit getDbOperationName(), getDbCollectionName(),
-    // getDbQueryText(), and getDbQuerySummary() implementations can override
-    // the parsed values from above
-    DbClientAttributesExtractor.onStartCommon(attributes, getter, request, captureQueryParameters);
+    if (emitOldDatabaseSemconv()) {
+      // calling this last so explicit getDbOperationName(), getDbCollectionName(),
+      // getDbQueryText(), and getDbQuerySummary() implementations can override
+      // the parsed values from above
+      DbClientAttributesExtractor.onStartCommon(attributes, getter, request, captureQueryParameters);
+    }
     serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
