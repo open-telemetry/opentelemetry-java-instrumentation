@@ -74,7 +74,109 @@ final class ElasticsearchDbAttributesGetter
   @Nullable
   public String getDbOperationName(ElasticsearchRestRequest request) {
     ElasticsearchEndpointDefinition endpointDefinition = request.getEndpointDefinition();
+    if (endpointDefinition != null) {
+      return endpointDefinition.getEndpointName();
+    }
+    return inferOperationName(request.getMethod(), request.getEndpoint());
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getDbOperation(ElasticsearchRestRequest request) {
+    ElasticsearchEndpointDefinition endpointDefinition = request.getEndpointDefinition();
     return endpointDefinition != null ? endpointDefinition.getEndpointName() : null;
+  }
+
+  @Nullable
+  static String inferOperationName(String method, String endpoint) {
+    int queryStart = endpoint.indexOf('?');
+    if (queryStart >= 0) {
+      endpoint = endpoint.substring(0, queryStart);
+    }
+
+    while (endpoint.startsWith("/")) {
+      endpoint = endpoint.substring(1);
+    }
+    if (endpoint.isEmpty()) {
+      return null;
+    }
+
+    String[] segments = endpoint.split("/");
+    if (segments[0].startsWith("_")) {
+      return inferOperationNameFromApiSegments(method, segments, 0);
+    }
+    if (segments.length > 1 && segments[1].startsWith("_")) {
+      return inferOperationNameFromApiSegments(method, segments, 1);
+    }
+    return null;
+  }
+
+  @Nullable
+  private static String inferOperationNameFromApiSegments(
+      String method, String[] segments, int apiSegmentIndex) {
+    String apiSegment = stripLeadingUnderscores(segments[apiSegmentIndex]);
+    if (apiSegment.isEmpty()) {
+      return null;
+    }
+    String documentOperation = inferDocumentOperationName(method, apiSegment);
+    if (documentOperation != null) {
+      return documentOperation;
+    }
+    if (isGroupedApi(apiSegment)
+        && segments.length > apiSegmentIndex + 1
+        && !segments[apiSegmentIndex + 1].startsWith("_")) {
+      return apiSegment + "." + segments[apiSegmentIndex + 1];
+    }
+    return apiSegment;
+  }
+
+  @Nullable
+  private static String inferDocumentOperationName(String method, String apiSegment) {
+    switch (apiSegment) {
+      case "create":
+      case "update":
+        return apiSegment;
+      case "doc":
+        return inferDocOperationName(method);
+      default:
+        return null;
+    }
+  }
+
+  @Nullable
+  private static String inferDocOperationName(String method) {
+    switch (method) {
+      case "DELETE":
+        return "delete";
+      case "GET":
+        return "get";
+      case "POST":
+      case "PUT":
+        return "index";
+      default:
+        return null;
+    }
+  }
+
+  private static boolean isGroupedApi(String apiSegment) {
+    switch (apiSegment) {
+      case "cat":
+      case "cluster":
+      case "nodes":
+      case "snapshot":
+      case "tasks":
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  private static String stripLeadingUnderscores(String value) {
+    while (value.startsWith("_")) {
+      value = value.substring(1);
+    }
+    return value;
   }
 
   @Override

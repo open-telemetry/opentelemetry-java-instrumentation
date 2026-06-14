@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
 /**
@@ -19,9 +21,13 @@ final class ElasticsearchSpanNameExtractor implements SpanNameExtractor<Elastics
     this.dbAttributesGetter = dbAttributesGetter;
   }
 
+  @SuppressWarnings("deprecation") // getDbOperation is used for old semconv span names
   @Override
   public String extract(ElasticsearchRestRequest elasticsearchRestRequest) {
-    String name = dbAttributesGetter.getDbOperationName(elasticsearchRestRequest);
+    String name =
+        emitStableDatabaseSemconv()
+            ? dbAttributesGetter.getDbOperationName(elasticsearchRestRequest)
+            : dbAttributesGetter.getDbOperation(elasticsearchRestRequest);
     return name != null ? name : elasticsearchRestRequest.getMethod();
   }
 }
