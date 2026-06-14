@@ -125,7 +125,7 @@ class DbClientSpanNameExtractorTest {
 
     if (emitStableDatabaseSemconv()) {
       when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
-      when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
+      lenient().when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
       when(dbAttributesGetter.getDbCollectionName(dbRequest)).thenReturn("users");
     }
     if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {

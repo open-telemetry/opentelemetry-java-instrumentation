@@ -444,7 +444,7 @@ class InfluxDbClientTest {
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "write " + host + ":" + port
-                                : "WRITE " + host + ":" + port)
+                                : "WRITE")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
