@@ -24,8 +24,8 @@ class LogbackAppenderOsgiTest {
   void appenderInstantiatesWithoutLogstash() {
     Appender<ILoggingEvent> appender = new OpenTelemetryAppender();
     assertInstanceOf(OpenTelemetryAppender.class, appender);
-    // logstash-logback-encoder must not be on the runtime classpath for this suite. Check a concrete
-    // class resource rather than the package directory, which a jar isn't required to contain.
+    // logstash-logback-encoder must not be present at runtime for this suite. Check a concrete
+    // class resource, not the package directory (a jar need not contain directory entries).
     assertNull(
         getClass().getClassLoader().getResource("net/logstash/logback/marker/Markers.class"));
   }
