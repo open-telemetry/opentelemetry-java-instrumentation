@@ -29,5 +29,5 @@ tasks.matching {
 }
 
 tasks.withType<Checkstyle>().matching { it.name == "checkstyleMain" }.configureEach {
-  exclude("**/InstrumentationVersion.java")
+  exclude("build/generated/sources/instrumentationVersionClass/java/main/**")
 }
