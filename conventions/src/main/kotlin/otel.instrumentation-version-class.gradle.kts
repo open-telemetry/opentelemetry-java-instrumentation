@@ -22,7 +22,9 @@ sourceSets {
   }
 }
 
-tasks.matching { it.name == "compileJava" || it.name == "sourcesJar" }.configureEach {
+tasks.matching {
+  it.name == "compileJava" || it.name == "sourcesJar" || it.name == "compileKotlin" || it.name == "kotlinSourcesJar"
+}.configureEach {
   dependsOn(generateInstrumentationVersionClass)
 }
 
