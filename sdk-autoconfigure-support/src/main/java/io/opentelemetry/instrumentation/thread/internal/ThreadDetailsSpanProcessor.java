@@ -19,7 +19,7 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class AddThreadDetailsSpanProcessor implements SpanProcessor {
+public class ThreadDetailsSpanProcessor implements SpanProcessor {
 
   // attributes are not stable yet
   public static final AttributeKey<Long> THREAD_ID = longKey("thread.id");
