@@ -3200,6 +3200,8 @@ libraries:
         type: STRING
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.summary
@@ -3316,6 +3318,8 @@ libraries:
         type: STRING
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.summary
@@ -3440,6 +3444,8 @@ libraries:
         type: STRING
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.summary
