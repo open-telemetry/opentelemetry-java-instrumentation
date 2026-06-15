@@ -11,7 +11,7 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
-import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.Context;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
@@ -19,6 +19,7 @@ import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -64,7 +65,8 @@ public final class DbExecution {
   @Nullable private final String serverAddress;
   @Nullable private final Integer serverPort;
   private final String connectionString;
-  private final String rawQueryText;
+  private final List<String> rawQueryTexts;
+  @Nullable private final Long batchSize;
   private final boolean parameterizedQuery;
 
   @Nullable private Context context;
@@ -100,13 +102,15 @@ public final class DbExecution {
             protocol != null ? ":" + protocol : "",
             serverAddress != null ? "//" + serverAddress : "",
             serverPort != null ? ":" + serverPort : "");
-    this.rawQueryText =
+    this.rawQueryTexts =
         queryInfo.getQueries().stream()
             .map(QueryInfo::getQuery)
             .map(
                 query ->
                     R2dbcSqlCommenterUtil.getOriginalQuery(queryInfo.getConnectionInfo(), query))
-            .collect(joining(";\n"));
+            .collect(toList());
+    int queryInfoBatchSize = queryInfo.getBatchSize();
+    this.batchSize = queryInfoBatchSize > 1 ? (long) queryInfoBatchSize : null;
     this.parameterizedQuery =
         queryInfo.getQueries().stream()
             .anyMatch(queryInfo1 -> !queryInfo1.getBindingsList().isEmpty());
@@ -146,8 +150,13 @@ public final class DbExecution {
     return connectionString;
   }
 
-  public String getRawQueryText() {
-    return rawQueryText;
+  public List<String> getRawQueryTexts() {
+    return rawQueryTexts;
+  }
+
+  @Nullable
+  public Long getBatchSize() {
+    return batchSize;
   }
 
   public boolean isParameterizedQuery() {
