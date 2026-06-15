@@ -30,6 +30,9 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   if [[ "$dir" == "instrumentation/rxjava/rxjava-1.0/library/src/main/java/rx" ]]; then
     continue
   fi
+  if [[ "$dir" == "instrumentation/elasticsearch/elasticsearch-rest-7.0/library/src/main/java/org/elasticsearch/client" ]]; then
+    continue
+  fi
 
   # some common modules don't have any base version (might have a variant instead, ex: javax)
   # - jdbc

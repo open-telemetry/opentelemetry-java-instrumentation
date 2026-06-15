@@ -56,7 +56,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   }
 
   private static AsyncHttpClient getClient(URI uri) {
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       return clientWithReadTimeout;
     }
     return client;

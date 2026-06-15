@@ -5,11 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.gwt.v2_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcServerExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.lang.reflect.Method;
 
@@ -24,13 +27,15 @@ public class GwtSingletons {
 
   static {
     GwtRpcAttributesGetter rpcAttributesGetter = new GwtRpcAttributesGetter();
-    instrumenter =
+    InstrumenterBuilder<Method, Void> builder =
         Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-            .buildInstrumenter(SpanKindExtractor.alwaysServer());
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
+    setRpcServerExceptionEventExtractor(builder);
+
+    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   public static Instrumenter<Method, Void> instrumenter() {

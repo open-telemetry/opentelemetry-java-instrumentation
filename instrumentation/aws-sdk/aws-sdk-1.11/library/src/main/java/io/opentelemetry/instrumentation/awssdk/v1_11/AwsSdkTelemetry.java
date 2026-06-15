@@ -11,6 +11,10 @@ import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.awssdk.v1_11.internal.AwsSdkInstrumenterFactory;
+import io.opentelemetry.instrumentation.awssdk.v1_11.internal.SqsProcessRequest;
+import io.opentelemetry.instrumentation.awssdk.v1_11.internal.SqsReceiveRequest;
+import io.opentelemetry.instrumentation.awssdk.v1_11.internal.TracingRequestHandler;
 import java.util.List;
 import javax.annotation.Nullable;
 

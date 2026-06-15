@@ -227,7 +227,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
             getter, request, batch ? "BATCH" : null, null, analyzedQuery.getStoredProcedureName());
       }
 
-      MultiQuery multiQuery = MultiQuery.analyzeWithSummary(rawQueryTexts, dialect, false);
+      MultiQuery multiQuery = MultiQuery.analyzeWithSummary(rawQueryTexts, dialect);
       String querySummary = multiQuery.getQuerySummary();
       if (querySummary != null) {
         return querySummary;

@@ -13,7 +13,7 @@ dependencies {
   // library("jakarta.servlet:jakarta.servlet-api:6.0.0")
   compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
   testImplementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
-  latestDepTestLibrary("jakarta.servlet:jakarta.servlet-api:6.1.0") // documented limitation
+  latestDepTestLibrary("jakarta.servlet:jakarta.servlet-api:6.1.0") // related dependency
 
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
@@ -27,6 +27,18 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-tasks.test {
+tasks.withType<Test>().configureEach {
   systemProperty("collectMetadata", otelProps.collectMetadata)
+}
+
+tasks {
+  val testV3Preview by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
+  check {
+    dependsOn(testV3Preview)
+  }
 }

@@ -21,12 +21,12 @@ import javax.annotation.Nullable;
  * objects for SDK 1.59.0+.
  *
  * <p>Loaded via reflection by {@link
- * io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging}.
+ * io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.ValueBridging}.
  */
 public class ValueBridging159 {
 
   // used via reflection by
-  // io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging
+  // io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.ValueBridging
   public static final Function<Object, Object> INSTANCE = ValueBridging159::toAgentValue;
 
   private static final Logger logger = Logger.getLogger(ValueBridging159.class.getName());

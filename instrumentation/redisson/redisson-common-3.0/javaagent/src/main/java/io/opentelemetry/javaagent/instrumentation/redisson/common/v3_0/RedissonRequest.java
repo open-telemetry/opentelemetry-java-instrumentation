@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.logging.Level.FINE;
@@ -31,6 +32,9 @@ import org.redisson.client.protocol.CommandsData;
 public abstract class RedissonRequest {
 
   private static final Logger logger = Logger.getLogger(RedissonRequest.class.getName());
+
+  private static final String MULTI = "MULTI";
+  private static final String PIPELINE = "PIPELINE";
 
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
@@ -86,11 +90,28 @@ public abstract class RedissonRequest {
       return ((CommandData<?, ?>) command).getCommand().getName();
     } else if (command instanceof CommandsData) {
       CommandsData commandsData = (CommandsData) command;
-      if (commandsData.getCommands().size() == 1) {
-        return commandsData.getCommands().get(0).getCommand().getName();
+      List<CommandData<?, ?>> commands = commandsData.getCommands();
+      if (commands.size() == 1) {
+        return commands.get(0).getCommand().getName();
       }
+      return emitStableDatabaseSemconv() ? getBatchOperationName(commands) : null;
     }
     return null;
+  }
+
+  @Nullable
+  private static String getBatchOperationName(List<CommandData<?, ?>> commands) {
+    if (commands.size() < 2) {
+      return null;
+    }
+
+    String firstCommandName = commands.get(0).getCommand().getName();
+    String batchOperationName = firstCommandName.equals(MULTI) ? MULTI : PIPELINE;
+    int firstBatchCommandIndex = firstCommandName.equals(MULTI) ? 1 : 0;
+    String commonCommandName = getCommonCommandName(commands, firstBatchCommandIndex);
+    return commonCommandName == null
+        ? batchOperationName
+        : batchOperationName + " " + commonCommandName;
   }
 
   @Nullable
@@ -127,6 +148,23 @@ public abstract class RedissonRequest {
       return singletonList(normalizeSingleCommand((CommandData<?, ?>) command));
     }
     return emptyList();
+  }
+
+  @Nullable
+  private static String getCommonCommandName(
+      List<CommandData<?, ?>> commands, int firstBatchCommandIndex) {
+    if (firstBatchCommandIndex >= commands.size()) {
+      return null;
+    }
+
+    String commonCommandName = commands.get(firstBatchCommandIndex).getCommand().getName();
+    for (int i = firstBatchCommandIndex + 1; i < commands.size(); i++) {
+      String commandName = commands.get(i).getCommand().getName();
+      if (!commandName.equals(commonCommandName)) {
+        return null;
+      }
+    }
+    return commonCommandName;
   }
 
   private static String normalizeSingleCommand(CommandData<?, ?> command) {

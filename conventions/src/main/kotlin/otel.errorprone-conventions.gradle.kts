@@ -109,9 +109,6 @@ tasks {
         disable("JdkObsolete")
         disable("JavaUtilDate")
 
-        // TODO: Remove this, we use this pattern in several tests and it will mean some moving.
-        disable("DefaultPackage")
-
         // we use modified Otel* checks which ignore *Advice classes
         disable("PrivateConstructorForUtilityClass")
         disable("CanIgnoreReturnValueSuggester")
@@ -134,6 +131,8 @@ tasks {
         // Requires adding compile dependency to JSpecify
         disable("AddNullMarkedToClass")
         disable("AddNullMarkedToPackageInfo")
+
+        disable("ReferenceEquality")
 
         if (otelProps.testLatestDeps) {
           // Some latest dep tests are compiled for java 17 although the base version uses an older
@@ -158,6 +157,7 @@ tasks {
           disable("OtelCanIgnoreReturnValueSuggester")
           disable("OtelInternalJavadoc")
           disable("SuppressWarningsWithoutExplanation")
+          disable("ExposedPrivateType")
         }
       }
     }

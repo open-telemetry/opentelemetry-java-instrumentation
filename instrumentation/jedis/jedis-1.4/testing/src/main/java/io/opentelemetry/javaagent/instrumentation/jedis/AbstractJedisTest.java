@@ -60,6 +60,7 @@ public abstract class AbstractJedisTest {
 
   @BeforeEach
   void reset() {
+    jedis.select(0);
     jedis.flushAll();
     testing.clearData();
   }

@@ -110,6 +110,8 @@ final class CassandraAttributesExtractor
 
     Statement<?> statement = (Statement<?>) executionInfo.getRequest();
     String consistencyLevel;
+    // getSession() is deprecated only because its visibility will be reduced in the future.
+    @SuppressWarnings("deprecation")
     DriverExecutionProfile config =
         request.getSession().getContext().getConfig().getDefaultProfile();
     if (statement.getConsistencyLevel() != null) {

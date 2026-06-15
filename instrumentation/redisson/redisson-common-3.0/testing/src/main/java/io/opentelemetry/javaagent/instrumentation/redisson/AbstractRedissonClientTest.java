@@ -258,18 +258,46 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? "PIPELINE SET" : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() ? "PIPELINE SET" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET batch1 ?;SET batch2 ?"))));
   }
 
   private static void invokeExecute(RBatch batch) throws ReflectiveOperationException {
     batch.getClass().getMethod("execute").invoke(batch);
+  }
+
+  @Test
+  void mixedBatchCommand() throws ReflectiveOperationException {
+    RBatch batch = createBatch(redisson);
+    assertThat(batch).isNotNull();
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch1").getAsync();
+    // Adapt different method signature:
+    // `BatchResult<?> execute()` and `List<?> execute()`
+    invokeExecute(batch);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "PIPELINE" : "DB Query")
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "PIPELINE" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "SET batch1 ?;GET batch1"))));
   }
 
   @Test
@@ -292,13 +320,16 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? "PIPELINE SET" : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() ? "PIPELINE SET" : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "SET " + bucketName + " ?;SET " + bucketName + " ?"))));
@@ -324,18 +355,21 @@ public abstract class AbstractRedissonClientTest {
           batch.execute();
         });
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("redis", "DB Query", "SET", "EXEC"),
+        orderByRootSpanName("MULTI SET", "DB Query", "SET", "EXEC"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? "MULTI SET" : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() ? "MULTI SET" : null),
                             equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->

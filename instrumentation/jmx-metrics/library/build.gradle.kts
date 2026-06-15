@@ -13,6 +13,7 @@ dependencies {
   testImplementation("com.linecorp.armeria:armeria-junit5:1.31.3")
   testImplementation("com.linecorp.armeria:armeria-grpc:1.31.3")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.5.0-alpha")
+  testImplementation("io.github.netmikey.logunit:logunit-jul")
 }
 
 tasks {

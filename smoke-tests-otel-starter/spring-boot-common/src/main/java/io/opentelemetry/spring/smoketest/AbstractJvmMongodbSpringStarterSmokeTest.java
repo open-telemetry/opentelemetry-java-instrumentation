@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoCo
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.testcontainers.junit.jupiter.Container;
@@ -57,13 +56,13 @@ public abstract class AbstractJvmMongodbSpringStarterSmokeTest
   }
 
   @Override
-  @Test
-  void mongodb() {
+  protected void runMongoClientTest(Runnable runnable) {
     contextRunner.run(
         applicationContext -> {
           testing = new SpringSmokeTestRunner(applicationContext.getBean(OpenTelemetry.class));
           mongoClient = applicationContext.getBean(MongoClient.class);
-          super.mongodb();
+
+          runnable.run();
         });
   }
 }

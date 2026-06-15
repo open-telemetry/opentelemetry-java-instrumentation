@@ -49,7 +49,7 @@ public final class SafeServiceLoader {
   public static <T extends Ordered> List<T> loadOrdered(
       Class<T> serviceClass, ClassLoader classLoader) {
     List<T> result = load(serviceClass, classLoader);
-    result.sort(Comparator.comparing(Ordered::order));
+    result.sort(Comparator.comparingInt(Ordered::order));
     return result;
   }
 

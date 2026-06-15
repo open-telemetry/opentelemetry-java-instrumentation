@@ -208,12 +208,12 @@ already proper AssertJ assertions - they throw on failure. Do **not** wrap them 
 
 Prefer built-in AssertJ collection/list assertions over extracting values manually:
 
-| Anti-pattern | Idiomatic form |
-| --- | --- |
-| `assertThat(list.size()).isEqualTo(N)` | `assertThat(list).hasSize(N)` |
-| `assertThat(list.isEmpty()).isTrue()` | `assertThat(list).isEmpty()` |
-| `assertThat(list).hasSize(0)` | `assertThat(list).isEmpty()` |
-| `assertThat(list.contains(x)).isTrue()` | `assertThat(list).contains(x)` |
+| Anti-pattern                                                                                                      | Idiomatic form                           |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `assertThat(list.size()).isEqualTo(N)`                                                                            | `assertThat(list).hasSize(N)`            |
+| `assertThat(list.isEmpty()).isTrue()`                                                                             | `assertThat(list).isEmpty()`             |
+| `assertThat(list).hasSize(0)`                                                                                     | `assertThat(list).isEmpty()`             |
+| `assertThat(list.contains(x)).isTrue()`                                                                           | `assertThat(list).contains(x)`           |
 | sequential `assertThat(list.get(0)).isEqualTo(a)` / `assertThat(list.get(1)).isEqualTo(b)` checking every element | `assertThat(list).containsExactly(a, b)` |
 
 The `containsExactly` form verifies both size and element values in order, making a
@@ -221,10 +221,10 @@ separate `hasSize` check redundant.
 
 Similar patterns apply to maps, arrays, and strings:
 
-| Anti-pattern | Idiomatic form |
-| --- | --- |
-| `assertThat(str.length()).isEqualTo(N)` | `assertThat(str).hasSize(N)` |
-| `assertThat(map.size()).isEqualTo(N)` | `assertThat(map).hasSize(N)` |
+| Anti-pattern                            | Idiomatic form                 |
+| --------------------------------------- | ------------------------------ |
+| `assertThat(str.length()).isEqualTo(N)` | `assertThat(str).hasSize(N)`   |
+| `assertThat(map.size()).isEqualTo(N)`   | `assertThat(map).hasSize(N)`   |
 | `assertThat(array.length).isEqualTo(N)` | `assertThat(array).hasSize(N)` |
 
 ## Span Ordering Assertions
@@ -253,11 +253,11 @@ Each flag has a shared static accessor; static-import it and call it directly. N
 `Boolean.getBoolean("…")` inline and never duplicate the property-name string at the call
 site.
 
-| Flag | Shared accessor | Where it lives |
-| --- | --- | --- |
-| `-PtestLatestDeps=true` | `testLatestDeps()` | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
-| `otel.semconv-stability.opt-in=…` | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc. | `io.opentelemetry.instrumentation.api.internal.SemconvStability` |
-| `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class |
+| Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
+| `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
 
 ### Inline ternary in `equalTo(...)` with `null` for "absent"
 

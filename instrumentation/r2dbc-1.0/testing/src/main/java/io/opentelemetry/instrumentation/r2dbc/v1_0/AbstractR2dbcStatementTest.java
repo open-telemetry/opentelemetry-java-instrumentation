@@ -11,8 +11,10 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -30,6 +32,7 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PASSWORD;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Named.named;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -54,6 +57,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -292,6 +296,62 @@ public abstract class AbstractR2dbcStatementTest {
         emitStableDatabaseSemconv() ? DB_QUERY_SUMMARY : DB_OPERATION_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  void testBatchQueries() {
+    assumeTrue(emitStableDatabaseSemconv());
+
+    DbSystemProps props = systems.get(MARIADB.system);
+    startContainer(props);
+    ConnectionFactory connectionFactory =
+        createProxyConnectionFactory(
+            ConnectionFactoryOptions.builder()
+                .option(DRIVER, props.system)
+                .option(HOST, container.getHost())
+                .option(PORT, port)
+                .option(USER, USER_DB)
+                .option(PASSWORD, PW_DB)
+                .option(DATABASE, DB)
+                .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
+                .build());
+
+    getTesting()
+        .runWithSpan(
+            "parent",
+            () -> {
+              Mono.from(connectionFactory.create())
+                  .flatMapMany(
+                      connection ->
+                          Flux.from(
+                                  connection
+                                      .createBatch()
+                                      .add("SELECT 1")
+                                      .add("SELECT 2")
+                                      .execute())
+                              .flatMap(result -> result.map((row, metadata) -> ""))
+                              .concatWith(Mono.from(connection.close()).cast(String.class)))
+                  .blockLast(Duration.ofMinutes(1));
+            });
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName("BATCH SELECT")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, MARIADB.system),
+                                equalTo(DB_NAMESPACE, DB),
+                                equalTo(DB_QUERY_TEXT, "SELECT ?"),
+                                equalTo(DB_QUERY_SUMMARY, "BATCH SELECT"),
+                                equalTo(DB_OPERATION_BATCH_SIZE, 2),
+                                equalTo(maybeStablePeerService(), "test-peer-service"),
+                                equalTo(SERVER_ADDRESS, container.getHost()),
+                                equalTo(SERVER_PORT, port))));
   }
 
   private static class Parameter {

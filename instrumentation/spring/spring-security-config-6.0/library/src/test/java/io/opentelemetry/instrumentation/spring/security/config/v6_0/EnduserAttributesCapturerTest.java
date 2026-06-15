@@ -5,19 +5,22 @@
 
 package io.opentelemetry.instrumentation.spring.security.config.v6_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ROLE;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_SCOPE;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_ROLES;
 import static java.util.Arrays.asList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.function.Consumer;
-import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.security.core.Authentication;
@@ -48,9 +51,8 @@ class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.doesNotHave(attribute(ENDUSER_ID))
-                .doesNotHave(attribute(ENDUSER_ROLE))
-                .doesNotHave(attribute(ENDUSER_SCOPE)));
+            span.hasAttributesSatisfyingExactly(
+                equalTo(ERROR_TYPE, "_OTHER"), equalTo(HTTP_REQUEST_METHOD, "GET")));
   }
 
   @Test
@@ -72,9 +74,11 @@ class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(ENDUSER_ID, "principal")
-                .doesNotHave(attribute(ENDUSER_ROLE))
-                .hasAttribute(ENDUSER_SCOPE, "scope1,scope2"));
+            span.hasAttributesSatisfyingExactly(
+                equalTo(ERROR_TYPE, "_OTHER"),
+                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                equalTo(v3Preview() ? USER_NAME : ENDUSER_ID, "principal"),
+                equalTo(ENDUSER_SCOPE, v3Preview() ? null : "scope1,scope2")));
   }
 
   @Test
@@ -96,9 +100,12 @@ class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(ENDUSER_ID, "principal")
-                .hasAttribute(ENDUSER_ROLE, "role1,role2")
-                .doesNotHave(attribute(ENDUSER_SCOPE)));
+            span.hasAttributesSatisfyingExactly(
+                equalTo(ERROR_TYPE, "_OTHER"),
+                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                equalTo(v3Preview() ? USER_NAME : ENDUSER_ID, "principal"),
+                equalTo(USER_ROLES, v3Preview() ? asList("role1", "role2") : null),
+                equalTo(ENDUSER_ROLE, v3Preview() ? null : "role1,role2")));
   }
 
   @Test
@@ -120,9 +127,10 @@ class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(ENDUSER_ID, "principal")
-                .doesNotHave(attribute(ENDUSER_ROLE))
-                .doesNotHave(attribute(ENDUSER_SCOPE)));
+            span.hasAttributesSatisfyingExactly(
+                equalTo(ERROR_TYPE, "_OTHER"),
+                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                equalTo(v3Preview() ? USER_NAME : ENDUSER_ID, "principal")));
   }
 
   @Test
@@ -144,9 +152,11 @@ class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.doesNotHave(attribute(ENDUSER_ID))
-                .hasAttribute(ENDUSER_ROLE, "role1,role2")
-                .doesNotHave(attribute(ENDUSER_SCOPE)));
+            span.hasAttributesSatisfyingExactly(
+                equalTo(ERROR_TYPE, "_OTHER"),
+                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                equalTo(USER_ROLES, v3Preview() ? asList("role1", "role2") : null),
+                equalTo(ENDUSER_ROLE, v3Preview() ? null : "role1,role2")));
   }
 
   @Test
@@ -168,9 +178,10 @@ class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.doesNotHave(attribute(ENDUSER_ID))
-                .doesNotHave(attribute(ENDUSER_ROLE))
-                .hasAttribute(ENDUSER_SCOPE, "scope1,scope2"));
+            span.hasAttributesSatisfyingExactly(
+                equalTo(ERROR_TYPE, "_OTHER"),
+                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                equalTo(ENDUSER_SCOPE, v3Preview() ? null : "scope1,scope2")));
   }
 
   @Test
@@ -196,9 +207,13 @@ class EnduserAttributesCapturerTest {
         capturer,
         authentication,
         span ->
-            span.hasAttribute(ENDUSER_ID, "principal")
-                .hasAttribute(ENDUSER_ROLE, "role1,role2")
-                .hasAttribute(ENDUSER_SCOPE, "scope1,scope2"));
+            span.hasAttributesSatisfyingExactly(
+                equalTo(ERROR_TYPE, "_OTHER"),
+                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                equalTo(v3Preview() ? USER_NAME : ENDUSER_ID, "principal"),
+                equalTo(USER_ROLES, v3Preview() ? asList("role1", "role2") : null),
+                equalTo(ENDUSER_ROLE, v3Preview() ? null : "role1,role2"),
+                equalTo(ENDUSER_SCOPE, v3Preview() ? null : "scope1,scope2")));
   }
 
   private static void test(
@@ -212,11 +227,5 @@ class EnduserAttributesCapturerTest {
         });
 
     testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(assertions));
-  }
-
-  private static Condition<SpanData> attribute(AttributeKey<?> attributeKey) {
-    return new Condition<>(
-        spanData -> spanData.getAttributes().get(attributeKey) != null,
-        "attribute " + attributeKey);
   }
 }
