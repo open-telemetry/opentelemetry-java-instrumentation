@@ -40,7 +40,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
 
   @Override
   @Nullable
-  // Old database semconv still use db.name, so we must implement the deprecated hook.
+  // Old database semconv still uses db.name, so we must implement the deprecated hook.
   @SuppressWarnings("deprecation")
   public String getDbName(GeodeRequest request) {
     return request.getRegion().getName();
