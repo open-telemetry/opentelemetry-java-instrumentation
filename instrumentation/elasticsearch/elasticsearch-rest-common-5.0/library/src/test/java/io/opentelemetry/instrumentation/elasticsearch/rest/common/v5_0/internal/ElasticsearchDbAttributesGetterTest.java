@@ -58,4 +58,39 @@ class ElasticsearchDbAttributesGetterTest {
     assertThat(underTest.getDbOperation(ElasticsearchRestRequest.create("GET", "_cluster/health")))
         .isNull();
   }
+
+  @Test
+  void shouldStripLeadingSlashAndQueryString() {
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("GET", "/_cat/indices"))
+        .isEqualTo("cat.indices");
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("GET", "_search?size=10"))
+        .isEqualTo("search");
+    assertThat(
+            ElasticsearchDbAttributesGetter.inferOperationName(
+                "GET", "/test-index/_search?from=0&size=10"))
+        .isEqualTo("search");
+  }
+
+  @Test
+  void shouldInferGroupedApiNameWithAndWithoutSubcommand() {
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("GET", "_nodes/stats"))
+        .isEqualTo("nodes.stats");
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("GET", "_nodes"))
+        .isEqualTo("nodes");
+    // a following underscore segment is not treated as a subcommand
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("POST", "_tasks/_cancel"))
+        .isEqualTo("tasks");
+    // a non-grouped api keeps just the api segment
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("POST", "_search/scroll"))
+        .isEqualTo("search");
+  }
+
+  @Test
+  void shouldReturnNullWhenNoApiSegmentPresent() {
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("GET", "")).isNull();
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("GET", "/")).isNull();
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("GET", "test-index")).isNull();
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("GET", "test-index/doc-id"))
+        .isNull();
+  }
 }

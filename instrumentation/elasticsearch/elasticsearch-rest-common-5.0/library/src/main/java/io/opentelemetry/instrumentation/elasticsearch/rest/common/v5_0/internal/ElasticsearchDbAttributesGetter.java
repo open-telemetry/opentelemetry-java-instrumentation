@@ -90,32 +90,58 @@ final class ElasticsearchDbAttributesGetter
 
   @Nullable
   static String inferOperationName(String method, String endpoint) {
-    int queryStart = endpoint.indexOf('?');
-    if (queryStart >= 0) {
-      endpoint = endpoint.substring(0, queryStart);
+    int end = endpoint.indexOf('?');
+    if (end < 0) {
+      end = endpoint.length();
     }
 
-    while (endpoint.startsWith("/")) {
-      endpoint = endpoint.substring(1);
+    int start = 0;
+    if (start < end && endpoint.charAt(start) == '/') {
+      // low-level REST client endpoints conventionally start with a single leading slash
+      start++;
     }
-    if (endpoint.isEmpty()) {
+
+    // Only the first three path segments are needed to infer the operation name, so extract them
+    // in a single pass instead of allocating an array for the whole path on this hot path.
+    String segment0 = null;
+    String segment1 = null;
+    String segment2 = null;
+    int segmentStart = start;
+    int found = 0;
+    for (int i = start; i <= end && found < 3; i++) {
+      if (i == end || endpoint.charAt(i) == '/') {
+        String segment = endpoint.substring(segmentStart, i);
+        switch (found++) {
+          case 0:
+            segment0 = segment;
+            break;
+          case 1:
+            segment1 = segment;
+            break;
+          default:
+            segment2 = segment;
+            break;
+        }
+        segmentStart = i + 1;
+      }
+    }
+
+    if (segment0 == null || segment0.isEmpty()) {
       return null;
     }
-
-    String[] segments = endpoint.split("/");
-    if (segments[0].startsWith("_")) {
-      return inferOperationNameFromApiSegments(method, segments, 0);
+    if (segment0.startsWith("_")) {
+      return inferOperationNameFromApiSegments(method, segment0, segment1);
     }
-    if (segments.length > 1 && segments[1].startsWith("_")) {
-      return inferOperationNameFromApiSegments(method, segments, 1);
+    if (segment1 != null && segment1.startsWith("_")) {
+      return inferOperationNameFromApiSegments(method, segment1, segment2);
     }
     return null;
   }
 
   @Nullable
   private static String inferOperationNameFromApiSegments(
-      String method, String[] segments, int apiSegmentIndex) {
-    String apiSegment = stripLeadingUnderscores(segments[apiSegmentIndex]);
+      String method, String apiSegmentRaw, @Nullable String nextSegment) {
+    String apiSegment = stripLeadingUnderscores(apiSegmentRaw);
     if (apiSegment.isEmpty()) {
       return null;
     }
@@ -123,10 +149,8 @@ final class ElasticsearchDbAttributesGetter
     if (documentOperation != null) {
       return documentOperation;
     }
-    if (isGroupedApi(apiSegment)
-        && segments.length > apiSegmentIndex + 1
-        && !segments[apiSegmentIndex + 1].startsWith("_")) {
-      return apiSegment + "." + segments[apiSegmentIndex + 1];
+    if (isGroupedApi(apiSegment) && nextSegment != null && !nextSegment.startsWith("_")) {
+      return apiSegment + "." + nextSegment;
     }
     return apiSegment;
   }
