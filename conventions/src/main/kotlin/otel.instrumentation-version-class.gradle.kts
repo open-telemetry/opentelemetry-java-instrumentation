@@ -1,0 +1,31 @@
+import io.opentelemetry.instrumentation.gradle.GenerateInstrumentationVersionClassTask
+import io.opentelemetry.instrumentation.gradle.InstrumentationVersionClassExtension
+
+plugins {
+  `java-library`
+}
+
+val instrumentationVersionClass = extensions.create<InstrumentationVersionClassExtension>("instrumentationVersionClass")
+val generatedInstrumentationVersionClassDir = layout.buildDirectory.dir("generated/sources/instrumentationVersionClass/java/main")
+
+val generateInstrumentationVersionClass by tasks.registering(GenerateInstrumentationVersionClassTask::class) {
+  className.set(instrumentationVersionClass.className)
+  instrumentationVersion.set(project.version.toString())
+  outputDirectory.set(generatedInstrumentationVersionClassDir)
+}
+
+sourceSets {
+  main {
+    java {
+      srcDir(generatedInstrumentationVersionClassDir)
+    }
+  }
+}
+
+tasks.matching { it.name == "compileJava" || it.name == "sourcesJar" }.configureEach {
+  dependsOn(generateInstrumentationVersionClass)
+}
+
+tasks.withType<Checkstyle>().matching { it.name == "checkstyleMain" }.configureEach {
+  exclude("**/InstrumentationVersion.java")
+}
