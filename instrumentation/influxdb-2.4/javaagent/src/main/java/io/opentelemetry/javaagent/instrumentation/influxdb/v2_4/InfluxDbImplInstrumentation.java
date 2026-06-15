@@ -18,6 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -59,7 +60,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(1, String.class))
                             .and(takesArgument(2, isEnum()))
                             .and(takesArgument(3, named("java.util.concurrent.TimeUnit"))))),
-        getClass().getName() + "$InfluxDbModifyAdvice");
+        getClass().getName() + "$InfluxDbWriteAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("createDatabase", "deleteDatabase"),
         getClass().getName() + "$InfluxDbModifyAdvice");
@@ -117,6 +118,85 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class InfluxDbWriteAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static InfluxDbScope<InfluxDbOperation> onEnter(
+        @Advice.Argument(0) Object arg0,
+        @Advice.AllArguments Object[] arguments,
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return null;
+      }
+
+      if (arg0 == null) {
+        return null;
+      }
+
+      Context parentContext = currentContext();
+
+      HttpUrl httpUrl = retrofit.baseUrl();
+      InfluxDbOperation influxDbOperation =
+          InfluxDbOperation.create(
+              httpUrl.host(),
+              httpUrl.port(),
+              getDatabase(arg0),
+              "write",
+              getOperationBatchSize(arguments));
+
+      if (!requestInstrumenter().shouldStart(parentContext, influxDbOperation)) {
+        return null;
+      }
+
+      return InfluxDbScope.start(requestInstrumenter(), parentContext, influxDbOperation);
+    }
+
+    @Nullable
+    public static String getDatabase(Object arg0) {
+      if (arg0 instanceof BatchPoints) {
+        return ((BatchPoints) arg0).getDatabase();
+      }
+      // write data by UDP protocol, in this way, can't get database name.
+      if (arg0 instanceof Integer) {
+        return null;
+      }
+      return String.valueOf(arg0);
+    }
+
+    @Nullable
+    public static Long getOperationBatchSize(Object[] arguments) {
+      if (arguments.length == 0) {
+        return null;
+      }
+
+      Object pointsOrRecords = arguments[arguments.length - 1];
+
+      int batchSize;
+      if (pointsOrRecords instanceof BatchPoints) {
+        batchSize = ((BatchPoints) pointsOrRecords).getPoints().size();
+      } else if (pointsOrRecords instanceof List) {
+        batchSize = ((List<?>) pointsOrRecords).size();
+      } else {
+        return null;
+      }
+      return batchSize > 1 ? (long) batchSize : null;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable InfluxDbScope<InfluxDbOperation> scope) {
+      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
+      if (callDepth.decrementAndGet() > 0 || scope == null) {
+        return;
+      }
+
+      scope.end(throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class InfluxDbModifyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -136,25 +216,18 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
       Context parentContext = currentContext();
 
       HttpUrl httpUrl = retrofit.baseUrl();
-      String database =
-          (arg0 instanceof BatchPoints)
-              ? ((BatchPoints) arg0).getDatabase()
-              // write data by UDP protocol, in this way, can't get database name.
-              : arg0 instanceof Integer ? null : String.valueOf(arg0);
-
       String operationName;
       if ("createDatabase".equals(methodName)) {
         // createDatabase emits a CREATE DATABASE query.
         operationName = "CREATE DATABASE";
-      } else if ("deleteDatabase".equals(methodName)) {
+      } else {
         // deleteDatabase emits a DROP DATABASE query.
         operationName = "DROP DATABASE";
-      } else {
-        operationName = methodName;
       }
 
       InfluxDbOperation influxDbOperation =
-          InfluxDbOperation.create(httpUrl.host(), httpUrl.port(), database, operationName);
+          InfluxDbOperation.create(
+              httpUrl.host(), httpUrl.port(), String.valueOf(arg0), operationName);
 
       if (!requestInstrumenter().shouldStart(parentContext, influxDbOperation)) {
         return null;

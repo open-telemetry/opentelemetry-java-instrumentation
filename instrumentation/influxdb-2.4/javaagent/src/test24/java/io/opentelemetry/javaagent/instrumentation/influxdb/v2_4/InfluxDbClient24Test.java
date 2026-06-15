@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -114,7 +115,9 @@ class InfluxDbClient24Test {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "write " + dbName : "WRITE " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "BATCH write " + dbName
+                                : "WRITE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
@@ -123,7 +126,9 @@ class InfluxDbClient24Test {
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? "write" : "WRITE"))),
+                                emitStableDatabaseSemconv() ? "BATCH write" : "WRITE"),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->

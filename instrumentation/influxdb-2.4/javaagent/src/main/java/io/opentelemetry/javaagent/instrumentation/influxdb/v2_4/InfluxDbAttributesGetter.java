@@ -13,7 +13,17 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getDbOperationName(InfluxDbOperation request) {
-    return request.getOperation();
+    String operation = request.getOperation();
+    if (operation == null) {
+      return null;
+    }
+    return request.getOperationBatchSize() == null ? operation : "BATCH " + operation;
+  }
+
+  @Nullable
+  @Override
+  public Long getDbOperationBatchSize(InfluxDbOperation request) {
+    return request.getOperationBatchSize();
   }
 
   @Nullable

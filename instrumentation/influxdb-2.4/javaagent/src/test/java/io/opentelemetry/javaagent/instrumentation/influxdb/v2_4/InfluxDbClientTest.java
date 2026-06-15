@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -124,7 +125,9 @@ class InfluxDbClientTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "write " + dbName : "WRITE " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "BATCH write " + dbName
+                                : "WRITE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
@@ -133,7 +136,9 @@ class InfluxDbClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? "write" : "WRITE"))),
+                                emitStableDatabaseSemconv() ? "BATCH write" : "WRITE"),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -367,6 +372,7 @@ class InfluxDbClientTest {
     String measurement = "cpu_load";
     List<String> records = new ArrayList<>();
     records.add(measurement + ",atag=test1 idle=100,usertime=10,system=1 1485273600");
+    records.add(measurement + ",atag=test2 idle=200,usertime=20,system=2 1485273601");
     influxDb.write(DATABASE_NAME, "autogen", InfluxDB.ConsistencyLevel.ONE, records);
 
     testing.waitAndAssertTraces(
@@ -375,7 +381,7 @@ class InfluxDbClientTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "write " + DATABASE_NAME
+                                ? "BATCH write " + DATABASE_NAME
                                 : "WRITE " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -385,7 +391,10 @@ class InfluxDbClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? "write" : "WRITE"))));
+                                emitStableDatabaseSemconv() ? "BATCH write" : "WRITE"),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? 2L : null))));
   }
 
   @Test
@@ -393,6 +402,7 @@ class InfluxDbClientTest {
     String measurement = "cpu_load";
     List<String> records = new ArrayList<>();
     records.add(measurement + ",atag=test1 idle=100,usertime=10,system=1 1485273600");
+    records.add(measurement + ",atag=test2 idle=200,usertime=20,system=2 1485273601");
     influxDb.write(DATABASE_NAME, "autogen", InfluxDB.ConsistencyLevel.ONE, SECONDS, records);
 
     testing.waitAndAssertTraces(
@@ -401,7 +411,7 @@ class InfluxDbClientTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "write " + DATABASE_NAME
+                                ? "BATCH write " + DATABASE_NAME
                                 : "WRITE " + DATABASE_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -411,7 +421,10 @@ class InfluxDbClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? "write" : "WRITE"))));
+                                emitStableDatabaseSemconv() ? "BATCH write" : "WRITE"),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? 2L : null))));
   }
 
   @Test
@@ -428,7 +441,9 @@ class InfluxDbClientTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "write " + host + ":" + port : "WRITE")
+                            emitStableDatabaseSemconv()
+                                ? "BATCH write " + host + ":" + port
+                                : "WRITE")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
@@ -437,6 +452,9 @@ class InfluxDbClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(
                                 maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? "write" : "WRITE"))));
+                                emitStableDatabaseSemconv() ? "BATCH write" : "WRITE"),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? 2000L : null))));
   }
 }
