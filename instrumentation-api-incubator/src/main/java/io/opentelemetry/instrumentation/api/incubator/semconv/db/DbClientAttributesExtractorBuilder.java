@@ -6,33 +6,16 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import javax.annotation.Nullable;
 
 /** A builder of {@link DbClientAttributesExtractor}. */
 public final class DbClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final DbClientAttributesGetter<REQUEST, RESPONSE> getter;
-  @Nullable AttributeKey<String> oldSemconvCollectionAttribute;
   boolean captureQueryParameters = false;
 
   DbClientAttributesExtractorBuilder(DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
-  }
-
-  /**
-   * Sets the attribute key for the old semconv collection attribute. Pass {@code null} to disable
-   * emitting any collection attribute under old semconv.
-   *
-   * @deprecated new semantic conventions always use db.collection.name
-   */
-  @CanIgnoreReturnValue
-  @Deprecated // to be removed in 3.0
-  public DbClientAttributesExtractorBuilder<REQUEST, RESPONSE> setOldSemconvCollectionAttribute(
-      @Nullable AttributeKey<String> oldSemconvCollectionAttribute) {
-    this.oldSemconvCollectionAttribute = oldSemconvCollectionAttribute;
-    return this;
   }
 
   /**
@@ -54,7 +37,6 @@ public final class DbClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * DbClientAttributesExtractorBuilder}.
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
-    return new DbClientAttributesExtractor<>(
-        getter, oldSemconvCollectionAttribute, captureQueryParameters);
+    return new DbClientAttributesExtractor<>(getter, captureQueryParameters);
   }
 }

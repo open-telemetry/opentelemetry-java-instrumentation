@@ -54,13 +54,12 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   private final DbClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
-  @Nullable private final AttributeKey<String> oldSemconvCollectionAttribute;
   private final boolean captureQueryParameters;
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    return new DbClientAttributesExtractor<>(getter, null, false);
+    return new DbClientAttributesExtractor<>(getter, false);
   }
 
   /**
@@ -73,11 +72,8 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   DbClientAttributesExtractor(
-      DbClientAttributesGetter<REQUEST, RESPONSE> getter,
-      @Nullable AttributeKey<String> oldSemconvCollectionAttribute,
-      boolean captureQueryParameters) {
+      DbClientAttributesGetter<REQUEST, RESPONSE> getter, boolean captureQueryParameters) {
     this.getter = getter;
-    this.oldSemconvCollectionAttribute = oldSemconvCollectionAttribute;
     this.captureQueryParameters = captureQueryParameters;
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(getter, emitOldDatabaseSemconv(), false);
@@ -87,14 +83,9 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    boolean emitOldCollection =
-        emitOldDatabaseSemconv() && oldSemconvCollectionAttribute != null;
-    // resolve the collection name once and reuse it for both stable and old semconv attributes,
-    // since some getters parse the request (e.g. Mongo BSON command inspection) to compute it
+    boolean emitOldSemconv = emitOldDatabaseSemconv();
     String collectionName =
-        emitStableDatabaseSemconv() || emitOldCollection
-            ? getter.getDbCollectionName(request)
-            : null;
+        emitStableDatabaseSemconv() ? getter.getDbCollectionName(request) : null;
 
     Long batchSize = getter.getDbOperationBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
@@ -111,7 +102,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
     }
-    if (emitOldDatabaseSemconv()) {
+    if (emitOldSemconv) {
       attributes.put(DB_SYSTEM, getter.getDbSystem(request));
       attributes.put(DB_USER, getter.getUser(request));
       attributes.put(DB_NAME, getter.getDbName(request));
@@ -119,10 +110,6 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       attributes.put(DB_STATEMENT, getter.getDbQueryText(request));
       attributes.put(DB_OPERATION, getter.getDbOperation(request));
     }
-    if (emitOldCollection) {
-      attributes.put(oldSemconvCollectionAttribute, collectionName);
-    }
-
     // Query parameters are an incubating feature and work with both old and new semconv
     if (captureQueryParameters && !isBatch) {
       Map<String, String> queryParameters = getter.getDbQueryParameters(request);
