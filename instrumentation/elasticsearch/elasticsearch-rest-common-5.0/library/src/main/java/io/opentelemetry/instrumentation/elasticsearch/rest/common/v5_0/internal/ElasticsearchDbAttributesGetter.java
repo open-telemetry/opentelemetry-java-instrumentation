@@ -149,7 +149,10 @@ final class ElasticsearchDbAttributesGetter
     if (documentOperation != null) {
       return documentOperation;
     }
-    if (isGroupedApi(apiSegment) && nextSegment != null && !nextSegment.startsWith("_")) {
+    if (isGroupedApi(apiSegment)
+        && nextSegment != null
+        && !nextSegment.isEmpty()
+        && !nextSegment.startsWith("_")) {
       return apiSegment + "." + nextSegment;
     }
     return apiSegment;

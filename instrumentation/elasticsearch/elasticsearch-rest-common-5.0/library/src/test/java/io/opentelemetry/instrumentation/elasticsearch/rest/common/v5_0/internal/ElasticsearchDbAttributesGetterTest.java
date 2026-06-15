@@ -83,6 +83,9 @@ class ElasticsearchDbAttributesGetterTest {
     // a non-grouped api keeps just the api segment
     assertThat(ElasticsearchDbAttributesGetter.inferOperationName("POST", "_search/scroll"))
         .isEqualTo("search");
+    // a trailing slash does not produce a trailing dot
+    assertThat(ElasticsearchDbAttributesGetter.inferOperationName("GET", "_nodes/"))
+        .isEqualTo("nodes");
   }
 
   @Test
