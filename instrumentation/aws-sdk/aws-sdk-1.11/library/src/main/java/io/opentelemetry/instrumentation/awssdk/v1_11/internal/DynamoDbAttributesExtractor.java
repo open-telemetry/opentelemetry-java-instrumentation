@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static java.util.Collections.singletonList;
@@ -18,6 +19,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -46,8 +48,12 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     }
 
     String operation = getOperationName(request.getOriginalRequest());
+    Long batchSize = extractBatchSize(operation, request.getOriginalRequest());
     if (emitStableDatabaseSemconv()) {
-      attributes.put(DB_OPERATION_NAME, getStableOperationName(operation));
+      attributes.put(DB_OPERATION_NAME, getStableOperationName(operation, batchSize));
+      if (isBatch(batchSize)) {
+        attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
+      }
     }
     if (emitOldDatabaseSemconv()) {
       attributes.put(DB_OPERATION, operation);
@@ -89,14 +95,69 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
   }
 
   @Nullable
-  private static String getStableOperationName(@Nullable String operation) {
+  private static String getStableOperationName(
+      @Nullable String operation, @Nullable Long batchSize) {
     if ("BatchGetItem".equals(operation)) {
-      return "BATCH GetItem";
+      return getStableBatchOperationName(batchSize, "GetItem", operation);
     }
     if ("BatchWriteItem".equals(operation)) {
-      return "BATCH WriteItem";
+      return getStableBatchOperationName(batchSize, "WriteItem", operation);
     }
     return operation;
+  }
+
+  private static String getStableBatchOperationName(
+      @Nullable Long batchSize, String itemOperation, String batchOperation) {
+    if (batchSize == null || batchSize == 0) {
+      return batchOperation;
+    }
+    if (batchSize == 1) {
+      return itemOperation;
+    }
+    return "BATCH " + itemOperation;
+  }
+
+  @Nullable
+  private static Long extractBatchSize(@Nullable String operation, Object request) {
+    if (!"BatchGetItem".equals(operation) && !"BatchWriteItem".equals(operation)) {
+      return null;
+    }
+
+    Map<?, ?> requestItems = RequestAccess.getRequestItems(request);
+    if (requestItems == null) {
+      return null;
+    }
+
+    long batchSize =
+        "BatchGetItem".equals(operation)
+            ? countBatchGetItems(requestItems)
+            : countBatchWriteItems(requestItems);
+    return batchSize == 0 ? null : batchSize;
+  }
+
+  private static long countBatchGetItems(Map<?, ?> requestItems) {
+    long count = 0;
+    for (Object keysAndAttributes : requestItems.values()) {
+      List<?> keys = RequestAccess.getKeys(keysAndAttributes);
+      if (keys != null) {
+        count += keys.size();
+      }
+    }
+    return count;
+  }
+
+  private static long countBatchWriteItems(Map<?, ?> requestItems) {
+    long count = 0;
+    for (Object writeRequests : requestItems.values()) {
+      if (writeRequests instanceof Collection) {
+        count += ((Collection<?>) writeRequests).size();
+      }
+    }
+    return count;
+  }
+
+  private static boolean isBatch(@Nullable Long batchSize) {
+    return batchSize != null && batchSize > 1;
   }
 
   @Nullable
