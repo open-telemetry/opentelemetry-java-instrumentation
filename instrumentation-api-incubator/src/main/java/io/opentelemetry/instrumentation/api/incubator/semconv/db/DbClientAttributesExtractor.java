@@ -83,10 +83,16 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    boolean emitOldSemconv = emitOldDatabaseSemconv();
-    String collectionName =
-        emitStableDatabaseSemconv() ? getter.getDbCollectionName(request) : null;
+    onStartCommon(attributes, getter, request, captureQueryParameters);
+    serverAttributesExtractor.onStart(attributes, parentContext, request);
+  }
 
+  @SuppressWarnings("deprecation") // until old db semconv are dropped
+  static <REQUEST, RESPONSE> void onStartCommon(
+      AttributesBuilder attributes,
+      DbClientAttributesGetter<REQUEST, RESPONSE> getter,
+      REQUEST request,
+      boolean captureQueryParameters) {
     Long batchSize = getter.getDbOperationBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
 
@@ -94,7 +100,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       attributes.put(
           DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
       attributes.put(DB_NAMESPACE, getter.getDbNamespace(request));
-      attributes.put(DB_COLLECTION_NAME, collectionName);
+      attributes.put(DB_COLLECTION_NAME, getter.getDbCollectionName(request));
       attributes.put(DB_QUERY_TEXT, getter.getDbQueryText(request));
       attributes.put(DB_OPERATION_NAME, getter.getDbOperationName(request));
       attributes.put(DB_QUERY_SUMMARY, getter.getDbQuerySummary(request));
@@ -102,7 +108,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
     }
-    if (emitOldSemconv) {
+    if (emitOldDatabaseSemconv()) {
       attributes.put(DB_SYSTEM, getter.getDbSystem(request));
       attributes.put(DB_USER, getter.getUser(request));
       attributes.put(DB_NAME, getter.getDbName(request));
@@ -110,6 +116,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       attributes.put(DB_STATEMENT, getter.getDbQueryText(request));
       attributes.put(DB_OPERATION, getter.getDbOperation(request));
     }
+
     // Query parameters are an incubating feature and work with both old and new semconv
     if (captureQueryParameters && !isBatch) {
       Map<String, String> queryParameters = getter.getDbQueryParameters(request);
@@ -121,8 +128,6 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
         }
       }
     }
-
-    serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
   @Override
