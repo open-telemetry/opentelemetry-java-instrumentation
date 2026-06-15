@@ -35,7 +35,7 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
 
   @Nullable
   @Override
-  // Old database semconv still use db.name, so we must implement the deprecated hook.
+  // Old database semconv still uses db.name, so we must implement the deprecated hook.
   @SuppressWarnings("deprecation")
   public String getDbName(HbaseRequest hbaseRequest) {
     TableName tableName = hbaseRequest.getTableName();
@@ -44,7 +44,7 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
 
   @Nullable
   @Override
-  // Old database semconv still use db.user, so we must implement the deprecated hook.
+  // Old database semconv still uses db.user, so we must implement the deprecated hook.
   @SuppressWarnings("deprecation")
   public String getUser(HbaseRequest hbaseRequest) {
     return hbaseRequest.getUser();
