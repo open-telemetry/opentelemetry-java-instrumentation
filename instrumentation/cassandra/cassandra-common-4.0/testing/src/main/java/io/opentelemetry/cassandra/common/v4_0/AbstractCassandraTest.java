@@ -187,10 +187,10 @@ public abstract class AbstractCassandraTest {
                                     maybeStable(DB_CASSANDRA_TABLE), "simple_values_test.users"))));
   }
 
-  // describes the batch cases: two statements with the same query, and two statements with
-  // different queries. (an empty batch is invalid CQL, and a single-statement batch is executed as
-  // a normal statement rather than a batch.) batch telemetry (db.operation.batch.size, BATCH span
-  // names and summaries) is only emitted under stable database semconv
+  // describes the batch cases: a single-statement batch (which is executed as a normal statement,
+  // not a batch), two statements with the same query, and two statements with different queries. (an
+  // empty batch is invalid CQL.) batch telemetry (db.operation.batch.size, BATCH span names and
+  // summaries) is only emitted under stable database semconv
   @ParameterizedTest
   @MethodSource("batchScenarios")
   void batchStatement(BatchScenario scenario) {
@@ -214,7 +214,10 @@ public abstract class AbstractCassandraTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(emitStableDatabaseSemconv() ? scenario.spanName : "DB Query")
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? scenario.spanName
+                                    : scenario.oldSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
@@ -230,13 +233,20 @@ public abstract class AbstractCassandraTest {
                                 equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv() ? scenario.statement : null),
+                                    emitStableDatabaseSemconv()
+                                        ? scenario.statement
+                                        : scenario.oldStatement),
                                 equalTo(
                                     DB_OPERATION_BATCH_SIZE,
                                     emitStableDatabaseSemconv() ? scenario.batchSize : null),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? scenario.summary : null),
+                                // a single-statement batch is not a batch, so it carries the normal
+                                // statement's db.operation and db.cassandra.table; the real batch
+                                // cases do not
+                                equalTo(maybeStable(DB_OPERATION), scenario.operation),
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), scenario.table),
                                 equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
                                 equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
                                 satisfies(
@@ -252,6 +262,27 @@ public abstract class AbstractCassandraTest {
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
+            // a single-statement batch is executed as a normal statement (not a batch): it has the
+            // normal INSERT span name in both modes, db.operation and db.cassandra.table, and no
+            // db.operation.batch.size
+            BatchScenario.builder("single")
+                .keyspace("batch_single_test")
+                .buildBatch(
+                    session -> {
+                      PreparedStatement insert =
+                          session.prepare(
+                              "INSERT INTO batch_single_test.users (name, age) values (?, ?)");
+                      return BatchStatement.newInstance(
+                          DefaultBatchType.LOGGED, insert.bind("alice", 1));
+                    })
+                .spanName("INSERT batch_single_test.users")
+                .oldSpanName("INSERT batch_single_test.users")
+                .statement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
+                .oldStatement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
+                .summary("INSERT batch_single_test.users")
+                .operation("INSERT")
+                .table("batch_single_test.users")
+                .build(),
             BatchScenario.builder("twoSameOperation")
                 .keyspace("batch_same_test")
                 .buildBatch(
@@ -263,6 +294,7 @@ public abstract class AbstractCassandraTest {
                           DefaultBatchType.LOGGED, insert.bind("alice", 1), insert.bind("bob", 2));
                     })
                 .spanName("BATCH INSERT batch_same_test.users")
+                .oldSpanName("DB Query")
                 .statement("INSERT INTO batch_same_test.users (name, age) values (?, ?)")
                 .summary("BATCH INSERT batch_same_test.users")
                 .batchSize(2)
@@ -281,6 +313,7 @@ public abstract class AbstractCassandraTest {
                               "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
                     })
                 .spanName("BATCH")
+                .oldSpanName("DB Query")
                 .statement(
                     "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?")
                 .summary("BATCH")
@@ -294,18 +327,26 @@ public abstract class AbstractCassandraTest {
     final String keyspace;
     final Function<CqlSession, BatchStatement> buildBatch;
     final String spanName;
+    final String oldSpanName;
     final String statement;
+    final String oldStatement;
     final String summary;
     final Long batchSize;
+    final String operation;
+    final String table;
 
     BatchScenario(Builder builder) {
       this.name = builder.name;
       this.keyspace = builder.keyspace;
       this.buildBatch = builder.buildBatch;
       this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
       this.statement = builder.statement;
+      this.oldStatement = builder.oldStatement;
       this.summary = builder.summary;
       this.batchSize = builder.batchSize;
+      this.operation = builder.operation;
+      this.table = builder.table;
     }
 
     @Override
@@ -323,9 +364,13 @@ public abstract class AbstractCassandraTest {
       private String keyspace;
       private Function<CqlSession, BatchStatement> buildBatch;
       private String spanName;
+      private String oldSpanName;
       private String statement;
+      private String oldStatement;
       private String summary;
       private Long batchSize;
+      private String operation;
+      private String table;
 
       Builder(String name) {
         this.name = name;
@@ -346,8 +391,18 @@ public abstract class AbstractCassandraTest {
         return this;
       }
 
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
       Builder statement(String statement) {
         this.statement = statement;
+        return this;
+      }
+
+      Builder oldStatement(String oldStatement) {
+        this.oldStatement = oldStatement;
         return this;
       }
 
@@ -358,6 +413,16 @@ public abstract class AbstractCassandraTest {
 
       Builder batchSize(long batchSize) {
         this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder operation(String operation) {
+        this.operation = operation;
+        return this;
+      }
+
+      Builder table(String table) {
+        this.table = table;
         return this;
       }
 

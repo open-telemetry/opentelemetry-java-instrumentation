@@ -296,10 +296,10 @@ class CassandraClientTest {
         SERVER_PORT);
   }
 
-  // describes the batch cases: two statements with the same query, and two statements with
-  // different queries. (an empty batch is invalid CQL, and a single-statement batch is executed as
-  // a normal statement rather than a batch.) batch telemetry (db.operation.batch.size, BATCH span
-  // names and summaries) is only emitted under stable database semconv
+  // describes the batch cases: a single-statement batch (which is executed as a normal statement,
+  // not a batch), two statements with the same query, and two statements with different queries. (an
+  // empty batch is invalid CQL.) batch telemetry (db.operation.batch.size, BATCH span names and
+  // summaries) is only emitted under stable database semconv
   @ParameterizedTest
   @MethodSource("batchScenarios")
   void batchStatement(BatchScenario scenario) {
@@ -322,7 +322,8 @@ class CassandraClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? scenario.spanName : "DB Query")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? scenario.spanName : scenario.oldSpanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -332,19 +333,46 @@ class CassandraClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                             equalTo(NETWORK_PEER_PORT, cassandraPort),
                             equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            // a single-statement batch is not a batch, so it carries the normal
+                            // statement's db.operation and db.cassandra.table; the real batch cases
+                            // do not
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv() ? scenario.statement : null),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.statement
+                                    : scenario.oldStatement),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? scenario.summary : null))));
+                                emitStableDatabaseSemconv() ? scenario.summary : null),
+                            equalTo(maybeStable(DB_OPERATION), scenario.operation),
+                            equalTo(maybeStable(DB_CASSANDRA_TABLE), scenario.table))));
   }
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
+            // a single-statement batch is executed as a normal statement (not a batch): it has the
+            // normal INSERT span name in both modes, db.operation and db.cassandra.table, and no
+            // db.operation.batch.size
+            BatchScenario.builder("single")
+                .keyspace("batch_single_test")
+                .buildBatch(
+                    session -> {
+                      PreparedStatement insert =
+                          session.prepare(
+                              "INSERT INTO batch_single_test.users (name, age) values (?, ?)");
+                      return new BatchStatement().add(insert.bind("alice", 1));
+                    })
+                .spanName("INSERT batch_single_test.users")
+                .oldSpanName("INSERT batch_single_test.users")
+                .statement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
+                .oldStatement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
+                .summary("INSERT batch_single_test.users")
+                .operation("INSERT")
+                .table("batch_single_test.users")
+                .build(),
             BatchScenario.builder("twoSameOperation")
                 .keyspace("batch_same_test")
                 .buildBatch(
@@ -357,6 +385,7 @@ class CassandraClientTest {
                           .add(insert.bind("bob", 2));
                     })
                 .spanName("BATCH INSERT batch_same_test.users")
+                .oldSpanName("DB Query")
                 .statement("INSERT INTO batch_same_test.users (name, age) values (?, ?)")
                 .summary("BATCH INSERT batch_same_test.users")
                 .batchSize(2)
@@ -375,6 +404,7 @@ class CassandraClientTest {
                                   "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
                     })
                 .spanName("BATCH")
+                .oldSpanName("DB Query")
                 .statement(
                     "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?")
                 .summary("BATCH")
@@ -388,18 +418,26 @@ class CassandraClientTest {
     final String keyspace;
     final Function<Session, BatchStatement> buildBatch;
     final String spanName;
+    final String oldSpanName;
     final String statement;
+    final String oldStatement;
     final String summary;
     final Long batchSize;
+    final String operation;
+    final String table;
 
     BatchScenario(Builder builder) {
       this.name = builder.name;
       this.keyspace = builder.keyspace;
       this.buildBatch = builder.buildBatch;
       this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
       this.statement = builder.statement;
+      this.oldStatement = builder.oldStatement;
       this.summary = builder.summary;
       this.batchSize = builder.batchSize;
+      this.operation = builder.operation;
+      this.table = builder.table;
     }
 
     @Override
@@ -417,9 +455,13 @@ class CassandraClientTest {
       private String keyspace;
       private Function<Session, BatchStatement> buildBatch;
       private String spanName;
+      private String oldSpanName;
       private String statement;
+      private String oldStatement;
       private String summary;
       private Long batchSize;
+      private String operation;
+      private String table;
 
       Builder(String name) {
         this.name = name;
@@ -440,8 +482,18 @@ class CassandraClientTest {
         return this;
       }
 
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
       Builder statement(String statement) {
         this.statement = statement;
+        return this;
+      }
+
+      Builder oldStatement(String oldStatement) {
+        this.oldStatement = oldStatement;
         return this;
       }
 
@@ -452,6 +504,16 @@ class CassandraClientTest {
 
       Builder batchSize(long batchSize) {
         this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder operation(String operation) {
+        this.operation = operation;
+        return this;
+      }
+
+      Builder table(String table) {
+        this.table = table;
         return this;
       }
 

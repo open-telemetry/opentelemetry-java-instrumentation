@@ -250,10 +250,10 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
-  // describes the batch cases: two commands with the same operation, and two commands with
-  // different operations. (a single-command batch is executed as a normal command rather than a
-  // pipeline.) batch telemetry (db.operation.batch.size, PIPELINE operation name) is only emitted
-  // under stable database semconv
+  // describes the batch cases: a single-command batch (which is executed as a normal command, not a
+  // pipeline), two commands with the same operation, and two commands with different operations.
+  // batch telemetry (db.operation.batch.size, PIPELINE operation name) is only emitted under stable
+  // database semconv
   @ParameterizedTest
   @MethodSource("batchScenarios")
   void batchCommand(BatchScenario scenario) throws ReflectiveOperationException {
@@ -267,24 +267,42 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? scenario.operationName : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? scenario.spanName : scenario.oldSpanName)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            // a single-command batch is not a batch, so in stable mode it is named
+                            // after the command (db.operation.name = SET) and in old mode carries
+                            // db.operation = SET; the real pipeline cases carry db.operation.name =
+                            // PIPELINE* (stable only) and db.operation.batch.size
                             equalTo(
                                 DB_OPERATION_NAME,
-                                emitStableDatabaseSemconv() ? scenario.operationName : null),
+                                emitStableDatabaseSemconv() ? scenario.operationName() : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(
+                                DB_OPERATION,
+                                emitStableDatabaseSemconv() ? null : scenario.oldOperation),
                             equalTo(maybeStable(DB_STATEMENT), scenario.statement))));
   }
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
+            // a single-command batch is executed as a normal command (not a pipeline): the span is
+            // named after the command, it carries db.operation (old) / db.operation.name (stable),
+            // and emits no db.operation.batch.size
+            new BatchScenario(
+                "single",
+                batch -> batch.getBucket("batch1").setAsync("v1"),
+                "SET",
+                "SET",
+                null,
+                "SET",
+                "SET batch1 ?"),
             new BatchScenario(
                 "twoSameOperation",
                 batch -> {
@@ -292,7 +310,9 @@ public abstract class AbstractRedissonClientTest {
                   batch.getBucket("batch2").setAsync("v2");
                 },
                 "PIPELINE SET",
+                "DB Query",
                 2L,
+                null,
                 "SET batch1 ?;SET batch2 ?"),
             new BatchScenario(
                 "twoDifferentOperations",
@@ -301,7 +321,9 @@ public abstract class AbstractRedissonClientTest {
                   batch.getBucket("batch1").getAsync();
                 },
                 "PIPELINE",
+                "DB Query",
                 2L,
+                null,
                 "SET batch1 ?;GET batch1"))
         .map(Arguments::of);
   }
@@ -309,21 +331,32 @@ public abstract class AbstractRedissonClientTest {
   private static final class BatchScenario {
     final String name;
     final Consumer<RBatch> commands;
-    final String operationName;
+    final String spanName;
+    final String oldSpanName;
     final Long batchSize;
+    final String oldOperation;
     final String statement;
 
     BatchScenario(
         String name,
         Consumer<RBatch> commands,
-        String operationName,
+        String spanName,
+        String oldSpanName,
         Long batchSize,
+        String oldOperation,
         String statement) {
       this.name = name;
       this.commands = commands;
-      this.operationName = operationName;
+      this.spanName = spanName;
+      this.oldSpanName = oldSpanName;
       this.batchSize = batchSize;
+      this.oldOperation = oldOperation;
       this.statement = statement;
+    }
+
+    // the stable-mode db.operation.name (= the span name in stable mode)
+    String operationName() {
+      return spanName;
     }
 
     @Override
