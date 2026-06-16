@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -291,15 +292,20 @@ class VertxSqlClientTest {
   @ParameterizedTest
   @MethodSource("batchScenarios")
   void testBatch(BatchScenario scenario) throws Exception {
-    testing
-        .runWithSpan(
-            "parent",
-            () ->
-                pool.preparedQuery("insert into test values ($1, $2) returning *")
-                    .executeBatch(scenario.tuples))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, SECONDS);
+    // an empty batch is rejected before sending, so its execution fails; non-empty batches succeed
+    try {
+      testing
+          .runWithSpan(
+              "parent",
+              () ->
+                  pool.preparedQuery("insert into test values ($1, $2) returning *")
+                      .executeBatch(scenario.tuples))
+          .toCompletionStage()
+          .toCompletableFuture()
+          .get(30, SECONDS);
+    } catch (ExecutionException e) {
+      // an empty batch fails to execute; the failure is recorded on the client span
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -333,6 +339,9 @@ class VertxSqlClientTest {
                             equalTo(
                                 maybeStable(DB_SQL_TABLE),
                                 emitStableDatabaseSemconv() ? null : "test"),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv() ? scenario.errorType : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -340,16 +349,31 @@ class VertxSqlClientTest {
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
+            // an empty batch is rejected before sending, so it looks like a single statement but
+            // records the error and emits no db.operation.batch.size
+            new BatchScenario(
+                "empty",
+                Collections.emptyList(),
+                "insert test",
+                "insert test",
+                null,
+                "io.vertx.core.impl.NoStackTraceThrowable"),
             // a single-statement batch is not a batch (size 1), so it emits no
             // db.operation.batch.size and no BATCH prefix
             new BatchScenario(
-                "single", singletonList(Tuple.of(3, "Three")), "insert test", "insert test", null),
+                "single",
+                singletonList(Tuple.of(3, "Three")),
+                "insert test",
+                "insert test",
+                null,
+                null),
             new BatchScenario(
                 "twoSameOperation",
                 asList(Tuple.of(4, "Four"), Tuple.of(5, "Five")),
                 "BATCH insert test",
                 "BATCH insert test",
-                2L))
+                2L,
+                null))
         .map(Arguments::of);
   }
 
@@ -359,18 +383,21 @@ class VertxSqlClientTest {
     final String stableSpanName;
     final String stableSummary;
     final Long batchSize;
+    final String errorType;
 
     BatchScenario(
         String name,
         List<Tuple> tuples,
         String stableSpanName,
         String stableSummary,
-        Long batchSize) {
+        Long batchSize,
+        String errorType) {
       this.name = name;
       this.tuples = tuples;
       this.stableSpanName = stableSpanName;
       this.stableSummary = stableSummary;
       this.batchSize = batchSize;
+      this.errorType = errorType;
     }
 
     @Override

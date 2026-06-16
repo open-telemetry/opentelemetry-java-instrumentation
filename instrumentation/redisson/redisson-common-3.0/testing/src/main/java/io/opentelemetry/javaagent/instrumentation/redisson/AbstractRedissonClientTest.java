@@ -262,7 +262,18 @@ public abstract class AbstractRedissonClientTest {
     scenario.commands.accept(batch);
     // Adapt different method signature:
     // `BatchResult<?> execute()` and `List<?> execute()`
-    invokeExecute(batch);
+    try {
+      invokeExecute(batch);
+    } catch (ReflectiveOperationException e) {
+      // an empty batch fails to execute
+    }
+
+    if (scenario.empty) {
+      // an empty batch produces no span
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -292,6 +303,8 @@ public abstract class AbstractRedissonClientTest {
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
+            // an empty batch fails to execute and produces no span
+            BatchScenario.empty(),
             // a single-command batch is executed as a normal command (not a pipeline): the span is
             // named after the command, it carries db.operation (old) / db.operation.name (stable),
             // and emits no db.operation.batch.size
@@ -336,6 +349,7 @@ public abstract class AbstractRedissonClientTest {
     final Long batchSize;
     final String oldOperation;
     final String statement;
+    final boolean empty;
 
     BatchScenario(
         String name,
@@ -352,6 +366,22 @@ public abstract class AbstractRedissonClientTest {
       this.batchSize = batchSize;
       this.oldOperation = oldOperation;
       this.statement = statement;
+      this.empty = false;
+    }
+
+    private BatchScenario() {
+      this.name = "empty";
+      this.commands = batch -> {};
+      this.spanName = null;
+      this.oldSpanName = null;
+      this.batchSize = null;
+      this.oldOperation = null;
+      this.statement = null;
+      this.empty = true;
+    }
+
+    static BatchScenario empty() {
+      return new BatchScenario();
     }
 
     // the stable-mode db.operation.name (= the span name in stable mode)

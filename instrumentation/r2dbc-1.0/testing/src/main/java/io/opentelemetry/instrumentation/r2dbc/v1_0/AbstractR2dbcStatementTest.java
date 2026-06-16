@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -33,7 +34,10 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.PASSWORD;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Named.named;
 
@@ -49,6 +53,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -302,9 +307,10 @@ public abstract class AbstractR2dbcStatementTest {
         SERVER_PORT);
   }
 
-  // describes the batch cases: a single-statement batch (not a batch -> no db.operation.batch.size)
-  // and two statements with the same operation. batch telemetry (db.operation.batch.size, BATCH
-  // span names and summaries) is only emitted under stable database semconv
+  // describes the batch cases: an empty batch (no statements -> no client span), a single-statement
+  // batch (not a batch -> no db.operation.batch.size) and two statements with the same operation.
+  // batch telemetry (db.operation.batch.size, BATCH span names and summaries) is only emitted under
+  // stable database semconv
   @ParameterizedTest
   @MethodSource("batchScenarios")
   void batchQueries(BatchScenario scenario) {
@@ -324,24 +330,52 @@ public abstract class AbstractR2dbcStatementTest {
                 .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
                 .build());
 
-    getTesting()
-        .runWithSpan(
-            "parent",
-            () -> {
-              Mono.from(connectionFactory.create())
-                  .flatMapMany(
-                      connection -> {
-                        Batch batch = connection.createBatch();
-                        for (String query : scenario.queries) {
-                          batch.add(query);
-                        }
-                        return Flux.from(batch.execute())
-                            .flatMap(result -> result.map((row, metadata) -> ""))
-                            .concatWith(Mono.from(connection.close()).cast(String.class));
-                      })
-                  .blockLast(Duration.ofMinutes(1));
-            });
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                getTesting()
+                    .runWithSpan(
+                        "parent",
+                        () -> {
+                          Mono.from(connectionFactory.create())
+                              .flatMapMany(
+                                  connection -> {
+                                    Batch batch = connection.createBatch();
+                                    for (String query : scenario.queries) {
+                                      batch.add(query);
+                                    }
+                                    return Flux.from(batch.execute())
+                                        .flatMap(result -> result.map((row, metadata) -> ""))
+                                        .concatWith(
+                                            Mono.from(connection.close()).cast(String.class));
+                                  })
+                              .blockLast(Duration.ofMinutes(1));
+                        }));
 
+    if (scenario.queries.isEmpty()) {
+      // an empty batch fails to execute and produces a client span with no query text, summary or
+      // batch size; the span name falls back to the database namespace and records the error
+      assertThat(thrown).isInstanceOf(NoSuchElementException.class);
+      getTesting()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                      span ->
+                          span.hasName(DB)
+                              .hasKind(SpanKind.CLIENT)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(DB_SYSTEM_NAME, MARIADB.system),
+                                  equalTo(DB_NAMESPACE, DB),
+                                  equalTo(maybeStablePeerService(), "test-peer-service"),
+                                  equalTo(SERVER_ADDRESS, container.getHost()),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(ERROR_TYPE, "java.util.NoSuchElementException"))));
+      return;
+    }
+
+    assertThat(thrown).isNull();
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -364,6 +398,8 @@ public abstract class AbstractR2dbcStatementTest {
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
+            // an empty batch produces no client span
+            new BatchScenario("empty", emptyList(), null, null, null),
             // a single-statement batch is not a batch (size 1), so it emits no
             // db.operation.batch.size and no BATCH prefix
             new BatchScenario("single", singletonList("SELECT 1"), "SELECT", "SELECT", null),
