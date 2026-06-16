@@ -381,7 +381,6 @@ public final class Internal {
       logger.warning(
           "otel.instrumentation.runtime-telemetry.capture-gc-cause is deprecated and will be removed in 3.0. GC cause will always be captured.");
     }
-
     Internal.setCaptureGcCause(builder, captureGcCause);
   }
 
