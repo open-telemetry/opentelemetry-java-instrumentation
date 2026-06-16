@@ -172,7 +172,6 @@ public abstract class AbstractAws2ClientCoreTest {
                         case "ListTables":
                           assertListTablesRequest(span);
                           return;
-                        case "BatchGetItem":
                         case "GetItem":
                           assertDynamoDbRequest(
                               span,
@@ -182,19 +181,6 @@ public abstract class AbstractAws2ClientCoreTest {
                                       AWS_DYNAMODB_CONSUMED_CAPACITY,
                                       singletonList(
                                           "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}"))));
-                          return;
-                        case "BatchWriteItem":
-                          assertDynamoDbRequest(
-                              span,
-                              operation,
-                              asList(
-                                  equalTo(
-                                      AWS_DYNAMODB_CONSUMED_CAPACITY,
-                                      singletonList(
-                                          "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")),
-                                  equalTo(
-                                      AWS_DYNAMODB_ITEM_COLLECTION_METRICS,
-                                      "[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")));
                           return;
                         case "DeleteItem":
                         case "PutItem":
@@ -294,16 +280,6 @@ public abstract class AbstractAws2ClientCoreTest {
   @SuppressWarnings("deprecation") // uses deprecated semconv
   private static void assertDynamoDbRequest(
       SpanDataAssert span, String operation, List<AttributeAssertion> extraAttributes) {
-    assertDynamoDbRequest(
-        span, operation, extraAttributes, expectedDbOperationNameForSingleItemRequest(operation));
-  }
-
-  @SuppressWarnings("deprecation") // uses deprecated semconv
-  private static void assertDynamoDbRequest(
-      SpanDataAssert span,
-      String operation,
-      List<AttributeAssertion> extraAttributes,
-      String expectedStableOperationName) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -319,9 +295,7 @@ public abstract class AbstractAws2ClientCoreTest {
                 equalTo(AWS_REQUEST_ID, "UNKNOWN"),
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
-                equalTo(
-                    maybeStable(DB_OPERATION),
-                    emitStableDatabaseSemconv() ? expectedStableOperationName : operation)));
+                equalTo(maybeStable(DB_OPERATION), operation)));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(DB_COLLECTION_NAME, "sometable"));
     }
@@ -433,56 +407,7 @@ public abstract class AbstractAws2ClientCoreTest {
             "UpdateTable",
             (Function<DynamoDbClient, Object>) c -> c.updateTable(b -> b.tableName("sometable"))),
         Arguments.of(
-            "Scan", (Function<DynamoDbClient, Object>) c -> c.scan(b -> b.tableName("sometable"))),
-        Arguments.of(
-            "BatchGetItem",
-            (Function<DynamoDbClient, Object>)
-                c ->
-                    c.batchGetItem(
-                        b ->
-                            b.requestItems(
-                                ImmutableMap.of(
-                                    "sometable",
-                                    KeysAndAttributes.builder()
-                                        .keys(
-                                            singletonList(
-                                                ImmutableMap.of(
-                                                    "keyOne",
-                                                        AttributeValue.builder().s("value").build(),
-                                                    "keyTwo",
-                                                        AttributeValue.builder()
-                                                            .s("differentValue")
-                                                            .build())))
-                                        .build())))),
-        Arguments.of(
-            "BatchWriteItem",
-            (Function<DynamoDbClient, Object>)
-                c ->
-                    c.batchWriteItem(
-                        b ->
-                            b.requestItems(
-                                ImmutableMap.of(
-                                    "sometable",
-                                    singletonList(
-                                        WriteRequest.builder()
-                                            .putRequest(
-                                                PutRequest.builder()
-                                                    .item(
-                                                        ImmutableMap.of(
-                                                            "key",
-                                                                AttributeValue.builder()
-                                                                    .s("value")
-                                                                    .build(),
-                                                            "attributeOne",
-                                                                AttributeValue.builder()
-                                                                    .s("one")
-                                                                    .build(),
-                                                            "attributeTwo",
-                                                                AttributeValue.builder()
-                                                                    .s("two")
-                                                                    .build()))
-                                                    .build())
-                                            .build()))))));
+            "Scan", (Function<DynamoDbClient, Object>) c -> c.scan(b -> b.tableName("sometable"))));
   }
 
   @ParameterizedTest
@@ -648,6 +573,32 @@ public abstract class AbstractAws2ClientCoreTest {
                 .execute(c -> c.batchGetItem(b -> b.requestItems(ImmutableMap.of())))
                 .stableOperation("BatchGetItem")
                 .build(),
+            // a single-item batch is not a batch, so it uses the singular item operation and emits
+            // no db.operation.batch.size
+            BatchScenario.builder("getItemSingle")
+                .awsOperation("BatchGetItem")
+                .responseContent(getResponseContent("BatchGetItem"))
+                .execute(
+                    c ->
+                        c.batchGetItem(
+                            b ->
+                                b.requestItems(
+                                    ImmutableMap.of(
+                                        "sometable",
+                                        KeysAndAttributes.builder()
+                                            .keys(
+                                                singletonList(
+                                                    ImmutableMap.of(
+                                                        "key",
+                                                        AttributeValue.builder()
+                                                            .s("value")
+                                                            .build())))
+                                            .build()))))
+                .stableOperation("GetItem")
+                .hasCollection()
+                .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+                .assertMetric()
+                .build(),
             BatchScenario.builder("getItemTwo")
                 .awsOperation("BatchGetItem")
                 .responseContent(getResponseContent("BatchGetItem"))
@@ -676,6 +627,42 @@ public abstract class AbstractAws2ClientCoreTest {
                 .hasCollection()
                 .batchSize(2)
                 .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+                .assertMetric()
+                .build(),
+            BatchScenario.builder("writeItemEmpty")
+                .awsOperation("BatchWriteItem")
+                .responseContent("{\"ConsumedCapacity\":[]}")
+                .execute(c -> c.batchWriteItem(b -> b.requestItems(ImmutableMap.of())))
+                .stableOperation("BatchWriteItem")
+                .build(),
+            // a single-item batch is not a batch, so it uses the singular item operation and emits
+            // no db.operation.batch.size
+            BatchScenario.builder("writeItemSingle")
+                .awsOperation("BatchWriteItem")
+                .responseContent(getResponseContent("BatchWriteItem"))
+                .execute(
+                    c ->
+                        c.batchWriteItem(
+                            b ->
+                                b.requestItems(
+                                    ImmutableMap.of(
+                                        "sometable",
+                                        singletonList(
+                                            WriteRequest.builder()
+                                                .putRequest(
+                                                    PutRequest.builder()
+                                                        .item(
+                                                            ImmutableMap.of(
+                                                                "key",
+                                                                AttributeValue.builder()
+                                                                    .s("value")
+                                                                    .build()))
+                                                        .build())
+                                                .build())))))
+                .stableOperation("WriteItem")
+                .hasCollection()
+                .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+                .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
                 .assertMetric()
                 .build(),
             BatchScenario.builder("writeItemTwo")
@@ -836,22 +823,6 @@ public abstract class AbstractAws2ClientCoreTest {
       BatchScenario build() {
         return new BatchScenario(this);
       }
-    }
-  }
-
-  private static String expectedDbOperationNameForSingleItemRequest(String operation) {
-    if (!emitStableDatabaseSemconv()) {
-      return operation;
-    }
-    // The parameterized Batch* requests contain one item. Stable DB semconv treats those as
-    // logical item operations; dedicated multi-item tests pass the BATCH operation name directly.
-    switch (operation) {
-      case "BatchGetItem":
-        return "GetItem";
-      case "BatchWriteItem":
-        return "WriteItem";
-      default:
-        return operation;
     }
   }
 
