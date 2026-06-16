@@ -18,7 +18,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -1887,18 +1886,30 @@ public abstract class AbstractJdbcInstrumentationTest {
   static Stream<Arguments> batchCasesStream() {
     return Stream.of(
             // an empty batch still produces a client span, but with no query text or batch size;
-            // the span name falls back to the database namespace
-            BatchScenario.builder().name("empty").spanName(DATABASE_NAME_LOWER).build(),
-            // a single-statement batch is not a batch (size 1), so it looks like a normal statement
+            // the span name falls back to the database namespace in both modes
+            BatchScenario.builder()
+                .name("empty")
+                .spanName(DATABASE_NAME_LOWER)
+                .oldSpanName(DATABASE_NAME_LOWER)
+                .build(),
+            // a single-statement batch is not a batch (size 1), so it looks like a normal
+            // statement and carries db.statement/db.operation/db.sql.table under old semconv
             BatchScenario.builder()
                 .name("single")
                 .createTable("stmt_batch_single")
                 .addQuery("INSERT INTO stmt_batch_single VALUES(1)")
                 .expectedResult(1)
                 .spanName("INSERT stmt_batch_single")
+                .oldSpanName("INSERT " + DATABASE_NAME_LOWER + ".stmt_batch_single")
                 .queryText("INSERT INTO stmt_batch_single VALUES(?)")
+                .oldStatement("INSERT INTO stmt_batch_single VALUES(?)")
                 .summary("INSERT stmt_batch_single")
+                .oldOperation("INSERT")
+                .oldTable("stmt_batch_single")
                 .build(),
+            // a multi-statement batch only emits db.query.text/summary and BATCH span name under
+            // stable semconv; under old semconv it has no statement-level attributes and the span
+            // name falls back to the namespace
             BatchScenario.builder()
                 .name("twoSameOperation")
                 .createTable("stmt_batch_same")
@@ -1906,6 +1917,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                 .addQuery("INSERT INTO stmt_batch_same VALUES(2)")
                 .expectedResult(1, 1)
                 .spanName("BATCH INSERT stmt_batch_same")
+                .oldSpanName(DATABASE_NAME_LOWER)
                 .queryText("INSERT INTO stmt_batch_same VALUES(?)")
                 .summary("BATCH INSERT stmt_batch_same")
                 .batchSize(2)
@@ -1918,6 +1930,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                 .addQuery("INSERT INTO stmt_batch_diff_2 VALUES(2)")
                 .expectedResult(1, 1)
                 .spanName("BATCH")
+                .oldSpanName(DATABASE_NAME_LOWER)
                 .queryText(
                     "INSERT INTO stmt_batch_diff_1 VALUES(?); INSERT INTO stmt_batch_diff_2"
                         + " VALUES(?)")
@@ -1930,10 +1943,6 @@ public abstract class AbstractJdbcInstrumentationTest {
   @ParameterizedTest
   @MethodSource("batchCasesStream")
   void testStatementBatch(BatchScenario scenario) throws SQLException {
-    // batch telemetry (db.operation.batch.size, BATCH span names and summaries) is only emitted
-    // under stable database semconv
-    Assumptions.assumeTrue(emitStableDatabaseSemconv());
-
     Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
     cleanup.deferCleanup(connection);
 
@@ -1964,15 +1973,41 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName(scenario.spanName)
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? scenario.spanName
+                                    : scenario.oldSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, maybeStableDbSystemName("h2")),
-                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                                equalTo(DB_QUERY_TEXT, scenario.queryText),
-                                equalTo(DB_QUERY_SUMMARY, scenario.summary),
-                                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize))));
+                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
+                                equalTo(
+                                    DB_CONNECTION_STRING,
+                                    emitStableDatabaseSemconv() ? null : "h2:mem:"),
+                                // batch telemetry (db.query.summary, BATCH span names and
+                                // db.operation.batch.size) is only emitted under stable semconv;
+                                // under old semconv the statement-level attributes (db.statement,
+                                // db.operation, db.sql.table) are only set for a single-statement
+                                // batch and multi-statement batches fall back to the namespace span
+                                // name
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv()
+                                        ? scenario.queryText
+                                        : scenario.oldStatement),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? scenario.summary : null),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : scenario.oldOperation),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : scenario.oldTable),
+                                equalTo(
+                                    DB_OPERATION_BATCH_SIZE,
+                                    emitStableDatabaseSemconv() ? scenario.batchSize : null))));
   }
 
   static Stream<Arguments> batchStream() throws SQLException {
@@ -2372,8 +2407,12 @@ public abstract class AbstractJdbcInstrumentationTest {
     final List<String> statementsToAdd;
     final int[] expectedResult;
     final String spanName;
+    final String oldSpanName;
     final String queryText;
+    final String oldStatement;
     final String summary;
+    final String oldOperation;
+    final String oldTable;
     final Long batchSize;
 
     BatchScenario(Builder builder) {
@@ -2382,8 +2421,12 @@ public abstract class AbstractJdbcInstrumentationTest {
       this.statementsToAdd = builder.statementsToAdd;
       this.expectedResult = builder.expectedResult;
       this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
       this.queryText = builder.queryText;
+      this.oldStatement = builder.oldStatement;
       this.summary = builder.summary;
+      this.oldOperation = builder.oldOperation;
+      this.oldTable = builder.oldTable;
       this.batchSize = builder.batchSize;
     }
 
@@ -2403,8 +2446,12 @@ public abstract class AbstractJdbcInstrumentationTest {
       private final List<String> statementsToAdd = new ArrayList<>();
       private int[] expectedResult = new int[] {};
       private String spanName;
+      private String oldSpanName;
       private String queryText;
+      private String oldStatement;
       private String summary;
+      private String oldOperation;
+      private String oldTable;
       private Long batchSize;
 
       Builder name(String name) {
@@ -2432,13 +2479,33 @@ public abstract class AbstractJdbcInstrumentationTest {
         return this;
       }
 
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
       Builder queryText(String queryText) {
         this.queryText = queryText;
         return this;
       }
 
+      Builder oldStatement(String oldStatement) {
+        this.oldStatement = oldStatement;
+        return this;
+      }
+
       Builder summary(String summary) {
         this.summary = summary;
+        return this;
+      }
+
+      Builder oldOperation(String oldOperation) {
+        this.oldOperation = oldOperation;
+        return this;
+      }
+
+      Builder oldTable(String oldTable) {
+        this.oldTable = oldTable;
         return this;
       }
 

@@ -14,7 +14,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -38,7 +37,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Named.named;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -307,15 +305,15 @@ public abstract class AbstractR2dbcStatementTest {
         SERVER_PORT);
   }
 
-  // describes the batch cases: an empty batch (no statements -> no client span), a single-statement
-  // batch (not a batch -> no db.operation.batch.size) and two statements with the same operation.
-  // batch telemetry (db.operation.batch.size, BATCH span names and summaries) is only emitted under
-  // stable database semconv
+  // describes the batch cases: an empty batch (no statements -> error client span), a
+  // single-statement batch (not a batch -> no db.operation.batch.size) and two statements with the
+  // same operation. batch telemetry (db.operation.batch.size, BATCH span names and summaries) is
+  // only emitted under stable database semconv; old semconv only sets statement-level attributes
+  // (db.statement, db.operation, db.sql.table) for a single-statement batch
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("batchScenarios")
   void batchQueries(BatchScenario scenario) {
-    assumeTrue(emitStableDatabaseSemconv());
-
     DbSystemProps props = systems.get(MARIADB.system);
     startContainer(props);
     ConnectionFactory connectionFactory =
@@ -352,9 +350,13 @@ public abstract class AbstractR2dbcStatementTest {
                               .blockLast(Duration.ofMinutes(1));
                         }));
 
+    String connectionString = MARIADB.system + "://localhost:" + port;
+
     if (scenario.queries.isEmpty()) {
-      // an empty batch fails to execute and produces a client span with no query text, summary or
-      // batch size; the span name falls back to the database namespace and records the error
+      // an empty batch fails to execute and produces a client span with no operation, summary or
+      // batch size; the span name falls back to the database namespace. under old semconv it still
+      // carries db.user/db.connection_string and an empty db.statement; under stable semconv it
+      // records the error instead (error.type is stable-only)
       assertThat(thrown).isInstanceOf(NoSuchElementException.class);
       getTesting()
           .waitAndAssertTraces(
@@ -366,12 +368,23 @@ public abstract class AbstractR2dbcStatementTest {
                               .hasKind(SpanKind.CLIENT)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(DB_SYSTEM_NAME, MARIADB.system),
-                                  equalTo(DB_NAMESPACE, DB),
+                                  equalTo(
+                                      DB_CONNECTION_STRING,
+                                      emitStableDatabaseSemconv() ? null : connectionString),
+                                  equalTo(maybeStable(DB_SYSTEM), MARIADB.system),
+                                  equalTo(maybeStable(DB_NAME), DB),
+                                  equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                                  equalTo(
+                                      maybeStable(DB_STATEMENT),
+                                      emitStableDatabaseSemconv() ? null : ""),
                                   equalTo(maybeStablePeerService(), "test-peer-service"),
                                   equalTo(SERVER_ADDRESS, container.getHost()),
                                   equalTo(SERVER_PORT, port),
-                                  equalTo(ERROR_TYPE, "java.util.NoSuchElementException"))));
+                                  equalTo(
+                                      ERROR_TYPE,
+                                      emitStableDatabaseSemconv()
+                                          ? "java.util.NoSuchElementException"
+                                          : null))));
       return;
     }
 
@@ -382,15 +395,36 @@ public abstract class AbstractR2dbcStatementTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(scenario.spanName)
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? scenario.spanName
+                                    : scenario.oldSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, MARIADB.system),
-                                equalTo(DB_NAMESPACE, DB),
-                                equalTo(DB_QUERY_TEXT, "SELECT ?"),
-                                equalTo(DB_QUERY_SUMMARY, scenario.summary),
-                                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                                equalTo(
+                                    DB_CONNECTION_STRING,
+                                    emitStableDatabaseSemconv() ? null : connectionString),
+                                equalTo(maybeStable(DB_SYSTEM), MARIADB.system),
+                                equalTo(maybeStable(DB_NAME), DB),
+                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                                // maybeStable(DB_STATEMENT) is db.query.text under stable semconv
+                                // (identical query texts are deduplicated) and db.statement under
+                                // old semconv (individual texts are concatenated with "; ")
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv()
+                                        ? scenario.queryText
+                                        : scenario.oldStatement),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? scenario.summary : null),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : scenario.oldOperation),
+                                equalTo(
+                                    DB_OPERATION_BATCH_SIZE,
+                                    emitStableDatabaseSemconv() ? scenario.batchSize : null),
                                 equalTo(maybeStablePeerService(), "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port))));
@@ -398,16 +432,32 @@ public abstract class AbstractR2dbcStatementTest {
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
-            // an empty batch produces no client span
-            new BatchScenario("empty", emptyList(), null, null, null),
+            // an empty batch produces an error client span
+            new BatchScenario("empty", emptyList(), null, null, null, null, null, null),
             // a single-statement batch is not a batch (size 1), so it emits no
-            // db.operation.batch.size and no BATCH prefix
-            new BatchScenario("single", singletonList("SELECT 1"), "SELECT", "SELECT", null),
+            // db.operation.batch.size and no BATCH prefix; under old semconv it carries
+            // db.statement/db.operation and the operation+namespace span name
+            new BatchScenario(
+                "single",
+                singletonList("SELECT 1"),
+                "SELECT",
+                "SELECT " + DB,
+                "SELECT",
+                "SELECT ?",
+                "SELECT ?",
+                "SELECT"),
+            // a multi-statement batch emits the BATCH span name, deduplicated db.query.text and
+            // db.operation.batch.size under stable semconv; under old semconv the individual
+            // statements are concatenated and the span name is operation+namespace
             new BatchScenario(
                 "twoSameOperation",
                 asList("SELECT 1", "SELECT 2"),
                 "BATCH SELECT",
+                "SELECT " + DB,
                 "BATCH SELECT",
+                "SELECT ?",
+                "SELECT ?; SELECT ?",
+                "SELECT",
                 2L))
         .map(Arguments::of);
   }
@@ -416,15 +466,47 @@ public abstract class AbstractR2dbcStatementTest {
     final String name;
     final List<String> queries;
     final String spanName;
+    final String oldSpanName;
     final String summary;
+    // the stable-semconv db.query.text (identical query texts are deduplicated)
+    final String queryText;
+    // the old-semconv db.statement (individual query texts concatenated with "; ")
+    final String oldStatement;
+    final String oldOperation;
     final Long batchSize;
 
+    // empty-batch scenario (no stable batch attributes, handled separately in the test)
     BatchScenario(
-        String name, List<String> queries, String spanName, String summary, Long batchSize) {
+        String name,
+        List<String> queries,
+        String spanName,
+        String oldSpanName,
+        String summary,
+        String queryText,
+        String oldStatement,
+        String oldOperation) {
+      this(name, queries, spanName, oldSpanName, summary, queryText, oldStatement, oldOperation,
+          null);
+    }
+
+    BatchScenario(
+        String name,
+        List<String> queries,
+        String spanName,
+        String oldSpanName,
+        String summary,
+        String queryText,
+        String oldStatement,
+        String oldOperation,
+        Long batchSize) {
       this.name = name;
       this.queries = queries;
       this.spanName = spanName;
+      this.oldSpanName = oldSpanName;
       this.summary = summary;
+      this.queryText = queryText;
+      this.oldStatement = oldStatement;
+      this.oldOperation = oldOperation;
       this.batchSize = batchSize;
     }
 
