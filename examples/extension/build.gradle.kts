@@ -13,7 +13,7 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id("com.gradleup.shadow") version "9.4.2"
-  id("com.diffplug.spotless") version "8.6.0"
+  id("com.diffplug.spotless") version "8.7.0"
 
   id("io.opentelemetry.instrumentation.muzzle-generation") version "2.29.0-alpha-SNAPSHOT"
   id("io.opentelemetry.instrumentation.muzzle-check") version "2.29.0-alpha-SNAPSHOT"
