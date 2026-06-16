@@ -328,6 +328,15 @@ public abstract class AbstractR2dbcStatementTest {
                 .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
                 .build());
 
+    // the batch statements target a real table so that the collection name is captured (in
+    // db.query.summary and, under old semconv for a single-statement batch, db.sql.table); the
+    // table must exist for the non-empty batches to execute successfully
+    if (!scenario.queries.isEmpty()) {
+      createPlayersTable(connectionFactory);
+      getTesting().waitForTraces(1);
+      getTesting().clearData();
+    }
+
     Throwable thrown =
         catchThrowable(
             () ->
@@ -422,6 +431,12 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(
                                     maybeStable(DB_OPERATION),
                                     emitStableDatabaseSemconv() ? null : scenario.oldOperation),
+                                // db.sql.table is only set under old semconv and only for a
+                                // single-statement batch (multi-statement batches do not capture a
+                                // collection name)
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : scenario.oldCollection),
                                 equalTo(
                                     DB_OPERATION_BATCH_SIZE,
                                     emitStableDatabaseSemconv() ? scenario.batchSize : null),
@@ -435,31 +450,48 @@ public abstract class AbstractR2dbcStatementTest {
             // an empty batch produces an error client span
             BatchScenario.builder("empty").queries(emptyList()).build(),
             // a single-statement batch is not a batch (size 1), so it emits no
-            // db.operation.batch.size and no BATCH prefix; under old semconv it carries
-            // db.statement/db.operation and the operation+namespace span name
+            // db.operation.batch.size and no BATCH prefix; under old semconv it carries the
+            // statement, operation, collection and the operation+namespace+table span name
             BatchScenario.builder("single")
-                .queries(singletonList("SELECT 1"))
-                .spanName("SELECT")
-                .oldSpanName("SELECT " + DB)
-                .summary("SELECT")
-                .queryText("SELECT ?")
-                .oldStatement("SELECT ?")
-                .oldOperation("SELECT")
+                .queries(singletonList("INSERT INTO players VALUES (1)"))
+                .spanName("INSERT players")
+                .oldSpanName("INSERT " + DB + ".players")
+                .summary("INSERT players")
+                .queryText("INSERT INTO players VALUES (?)")
+                .oldStatement("INSERT INTO players VALUES (?)")
+                .oldOperation("INSERT")
+                .oldCollection("players")
                 .build(),
             // a multi-statement batch emits the BATCH span name, deduplicated db.query.text and
-            // db.operation.batch.size under stable semconv; under old semconv the individual
-            // statements are concatenated and the span name is operation+namespace
+            // db.operation.batch.size under stable semconv; the collection name is captured in the
+            // summary (BATCH INSERT players). under old semconv the individual statements are
+            // concatenated but the shared operation and collection are still captured
             BatchScenario.builder("twoSameOperation")
-                .queries(asList("SELECT 1", "SELECT 2"))
-                .spanName("BATCH SELECT")
-                .oldSpanName("SELECT " + DB)
-                .summary("BATCH SELECT")
-                .queryText("SELECT ?")
-                .oldStatement("SELECT ?; SELECT ?")
-                .oldOperation("SELECT")
+                .queries(asList("INSERT INTO players VALUES (2)", "INSERT INTO players VALUES (3)"))
+                .spanName("BATCH INSERT players")
+                .oldSpanName("INSERT " + DB + ".players")
+                .summary("BATCH INSERT players")
+                .queryText("INSERT INTO players VALUES (?)")
+                .oldStatement("INSERT INTO players VALUES (?); INSERT INTO players VALUES (?)")
+                .oldOperation("INSERT")
+                .oldCollection("players")
                 .batchSize(2)
                 .build())
         .map(Arguments::of);
+  }
+
+  private void createPlayersTable(ConnectionFactory connectionFactory) {
+    Mono.from(connectionFactory.create())
+        .flatMapMany(
+            connection ->
+                Mono.from(
+                        connection
+                            .createStatement(
+                                "CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY)")
+                            .execute())
+                    .flatMapMany(result -> result.map((row, metadata) -> ""))
+                    .concatWith(Mono.from(connection.close()).cast(String.class)))
+        .blockLast(Duration.ofMinutes(1));
   }
 
   private static class Parameter {
@@ -527,6 +559,8 @@ public abstract class AbstractR2dbcStatementTest {
     // the old-semconv db.statement (individual query texts concatenated with "; ")
     final String oldStatement;
     final String oldOperation;
+    // the old-semconv db.sql.table (only captured for a single-statement batch)
+    final String oldCollection;
     final Long batchSize;
 
     BatchScenario(Builder builder) {
@@ -538,6 +572,7 @@ public abstract class AbstractR2dbcStatementTest {
       this.queryText = builder.queryText;
       this.oldStatement = builder.oldStatement;
       this.oldOperation = builder.oldOperation;
+      this.oldCollection = builder.oldCollection;
       this.batchSize = builder.batchSize;
     }
 
@@ -560,6 +595,7 @@ public abstract class AbstractR2dbcStatementTest {
       private String queryText;
       private String oldStatement;
       private String oldOperation;
+      private String oldCollection;
       private Long batchSize;
 
       Builder(String name) {
@@ -598,6 +634,11 @@ public abstract class AbstractR2dbcStatementTest {
 
       Builder oldOperation(String oldOperation) {
         this.oldOperation = oldOperation;
+        return this;
+      }
+
+      Builder oldCollection(String oldCollection) {
+        this.oldCollection = oldCollection;
         return this;
       }
 
