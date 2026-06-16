@@ -334,9 +334,6 @@ class CassandraClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                             equalTo(NETWORK_PEER_PORT, cassandraPort),
                             equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
-                            // a single-statement batch is not a batch, so it carries the normal
-                            // statement's db.operation and db.cassandra.table; the real batch cases
-                            // do not
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 emitStableDatabaseSemconv()
@@ -348,8 +345,21 @@ class CassandraClientTest {
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? scenario.summary : null),
-                            equalTo(maybeStable(DB_OPERATION), scenario.operation),
-                            equalTo(maybeStable(DB_CASSANDRA_TABLE), scenario.table))));
+                            // under stable semconv a batch carries db.operation.name (BATCH, or
+                            // BATCH <operation> when all statements share one operation) and
+                            // db.collection.name (when all statements share one collection); a
+                            // single-statement batch is not a batch, so it carries the normal
+                            // statement's db.operation.name and db.cassandra.table
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.operation
+                                    : scenario.oldOperation),
+                            equalTo(
+                                maybeStable(DB_CASSANDRA_TABLE),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.collection
+                                    : scenario.oldCollection))));
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -380,7 +390,9 @@ class CassandraClientTest {
                 .oldStatement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
                 .summary("INSERT batch_single_test.users")
                 .operation("INSERT")
-                .table("batch_single_test.users")
+                .oldOperation("INSERT")
+                .collection("batch_single_test.users")
+                .oldCollection("batch_single_test.users")
                 .build(),
             BatchScenario.builder("twoSameOperation")
                 .keyspace("batch_same_test")
@@ -397,6 +409,8 @@ class CassandraClientTest {
                 .oldSpanName("DB Query")
                 .statement("INSERT INTO batch_same_test.users (name, age) values (?, ?)")
                 .summary("BATCH INSERT batch_same_test.users")
+                .operation("BATCH INSERT batch_same_test.users")
+                .collection("batch_same_test.users")
                 .batchSize(2)
                 .build(),
             BatchScenario.builder("twoDifferentOperations")
@@ -417,6 +431,8 @@ class CassandraClientTest {
                 .statement(
                     "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?")
                 .summary("BATCH")
+                .operation("BATCH")
+                .collection("batch_mixed_test.users")
                 .batchSize(2)
                 .build())
         .map(Arguments::of);
@@ -433,7 +449,9 @@ class CassandraClientTest {
     final String summary;
     final Long batchSize;
     final String operation;
-    final String table;
+    final String oldOperation;
+    final String collection;
+    final String oldCollection;
 
     BatchScenario(Builder builder) {
       this.name = builder.name;
@@ -446,7 +464,9 @@ class CassandraClientTest {
       this.summary = builder.summary;
       this.batchSize = builder.batchSize;
       this.operation = builder.operation;
-      this.table = builder.table;
+      this.oldOperation = builder.oldOperation;
+      this.collection = builder.collection;
+      this.oldCollection = builder.oldCollection;
     }
 
     @Override
@@ -470,7 +490,9 @@ class CassandraClientTest {
       private String summary;
       private Long batchSize;
       private String operation;
-      private String table;
+      private String oldOperation;
+      private String collection;
+      private String oldCollection;
 
       Builder(String name) {
         this.name = name;
@@ -521,8 +543,18 @@ class CassandraClientTest {
         return this;
       }
 
-      Builder table(String table) {
-        this.table = table;
+      Builder oldOperation(String oldOperation) {
+        this.oldOperation = oldOperation;
+        return this;
+      }
+
+      Builder collection(String collection) {
+        this.collection = collection;
+        return this;
+      }
+
+      Builder oldCollection(String oldCollection) {
+        this.oldCollection = oldCollection;
         return this;
       }
 
