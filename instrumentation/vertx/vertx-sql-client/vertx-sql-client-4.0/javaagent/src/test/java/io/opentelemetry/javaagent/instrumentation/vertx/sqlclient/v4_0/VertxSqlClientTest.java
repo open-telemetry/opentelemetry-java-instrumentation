@@ -61,7 +61,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -348,30 +347,29 @@ class VertxSqlClientTest {
                             equalTo(SERVER_PORT, port))));
   }
 
-  private static Stream<Arguments> batchScenarios() {
+  private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-            // an empty batch is rejected before sending, so it looks like a single statement but
-            // records the error and emits no db.operation.batch.size
-            BatchScenario.builder("empty")
-                .tuples(emptyList())
-                .stableSpanName("insert test")
-                .stableSummary("insert test")
-                .errorType("io.vertx.core.impl.NoStackTraceThrowable")
-                .build(),
-            // a single-statement batch is not a batch (size 1), so it emits no
-            // db.operation.batch.size and no BATCH prefix
-            BatchScenario.builder("single")
-                .tuples(singletonList(Tuple.of(3, "Three")))
-                .stableSpanName("insert test")
-                .stableSummary("insert test")
-                .build(),
-            BatchScenario.builder("twoSameOperation")
-                .tuples(asList(Tuple.of(4, "Four"), Tuple.of(5, "Five")))
-                .stableSpanName("BATCH insert test")
-                .stableSummary("BATCH insert test")
-                .batchSize(2)
-                .build())
-        .map(Arguments::of);
+        // an empty batch is rejected before sending, so it looks like a single statement but
+        // records the error and emits no db.operation.batch.size
+        BatchScenario.builder("empty")
+            .tuples(emptyList())
+            .stableSpanName("insert test")
+            .stableSummary("insert test")
+            .errorType("io.vertx.core.impl.NoStackTraceThrowable")
+            .build(),
+        // a single-statement batch is not a batch (size 1), so it emits no
+        // db.operation.batch.size and no BATCH prefix
+        BatchScenario.builder("single")
+            .tuples(singletonList(Tuple.of(3, "Three")))
+            .stableSpanName("insert test")
+            .stableSummary("insert test")
+            .build(),
+        BatchScenario.builder("twoSameOperation")
+            .tuples(asList(Tuple.of(4, "Four"), Tuple.of(5, "Five")))
+            .stableSpanName("BATCH insert test")
+            .stableSummary("BATCH insert test")
+            .batchSize(2)
+            .build());
   }
 
   @Test

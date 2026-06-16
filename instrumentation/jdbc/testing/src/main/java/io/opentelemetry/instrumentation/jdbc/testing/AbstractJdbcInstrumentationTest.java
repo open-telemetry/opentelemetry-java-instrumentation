@@ -1883,61 +1883,60 @@ public abstract class AbstractJdbcInstrumentationTest {
   // expected executeBatch() result, and the expected client span. batch telemetry comes from the
   // shared SQL extractors and is database-agnostic, so a single (in-memory) database is enough to
   // lock down its shape
-  static Stream<Arguments> batchCasesStream() {
+  static Stream<BatchScenario> batchCasesStream() {
     return Stream.of(
-            // an empty batch still produces a client span, but with no query text or batch size;
-            // the span name falls back to the database namespace in both modes
-            BatchScenario.builder()
-                .name("empty")
-                .spanName(DATABASE_NAME_LOWER)
-                .oldSpanName(DATABASE_NAME_LOWER)
-                .build(),
-            // a single-statement batch is not a batch (size 1), so it looks like a normal
-            // statement and carries db.statement/db.operation/db.sql.table under old semconv
-            BatchScenario.builder()
-                .name("single")
-                .createTable("stmt_batch_single")
-                .addQuery("INSERT INTO stmt_batch_single VALUES(1)")
-                .expectedResult(1)
-                .spanName("INSERT stmt_batch_single")
-                .oldSpanName("INSERT " + DATABASE_NAME_LOWER + ".stmt_batch_single")
-                .queryText("INSERT INTO stmt_batch_single VALUES(?)")
-                .oldStatement("INSERT INTO stmt_batch_single VALUES(?)")
-                .summary("INSERT stmt_batch_single")
-                .oldOperation("INSERT")
-                .oldTable("stmt_batch_single")
-                .build(),
-            // a multi-statement batch only emits db.query.text/summary and BATCH span name under
-            // stable semconv; under old semconv it has no statement-level attributes and the span
-            // name falls back to the namespace
-            BatchScenario.builder()
-                .name("twoSameOperation")
-                .createTable("stmt_batch_same")
-                .addQuery("INSERT INTO stmt_batch_same VALUES(1)")
-                .addQuery("INSERT INTO stmt_batch_same VALUES(2)")
-                .expectedResult(1, 1)
-                .spanName("BATCH INSERT stmt_batch_same")
-                .oldSpanName(DATABASE_NAME_LOWER)
-                .queryText("INSERT INTO stmt_batch_same VALUES(?)")
-                .summary("BATCH INSERT stmt_batch_same")
-                .batchSize(2)
-                .build(),
-            BatchScenario.builder()
-                .name("twoDifferentOperations")
-                .createTable("stmt_batch_diff_1")
-                .createTable("stmt_batch_diff_2")
-                .addQuery("INSERT INTO stmt_batch_diff_1 VALUES(1)")
-                .addQuery("INSERT INTO stmt_batch_diff_2 VALUES(2)")
-                .expectedResult(1, 1)
-                .spanName("BATCH")
-                .oldSpanName(DATABASE_NAME_LOWER)
-                .queryText(
-                    "INSERT INTO stmt_batch_diff_1 VALUES(?); INSERT INTO stmt_batch_diff_2"
-                        + " VALUES(?)")
-                .summary("BATCH")
-                .batchSize(2)
-                .build())
-        .map(Arguments::of);
+        // an empty batch still produces a client span, but with no query text or batch size;
+        // the span name falls back to the database namespace in both modes
+        BatchScenario.builder()
+            .name("empty")
+            .spanName(DATABASE_NAME_LOWER)
+            .oldSpanName(DATABASE_NAME_LOWER)
+            .build(),
+        // a single-statement batch is not a batch (size 1), so it looks like a normal
+        // statement and carries db.statement/db.operation/db.sql.table under old semconv
+        BatchScenario.builder()
+            .name("single")
+            .createTable("stmt_batch_single")
+            .addQuery("INSERT INTO stmt_batch_single VALUES(1)")
+            .expectedResult(1)
+            .spanName("INSERT stmt_batch_single")
+            .oldSpanName("INSERT " + DATABASE_NAME_LOWER + ".stmt_batch_single")
+            .queryText("INSERT INTO stmt_batch_single VALUES(?)")
+            .oldStatement("INSERT INTO stmt_batch_single VALUES(?)")
+            .summary("INSERT stmt_batch_single")
+            .oldOperation("INSERT")
+            .oldTable("stmt_batch_single")
+            .build(),
+        // a multi-statement batch only emits db.query.text/summary and BATCH span name under
+        // stable semconv; under old semconv it has no statement-level attributes and the span
+        // name falls back to the namespace
+        BatchScenario.builder()
+            .name("twoSameOperation")
+            .createTable("stmt_batch_same")
+            .addQuery("INSERT INTO stmt_batch_same VALUES(1)")
+            .addQuery("INSERT INTO stmt_batch_same VALUES(2)")
+            .expectedResult(1, 1)
+            .spanName("BATCH INSERT stmt_batch_same")
+            .oldSpanName(DATABASE_NAME_LOWER)
+            .queryText("INSERT INTO stmt_batch_same VALUES(?)")
+            .summary("BATCH INSERT stmt_batch_same")
+            .batchSize(2)
+            .build(),
+        BatchScenario.builder()
+            .name("twoDifferentOperations")
+            .createTable("stmt_batch_diff_1")
+            .createTable("stmt_batch_diff_2")
+            .addQuery("INSERT INTO stmt_batch_diff_1 VALUES(1)")
+            .addQuery("INSERT INTO stmt_batch_diff_2 VALUES(2)")
+            .expectedResult(1, 1)
+            .spanName("BATCH")
+            .oldSpanName(DATABASE_NAME_LOWER)
+            .queryText(
+                "INSERT INTO stmt_batch_diff_1 VALUES(?); INSERT INTO stmt_batch_diff_2"
+                    + " VALUES(?)")
+            .summary("BATCH")
+            .batchSize(2)
+            .build());
   }
 
   @ParameterizedTest

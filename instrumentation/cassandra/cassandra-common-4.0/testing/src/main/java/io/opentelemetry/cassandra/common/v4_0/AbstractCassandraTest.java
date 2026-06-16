@@ -271,80 +271,79 @@ public abstract class AbstractCassandraTest {
                                     maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0))));
   }
 
-  private static Stream<Arguments> batchScenarios() {
+  private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-            // an empty batch still produces a client span, but with no query text, summary,
-            // operation or batch size; the span name falls back to the database system name
-            BatchScenario.builder("empty")
-                .keyspace("batch_empty_test")
-                .buildBatch(session -> BatchStatement.newInstance(DefaultBatchType.LOGGED))
-                .spanName("cassandra")
-                .oldSpanName("DB Query")
-                .build(),
-            // a single-statement batch is executed as a normal statement (not a batch): it has the
-            // normal INSERT span name in both modes, db.operation and db.cassandra.table, and no
-            // db.operation.batch.size
-            BatchScenario.builder("single")
-                .keyspace("batch_single_test")
-                .buildBatch(
-                    session -> {
-                      PreparedStatement insert =
-                          session.prepare(
-                              "INSERT INTO batch_single_test.users (name, age) values (?, ?)");
-                      return BatchStatement.newInstance(
-                          DefaultBatchType.LOGGED, insert.bind("alice", 1));
-                    })
-                .spanName("INSERT batch_single_test.users")
-                .oldSpanName("INSERT batch_single_test.users")
-                .statement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
-                .oldStatement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
-                .summary("INSERT batch_single_test.users")
-                .operation("INSERT")
-                .oldOperation("INSERT")
-                .collection("batch_single_test.users")
-                .oldCollection("batch_single_test.users")
-                .build(),
-            BatchScenario.builder("twoSameOperation")
-                .keyspace("batch_same_test")
-                .buildBatch(
-                    session -> {
-                      PreparedStatement insert =
-                          session.prepare(
-                              "INSERT INTO batch_same_test.users (name, age) values (?, ?)");
-                      return BatchStatement.newInstance(
-                          DefaultBatchType.LOGGED, insert.bind("alice", 1), insert.bind("bob", 2));
-                    })
-                .spanName("BATCH INSERT batch_same_test.users")
-                .oldSpanName("DB Query")
-                .statement("INSERT INTO batch_same_test.users (name, age) values (?, ?)")
-                .summary("BATCH INSERT batch_same_test.users")
-                .operation("BATCH INSERT")
-                .collection("batch_same_test.users")
-                .batchSize(2)
-                .build(),
-            BatchScenario.builder("twoDifferentOperations")
-                .keyspace("batch_mixed_test")
-                .buildBatch(
-                    session -> {
-                      PreparedStatement insert =
-                          session.prepare(
-                              "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?)");
-                      return BatchStatement.newInstance(
-                          DefaultBatchType.LOGGED,
-                          insert.bind(1),
-                          SimpleStatement.newInstance(
-                              "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
-                    })
-                .spanName("BATCH")
-                .oldSpanName("DB Query")
-                .statement(
-                    "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?")
-                .summary("BATCH")
-                .operation("BATCH")
-                .collection("batch_mixed_test.users")
-                .batchSize(2)
-                .build())
-        .map(Arguments::of);
+        // an empty batch still produces a client span, but with no query text, summary,
+        // operation or batch size; the span name falls back to the database system name
+        BatchScenario.builder("empty")
+            .keyspace("batch_empty_test")
+            .buildBatch(session -> BatchStatement.newInstance(DefaultBatchType.LOGGED))
+            .spanName("cassandra")
+            .oldSpanName("DB Query")
+            .build(),
+        // a single-statement batch is executed as a normal statement (not a batch): it has the
+        // normal INSERT span name in both modes, db.operation and db.cassandra.table, and no
+        // db.operation.batch.size
+        BatchScenario.builder("single")
+            .keyspace("batch_single_test")
+            .buildBatch(
+                session -> {
+                  PreparedStatement insert =
+                      session.prepare(
+                          "INSERT INTO batch_single_test.users (name, age) values (?, ?)");
+                  return BatchStatement.newInstance(
+                      DefaultBatchType.LOGGED, insert.bind("alice", 1));
+                })
+            .spanName("INSERT batch_single_test.users")
+            .oldSpanName("INSERT batch_single_test.users")
+            .statement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
+            .oldStatement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
+            .summary("INSERT batch_single_test.users")
+            .operation("INSERT")
+            .oldOperation("INSERT")
+            .collection("batch_single_test.users")
+            .oldCollection("batch_single_test.users")
+            .build(),
+        BatchScenario.builder("twoSameOperation")
+            .keyspace("batch_same_test")
+            .buildBatch(
+                session -> {
+                  PreparedStatement insert =
+                      session.prepare(
+                          "INSERT INTO batch_same_test.users (name, age) values (?, ?)");
+                  return BatchStatement.newInstance(
+                      DefaultBatchType.LOGGED, insert.bind("alice", 1), insert.bind("bob", 2));
+                })
+            .spanName("BATCH INSERT batch_same_test.users")
+            .oldSpanName("DB Query")
+            .statement("INSERT INTO batch_same_test.users (name, age) values (?, ?)")
+            .summary("BATCH INSERT batch_same_test.users")
+            .operation("BATCH INSERT")
+            .collection("batch_same_test.users")
+            .batchSize(2)
+            .build(),
+        BatchScenario.builder("twoDifferentOperations")
+            .keyspace("batch_mixed_test")
+            .buildBatch(
+                session -> {
+                  PreparedStatement insert =
+                      session.prepare(
+                          "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?)");
+                  return BatchStatement.newInstance(
+                      DefaultBatchType.LOGGED,
+                      insert.bind(1),
+                      SimpleStatement.newInstance(
+                          "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
+                })
+            .spanName("BATCH")
+            .oldSpanName("DB Query")
+            .statement(
+                "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?")
+            .summary("BATCH")
+            .operation("BATCH")
+            .collection("batch_mixed_test.users")
+            .batchSize(2)
+            .build());
   }
 
   @ParameterizedTest(name = "{index}: {0}")

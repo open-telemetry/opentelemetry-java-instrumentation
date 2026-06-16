@@ -45,7 +45,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTest {
@@ -121,48 +120,47 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         response, client, "DynamoDBv2", scenario.awsOperation, "POST", additionalAttributes);
   }
 
-  private static Stream<Arguments> batchScenarios() {
+  private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-            // an empty batch keeps the raw batch operation name and emits no batch size or
-            // collection name
-            BatchScenario.builder("getItemEmpty")
-                .awsOperation("BatchGetItem")
-                .execute(client -> client.batchGetItem(getItemRequest(0)))
-                .stableOperation("BatchGetItem")
-                .build(),
-            // a single-item batch is not a batch, so it uses the singular item operation
-            BatchScenario.builder("getItemSingle")
-                .awsOperation("BatchGetItem")
-                .execute(client -> client.batchGetItem(getItemRequest(1)))
-                .stableOperation("GetItem")
-                .hasCollection()
-                .build(),
-            BatchScenario.builder("getItemTwo")
-                .awsOperation("BatchGetItem")
-                .execute(client -> client.batchGetItem(getItemRequest(2)))
-                .stableOperation("BATCH GetItem")
-                .batchSize(2)
-                .hasCollection()
-                .build(),
-            BatchScenario.builder("writeItemEmpty")
-                .awsOperation("BatchWriteItem")
-                .execute(client -> client.batchWriteItem(writeItemRequest(0)))
-                .stableOperation("BatchWriteItem")
-                .build(),
-            BatchScenario.builder("writeItemSingle")
-                .awsOperation("BatchWriteItem")
-                .execute(client -> client.batchWriteItem(writeItemRequest(1)))
-                .stableOperation("WriteItem")
-                .hasCollection()
-                .build(),
-            BatchScenario.builder("writeItemTwo")
-                .awsOperation("BatchWriteItem")
-                .execute(client -> client.batchWriteItem(writeItemRequest(2)))
-                .stableOperation("BATCH WriteItem")
-                .batchSize(2)
-                .hasCollection()
-                .build())
-        .map(Arguments::of);
+        // an empty batch keeps the raw batch operation name and emits no batch size or
+        // collection name
+        BatchScenario.builder("getItemEmpty")
+            .awsOperation("BatchGetItem")
+            .execute(client -> client.batchGetItem(getItemRequest(0)))
+            .stableOperation("BatchGetItem")
+            .build(),
+        // a single-item batch is not a batch, so it uses the singular item operation
+        BatchScenario.builder("getItemSingle")
+            .awsOperation("BatchGetItem")
+            .execute(client -> client.batchGetItem(getItemRequest(1)))
+            .stableOperation("GetItem")
+            .hasCollection()
+            .build(),
+        BatchScenario.builder("getItemTwo")
+            .awsOperation("BatchGetItem")
+            .execute(client -> client.batchGetItem(getItemRequest(2)))
+            .stableOperation("BATCH GetItem")
+            .batchSize(2)
+            .hasCollection()
+            .build(),
+        BatchScenario.builder("writeItemEmpty")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(writeItemRequest(0)))
+            .stableOperation("BatchWriteItem")
+            .build(),
+        BatchScenario.builder("writeItemSingle")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(writeItemRequest(1)))
+            .stableOperation("WriteItem")
+            .hasCollection()
+            .build(),
+        BatchScenario.builder("writeItemTwo")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(writeItemRequest(2)))
+            .stableOperation("BATCH WriteItem")
+            .batchSize(2)
+            .hasCollection()
+            .build());
   }
 
   private static BatchGetItemRequest getItemRequest(int count) {

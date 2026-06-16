@@ -563,149 +563,144 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  private static Stream<Arguments> batchScenarios() {
+  private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-            // an empty batch still produces a span, but keeps the raw batch operation name and
-            // emits no db.operation.batch.size, db.collection.name or table-name attributes
-            BatchScenario.builder("getItemEmpty")
-                .awsOperation("BatchGetItem")
-                .responseContent("{\"ConsumedCapacity\":[]}")
-                .execute(c -> c.batchGetItem(b -> b.requestItems(ImmutableMap.of())))
-                .stableOperation("BatchGetItem")
-                .build(),
-            // a single-item batch is not a batch, so it uses the singular item operation and emits
-            // no db.operation.batch.size
-            BatchScenario.builder("getItemSingle")
-                .awsOperation("BatchGetItem")
-                .responseContent(getResponseContent("BatchGetItem"))
-                .execute(
-                    c ->
-                        c.batchGetItem(
-                            b ->
-                                b.requestItems(
-                                    ImmutableMap.of(
-                                        "sometable",
-                                        KeysAndAttributes.builder()
-                                            .keys(
-                                                singletonList(
-                                                    ImmutableMap.of(
-                                                        "key",
-                                                        AttributeValue.builder()
-                                                            .s("value")
-                                                            .build())))
-                                            .build()))))
-                .stableOperation("GetItem")
-                .hasCollection()
-                .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
-                .assertMetric()
-                .build(),
-            BatchScenario.builder("getItemTwo")
-                .awsOperation("BatchGetItem")
-                .responseContent(getResponseContent("BatchGetItem"))
-                .execute(
-                    c ->
-                        c.batchGetItem(
-                            b ->
-                                b.requestItems(
-                                    ImmutableMap.of(
-                                        "sometable",
-                                        KeysAndAttributes.builder()
-                                            .keys(
-                                                asList(
-                                                    ImmutableMap.of(
-                                                        "key",
-                                                        AttributeValue.builder()
-                                                            .s("value")
-                                                            .build()),
-                                                    ImmutableMap.of(
-                                                        "key",
-                                                        AttributeValue.builder()
-                                                            .s("anotherValue")
-                                                            .build())))
-                                            .build()))))
-                .stableOperation("BATCH GetItem")
-                .hasCollection()
-                .batchSize(2)
-                .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
-                .assertMetric()
-                .build(),
-            BatchScenario.builder("writeItemEmpty")
-                .awsOperation("BatchWriteItem")
-                .responseContent("{\"ConsumedCapacity\":[]}")
-                .execute(c -> c.batchWriteItem(b -> b.requestItems(ImmutableMap.of())))
-                .stableOperation("BatchWriteItem")
-                .build(),
-            // a single-item batch is not a batch, so it uses the singular item operation and emits
-            // no db.operation.batch.size
-            BatchScenario.builder("writeItemSingle")
-                .awsOperation("BatchWriteItem")
-                .responseContent(getResponseContent("BatchWriteItem"))
-                .execute(
-                    c ->
-                        c.batchWriteItem(
-                            b ->
-                                b.requestItems(
-                                    ImmutableMap.of(
-                                        "sometable",
-                                        singletonList(
-                                            WriteRequest.builder()
-                                                .putRequest(
-                                                    PutRequest.builder()
-                                                        .item(
-                                                            ImmutableMap.of(
-                                                                "key",
-                                                                AttributeValue.builder()
-                                                                    .s("value")
-                                                                    .build()))
-                                                        .build())
-                                                .build())))))
-                .stableOperation("WriteItem")
-                .hasCollection()
-                .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
-                .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
-                .assertMetric()
-                .build(),
-            BatchScenario.builder("writeItemTwo")
-                .awsOperation("BatchWriteItem")
-                .responseContent(getResponseContent("BatchWriteItem"))
-                .execute(
-                    c ->
-                        c.batchWriteItem(
-                            b ->
-                                b.requestItems(
-                                    ImmutableMap.of(
-                                        "sometable",
-                                        asList(
-                                            WriteRequest.builder()
-                                                .putRequest(
-                                                    PutRequest.builder()
-                                                        .item(
-                                                            ImmutableMap.of(
-                                                                "key",
-                                                                AttributeValue.builder()
-                                                                    .s("value")
-                                                                    .build()))
-                                                        .build())
-                                                .build(),
-                                            WriteRequest.builder()
-                                                .putRequest(
-                                                    PutRequest.builder()
-                                                        .item(
-                                                            ImmutableMap.of(
-                                                                "key",
-                                                                AttributeValue.builder()
-                                                                    .s("anotherValue")
-                                                                    .build()))
-                                                        .build())
-                                                .build())))))
-                .stableOperation("BATCH WriteItem")
-                .hasCollection()
-                .batchSize(2)
-                .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
-                .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
-                .assertMetric()
-                .build())
-        .map(Arguments::of);
+        // an empty batch still produces a span, but keeps the raw batch operation name and
+        // emits no db.operation.batch.size, db.collection.name or table-name attributes
+        BatchScenario.builder("getItemEmpty")
+            .awsOperation("BatchGetItem")
+            .responseContent("{\"ConsumedCapacity\":[]}")
+            .execute(c -> c.batchGetItem(b -> b.requestItems(ImmutableMap.of())))
+            .stableOperation("BatchGetItem")
+            .build(),
+        // a single-item batch is not a batch, so it uses the singular item operation and emits
+        // no db.operation.batch.size
+        BatchScenario.builder("getItemSingle")
+            .awsOperation("BatchGetItem")
+            .responseContent(getResponseContent("BatchGetItem"))
+            .execute(
+                c ->
+                    c.batchGetItem(
+                        b ->
+                            b.requestItems(
+                                ImmutableMap.of(
+                                    "sometable",
+                                    KeysAndAttributes.builder()
+                                        .keys(
+                                            singletonList(
+                                                ImmutableMap.of(
+                                                    "key",
+                                                    AttributeValue.builder().s("value").build())))
+                                        .build()))))
+            .stableOperation("GetItem")
+            .hasCollection()
+            .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+            .assertMetric()
+            .build(),
+        BatchScenario.builder("getItemTwo")
+            .awsOperation("BatchGetItem")
+            .responseContent(getResponseContent("BatchGetItem"))
+            .execute(
+                c ->
+                    c.batchGetItem(
+                        b ->
+                            b.requestItems(
+                                ImmutableMap.of(
+                                    "sometable",
+                                    KeysAndAttributes.builder()
+                                        .keys(
+                                            asList(
+                                                ImmutableMap.of(
+                                                    "key",
+                                                    AttributeValue.builder().s("value").build()),
+                                                ImmutableMap.of(
+                                                    "key",
+                                                    AttributeValue.builder()
+                                                        .s("anotherValue")
+                                                        .build())))
+                                        .build()))))
+            .stableOperation("BATCH GetItem")
+            .hasCollection()
+            .batchSize(2)
+            .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+            .assertMetric()
+            .build(),
+        BatchScenario.builder("writeItemEmpty")
+            .awsOperation("BatchWriteItem")
+            .responseContent("{\"ConsumedCapacity\":[]}")
+            .execute(c -> c.batchWriteItem(b -> b.requestItems(ImmutableMap.of())))
+            .stableOperation("BatchWriteItem")
+            .build(),
+        // a single-item batch is not a batch, so it uses the singular item operation and emits
+        // no db.operation.batch.size
+        BatchScenario.builder("writeItemSingle")
+            .awsOperation("BatchWriteItem")
+            .responseContent(getResponseContent("BatchWriteItem"))
+            .execute(
+                c ->
+                    c.batchWriteItem(
+                        b ->
+                            b.requestItems(
+                                ImmutableMap.of(
+                                    "sometable",
+                                    singletonList(
+                                        WriteRequest.builder()
+                                            .putRequest(
+                                                PutRequest.builder()
+                                                    .item(
+                                                        ImmutableMap.of(
+                                                            "key",
+                                                            AttributeValue.builder()
+                                                                .s("value")
+                                                                .build()))
+                                                    .build())
+                                            .build())))))
+            .stableOperation("WriteItem")
+            .hasCollection()
+            .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+            .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
+            .assertMetric()
+            .build(),
+        BatchScenario.builder("writeItemTwo")
+            .awsOperation("BatchWriteItem")
+            .responseContent(getResponseContent("BatchWriteItem"))
+            .execute(
+                c ->
+                    c.batchWriteItem(
+                        b ->
+                            b.requestItems(
+                                ImmutableMap.of(
+                                    "sometable",
+                                    asList(
+                                        WriteRequest.builder()
+                                            .putRequest(
+                                                PutRequest.builder()
+                                                    .item(
+                                                        ImmutableMap.of(
+                                                            "key",
+                                                            AttributeValue.builder()
+                                                                .s("value")
+                                                                .build()))
+                                                    .build())
+                                            .build(),
+                                        WriteRequest.builder()
+                                            .putRequest(
+                                                PutRequest.builder()
+                                                    .item(
+                                                        ImmutableMap.of(
+                                                            "key",
+                                                            AttributeValue.builder()
+                                                                .s("anotherValue")
+                                                                .build()))
+                                                    .build())
+                                            .build())))))
+            .stableOperation("BATCH WriteItem")
+            .hasCollection()
+            .batchSize(2)
+            .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+            .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
+            .assertMetric()
+            .build());
   }
 
   private static String getResponseContent(String operation) {

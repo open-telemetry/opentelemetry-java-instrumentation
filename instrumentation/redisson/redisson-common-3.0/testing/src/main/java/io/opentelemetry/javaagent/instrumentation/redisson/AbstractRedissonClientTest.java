@@ -54,7 +54,6 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.redisson.Redisson;
 import org.redisson.api.BatchOptions;
@@ -302,43 +301,42 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(maybeStable(DB_STATEMENT), scenario.statement))));
   }
 
-  private static Stream<Arguments> batchScenarios() {
+  private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-            // an empty batch fails to execute and produces no span
-            BatchScenario.builder("empty").commands(batch -> {}).empty().build(),
-            // a single-command batch is executed as a normal command (not a pipeline): the span is
-            // named after the command, it carries db.operation (old) / db.operation.name (stable),
-            // and emits no db.operation.batch.size
-            BatchScenario.builder("single")
-                .commands(batch -> batch.getBucket("batch1").setAsync("v1"))
-                .spanName("SET")
-                .oldSpanName("SET")
-                .oldOperation("SET")
-                .statement("SET batch1 ?")
-                .build(),
-            BatchScenario.builder("twoSameOperation")
-                .commands(
-                    batch -> {
-                      batch.getBucket("batch1").setAsync("v1");
-                      batch.getBucket("batch2").setAsync("v2");
-                    })
-                .spanName("PIPELINE SET")
-                .oldSpanName("DB Query")
-                .batchSize(2)
-                .statement("SET batch1 ?;SET batch2 ?")
-                .build(),
-            BatchScenario.builder("twoDifferentOperations")
-                .commands(
-                    batch -> {
-                      batch.getBucket("batch1").setAsync("v1");
-                      batch.getBucket("batch1").getAsync();
-                    })
-                .spanName("PIPELINE")
-                .oldSpanName("DB Query")
-                .batchSize(2)
-                .statement("SET batch1 ?;GET batch1")
-                .build())
-        .map(Arguments::of);
+        // an empty batch fails to execute and produces no span
+        BatchScenario.builder("empty").commands(batch -> {}).empty().build(),
+        // a single-command batch is executed as a normal command (not a pipeline): the span is
+        // named after the command, it carries db.operation (old) / db.operation.name (stable),
+        // and emits no db.operation.batch.size
+        BatchScenario.builder("single")
+            .commands(batch -> batch.getBucket("batch1").setAsync("v1"))
+            .spanName("SET")
+            .oldSpanName("SET")
+            .oldOperation("SET")
+            .statement("SET batch1 ?")
+            .build(),
+        BatchScenario.builder("twoSameOperation")
+            .commands(
+                batch -> {
+                  batch.getBucket("batch1").setAsync("v1");
+                  batch.getBucket("batch2").setAsync("v2");
+                })
+            .spanName("PIPELINE SET")
+            .oldSpanName("DB Query")
+            .batchSize(2)
+            .statement("SET batch1 ?;SET batch2 ?")
+            .build(),
+        BatchScenario.builder("twoDifferentOperations")
+            .commands(
+                batch -> {
+                  batch.getBucket("batch1").setAsync("v1");
+                  batch.getBucket("batch1").getAsync();
+                })
+            .spanName("PIPELINE")
+            .oldSpanName("DB Query")
+            .batchSize(2)
+            .statement("SET batch1 ?;GET batch1")
+            .build());
   }
 
   private static void invokeExecute(RBatch batch) throws ReflectiveOperationException {

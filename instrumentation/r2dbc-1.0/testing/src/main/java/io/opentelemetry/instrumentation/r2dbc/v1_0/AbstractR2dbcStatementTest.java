@@ -445,56 +445,53 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(SERVER_PORT, port))));
   }
 
-  private static Stream<Arguments> batchScenarios() {
+  private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-            // an empty batch produces an error client span
-            BatchScenario.builder("empty").queries(emptyList()).build(),
-            // a single-statement batch is not a batch (size 1), so it emits no
-            // db.operation.batch.size and no BATCH prefix; under old semconv it carries the
-            // statement, operation, collection and the operation+namespace+table span name
-            BatchScenario.builder("single")
-                .queries(singletonList("INSERT INTO players VALUES (1)"))
-                .spanName("INSERT players")
-                .oldSpanName("INSERT " + DB + ".players")
-                .summary("INSERT players")
-                .queryText("INSERT INTO players VALUES (?)")
-                .oldStatement("INSERT INTO players VALUES (?)")
-                .oldOperation("INSERT")
-                .oldCollection("players")
-                .build(),
-            // a multi-statement batch emits the BATCH span name, deduplicated db.query.text and
-            // db.operation.batch.size under stable semconv; the collection name is captured in the
-            // summary (BATCH INSERT players). under old semconv the individual statements are
-            // concatenated but the shared operation and collection are still captured
-            BatchScenario.builder("twoSameOperation")
-                .queries(asList("INSERT INTO players VALUES (2)", "INSERT INTO players VALUES (3)"))
-                .spanName("BATCH INSERT players")
-                .oldSpanName("INSERT " + DB + ".players")
-                .summary("BATCH INSERT players")
-                .queryText("INSERT INTO players VALUES (?)")
-                .oldStatement("INSERT INTO players VALUES (?); INSERT INTO players VALUES (?)")
-                .oldOperation("INSERT")
-                .oldCollection("players")
-                .batchSize(2)
-                .build(),
-            // a multi-statement batch with different operations has no shared operation or summary,
-            // so db.query.summary (and the span name) is just BATCH; the individual statements are
-            // still concatenated into db.query.text / db.statement
-            BatchScenario.builder("twoDifferentOperations")
-                .queries(
-                    asList(
-                        "INSERT INTO players VALUES (4)", "UPDATE players SET id = 5 WHERE id = 4"))
-                .spanName("BATCH")
-                .oldSpanName("INSERT " + DB + ".players")
-                .summary("BATCH")
-                .queryText("INSERT INTO players VALUES (?); UPDATE players SET id = ? WHERE id = ?")
-                .oldStatement(
-                    "INSERT INTO players VALUES (?); UPDATE players SET id = ? WHERE id = ?")
-                .oldOperation("INSERT")
-                .oldCollection("players")
-                .batchSize(2)
-                .build())
-        .map(Arguments::of);
+        // an empty batch produces an error client span
+        BatchScenario.builder("empty").queries(emptyList()).build(),
+        // a single-statement batch is not a batch (size 1), so it emits no
+        // db.operation.batch.size and no BATCH prefix; under old semconv it carries the
+        // statement, operation, collection and the operation+namespace+table span name
+        BatchScenario.builder("single")
+            .queries(singletonList("INSERT INTO players VALUES (1)"))
+            .spanName("INSERT players")
+            .oldSpanName("INSERT " + DB + ".players")
+            .summary("INSERT players")
+            .queryText("INSERT INTO players VALUES (?)")
+            .oldStatement("INSERT INTO players VALUES (?)")
+            .oldOperation("INSERT")
+            .oldCollection("players")
+            .build(),
+        // a multi-statement batch emits the BATCH span name, deduplicated db.query.text and
+        // db.operation.batch.size under stable semconv; the collection name is captured in the
+        // summary (BATCH INSERT players). under old semconv the individual statements are
+        // concatenated but the shared operation and collection are still captured
+        BatchScenario.builder("twoSameOperation")
+            .queries(asList("INSERT INTO players VALUES (2)", "INSERT INTO players VALUES (3)"))
+            .spanName("BATCH INSERT players")
+            .oldSpanName("INSERT " + DB + ".players")
+            .summary("BATCH INSERT players")
+            .queryText("INSERT INTO players VALUES (?)")
+            .oldStatement("INSERT INTO players VALUES (?); INSERT INTO players VALUES (?)")
+            .oldOperation("INSERT")
+            .oldCollection("players")
+            .batchSize(2)
+            .build(),
+        // a multi-statement batch with different operations has no shared operation or summary,
+        // so db.query.summary (and the span name) is just BATCH; the individual statements are
+        // still concatenated into db.query.text / db.statement
+        BatchScenario.builder("twoDifferentOperations")
+            .queries(
+                asList("INSERT INTO players VALUES (4)", "UPDATE players SET id = 5 WHERE id = 4"))
+            .spanName("BATCH")
+            .oldSpanName("INSERT " + DB + ".players")
+            .summary("BATCH")
+            .queryText("INSERT INTO players VALUES (?); UPDATE players SET id = ? WHERE id = ?")
+            .oldStatement("INSERT INTO players VALUES (?); UPDATE players SET id = ? WHERE id = ?")
+            .oldOperation("INSERT")
+            .oldCollection("players")
+            .batchSize(2)
+            .build());
   }
 
   private void createPlayersTable(ConnectionFactory connectionFactory) {
