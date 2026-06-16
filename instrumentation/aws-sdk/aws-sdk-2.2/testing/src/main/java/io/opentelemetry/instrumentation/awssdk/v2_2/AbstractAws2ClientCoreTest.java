@@ -708,6 +708,30 @@ public abstract class AbstractAws2ClientCoreTest {
         .map(Arguments::of);
   }
 
+  private static String getResponseContent(String operation) {
+    switch (operation) {
+      case "ListTables":
+        return "{\"TableNames\":[\"sometable\"]}";
+      case "BatchGetItem":
+        return "{\"ConsumedCapacity\":[{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}]}";
+      case "GetItem":
+      case "Query":
+      case "UpdateTable":
+        return "{\"ConsumedCapacity\":{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}}";
+      case "BatchWriteItem":
+        return "{\"ConsumedCapacity\":[{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}],\"ItemCollectionMetrics\":{\"somekey1\":[{\"ItemCollectionKey\":{\"somekey2\":{}}}]}}";
+      case "CreateTable":
+      case "DeleteItem":
+      case "PutItem":
+      case "UpdateItem":
+        return "{\"ConsumedCapacity\":{\"TableName\":\"sometable\",\"CapacityUnits\":1.0},\"ItemCollectionMetrics\":{\"ItemCollectionKey\":{\"somekey\":{}}}}";
+      case "Scan":
+        return "{\"Count\":1,\"ScannedCount\":1,\"ConsumedCapacity\":{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}}";
+      default:
+        return "";
+    }
+  }
+
   private static final class BatchScenario {
     final String name;
     final String awsOperation;
@@ -823,30 +847,6 @@ public abstract class AbstractAws2ClientCoreTest {
       BatchScenario build() {
         return new BatchScenario(this);
       }
-    }
-  }
-
-  private static String getResponseContent(String operation) {
-    switch (operation) {
-      case "ListTables":
-        return "{\"TableNames\":[\"sometable\"]}";
-      case "BatchGetItem":
-        return "{\"ConsumedCapacity\":[{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}]}";
-      case "GetItem":
-      case "Query":
-      case "UpdateTable":
-        return "{\"ConsumedCapacity\":{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}}";
-      case "BatchWriteItem":
-        return "{\"ConsumedCapacity\":[{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}],\"ItemCollectionMetrics\":{\"somekey1\":[{\"ItemCollectionKey\":{\"somekey2\":{}}}]}}";
-      case "CreateTable":
-      case "DeleteItem":
-      case "PutItem":
-      case "UpdateItem":
-        return "{\"ConsumedCapacity\":{\"TableName\":\"sometable\",\"CapacityUnits\":1.0},\"ItemCollectionMetrics\":{\"ItemCollectionKey\":{\"somekey\":{}}}}";
-      case "Scan":
-        return "{\"Count\":1,\"ScannedCount\":1,\"ConsumedCapacity\":{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}}";
-      default:
-        return "";
     }
   }
 }

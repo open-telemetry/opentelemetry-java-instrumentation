@@ -305,96 +305,40 @@ public abstract class AbstractRedissonClientTest {
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
             // an empty batch fails to execute and produces no span
-            BatchScenario.empty(),
+            BatchScenario.builder("empty").commands(batch -> {}).empty().build(),
             // a single-command batch is executed as a normal command (not a pipeline): the span is
             // named after the command, it carries db.operation (old) / db.operation.name (stable),
             // and emits no db.operation.batch.size
-            new BatchScenario(
-                "single",
-                batch -> batch.getBucket("batch1").setAsync("v1"),
-                "SET",
-                "SET",
-                null,
-                "SET",
-                "SET batch1 ?"),
-            new BatchScenario(
-                "twoSameOperation",
-                batch -> {
-                  batch.getBucket("batch1").setAsync("v1");
-                  batch.getBucket("batch2").setAsync("v2");
-                },
-                "PIPELINE SET",
-                "DB Query",
-                2L,
-                null,
-                "SET batch1 ?;SET batch2 ?"),
-            new BatchScenario(
-                "twoDifferentOperations",
-                batch -> {
-                  batch.getBucket("batch1").setAsync("v1");
-                  batch.getBucket("batch1").getAsync();
-                },
-                "PIPELINE",
-                "DB Query",
-                2L,
-                null,
-                "SET batch1 ?;GET batch1"))
+            BatchScenario.builder("single")
+                .commands(batch -> batch.getBucket("batch1").setAsync("v1"))
+                .spanName("SET")
+                .oldSpanName("SET")
+                .oldOperation("SET")
+                .statement("SET batch1 ?")
+                .build(),
+            BatchScenario.builder("twoSameOperation")
+                .commands(
+                    batch -> {
+                      batch.getBucket("batch1").setAsync("v1");
+                      batch.getBucket("batch2").setAsync("v2");
+                    })
+                .spanName("PIPELINE SET")
+                .oldSpanName("DB Query")
+                .batchSize(2)
+                .statement("SET batch1 ?;SET batch2 ?")
+                .build(),
+            BatchScenario.builder("twoDifferentOperations")
+                .commands(
+                    batch -> {
+                      batch.getBucket("batch1").setAsync("v1");
+                      batch.getBucket("batch1").getAsync();
+                    })
+                .spanName("PIPELINE")
+                .oldSpanName("DB Query")
+                .batchSize(2)
+                .statement("SET batch1 ?;GET batch1")
+                .build())
         .map(Arguments::of);
-  }
-
-  private static final class BatchScenario {
-    final String name;
-    final Consumer<RBatch> commands;
-    final String spanName;
-    final String oldSpanName;
-    final Long batchSize;
-    final String oldOperation;
-    final String statement;
-    final boolean empty;
-
-    BatchScenario(
-        String name,
-        Consumer<RBatch> commands,
-        String spanName,
-        String oldSpanName,
-        Long batchSize,
-        String oldOperation,
-        String statement) {
-      this.name = name;
-      this.commands = commands;
-      this.spanName = spanName;
-      this.oldSpanName = oldSpanName;
-      this.batchSize = batchSize;
-      this.oldOperation = oldOperation;
-      this.statement = statement;
-      this.empty = false;
-    }
-
-    private BatchScenario() {
-      this.name = "empty";
-      this.commands = batch -> {};
-      this.spanName = null;
-      this.oldSpanName = null;
-      this.batchSize = null;
-      this.oldOperation = null;
-      this.statement = null;
-      this.empty = true;
-    }
-
-    static BatchScenario empty() {
-      return new BatchScenario();
-    }
-
-    // the stable-mode db.operation.name (= the span name in stable mode)
-    String operationName() {
-      return spanName;
-    }
-
-    @Override
-    public String toString() {
-      // used as the parameterized test display name
-      return name;
-    }
   }
 
   private static void invokeExecute(RBatch batch) throws ReflectiveOperationException {
@@ -702,5 +646,96 @@ public abstract class AbstractRedissonClientTest {
 
   protected RBatch createBatch(RedissonClient redisson) {
     return redisson.createBatch(BatchOptions.defaults());
+  }
+
+  private static final class BatchScenario {
+    final String name;
+    final Consumer<RBatch> commands;
+    final String spanName;
+    final String oldSpanName;
+    final Long batchSize;
+    final String oldOperation;
+    final String statement;
+    final boolean empty;
+
+    BatchScenario(Builder builder) {
+      this.name = builder.name;
+      this.commands = builder.commands;
+      this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
+      this.batchSize = builder.batchSize;
+      this.oldOperation = builder.oldOperation;
+      this.statement = builder.statement;
+      this.empty = builder.empty;
+    }
+
+    static Builder builder(String name) {
+      return new Builder(name);
+    }
+
+    // the stable-mode db.operation.name (= the span name in stable mode)
+    String operationName() {
+      return spanName;
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
+
+    static final class Builder {
+      private final String name;
+      private Consumer<RBatch> commands;
+      private String spanName;
+      private String oldSpanName;
+      private Long batchSize;
+      private String oldOperation;
+      private String statement;
+      private boolean empty;
+
+      Builder(String name) {
+        this.name = name;
+      }
+
+      Builder commands(Consumer<RBatch> commands) {
+        this.commands = commands;
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder oldOperation(String oldOperation) {
+        this.oldOperation = oldOperation;
+        return this;
+      }
+
+      Builder statement(String statement) {
+        this.statement = statement;
+        return this;
+      }
+
+      Builder empty() {
+        this.empty = true;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }

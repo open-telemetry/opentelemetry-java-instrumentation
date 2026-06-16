@@ -438,132 +438,6 @@ class CassandraClientTest {
         .map(Arguments::of);
   }
 
-  private static final class BatchScenario {
-    final String name;
-    final String keyspace;
-    final Function<Session, BatchStatement> buildBatch;
-    final String spanName;
-    final String oldSpanName;
-    final String statement;
-    final String oldStatement;
-    final String summary;
-    final Long batchSize;
-    final String operation;
-    final String oldOperation;
-    final String collection;
-    final String oldCollection;
-
-    BatchScenario(Builder builder) {
-      this.name = builder.name;
-      this.keyspace = builder.keyspace;
-      this.buildBatch = builder.buildBatch;
-      this.spanName = builder.spanName;
-      this.oldSpanName = builder.oldSpanName;
-      this.statement = builder.statement;
-      this.oldStatement = builder.oldStatement;
-      this.summary = builder.summary;
-      this.batchSize = builder.batchSize;
-      this.operation = builder.operation;
-      this.oldOperation = builder.oldOperation;
-      this.collection = builder.collection;
-      this.oldCollection = builder.oldCollection;
-    }
-
-    @Override
-    public String toString() {
-      // used as the parameterized test display name
-      return name;
-    }
-
-    static Builder builder(String name) {
-      return new Builder(name);
-    }
-
-    static final class Builder {
-      private final String name;
-      private String keyspace;
-      private Function<Session, BatchStatement> buildBatch;
-      private String spanName;
-      private String oldSpanName;
-      private String statement;
-      private String oldStatement;
-      private String summary;
-      private Long batchSize;
-      private String operation;
-      private String oldOperation;
-      private String collection;
-      private String oldCollection;
-
-      Builder(String name) {
-        this.name = name;
-      }
-
-      Builder keyspace(String keyspace) {
-        this.keyspace = keyspace;
-        return this;
-      }
-
-      Builder buildBatch(Function<Session, BatchStatement> buildBatch) {
-        this.buildBatch = buildBatch;
-        return this;
-      }
-
-      Builder spanName(String spanName) {
-        this.spanName = spanName;
-        return this;
-      }
-
-      Builder oldSpanName(String oldSpanName) {
-        this.oldSpanName = oldSpanName;
-        return this;
-      }
-
-      Builder statement(String statement) {
-        this.statement = statement;
-        return this;
-      }
-
-      Builder oldStatement(String oldStatement) {
-        this.oldStatement = oldStatement;
-        return this;
-      }
-
-      Builder summary(String summary) {
-        this.summary = summary;
-        return this;
-      }
-
-      Builder batchSize(long batchSize) {
-        this.batchSize = batchSize;
-        return this;
-      }
-
-      Builder operation(String operation) {
-        this.operation = operation;
-        return this;
-      }
-
-      Builder oldOperation(String oldOperation) {
-        this.oldOperation = oldOperation;
-        return this;
-      }
-
-      Builder collection(String collection) {
-        this.collection = collection;
-        return this;
-      }
-
-      Builder oldCollection(String oldCollection) {
-        this.oldCollection = oldCollection;
-        return this;
-      }
-
-      BatchScenario build() {
-        return new BatchScenario(this);
-      }
-    }
-  }
-
   private static Stream<Arguments> provideSyncParameters() {
     return Stream.of(
         Arguments.of(
@@ -693,6 +567,132 @@ class CassandraClientTest {
       this.spanName = spanName;
       this.operation = operation;
       this.table = table;
+    }
+  }
+
+  private static final class BatchScenario {
+    final String name;
+    final String keyspace;
+    final Function<Session, BatchStatement> buildBatch;
+    final String spanName;
+    final String oldSpanName;
+    final String statement;
+    final String oldStatement;
+    final String summary;
+    final Long batchSize;
+    final String operation;
+    final String oldOperation;
+    final String collection;
+    final String oldCollection;
+
+    BatchScenario(Builder builder) {
+      this.name = builder.name;
+      this.keyspace = builder.keyspace;
+      this.buildBatch = builder.buildBatch;
+      this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
+      this.statement = builder.statement;
+      this.oldStatement = builder.oldStatement;
+      this.summary = builder.summary;
+      this.batchSize = builder.batchSize;
+      this.operation = builder.operation;
+      this.oldOperation = builder.oldOperation;
+      this.collection = builder.collection;
+      this.oldCollection = builder.oldCollection;
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
+
+    static Builder builder(String name) {
+      return new Builder(name);
+    }
+
+    static final class Builder {
+      private final String name;
+      private String keyspace;
+      private Function<Session, BatchStatement> buildBatch;
+      private String spanName;
+      private String oldSpanName;
+      private String statement;
+      private String oldStatement;
+      private String summary;
+      private Long batchSize;
+      private String operation;
+      private String oldOperation;
+      private String collection;
+      private String oldCollection;
+
+      Builder(String name) {
+        this.name = name;
+      }
+
+      Builder keyspace(String keyspace) {
+        this.keyspace = keyspace;
+        return this;
+      }
+
+      Builder buildBatch(Function<Session, BatchStatement> buildBatch) {
+        this.buildBatch = buildBatch;
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
+      Builder statement(String statement) {
+        this.statement = statement;
+        return this;
+      }
+
+      Builder oldStatement(String oldStatement) {
+        this.oldStatement = oldStatement;
+        return this;
+      }
+
+      Builder summary(String summary) {
+        this.summary = summary;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder operation(String operation) {
+        this.operation = operation;
+        return this;
+      }
+
+      Builder oldOperation(String oldOperation) {
+        this.oldOperation = oldOperation;
+        return this;
+      }
+
+      Builder collection(String collection) {
+        this.collection = collection;
+        return this;
+      }
+
+      Builder oldCollection(String oldCollection) {
+        this.oldCollection = oldCollection;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
     }
   }
 }

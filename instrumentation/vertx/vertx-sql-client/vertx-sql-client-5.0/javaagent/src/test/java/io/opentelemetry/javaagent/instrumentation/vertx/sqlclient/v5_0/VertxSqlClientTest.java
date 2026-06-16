@@ -353,60 +353,26 @@ class VertxSqlClientTest {
     return Stream.of(
             // an empty batch is rejected before sending, so it looks like a single statement but
             // records the error and emits no db.operation.batch.size
-            new BatchScenario(
-                "empty",
-                emptyList(),
-                "insert test",
-                "insert test",
-                null,
-                "io.vertx.core.VertxException"),
+            BatchScenario.builder("empty")
+                .tuples(emptyList())
+                .stableSpanName("insert test")
+                .stableSummary("insert test")
+                .errorType("io.vertx.core.VertxException")
+                .build(),
             // a single-statement batch is not a batch (size 1), so it emits no
             // db.operation.batch.size and no BATCH prefix
-            new BatchScenario(
-                "single",
-                singletonList(Tuple.of(3, "Three")),
-                "insert test",
-                "insert test",
-                null,
-                null),
-            new BatchScenario(
-                "twoSameOperation",
-                asList(Tuple.of(4, "Four"), Tuple.of(5, "Five")),
-                "BATCH insert test",
-                "BATCH insert test",
-                2L,
-                null))
+            BatchScenario.builder("single")
+                .tuples(singletonList(Tuple.of(3, "Three")))
+                .stableSpanName("insert test")
+                .stableSummary("insert test")
+                .build(),
+            BatchScenario.builder("twoSameOperation")
+                .tuples(asList(Tuple.of(4, "Four"), Tuple.of(5, "Five")))
+                .stableSpanName("BATCH insert test")
+                .stableSummary("BATCH insert test")
+                .batchSize(2)
+                .build())
         .map(Arguments::of);
-  }
-
-  private static final class BatchScenario {
-    final String name;
-    final List<Tuple> tuples;
-    final String stableSpanName;
-    final String stableSummary;
-    final Long batchSize;
-    final String errorType;
-
-    BatchScenario(
-        String name,
-        List<Tuple> tuples,
-        String stableSpanName,
-        String stableSummary,
-        Long batchSize,
-        String errorType) {
-      this.name = name;
-      this.tuples = tuples;
-      this.stableSpanName = stableSpanName;
-      this.stableSummary = stableSummary;
-      this.batchSize = batchSize;
-      this.errorType = errorType;
-    }
-
-    @Override
-    public String toString() {
-      // used as the parameterized test display name
-      return name;
-    }
   }
 
   @Test
@@ -589,5 +555,75 @@ class VertxSqlClientTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
     testing.waitAndAssertTraces(assertions);
+  }
+
+  private static final class BatchScenario {
+    final String name;
+    final List<Tuple> tuples;
+    final String stableSpanName;
+    final String stableSummary;
+    final Long batchSize;
+    final String errorType;
+
+    BatchScenario(Builder builder) {
+      this.name = builder.name;
+      this.tuples = builder.tuples;
+      this.stableSpanName = builder.stableSpanName;
+      this.stableSummary = builder.stableSummary;
+      this.batchSize = builder.batchSize;
+      this.errorType = builder.errorType;
+    }
+
+    static Builder builder(String name) {
+      return new Builder(name);
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
+
+    static final class Builder {
+      private final String name;
+      private List<Tuple> tuples;
+      private String stableSpanName;
+      private String stableSummary;
+      private Long batchSize;
+      private String errorType;
+
+      Builder(String name) {
+        this.name = name;
+      }
+
+      Builder tuples(List<Tuple> tuples) {
+        this.tuples = tuples;
+        return this;
+      }
+
+      Builder stableSpanName(String stableSpanName) {
+        this.stableSpanName = stableSpanName;
+        return this;
+      }
+
+      Builder stableSummary(String stableSummary) {
+        this.stableSummary = stableSummary;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder errorType(String errorType) {
+        this.errorType = errorType;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }

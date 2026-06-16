@@ -433,88 +433,33 @@ public abstract class AbstractR2dbcStatementTest {
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
             // an empty batch produces an error client span
-            new BatchScenario("empty", emptyList(), null, null, null, null, null, null),
+            BatchScenario.builder("empty").queries(emptyList()).build(),
             // a single-statement batch is not a batch (size 1), so it emits no
             // db.operation.batch.size and no BATCH prefix; under old semconv it carries
             // db.statement/db.operation and the operation+namespace span name
-            new BatchScenario(
-                "single",
-                singletonList("SELECT 1"),
-                "SELECT",
-                "SELECT " + DB,
-                "SELECT",
-                "SELECT ?",
-                "SELECT ?",
-                "SELECT"),
+            BatchScenario.builder("single")
+                .queries(singletonList("SELECT 1"))
+                .spanName("SELECT")
+                .oldSpanName("SELECT " + DB)
+                .summary("SELECT")
+                .queryText("SELECT ?")
+                .oldStatement("SELECT ?")
+                .oldOperation("SELECT")
+                .build(),
             // a multi-statement batch emits the BATCH span name, deduplicated db.query.text and
             // db.operation.batch.size under stable semconv; under old semconv the individual
             // statements are concatenated and the span name is operation+namespace
-            new BatchScenario(
-                "twoSameOperation",
-                asList("SELECT 1", "SELECT 2"),
-                "BATCH SELECT",
-                "SELECT " + DB,
-                "BATCH SELECT",
-                "SELECT ?",
-                "SELECT ?; SELECT ?",
-                "SELECT",
-                2L))
+            BatchScenario.builder("twoSameOperation")
+                .queries(asList("SELECT 1", "SELECT 2"))
+                .spanName("BATCH SELECT")
+                .oldSpanName("SELECT " + DB)
+                .summary("BATCH SELECT")
+                .queryText("SELECT ?")
+                .oldStatement("SELECT ?; SELECT ?")
+                .oldOperation("SELECT")
+                .batchSize(2)
+                .build())
         .map(Arguments::of);
-  }
-
-  private static final class BatchScenario {
-    final String name;
-    final List<String> queries;
-    final String spanName;
-    final String oldSpanName;
-    final String summary;
-    // the stable-semconv db.query.text (identical query texts are deduplicated)
-    final String queryText;
-    // the old-semconv db.statement (individual query texts concatenated with "; ")
-    final String oldStatement;
-    final String oldOperation;
-    final Long batchSize;
-
-    // empty-batch scenario (no stable batch attributes, handled separately in the test)
-    BatchScenario(
-        String name,
-        List<String> queries,
-        String spanName,
-        String oldSpanName,
-        String summary,
-        String queryText,
-        String oldStatement,
-        String oldOperation) {
-      this(name, queries, spanName, oldSpanName, summary, queryText, oldStatement, oldOperation,
-          null);
-    }
-
-    BatchScenario(
-        String name,
-        List<String> queries,
-        String spanName,
-        String oldSpanName,
-        String summary,
-        String queryText,
-        String oldStatement,
-        String oldOperation,
-        Long batchSize) {
-      this.name = name;
-      this.queries = queries;
-      this.spanName = spanName;
-      this.oldSpanName = oldSpanName;
-      this.summary = summary;
-      this.queryText = queryText;
-      this.oldStatement = oldStatement;
-      this.oldOperation = oldOperation;
-      this.batchSize = batchSize;
-    }
-
-    @Override
-    public String toString() {
-      // used as the parameterized test display name
-      return name;
-    }
   }
 
   private static class Parameter {
@@ -568,6 +513,102 @@ public abstract class AbstractR2dbcStatementTest {
         envVariables.put(keyValues[2 * i], keyValues[2 * i + 1]);
       }
       return this;
+    }
+  }
+
+  private static final class BatchScenario {
+    final String name;
+    final List<String> queries;
+    final String spanName;
+    final String oldSpanName;
+    final String summary;
+    // the stable-semconv db.query.text (identical query texts are deduplicated)
+    final String queryText;
+    // the old-semconv db.statement (individual query texts concatenated with "; ")
+    final String oldStatement;
+    final String oldOperation;
+    final Long batchSize;
+
+    BatchScenario(Builder builder) {
+      this.name = builder.name;
+      this.queries = builder.queries;
+      this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
+      this.summary = builder.summary;
+      this.queryText = builder.queryText;
+      this.oldStatement = builder.oldStatement;
+      this.oldOperation = builder.oldOperation;
+      this.batchSize = builder.batchSize;
+    }
+
+    static Builder builder(String name) {
+      return new Builder(name);
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
+
+    static final class Builder {
+      private final String name;
+      private List<String> queries;
+      private String spanName;
+      private String oldSpanName;
+      private String summary;
+      private String queryText;
+      private String oldStatement;
+      private String oldOperation;
+      private Long batchSize;
+
+      Builder(String name) {
+        this.name = name;
+      }
+
+      Builder queries(List<String> queries) {
+        this.queries = queries;
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
+      Builder summary(String summary) {
+        this.summary = summary;
+        return this;
+      }
+
+      Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      Builder oldStatement(String oldStatement) {
+        this.oldStatement = oldStatement;
+        return this;
+      }
+
+      Builder oldOperation(String oldOperation) {
+        this.oldOperation = oldOperation;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
     }
   }
 }
