@@ -18,6 +18,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -1879,6 +1880,101 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))));
   }
 
+  // describes the four batch cases: the tables to create, the statements added to the batch, the
+  // expected executeBatch() result, and the expected client span. batch telemetry comes from the
+  // shared SQL extractors and is database-agnostic, so a single (in-memory) database is enough to
+  // lock down its shape
+  static Stream<Arguments> batchCasesStream() {
+    return Stream.of(
+            // an empty batch still produces a client span, but with no query text or batch size;
+            // the span name falls back to the database namespace
+            BatchScenario.builder().name("empty").spanName(DATABASE_NAME_LOWER).build(),
+            // a single-statement batch is not a batch (size 1), so it looks like a normal statement
+            BatchScenario.builder()
+                .name("single")
+                .createTable("stmt_batch_single")
+                .addQuery("INSERT INTO stmt_batch_single VALUES(1)")
+                .expectedResult(1)
+                .spanName("INSERT stmt_batch_single")
+                .queryText("INSERT INTO stmt_batch_single VALUES(?)")
+                .summary("INSERT stmt_batch_single")
+                .build(),
+            BatchScenario.builder()
+                .name("twoSameOperation")
+                .createTable("stmt_batch_same")
+                .addQuery("INSERT INTO stmt_batch_same VALUES(1)")
+                .addQuery("INSERT INTO stmt_batch_same VALUES(2)")
+                .expectedResult(1, 1)
+                .spanName("BATCH INSERT stmt_batch_same")
+                .queryText("INSERT INTO stmt_batch_same VALUES(?)")
+                .summary("BATCH INSERT stmt_batch_same")
+                .batchSize(2)
+                .build(),
+            BatchScenario.builder()
+                .name("twoDifferentOperations")
+                .createTable("stmt_batch_diff_1")
+                .createTable("stmt_batch_diff_2")
+                .addQuery("INSERT INTO stmt_batch_diff_1 VALUES(1)")
+                .addQuery("INSERT INTO stmt_batch_diff_2 VALUES(2)")
+                .expectedResult(1, 1)
+                .spanName("BATCH")
+                .queryText(
+                    "INSERT INTO stmt_batch_diff_1 VALUES(?); INSERT INTO stmt_batch_diff_2"
+                        + " VALUES(?)")
+                .summary("BATCH")
+                .batchSize(2)
+                .build())
+        .map(Arguments::of);
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchCasesStream")
+  void testStatementBatch(BatchScenario scenario) throws SQLException {
+    // batch telemetry (db.operation.batch.size, BATCH span names and summaries) is only emitted
+    // under stable database semconv
+    Assumptions.assumeTrue(emitStableDatabaseSemconv());
+
+    Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
+    cleanup.deferCleanup(connection);
+
+    for (String table : scenario.tablesToCreate) {
+      Statement createTable = connection.createStatement();
+      createTable.execute("CREATE TABLE " + table + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
+      cleanup.deferCleanup(createTable);
+    }
+    if (!scenario.tablesToCreate.isEmpty()) {
+      testing().waitForTraces(scenario.tablesToCreate.size());
+      testing().clearData();
+    }
+
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
+    for (String sql : scenario.statementsToAdd) {
+      statement.addBatch(sql);
+    }
+
+    testing()
+        .runWithSpan(
+            "parent",
+            () -> assertThat(statement.executeBatch()).isEqualTo(scenario.expectedResult));
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(scenario.spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, maybeStableDbSystemName("h2")),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, scenario.queryText),
+                                equalTo(DB_QUERY_SUMMARY, scenario.summary),
+                                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize))));
+  }
+
   static Stream<Arguments> batchStream() throws SQLException {
     return Stream.of(
         Arguments.of("h2", new org.h2.Driver().connect(JDBC_URLS.get("h2"), null), null, "h2:mem:"),
@@ -1894,19 +1990,6 @@ public abstract class AbstractJdbcInstrumentationTest {
             new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
             null,
             "sqlite:memory:"));
-  }
-
-  @ParameterizedTest
-  @MethodSource("batchStream")
-  void testBatch(String system, Connection connection, String username, String url)
-      throws SQLException {
-    testBatchImpl(
-        system,
-        wrap(connection),
-        username,
-        url,
-        "simple_batch_test",
-        statement -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
   }
 
   @ParameterizedTest
@@ -1931,170 +2014,6 @@ public abstract class AbstractJdbcInstrumentationTest {
       assertThatThrownBy(statement::executeLargeBatch)
           .isInstanceOf(UnsupportedOperationException.class);
     }
-  }
-
-  private void testBatchImpl(
-      String system,
-      Connection connection,
-      String username,
-      String url,
-      String tableName,
-      ThrowingConsumer<Statement> action)
-      throws SQLException {
-    Statement createTable = connection.createStatement();
-    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable);
-
-    testing().waitForTraces(1);
-    testing().clearData();
-
-    Statement statement = connection.createStatement();
-    cleanup.deferCleanup(statement);
-    statement.addBatch("INSERT INTO non_existent_table VALUES(1)");
-    statement.clearBatch();
-    statement.addBatch("INSERT INTO " + tableName + " VALUES(1)");
-    statement.addBatch("INSERT INTO " + tableName + " VALUES(2)");
-    testing().runWithSpan("parent", () -> action.accept(statement));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT " + tableName
-                                    : "jdbcunittest")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                                equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv()
-                                        ? "INSERT INTO " + tableName + " VALUES(?)"
-                                        : null),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv()
-                                        ? "BATCH INSERT " + tableName
-                                        : null),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? 2L : null))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("batchStream")
-  void testMultiBatch(String system, Connection conn, String username, String url)
-      throws SQLException {
-    Connection connection = wrap(conn);
-    String tableName1 = "multi_batch_test_1";
-    String tableName2 = "multi_batch_test_2";
-    Statement createTable1 = connection.createStatement();
-    createTable1.execute(
-        "CREATE TABLE " + tableName1 + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable1);
-    Statement createTable2 = connection.createStatement();
-    createTable2.execute(
-        "CREATE TABLE " + tableName2 + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable2);
-
-    testing().waitForTraces(2);
-    testing().clearData();
-
-    Statement statement = connection.createStatement();
-    cleanup.deferCleanup(statement);
-    statement.addBatch("INSERT INTO " + tableName1 + " VALUES(1)");
-    statement.addBatch("INSERT INTO " + tableName2 + " VALUES(2)");
-    testing()
-        .runWithSpan(
-            "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(emitStableDatabaseSemconv() ? "BATCH" : "jdbcunittest")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                                equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv()
-                                        ? "INSERT INTO "
-                                            + tableName1
-                                            + " VALUES(?); INSERT INTO multi_batch_test_2 VALUES(?)"
-                                        : null),
-                                equalTo(
-                                    DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "BATCH" : null),
-                                equalTo(maybeStable(DB_OPERATION), null),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? 2L : null))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("batchStream")
-  void testSingleItemBatch(String system, Connection conn, String username, String url)
-      throws SQLException {
-    Connection connection = wrap(conn);
-    String tableName = "single_item_batch_test";
-    Statement createTable = connection.createStatement();
-    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable);
-
-    testing().waitForTraces(1);
-    testing().clearData();
-
-    Statement statement = connection.createStatement();
-    cleanup.deferCleanup(statement);
-    statement.addBatch("INSERT INTO " + tableName + " VALUES(1)");
-    testing()
-        .runWithSpan("parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1}));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "INSERT " + tableName
-                                    : "INSERT jdbcunittest." + tableName)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                                equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "INSERT INTO " + tableName + " VALUES(?)"),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "INSERT " + tableName : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : "INSERT"),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? null : tableName))));
   }
 
   @ParameterizedTest
@@ -2445,5 +2364,92 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     : "SELECT " + DATABASE_NAME_LOWER)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(1))));
+  }
+
+  private static final class BatchScenario {
+    final String name;
+    final List<String> tablesToCreate;
+    final List<String> statementsToAdd;
+    final int[] expectedResult;
+    final String spanName;
+    final String queryText;
+    final String summary;
+    final Long batchSize;
+
+    BatchScenario(Builder builder) {
+      this.name = builder.name;
+      this.tablesToCreate = builder.tablesToCreate;
+      this.statementsToAdd = builder.statementsToAdd;
+      this.expectedResult = builder.expectedResult;
+      this.spanName = builder.spanName;
+      this.queryText = builder.queryText;
+      this.summary = builder.summary;
+      this.batchSize = builder.batchSize;
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static final class Builder {
+      private String name;
+      private final List<String> tablesToCreate = new ArrayList<>();
+      private final List<String> statementsToAdd = new ArrayList<>();
+      private int[] expectedResult = new int[] {};
+      private String spanName;
+      private String queryText;
+      private String summary;
+      private Long batchSize;
+
+      Builder name(String name) {
+        this.name = name;
+        return this;
+      }
+
+      Builder createTable(String table) {
+        this.tablesToCreate.add(table);
+        return this;
+      }
+
+      Builder addQuery(String query) {
+        this.statementsToAdd.add(query);
+        return this;
+      }
+
+      Builder expectedResult(int... result) {
+        this.expectedResult = result;
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      Builder summary(String summary) {
+        this.summary = summary;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }

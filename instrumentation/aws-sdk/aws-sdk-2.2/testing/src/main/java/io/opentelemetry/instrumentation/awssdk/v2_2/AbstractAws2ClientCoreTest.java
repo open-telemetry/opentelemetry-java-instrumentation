@@ -566,9 +566,14 @@ public abstract class AbstractAws2ClientCoreTest {
                                         .doesNotContainKey(DB_COLLECTION_NAME))));
   }
 
-  @Test
+  // describes the batch cases for the two DynamoDB batch operations (BatchGetItem and
+  // BatchWriteItem): the request to send, the mocked response and the expected client span. batch
+  // attributes (db.operation.batch.size, BATCH operation name, db.collection.name) are only emitted
+  // under stable database semconv; the span and db.operation.name are emitted in both modes
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  void testBatchGetItemWithMultipleItemsUsesStableBatchAttributes() {
+  void batchOperation(BatchScenario scenario) {
     DynamoDbClientBuilder builder = DynamoDbClient.builder();
     configureSdkClient(builder);
     DynamoDbClient client =
@@ -578,114 +583,260 @@ public abstract class AbstractAws2ClientCoreTest {
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
     server.enqueue(
-        HttpResponse.of(
-            HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, getResponseContent("BatchGetItem")));
+        HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, scenario.responseContent));
 
-    client.batchGetItem(
-        b ->
-            b.requestItems(
-                ImmutableMap.of(
-                    "sometable",
-                    KeysAndAttributes.builder()
-                        .keys(
-                            asList(
-                                ImmutableMap.of("key", AttributeValue.builder().s("value").build()),
-                                ImmutableMap.of(
-                                    "key", AttributeValue.builder().s("anotherValue").build())))
-                        .build())));
+    Object response = scenario.execute.apply(client);
+    assertThat(response).isNotNull();
 
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        assertDynamoDbRequest(
-                            span,
-                            "BatchGetItem",
-                            asList(
-                                equalTo(
-                                    AWS_DYNAMODB_CONSUMED_CAPACITY,
-                                    singletonList(
-                                        "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? Long.valueOf(2) : null)),
-                            "BATCH GetItem")));
+                    span -> {
+                      List<AttributeAssertion> attributes =
+                          new ArrayList<>(
+                              asList(
+                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                  equalTo(SERVER_PORT, server.httpPort()),
+                                  equalTo(URL_FULL, server.httpUri() + "/"),
+                                  equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                  equalTo(RPC_SYSTEM, "aws-api"),
+                                  equalTo(RPC_SERVICE, "DynamoDb"),
+                                  equalTo(RPC_METHOD, scenario.awsOperation),
+                                  equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                  equalTo(AWS_REQUEST_ID, "UNKNOWN"),
+                                  equalTo(
+                                      maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
+                                  equalTo(
+                                      maybeStable(DB_OPERATION),
+                                      emitStableDatabaseSemconv()
+                                          ? scenario.stableOperation
+                                          : scenario.awsOperation)));
+                      if (scenario.hasCollection) {
+                        attributes.add(
+                            equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")));
+                        if (emitStableDatabaseSemconv()) {
+                          attributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
+                        }
+                      }
+                      attributes.addAll(scenario.extraAttributes());
+                      span.hasName("DynamoDb." + scenario.awsOperation)
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(attributes);
+                    }));
 
-    assertDurationMetric(
-        getTesting(),
-        "io.opentelemetry.aws-sdk-2.2",
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        DB_COLLECTION_NAME);
+    if (scenario.assertMetric) {
+      assertDurationMetric(
+          getTesting(),
+          "io.opentelemetry.aws-sdk-2.2",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_COLLECTION_NAME);
+    }
   }
 
-  @Test
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  void testBatchWriteItemWithMultipleItemsUsesStableBatchAttributes() {
-    DynamoDbClientBuilder builder = DynamoDbClient.builder();
-    configureSdkClient(builder);
-    DynamoDbClient client =
-        builder
-            .endpointOverride(server.httpUri())
-            .region(Region.AP_NORTHEAST_1)
-            .credentialsProvider(CREDENTIALS_PROVIDER)
-            .build();
-    server.enqueue(
-        HttpResponse.of(
-            HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, getResponseContent("BatchWriteItem")));
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+            // an empty batch still produces a span, but keeps the raw batch operation name and
+            // emits no db.operation.batch.size, db.collection.name or table-name attributes
+            BatchScenario.builder("getItemEmpty")
+                .awsOperation("BatchGetItem")
+                .responseContent("{\"ConsumedCapacity\":[]}")
+                .execute(c -> c.batchGetItem(b -> b.requestItems(ImmutableMap.of())))
+                .stableOperation("BatchGetItem")
+                .build(),
+            BatchScenario.builder("getItemTwo")
+                .awsOperation("BatchGetItem")
+                .responseContent(getResponseContent("BatchGetItem"))
+                .execute(
+                    c ->
+                        c.batchGetItem(
+                            b ->
+                                b.requestItems(
+                                    ImmutableMap.of(
+                                        "sometable",
+                                        KeysAndAttributes.builder()
+                                            .keys(
+                                                asList(
+                                                    ImmutableMap.of(
+                                                        "key",
+                                                        AttributeValue.builder().s("value").build()),
+                                                    ImmutableMap.of(
+                                                        "key",
+                                                        AttributeValue.builder()
+                                                            .s("anotherValue")
+                                                            .build())))
+                                            .build()))))
+                .stableOperation("BATCH GetItem")
+                .hasCollection()
+                .batchSize(2)
+                .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+                .assertMetric()
+                .build(),
+            BatchScenario.builder("writeItemTwo")
+                .awsOperation("BatchWriteItem")
+                .responseContent(getResponseContent("BatchWriteItem"))
+                .execute(
+                    c ->
+                        c.batchWriteItem(
+                            b ->
+                                b.requestItems(
+                                    ImmutableMap.of(
+                                        "sometable",
+                                        asList(
+                                            WriteRequest.builder()
+                                                .putRequest(
+                                                    PutRequest.builder()
+                                                        .item(
+                                                            ImmutableMap.of(
+                                                                "key",
+                                                                AttributeValue.builder()
+                                                                    .s("value")
+                                                                    .build()))
+                                                        .build())
+                                                .build(),
+                                            WriteRequest.builder()
+                                                .putRequest(
+                                                    PutRequest.builder()
+                                                        .item(
+                                                            ImmutableMap.of(
+                                                                "key",
+                                                                AttributeValue.builder()
+                                                                    .s("anotherValue")
+                                                                    .build()))
+                                                        .build())
+                                                .build()))))) 
+                .stableOperation("BATCH WriteItem")
+                .hasCollection()
+                .batchSize(2)
+                .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+                .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
+                .assertMetric()
+                .build())
+        .map(Arguments::of);
+  }
 
-    client.batchWriteItem(
-        b ->
-            b.requestItems(
-                ImmutableMap.of(
-                    "sometable",
-                    asList(
-                        WriteRequest.builder()
-                            .putRequest(
-                                PutRequest.builder()
-                                    .item(
-                                        ImmutableMap.of(
-                                            "key", AttributeValue.builder().s("value").build()))
-                                    .build())
-                            .build(),
-                        WriteRequest.builder()
-                            .putRequest(
-                                PutRequest.builder()
-                                    .item(
-                                        ImmutableMap.of(
-                                            "key",
-                                            AttributeValue.builder().s("anotherValue").build()))
-                                    .build())
-                            .build()))));
+  private static final class BatchScenario {
+    final String name;
+    final String awsOperation;
+    final String responseContent;
+    final Function<DynamoDbClient, Object> execute;
+    final String stableOperation;
+    final boolean hasCollection;
+    final Long batchSize;
+    final String consumedCapacity;
+    final String itemCollectionMetrics;
+    final boolean assertMetric;
 
-    getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        assertDynamoDbRequest(
-                            span,
-                            "BatchWriteItem",
-                            asList(
-                                equalTo(
-                                    AWS_DYNAMODB_CONSUMED_CAPACITY,
-                                    singletonList(
-                                        "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")),
-                                equalTo(
-                                    AWS_DYNAMODB_ITEM_COLLECTION_METRICS,
-                                    "[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]"),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? Long.valueOf(2) : null)),
-                            "BATCH WriteItem")));
+    BatchScenario(Builder builder) {
+      this.name = builder.name;
+      this.awsOperation = builder.awsOperation;
+      this.responseContent = builder.responseContent;
+      this.execute = builder.execute;
+      this.stableOperation = builder.stableOperation;
+      this.hasCollection = builder.hasCollection;
+      this.batchSize = builder.batchSize;
+      this.consumedCapacity = builder.consumedCapacity;
+      this.itemCollectionMetrics = builder.itemCollectionMetrics;
+      this.assertMetric = builder.assertMetric;
+    }
 
-    assertDurationMetric(
-        getTesting(),
-        "io.opentelemetry.aws-sdk-2.2",
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        DB_COLLECTION_NAME);
+    @SuppressWarnings("deprecation") // uses deprecated semconv
+    List<AttributeAssertion> extraAttributes() {
+      List<AttributeAssertion> attributes = new ArrayList<>();
+      if (consumedCapacity != null) {
+        attributes.add(
+            equalTo(AWS_DYNAMODB_CONSUMED_CAPACITY, singletonList(consumedCapacity)));
+      }
+      if (itemCollectionMetrics != null) {
+        attributes.add(equalTo(AWS_DYNAMODB_ITEM_COLLECTION_METRICS, itemCollectionMetrics));
+      }
+      if (batchSize != null) {
+        attributes.add(
+            equalTo(
+                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? batchSize : null));
+      }
+      return attributes;
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
+
+    static Builder builder(String name) {
+      return new Builder(name);
+    }
+
+    static final class Builder {
+      private final String name;
+      private String awsOperation;
+      private String responseContent;
+      private Function<DynamoDbClient, Object> execute;
+      private String stableOperation;
+      private boolean hasCollection;
+      private Long batchSize;
+      private String consumedCapacity;
+      private String itemCollectionMetrics;
+      private boolean assertMetric;
+
+      Builder(String name) {
+        this.name = name;
+      }
+
+      Builder awsOperation(String awsOperation) {
+        this.awsOperation = awsOperation;
+        return this;
+      }
+
+      Builder responseContent(String responseContent) {
+        this.responseContent = responseContent;
+        return this;
+      }
+
+      Builder execute(Function<DynamoDbClient, Object> execute) {
+        this.execute = execute;
+        return this;
+      }
+
+      Builder stableOperation(String stableOperation) {
+        this.stableOperation = stableOperation;
+        return this;
+      }
+
+      Builder hasCollection() {
+        this.hasCollection = true;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder consumedCapacity(String consumedCapacity) {
+        this.consumedCapacity = consumedCapacity;
+        return this;
+      }
+
+      Builder itemCollectionMetrics(String itemCollectionMetrics) {
+        this.itemCollectionMetrics = itemCollectionMetrics;
+        return this;
+      }
+
+      Builder assertMetric() {
+        this.assertMetric = true;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 
   private static String expectedDbOperationNameForSingleItemRequest(String operation) {

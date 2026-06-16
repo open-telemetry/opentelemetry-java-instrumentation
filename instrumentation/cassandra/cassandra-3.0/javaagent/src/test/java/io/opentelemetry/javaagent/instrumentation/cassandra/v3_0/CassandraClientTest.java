@@ -43,6 +43,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -295,34 +296,33 @@ class CassandraClientTest {
         SERVER_PORT);
   }
 
-  @Test
-  void batchStatementWithSameQuery() {
+  // describes the batch cases: two statements with the same query, and two statements with
+  // different queries. (an empty batch is invalid CQL, and a single-statement batch is executed as
+  // a normal statement rather than a batch.) batch telemetry (db.operation.batch.size, BATCH span
+  // names and summaries) is only emitted under stable database semconv
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void batchStatement(BatchScenario scenario) {
     Session session = cluster.connect();
     cleanup.deferCleanup(session);
 
-    session.execute("DROP KEYSPACE IF EXISTS batch_same_test");
+    session.execute("DROP KEYSPACE IF EXISTS " + scenario.keyspace);
     session.execute(
-        "CREATE KEYSPACE batch_same_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
-    session.execute("CREATE TABLE batch_same_test.users ( name text PRIMARY KEY, age int )");
-    PreparedStatement preparedStatement =
-        session.prepare("INSERT INTO batch_same_test.users (name, age) values (?, ?)");
+        "CREATE KEYSPACE "
+            + scenario.keyspace
+            + " WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    session.execute(
+        "CREATE TABLE " + scenario.keyspace + ".users ( name text PRIMARY KEY, age int )");
     testing.waitForTraces(3);
     testing.clearData();
 
-    BatchStatement batchStatement =
-        new BatchStatement()
-            .add(preparedStatement.bind("alice", 1))
-            .add(preparedStatement.bind("bob", 2));
-    session.execute(batchStatement);
+    session.execute(scenario.buildBatch.apply(session));
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "BATCH INSERT batch_same_test.users"
-                                : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? scenario.spanName : "DB Query")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -334,63 +334,131 @@ class CassandraClientTest {
                             equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? "INSERT INTO batch_same_test.users (name, age) values (?, ?)"
-                                    : null),
+                                emitStableDatabaseSemconv() ? scenario.statement : null),
                             equalTo(
-                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT batch_same_test.users"
-                                    : null))));
+                                emitStableDatabaseSemconv() ? scenario.summary : null))));
   }
 
-  @Test
-  void batchStatementWithDifferentQueries() {
-    Session session = cluster.connect();
-    cleanup.deferCleanup(session);
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+            BatchScenario.builder("twoSameOperation")
+                .keyspace("batch_same_test")
+                .buildBatch(
+                    session -> {
+                      PreparedStatement insert =
+                          session.prepare(
+                              "INSERT INTO batch_same_test.users (name, age) values (?, ?)");
+                      return new BatchStatement()
+                          .add(insert.bind("alice", 1))
+                          .add(insert.bind("bob", 2));
+                    })
+                .spanName("BATCH INSERT batch_same_test.users")
+                .statement("INSERT INTO batch_same_test.users (name, age) values (?, ?)")
+                .summary("BATCH INSERT batch_same_test.users")
+                .batchSize(2)
+                .build(),
+            BatchScenario.builder("twoDifferentOperations")
+                .keyspace("batch_mixed_test")
+                .buildBatch(
+                    session -> {
+                      PreparedStatement insert =
+                          session.prepare(
+                              "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?)");
+                      return new BatchStatement()
+                          .add(insert.bind(1))
+                          .add(
+                              new SimpleStatement(
+                                  "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
+                    })
+                .spanName("BATCH")
+                .statement(
+                    "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?")
+                .summary("BATCH")
+                .batchSize(2)
+                .build())
+        .map(Arguments::of);
+  }
 
-    session.execute("DROP KEYSPACE IF EXISTS batch_mixed_test");
-    session.execute(
-        "CREATE KEYSPACE batch_mixed_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
-    session.execute("CREATE TABLE batch_mixed_test.users ( name text PRIMARY KEY, age int )");
-    PreparedStatement insertStatement =
-        session.prepare("INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?)");
-    testing.waitForTraces(3);
-    testing.clearData();
+  private static final class BatchScenario {
+    final String name;
+    final String keyspace;
+    final Function<Session, BatchStatement> buildBatch;
+    final String spanName;
+    final String statement;
+    final String summary;
+    final Long batchSize;
 
-    BatchStatement batchStatement =
-        new BatchStatement()
-            .add(insertStatement.bind(1))
-            .add(
-                new SimpleStatement(
-                    "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
-    session.execute(batchStatement);
+    BatchScenario(Builder builder) {
+      this.name = builder.name;
+      this.keyspace = builder.keyspace;
+      this.buildBatch = builder.buildBatch;
+      this.spanName = builder.spanName;
+      this.statement = builder.statement;
+      this.summary = builder.summary;
+      this.batchSize = builder.batchSize;
+    }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "BATCH" : "DB Query")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
-                            equalTo(SERVER_ADDRESS, cassandraHost),
-                            equalTo(SERVER_PORT, cassandraPort),
-                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                            equalTo(NETWORK_PEER_PORT, cassandraPort),
-                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?"
-                                    : null),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
-                            equalTo(
-                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "BATCH" : null))));
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
+
+    static Builder builder(String name) {
+      return new Builder(name);
+    }
+
+    static final class Builder {
+      private final String name;
+      private String keyspace;
+      private Function<Session, BatchStatement> buildBatch;
+      private String spanName;
+      private String statement;
+      private String summary;
+      private Long batchSize;
+
+      Builder(String name) {
+        this.name = name;
+      }
+
+      Builder keyspace(String keyspace) {
+        this.keyspace = keyspace;
+        return this;
+      }
+
+      Builder buildBatch(Function<Session, BatchStatement> buildBatch) {
+        this.buildBatch = buildBatch;
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder statement(String statement) {
+        this.statement = statement;
+        return this;
+      }
+
+      Builder summary(String summary) {
+        this.summary = summary;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 
   private static Stream<Arguments> provideSyncParameters() {
