@@ -29,6 +29,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -353,7 +354,7 @@ class VertxSqlClientTest {
             // records the error and emits no db.operation.batch.size
             new BatchScenario(
                 "empty",
-                Collections.emptyList(),
+                emptyList(),
                 "insert test",
                 "insert test",
                 null,

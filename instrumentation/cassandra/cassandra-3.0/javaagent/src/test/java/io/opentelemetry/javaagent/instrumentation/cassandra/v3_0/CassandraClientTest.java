@@ -297,7 +297,8 @@ class CassandraClientTest {
   }
 
   // describes the batch cases: a single-statement batch (which is executed as a normal statement,
-  // not a batch), two statements with the same query, and two statements with different queries. (an
+  // not a batch), two statements with the same query, and two statements with different queries.
+  // (an
   // empty batch is invalid CQL.) batch telemetry (db.operation.batch.size, BATCH span names and
   // summaries) is only emitted under stable database semconv
   @ParameterizedTest

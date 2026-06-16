@@ -278,7 +278,8 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? scenario.spanName : scenario.oldSpanName)
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? scenario.spanName : scenario.oldSpanName)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
