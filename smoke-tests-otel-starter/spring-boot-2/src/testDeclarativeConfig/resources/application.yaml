@@ -38,6 +38,10 @@ otel:
       - tracecontext:
       - baggage:
 
+  distribution:
+    spring_starter:
+      thread_details_enabled: true
+
   instrumentation/development:
     java:
       common:
