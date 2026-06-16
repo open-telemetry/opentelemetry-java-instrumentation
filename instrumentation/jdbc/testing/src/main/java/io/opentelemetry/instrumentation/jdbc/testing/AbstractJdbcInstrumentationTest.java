@@ -1881,9 +1881,9 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   // describes the four batch cases: the statements added to the batch, the expected
   // executeBatch() result, and the expected client span. each scenario runs against a freshly
-  // recreated items table, so batch row ids can be reused across scenarios. batch telemetry comes
-  // from the shared SQL extractors and is database-agnostic, so a single (in-memory) database is
-  // enough to lock down its shape
+  // recreated batch_test table, so batch row ids can be reused across scenarios. batch telemetry
+  // comes from the shared SQL extractors and is database-agnostic, so a single (in-memory) database
+  // is enough to lock down its shape
   static Stream<BatchScenario> batchCasesStream() {
     return Stream.of(
         // an empty batch still produces a client span, but with no query text or batch size;
@@ -1897,28 +1897,28 @@ public abstract class AbstractJdbcInstrumentationTest {
         // statement and carries db.statement/db.operation/db.sql.table under old semconv
         BatchScenario.builder()
             .name("single")
-            .addQuery("INSERT INTO items (id, num) VALUES (1, 1)")
+            .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
             .expectedResult(1)
-            .spanName("INSERT items")
-            .oldSpanName("INSERT " + DATABASE_NAME_LOWER + ".items")
-            .queryText("INSERT INTO items (id, num) VALUES (?, ?)")
-            .oldStatement("INSERT INTO items (id, num) VALUES (?, ?)")
-            .summary("INSERT items")
+            .spanName("INSERT batch_test")
+            .oldSpanName("INSERT " + DATABASE_NAME_LOWER + ".batch_test")
+            .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+            .oldStatement("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+            .summary("INSERT batch_test")
             .oldOperation("INSERT")
-            .oldTable("items")
+            .oldTable("batch_test")
             .build(),
         // a multi-statement batch only emits db.query.text/summary and BATCH span name under
         // stable semconv; under old semconv it has no statement-level attributes and the span
         // name falls back to the namespace
         BatchScenario.builder()
             .name("twoSameOperation")
-            .addQuery("INSERT INTO items (id, num) VALUES (1, 1)")
-            .addQuery("INSERT INTO items (id, num) VALUES (2, 2)")
+            .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+            .addQuery("INSERT INTO batch_test (id, num) VALUES (2, 2)")
             .expectedResult(1, 1)
-            .spanName("BATCH INSERT items")
+            .spanName("BATCH INSERT batch_test")
             .oldSpanName(DATABASE_NAME_LOWER)
-            .queryText("INSERT INTO items (id, num) VALUES (?, ?)")
-            .summary("BATCH INSERT items")
+            .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+            .summary("BATCH INSERT batch_test")
             .batchSize(2)
             .build(),
         // a multi-statement batch with different operations has no shared operation or summary,
@@ -1926,13 +1926,13 @@ public abstract class AbstractJdbcInstrumentationTest {
         // statement-level attributes and the span name falls back to the namespace
         BatchScenario.builder()
             .name("twoDifferentOperations")
-            .addQuery("INSERT INTO items (id, num) VALUES (1, 1)")
-            .addQuery("UPDATE items SET num = 5 WHERE id = 1")
+            .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+            .addQuery("UPDATE batch_test SET num = 5 WHERE id = 1")
             .expectedResult(1, 1)
             .spanName("BATCH")
             .oldSpanName(DATABASE_NAME_LOWER)
             .queryText(
-                "INSERT INTO items (id, num) VALUES (?, ?); UPDATE items SET num = ? WHERE id = ?")
+                "INSERT INTO batch_test (id, num) VALUES (?, ?); UPDATE batch_test SET num = ? WHERE id = ?")
             .summary("BATCH")
             .batchSize(2)
             .build());
@@ -1944,14 +1944,14 @@ public abstract class AbstractJdbcInstrumentationTest {
     Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
     cleanup.deferCleanup(connection);
 
-    // recreate a fresh items table for each scenario so that batch row ids can be reused without
-    // worrying about collisions from previous scenarios
+    // recreate a fresh batch_test table for each scenario so that batch row ids can be reused
+    // without worrying about collisions from previous scenarios
     Statement dropTable = connection.createStatement();
-    dropTable.execute("DROP TABLE IF EXISTS items");
+    dropTable.execute("DROP TABLE IF EXISTS batch_test");
     cleanup.deferCleanup(dropTable);
     Statement createTable = connection.createStatement();
     createTable.execute(
-        "CREATE TABLE items (id INTEGER not NULL, num INTEGER, PRIMARY KEY ( id ))");
+        "CREATE TABLE batch_test (id INTEGER not NULL, num INTEGER, PRIMARY KEY ( id ))");
     cleanup.deferCleanup(createTable);
     testing().waitForTraces(2);
     testing().clearData();

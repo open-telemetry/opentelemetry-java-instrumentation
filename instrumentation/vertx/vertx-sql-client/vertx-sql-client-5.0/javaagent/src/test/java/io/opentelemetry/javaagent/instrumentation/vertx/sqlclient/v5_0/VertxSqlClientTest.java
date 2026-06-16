@@ -293,13 +293,19 @@ class VertxSqlClientTest {
   @ParameterizedTest
   @MethodSource("batchScenarios")
   void testBatch(BatchScenario scenario) throws Exception {
+    // recreate a fresh batch_test table for each scenario so that batch row ids can be reused
+    // without worrying about collisions from previous scenarios
+    recreateBatchTestTable();
+    testing.waitForTraces(2);
+    testing.clearData();
+
     // an empty batch is rejected before sending, so its execution fails; non-empty batches succeed
     try {
       testing
           .runWithSpan(
               "parent",
               () ->
-                  pool.preparedQuery("insert into test values ($1, $2) returning *")
+                  pool.preparedQuery("insert into batch_test values ($1, $2) returning *")
                       .executeBatch(scenario.tuples))
           .toCompletionStage()
           .toCompletableFuture()
@@ -316,7 +322,7 @@ class VertxSqlClientTest {
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? scenario.stableSpanName
-                                : "INSERT tempdb.test")
+                                : "INSERT tempdb.batch_test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -327,7 +333,7 @@ class VertxSqlClientTest {
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "insert into test values ($1, $2) returning *"),
+                                "insert into batch_test values ($1, $2) returning *"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? scenario.stableSummary : null),
@@ -339,7 +345,7 @@ class VertxSqlClientTest {
                                 emitStableDatabaseSemconv() ? null : "INSERT"),
                             equalTo(
                                 maybeStable(DB_SQL_TABLE),
-                                emitStableDatabaseSemconv() ? null : "test"),
+                                emitStableDatabaseSemconv() ? null : "batch_test"),
                             equalTo(
                                 ERROR_TYPE,
                                 emitStableDatabaseSemconv() ? scenario.errorType : null),
@@ -348,27 +354,36 @@ class VertxSqlClientTest {
                             equalTo(SERVER_PORT, port))));
   }
 
+  private static void recreateBatchTestTable() throws Exception {
+    pool.query("drop table if exists batch_test")
+        .execute()
+        .compose(r -> pool.query("create table batch_test(id int primary key, num int)").execute())
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+  }
+
   private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
         // an empty batch is rejected before sending, so it looks like a single statement but
         // records the error and emits no db.operation.batch.size
         BatchScenario.builder("empty")
             .tuples(emptyList())
-            .stableSpanName("insert test")
-            .stableSummary("insert test")
+            .stableSpanName("insert batch_test")
+            .stableSummary("insert batch_test")
             .errorType("io.vertx.core.VertxException")
             .build(),
         // a single-statement batch is not a batch (size 1), so it emits no
         // db.operation.batch.size and no BATCH prefix
         BatchScenario.builder("single")
-            .tuples(singletonList(Tuple.of(3, "Three")))
-            .stableSpanName("insert test")
-            .stableSummary("insert test")
+            .tuples(singletonList(Tuple.of(1, 1)))
+            .stableSpanName("insert batch_test")
+            .stableSummary("insert batch_test")
             .build(),
         BatchScenario.builder("twoSameOperation")
-            .tuples(asList(Tuple.of(4, "Four"), Tuple.of(5, "Five")))
-            .stableSpanName("BATCH insert test")
-            .stableSummary("BATCH insert test")
+            .tuples(asList(Tuple.of(1, 1), Tuple.of(2, 2)))
+            .stableSpanName("BATCH insert batch_test")
+            .stableSummary("BATCH insert batch_test")
             .batchSize(2)
             .build());
   }

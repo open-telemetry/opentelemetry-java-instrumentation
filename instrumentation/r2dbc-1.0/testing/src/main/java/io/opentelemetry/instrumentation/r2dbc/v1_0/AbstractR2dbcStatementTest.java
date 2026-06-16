@@ -328,10 +328,10 @@ public abstract class AbstractR2dbcStatementTest {
                 .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
                 .build());
 
-    // recreate a fresh items table for each scenario so that batch row ids can be reused without
-    // worrying about collisions from previous scenarios; the table also lets the collection name
-    // be captured (in db.query.summary and, under old semconv, db.sql.table)
-    recreateItemsTable(connectionFactory);
+    // recreate a fresh batch_test table for each scenario so that batch row ids can be reused
+    // without worrying about collisions from previous scenarios; the table also lets the collection
+    // name be captured (in db.query.summary and, under old semconv, db.sql.table)
+    recreateBatchTestTable(connectionFactory);
     getTesting().waitForTraces(2);
     getTesting().clearData();
 
@@ -451,32 +451,32 @@ public abstract class AbstractR2dbcStatementTest {
         // db.operation.batch.size and no BATCH prefix; under old semconv it carries the
         // statement, operation, collection and the operation+namespace+table span name
         BatchScenario.builder("single")
-            .queries(singletonList("INSERT INTO items (id, num) VALUES (1, 1)"))
-            .spanName("INSERT items")
-            .oldSpanName("INSERT " + DB + ".items")
-            .summary("INSERT items")
-            .queryText("INSERT INTO items (id, num) VALUES (?, ?)")
-            .oldStatement("INSERT INTO items (id, num) VALUES (?, ?)")
+            .queries(singletonList("INSERT INTO batch_test (id, num) VALUES (1, 1)"))
+            .spanName("INSERT batch_test")
+            .oldSpanName("INSERT " + DB + ".batch_test")
+            .summary("INSERT batch_test")
+            .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+            .oldStatement("INSERT INTO batch_test (id, num) VALUES (?, ?)")
             .oldOperation("INSERT")
-            .oldCollection("items")
+            .oldCollection("batch_test")
             .build(),
         // a multi-statement batch emits the BATCH span name, deduplicated db.query.text and
         // db.operation.batch.size under stable semconv; the collection name is captured in the
-        // summary (BATCH INSERT items). under old semconv the individual statements are
+        // summary (BATCH INSERT batch_test). under old semconv the individual statements are
         // concatenated but the shared operation and collection are still captured
         BatchScenario.builder("twoSameOperation")
             .queries(
                 asList(
-                    "INSERT INTO items (id, num) VALUES (1, 1)",
-                    "INSERT INTO items (id, num) VALUES (2, 2)"))
-            .spanName("BATCH INSERT items")
-            .oldSpanName("INSERT " + DB + ".items")
-            .summary("BATCH INSERT items")
-            .queryText("INSERT INTO items (id, num) VALUES (?, ?)")
+                    "INSERT INTO batch_test (id, num) VALUES (1, 1)",
+                    "INSERT INTO batch_test (id, num) VALUES (2, 2)"))
+            .spanName("BATCH INSERT batch_test")
+            .oldSpanName("INSERT " + DB + ".batch_test")
+            .summary("BATCH INSERT batch_test")
+            .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
             .oldStatement(
-                "INSERT INTO items (id, num) VALUES (?, ?); INSERT INTO items (id, num) VALUES (?, ?)")
+                "INSERT INTO batch_test (id, num) VALUES (?, ?); INSERT INTO batch_test (id, num) VALUES (?, ?)")
             .oldOperation("INSERT")
-            .oldCollection("items")
+            .oldCollection("batch_test")
             .batchSize(2)
             .build(),
         // a multi-statement batch with different operations has no shared operation or summary,
@@ -485,32 +485,32 @@ public abstract class AbstractR2dbcStatementTest {
         BatchScenario.builder("twoDifferentOperations")
             .queries(
                 asList(
-                    "INSERT INTO items (id, num) VALUES (1, 1)",
-                    "UPDATE items SET num = 5 WHERE id = 1"))
+                    "INSERT INTO batch_test (id, num) VALUES (1, 1)",
+                    "UPDATE batch_test SET num = 5 WHERE id = 1"))
             .spanName("BATCH")
-            .oldSpanName("INSERT " + DB + ".items")
+            .oldSpanName("INSERT " + DB + ".batch_test")
             .summary("BATCH")
             .queryText(
-                "INSERT INTO items (id, num) VALUES (?, ?); UPDATE items SET num = ? WHERE id = ?")
+                "INSERT INTO batch_test (id, num) VALUES (?, ?); UPDATE batch_test SET num = ? WHERE id = ?")
             .oldStatement(
-                "INSERT INTO items (id, num) VALUES (?, ?); UPDATE items SET num = ? WHERE id = ?")
+                "INSERT INTO batch_test (id, num) VALUES (?, ?); UPDATE batch_test SET num = ? WHERE id = ?")
             .oldOperation("INSERT")
-            .oldCollection("items")
+            .oldCollection("batch_test")
             .batchSize(2)
             .build());
   }
 
-  private void recreateItemsTable(ConnectionFactory connectionFactory) {
+  private void recreateBatchTestTable(ConnectionFactory connectionFactory) {
     Mono.from(connectionFactory.create())
         .flatMapMany(
             connection ->
-                Mono.from(connection.createStatement("DROP TABLE IF EXISTS items").execute())
+                Mono.from(connection.createStatement("DROP TABLE IF EXISTS batch_test").execute())
                     .flatMapMany(result -> result.map((row, metadata) -> ""))
                     .concatWith(
                         Mono.from(
                                 connection
                                     .createStatement(
-                                        "CREATE TABLE items (id INTEGER PRIMARY KEY, num INTEGER)")
+                                        "CREATE TABLE batch_test (id INTEGER PRIMARY KEY, num INTEGER)")
                                     .execute())
                             .flatMapMany(result -> result.map((row, metadata) -> "")))
                     .concatWith(Mono.from(connection.close()).cast(String.class)))

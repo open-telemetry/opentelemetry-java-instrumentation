@@ -71,6 +71,10 @@ public abstract class AbstractCassandraTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractCassandraTest.class);
 
+  // all batch scenarios share a single keyspace + table (recreated per scenario), so batch row ids
+  // can be reused without worrying about collisions from previous scenarios
+  private static final String BATCH_KEYSPACE = "batch_test";
+
   @RegisterExtension protected final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private GenericContainer<?> cassandra;
@@ -198,12 +202,12 @@ public abstract class AbstractCassandraTest {
     CqlSession session = getSession(null);
     cleanup.deferCleanup(session);
 
-    session.execute("DROP KEYSPACE IF EXISTS " + scenario.keyspace);
+    session.execute("DROP KEYSPACE IF EXISTS " + BATCH_KEYSPACE);
     session.execute(
         "CREATE KEYSPACE "
-            + scenario.keyspace
+            + BATCH_KEYSPACE
             + " WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
-    session.execute("CREATE TABLE " + scenario.keyspace + ".items ( id int PRIMARY KEY, num int )");
+    session.execute("CREATE TABLE " + BATCH_KEYSPACE + ".records ( id int PRIMARY KEY, num int )");
     testing().waitForTraces(3);
     testing().clearData();
 
@@ -275,7 +279,6 @@ public abstract class AbstractCassandraTest {
         // an empty batch still produces a client span, but with no query text, summary,
         // operation or batch size; the span name falls back to the database system name
         BatchScenario.builder("empty")
-            .keyspace("batch_empty_test")
             .buildBatch(session -> BatchStatement.newInstance(DefaultBatchType.LOGGED))
             .spanName("cassandra")
             .oldSpanName("DB Query")
@@ -284,60 +287,56 @@ public abstract class AbstractCassandraTest {
         // normal INSERT span name in both modes, db.operation and db.cassandra.table, and no
         // db.operation.batch.size
         BatchScenario.builder("single")
-            .keyspace("batch_single_test")
             .buildBatch(
                 session -> {
                   PreparedStatement insert =
-                      session.prepare(
-                          "INSERT INTO batch_single_test.items (id, num) values (?, ?)");
+                      session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
                   return BatchStatement.newInstance(DefaultBatchType.LOGGED, insert.bind(1, 1));
                 })
-            .spanName("INSERT batch_single_test.items")
-            .oldSpanName("INSERT batch_single_test.items")
-            .statement("INSERT INTO batch_single_test.items (id, num) values (?, ?)")
-            .oldStatement("INSERT INTO batch_single_test.items (id, num) values (?, ?)")
-            .summary("INSERT batch_single_test.items")
+            .spanName("INSERT batch_test.records")
+            .oldSpanName("INSERT batch_test.records")
+            .statement("INSERT INTO batch_test.records (id, num) values (?, ?)")
+            .oldStatement("INSERT INTO batch_test.records (id, num) values (?, ?)")
+            .summary("INSERT batch_test.records")
             .operation("INSERT")
             .oldOperation("INSERT")
-            .collection("batch_single_test.items")
-            .oldCollection("batch_single_test.items")
+            .collection("batch_test.records")
+            .oldCollection("batch_test.records")
             .build(),
         BatchScenario.builder("twoSameOperation")
-            .keyspace("batch_same_test")
             .buildBatch(
                 session -> {
                   PreparedStatement insert =
-                      session.prepare("INSERT INTO batch_same_test.items (id, num) values (?, ?)");
+                      session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
                   return BatchStatement.newInstance(
                       DefaultBatchType.LOGGED, insert.bind(1, 1), insert.bind(2, 2));
                 })
-            .spanName("BATCH INSERT batch_same_test.items")
+            .spanName("BATCH INSERT batch_test.records")
             .oldSpanName("DB Query")
-            .statement("INSERT INTO batch_same_test.items (id, num) values (?, ?)")
-            .summary("BATCH INSERT batch_same_test.items")
+            .statement("INSERT INTO batch_test.records (id, num) values (?, ?)")
+            .summary("BATCH INSERT batch_test.records")
             .operation("BATCH INSERT")
-            .collection("batch_same_test.items")
+            .collection("batch_test.records")
             .batchSize(2)
             .build(),
         BatchScenario.builder("twoDifferentOperations")
-            .keyspace("batch_mixed_test")
             .buildBatch(
                 session -> {
                   PreparedStatement insert =
-                      session.prepare("INSERT INTO batch_mixed_test.items (id, num) values (4, ?)");
+                      session.prepare("INSERT INTO batch_test.records (id, num) values (4, ?)");
                   return BatchStatement.newInstance(
                       DefaultBatchType.LOGGED,
                       insert.bind(4),
                       SimpleStatement.newInstance(
-                          "UPDATE batch_mixed_test.items SET num = 5 WHERE id = 4"));
+                          "UPDATE batch_test.records SET num = 5 WHERE id = 4"));
                 })
             .spanName("BATCH")
             .oldSpanName("DB Query")
             .statement(
-                "INSERT INTO batch_mixed_test.items (id, num) values (4, ?); UPDATE batch_mixed_test.items SET num = ? WHERE id = ?")
+                "INSERT INTO batch_test.records (id, num) values (4, ?); UPDATE batch_test.records SET num = ? WHERE id = ?")
             .summary("BATCH")
             .operation("BATCH")
-            .collection("batch_mixed_test.items")
+            .collection("batch_test.records")
             .batchSize(2)
             .build());
   }
@@ -600,7 +599,6 @@ public abstract class AbstractCassandraTest {
 
   private static final class BatchScenario {
     final String name;
-    final String keyspace;
     final Function<CqlSession, BatchStatement> buildBatch;
     final String spanName;
     final String oldSpanName;
@@ -615,7 +613,6 @@ public abstract class AbstractCassandraTest {
 
     BatchScenario(Builder builder) {
       this.name = builder.name;
-      this.keyspace = builder.keyspace;
       this.buildBatch = builder.buildBatch;
       this.spanName = builder.spanName;
       this.oldSpanName = builder.oldSpanName;
@@ -641,7 +638,6 @@ public abstract class AbstractCassandraTest {
 
     static final class Builder {
       private final String name;
-      private String keyspace;
       private Function<CqlSession, BatchStatement> buildBatch;
       private String spanName;
       private String oldSpanName;
@@ -656,11 +652,6 @@ public abstract class AbstractCassandraTest {
 
       Builder(String name) {
         this.name = name;
-      }
-
-      Builder keyspace(String keyspace) {
-        this.keyspace = keyspace;
-        return this;
       }
 
       Builder buildBatch(Function<CqlSession, BatchStatement> buildBatch) {
