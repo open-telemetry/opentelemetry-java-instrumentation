@@ -100,6 +100,24 @@ public abstract class RedissonRequest {
   }
 
   @Nullable
+  public Long getOperationBatchSize() {
+    Object command = getCommand();
+    if (!(command instanceof CommandsData)) {
+      return null;
+    }
+    List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
+    if (commands.isEmpty()) {
+      return null;
+    }
+    int batchSize = commands.size();
+    if (commands.get(0).getCommand().getName().equals(MULTI)) {
+      // MULTI is a transaction wrapper command, not a user operation in the batch.
+      batchSize--;
+    }
+    return batchSize > 1 ? (long) batchSize : null;
+  }
+
+  @Nullable
   private static String getBatchOperationName(List<CommandData<?, ?>> commands) {
     if (commands.size() < 2) {
       return null;

@@ -2388,6 +2388,8 @@ libraries:
         type: STRING
       - name: db.collection.name
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -2758,6 +2760,8 @@ libraries:
         type: STRING
       - name: db.collection.name
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -4961,7 +4965,7 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
-      - name: db.namespace
+      - name: db.collection.name
         type: STRING
       - name: db.operation.name
         type: STRING
@@ -4970,7 +4974,7 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
-      - name: db.namespace
+      - name: db.collection.name
         type: STRING
       - name: db.operation.name
         type: STRING
@@ -12732,6 +12736,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.query.summary
         type: STRING
       - name: db.query.text

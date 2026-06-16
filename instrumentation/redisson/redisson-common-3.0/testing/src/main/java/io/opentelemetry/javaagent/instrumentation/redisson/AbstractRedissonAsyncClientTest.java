@@ -256,6 +256,9 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(
                                 DB_OPERATION_NAME,
                                 emitStableDatabaseSemconv() ? "MULTI SET" : null),
+                            // db.operation.batch.size is not emitted because MULTI transaction
+                            // telemetry is split across wrapper and command spans, so this span
+                            // does not represent the full logical batch.
                             equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
