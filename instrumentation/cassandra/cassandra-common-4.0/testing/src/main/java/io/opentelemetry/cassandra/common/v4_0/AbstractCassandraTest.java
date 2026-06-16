@@ -318,7 +318,7 @@ public abstract class AbstractCassandraTest {
                 .oldSpanName("DB Query")
                 .statement("INSERT INTO batch_same_test.users (name, age) values (?, ?)")
                 .summary("BATCH INSERT batch_same_test.users")
-                .operation("BATCH INSERT batch_same_test.users")
+                .operation("BATCH INSERT")
                 .collection("batch_same_test.users")
                 .batchSize(2)
                 .build(),
