@@ -76,7 +76,8 @@ class MultiQuery {
     private final UniqueValue uniqueOperationName = new UniqueValue();
     private final UniqueValue uniqueCollectionName = new UniqueValue();
 
-    @SuppressWarnings("deprecation") // getOperationName()/getCollectionName() package-private in 3.0
+    @SuppressWarnings(
+        "deprecation") // getOperationName()/getCollectionName() package-private in 3.0
     void add(SqlQuery analyzedQuery, @Nullable String queryText) {
       uniqueStoredProcedureName.set(analyzedQuery.getStoredProcedureName());
       uniqueQueryTexts.add(queryText);

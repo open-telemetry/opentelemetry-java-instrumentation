@@ -433,8 +433,7 @@ class SqlClientAttributesExtractorTest {
     Map<String, Object> mixedCollections = new HashMap<>();
     mixedCollections.put("db.namespace", "potatoes");
     mixedCollections.put(
-        "db.query.texts",
-        asList("INSERT INTO potato VALUES(1)", "INSERT INTO tomato VALUES(2)"));
+        "db.query.texts", asList("INSERT INTO potato VALUES(1)", "INSERT INTO tomato VALUES(2)"));
     mixedCollections.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
 
     Context context = Context.root();
