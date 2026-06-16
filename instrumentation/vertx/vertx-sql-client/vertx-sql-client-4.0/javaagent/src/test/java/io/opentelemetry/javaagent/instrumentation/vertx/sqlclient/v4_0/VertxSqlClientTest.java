@@ -29,6 +29,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -53,9 +54,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -280,14 +285,18 @@ class VertxSqlClientTest {
                             equalTo(SERVER_PORT, port))));
   }
 
-  @Test
-  void testBatch() throws Exception {
+  // describes the batch cases: a single-statement batch (not a batch -> no db.operation.batch.size)
+  // and two statements. batch telemetry (db.operation.batch.size, BATCH span names and summaries)
+  // is only emitted under stable database semconv
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void testBatch(BatchScenario scenario) throws Exception {
     testing
         .runWithSpan(
             "parent",
             () ->
                 pool.preparedQuery("insert into test values ($1, $2) returning *")
-                    .executeBatch(asList(Tuple.of(3, "Three"), Tuple.of(4, "Four"))))
+                    .executeBatch(scenario.tuples))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -299,7 +308,7 @@ class VertxSqlClientTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "BATCH insert test"
+                                ? scenario.stableSpanName
                                 : "INSERT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -314,9 +323,10 @@ class VertxSqlClientTest {
                                 "insert into test values ($1, $2) returning *"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "BATCH insert test" : null),
+                                emitStableDatabaseSemconv() ? scenario.stableSummary : null),
                             equalTo(
-                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT"),
@@ -326,6 +336,48 @@ class VertxSqlClientTest {
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+            // a single-statement batch is not a batch (size 1), so it emits no
+            // db.operation.batch.size and no BATCH prefix
+            new BatchScenario(
+                "single", singletonList(Tuple.of(3, "Three")), "insert test", "insert test", null),
+            new BatchScenario(
+                "twoSameOperation",
+                asList(Tuple.of(4, "Four"), Tuple.of(5, "Five")),
+                "BATCH insert test",
+                "BATCH insert test",
+                2L))
+        .map(Arguments::of);
+  }
+
+  private static final class BatchScenario {
+    final String name;
+    final List<Tuple> tuples;
+    final String stableSpanName;
+    final String stableSummary;
+    final Long batchSize;
+
+    BatchScenario(
+        String name,
+        List<Tuple> tuples,
+        String stableSpanName,
+        String stableSummary,
+        Long batchSize) {
+      this.name = name;
+      this.tuples = tuples;
+      this.stableSpanName = stableSpanName;
+      this.stableSummary = stableSummary;
+      this.batchSize = batchSize;
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
   }
 
   @Test

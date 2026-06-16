@@ -32,18 +32,22 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PASSWORD;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Named.named;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.r2dbc.spi.Batch;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -298,8 +302,12 @@ public abstract class AbstractR2dbcStatementTest {
         SERVER_PORT);
   }
 
-  @Test
-  void testBatchQueries() {
+  // describes the batch cases: a single-statement batch (not a batch -> no db.operation.batch.size)
+  // and two statements with the same operation. batch telemetry (db.operation.batch.size, BATCH
+  // span names and summaries) is only emitted under stable database semconv
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void batchQueries(BatchScenario scenario) {
     assumeTrue(emitStableDatabaseSemconv());
 
     DbSystemProps props = systems.get(MARIADB.system);
@@ -322,15 +330,15 @@ public abstract class AbstractR2dbcStatementTest {
             () -> {
               Mono.from(connectionFactory.create())
                   .flatMapMany(
-                      connection ->
-                          Flux.from(
-                                  connection
-                                      .createBatch()
-                                      .add("SELECT 1")
-                                      .add("SELECT 2")
-                                      .execute())
-                              .flatMap(result -> result.map((row, metadata) -> ""))
-                              .concatWith(Mono.from(connection.close()).cast(String.class)))
+                      connection -> {
+                        Batch batch = connection.createBatch();
+                        for (String query : scenario.queries) {
+                          batch.add(query);
+                        }
+                        return Flux.from(batch.execute())
+                            .flatMap(result -> result.map((row, metadata) -> ""))
+                            .concatWith(Mono.from(connection.close()).cast(String.class));
+                      })
                   .blockLast(Duration.ofMinutes(1));
             });
 
@@ -340,18 +348,55 @@ public abstract class AbstractR2dbcStatementTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("BATCH SELECT")
+                        span.hasName(scenario.spanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(DB_SYSTEM_NAME, MARIADB.system),
                                 equalTo(DB_NAMESPACE, DB),
                                 equalTo(DB_QUERY_TEXT, "SELECT ?"),
-                                equalTo(DB_QUERY_SUMMARY, "BATCH SELECT"),
-                                equalTo(DB_OPERATION_BATCH_SIZE, 2),
+                                equalTo(DB_QUERY_SUMMARY, scenario.summary),
+                                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                                 equalTo(maybeStablePeerService(), "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port))));
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+            // a single-statement batch is not a batch (size 1), so it emits no
+            // db.operation.batch.size and no BATCH prefix
+            new BatchScenario("single", singletonList("SELECT 1"), "SELECT", "SELECT", null),
+            new BatchScenario(
+                "twoSameOperation",
+                asList("SELECT 1", "SELECT 2"),
+                "BATCH SELECT",
+                "BATCH SELECT",
+                2L))
+        .map(Arguments::of);
+  }
+
+  private static final class BatchScenario {
+    final String name;
+    final List<String> queries;
+    final String spanName;
+    final String summary;
+    final Long batchSize;
+
+    BatchScenario(
+        String name, List<String> queries, String spanName, String summary, Long batchSize) {
+      this.name = name;
+      this.queries = queries;
+      this.spanName = spanName;
+      this.summary = summary;
+      this.batchSize = batchSize;
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
   }
 
   private static class Parameter {
