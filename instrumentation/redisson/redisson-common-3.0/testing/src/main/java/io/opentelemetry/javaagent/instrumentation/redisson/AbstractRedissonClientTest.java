@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -52,6 +53,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.redisson.Redisson;
 import org.redisson.api.BatchOptions;
 import org.redisson.api.RAtomicLong;
@@ -246,12 +250,16 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
-  @Test
-  void batchCommand() throws ReflectiveOperationException {
+  // describes the batch cases: two commands with the same operation, and two commands with
+  // different operations. (a single-command batch is executed as a normal command rather than a
+  // pipeline.) batch telemetry (db.operation.batch.size, PIPELINE operation name) is only emitted
+  // under stable database semconv
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void batchCommand(BatchScenario scenario) throws ReflectiveOperationException {
     RBatch batch = createBatch(redisson);
     assertThat(batch).isNotNull();
-    batch.getBucket("batch1").setAsync("v1");
-    batch.getBucket("batch2").setAsync("v2");
+    scenario.commands.accept(batch);
     // Adapt different method signature:
     // `BatchResult<?> execute()` and `List<?> execute()`
     invokeExecute(batch);
@@ -259,7 +267,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "PIPELINE SET" : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? scenario.operationName : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -268,41 +276,65 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(
                                 DB_OPERATION_NAME,
-                                emitStableDatabaseSemconv() ? "PIPELINE SET" : null),
+                                emitStableDatabaseSemconv() ? scenario.operationName : null),
                             equalTo(
-                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET batch1 ?;SET batch2 ?"))));
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(maybeStable(DB_STATEMENT), scenario.statement))));
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+            new BatchScenario(
+                "twoSameOperation",
+                batch -> {
+                  batch.getBucket("batch1").setAsync("v1");
+                  batch.getBucket("batch2").setAsync("v2");
+                },
+                "PIPELINE SET",
+                2L,
+                "SET batch1 ?;SET batch2 ?"),
+            new BatchScenario(
+                "twoDifferentOperations",
+                batch -> {
+                  batch.getBucket("batch1").setAsync("v1");
+                  batch.getBucket("batch1").getAsync();
+                },
+                "PIPELINE",
+                2L,
+                "SET batch1 ?;GET batch1"))
+        .map(Arguments::of);
+  }
+
+  private static final class BatchScenario {
+    final String name;
+    final Consumer<RBatch> commands;
+    final String operationName;
+    final Long batchSize;
+    final String statement;
+
+    BatchScenario(
+        String name,
+        Consumer<RBatch> commands,
+        String operationName,
+        Long batchSize,
+        String statement) {
+      this.name = name;
+      this.commands = commands;
+      this.operationName = operationName;
+      this.batchSize = batchSize;
+      this.statement = statement;
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
   }
 
   private static void invokeExecute(RBatch batch) throws ReflectiveOperationException {
     batch.getClass().getMethod("execute").invoke(batch);
-  }
-
-  @Test
-  void mixedBatchCommand() throws ReflectiveOperationException {
-    RBatch batch = createBatch(redisson);
-    assertThat(batch).isNotNull();
-    batch.getBucket("batch1").setAsync("v1");
-    batch.getBucket("batch1").getAsync();
-    // Adapt different method signature:
-    // `BatchResult<?> execute()` and `List<?> execute()`
-    invokeExecute(batch);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "PIPELINE" : "DB Query")
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(
-                                DB_OPERATION_NAME, emitStableDatabaseSemconv() ? "PIPELINE" : null),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET batch1 ?;GET batch1"))));
   }
 
   @Test
