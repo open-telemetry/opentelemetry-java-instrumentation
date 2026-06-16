@@ -8,33 +8,33 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **2** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM Project URL**: [https://github.com/raphw/weak-lock-free](https://github.com/raphw/weak-lock-free)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 **3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.22`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [jackson-annotations-2.22.jar/META-INF/LICENSE](jackson-annotations-2.22.jar/META-INF/LICENSE)
     - [jackson-annotations-2.22.jar/META-INF/NOTICE](jackson-annotations-2.22.jar/META-INF/NOTICE)
 
 **4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.22.0`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [jackson-core-2.22.0.jar/META-INF/LICENSE](jackson-core-2.22.0.jar/META-INF/LICENSE)
     - [jackson-core-2.22.0.jar/META-INF/NOTICE](jackson-core-2.22.0.jar/META-INF/NOTICE)
 
 **5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.22.0`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [jackson-databind-2.22.0.jar/META-INF/LICENSE](jackson-databind-2.22.0.jar/META-INF/LICENSE)
     - [jackson-databind-2.22.0.jar/META-INF/NOTICE](jackson-databind-2.22.0.jar/META-INF/NOTICE)
 
 **6** **Group:** `com.googlecode.concurrentlinkedhashmap` **Name:** `concurrentlinkedhashmap-lru` **Version:** `1.4.2`
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM Project URL**: [http://code.google.com/p/concurrentlinkedhashmap](http://code.google.com/p/concurrentlinkedhashmap)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -187,46 +187,46 @@
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 **44** **Group:** `io.prometheus` **Name:** `prometheus-metrics-config` **Version:** `1.5.1`
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **45** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exporter-common` **Version:** `1.5.1`
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **46** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exporter-httpserver` **Version:** `1.5.1`
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **47** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exposition-formats-no-protobuf` **Version:** `1.5.1`
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **48** **Group:** `io.prometheus` **Name:** `prometheus-metrics-exposition-textformats` **Version:** `1.5.1`
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **49** **Group:** `io.prometheus` **Name:** `prometheus-metrics-model` **Version:** `1.5.1`
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **50** **Group:** `io.zipkin.reporter2` **Name:** `zipkin-reporter` **Version:** `3.5.3`
 > - **Manifest Project URL**: [https://zipkin.io/](https://zipkin.io/)
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM Project URL**: [https://github.com/openzipkin/zipkin-reporter-java/zipkin-reporter](https://github.com/openzipkin/zipkin-reporter-java/zipkin-reporter)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-reporter-3.5.3.jar/META-INF/LICENSE](zipkin-reporter-3.5.3.jar/META-INF/LICENSE)
 
 **51** **Group:** `io.zipkin.reporter2` **Name:** `zipkin-sender-okhttp3` **Version:** `3.5.3`
 > - **Manifest Project URL**: [https://zipkin.io/](https://zipkin.io/)
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM Project URL**: [https://github.com/openzipkin/zipkin-reporter-java/zipkin-sender-okhttp3](https://github.com/openzipkin/zipkin-reporter-java/zipkin-sender-okhttp3)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-sender-okhttp3-3.5.3.jar/META-INF/LICENSE](zipkin-sender-okhttp3-3.5.3.jar/META-INF/LICENSE)
 
 **52** **Group:** `io.zipkin.zipkin2` **Name:** `zipkin` **Version:** `2.27.1`
 > - **Manifest Project URL**: [http://zipkin.io/](http://zipkin.io/)
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.27.1.jar/META-INF/LICENSE](zipkin-2.27.1.jar/META-INF/LICENSE)
 
@@ -245,41 +245,41 @@
 
 **56** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 **57** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 **58** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 **59** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 **60** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 **61** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.10`
-> - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
+> - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml-engine](https://bitbucket.org/snakeyaml/snakeyaml-engine)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -299,40 +299,40 @@
 
 **64** **Group:** `com.google.protobuf` **Name:** `protobuf-java` **Version:** `4.34.0`
 > - **Manifest Project URL**: [https://developers.google.com/protocol-buffers/](https://developers.google.com/protocol-buffers/)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 **65** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 **66** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 **67** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 **68** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
 **69** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.10.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
-> - **Manifest License**: The 3-Clause BSD License (Not Packaged)
+> - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
