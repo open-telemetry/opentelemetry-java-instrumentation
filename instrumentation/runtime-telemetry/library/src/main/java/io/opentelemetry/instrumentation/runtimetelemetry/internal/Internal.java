@@ -374,13 +374,13 @@ public final class Internal {
 
     // Apply capture_gc_cause. GC cause is always captured when emitting stable JVM semantic
     // conventions and is no longer configurable; otherwise it defaults to false.
-    boolean captureGcCause =
-        SemconvStability.v3Preview() || config.getBoolean("capture_gc_cause", false);
-
-    if (config.getString("capture_gc_cause") != null) {
+    Boolean captureGcCauseConfig = config.getBoolean("capture_gc_cause");
+    if (captureGcCauseConfig != null) {
       logger.warning(
           "otel.instrumentation.runtime-telemetry.capture-gc-cause is deprecated and will be removed in 3.0. GC cause will always be captured.");
     }
+    boolean captureGcCause =
+        SemconvStability.v3Preview() || Boolean.TRUE.equals(captureGcCauseConfig);
     Internal.setCaptureGcCause(builder, captureGcCause);
   }
 
