@@ -328,14 +328,12 @@ public abstract class AbstractR2dbcStatementTest {
                 .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
                 .build());
 
-    // the batch statements target a real table so that the collection name is captured (in
-    // db.query.summary and, under old semconv for a single-statement batch, db.sql.table); the
-    // table must exist for the non-empty batches to execute successfully
-    if (!scenario.queries.isEmpty()) {
-      createItemsTable(connectionFactory);
-      getTesting().waitForTraces(1);
-      getTesting().clearData();
-    }
+    // recreate a fresh items table for each scenario so that batch row ids can be reused without
+    // worrying about collisions from previous scenarios; the table also lets the collection name
+    // be captured (in db.query.summary and, under old semconv, db.sql.table)
+    recreateItemsTable(connectionFactory);
+    getTesting().waitForTraces(2);
+    getTesting().clearData();
 
     Throwable thrown =
         catchThrowable(
@@ -469,8 +467,8 @@ public abstract class AbstractR2dbcStatementTest {
         BatchScenario.builder("twoSameOperation")
             .queries(
                 asList(
-                    "INSERT INTO items (id, num) VALUES (2, 2)",
-                    "INSERT INTO items (id, num) VALUES (3, 3)"))
+                    "INSERT INTO items (id, num) VALUES (1, 1)",
+                    "INSERT INTO items (id, num) VALUES (2, 2)"))
             .spanName("BATCH INSERT items")
             .oldSpanName("INSERT " + DB + ".items")
             .summary("BATCH INSERT items")
@@ -487,8 +485,8 @@ public abstract class AbstractR2dbcStatementTest {
         BatchScenario.builder("twoDifferentOperations")
             .queries(
                 asList(
-                    "INSERT INTO items (id, num) VALUES (4, 4)",
-                    "UPDATE items SET num = 5 WHERE id = 4"))
+                    "INSERT INTO items (id, num) VALUES (1, 1)",
+                    "UPDATE items SET num = 5 WHERE id = 1"))
             .spanName("BATCH")
             .oldSpanName("INSERT " + DB + ".items")
             .summary("BATCH")
@@ -502,16 +500,19 @@ public abstract class AbstractR2dbcStatementTest {
             .build());
   }
 
-  private void createItemsTable(ConnectionFactory connectionFactory) {
+  private void recreateItemsTable(ConnectionFactory connectionFactory) {
     Mono.from(connectionFactory.create())
         .flatMapMany(
             connection ->
-                Mono.from(
-                        connection
-                            .createStatement(
-                                "CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY, num INTEGER)")
-                            .execute())
+                Mono.from(connection.createStatement("DROP TABLE IF EXISTS items").execute())
                     .flatMapMany(result -> result.map((row, metadata) -> ""))
+                    .concatWith(
+                        Mono.from(
+                                connection
+                                    .createStatement(
+                                        "CREATE TABLE items (id INTEGER PRIMARY KEY, num INTEGER)")
+                                    .execute())
+                            .flatMapMany(result -> result.map((row, metadata) -> "")))
                     .concatWith(Mono.from(connection.close()).cast(String.class)))
         .blockLast(Duration.ofMinutes(1));
   }

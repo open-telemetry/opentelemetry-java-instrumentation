@@ -1879,10 +1879,11 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))));
   }
 
-  // describes the four batch cases: the tables to create, the statements added to the batch, the
-  // expected executeBatch() result, and the expected client span. batch telemetry comes from the
-  // shared SQL extractors and is database-agnostic, so a single (in-memory) database is enough to
-  // lock down its shape
+  // describes the four batch cases: the statements added to the batch, the expected
+  // executeBatch() result, and the expected client span. each scenario runs against a freshly
+  // recreated items table, so batch row ids can be reused across scenarios. batch telemetry comes
+  // from the shared SQL extractors and is database-agnostic, so a single (in-memory) database is
+  // enough to lock down its shape
   static Stream<BatchScenario> batchCasesStream() {
     return Stream.of(
         // an empty batch still produces a client span, but with no query text or batch size;
@@ -1896,7 +1897,6 @@ public abstract class AbstractJdbcInstrumentationTest {
         // statement and carries db.statement/db.operation/db.sql.table under old semconv
         BatchScenario.builder()
             .name("single")
-            .createTable("items")
             .addQuery("INSERT INTO items (id, num) VALUES (1, 1)")
             .expectedResult(1)
             .spanName("INSERT items")
@@ -1912,9 +1912,8 @@ public abstract class AbstractJdbcInstrumentationTest {
         // name falls back to the namespace
         BatchScenario.builder()
             .name("twoSameOperation")
-            .createTable("items")
+            .addQuery("INSERT INTO items (id, num) VALUES (1, 1)")
             .addQuery("INSERT INTO items (id, num) VALUES (2, 2)")
-            .addQuery("INSERT INTO items (id, num) VALUES (3, 3)")
             .expectedResult(1, 1)
             .spanName("BATCH INSERT items")
             .oldSpanName(DATABASE_NAME_LOWER)
@@ -1927,9 +1926,8 @@ public abstract class AbstractJdbcInstrumentationTest {
         // statement-level attributes and the span name falls back to the namespace
         BatchScenario.builder()
             .name("twoDifferentOperations")
-            .createTable("items")
-            .addQuery("INSERT INTO items (id, num) VALUES (4, 4)")
-            .addQuery("UPDATE items SET num = 5 WHERE id = 4")
+            .addQuery("INSERT INTO items (id, num) VALUES (1, 1)")
+            .addQuery("UPDATE items SET num = 5 WHERE id = 1")
             .expectedResult(1, 1)
             .spanName("BATCH")
             .oldSpanName(DATABASE_NAME_LOWER)
@@ -1946,18 +1944,17 @@ public abstract class AbstractJdbcInstrumentationTest {
     Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
     cleanup.deferCleanup(connection);
 
-    for (String table : scenario.tablesToCreate) {
-      Statement createTable = connection.createStatement();
-      createTable.execute(
-          "CREATE TABLE IF NOT EXISTS "
-              + table
-              + " (id INTEGER not NULL, num INTEGER, PRIMARY KEY ( id ))");
-      cleanup.deferCleanup(createTable);
-    }
-    if (!scenario.tablesToCreate.isEmpty()) {
-      testing().waitForTraces(scenario.tablesToCreate.size());
-      testing().clearData();
-    }
+    // recreate a fresh items table for each scenario so that batch row ids can be reused without
+    // worrying about collisions from previous scenarios
+    Statement dropTable = connection.createStatement();
+    dropTable.execute("DROP TABLE IF EXISTS items");
+    cleanup.deferCleanup(dropTable);
+    Statement createTable = connection.createStatement();
+    createTable.execute(
+        "CREATE TABLE items (id INTEGER not NULL, num INTEGER, PRIMARY KEY ( id ))");
+    cleanup.deferCleanup(createTable);
+    testing().waitForTraces(2);
+    testing().clearData();
 
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
@@ -2406,7 +2403,6 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   private static final class BatchScenario {
     final String name;
-    final List<String> tablesToCreate;
     final List<String> statementsToAdd;
     final int[] expectedResult;
     final String spanName;
@@ -2420,7 +2416,6 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     BatchScenario(Builder builder) {
       this.name = builder.name;
-      this.tablesToCreate = builder.tablesToCreate;
       this.statementsToAdd = builder.statementsToAdd;
       this.expectedResult = builder.expectedResult;
       this.spanName = builder.spanName;
@@ -2445,7 +2440,6 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     static final class Builder {
       private String name;
-      private final List<String> tablesToCreate = new ArrayList<>();
       private final List<String> statementsToAdd = new ArrayList<>();
       private int[] expectedResult = new int[] {};
       private String spanName;
@@ -2459,11 +2453,6 @@ public abstract class AbstractJdbcInstrumentationTest {
 
       Builder name(String name) {
         this.name = name;
-        return this;
-      }
-
-      Builder createTable(String table) {
-        this.tablesToCreate.add(table);
         return this;
       }
 
