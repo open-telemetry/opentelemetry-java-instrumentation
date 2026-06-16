@@ -476,6 +476,23 @@ public abstract class AbstractR2dbcStatementTest {
                 .oldOperation("INSERT")
                 .oldCollection("players")
                 .batchSize(2)
+                .build(),
+            // a multi-statement batch with different operations has no shared operation or summary,
+            // so db.query.summary (and the span name) is just BATCH; the individual statements are
+            // still concatenated into db.query.text / db.statement
+            BatchScenario.builder("twoDifferentOperations")
+                .queries(
+                    asList(
+                        "INSERT INTO players VALUES (4)", "UPDATE players SET id = 5 WHERE id = 4"))
+                .spanName("BATCH")
+                .oldSpanName("INSERT " + DB + ".players")
+                .summary("BATCH")
+                .queryText("INSERT INTO players VALUES (?); UPDATE players SET id = ? WHERE id = ?")
+                .oldStatement(
+                    "INSERT INTO players VALUES (?); UPDATE players SET id = ? WHERE id = ?")
+                .oldOperation("INSERT")
+                .oldCollection("players")
+                .batchSize(2)
                 .build())
         .map(Arguments::of);
   }
