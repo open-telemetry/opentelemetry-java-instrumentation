@@ -100,11 +100,12 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
     if (emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
       when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
     }
     if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getDbOperation(dbRequest)).thenReturn("SELECT");
       when(dbAttributesGetter.getDbName(dbRequest)).thenReturn("database");
     }
 
@@ -118,11 +119,41 @@ class DbClientSpanNameExtractorTest {
   }
 
   @Test
+  void shouldPreferCollectionNameOverNamespace() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    if (emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
+      lenient().when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
+      when(dbAttributesGetter.getDbCollectionName(dbRequest)).thenReturn("users");
+    }
+    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getDbOperation(dbRequest)).thenReturn("SELECT");
+      when(dbAttributesGetter.getDbName(dbRequest)).thenReturn("database");
+    }
+
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertThat(spanName)
+        .isEqualTo(emitStableDatabaseSemconv() ? "SELECT users" : "SELECT database");
+  }
+
+  @Test
   void shouldExtractOperation() {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
+    if (emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
+    }
+    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getDbOperation(dbRequest)).thenReturn("SELECT");
+    }
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
 
@@ -177,7 +208,7 @@ class DbClientSpanNameExtractorTest {
       when(dbAttributesGetter.getDbQuerySummary(dbRequest)).thenReturn("SELECT users");
     }
     if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
-      when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
+      when(dbAttributesGetter.getDbOperation(dbRequest)).thenReturn("SELECT");
       when(dbAttributesGetter.getDbName(dbRequest)).thenReturn("database");
     }
 
@@ -236,12 +267,11 @@ class DbClientSpanNameExtractorTest {
   }
 
   @Test
-  void shouldFallBackToExplicitOperationNameForEmptySqlQuery() {
+  void shouldFallBackToNamespaceForEmptySqlQuery() {
     // given
     DbRequest dbRequest = new DbRequest();
 
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
-    when(sqlAttributesGetter.getDbOperationName(dbRequest)).thenReturn("WRITE");
     if (emitStableDatabaseSemconv()) {
       when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("mydb");
     }
@@ -255,7 +285,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertThat(spanName).isEqualTo("WRITE mydb");
+    assertThat(spanName).isEqualTo("mydb");
   }
 
   @Test
@@ -283,12 +313,11 @@ class DbClientSpanNameExtractorTest {
 
   @Test
   @SuppressWarnings("deprecation") // testing deprecated method
-  void shouldFallBackToExplicitOperationForEmptySqlQueryInMigration() {
+  void shouldFallBackToNamespaceForEmptySqlQueryInMigration() {
     // given
     DbRequest dbRequest = new DbRequest();
 
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
-    when(sqlAttributesGetter.getDbOperationName(dbRequest)).thenReturn("WRITE");
     if (emitStableDatabaseSemconv()) {
       when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("mydb");
     }
@@ -303,7 +332,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertThat(spanName).isEqualTo("WRITE mydb");
+    assertThat(spanName).isEqualTo("mydb");
   }
 
   static class DbRequest {}

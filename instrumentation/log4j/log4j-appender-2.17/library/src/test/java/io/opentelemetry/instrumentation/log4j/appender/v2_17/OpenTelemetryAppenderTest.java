@@ -164,7 +164,7 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     StringMap contextData = ContextDataFactory.createContextData();
     contextData.putValue(contextDataKeys.getTraceIdKey(), traceId);
     contextData.putValue(contextDataKeys.getSpanIdKey(), spanId);
-    contextData.putValue(contextDataKeys.getTraceFlags(), traceFlags);
+    contextData.putValue(contextDataKeys.getTraceFlagsKey(), traceFlags);
 
     StatusMessageCollector statusMessages = new StatusMessageCollector();
     StatusLogger.getLogger().registerListener(statusMessages);

@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.Declarativ
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread.ThreadDetailsCustomizerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
@@ -194,6 +195,11 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       public DeclarativeConfigurationCustomizerProvider distroConfigurationCustomizerProvider() {
         return new ResourceCustomizerProvider();
+      }
+
+      @Bean
+      public DeclarativeConfigurationCustomizerProvider threadDetailsCustomizerProvider() {
+        return new ThreadDetailsCustomizerProvider();
       }
 
       @Bean

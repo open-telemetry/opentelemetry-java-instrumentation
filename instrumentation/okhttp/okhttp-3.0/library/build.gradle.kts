@@ -1,7 +1,12 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.instrumentation-version-class")
   id("otel.nullaway-conventions")
   id("otel.animalsniffer-conventions")
+}
+
+instrumentationVersionClass {
+  className.set("io.opentelemetry.instrumentation.okhttp.v3_0.internal.InstrumentationVersion")
 }
 
 dependencies {

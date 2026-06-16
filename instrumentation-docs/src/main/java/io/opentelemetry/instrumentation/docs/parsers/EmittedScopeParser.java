@@ -90,7 +90,7 @@ public class EmittedScopeParser {
       Set<EmittedScope.Scope> scopes, String scopeName) {
     return scopes.stream()
         .filter(scope -> scopeName.equals(scope.getName()))
-        .min(Comparator.comparing(scope -> scope.getSchemaUrl() == null ? 1 : 0))
+        .min(Comparator.comparingInt(scope -> scope.getSchemaUrl() == null ? 1 : 0))
         .orElse(null);
   }
 

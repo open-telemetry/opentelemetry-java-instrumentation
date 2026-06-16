@@ -9,6 +9,7 @@ distribution:
   javaagent:
     indy/development: true
     force_synchronous_agent_listeners/development: false
+    thread_details_enabled: true
     exclude_classes:
       - com.example.excluded.Class1
       - com.example.excluded.Class2

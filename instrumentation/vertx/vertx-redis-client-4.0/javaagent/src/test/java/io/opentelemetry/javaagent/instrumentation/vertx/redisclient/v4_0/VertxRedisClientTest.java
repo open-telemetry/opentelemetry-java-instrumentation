@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -85,15 +86,20 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))));
 
-    if (emitStableDatabaseSemconv()) {
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.vertx-redis-client-4.0",
-          metric -> metric.hasName("db.client.operation.duration"));
-    }
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.vertx-redis-client-4.0",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_NAMESPACE,
+        SERVER_ADDRESS,
+        SERVER_PORT,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT);
   }
 
   @Test
@@ -108,13 +114,13 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET")
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo"))));
   }
@@ -150,14 +156,14 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo")),
@@ -180,13 +186,16 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("RANDOMKEY")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "RANDOMKEY " + host + ":" + port
+                                : "RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));

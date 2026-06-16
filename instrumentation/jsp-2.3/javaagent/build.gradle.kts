@@ -39,7 +39,6 @@ dependencies {
 
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:9.+") // documented limitation
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // documented limitation
-  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-logging-juli:9.+") // documented limitation
 }
 
 tasks {

@@ -13,12 +13,16 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class CommonConfig {
+  private static final Logger logger = Logger.getLogger(CommonConfig.class.getName());
+  private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
 
   private final List<String> clientRequestHeaders;
   private final List<String> clientResponseHeaders;
@@ -89,12 +93,58 @@ public final class CommonConfig {
             .getBoolean("emit_experimental_telemetry/development", false);
     v3Preview = commonConfig.getBoolean("v3_preview", false);
     userConfig = new UserConfig(commonConfig, v3Preview);
+    DeclarativeConfigProperties logging = commonConfig.get("logging");
     loggingTraceIdKey =
-        commonConfig.get("logging").getString("trace_id", LoggingContextConstants.TRACE_ID);
+        getConfig(
+            logging,
+            "trace_id_key",
+            "trace_id",
+            "otel.instrumentation.common.logging.trace-id-key",
+            "otel.instrumentation.common.logging.trace-id",
+            LoggingContextConstants.TRACE_ID);
     loggingSpanIdKey =
-        commonConfig.get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
+        getConfig(
+            logging,
+            "span_id_key",
+            "span_id",
+            "otel.instrumentation.common.logging.span-id-key",
+            "otel.instrumentation.common.logging.span-id",
+            LoggingContextConstants.SPAN_ID);
     loggingTraceFlagsKey =
-        commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
+        getConfig(
+            logging,
+            "trace_flags_key",
+            "trace_flags",
+            "otel.instrumentation.common.logging.trace-flags-key",
+            "otel.instrumentation.common.logging.trace-flags",
+            LoggingContextConstants.TRACE_FLAGS);
+  }
+
+  private static String getConfig(
+      DeclarativeConfigProperties config,
+      String newDeclarativeKey,
+      String oldDeclarativeKey,
+      String newProperty,
+      String oldProperty,
+      String defaultValue) {
+    String value = config.getString(newDeclarativeKey);
+    if (value != null) {
+      return value;
+    }
+    value = config.getString(oldDeclarativeKey);
+    if (value != null) {
+      if (warnedDeprecatedProperties.add(oldProperty)) {
+        logger.warning(
+            "The "
+                + oldProperty
+                + " setting and the equivalent declarative configuration property"
+                + " are deprecated and will be removed in 3.0. Use "
+                + newProperty
+                + " or equivalent declarative configuration instead.");
+      }
+      return value;
+    }
+    return defaultValue;
   }
 
   public List<String> getClientRequestHeaders() {

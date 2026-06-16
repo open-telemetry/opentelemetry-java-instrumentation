@@ -178,16 +178,17 @@ class LogbackAppenderTest {
       properties.put(
           "otel.distribution.spring_starter.instrumentation.disabled[0]", "logback_appender");
       properties.put("otel.instrumentation/development.java.logback_mdc.add_baggage", "true");
-      properties.put("otel.instrumentation/development.java.common.logging.trace_id", "traceid");
-      properties.put("otel.instrumentation/development.java.common.logging.span_id", "spanid");
       properties.put(
-          "otel.instrumentation/development.java.common.logging.trace_flags", "traceflags");
+          "otel.instrumentation/development.java.common.logging.trace_id_key", "traceid");
+      properties.put("otel.instrumentation/development.java.common.logging.span_id_key", "spanid");
+      properties.put(
+          "otel.instrumentation/development.java.common.logging.trace_flags_key", "traceflags");
     } else {
       properties.put("otel.instrumentation.logback-appender.enabled", "false");
       properties.put("otel.instrumentation.logback-mdc.add-baggage", "true");
-      properties.put("otel.instrumentation.common.logging.trace-id", "traceid");
-      properties.put("otel.instrumentation.common.logging.span-id", "spanid");
-      properties.put("otel.instrumentation.common.logging.trace-flags", "traceflags");
+      properties.put("otel.instrumentation.common.logging.trace-id-key", "traceid");
+      properties.put("otel.instrumentation.common.logging.span-id-key", "spanid");
+      properties.put("otel.instrumentation.common.logging.trace-flags-key", "traceflags");
     }
 
     SpringApplication app =
