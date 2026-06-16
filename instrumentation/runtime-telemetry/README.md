@@ -12,7 +12,7 @@
 
 | System property                                                          | Type    | Default | Description                                                                            |
 | ------------------------------------------------------------------------ | ------- | ------- | -------------------------------------------------------------------------------------- |
-| `otel.instrumentation.runtime-telemetry.capture-gc-cause`                | Boolean | `true`  | Enable the capture of the jvm.gc.cause attribute. Will always be captured in 3.0.      |
+| `otel.instrumentation.runtime-telemetry.capture-gc-cause`                | Boolean | `false` | Enable the capture of the jvm.gc.cause attribute. Will always be captured in 3.0.      |
 | `otel.instrumentation.runtime-telemetry.emit-experimental-telemetry`     | Boolean | `false` | Use `emit-experimental-metrics` instead.                                               |
 | `otel.instrumentation.runtime-telemetry.package-emitter.enabled`         | Boolean | `false` | Use `experimental.package-emitter.enabled` instead.                                    |
 | `otel.instrumentation.runtime-telemetry.package-emitter.jars-per-second` | Integer | 10      | Use `experimental.package-emitter.jars-per-second` instead.                            |
