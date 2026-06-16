@@ -332,7 +332,7 @@ public abstract class AbstractR2dbcStatementTest {
     // db.query.summary and, under old semconv for a single-statement batch, db.sql.table); the
     // table must exist for the non-empty batches to execute successfully
     if (!scenario.queries.isEmpty()) {
-      createPlayersTable(connectionFactory);
+      createItemsTable(connectionFactory);
       getTesting().waitForTraces(1);
       getTesting().clearData();
     }
@@ -453,28 +453,32 @@ public abstract class AbstractR2dbcStatementTest {
         // db.operation.batch.size and no BATCH prefix; under old semconv it carries the
         // statement, operation, collection and the operation+namespace+table span name
         BatchScenario.builder("single")
-            .queries(singletonList("INSERT INTO players VALUES (1)"))
-            .spanName("INSERT players")
-            .oldSpanName("INSERT " + DB + ".players")
-            .summary("INSERT players")
-            .queryText("INSERT INTO players VALUES (?)")
-            .oldStatement("INSERT INTO players VALUES (?)")
+            .queries(singletonList("INSERT INTO items (id, num) VALUES (1, 1)"))
+            .spanName("INSERT items")
+            .oldSpanName("INSERT " + DB + ".items")
+            .summary("INSERT items")
+            .queryText("INSERT INTO items (id, num) VALUES (?, ?)")
+            .oldStatement("INSERT INTO items (id, num) VALUES (?, ?)")
             .oldOperation("INSERT")
-            .oldCollection("players")
+            .oldCollection("items")
             .build(),
         // a multi-statement batch emits the BATCH span name, deduplicated db.query.text and
         // db.operation.batch.size under stable semconv; the collection name is captured in the
-        // summary (BATCH INSERT players). under old semconv the individual statements are
+        // summary (BATCH INSERT items). under old semconv the individual statements are
         // concatenated but the shared operation and collection are still captured
         BatchScenario.builder("twoSameOperation")
-            .queries(asList("INSERT INTO players VALUES (2)", "INSERT INTO players VALUES (3)"))
-            .spanName("BATCH INSERT players")
-            .oldSpanName("INSERT " + DB + ".players")
-            .summary("BATCH INSERT players")
-            .queryText("INSERT INTO players VALUES (?)")
-            .oldStatement("INSERT INTO players VALUES (?); INSERT INTO players VALUES (?)")
+            .queries(
+                asList(
+                    "INSERT INTO items (id, num) VALUES (2, 2)",
+                    "INSERT INTO items (id, num) VALUES (3, 3)"))
+            .spanName("BATCH INSERT items")
+            .oldSpanName("INSERT " + DB + ".items")
+            .summary("BATCH INSERT items")
+            .queryText("INSERT INTO items (id, num) VALUES (?, ?)")
+            .oldStatement(
+                "INSERT INTO items (id, num) VALUES (?, ?); INSERT INTO items (id, num) VALUES (?, ?)")
             .oldOperation("INSERT")
-            .oldCollection("players")
+            .oldCollection("items")
             .batchSize(2)
             .build(),
         // a multi-statement batch with different operations has no shared operation or summary,
@@ -482,26 +486,30 @@ public abstract class AbstractR2dbcStatementTest {
         // still concatenated into db.query.text / db.statement
         BatchScenario.builder("twoDifferentOperations")
             .queries(
-                asList("INSERT INTO players VALUES (4)", "UPDATE players SET id = 5 WHERE id = 4"))
+                asList(
+                    "INSERT INTO items (id, num) VALUES (4, 4)",
+                    "UPDATE items SET num = 5 WHERE id = 4"))
             .spanName("BATCH")
-            .oldSpanName("INSERT " + DB + ".players")
+            .oldSpanName("INSERT " + DB + ".items")
             .summary("BATCH")
-            .queryText("INSERT INTO players VALUES (?); UPDATE players SET id = ? WHERE id = ?")
-            .oldStatement("INSERT INTO players VALUES (?); UPDATE players SET id = ? WHERE id = ?")
+            .queryText(
+                "INSERT INTO items (id, num) VALUES (?, ?); UPDATE items SET num = ? WHERE id = ?")
+            .oldStatement(
+                "INSERT INTO items (id, num) VALUES (?, ?); UPDATE items SET num = ? WHERE id = ?")
             .oldOperation("INSERT")
-            .oldCollection("players")
+            .oldCollection("items")
             .batchSize(2)
             .build());
   }
 
-  private void createPlayersTable(ConnectionFactory connectionFactory) {
+  private void createItemsTable(ConnectionFactory connectionFactory) {
     Mono.from(connectionFactory.create())
         .flatMapMany(
             connection ->
                 Mono.from(
                         connection
                             .createStatement(
-                                "CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY)")
+                                "CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY, num INTEGER)")
                             .execute())
                     .flatMapMany(result -> result.map((row, metadata) -> ""))
                     .concatWith(Mono.from(connection.close()).cast(String.class)))

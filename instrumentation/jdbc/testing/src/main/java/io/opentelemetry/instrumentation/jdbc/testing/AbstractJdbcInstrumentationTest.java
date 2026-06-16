@@ -1896,44 +1896,45 @@ public abstract class AbstractJdbcInstrumentationTest {
         // statement and carries db.statement/db.operation/db.sql.table under old semconv
         BatchScenario.builder()
             .name("single")
-            .createTable("stmt_batch_single")
-            .addQuery("INSERT INTO stmt_batch_single VALUES(1)")
+            .createTable("items")
+            .addQuery("INSERT INTO items (id, num) VALUES (1, 1)")
             .expectedResult(1)
-            .spanName("INSERT stmt_batch_single")
-            .oldSpanName("INSERT " + DATABASE_NAME_LOWER + ".stmt_batch_single")
-            .queryText("INSERT INTO stmt_batch_single VALUES(?)")
-            .oldStatement("INSERT INTO stmt_batch_single VALUES(?)")
-            .summary("INSERT stmt_batch_single")
+            .spanName("INSERT items")
+            .oldSpanName("INSERT " + DATABASE_NAME_LOWER + ".items")
+            .queryText("INSERT INTO items (id, num) VALUES (?, ?)")
+            .oldStatement("INSERT INTO items (id, num) VALUES (?, ?)")
+            .summary("INSERT items")
             .oldOperation("INSERT")
-            .oldTable("stmt_batch_single")
+            .oldTable("items")
             .build(),
         // a multi-statement batch only emits db.query.text/summary and BATCH span name under
         // stable semconv; under old semconv it has no statement-level attributes and the span
         // name falls back to the namespace
         BatchScenario.builder()
             .name("twoSameOperation")
-            .createTable("stmt_batch_same")
-            .addQuery("INSERT INTO stmt_batch_same VALUES(1)")
-            .addQuery("INSERT INTO stmt_batch_same VALUES(2)")
+            .createTable("items")
+            .addQuery("INSERT INTO items (id, num) VALUES (2, 2)")
+            .addQuery("INSERT INTO items (id, num) VALUES (3, 3)")
             .expectedResult(1, 1)
-            .spanName("BATCH INSERT stmt_batch_same")
+            .spanName("BATCH INSERT items")
             .oldSpanName(DATABASE_NAME_LOWER)
-            .queryText("INSERT INTO stmt_batch_same VALUES(?)")
-            .summary("BATCH INSERT stmt_batch_same")
+            .queryText("INSERT INTO items (id, num) VALUES (?, ?)")
+            .summary("BATCH INSERT items")
             .batchSize(2)
             .build(),
+        // a multi-statement batch with different operations has no shared operation or summary,
+        // so db.query.summary (and the span name) is just BATCH; under old semconv it has no
+        // statement-level attributes and the span name falls back to the namespace
         BatchScenario.builder()
             .name("twoDifferentOperations")
-            .createTable("stmt_batch_diff_1")
-            .createTable("stmt_batch_diff_2")
-            .addQuery("INSERT INTO stmt_batch_diff_1 VALUES(1)")
-            .addQuery("INSERT INTO stmt_batch_diff_2 VALUES(2)")
+            .createTable("items")
+            .addQuery("INSERT INTO items (id, num) VALUES (4, 4)")
+            .addQuery("UPDATE items SET num = 5 WHERE id = 4")
             .expectedResult(1, 1)
             .spanName("BATCH")
             .oldSpanName(DATABASE_NAME_LOWER)
             .queryText(
-                "INSERT INTO stmt_batch_diff_1 VALUES(?); INSERT INTO stmt_batch_diff_2"
-                    + " VALUES(?)")
+                "INSERT INTO items (id, num) VALUES (?, ?); UPDATE items SET num = ? WHERE id = ?")
             .summary("BATCH")
             .batchSize(2)
             .build());
@@ -1947,7 +1948,10 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     for (String table : scenario.tablesToCreate) {
       Statement createTable = connection.createStatement();
-      createTable.execute("CREATE TABLE " + table + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
+      createTable.execute(
+          "CREATE TABLE IF NOT EXISTS "
+              + table
+              + " (id INTEGER not NULL, num INTEGER, PRIMARY KEY ( id ))");
       cleanup.deferCleanup(createTable);
     }
     if (!scenario.tablesToCreate.isEmpty()) {

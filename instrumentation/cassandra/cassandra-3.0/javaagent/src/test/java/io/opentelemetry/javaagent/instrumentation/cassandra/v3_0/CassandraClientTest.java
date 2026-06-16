@@ -312,8 +312,7 @@ class CassandraClientTest {
         "CREATE KEYSPACE "
             + scenario.keyspace
             + " WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
-    session.execute(
-        "CREATE TABLE " + scenario.keyspace + ".users ( name text PRIMARY KEY, age int )");
+    session.execute("CREATE TABLE " + scenario.keyspace + ".items ( id int PRIMARY KEY, num int )");
     testing.waitForTraces(3);
     testing.clearData();
 
@@ -381,36 +380,33 @@ class CassandraClientTest {
                 session -> {
                   PreparedStatement insert =
                       session.prepare(
-                          "INSERT INTO batch_single_test.users (name, age) values (?, ?)");
-                  return new BatchStatement().add(insert.bind("alice", 1));
+                          "INSERT INTO batch_single_test.items (id, num) values (?, ?)");
+                  return new BatchStatement().add(insert.bind(1, 1));
                 })
-            .spanName("INSERT batch_single_test.users")
-            .oldSpanName("INSERT batch_single_test.users")
-            .statement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
-            .oldStatement("INSERT INTO batch_single_test.users (name, age) values (?, ?)")
-            .summary("INSERT batch_single_test.users")
+            .spanName("INSERT batch_single_test.items")
+            .oldSpanName("INSERT batch_single_test.items")
+            .statement("INSERT INTO batch_single_test.items (id, num) values (?, ?)")
+            .oldStatement("INSERT INTO batch_single_test.items (id, num) values (?, ?)")
+            .summary("INSERT batch_single_test.items")
             .operation("INSERT")
             .oldOperation("INSERT")
-            .collection("batch_single_test.users")
-            .oldCollection("batch_single_test.users")
+            .collection("batch_single_test.items")
+            .oldCollection("batch_single_test.items")
             .build(),
         BatchScenario.builder("twoSameOperation")
             .keyspace("batch_same_test")
             .buildBatch(
                 session -> {
                   PreparedStatement insert =
-                      session.prepare(
-                          "INSERT INTO batch_same_test.users (name, age) values (?, ?)");
-                  return new BatchStatement()
-                      .add(insert.bind("alice", 1))
-                      .add(insert.bind("bob", 2));
+                      session.prepare("INSERT INTO batch_same_test.items (id, num) values (?, ?)");
+                  return new BatchStatement().add(insert.bind(1, 1)).add(insert.bind(2, 2));
                 })
-            .spanName("BATCH INSERT batch_same_test.users")
+            .spanName("BATCH INSERT batch_same_test.items")
             .oldSpanName("DB Query")
-            .statement("INSERT INTO batch_same_test.users (name, age) values (?, ?)")
-            .summary("BATCH INSERT batch_same_test.users")
+            .statement("INSERT INTO batch_same_test.items (id, num) values (?, ?)")
+            .summary("BATCH INSERT batch_same_test.items")
             .operation("BATCH INSERT")
-            .collection("batch_same_test.users")
+            .collection("batch_same_test.items")
             .batchSize(2)
             .build(),
         BatchScenario.builder("twoDifferentOperations")
@@ -418,21 +414,20 @@ class CassandraClientTest {
             .buildBatch(
                 session -> {
                   PreparedStatement insert =
-                      session.prepare(
-                          "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?)");
+                      session.prepare("INSERT INTO batch_mixed_test.items (id, num) values (4, ?)");
                   return new BatchStatement()
-                      .add(insert.bind(1))
+                      .add(insert.bind(4))
                       .add(
                           new SimpleStatement(
-                              "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
+                              "UPDATE batch_mixed_test.items SET num = 5 WHERE id = 4"));
                 })
             .spanName("BATCH")
             .oldSpanName("DB Query")
             .statement(
-                "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?")
+                "INSERT INTO batch_mixed_test.items (id, num) values (4, ?); UPDATE batch_mixed_test.items SET num = ? WHERE id = ?")
             .summary("BATCH")
             .operation("BATCH")
-            .collection("batch_mixed_test.users")
+            .collection("batch_mixed_test.items")
             .batchSize(2)
             .build());
   }
