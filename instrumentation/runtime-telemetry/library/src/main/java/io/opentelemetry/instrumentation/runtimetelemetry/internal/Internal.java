@@ -117,6 +117,7 @@ public final class Internal {
    * @param builder the runtime telemetry builder
    * @param captureGcCause {@code true} to capture the GC cause attribute
    */
+  // this method will be removed in 3.0 since GC cause will always be captured in that version
   public static void setCaptureGcCause(RuntimeTelemetryBuilder builder, boolean captureGcCause) {
     if (setCaptureGcCause != null) {
       setCaptureGcCause.accept(builder, captureGcCause);
