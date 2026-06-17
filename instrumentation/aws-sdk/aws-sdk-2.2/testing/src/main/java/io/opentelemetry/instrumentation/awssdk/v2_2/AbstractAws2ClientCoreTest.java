@@ -80,6 +80,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.DeleteRequest;
 import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndex;
@@ -687,6 +688,50 @@ public abstract class AbstractAws2ClientCoreTest {
                                             .putRequest(
                                                 PutRequest.builder()
                                                     .item(
+                                                        ImmutableMap.of(
+                                                            "key",
+                                                            AttributeValue.builder()
+                                                                .s("anotherValue")
+                                                                .build()))
+                                                    .build())
+                                            .build())))))
+            .stableOperation("BATCH WriteItem")
+            .hasCollection()
+            .batchSize(2)
+            .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+            .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
+            .assertMetric()
+            .build(),
+        // a batch mixing a put and a delete in one table: unlike the SQL/Cassandra matrices where
+        // a batch with differing operations collapses to just "BATCH", DynamoDB derives the
+        // operation name from the item count alone, so a put+delete write batch still reports the
+        // shared "BATCH WriteItem" operation (and the single collection)
+        BatchScenario.builder("writeItemMixed")
+            .awsOperation("BatchWriteItem")
+            .responseContent(getResponseContent("BatchWriteItem"))
+            .execute(
+                c ->
+                    c.batchWriteItem(
+                        b ->
+                            b.requestItems(
+                                ImmutableMap.of(
+                                    "sometable",
+                                    asList(
+                                        WriteRequest.builder()
+                                            .putRequest(
+                                                PutRequest.builder()
+                                                    .item(
+                                                        ImmutableMap.of(
+                                                            "key",
+                                                            AttributeValue.builder()
+                                                                .s("value")
+                                                                .build()))
+                                                    .build())
+                                            .build(),
+                                        WriteRequest.builder()
+                                            .deleteRequest(
+                                                DeleteRequest.builder()
+                                                    .key(
                                                         ImmutableMap.of(
                                                             "key",
                                                             AttributeValue.builder()
