@@ -168,8 +168,8 @@ public final class ParseContext {
 
   /**
    * Resolve the database name from URL parameters, trying {@code databasename} first and falling
-   * back to {@code database}. This is used by URL-based parsers ({@link #applyCommonParams}) and
-   * by parsers that handle params separately (e.g., {@code JtdsUrlParser}).
+   * back to {@code database}. Used by URL-based parsers ({@link #applyCommonParams}) and by
+   * parsers that handle params separately (e.g., {@code JtdsUrlParser}).
    *
    * @param params the URL parameter map
    */
