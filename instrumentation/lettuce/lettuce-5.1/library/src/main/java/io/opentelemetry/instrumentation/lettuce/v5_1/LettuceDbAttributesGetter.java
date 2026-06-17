@@ -41,6 +41,12 @@ class LettuceDbAttributesGetter
 
   @Nullable
   @Override
+  public Long getDbOperationBatchSize(LettuceRequest request) {
+    return request.getBatchSize();
+  }
+
+  @Nullable
+  @Override
   public String getServerAddress(LettuceRequest request) {
     InetSocketAddress address = request.getAddress();
     return address != null ? address.getHostString() : null;

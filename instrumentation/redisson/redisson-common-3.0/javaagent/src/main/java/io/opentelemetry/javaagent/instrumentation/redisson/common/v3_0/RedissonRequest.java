@@ -99,6 +99,30 @@ public abstract class RedissonRequest {
     return null;
   }
 
+  public boolean isMultiBatch() {
+    Object command = getCommand();
+    if (!(command instanceof CommandsData)) {
+      return false;
+    }
+    List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
+    return !commands.isEmpty() && commands.get(0).getCommand().getName().equals(MULTI);
+  }
+
+  public boolean isExecCommand() {
+    Object command = getCommand();
+    if (command instanceof CommandData) {
+      return ((CommandData<?, ?>) command).getCommand().getName().equals("EXEC");
+    }
+    if (command instanceof CommandsData) {
+      for (CommandData<?, ?> singleCommand : ((CommandsData) command).getCommands()) {
+        if (singleCommand.getCommand().getName().equals("EXEC")) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   @Nullable
   public Long getOperationBatchSize() {
     Object command = getCommand();

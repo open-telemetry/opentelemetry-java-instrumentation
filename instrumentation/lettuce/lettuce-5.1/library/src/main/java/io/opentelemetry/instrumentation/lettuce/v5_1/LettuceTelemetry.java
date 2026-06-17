@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import io.lettuce.core.protocol.RedisCommand;
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import javax.annotation.Nullable;
 
 /** Entrypoint for instrumenting Lettuce or clients. */
 public final class LettuceTelemetry {
@@ -28,6 +30,37 @@ public final class LettuceTelemetry {
    */
   public static LettuceTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new LettuceTelemetryBuilder(openTelemetry);
+  }
+
+  /** Used by the javaagent to track Lettuce auto-flush batches. */
+  public static void setAutoFlushCommands(Object commands, boolean autoFlush) {
+    OpenTelemetryTracing.setAutoFlushCommands(commands, autoFlush);
+  }
+
+  /** Used by the javaagent to capture commands while Lettuce auto-flush is disabled. */
+  public static void capture(Object commands, RedisCommand<?, ?, ?> command) {
+    OpenTelemetryTracing.capture(commands, command);
+  }
+
+  /** Used by the javaagent to start an aggregate span for a flushed Lettuce batch. */
+  @Nullable
+  public static Object startBatch(Object commands) {
+    return OpenTelemetryTracing.startBatch(commands);
+  }
+
+  /** Used by the javaagent to clear the active flushed batch and end it on synchronous failure. */
+  public static void finishBatch(Object batch, @Nullable Throwable throwable) {
+    OpenTelemetryTracing.finishBatch(batch, throwable);
+  }
+
+  /** Used by the javaagent to activate batch suppression while Lettuce writes a command. */
+  public static void startCommand(RedisCommand<?, ?, ?> command) {
+    OpenTelemetryTracing.startCommand(command);
+  }
+
+  /** Used by the javaagent to clear the active command write batch suppression. */
+  public static void endCommand() {
+    OpenTelemetryTracing.endCommand();
   }
 
   LettuceTelemetry(

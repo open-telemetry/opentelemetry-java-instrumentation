@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -18,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
@@ -52,9 +54,13 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -474,6 +480,99 @@ class LettuceAsyncClientTest {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  // Lettuce auto-flush batching is traced as one aggregate span from flush through completion.
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("deferredFlushScenarios")
+  void deferredFlushCommand(
+      String name, AsyncCommandsScenario scenario, List<ExpectedCommand> expectedCommands)
+      throws Exception {
+    asyncCommands.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
+
+    List<RedisFuture<?>> futures = scenario.run(asyncCommands);
+    asyncCommands.flushCommands();
+    for (RedisFuture<?> future : futures) {
+      future.get(10, SECONDS);
+    }
+
+    if (expectedCommands.isEmpty()) {
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+
+    String operation = pipelineOperation(expectedCommands);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(operation)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_OPERATION), operation),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() && expectedCommands.size() > 1
+                                    ? (long) expectedCommands.size()
+                                    : null))));
+  }
+
+  private static String pipelineOperation(List<ExpectedCommand> commands) {
+    if (commands.size() == 1) {
+      return commands.get(0).operation;
+    }
+    String operation = commands.get(0).operation;
+    for (ExpectedCommand command : commands) {
+      if (!operation.equals(command.operation)) {
+        return "PIPELINE";
+      }
+    }
+    return "PIPELINE " + operation;
+  }
+
+  private static Stream<Arguments> deferredFlushScenarios() {
+    return Stream.of(
+        Arguments.of("empty", (AsyncCommandsScenario) commands -> emptyList(), emptyList()),
+        Arguments.of(
+            "single",
+            (AsyncCommandsScenario) commands -> futures(commands.set("batch1", "v1")),
+            expectedCommands(expectedCommand("SET"))),
+        Arguments.of(
+            "twoSameOperation",
+            (AsyncCommandsScenario)
+                commands -> futures(commands.set("batch1", "v1"), commands.set("batch2", "v2")),
+            expectedCommands(expectedCommand("SET"), expectedCommand("SET"))),
+        Arguments.of(
+            "twoDifferentOperations",
+            (AsyncCommandsScenario)
+                commands -> futures(commands.set("batch1", "v1"), commands.get("batch1")),
+            expectedCommands(expectedCommand("SET"), expectedCommand("GET"))));
+  }
+
+  private static List<RedisFuture<?>> futures(RedisFuture<?>... futures) {
+    return asList(futures);
+  }
+
+  private static List<ExpectedCommand> expectedCommands(ExpectedCommand... commands) {
+    return asList(commands);
+  }
+
+  private static ExpectedCommand expectedCommand(String operation) {
+    return new ExpectedCommand(operation);
+  }
+
+  private interface AsyncCommandsScenario {
+    List<RedisFuture<?>> run(RedisAsyncCommands<String, String> commands);
+  }
+
+  private static class ExpectedCommand {
+    private final String operation;
+
+    private ExpectedCommand(String operation) {
+      this.operation = operation;
+    }
   }
 
   @Test

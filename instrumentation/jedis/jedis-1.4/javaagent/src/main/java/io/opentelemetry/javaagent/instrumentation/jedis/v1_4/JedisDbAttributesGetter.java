@@ -5,18 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
-
-  private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(
-          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jedis"));
 
   @Override
   public String getDbSystemName(JedisRequest request) {
@@ -31,12 +24,18 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getDbQueryText(JedisRequest request) {
-    return sanitizer.sanitize(request.getCommand().name(), request.getArgs());
+    return request.getQueryText();
   }
 
   @Override
   public String getDbOperationName(JedisRequest request) {
-    return request.getCommand().name();
+    return request.getOperationName();
+  }
+
+  @Override
+  @Nullable
+  public Long getDbOperationBatchSize(JedisRequest request) {
+    return request.getBatchSize();
   }
 
   @Override

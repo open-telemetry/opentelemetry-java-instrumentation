@@ -399,8 +399,7 @@ public abstract class AbstractRedissonClientTest {
           batch.getBucket("batch2").setAsync("v2");
           batch.execute();
         });
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("MULTI SET", "DB Query", "SET", "EXEC"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
@@ -416,31 +415,8 @@ public abstract class AbstractRedissonClientTest {
                                 DB_OPERATION_NAME,
                                 emitStableDatabaseSemconv() ? "MULTI SET" : null),
                             // db.operation.batch.size is not emitted because MULTI transaction
-                            // telemetry is split across wrapper and command spans, so this span
-                            // does not represent the full logical batch.
+                            // wrapper only sees MULTI plus the first queued command.
                             equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SET")
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("EXEC")
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "EXEC"),
-                            equalTo(maybeStable(DB_OPERATION), "EXEC"))
                         .hasParent(trace.getSpan(0))));
   }
 

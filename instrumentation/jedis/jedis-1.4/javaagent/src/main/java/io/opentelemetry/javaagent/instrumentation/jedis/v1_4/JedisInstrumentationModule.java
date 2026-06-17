@@ -30,6 +30,9 @@ public class JedisInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new JedisConnectionInstrumentation(), new JedisInstrumentation());
+    return asList(
+        new JedisConnectionInstrumentation(),
+        new JedisInstrumentation(),
+        new JedisPipelineInstrumentation());
   }
 }

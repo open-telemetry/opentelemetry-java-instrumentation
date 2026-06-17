@@ -6,10 +6,14 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter.splitArgs;
+import static java.util.Collections.emptyList;
 
+import io.lettuce.core.protocol.OtelCommandArgsUtil;
+import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.StringJoiner;
 import javax.annotation.Nullable;
 
 final class LettuceRequest {
@@ -20,6 +24,8 @@ final class LettuceRequest {
   @Nullable private String argsString;
   @Nullable private InetSocketAddress address;
   @Nullable private Long databaseIndex;
+  @Nullable private Long batchSize;
+  private boolean pipeline;
 
   LettuceRequest(RedisCommandSanitizer sanitizer) {
     this.sanitizer = sanitizer;
@@ -55,9 +61,22 @@ final class LettuceRequest {
     this.databaseIndex = databaseIndex;
   }
 
+  void setPipeline(List<RedisCommand<?, ?, ?>> commands) {
+    command = pipelineOperationName(commands);
+    argsList = null;
+    argsString = pipelineStatement(commands);
+    batchSize = commands.size() > 1 ? (long) commands.size() : null;
+    pipeline = true;
+  }
+
   @Nullable
   Long getDatabaseIndex() {
     return databaseIndex;
+  }
+
+  @Nullable
+  Long getBatchSize() {
+    return batchSize;
   }
 
   @Nullable
@@ -66,10 +85,39 @@ final class LettuceRequest {
     if (cmd == null) {
       return null;
     }
+    if (pipeline) {
+      return argsString;
+    }
     List<String> args = argsList;
     if (args == null) {
       args = splitArgs(argsString);
     }
     return sanitizer.sanitize(cmd, args);
+  }
+
+  private static String pipelineOperationName(List<RedisCommand<?, ?, ?>> commands) {
+    String operationName = commands.get(0).getType().name();
+    if (commands.size() == 1) {
+      return operationName;
+    }
+    for (int i = 1; i < commands.size(); i++) {
+      if (!operationName.equals(commands.get(i).getType().name())) {
+        return "PIPELINE";
+      }
+    }
+    return "PIPELINE " + operationName;
+  }
+
+  private String pipelineStatement(List<RedisCommand<?, ?, ?>> commands) {
+    StringJoiner joiner = new StringJoiner(";");
+    for (RedisCommand<?, ?, ?> command : commands) {
+      String commandName = command.getType().name();
+      List<String> args =
+          command.getArgs() == null
+              ? emptyList()
+              : OtelCommandArgsUtil.getCommandArgs(command.getArgs());
+      joiner.add(sanitizer.sanitize(commandName, args));
+    }
+    return joiner.toString();
   }
 }

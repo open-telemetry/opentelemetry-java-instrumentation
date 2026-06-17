@@ -19,6 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisPipelineContext;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
 import java.net.Socket;
 import javax.annotation.Nullable;
@@ -66,8 +67,12 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    public static AdviceScope start(JedisRequest request) {
+    public static AdviceScope start(JedisRequest request, @Nullable Socket socket) {
       Context parentContext = currentContext();
+      request.setSocket(socket);
+      if (JedisPipelineContext.capture(request)) {
+        return null;
+      }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
@@ -101,8 +106,9 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     public static AdviceScope onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) ProtocolCommand command,
-        @Advice.Argument(1) byte[][] args) {
-      return AdviceScope.start(JedisRequest.create(connection, command, asList(args)));
+        @Advice.Argument(1) byte[][] args,
+        @Advice.FieldValue("socket") Socket socket) {
+      return AdviceScope.start(JedisRequest.create(connection, command, asList(args)), socket);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -122,8 +128,10 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
-        @Advice.This Connection connection, @Advice.Argument(0) CommandArguments command) {
-      return AdviceScope.start(JedisRequest.create(connection, command));
+        @Advice.This Connection connection,
+        @Advice.Argument(0) CommandArguments command,
+        @Advice.FieldValue("socket") Socket socket) {
+      return AdviceScope.start(JedisRequest.create(connection, command), socket);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

@@ -31,4 +31,9 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
   protected boolean connectHasSpans() {
     return testLatestDeps();
   }
+
+  @Override
+  protected boolean aggregateDeferredFlush() {
+    return true;
+  }
 }
