@@ -367,12 +367,13 @@ class CassandraClientTest {
 
   private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-        // an empty batch still produces a client span, but with no query text, summary,
-        // operation or batch size; the span name falls back to the database system name
+        // an empty batch still produces a client span carrying db.operation.batch.size 0, but with
+        // no query text, summary or operation; the span name falls back to the database system name
         BatchScenario.builder("empty")
             .buildBatch(session -> new BatchStatement())
             .spanName("cassandra")
             .oldSpanName("DB Query")
+            .batchSize(0)
             .build(),
         // a single-statement batch is executed as a normal statement (not a batch): it has the
         // normal INSERT span name in both modes, db.operation and db.cassandra.table, and no

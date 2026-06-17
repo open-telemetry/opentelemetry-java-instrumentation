@@ -360,10 +360,10 @@ public abstract class AbstractR2dbcStatementTest {
     String connectionString = MARIADB.system + "://localhost:" + port;
 
     if (scenario.queries.isEmpty()) {
-      // an empty batch fails to execute and produces a client span with no operation, summary or
-      // batch size; the span name falls back to the database namespace. under old semconv it still
-      // carries db.user/db.connection_string and an empty db.statement; under stable semconv it
-      // records the error instead (error.type is stable-only)
+      // an empty batch fails to execute and produces a client span with no operation or summary,
+      // but carries db.operation.batch.size 0; the span name falls back to the database namespace.
+      // under old semconv it still carries db.user/db.connection_string and an empty db.statement;
+      // under stable semconv it records the error instead (error.type is stable-only)
       assertThat(thrown).isInstanceOf(NoSuchElementException.class);
       getTesting()
           .waitAndAssertTraces(
@@ -384,6 +384,9 @@ public abstract class AbstractR2dbcStatementTest {
                                   equalTo(
                                       maybeStable(DB_STATEMENT),
                                       emitStableDatabaseSemconv() ? null : ""),
+                                  equalTo(
+                                      DB_OPERATION_BATCH_SIZE,
+                                      emitStableDatabaseSemconv() ? 0L : null),
                                   equalTo(maybeStablePeerService(), "test-peer-service"),
                                   equalTo(SERVER_ADDRESS, container.getHost()),
                                   equalTo(SERVER_PORT, port),

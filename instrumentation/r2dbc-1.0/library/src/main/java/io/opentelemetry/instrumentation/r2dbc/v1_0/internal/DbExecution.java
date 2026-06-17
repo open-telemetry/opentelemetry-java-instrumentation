@@ -14,6 +14,7 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.Context;
+import io.r2dbc.proxy.core.ExecutionType;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
@@ -109,8 +110,13 @@ public final class DbExecution {
                 query ->
                     R2dbcSqlCommenterUtil.getOriginalQuery(queryInfo.getConnectionInfo(), query))
             .collect(toList());
+    // db.operation.batch.size applies only to Batch executions (Connection#createBatch); a plain
+    // Statement always reports getBatchSize() == 0 and must not be treated as a batch. For a Batch
+    // the size is captured for every execution (including an empty batch with size 0) and only
+    // omitted for a single-statement batch (size 1)
     int queryInfoBatchSize = queryInfo.getBatchSize();
-    this.batchSize = queryInfoBatchSize > 1 ? (long) queryInfoBatchSize : null;
+    boolean isBatch = queryInfo.getType() == ExecutionType.BATCH;
+    this.batchSize = isBatch && queryInfoBatchSize != 1 ? (long) queryInfoBatchSize : null;
     this.parameterizedQuery =
         queryInfo.getQueries().stream()
             .anyMatch(queryInfo1 -> !queryInfo1.getBindingsList().isEmpty());

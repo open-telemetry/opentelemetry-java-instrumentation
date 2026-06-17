@@ -1886,12 +1886,13 @@ public abstract class AbstractJdbcInstrumentationTest {
   // is enough to lock down its shape
   static Stream<BatchScenario> batchCasesStream() {
     return Stream.of(
-        // an empty batch still produces a client span, but with no query text or batch size;
-        // the span name falls back to the database namespace in both modes
+        // an empty batch still produces a client span carrying db.operation.batch.size 0, but no
+        // query text; the span name falls back to the database namespace in both modes
         BatchScenario.builder()
             .name("empty")
             .spanName(DATABASE_NAME_LOWER)
             .oldSpanName(DATABASE_NAME_LOWER)
+            .batchSize(0)
             .build(),
         // a single-statement batch is not a batch (size 1), so it looks like a normal
         // statement and carries db.statement/db.operation/db.sql.table under old semconv

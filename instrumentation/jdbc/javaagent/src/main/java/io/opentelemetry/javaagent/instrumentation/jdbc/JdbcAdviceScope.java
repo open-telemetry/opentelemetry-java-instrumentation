@@ -77,6 +77,8 @@ public class JdbcAdviceScope {
 
   @Nullable
   private static DbRequest createBatchRequest(Statement statement) {
+    // reaching here means executeBatch()/executeLargeBatch() was called, so this is always a batch
+    // execution; an empty batch (no addBatch() calls) reports db.operation.batch.size 0
     if (statement instanceof PreparedStatement) {
       String sql = JdbcData.PREPARED_STATEMENT.get((PreparedStatement) statement);
       if (sql == null) {
@@ -84,11 +86,11 @@ public class JdbcAdviceScope {
       }
       Long batchSize = JdbcData.getPreparedStatementBatchSize((PreparedStatement) statement);
       Map<String, String> parameters = JdbcData.getParameters((PreparedStatement) statement);
-      return DbRequest.create(statement, sql, batchSize, parameters, true);
+      return DbRequest.create(statement, sql, batchSize != null ? batchSize : 0L, parameters, true);
     } else {
       JdbcData.StatementBatchInfo batchInfo = JdbcData.getStatementBatchInfo(statement);
       if (batchInfo == null) {
-        return DbRequest.create(statement, emptyList(), null, false);
+        return DbRequest.create(statement, emptyList(), 0L, false);
       } else {
         return DbRequest.create(
             statement, batchInfo.getQueryTexts(), batchInfo.getBatchSize(), false);

@@ -123,12 +123,13 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
 
   private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-        // an empty batch keeps the raw batch operation name and emits no batch size or
-        // collection name
+        // an empty batch keeps the raw batch operation name and carries db.operation.batch.size 0,
+        // but no collection name
         BatchScenario.builder("getItemEmpty")
             .awsOperation("BatchGetItem")
             .execute(client -> client.batchGetItem(getItemRequest(0)))
             .stableOperation("BatchGetItem")
+            .batchSize(0)
             .build(),
         // a single-item batch is not a batch, so it uses the singular item operation
         BatchScenario.builder("getItemSingle")
@@ -148,6 +149,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
             .awsOperation("BatchWriteItem")
             .execute(client -> client.batchWriteItem(writeItemRequest(0)))
             .stableOperation("BatchWriteItem")
+            .batchSize(0)
             .build(),
         BatchScenario.builder("writeItemSingle")
             .awsOperation("BatchWriteItem")

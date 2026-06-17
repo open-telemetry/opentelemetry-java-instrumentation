@@ -51,7 +51,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     Long batchSize = extractBatchSize(operation, request.getOriginalRequest());
     if (emitStableDatabaseSemconv()) {
       attributes.put(DB_OPERATION_NAME, getStableOperationName(operation, batchSize));
-      if (isBatch(batchSize)) {
+      if (shouldEmitBatchSize(batchSize)) {
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
     }
@@ -132,7 +132,8 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
         "BatchGetItem".equals(operation)
             ? countBatchGetItems(requestItems)
             : countBatchWriteItems(requestItems);
-    return batchSize == 0 ? null : batchSize;
+    // return the size for every batch request, including an empty batch with size 0
+    return batchSize;
   }
 
   private static long countBatchGetItems(Map<?, ?> requestItems) {
@@ -156,8 +157,10 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     return count;
   }
 
-  private static boolean isBatch(@Nullable Long batchSize) {
-    return batchSize != null && batchSize > 1;
+  // db.operation.batch.size is captured for every batch request (including an empty batch with
+  // size 0); it is only omitted for a single-item batch, which is reported as a non-batch operation
+  private static boolean shouldEmitBatchSize(@Nullable Long batchSize) {
+    return batchSize != null && batchSize != 1;
   }
 
   @Nullable

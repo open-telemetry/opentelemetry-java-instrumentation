@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
+import io.r2dbc.proxy.core.ExecutionType;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.proxy.test.MockConnectionInfo;
@@ -58,6 +59,7 @@ class DbExecutionTest {
   void dbExecutionWithBatch() {
     QueryExecutionInfo queryExecutionInfo =
         MockQueryExecutionInfo.builder()
+            .type(ExecutionType.BATCH)
             .queryInfo(new QueryInfo("INSERT INTO person VALUES(1)"))
             .queryInfo(new QueryInfo("INSERT INTO person VALUES(2)"))
             .batchSize(2)
@@ -74,9 +76,27 @@ class DbExecutionTest {
   }
 
   @Test
+  void dbExecutionWithEmptyBatch() {
+    QueryExecutionInfo queryExecutionInfo =
+        MockQueryExecutionInfo.builder()
+            .type(ExecutionType.BATCH)
+            .batchSize(0)
+            .connectionInfo(MockConnectionInfo.builder().build())
+            .build();
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db");
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
+
+    // an empty batch still reports db.operation.batch.size 0
+    assertThat(dbExecution.getBatchSize()).isEqualTo(0);
+  }
+
+  @Test
   void dbExecutionWithBatchSizeOne() {
     QueryExecutionInfo queryExecutionInfo =
         MockQueryExecutionInfo.builder()
+            .type(ExecutionType.BATCH)
             .queryInfo(new QueryInfo("INSERT INTO person VALUES(1)"))
             .batchSize(1)
             .connectionInfo(MockConnectionInfo.builder().build())
@@ -87,6 +107,7 @@ class DbExecutionTest {
     DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
 
     assertThat(dbExecution.getRawQueryTexts()).containsExactly("INSERT INTO person VALUES(1)");
+    // a single-statement batch is reported as a non-batch, so it has no db.operation.batch.size
     assertThat(dbExecution.getBatchSize()).isNull();
   }
 

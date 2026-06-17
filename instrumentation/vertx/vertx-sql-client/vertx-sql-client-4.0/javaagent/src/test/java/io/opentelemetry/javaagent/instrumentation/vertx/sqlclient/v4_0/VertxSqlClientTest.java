@@ -365,12 +365,13 @@ class VertxSqlClientTest {
   private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
         // an empty batch is rejected before sending, so it looks like a single statement but
-        // records the error and emits no db.operation.batch.size
+        // records the error and carries db.operation.batch.size 0
         BatchScenario.builder("empty")
             .tuples(emptyList())
             .stableSpanName("insert batch_test")
             .stableSummary("insert batch_test")
             .errorType("io.vertx.core.impl.NoStackTraceThrowable")
+            .batchSize(0)
             .build(),
         // a single-statement batch is not a batch (size 1), so it emits no
         // db.operation.batch.size and no BATCH prefix

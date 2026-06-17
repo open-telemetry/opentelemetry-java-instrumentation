@@ -102,6 +102,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
     Long batchSize = getter.getDbOperationBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
+    // db.operation.batch.size is captured for every batch execution (including an empty batch with
+    // size 0); it is only omitted for a single-statement batch, which is reported as a non-batch
+    boolean emitBatchSize = batchSize != null && batchSize != 1;
 
     if (emitOldDatabaseSemconv()) {
       if (rawQueryTexts.size() == 1) { // for backcompat(?)
@@ -118,7 +121,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     }
 
     if (emitStableDatabaseSemconv()) {
-      if (isBatch) {
+      if (emitBatchSize) {
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
       if (rawQueryTexts.size() == 1) {

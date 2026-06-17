@@ -566,13 +566,14 @@ public abstract class AbstractAws2ClientCoreTest {
   @SuppressWarnings("deprecation") // uses deprecated semconv
   private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-        // an empty batch still produces a span, but keeps the raw batch operation name and
-        // emits no db.operation.batch.size, db.collection.name or table-name attributes
+        // an empty batch still produces a span with the raw batch operation name and
+        // db.operation.batch.size 0, but no db.collection.name or table-name attributes
         BatchScenario.builder("getItemEmpty")
             .awsOperation("BatchGetItem")
             .responseContent("{\"ConsumedCapacity\":[]}")
             .execute(c -> c.batchGetItem(b -> b.requestItems(ImmutableMap.of())))
             .stableOperation("BatchGetItem")
+            .batchSize(0)
             .build(),
         // a single-item batch is not a batch, so it uses the singular item operation and emits
         // no db.operation.batch.size
@@ -631,6 +632,7 @@ public abstract class AbstractAws2ClientCoreTest {
             .responseContent("{\"ConsumedCapacity\":[]}")
             .execute(c -> c.batchWriteItem(b -> b.requestItems(ImmutableMap.of())))
             .stableOperation("BatchWriteItem")
+            .batchSize(0)
             .build(),
         // a single-item batch is not a batch, so it uses the singular item operation and emits
         // no db.operation.batch.size
