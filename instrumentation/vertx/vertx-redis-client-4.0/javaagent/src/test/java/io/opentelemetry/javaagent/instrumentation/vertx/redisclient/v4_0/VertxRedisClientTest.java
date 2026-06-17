@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -32,14 +33,20 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.vertx.core.Vertx;
+import io.vertx.redis.client.Command;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
+import io.vertx.redis.client.Request;
 import java.net.InetAddress;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -201,7 +208,58 @@ class VertxRedisClientTest {
                             redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));
   }
 
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("batchScenarios")
+  void batchCommand(BatchScenario scenario) throws Exception {
+    testing.clearData();
+
+    client.batch(scenario.requests).toCompletionStage().toCompletableFuture().get(30, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? scenario.operation + " " + host + ":" + port
+                                : scenario.operation)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            redisSpanAttributes(
+                                scenario.operation, scenario.statement, scenario.batchSize))));
+  }
+
+  private static Stream<BatchScenario> batchScenarios() {
+    return Stream.of(
+        BatchScenario.builder("single")
+            .requests(Request.cmd(Command.SET).arg("batch1").arg("v1"))
+            .operation("SET")
+            .statement("SET batch1 ?")
+            .build(),
+        BatchScenario.builder("twoSameOperation")
+            .requests(
+                Request.cmd(Command.SET).arg("batch1").arg("v1"),
+                Request.cmd(Command.SET).arg("batch2").arg("v2"))
+            .operation("PIPELINE SET")
+            .statement("SET batch1 ?;SET batch2 ?")
+            .batchSize(2)
+            .build(),
+        BatchScenario.builder("twoDifferentOperations")
+            .requests(
+                Request.cmd(Command.SET).arg("batch1").arg("v1"),
+                Request.cmd(Command.GET).arg("batch1"))
+            .operation("PIPELINE")
+            .statement("SET batch1 ?;GET batch1")
+            .batchSize(2)
+            .build());
+  }
+
   private static AttributeAssertion[] redisSpanAttributes(String operation, String queryText) {
+    return redisSpanAttributes(operation, queryText, null);
+  }
+
+  private static AttributeAssertion[] redisSpanAttributes(
+      String operation, String queryText, Long batchSize) {
     // not testing database/dup
     if (emitStableDatabaseSemconv()) {
       return new AttributeAssertion[] {
@@ -209,6 +267,7 @@ class VertxRedisClientTest {
         equalTo(DB_QUERY_TEXT, queryText),
         equalTo(DB_OPERATION_NAME, operation),
         equalTo(DB_NAMESPACE, "1"),
+        equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
         equalTo(maybeStablePeerService(), "test-peer-service"),
@@ -227,6 +286,68 @@ class VertxRedisClientTest {
         equalTo(NETWORK_PEER_PORT, port),
         equalTo(NETWORK_PEER_ADDRESS, ip)
       };
+    }
+  }
+
+  private static class BatchScenario {
+    private final String name;
+    private final List<Request> requests;
+    private final String operation;
+    private final String statement;
+    private final Long batchSize;
+
+    private BatchScenario(
+        String name, List<Request> requests, String operation, String statement, Long batchSize) {
+      this.name = name;
+      this.requests = requests;
+      this.operation = operation;
+      this.statement = statement;
+      this.batchSize = batchSize;
+    }
+
+    private static Builder builder(String name) {
+      return new Builder(name);
+    }
+
+    @Override
+    public String toString() {
+      return name;
+    }
+
+    private static class Builder {
+      private final String name;
+      private List<Request> requests;
+      private String operation;
+      private String statement;
+      private Long batchSize;
+
+      private Builder(String name) {
+        this.name = name;
+      }
+
+      private Builder requests(Request... requests) {
+        this.requests = asList(requests);
+        return this;
+      }
+
+      private Builder operation(String operation) {
+        this.operation = operation;
+        return this;
+      }
+
+      private Builder statement(String statement) {
+        this.statement = statement;
+        return this;
+      }
+
+      private Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      private BatchScenario build() {
+        return new BatchScenario(name, requests, operation, statement, batchSize);
+      }
     }
   }
 }

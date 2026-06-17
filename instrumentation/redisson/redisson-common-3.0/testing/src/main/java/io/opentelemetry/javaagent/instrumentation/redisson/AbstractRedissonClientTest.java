@@ -145,6 +145,7 @@ public abstract class AbstractRedissonClientTest {
   void cleanup() {
     if (redisson != null) {
       redisson.shutdown();
+      testing.clearData();
     }
   }
 

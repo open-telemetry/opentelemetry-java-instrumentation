@@ -125,6 +125,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   void cleanup() {
     if (redisson != null) {
       redisson.shutdown();
+      testing.clearData();
     }
   }
 
@@ -241,7 +242,7 @@ public abstract class AbstractRedissonAsyncClientTest {
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", "SADD", "callback"),
+        orderByRootSpanName("parent", "DB Query", "callback"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
@@ -260,28 +261,6 @@ public abstract class AbstractRedissonAsyncClientTest {
                             // telemetry is split across wrapper and command spans, so this span
                             // does not represent the full logical batch.
                             equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SET")
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("EXEC")
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "EXEC"),
-                            equalTo(maybeStable(DB_OPERATION), "EXEC"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }

@@ -24,6 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hadoop.hbase.net.Address;
 import org.apache.hadoop.hbase.security.User;
+import org.apache.hadoop.hbase.shaded.protobuf.generated.ClientProtos;
 import org.apache.hbase.thirdparty.com.google.protobuf.Descriptors;
 
 class AbstractRpcClientInstrumentation implements TypeInstrumentation {
@@ -51,6 +52,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static RequestAndContext onEnter(
         @Advice.Argument(0) Descriptors.MethodDescriptor md,
+        @Advice.Argument(2) Object param,
         @Advice.Argument(4) User ticket,
         @Advice.Argument(5) Object addr) {
       String hostname = null;
@@ -65,7 +67,8 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
         hostname = address.getHostString();
       }
       HbaseRequest request =
-          HbaseRequest.create(md.getName(), getTableName(), ticket.getName(), hostname, port);
+          HbaseRequest.create(
+              md.getName(), getTableName(), ticket.getName(), hostname, port, getBatchSize(param));
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
@@ -75,6 +78,19 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       RequestAndContext requestAndContext = RequestAndContext.create(request, scope, context);
       setRequestAndContext(requestAndContext);
       return requestAndContext;
+    }
+
+    @Nullable
+    public static Long getBatchSize(Object param) {
+      if (!(param instanceof ClientProtos.MultiRequest)) {
+        return null;
+      }
+      long batchSize = 0;
+      for (ClientProtos.RegionAction regionAction :
+          ((ClientProtos.MultiRequest) param).getRegionActionList()) {
+        batchSize += regionAction.getActionCount();
+      }
+      return batchSize > 1 ? batchSize : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

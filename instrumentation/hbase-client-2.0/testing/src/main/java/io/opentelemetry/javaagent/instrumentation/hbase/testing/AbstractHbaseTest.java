@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -23,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -41,6 +43,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -59,6 +62,7 @@ import org.apache.hadoop.hbase.client.Increment;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Row;
 import org.apache.hadoop.hbase.client.RowMutations;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
@@ -71,6 +75,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
@@ -98,7 +104,6 @@ public abstract class AbstractHbaseTest {
   private static final int GET_TIMEOUT_OPERATION_TIMEOUT_MILLIS = 1000;
   private static final int GET_TIMEOUT_RPC_TIMEOUT_MILLIS = 200;
   private static final String ROW_1 = "row1";
-  private static final String ROW_2 = "row2";
   private static final String ROW_3 = "row3";
   private static final String ROW_4 = "row4";
   private static final String ROW_5 = "row5";
@@ -354,47 +359,100 @@ public abstract class AbstractHbaseTest {
     testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, SCAN, REGION_SERVER_PORT, true));
   }
 
-  @Test
-  void testBatchGet() throws IOException {
-    Result[] results;
+  // describes the batch cases: empty, single action, two actions with the same type, and two
+  // actions with different types. HBase reports all non-empty Table.batch(...) calls as Multi;
+  // db.operation.batch.size is emitted only when there are multiple actions under stable database
+  // semconv.
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void testBatch(BatchScenario scenario) throws IOException, InterruptedException {
+    Object[] results = new Object[scenario.actions.size()];
     try (Table table = connection.getTable(TABLE_NAME)) {
-      List<Get> getList = new ArrayList<>();
-      getList.add(new Get(Bytes.toBytes(ROW_1)));
-      getList.add(new Get(Bytes.toBytes(ROW_2)));
-      getList.add(new Get(Bytes.toBytes(ROW_5)));
-      results = table.get(getList);
+      table.batch(scenario.actions, results);
     }
-    assertThat(results).hasSize(3);
-    {
-      assertThat(Bytes.toString(results[0].getRow())).isEqualTo(ROW_1);
-      assertThat(value(results[0], "col1")).isEqualTo("col1_val_1");
-      assertThat(value(results[0], "col2")).isEqualTo("col2_val_1");
+    scenario.resultAssertions.accept(results);
+
+    if (scenario.empty) {
+      assertThat(testing().spans()).isEmpty();
+      return;
     }
-    {
-      assertThat(Bytes.toString(results[1].getRow())).isNull();
-      assertThat(value(results[1], "col1")).isNull();
-      assertThat(value(results[1], "col2")).isNull();
-    }
-    {
-      assertThat(Bytes.toString(results[2].getRow())).isNull();
-      assertThat(value(results[2], "col1")).isNull();
-      assertThat(value(results[2], "col2")).isNull();
-    }
-    testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
+
+    testing()
+        .waitAndAssertTraces(
+            scenario.batchSize != null
+                ? traceAssertConsumer(
+                    TABLE_NAME,
+                    scenario.operation,
+                    REGION_SERVER_PORT,
+                    true,
+                    scenario.batchSize.intValue())
+                : traceAssertConsumer(TABLE_NAME, scenario.operation, REGION_SERVER_PORT, true));
   }
 
-  @Test
-  void testBatchPut() throws IOException {
-    try (Table table = connection.getTable(TABLE_NAME)) {
-      List<Put> putList = new ArrayList<>();
-      for (int i = 2; i < 5; i++) {
-        Put put = new Put(Bytes.toBytes("batch-put-row" + i));
-        put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val_" + i));
-        putList.add(put);
-      }
-      table.put(putList);
-    }
-    testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
+  private static Stream<BatchScenario> batchScenarios() {
+    return Stream.of(
+        // an empty batch produces no span
+        BatchScenario.builder("empty").empty().build(),
+        // a single-action batch is sent as Multi but is not a batch for db.operation.batch.size
+        BatchScenario.builder("single")
+            .actions(get(ROW_1))
+            .results(
+                results -> {
+                  assertThat(results).hasSize(1);
+                  assertExistingRow(result(results[0]), ROW_1, "col1_val_1", "col2_val_1");
+                })
+            .build(),
+        BatchScenario.builder("twoSameOperation")
+            .actions(get(ROW_1), get(ROW_5))
+            .batchSize(2)
+            .results(
+                results -> {
+                  assertThat(results).hasSize(2);
+                  assertExistingRow(result(results[0]), ROW_1, "col1_val_1", "col2_val_1");
+                  assertMissingRow(result(results[1]));
+                })
+            .build(),
+        BatchScenario.builder("twoDifferentOperations")
+            .actions(put("batch-matrix-put-row"), get(ROW_1))
+            .batchSize(2)
+            .results(
+                results -> {
+                  assertThat(results).hasSize(2);
+                  assertExistingRow(result(results[1]), ROW_1, "col1_val_1", "col2_val_1");
+                })
+            .build());
+  }
+
+  private static List<Row> batchActions(Row... rows) {
+    return asList(rows);
+  }
+
+  private static Get get(String rowKey) {
+    return new Get(Bytes.toBytes(rowKey));
+  }
+
+  private static Put put(String rowKey) {
+    Put put = new Put(Bytes.toBytes(rowKey));
+    put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val"));
+    return put;
+  }
+
+  private static Result result(Object result) {
+    assertThat(result).isInstanceOf(Result.class);
+    return (Result) result;
+  }
+
+  private static void assertExistingRow(
+      Result result, String rowKey, String col1Value, String col2Value) {
+    assertThat(Bytes.toString(result.getRow())).isEqualTo(rowKey);
+    assertThat(value(result, "col1")).isEqualTo(col1Value);
+    assertThat(value(result, "col2")).isEqualTo(col2Value);
+  }
+
+  private static void assertMissingRow(Result result) {
+    assertThat(Bytes.toString(result.getRow())).isNull();
+    assertThat(value(result, "col1")).isNull();
+    assertThat(value(result, "col2")).isNull();
   }
 
   @Test
@@ -487,7 +545,7 @@ public abstract class AbstractHbaseTest {
     }
     testing()
         .waitAndAssertTraces(
-            traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true),
+            traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true, 2),
             traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
   }
 
@@ -526,6 +584,21 @@ public abstract class AbstractHbaseTest {
 
   protected Consumer<TraceAssert> traceAssertConsumer(
       TableName table, String operation, int port, boolean hasTable) {
+    return traceAssertConsumer(table, operation, port, hasTable, false, 0);
+  }
+
+  protected Consumer<TraceAssert> traceAssertConsumer(
+      TableName table, String operation, int port, boolean hasTable, int batchSize) {
+    return traceAssertConsumer(table, operation, port, hasTable, true, batchSize);
+  }
+
+  private Consumer<TraceAssert> traceAssertConsumer(
+      TableName table,
+      String operation,
+      int port,
+      boolean hasTable,
+      boolean hasBatchSize,
+      int batchSize) {
     String spanName;
     if (hasTable) {
       spanName = operation + " " + table.getNameAsString();
@@ -544,6 +617,11 @@ public abstract class AbstractHbaseTest {
                         equalTo(maybeStable(DB_OPERATION), operation),
                         equalTo(maybeStable(DB_NAME), dbNamespace(table, hasTable)),
                         equalTo(DB_COLLECTION_NAME, dbCollectionName(table, hasTable)),
+                        equalTo(
+                            DB_OPERATION_BATCH_SIZE,
+                            emitStableDatabaseSemconv() && hasBatchSize
+                                ? Long.valueOf(batchSize)
+                                : null),
                         equalTo(SERVER_ADDRESS, hostname),
                         equalTo(SERVER_PORT, port),
                         satisfies(
@@ -568,5 +646,69 @@ public abstract class AbstractHbaseTest {
       return table.getNameAsString();
     }
     return null;
+  }
+
+  private static final class BatchScenario {
+    final String name;
+    final List<Row> actions;
+    final String operation;
+    final Long batchSize;
+    final boolean empty;
+    final Consumer<Object[]> resultAssertions;
+
+    BatchScenario(Builder builder) {
+      this.name = builder.name;
+      this.actions = builder.actions;
+      this.operation = MULTI;
+      this.batchSize = builder.batchSize;
+      this.empty = builder.empty;
+      this.resultAssertions = builder.resultAssertions;
+    }
+
+    static Builder builder(String name) {
+      return new Builder(name);
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
+
+    static final class Builder {
+      private final String name;
+      private List<Row> actions = batchActions();
+      private Long batchSize;
+      private boolean empty;
+      private Consumer<Object[]> resultAssertions = results -> assertThat(results).isEmpty();
+
+      Builder(String name) {
+        this.name = name;
+      }
+
+      Builder actions(Row... actions) {
+        this.actions = batchActions(actions);
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder empty() {
+        this.empty = true;
+        return this;
+      }
+
+      Builder results(Consumer<Object[]> resultAssertions) {
+        this.resultAssertions = resultAssertions;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }
