@@ -191,6 +191,9 @@ public final class ParseContext {
       this.port = port;
     }
     String databaseName = params.get("databasename");
+    if (databaseName == null || databaseName.isEmpty()) {
+      databaseName = params.get("database");
+    }
     if (databaseName != null && !databaseName.isEmpty()) {
       this.databaseName = databaseName;
     }
