@@ -17,11 +17,11 @@ import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import org.junit.jupiter.api.Test;
 
-class AddThreadDetailsSpanProcessorTest {
+class ThreadDetailsSpanProcessorTest {
 
   private final ReadWriteSpan span = mock(ReadWriteSpan.class);
 
-  private final SpanProcessor spanProcessor = new AddThreadDetailsSpanProcessor();
+  private final SpanProcessor spanProcessor = new ThreadDetailsSpanProcessor();
 
   @Test
   void onStart() {

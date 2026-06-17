@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -273,7 +274,16 @@ public abstract class AbstractHbaseTest {
                                     maybeStable(DB_SYSTEM),
                                     maybeStableDbSystemName(DB_SYSTEM_VALUE)),
                                 equalTo(maybeStable(DB_OPERATION), GET),
-                                equalTo(maybeStable(DB_NAME), TABLE_NAME.getNameAsString()),
+                                equalTo(
+                                    maybeStable(DB_NAME),
+                                    emitStableDatabaseSemconv()
+                                        ? TABLE_NAME.getNamespaceAsString()
+                                        : TABLE_NAME.getNameAsString()),
+                                equalTo(
+                                    DB_COLLECTION_NAME,
+                                    emitStableDatabaseSemconv()
+                                        ? TABLE_NAME.getNameAsString()
+                                        : null),
                                 equalTo(SERVER_ADDRESS, hostname),
                                 equalTo(SERVER_PORT, REGION_SERVER_PORT),
                                 equalTo(
@@ -509,6 +519,7 @@ public abstract class AbstractHbaseTest {
         DB_SYSTEM_NAME,
         maybeStable(DB_OPERATION),
         maybeStable(DB_NAME),
+        DB_COLLECTION_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -531,7 +542,8 @@ public abstract class AbstractHbaseTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)),
                         equalTo(maybeStable(DB_OPERATION), operation),
-                        equalTo(maybeStable(DB_NAME), hasTable ? table.getNameAsString() : null),
+                        equalTo(maybeStable(DB_NAME), dbNamespace(table, hasTable)),
+                        equalTo(DB_COLLECTION_NAME, dbCollectionName(table, hasTable)),
                         equalTo(SERVER_ADDRESS, hostname),
                         equalTo(SERVER_PORT, port),
                         satisfies(
@@ -539,5 +551,22 @@ public abstract class AbstractHbaseTest {
                             emitStableDatabaseSemconv()
                                 ? AbstractAssert::isNull
                                 : AbstractAssert::isNotNull)));
+  }
+
+  private static String dbNamespace(TableName table, boolean hasTable) {
+    if (!hasTable) {
+      return null;
+    }
+    if (emitStableDatabaseSemconv()) {
+      return table.getNamespaceAsString();
+    }
+    return table.getNameAsString();
+  }
+
+  private static String dbCollectionName(TableName table, boolean hasTable) {
+    if (hasTable && emitStableDatabaseSemconv()) {
+      return table.getNameAsString();
+    }
+    return null;
   }
 }

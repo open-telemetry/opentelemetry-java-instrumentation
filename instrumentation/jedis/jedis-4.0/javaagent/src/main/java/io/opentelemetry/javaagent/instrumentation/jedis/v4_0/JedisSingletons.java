@@ -28,6 +28,8 @@ public class JedisSingletons {
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
+    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
+    // span name.
     JedisDbAttributesGetter spanNameAttributesGetter =
         new JedisDbAttributesGetter() {
           @Override

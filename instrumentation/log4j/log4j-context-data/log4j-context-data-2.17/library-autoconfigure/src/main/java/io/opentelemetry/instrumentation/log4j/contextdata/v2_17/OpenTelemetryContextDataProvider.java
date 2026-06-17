@@ -80,7 +80,7 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
     SpanContext spanContext = currentSpan.getSpanContext();
     contextData.put(contextDataKeys.getTraceIdKey(), spanContext.getTraceId());
     contextData.put(contextDataKeys.getSpanIdKey(), spanContext.getSpanId());
-    contextData.put(contextDataKeys.getTraceFlags(), spanContext.getTraceFlags().asHex());
+    contextData.put(contextDataKeys.getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
 
     if (Configuration.baggageEnabled) {
       Baggage baggage = Baggage.fromContext(context);

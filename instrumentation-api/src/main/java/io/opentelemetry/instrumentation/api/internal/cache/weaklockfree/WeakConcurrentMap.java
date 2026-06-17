@@ -50,7 +50,8 @@ import javax.annotation.Nullable;
   "MissingSummary",
   "UngroupedOverloads",
   "FieldMissingNullable",
-  "SuppressWarningsWithoutExplanation"
+  "SuppressWarningsWithoutExplanation",
+  "ReferenceEquality"
 })
 public class WeakConcurrentMap<K, V>
     extends AbstractWeakConcurrentMap<K, V, WeakConcurrentMap.LookupKey<K>> {

@@ -37,13 +37,13 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
-val errorProneVersion = "2.49.0"
+val errorProneVersion = "2.50.0"
 val byteBuddyVersion = "1.18.10"
 val asmVersion = "9.10.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.18"
-val semConvVersion = "1.41.1"
+val semConvVersion = "1.42.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(

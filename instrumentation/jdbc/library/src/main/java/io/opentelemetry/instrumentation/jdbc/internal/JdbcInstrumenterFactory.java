@@ -133,6 +133,7 @@ public final class JdbcInstrumenterFactory {
             SqlClientAttributesExtractor.builder(new JdbcAttributesGetter()).build())
         .addAttributesExtractor(new TransactionAttributeExtractor())
         .addAttributesExtractors(extractors)
+        .addOperationMetrics(DbClientMetrics.get())
         .setEnabled(enabled)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

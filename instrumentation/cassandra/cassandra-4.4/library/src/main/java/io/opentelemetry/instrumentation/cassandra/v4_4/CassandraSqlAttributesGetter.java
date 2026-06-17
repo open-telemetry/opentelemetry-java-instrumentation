@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static java.util.Collections.singleton;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -36,6 +35,8 @@ final class CassandraSqlAttributesGetter
     return DOUBLE_QUOTES_ARE_IDENTIFIERS;
   }
 
+  // getSession() is deprecated only because its visibility will be reduced in the future.
+  @SuppressWarnings("deprecation")
   @Override
   @Nullable
   public String getDbNamespace(CassandraRequest request) {
@@ -44,7 +45,13 @@ final class CassandraSqlAttributesGetter
 
   @Override
   public Collection<String> getRawQueryTexts(CassandraRequest request) {
-    return singleton(request.getQueryText());
+    return request.getQueryTexts();
+  }
+
+  @Override
+  @Nullable
+  public Long getDbOperationBatchSize(CassandraRequest request) {
+    return request.getBatchSize();
   }
 
   @Nullable
@@ -67,7 +74,7 @@ final class CassandraSqlAttributesGetter
   }
 
   @Override
-  public boolean isParameterizedQuery(CassandraRequest request) {
-    return request.isParameterizedQuery();
+  public boolean isParameterizedQuery(CassandraRequest request, int queryIndex) {
+    return request.isParameterizedQuery(queryIndex);
   }
 }

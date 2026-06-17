@@ -2347,6 +2347,8 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.collection.name
+        type: STRING
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -2384,6 +2386,10 @@ libraries:
         type: STRING
       - name: aws.step_functions.state_machine.arn
         type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -2695,6 +2701,8 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.collection.name
+        type: STRING
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -2750,6 +2758,10 @@ libraries:
         type: STRING
       - name: aws.step_functions.state_machine.arn
         type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -3192,6 +3204,8 @@ libraries:
         type: STRING
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.summary
@@ -3308,6 +3322,8 @@ libraries:
         type: STRING
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.summary
@@ -3432,6 +3448,8 @@ libraries:
         type: STRING
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.summary
@@ -4947,7 +4965,7 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
-      - name: db.namespace
+      - name: db.collection.name
         type: STRING
       - name: db.operation.name
         type: STRING
@@ -4956,7 +4974,7 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
-      - name: db.namespace
+      - name: db.collection.name
         type: STRING
       - name: db.operation.name
         type: STRING
@@ -5742,6 +5760,20 @@ libraries:
         type: STRING
       - name: rpc.system
         type: STRING
+- name: hbase-client-2.0
+  display_name: HBase Client
+  description: |
+    This instrumentation enables database client spans and database client metrics for the Apache HBase client.
+  semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+  library_link: https://hbase.apache.org/
+  source_path: instrumentation/hbase-client-2.0
+  scope:
+    name: io.opentelemetry.hbase-client-2.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.hbase:hbase-client:[2.0.0, 2.5.0)
 - name: helidon-4.3
   display_name: Helidon
   description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -9877,20 +9909,20 @@ libraries:
       Enables adding baggage entries to the Log4j ThreadContext, prefixed with "baggage.".
     type: boolean
     default: false
-  - name: otel.instrumentation.common.logging.trace-id
-    declarative_name: java.common.logging.trace_id
+  - name: otel.instrumentation.common.logging.trace-id-key
+    declarative_name: java.common.logging.trace_id_key
     description: |
       Specifies the key name used to store the trace ID in the logging context.
     type: string
     default: trace_id
-  - name: otel.instrumentation.common.logging.span-id
-    declarative_name: java.common.logging.span_id
+  - name: otel.instrumentation.common.logging.span-id-key
+    declarative_name: java.common.logging.span_id_key
     description: |
       Specifies the key name used to store the span ID in the logging context.
     type: string
     default: span_id
-  - name: otel.instrumentation.common.logging.trace-flags
-    declarative_name: java.common.logging.trace_flags
+  - name: otel.instrumentation.common.logging.trace-flags-key
+    declarative_name: java.common.logging.trace_flags_key
     description: |
       Specifies the key name used to store the trace flags in the logging context.
     type: string
@@ -9919,20 +9951,20 @@ libraries:
       Enables adding baggage entries to the Log4j ThreadContext, prefixed with "baggage.".
     type: boolean
     default: false
-  - name: otel.instrumentation.common.logging.trace-id
-    declarative_name: java.common.logging.trace_id
+  - name: otel.instrumentation.common.logging.trace-id-key
+    declarative_name: java.common.logging.trace_id_key
     description: |
       Specifies the key name used to store the trace ID in the logging context.
     type: string
     default: trace_id
-  - name: otel.instrumentation.common.logging.span-id
-    declarative_name: java.common.logging.span_id
+  - name: otel.instrumentation.common.logging.span-id-key
+    declarative_name: java.common.logging.span_id_key
     description: |
       Specifies the key name used to store the span ID in the logging context.
     type: string
     default: span_id
-  - name: otel.instrumentation.common.logging.trace-flags
-    declarative_name: java.common.logging.trace_flags
+  - name: otel.instrumentation.common.logging.trace-flags-key
+    declarative_name: java.common.logging.trace_flags_key
     description: |
       Specifies the key name used to store the trace flags in the logging context.
     type: string
@@ -9955,20 +9987,20 @@ libraries:
   javaagent_target_versions:
   - log4j:log4j:[1.2,)
   configurations:
-  - name: otel.instrumentation.common.logging.trace-id
-    declarative_name: java.common.logging.trace_id
+  - name: otel.instrumentation.common.logging.trace-id-key
+    declarative_name: java.common.logging.trace_id_key
     description: |
       Specifies the key name used to store the trace ID in the logging context.
     type: string
     default: trace_id
-  - name: otel.instrumentation.common.logging.span-id
-    declarative_name: java.common.logging.span_id
+  - name: otel.instrumentation.common.logging.span-id-key
+    declarative_name: java.common.logging.span_id_key
     description: |
       Specifies the key name used to store the span ID in the logging context.
     type: string
     default: span_id
-  - name: otel.instrumentation.common.logging.trace-flags
-    declarative_name: java.common.logging.trace_flags
+  - name: otel.instrumentation.common.logging.trace-flags-key
+    declarative_name: java.common.logging.trace_flags_key
     description: |
       Specifies the key name used to store the trace flags in the logging context.
     type: string
@@ -10076,20 +10108,20 @@ libraries:
       Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
     type: boolean
     default: false
-  - name: otel.instrumentation.common.logging.trace-id
-    declarative_name: java.common.logging.trace_id
+  - name: otel.instrumentation.common.logging.trace-id-key
+    declarative_name: java.common.logging.trace_id_key
     description: |
       Specifies the key name used to store the trace ID in the logging context.
     type: string
     default: trace_id
-  - name: otel.instrumentation.common.logging.span-id
-    declarative_name: java.common.logging.span_id
+  - name: otel.instrumentation.common.logging.span-id-key
+    declarative_name: java.common.logging.span_id_key
     description: |
       Specifies the key name used to store the span ID in the logging context.
     type: string
     default: span_id
-  - name: otel.instrumentation.common.logging.trace-flags
-    declarative_name: java.common.logging.trace_flags
+  - name: otel.instrumentation.common.logging.trace-flags-key
+    declarative_name: java.common.logging.trace_flags_key
     description: |
       Specifies the key name used to store the trace flags in the logging context.
     type: string
@@ -12704,6 +12736,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.query.summary
         type: STRING
       - name: db.query.text
@@ -13396,6 +13430,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -13456,6 +13492,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -14573,6 +14611,84 @@ libraries:
       - name: url.scheme
         type: STRING
       - name: user_agent.original
+        type: STRING
+- name: sofa-rpc-5.4
+  display_name: SOFARPC
+  description: |
+    The SOFARPC instrumentation provides RPC client spans and metrics, and RPC server spans and metrics for SOFARPC RPC calls.
+  semantic_conventions:
+  - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
+  - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
+  library_link: https://github.com/sofastack/sofa-rpc/
+  source_path: instrumentation/sofa-rpc-5.4
+  scope:
+    name: io.opentelemetry.sofa-rpc-5.4
+  has_standalone_library: true
+  has_javaagent: true
+  javaagent_target_versions:
+  - com.alipay.sofa:sofa-rpc-all:[5.4.0,)
+  configurations:
+  - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
+    description: Used to specify a mapping from host names or IP addresses to peer
+      services.
+    type: structured_list
+    default: ''
+  telemetry:
+  - when: default
+    metrics:
+    - name: rpc.client.duration
+      description: The duration of an outbound RPC invocation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: ms
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: rpc.server.duration
+      description: The duration of an inbound RPC invocation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: ms
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: peer.service
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: SERVER
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
         type: STRING
 - name: spark-2.3
   display_name: Spark Web Framework
@@ -17012,6 +17128,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.query.summary
         type: STRING
       - name: db.query.text
@@ -17091,6 +17209,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.query.summary
         type: STRING
       - name: db.query.text

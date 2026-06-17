@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 
@@ -17,7 +19,7 @@ class CouchbaseSpanNameExtractor implements SpanNameExtractor<CouchbaseRequestIn
 
   @Override
   public String extract(CouchbaseRequestInfo couchbaseRequest) {
-    if (couchbaseRequest.isMethodCall()) {
+    if (!emitStableDatabaseSemconv() && couchbaseRequest.isMethodCall()) {
       return couchbaseRequest.getOperation();
     }
     return dbSpanNameExtractor.extract(couchbaseRequest);
