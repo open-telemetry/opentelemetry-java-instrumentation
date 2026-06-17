@@ -636,7 +636,7 @@ public abstract class AbstractAws2ClientCoreTest {
             .build(),
         // a single-item batch is not a batch, so it uses the singular item operation and emits
         // no db.operation.batch.size
-        BatchScenario.builder("writeItemSingle")
+        BatchScenario.builder("writeItemSinglePut")
             .awsOperation("BatchWriteItem")
             .responseContent(getResponseContent("BatchWriteItem"))
             .execute(
@@ -658,13 +658,43 @@ public abstract class AbstractAws2ClientCoreTest {
                                                                 .build()))
                                                     .build())
                                             .build())))))
-            .stableOperation("WriteItem")
+            .stableOperation("PutItem")
             .hasCollection()
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
             .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
             .assertMetric()
             .build(),
-        BatchScenario.builder("writeItemTwo")
+        // a single delete request is reported as DeleteItem
+        BatchScenario.builder("writeItemSingleDelete")
+            .awsOperation("BatchWriteItem")
+            .responseContent(getResponseContent("BatchWriteItem"))
+            .execute(
+                c ->
+                    c.batchWriteItem(
+                        b ->
+                            b.requestItems(
+                                ImmutableMap.of(
+                                    "sometable",
+                                    singletonList(
+                                        WriteRequest.builder()
+                                            .deleteRequest(
+                                                DeleteRequest.builder()
+                                                    .key(
+                                                        ImmutableMap.of(
+                                                            "key",
+                                                            AttributeValue.builder()
+                                                                .s("value")
+                                                                .build()))
+                                                    .build())
+                                            .build())))))
+            .stableOperation("DeleteItem")
+            .hasCollection()
+            .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+            .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
+            .assertMetric()
+            .build(),
+        // two put requests are reported as BATCH PutItem
+        BatchScenario.builder("writeItemTwoPuts")
             .awsOperation("BatchWriteItem")
             .responseContent(getResponseContent("BatchWriteItem"))
             .execute(
@@ -697,17 +727,56 @@ public abstract class AbstractAws2ClientCoreTest {
                                                                 .build()))
                                                     .build())
                                             .build())))))
-            .stableOperation("BATCH WriteItem")
+            .stableOperation("BATCH PutItem")
             .hasCollection()
             .batchSize(2)
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
             .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
             .assertMetric()
             .build(),
-        // a batch mixing a put and a delete in one table: unlike the SQL/Cassandra matrices where
-        // a batch with differing operations collapses to just "BATCH", DynamoDB derives the
-        // operation name from the item count alone, so a put+delete write batch still reports the
-        // shared "BATCH WriteItem" operation (and the single collection)
+        // two delete requests are reported as BATCH DeleteItem
+        BatchScenario.builder("writeItemTwoDeletes")
+            .awsOperation("BatchWriteItem")
+            .responseContent(getResponseContent("BatchWriteItem"))
+            .execute(
+                c ->
+                    c.batchWriteItem(
+                        b ->
+                            b.requestItems(
+                                ImmutableMap.of(
+                                    "sometable",
+                                    asList(
+                                        WriteRequest.builder()
+                                            .deleteRequest(
+                                                DeleteRequest.builder()
+                                                    .key(
+                                                        ImmutableMap.of(
+                                                            "key",
+                                                            AttributeValue.builder()
+                                                                .s("value")
+                                                                .build()))
+                                                    .build())
+                                            .build(),
+                                        WriteRequest.builder()
+                                            .deleteRequest(
+                                                DeleteRequest.builder()
+                                                    .key(
+                                                        ImmutableMap.of(
+                                                            "key",
+                                                            AttributeValue.builder()
+                                                                .s("anotherValue")
+                                                                .build()))
+                                                    .build())
+                                            .build())))))
+            .stableOperation("BATCH DeleteItem")
+            .hasCollection()
+            .batchSize(2)
+            .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
+            .itemCollectionMetrics("[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")
+            .assertMetric()
+            .build(),
+        // a batch mixing a put and a delete in one table collapses to bare "BATCH"
+        // (consistent with SQL/Cassandra mixed-operation batches)
         BatchScenario.builder("writeItemMixed")
             .awsOperation("BatchWriteItem")
             .responseContent(getResponseContent("BatchWriteItem"))
@@ -741,7 +810,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                                                 .build()))
                                                     .build())
                                             .build())))))
-            .stableOperation("BATCH WriteItem")
+            .stableOperation("BATCH")
             .hasCollection()
             .batchSize(2)
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")

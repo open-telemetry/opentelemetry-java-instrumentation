@@ -151,27 +151,42 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
             .stableOperation("BatchWriteItem")
             .batchSize(0)
             .build(),
-        BatchScenario.builder("writeItemSingle")
+        // a single put request is reported as PutItem
+        BatchScenario.builder("writeItemSinglePut")
             .awsOperation("BatchWriteItem")
-            .execute(client -> client.batchWriteItem(writeItemRequest(1)))
-            .stableOperation("WriteItem")
+            .execute(client -> client.batchWriteItem(putItemsRequest(1)))
+            .stableOperation("PutItem")
             .hasCollection()
             .build(),
-        BatchScenario.builder("writeItemTwo")
+        // a single delete request is reported as DeleteItem
+        BatchScenario.builder("writeItemSingleDelete")
             .awsOperation("BatchWriteItem")
-            .execute(client -> client.batchWriteItem(writeItemRequest(2)))
-            .stableOperation("BATCH WriteItem")
+            .execute(client -> client.batchWriteItem(deleteItemsRequest(1)))
+            .stableOperation("DeleteItem")
+            .hasCollection()
+            .build(),
+        // two put requests are reported as BATCH PutItem
+        BatchScenario.builder("writeItemTwoPuts")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(putItemsRequest(2)))
+            .stableOperation("BATCH PutItem")
             .batchSize(2)
             .hasCollection()
             .build(),
-        // a batch mixing a put and a delete in one table: unlike the SQL/Cassandra matrices where
-        // a batch with differing operations collapses to just "BATCH", DynamoDB derives the
-        // operation name from the item count alone, so a put+delete write batch still reports the
-        // shared "BATCH WriteItem" operation (and the single collection)
+        // two delete requests are reported as BATCH DeleteItem
+        BatchScenario.builder("writeItemTwoDeletes")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(deleteItemsRequest(2)))
+            .stableOperation("BATCH DeleteItem")
+            .batchSize(2)
+            .hasCollection()
+            .build(),
+        // a batch mixing a put and a delete collapses to bare "BATCH"
+        // (consistent with SQL/Cassandra mixed-operation batches)
         BatchScenario.builder("writeItemMixed")
             .awsOperation("BatchWriteItem")
             .execute(client -> client.batchWriteItem(mixedWriteItemRequest()))
-            .stableOperation("BATCH WriteItem")
+            .stableOperation("BATCH")
             .batchSize(2)
             .hasCollection()
             .build());
@@ -195,15 +210,37 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
     }
     List<WriteRequest> writes = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      writes.add(writeRequest("value" + i));
+      writes.add(putRequest("value" + i));
     }
     return new BatchWriteItemRequest().withRequestItems(singletonMap("sometable", writes));
   }
 
-  private static WriteRequest writeRequest(String value) {
+  private static BatchWriteItemRequest putItemsRequest(int count) {
+    List<WriteRequest> writes = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      writes.add(putRequest("value" + i));
+    }
+    return new BatchWriteItemRequest().withRequestItems(singletonMap("sometable", writes));
+  }
+
+  private static BatchWriteItemRequest deleteItemsRequest(int count) {
+    List<WriteRequest> writes = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      writes.add(deleteRequest("value" + i));
+    }
+    return new BatchWriteItemRequest().withRequestItems(singletonMap("sometable", writes));
+  }
+
+  private static WriteRequest putRequest(String value) {
     return new WriteRequest()
         .withPutRequest(
             new PutRequest().withItem(singletonMap("key", new AttributeValue().withS(value))));
+  }
+
+  private static WriteRequest deleteRequest(String value) {
+    return new WriteRequest()
+        .withDeleteRequest(
+            new DeleteRequest().withKey(singletonMap("key", new AttributeValue().withS(value))));
   }
 
   private static BatchWriteItemRequest mixedWriteItemRequest() {

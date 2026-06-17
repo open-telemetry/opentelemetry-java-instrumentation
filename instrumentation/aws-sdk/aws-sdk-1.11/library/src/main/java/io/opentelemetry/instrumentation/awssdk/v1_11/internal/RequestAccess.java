@@ -111,6 +111,24 @@ final class RequestAccess {
     return invokeOrNull(access.getKeys, request, List.class);
   }
 
+  /**
+   * Returns true if the given WriteRequest contains a PutRequest, false otherwise. Uses reflection
+   * to call getPutRequest() on the WriteRequest object.
+   */
+  static boolean hasPutRequest(Object writeRequest) {
+    WriteRequestAccess access = WriteRequestAccess.ACCESSORS.get(writeRequest.getClass());
+    return invokeOrNull(access.getPutRequest, writeRequest, Object.class) != null;
+  }
+
+  /**
+   * Returns true if the given WriteRequest contains a DeleteRequest, false otherwise. Uses
+   * reflection to call getDeleteRequest() on the WriteRequest object.
+   */
+  static boolean hasDeleteRequest(Object writeRequest) {
+    WriteRequestAccess access = WriteRequestAccess.ACCESSORS.get(writeRequest.getClass());
+    return invokeOrNull(access.getDeleteRequest, writeRequest, Object.class) != null;
+  }
+
   @Nullable
   static String getSnsTopicArn(Object request) {
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
@@ -218,6 +236,24 @@ final class RequestAccess {
       } catch (Throwable ignored) {
         return null;
       }
+    }
+  }
+
+  private static class WriteRequestAccess {
+    private static final ClassValue<WriteRequestAccess> ACCESSORS =
+        new ClassValue<WriteRequestAccess>() {
+          @Override
+          protected WriteRequestAccess computeValue(Class<?> type) {
+            return new WriteRequestAccess(type);
+          }
+        };
+
+    @Nullable private final MethodHandle getPutRequest;
+    @Nullable private final MethodHandle getDeleteRequest;
+
+    private WriteRequestAccess(Class<?> clz) {
+      getPutRequest = findAccessorOrNull(clz, "getPutRequest", Object.class);
+      getDeleteRequest = findAccessorOrNull(clz, "getDeleteRequest", Object.class);
     }
   }
 }
