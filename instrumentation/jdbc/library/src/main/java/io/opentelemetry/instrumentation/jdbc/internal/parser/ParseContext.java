@@ -167,23 +167,6 @@ public final class ParseContext {
   }
 
   /**
-   * Resolve the database name from URL parameters, trying {@code databasename} first and falling
-   * back to {@code database}. Used by URL-based parsers ({@link #applyCommonParams}) and by parsers
-   * that handle params separately (e.g., {@code JtdsUrlParser}).
-   *
-   * @param params the URL parameter map
-   */
-  public void applyDatabaseNameParam(Map<String, String> params) {
-    String databaseName = params.get("databasename");
-    if (databaseName == null || databaseName.isEmpty()) {
-      databaseName = params.get("database");
-    }
-    if (databaseName != null && !databaseName.isEmpty()) {
-      this.databaseName = databaseName;
-    }
-  }
-
-  /**
    * Apply common parameters from URL parameters to the context.
    *
    * <p>Extracts the same properties as {@link #applyDataSourceProperties()} but using lowercase
@@ -207,7 +190,10 @@ public final class ParseContext {
     if (port != null) {
       this.port = port;
     }
-    applyDatabaseNameParam(params);
+    String databaseName = params.get("databasename");
+    if (databaseName != null && !databaseName.isEmpty()) {
+      this.databaseName = databaseName;
+    }
     if (params.containsKey("user")) {
       this.user = params.get("user");
     }

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.splitQuery;
 
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Parser for jTDS SQL Server JDBC URLs.
@@ -68,7 +69,7 @@ public final class JtdsUrlParser implements JdbcUrlParser {
 
       // If no path, use databasename or database param as fallback for database
       if (ctx.databaseName() == null) {
-        ctx.applyDatabaseNameParam(urlParams);
+        ctx.databaseName(getDatabaseNameParam(urlParams));
       }
     }
 
@@ -85,5 +86,14 @@ public final class JtdsUrlParser implements JdbcUrlParser {
         ctx.namespace(instanceName);
       }
     }
+  }
+
+  @Nullable
+  private static String getDatabaseNameParam(Map<String, String> params) {
+    String databaseName = params.get("databasename");
+    if (databaseName == null || databaseName.isEmpty()) {
+      databaseName = params.get("database");
+    }
+    return databaseName == null || databaseName.isEmpty() ? null : databaseName;
   }
 }

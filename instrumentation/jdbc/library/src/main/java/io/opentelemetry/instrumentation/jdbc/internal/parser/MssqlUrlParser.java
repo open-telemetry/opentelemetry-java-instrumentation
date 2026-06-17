@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
+import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Parser for Microsoft SQL Server JDBC URLs.
@@ -54,6 +56,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
 
     // Layer 3: URL params (SQL Server-specific: servername)
     ctx.applyCommonParams(jdbcUrl, ";", ";");
+    applyDatabaseAliasParam(jdbcUrl, ctx);
 
     // Layer 4: Parse URL structure (host:port/path)
     String instanceName = parseUrlWithInstance(jdbcUrl, ctx);
@@ -141,6 +144,26 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     }
 
     return instanceName;
+  }
+
+  private static void applyDatabaseAliasParam(String jdbcUrl, ParseContext ctx) {
+    if (ctx.databaseName() != null) {
+      return;
+    }
+    Map<String, String> params = UrlParsingUtils.extractSemicolonParams(jdbcUrl);
+    String databaseName = getDatabaseNameParam(params);
+    if (databaseName != null) {
+      ctx.databaseName(databaseName);
+    }
+  }
+
+  @Nullable
+  private static String getDatabaseNameParam(Map<String, String> params) {
+    String databaseName = params.get("databasename");
+    if (databaseName == null || databaseName.isEmpty()) {
+      databaseName = params.get("database");
+    }
+    return databaseName == null || databaseName.isEmpty() ? null : databaseName;
   }
 
   /**
