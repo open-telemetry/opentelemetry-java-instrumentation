@@ -694,6 +694,7 @@ class JdbcConnectionUrlParserTest {
             .setShortUrl("jtds:sqlserver://ss.host:1433")
             .setSystem("microsoft.sql_server")
             .setOldSystem("mssql")
+            .setSubtype("sqlserver")
             .setHost("ss.host")
             .setPort(1433)
             .setNamespace("ssinstance|ssdb")
