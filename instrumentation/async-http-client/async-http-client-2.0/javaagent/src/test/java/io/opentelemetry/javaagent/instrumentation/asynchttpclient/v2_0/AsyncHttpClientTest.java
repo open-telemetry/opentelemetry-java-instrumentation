@@ -43,7 +43,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
     return Dsl.asyncHttpClient(configureTimeout(Dsl.config(), readTimeout));
   }
 
-  protected static AsyncHttpClient getClient(URI uri) {
+  static AsyncHttpClient getClient(URI uri) {
     if (uri.getPath().endsWith("/read-timeout")) {
       return clientWithReadTimeout;
     }
