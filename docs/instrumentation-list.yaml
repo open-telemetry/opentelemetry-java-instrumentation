@@ -13430,6 +13430,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -13490,6 +13492,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -17124,6 +17128,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.query.summary
         type: STRING
       - name: db.query.text
@@ -17203,6 +17209,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.query.summary
         type: STRING
       - name: db.query.text
