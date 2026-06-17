@@ -37,9 +37,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
-import redis.clients.jedis.Client;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPipeline;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJedisTest {
@@ -177,14 +175,9 @@ public abstract class AbstractJedisTest {
   @ParameterizedTest(name = "{0}")
   @MethodSource("pipelineScenarios")
   void pipelineCommand(
-      String name, PipelineScenario scenario, List<ExpectedCommand> expectedCommands) {
-    jedis.pipelined(
-        new JedisPipeline() {
-          @Override
-          public void execute() {
-            scenario.run(client);
-          }
-        });
+      String name, PipelineScenario scenario, List<ExpectedCommand> expectedCommands)
+      throws ReflectiveOperationException {
+    runPipeline(scenario);
 
     if (expectedCommands.isEmpty()) {
       assertThat(testing.spans()).isEmpty();
@@ -274,8 +267,62 @@ public abstract class AbstractJedisTest {
     return new ExpectedCommand(operation, statement);
   }
 
-  private interface PipelineScenario {
-    void run(Client client);
+  private static void runPipeline(PipelineScenario scenario) throws ReflectiveOperationException {
+    if (hasJedisPipelineCallback()) {
+      Jedis14PipelineRunner.run(jedis, scenario);
+      return;
+    }
+    Object pipeline = Jedis.class.getMethod("pipelined").invoke(jedis);
+    scenario.run(new ReflectivePipelineOperations(pipeline));
+    pipeline.getClass().getMethod("sync").invoke(pipeline);
+  }
+
+  private static boolean hasJedisPipelineCallback() {
+    try {
+      Class.forName("redis.clients.jedis.JedisPipeline");
+      return true;
+    } catch (ClassNotFoundException ignored) {
+      return false;
+    }
+  }
+
+  interface PipelineScenario {
+    void run(PipelineOperations pipeline);
+  }
+
+  interface PipelineOperations {
+    void set(String key, String value);
+
+    void get(String key);
+  }
+
+  private static class ReflectivePipelineOperations implements PipelineOperations {
+    private final Object pipeline;
+
+    private ReflectivePipelineOperations(Object pipeline) {
+      this.pipeline = pipeline;
+    }
+
+    @Override
+    public void set(String key, String value) {
+      try {
+        pipeline
+            .getClass()
+            .getMethod("set", String.class, String.class)
+            .invoke(pipeline, key, value);
+      } catch (ReflectiveOperationException e) {
+        throw new IllegalStateException(e);
+      }
+    }
+
+    @Override
+    public void get(String key) {
+      try {
+        pipeline.getClass().getMethod("get", String.class).invoke(pipeline, key);
+      } catch (ReflectiveOperationException e) {
+        throw new IllegalStateException(e);
+      }
+    }
   }
 
   private static class ExpectedCommand {
