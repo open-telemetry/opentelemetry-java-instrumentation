@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -117,7 +118,7 @@ final class RequestAccess {
    */
   static boolean hasPutRequest(Object writeRequest) {
     WriteRequestAccess access = WriteRequestAccess.ACCESSORS.get(writeRequest.getClass());
-    return invokeOrNull(access.getPutRequest, writeRequest, Object.class) != null;
+    return access.invokeGetPutRequest(writeRequest) != null;
   }
 
   /**
@@ -126,7 +127,7 @@ final class RequestAccess {
    */
   static boolean hasDeleteRequest(Object writeRequest) {
     WriteRequestAccess access = WriteRequestAccess.ACCESSORS.get(writeRequest.getClass());
-    return invokeOrNull(access.getDeleteRequest, writeRequest, Object.class) != null;
+    return access.invokeGetDeleteRequest(writeRequest) != null;
   }
 
   @Nullable
@@ -248,12 +249,43 @@ final class RequestAccess {
           }
         };
 
-    @Nullable private final MethodHandle getPutRequest;
-    @Nullable private final MethodHandle getDeleteRequest;
+    @Nullable private final Method getPutRequest;
+    @Nullable private final Method getDeleteRequest;
 
     private WriteRequestAccess(Class<?> clz) {
-      getPutRequest = findAccessorOrNull(clz, "getPutRequest", Object.class);
-      getDeleteRequest = findAccessorOrNull(clz, "getDeleteRequest", Object.class);
+      getPutRequest = findMethodOrNull(clz, "getPutRequest");
+      getDeleteRequest = findMethodOrNull(clz, "getDeleteRequest");
+    }
+
+    @Nullable
+    Object invokeGetPutRequest(Object obj) {
+      return invokeMethod(getPutRequest, obj);
+    }
+
+    @Nullable
+    Object invokeGetDeleteRequest(Object obj) {
+      return invokeMethod(getDeleteRequest, obj);
+    }
+
+    @Nullable
+    private static Object invokeMethod(@Nullable Method method, Object obj) {
+      if (method == null) {
+        return null;
+      }
+      try {
+        return method.invoke(obj);
+      } catch (Throwable ignored) {
+        return null;
+      }
+    }
+
+    @Nullable
+    private static Method findMethodOrNull(Class<?> clz, String methodName) {
+      try {
+        return clz.getMethod(methodName);
+      } catch (Throwable ignored) {
+        return null;
+      }
     }
   }
 }

@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcSqlAttributesGetter;
+import io.r2dbc.proxy.core.ExecutionType;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.proxy.test.MockConnectionInfo;
@@ -43,6 +44,7 @@ class R2dbcSqlAttributesGetterTest {
   void rawQueryTextsForBatch() {
     QueryExecutionInfo queryExecutionInfo =
         MockQueryExecutionInfo.builder()
+            .type(ExecutionType.BATCH)
             .queryInfo(new QueryInfo("INSERT INTO person VALUES(1)"))
             .queryInfo(new QueryInfo("INSERT INTO person VALUES(2)"))
             .batchSize(2)
