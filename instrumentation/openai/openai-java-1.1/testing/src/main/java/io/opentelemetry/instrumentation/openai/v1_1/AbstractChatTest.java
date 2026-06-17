@@ -79,6 +79,9 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+// TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
+// is resolved.
+@SuppressWarnings("OtelDeprecatedApiUsage")
 public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
   protected static final String TEST_CHAT_MODEL = "gpt-4o-mini";

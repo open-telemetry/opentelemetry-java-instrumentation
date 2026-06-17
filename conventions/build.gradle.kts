@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "8.6.0"
+  id("com.diffplug.spotless") version "8.7.0"
 }
 
 spotless {
@@ -54,7 +54,7 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.6.0")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.7.0")
   implementation("com.google.guava:guava:33.6.0-jre")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.2") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
@@ -79,7 +79,7 @@ dependencies {
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
   // Used by otel.spring-native-test-conventions for typed access to the metadata repository
   // extension. Provided at runtime by smoke-test modules that apply this plugin via settings.
-  compileOnly("org.graalvm.buildtools:native-gradle-plugin:1.1.1")
+  compileOnly("org.graalvm.buildtools:native-gradle-plugin:1.1.2")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")

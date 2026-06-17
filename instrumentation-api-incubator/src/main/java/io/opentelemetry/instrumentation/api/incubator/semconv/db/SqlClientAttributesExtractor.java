@@ -7,12 +7,15 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.stableDbSystemName;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -22,7 +25,9 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
+import io.opentelemetry.semconv.AttributeKeyTemplate;
 import java.util.Collection;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -39,8 +44,15 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
+  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
+  private static final AttributeKey<String> DB_CONNECTION_STRING =
+      AttributeKey.stringKey("db.connection_string");
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
+      AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -141,10 +153,24 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       }
     }
 
-    // calling this last so explicit getDbOperationName(), getDbCollectionName(),
-    // getDbQueryText(), and getDbQuerySummary() implementations can override
-    // the parsed values from above
-    DbClientAttributesExtractor.onStartCommon(attributes, getter, request, captureQueryParameters);
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(DB_SYSTEM_NAME, stableDbSystemName(getter.getDbSystemName(request)));
+      attributes.put(DB_NAMESPACE, getter.getDbNamespace(request));
+    }
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_SYSTEM, getter.getDbSystem(request));
+      attributes.put(DB_USER, getter.getUser(request));
+      attributes.put(DB_NAME, getter.getDbName(request));
+      attributes.put(DB_CONNECTION_STRING, getter.getConnectionString(request));
+    }
+    if (captureQueryParameters && !isBatch) {
+      Map<String, String> queryParameters = getter.getDbQueryParameters(request);
+      if (queryParameters != null && !queryParameters.isEmpty()) {
+        for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
+          attributes.put(DB_QUERY_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue());
+        }
+      }
+    }
     serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 

@@ -18,7 +18,7 @@ To enable collection of the predefined metrics, specify a list of targets as the
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
-     -Dotel.jmx.target.system=jetty,kafka-broker \
+     -Dotel.jmx.target.system=jetty,experimental-kafka-broker \
      ... \
      -jar myapp.jar
 ```
@@ -28,8 +28,8 @@ No targets are enabled by default. The supported target environments are listed 
 - [activemq](library/activemq.md)
 - [camel](library/camel.md)
 - [jetty](library/jetty.md)
-- [kafka-broker](javaagent/kafka-broker.md)
-- [kafka-connect](library/kafka-connect.md)
+- [experimental-kafka-broker](javaagent/kafka-broker.md)
+- [experimental-kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
 - [hadoop](library/hadoop.md)

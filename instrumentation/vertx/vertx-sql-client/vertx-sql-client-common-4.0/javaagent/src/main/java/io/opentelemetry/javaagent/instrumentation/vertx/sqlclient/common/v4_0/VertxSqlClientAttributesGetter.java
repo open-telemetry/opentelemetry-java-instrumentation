@@ -92,6 +92,12 @@ class VertxSqlClientAttributesGetter
 
   @Nullable
   @Override
+  public Long getDbOperationBatchSize(VertxSqlClientRequest request) {
+    return request.getOperationBatchSize();
+  }
+
+  @Nullable
+  @Override
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     return responseStatusExtractor.apply(error);
