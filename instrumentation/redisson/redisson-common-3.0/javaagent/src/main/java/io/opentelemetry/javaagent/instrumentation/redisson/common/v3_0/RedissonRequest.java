@@ -43,6 +43,8 @@ public abstract class RedissonRequest {
   // note that RedisCommandSanitizer already limits the size of sanitized commands
   private static final int LIMIT = 32 * 1024;
 
+  private final List<CommandData<?, ?>> additionalCommands = new ArrayList<>();
+
   @Nullable
   private static final MethodHandle COMMAND_DATA_GET_PROMISE =
       findGetPromiseMethod(CommandData.class);
@@ -83,14 +85,37 @@ public abstract class RedissonRequest {
 
   public abstract Object getCommand();
 
+  void addCommandsFrom(RedissonRequest request) {
+    if (!isMultiBatch()) {
+      return;
+    }
+    Object command = request.getCommand();
+    if (command == getCommand()) {
+      return;
+    }
+    if (command instanceof CommandData) {
+      addCommand((CommandData<?, ?>) command);
+    } else if (command instanceof CommandsData) {
+      for (CommandData<?, ?> singleCommand : ((CommandsData) command).getCommands()) {
+        addCommand(singleCommand);
+      }
+    }
+  }
+
+  private void addCommand(CommandData<?, ?> command) {
+    String commandName = command.getCommand().getName();
+    if (!commandName.equals(MULTI) && !commandName.equals("EXEC")) {
+      additionalCommands.add(command);
+    }
+  }
+
   @Nullable
   public String getOperationName() {
     Object command = getCommand();
     if (command instanceof CommandData) {
       return ((CommandData<?, ?>) command).getCommand().getName();
     } else if (command instanceof CommandsData) {
-      CommandsData commandsData = (CommandsData) command;
-      List<CommandData<?, ?>> commands = commandsData.getCommands();
+      List<CommandData<?, ?>> commands = getCommands();
       if (commands.size() == 1) {
         return commands.get(0).getCommand().getName();
       }
@@ -99,13 +124,37 @@ public abstract class RedissonRequest {
     return null;
   }
 
+  public boolean isMultiBatch() {
+    Object command = getCommand();
+    if (!(command instanceof CommandsData)) {
+      return false;
+    }
+    List<CommandData<?, ?>> commands = getCommands();
+    return !commands.isEmpty() && commands.get(0).getCommand().getName().equals(MULTI);
+  }
+
+  public boolean isExecCommand() {
+    Object command = getCommand();
+    if (command instanceof CommandData) {
+      return ((CommandData<?, ?>) command).getCommand().getName().equals("EXEC");
+    }
+    if (command instanceof CommandsData) {
+      for (CommandData<?, ?> singleCommand : getCommands()) {
+        if (singleCommand.getCommand().getName().equals("EXEC")) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   @Nullable
   public Long getOperationBatchSize() {
     Object command = getCommand();
     if (!(command instanceof CommandsData)) {
       return null;
     }
-    List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
+    List<CommandData<?, ?>> commands = getCommands();
     if (commands.isEmpty()) {
       return null;
     }
@@ -151,7 +200,7 @@ public abstract class RedissonRequest {
     // get command
     if (command instanceof CommandsData) {
       int length = 0;
-      List<CommandData<?, ?>> commands = ((CommandsData) command).getCommands();
+      List<CommandData<?, ?>> commands = getCommands();
       List<String> normalizedCommands = new ArrayList<>(commands.size());
       for (CommandData<?, ?> singleCommand : commands) {
         String s = normalizeSingleCommand(singleCommand);
@@ -207,6 +256,18 @@ public abstract class RedissonRequest {
       }
     }
     return sanitizer.sanitize(command.getCommand().getName(), args);
+  }
+
+  private List<CommandData<?, ?>> getCommands() {
+    List<CommandData<?, ?>> commands = ((CommandsData) getCommand()).getCommands();
+    if (additionalCommands.isEmpty()) {
+      return commands;
+    }
+    List<CommandData<?, ?>> combinedCommands =
+        new ArrayList<>(commands.size() + additionalCommands.size());
+    combinedCommands.addAll(commands);
+    combinedCommands.addAll(additionalCommands);
+    return combinedCommands;
   }
 
   @Nullable

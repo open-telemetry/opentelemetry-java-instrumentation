@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.EndOperationListener;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.PromiseWrapper;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonBatchSpanManager;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonRequest;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -38,14 +39,30 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
   public static class SendAdvice {
 
     public static class AdviceScope {
-      private final RedissonRequest request;
-      private final Context context;
-      private final Scope scope;
+      private final RedisConnection connection;
+      @Nullable private final RedissonRequest request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
+      private final boolean multiSpan;
+      private final boolean suppressedSpan;
 
-      private AdviceScope(RedissonRequest request, Context context, Scope scope) {
+      private AdviceScope(
+          RedisConnection connection,
+          @Nullable RedissonRequest request,
+          @Nullable Context context,
+          @Nullable Scope scope,
+          boolean multiSpan,
+          boolean suppressedSpan) {
+        this.connection = connection;
         this.request = request;
         this.context = context;
         this.scope = scope;
+        this.multiSpan = multiSpan;
+        this.suppressedSpan = suppressedSpan;
+      }
+
+      private static AdviceScope suppressed(RedisConnection connection) {
+        return new AdviceScope(connection, null, null, null, false, true);
       }
 
       @Nullable
@@ -57,6 +74,9 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
         if (promise == null) {
           return null;
         }
+        if (RedissonBatchSpanManager.suppressSpanOrEndMultiSpan(connection, request, promise)) {
+          return suppressed(connection);
+        }
         Context parentContext = currentContext();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
@@ -65,16 +85,26 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
         Context context = instrumenter().start(parentContext, request);
         Scope scope = context.makeCurrent();
 
+        if (request.isMultiBatch()) {
+          RedissonBatchSpanManager.startMultiSpan(connection, instrumenter(), context, request);
+          return new AdviceScope(connection, request, context, scope, true, false);
+        }
         promise.setEndOperationListener(
             new EndOperationListener<>(instrumenter(), context, request));
-        return new AdviceScope(request, context, scope);
+        return new AdviceScope(connection, request, context, scope, false, false);
       }
 
       public void end(@Nullable Throwable throwable) {
-        scope.close();
+        if (scope != null) {
+          scope.close();
+        }
 
         if (throwable != null) {
-          instrumenter().end(context, request, null, throwable);
+          if (multiSpan || suppressedSpan) {
+            RedissonBatchSpanManager.endMultiSpan(connection, throwable);
+          } else if (context != null && request != null) {
+            instrumenter().end(context, request, null, throwable);
+          }
         }
         // span ended in EndOperationListener
       }
