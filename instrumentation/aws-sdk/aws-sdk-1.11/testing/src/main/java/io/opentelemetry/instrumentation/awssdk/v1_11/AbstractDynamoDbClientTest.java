@@ -145,7 +145,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
             .build(),
         BatchScenario.builder("writeItemEmpty")
             .awsOperation("BatchWriteItem")
-            .execute(client -> client.batchWriteItem(writeItemRequest(0)))
+            .execute(client -> client.batchWriteItem(emptyWriteItemRequest()))
             .stableOperation("BatchWriteItem")
             .batchSize(0)
             .build(),
@@ -202,15 +202,8 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         .withRequestItems(singletonMap("sometable", new KeysAndAttributes().withKeys(keys)));
   }
 
-  private static BatchWriteItemRequest writeItemRequest(int count) {
-    if (count == 0) {
-      return new BatchWriteItemRequest().withRequestItems(emptyMap());
-    }
-    List<WriteRequest> writes = new ArrayList<>();
-    for (int i = 0; i < count; i++) {
-      writes.add(putRequest("value" + i));
-    }
-    return new BatchWriteItemRequest().withRequestItems(singletonMap("sometable", writes));
+  private static BatchWriteItemRequest emptyWriteItemRequest() {
+    return new BatchWriteItemRequest().withRequestItems(emptyMap());
   }
 
   private static BatchWriteItemRequest putItemsRequest(int count) {
