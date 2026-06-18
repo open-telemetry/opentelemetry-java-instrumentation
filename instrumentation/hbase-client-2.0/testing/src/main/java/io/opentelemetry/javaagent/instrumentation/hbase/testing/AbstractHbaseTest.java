@@ -41,6 +41,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -59,6 +60,7 @@ import org.apache.hadoop.hbase.client.Increment;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Row;
 import org.apache.hadoop.hbase.client.RowMutations;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
@@ -71,6 +73,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
@@ -101,7 +106,6 @@ public abstract class AbstractHbaseTest {
   private static final String ROW_2 = "row2";
   private static final String ROW_3 = "row3";
   private static final String ROW_4 = "row4";
-  private static final String ROW_5 = "row5";
   private static final String SCAN_ROW = "scan-row";
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
@@ -354,47 +358,53 @@ public abstract class AbstractHbaseTest {
     testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, SCAN, REGION_SERVER_PORT, true));
   }
 
-  @Test
-  void testBatchGet() throws IOException {
-    Result[] results;
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void testBatch(BatchScenario scenario) throws Exception {
     try (Table table = connection.getTable(TABLE_NAME)) {
-      List<Get> getList = new ArrayList<>();
-      getList.add(new Get(Bytes.toBytes(ROW_1)));
-      getList.add(new Get(Bytes.toBytes(ROW_2)));
-      getList.add(new Get(Bytes.toBytes(ROW_5)));
-      results = table.get(getList);
+      table.batch(scenario.actions, new Object[scenario.actions.size()]);
     }
-    assertThat(results).hasSize(3);
-    {
-      assertThat(Bytes.toString(results[0].getRow())).isEqualTo(ROW_1);
-      assertThat(value(results[0], "col1")).isEqualTo("col1_val_1");
-      assertThat(value(results[0], "col2")).isEqualTo("col2_val_1");
+
+    if (scenario.actions.isEmpty()) {
+      assertThat(testing().spans()).isEmpty();
+      return;
     }
-    {
-      assertThat(Bytes.toString(results[1].getRow())).isNull();
-      assertThat(value(results[1], "col1")).isNull();
-      assertThat(value(results[1], "col2")).isNull();
-    }
-    {
-      assertThat(Bytes.toString(results[2].getRow())).isNull();
-      assertThat(value(results[2], "col1")).isNull();
-      assertThat(value(results[2], "col2")).isNull();
-    }
-    testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
+
+    testing()
+        .waitAndAssertTraces(
+            traceAssertConsumer(TABLE_NAME, scenario.operationName, REGION_SERVER_PORT, true));
   }
 
-  @Test
-  void testBatchPut() throws IOException {
-    try (Table table = connection.getTable(TABLE_NAME)) {
-      List<Put> putList = new ArrayList<>();
-      for (int i = 2; i < 5; i++) {
-        Put put = new Put(Bytes.toBytes("batch-put-row" + i));
-        put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val_" + i));
-        putList.add(put);
-      }
-      table.put(putList);
-    }
-    testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        // an empty batch produces no span
+        Arguments.argumentSet("empty", BatchScenario.builder().build()),
+        Arguments.argumentSet(
+            "single", BatchScenario.builder().addAction(get(ROW_1)).operationName(MULTI).build()),
+        Arguments.argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .addAction(get(ROW_1))
+                .addAction(get(ROW_2))
+                .operationName(MULTI)
+                .build()),
+        Arguments.argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .addAction(put("batch-matrix-put-row"))
+                .addAction(get(ROW_1))
+                .operationName(MULTI)
+                .build()));
+  }
+
+  private static Get get(String rowKey) {
+    return new Get(Bytes.toBytes(rowKey));
+  }
+
+  private static Put put(String rowKey) {
+    Put put = new Put(Bytes.toBytes(rowKey));
+    put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val"));
+    return put;
   }
 
   @Test
@@ -568,5 +578,38 @@ public abstract class AbstractHbaseTest {
       return table.getNameAsString();
     }
     return null;
+  }
+
+  private static final class BatchScenario {
+    final List<Row> actions;
+    final String operationName;
+
+    BatchScenario(Builder builder) {
+      this.actions = builder.actions;
+      this.operationName = builder.operationName;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static final class Builder {
+      private final List<Row> actions = new ArrayList<>();
+      private String operationName;
+
+      Builder operationName(String operationName) {
+        this.operationName = operationName;
+        return this;
+      }
+
+      Builder addAction(Row action) {
+        this.actions.add(action);
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }
