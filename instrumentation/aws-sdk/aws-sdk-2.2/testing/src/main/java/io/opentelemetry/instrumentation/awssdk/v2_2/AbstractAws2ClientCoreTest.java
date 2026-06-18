@@ -492,10 +492,6 @@ public abstract class AbstractAws2ClientCoreTest {
                                         .doesNotContainKey(DB_COLLECTION_NAME))));
   }
 
-  // describes the batch cases for the two DynamoDB batch operations (BatchGetItem and
-  // BatchWriteItem): the request to send, the mocked response and the expected client span. batch
-  // attributes (db.operation.batch.size, BATCH operation name, db.collection.name) are only emitted
-  // under stable database semconv; the span and db.operation.name are emitted in both modes
   @ParameterizedTest
   @MethodSource("batchScenarios")
   @SuppressWarnings("deprecation") // uses deprecated semconv
@@ -566,17 +562,14 @@ public abstract class AbstractAws2ClientCoreTest {
   @SuppressWarnings("deprecation") // uses deprecated semconv
   private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-        // an empty batch still produces a span with the raw batch operation name and
-        // db.operation.batch.size 0, but no db.collection.name or table-name attributes
+        // BatchGetItem entries are keys, not explicit operations, so the stable operation name
+        // remains the raw batch operation and db.operation.batch.size is not emitted.
         BatchScenario.builder("getItemEmpty")
             .awsOperation("BatchGetItem")
             .responseContent("{\"ConsumedCapacity\":[]}")
             .execute(c -> c.batchGetItem(b -> b.requestItems(ImmutableMap.of())))
             .stableOperation("BatchGetItem")
-            .batchSize(0)
             .build(),
-        // a single-item batch is not a batch, so it uses the singular item operation and emits
-        // no db.operation.batch.size
         BatchScenario.builder("getItemSingle")
             .awsOperation("BatchGetItem")
             .responseContent(getResponseContent("BatchGetItem"))
@@ -594,7 +587,7 @@ public abstract class AbstractAws2ClientCoreTest {
                                                     "key",
                                                     AttributeValue.builder().s("value").build())))
                                         .build()))))
-            .stableOperation("GetItem")
+            .stableOperation("BatchGetItem")
             .hasCollection()
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
             .assertMetric()
@@ -621,9 +614,8 @@ public abstract class AbstractAws2ClientCoreTest {
                                                         .s("anotherValue")
                                                         .build())))
                                         .build()))))
-            .stableOperation("BATCH GetItem")
+            .stableOperation("BatchGetItem")
             .hasCollection()
-            .batchSize(2)
             .consumedCapacity("{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")
             .assertMetric()
             .build(),

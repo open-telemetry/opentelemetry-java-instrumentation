@@ -80,9 +80,6 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
   @Nullable
   private static String getStableOperationName(
       @Nullable String operation, @Nullable Long batchSize, int writeOpType) {
-    if ("BatchGetItem".equals(operation)) {
-      return getStableBatchOperationName(batchSize, "GetItem", operation);
-    }
     if ("BatchWriteItem".equals(operation)) {
       return getStableWriteOperationName(batchSize, writeOpType);
     }
@@ -104,21 +101,10 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
     return "BATCH " + itemOp;
   }
 
-  private static String getStableBatchOperationName(
-      @Nullable Long batchSize, String itemOperation, String batchOperation) {
-    if (batchSize == null || batchSize == 0) {
-      return batchOperation;
-    }
-    if (batchSize == 1) {
-      return itemOperation;
-    }
-    return "BATCH " + itemOperation;
-  }
-
   @Nullable
-  private Long extractBatchSize(
+  private static Long extractBatchSize(
       @Nullable String operation, ExecutionAttributes executionAttributes) {
-    if (!"BatchGetItem".equals(operation) && !"BatchWriteItem".equals(operation)) {
+    if (!"BatchWriteItem".equals(operation)) {
       return null;
     }
 
@@ -133,20 +119,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
     }
 
     Map<?, ?> requestItemsMap = (Map<?, ?>) requestItems.get();
-    return "BatchGetItem".equals(operation)
-        ? countBatchGetItems(requestItemsMap)
-        : countBatchWriteItems(requestItemsMap);
-  }
-
-  private long countBatchGetItems(Map<?, ?> requestItems) {
-    long count = 0;
-    for (Object keysAndAttributes : requestItems.values()) {
-      Object keys = next(keysAndAttributes, "Keys");
-      if (keys instanceof Collection) {
-        count += ((Collection<?>) keys).size();
-      }
-    }
-    return count;
+    return countBatchWriteItems(requestItemsMap);
   }
 
   private static long countBatchWriteItems(Map<?, ?> requestItems) {

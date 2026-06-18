@@ -107,9 +107,6 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
   @Nullable
   private static String getStableOperationName(
       @Nullable String operation, @Nullable Long batchSize, int writeOpType) {
-    if ("BatchGetItem".equals(operation)) {
-      return getStableBatchOperationName(batchSize, "GetItem", operation);
-    }
     if ("BatchWriteItem".equals(operation)) {
       return getStableWriteOperationName(batchSize, writeOpType);
     }
@@ -131,20 +128,9 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     return "BATCH " + itemOp;
   }
 
-  private static String getStableBatchOperationName(
-      @Nullable Long batchSize, String itemOperation, String batchOperation) {
-    if (batchSize == null || batchSize == 0) {
-      return batchOperation;
-    }
-    if (batchSize == 1) {
-      return itemOperation;
-    }
-    return "BATCH " + itemOperation;
-  }
-
   @Nullable
   private static Long extractBatchSize(@Nullable String operation, Object request) {
-    if (!"BatchGetItem".equals(operation) && !"BatchWriteItem".equals(operation)) {
+    if (!"BatchWriteItem".equals(operation)) {
       return null;
     }
 
@@ -153,23 +139,9 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
       return null;
     }
 
-    long batchSize =
-        "BatchGetItem".equals(operation)
-            ? countBatchGetItems(requestItems)
-            : countBatchWriteItems(requestItems);
+    long batchSize = countBatchWriteItems(requestItems);
     // return the size for every batch request, including an empty batch with size 0
     return batchSize;
-  }
-
-  private static long countBatchGetItems(Map<?, ?> requestItems) {
-    long count = 0;
-    for (Object keysAndAttributes : requestItems.values()) {
-      List<?> keys = RequestAccess.getKeys(keysAndAttributes);
-      if (keys != null) {
-        count += keys.size();
-      }
-    }
-    return count;
   }
 
   private static long countBatchWriteItems(Map<?, ?> requestItems) {

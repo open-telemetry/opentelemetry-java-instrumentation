@@ -5,6 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Collections;
@@ -13,6 +21,9 @@ import java.util.WeakHashMap;
 import javax.annotation.Nullable;
 
 public final class RedissonBatchSpanManager {
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+
   private static final Map<Object, ActiveSpan> activeMultiSpans =
       Collections.synchronizedMap(new WeakHashMap<>());
 
@@ -31,6 +42,10 @@ public final class RedissonBatchSpanManager {
       return false;
     }
 
+    if (!request.isExecCommand()) {
+      activeSpan.request.addCommandsFrom(request);
+      activeSpan.updateAttributes();
+    }
     setEndOperationListener(connection, promise, activeSpan, request.isExecCommand());
     return true;
   }
@@ -76,6 +91,21 @@ public final class RedissonBatchSpanManager {
 
     private void end(@Nullable Throwable error) {
       instrumenter.end(context, request, null, error);
+    }
+
+    private void updateAttributes() {
+      Span span = Span.fromContext(context);
+      if (emitStableDatabaseSemconv()) {
+        span.setAttribute(DB_OPERATION_NAME, request.getOperationName());
+        span.setAttribute(DB_QUERY_TEXT, request.getQueryText());
+        Long batchSize = request.getOperationBatchSize();
+        if (batchSize != null) {
+          span.setAttribute(DB_OPERATION_BATCH_SIZE, batchSize);
+        }
+      }
+      if (emitOldDatabaseSemconv()) {
+        span.setAttribute(DB_STATEMENT, request.getQueryText());
+      }
     }
   }
 }

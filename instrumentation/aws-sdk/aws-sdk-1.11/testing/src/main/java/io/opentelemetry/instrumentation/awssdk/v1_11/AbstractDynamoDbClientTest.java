@@ -92,7 +92,8 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
   // describes the batch cases for the two DynamoDB batch operations (BatchGetItem and
   // BatchWriteItem): the request to send and the expected client span. batch attributes
   // (db.operation.batch.size, BATCH operation name, db.collection.name) are only emitted under
-  // stable database semconv; the span and db.operation.name are emitted in both modes
+  // stable database semconv for BatchWriteItem, whose request entries represent explicit write
+  // operations. BatchGetItem request entries are keys, so they do not produce batch telemetry.
   @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("batchScenarios")
@@ -123,26 +124,23 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
 
   private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-        // an empty batch keeps the raw batch operation name and carries db.operation.batch.size 0,
-        // but no collection name
+        // BatchGetItem entries are keys, not explicit operations, so the stable operation name
+        // remains the raw batch operation and db.operation.batch.size is not emitted.
         BatchScenario.builder("getItemEmpty")
             .awsOperation("BatchGetItem")
             .execute(client -> client.batchGetItem(getItemRequest(0)))
             .stableOperation("BatchGetItem")
-            .batchSize(0)
             .build(),
-        // a single-item batch is not a batch, so it uses the singular item operation
         BatchScenario.builder("getItemSingle")
             .awsOperation("BatchGetItem")
             .execute(client -> client.batchGetItem(getItemRequest(1)))
-            .stableOperation("GetItem")
+            .stableOperation("BatchGetItem")
             .hasCollection()
             .build(),
         BatchScenario.builder("getItemTwo")
             .awsOperation("BatchGetItem")
             .execute(client -> client.batchGetItem(getItemRequest(2)))
-            .stableOperation("BATCH GetItem")
-            .batchSize(2)
+            .stableOperation("BatchGetItem")
             .hasCollection()
             .build(),
         BatchScenario.builder("writeItemEmpty")

@@ -415,9 +415,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(
                                 DB_OPERATION_NAME,
                                 emitStableDatabaseSemconv() ? "MULTI SET" : null),
-                            // db.operation.batch.size is not emitted because MULTI transaction
-                            // wrapper only sees MULTI plus the first queued command.
-                            equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
+                            equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?;SET batch2 ?"))
                         .hasParent(trace.getSpan(0))));
   }
 
