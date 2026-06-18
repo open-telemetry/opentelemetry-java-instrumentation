@@ -279,6 +279,22 @@ public final class UrlParsingUtils {
   }
 
   /**
+   * Resolve the database name from URL parameters, trying {@code databasename} first and falling
+   * back to {@code database}. Returns {@code null} if neither key has a non-empty value.
+   *
+   * @param params the URL parameter map (keys must be lowercase)
+   * @return the resolved database name, or {@code null}
+   */
+  @Nullable
+  public static String getDatabaseNameParam(Map<String, String> params) {
+    String databaseName = params.get("databasename");
+    if (databaseName == null || databaseName.isEmpty()) {
+      databaseName = params.get("database");
+    }
+    return databaseName == null || databaseName.isEmpty() ? null : databaseName;
+  }
+
+  /**
    * Lightweight wrapper for URL parameters that provides cleaner access patterns.
    *
    * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change

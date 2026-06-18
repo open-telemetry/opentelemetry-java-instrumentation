@@ -69,7 +69,10 @@ public final class JtdsUrlParser implements JdbcUrlParser {
 
       // If no path, use databasename or database param as fallback for database
       if (ctx.databaseName() == null) {
-        ctx.databaseName(getDatabaseNameParam(urlParams));
+        String databaseName = UrlParsingUtils.getDatabaseNameParam(urlParams);
+        if (databaseName != null) {
+          ctx.databaseName(databaseName);
+        }
       }
     }
 
@@ -88,12 +91,4 @@ public final class JtdsUrlParser implements JdbcUrlParser {
     }
   }
 
-  @Nullable
-  private static String getDatabaseNameParam(Map<String, String> params) {
-    String databaseName = params.get("databasename");
-    if (databaseName == null || databaseName.isEmpty()) {
-      databaseName = params.get("database");
-    }
-    return databaseName == null || databaseName.isEmpty() ? null : databaseName;
-  }
 }

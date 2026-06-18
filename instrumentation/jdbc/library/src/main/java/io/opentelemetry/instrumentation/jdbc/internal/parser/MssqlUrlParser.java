@@ -55,8 +55,11 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     }
 
     // Layer 3: URL params (SQL Server-specific: servername)
-    ctx.applyCommonParams(jdbcUrl, ";", ";");
-    applyDatabaseAliasParam(jdbcUrl, ctx);
+    // Parse semicolon-delimited parameters once and apply both standard and
+    // MSSQL-specific properties from the same map to avoid re-parsing the URL.
+    Map<String, String> urlParams = UrlParsingUtils.extractSemicolonParams(jdbcUrl);
+    applyCommonParams(ctx, urlParams);
+    applyDatabaseAliasParam(ctx, urlParams);
 
     // Layer 4: Parse URL structure (host:port/path)
     String instanceName = parseUrlWithInstance(jdbcUrl, ctx);
@@ -146,24 +149,43 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     return instanceName;
   }
 
-  private static void applyDatabaseAliasParam(String jdbcUrl, ParseContext ctx) {
-    if (ctx.databaseName() != null) {
+  /**
+   * Apply standard URL parameters from a pre-parsed map. Equivalent to {@link
+   * ParseContext#applyCommonParams} but operates on an already-extracted parameter map to avoid
+   * re-parsing the URL string.
+   */
+  private static void applyCommonParams(ParseContext ctx, Map<String, String> params) {
+    if (params.isEmpty()) {
       return;
     }
-    Map<String, String> params = UrlParsingUtils.extractSemicolonParams(jdbcUrl);
-    String databaseName = getDatabaseNameParam(params);
-    if (databaseName != null) {
+    if (params.containsKey("servername")) {
+      ctx.host(params.get("servername"));
+    }
+    Integer port = UrlParsingUtils.parsePort(params.get("portnumber"));
+    if (port != null) {
+      ctx.port(port);
+    }
+    String databaseName = params.get("databasename");
+    if (databaseName != null && !databaseName.isEmpty()) {
       ctx.databaseName(databaseName);
+    }
+    if (params.containsKey("user")) {
+      ctx.user(params.get("user"));
     }
   }
 
-  @Nullable
-  private static String getDatabaseNameParam(Map<String, String> params) {
-    String databaseName = params.get("databasename");
-    if (databaseName == null || databaseName.isEmpty()) {
-      databaseName = params.get("database");
+  /**
+   * Apply the {@code database} URL parameter alias when {@code databasename} has not already been
+   * set by {@link #applyCommonParams(ParseContext, Map)}.
+   */
+  private static void applyDatabaseAliasParam(ParseContext ctx, Map<String, String> params) {
+    if (ctx.databaseName() != null) {
+      return;
     }
-    return databaseName == null || databaseName.isEmpty() ? null : databaseName;
+    String databaseName = UrlParsingUtils.getDatabaseNameParam(params);
+    if (databaseName != null) {
+      ctx.databaseName(databaseName);
+    }
   }
 
   /**
