@@ -57,7 +57,7 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     // Parse semicolon-delimited parameters once and apply both standard and
     // MSSQL-specific properties from the same map to avoid re-parsing the URL.
     Map<String, String> urlParams = UrlParsingUtils.extractSemicolonParams(jdbcUrl);
-    applyCommonParams(ctx, urlParams);
+    ctx.applyCommonParams(urlParams);
     applyDatabaseAliasParam(ctx, urlParams);
 
     // Layer 4: Parse URL structure (host:port/path)
@@ -149,33 +149,8 @@ public final class MssqlUrlParser implements JdbcUrlParser {
   }
 
   /**
-   * Apply standard URL parameters from a pre-parsed map. Equivalent to {@link
-   * ParseContext#applyCommonParams} but operates on an already-extracted parameter map to avoid
-   * re-parsing the URL string.
-   */
-  private static void applyCommonParams(ParseContext ctx, Map<String, String> params) {
-    if (params.isEmpty()) {
-      return;
-    }
-    if (params.containsKey("servername")) {
-      ctx.host(params.get("servername"));
-    }
-    Integer port = UrlParsingUtils.parsePort(params.get("portnumber"));
-    if (port != null) {
-      ctx.port(port);
-    }
-    String databaseName = params.get("databasename");
-    if (databaseName != null && !databaseName.isEmpty()) {
-      ctx.databaseName(databaseName);
-    }
-    if (params.containsKey("user")) {
-      ctx.user(params.get("user"));
-    }
-  }
-
-  /**
    * Apply the {@code database} URL parameter alias when {@code databasename} has not already been
-   * set by {@link #applyCommonParams(ParseContext, Map)}.
+   * set by {@link ParseContext#applyCommonParams(Map)}.
    */
   private static void applyDatabaseAliasParam(ParseContext ctx, Map<String, String> params) {
     if (ctx.databaseName() != null) {
