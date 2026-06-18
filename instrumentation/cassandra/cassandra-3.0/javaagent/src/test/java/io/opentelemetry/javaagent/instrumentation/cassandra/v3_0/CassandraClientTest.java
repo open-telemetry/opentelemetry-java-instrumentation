@@ -368,10 +368,10 @@ class CassandraClientTest {
   private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
         // an empty batch still produces a client span carrying db.operation.batch.size 0, but with
-        // no query text, summary or operation; the span name falls back to the database system name
+        // no query text, summary or operation; the stable span name is BATCH
         BatchScenario.builder("empty")
             .buildBatch(session -> new BatchStatement())
-            .spanName("cassandra")
+            .spanName("BATCH")
             .oldSpanName("DB Query")
             .batchSize(0)
             .build(),

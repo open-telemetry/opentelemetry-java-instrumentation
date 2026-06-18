@@ -361,7 +361,7 @@ public abstract class AbstractR2dbcStatementTest {
 
     if (scenario.queries.isEmpty()) {
       // an empty batch fails to execute and produces a client span with no operation or summary,
-      // but carries db.operation.batch.size 0; the span name falls back to the database namespace.
+      // but carries db.operation.batch.size 0 and the BATCH span name under stable semconv.
       // under old semconv it still carries db.user/db.connection_string and an empty db.statement;
       // under stable semconv it records the error instead (error.type is stable-only)
       assertThat(thrown).isInstanceOf(NoSuchElementException.class);
@@ -371,7 +371,7 @@ public abstract class AbstractR2dbcStatementTest {
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                       span ->
-                          span.hasName(DB)
+                          span.hasName(emitStableDatabaseSemconv() ? "BATCH" : DB)
                               .hasKind(SpanKind.CLIENT)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(

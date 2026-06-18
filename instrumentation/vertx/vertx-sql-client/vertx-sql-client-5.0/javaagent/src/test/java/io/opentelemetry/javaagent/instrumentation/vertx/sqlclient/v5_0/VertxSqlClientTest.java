@@ -369,8 +369,8 @@ class VertxSqlClientTest {
         // records the error and carries db.operation.batch.size 0
         BatchScenario.builder("empty")
             .tuples(emptyList())
-            .stableSpanName("insert batch_test")
-            .stableSummary("insert batch_test")
+            .stableSpanName("BATCH insert batch_test")
+            .stableSummary("BATCH insert batch_test")
             .errorType("io.vertx.core.VertxException")
             .batchSize(0)
             .build(),

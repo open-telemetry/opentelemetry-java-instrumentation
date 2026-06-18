@@ -396,11 +396,13 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   void deferredFlushCommand(
       String name, AsyncCommandsScenario scenario, List<ExpectedCommand> expectedCommands)
       throws Exception {
-    asyncCommands.setAutoFlushCommands(false);
-    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
+    StatefulRedisConnection<String, String> statefulConnection =
+        asyncCommands.getStatefulConnection();
+    statefulConnection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> statefulConnection.setAutoFlushCommands(true));
 
     List<RedisFuture<?>> futures = scenario.run(asyncCommands);
-    asyncCommands.flushCommands();
+    statefulConnection.flushCommands();
     for (RedisFuture<?> future : futures) {
       future.get(10, SECONDS);
     }

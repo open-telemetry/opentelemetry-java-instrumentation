@@ -22,13 +22,16 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.lettuce.core.AbstractRedisAsyncCommands");
+    return named("io.lettuce.core.AbstractRedisAsyncCommands")
+        .or(named("io.lettuce.core.protocol.DefaultEndpoint"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
+        named("dispatch")
+            .or(named("write"))
+            .and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
         getClass().getName() + "$DispatchAdvice");
     transformer.applyAdviceToMethod(
         named("setAutoFlushCommands").and(takesArguments(1)),
