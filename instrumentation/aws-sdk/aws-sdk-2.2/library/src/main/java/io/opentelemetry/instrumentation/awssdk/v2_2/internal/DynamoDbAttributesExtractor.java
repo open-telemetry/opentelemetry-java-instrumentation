@@ -87,7 +87,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
   }
 
   private static String getStableWriteOperationName(@Nullable Long batchSize, int writeOpType) {
-    if (batchSize == null || batchSize == 0) {
+    if (batchSize == null || batchSize == 0 || writeOpType == WRITE_OP_NONE) {
       return "BatchWriteItem";
     }
     String itemOp = writeOpType == WRITE_OP_PUT ? "PutItem" : "DeleteItem";
