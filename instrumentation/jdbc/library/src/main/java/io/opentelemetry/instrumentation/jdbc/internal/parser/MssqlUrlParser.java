@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import java.util.Map;
-import javax.annotation.Nullable;
 
 /**
  * Parser for Microsoft SQL Server JDBC URLs.

@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.splitQuery;
 
 import java.util.Map;
-import javax.annotation.Nullable;
 
 /**
  * Parser for jTDS SQL Server JDBC URLs.
@@ -91,4 +90,3 @@ public final class JtdsUrlParser implements JdbcUrlParser {
     }
   }
 
-}
