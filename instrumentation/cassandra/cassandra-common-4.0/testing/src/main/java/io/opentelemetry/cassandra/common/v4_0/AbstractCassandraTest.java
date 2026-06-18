@@ -50,6 +50,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
@@ -186,26 +187,20 @@ public abstract class AbstractCassandraTest {
                                     maybeStable(DB_CASSANDRA_TABLE), "simple_values_test.users"))));
   }
 
-  @Test
-  void batchStatementWithSameQuery() {
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void batchStatement(BatchScenario scenario) {
     CqlSession session = getSession(null);
     cleanup.deferCleanup(session);
 
-    session.execute("DROP KEYSPACE IF EXISTS batch_same_test");
+    session.execute("DROP KEYSPACE IF EXISTS batch_test");
     session.execute(
-        "CREATE KEYSPACE batch_same_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
-    session.execute("CREATE TABLE batch_same_test.users ( name text PRIMARY KEY, age int )");
-    PreparedStatement preparedStatement =
-        session.prepare("INSERT INTO batch_same_test.users (name, age) values (?, ?)");
+        "CREATE KEYSPACE batch_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    session.execute("CREATE TABLE batch_test.records ( id int PRIMARY KEY, num int )");
     testing().waitForTraces(3);
     testing().clearData();
 
-    BatchStatement batchStatement =
-        BatchStatement.newInstance(
-            DefaultBatchType.LOGGED,
-            preparedStatement.bind("alice", 1),
-            preparedStatement.bind("bob", 2));
-    session.execute(batchStatement);
+    session.execute(scenario.buildBatch.apply(session));
 
     testing()
         .waitAndAssertTraces(
@@ -214,8 +209,8 @@ public abstract class AbstractCassandraTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT batch_same_test.users"
-                                    : "DB Query")
+                                    ? scenario.spanName
+                                    : scenario.oldSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
@@ -232,16 +227,20 @@ public abstract class AbstractCassandraTest {
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
                                     emitStableDatabaseSemconv()
-                                        ? "INSERT INTO batch_same_test.users (name, age) values (?, ?)"
-                                        : null),
+                                        ? scenario.queryText
+                                        : scenario.oldStatement),
                                 equalTo(
                                     DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? 2L : null),
+                                    emitStableDatabaseSemconv() ? scenario.batchSize : null),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv()
-                                        ? "BATCH INSERT batch_same_test.users"
-                                        : null),
+                                    emitStableDatabaseSemconv() ? scenario.querySummary : null),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    scenario.operationName),
+                                equalTo(
+                                    maybeStable(DB_CASSANDRA_TABLE),
+                                    scenario.collectionName),
                                 equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
                                 equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
                                 satisfies(
@@ -255,68 +254,68 @@ public abstract class AbstractCassandraTest {
                                     maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0))));
   }
 
-  @Test
-  void batchStatementWithDifferentQueries() {
-    CqlSession session = getSession(null);
-    cleanup.deferCleanup(session);
-
-    session.execute("DROP KEYSPACE IF EXISTS batch_mixed_test");
-    session.execute(
-        "CREATE KEYSPACE batch_mixed_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
-    session.execute("CREATE TABLE batch_mixed_test.users ( name text PRIMARY KEY, age int )");
-    PreparedStatement insertStatement =
-        session.prepare("INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?)");
-    testing().waitForTraces(3);
-    testing().clearData();
-
-    BatchStatement batchStatement =
-        BatchStatement.newInstance(
-            DefaultBatchType.LOGGED,
-            insertStatement.bind(1),
-            SimpleStatement.newInstance(
-                "UPDATE batch_mixed_test.users SET age = 2 WHERE name = 'alice'"));
-    session.execute(batchStatement);
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(emitStableDatabaseSemconv() ? "BATCH" : "DB Query")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    emitStableDatabaseSemconv()
-                                        ? val -> val.isNull()
-                                        : val -> val.isIn("ipv4", "ipv6")),
-                                equalTo(SERVER_ADDRESS, cassandraHost),
-                                equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv()
-                                        ? "INSERT INTO batch_mixed_test.users (name, age) values ('alice', ?); UPDATE batch_mixed_test.users SET age = ? WHERE name = ?"
-                                        : null),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? 2L : null),
-                                equalTo(
-                                    DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "BATCH" : null),
-                                equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
-                                equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
-                                satisfies(
-                                    maybeStable(DB_CASSANDRA_COORDINATOR_ID),
-                                    val -> val.isInstanceOf(String.class)),
-                                satisfies(
-                                    maybeStable(DB_CASSANDRA_IDEMPOTENCE),
-                                    val -> val.isInstanceOf(Boolean.class)),
-                                equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
-                                equalTo(
-                                    maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0))));
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        Arguments.argumentSet(
+            "empty",
+            BatchScenario.builder()
+                .buildBatch(session -> BatchStatement.newInstance(DefaultBatchType.LOGGED))
+                .spanName("cassandra")
+                .oldSpanName("DB Query")
+                .build()),
+        Arguments.argumentSet(
+            "single",
+            BatchScenario.builder()
+                .buildBatch(
+                    session -> {
+                      PreparedStatement insert =
+                          session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
+                      return BatchStatement.newInstance(DefaultBatchType.LOGGED, insert.bind(1, 1));
+                    })
+                .spanName("INSERT batch_test.records")
+                .oldSpanName("INSERT batch_test.records")
+                .queryText("INSERT INTO batch_test.records (id, num) values (?, ?)")
+                .oldStatement("INSERT INTO batch_test.records (id, num) values (?, ?)")
+                .querySummary("INSERT batch_test.records")
+                .operationName("INSERT")
+                .collectionName("batch_test.records")
+                .build()),
+        Arguments.argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .buildBatch(
+                    session -> {
+                      PreparedStatement insert =
+                          session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
+                      return BatchStatement.newInstance(
+                          DefaultBatchType.LOGGED, insert.bind(1, 1), insert.bind(2, 2));
+                    })
+                .spanName("BATCH INSERT batch_test.records")
+                .oldSpanName("DB Query")
+                .queryText("INSERT INTO batch_test.records (id, num) values (?, ?)")
+                .querySummary("BATCH INSERT batch_test.records")
+                .batchSize(2)
+                .build()),
+        Arguments.argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .buildBatch(
+                    session -> {
+                      PreparedStatement insert =
+                          session.prepare("INSERT INTO batch_test.records (id, num) values (4, ?)");
+                      return BatchStatement.newInstance(
+                          DefaultBatchType.LOGGED,
+                          insert.bind(4),
+                          SimpleStatement.newInstance(
+                              "UPDATE batch_test.records SET num = 5 WHERE id = 4"));
+                    })
+                .spanName("BATCH")
+                .oldSpanName("DB Query")
+                .queryText(
+                    "INSERT INTO batch_test.records (id, num) values (4, ?); UPDATE batch_test.records SET num = ? WHERE id = ?")
+                .querySummary("BATCH")
+                .batchSize(2)
+                .build()));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -573,5 +572,94 @@ public abstract class AbstractCassandraTest {
   protected CqlSessionBuilder addContactPoint(CqlSessionBuilder sessionBuilder) {
     sessionBuilder.addContactPoint(new InetSocketAddress(cassandra.getHost(), cassandraPort));
     return sessionBuilder;
+  }
+
+  private static final class BatchScenario {
+    final Function<CqlSession, BatchStatement> buildBatch;
+    final String spanName;
+    final String oldSpanName;
+    final String queryText;
+    final String oldStatement;
+    final String querySummary;
+    final Long batchSize;
+    final String operationName;
+    final String collectionName;
+
+    BatchScenario(Builder builder) {
+      this.buildBatch = builder.buildBatch;
+      this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
+      this.queryText = builder.queryText;
+      this.oldStatement = builder.oldStatement;
+      this.querySummary = builder.querySummary;
+      this.batchSize = builder.batchSize;
+      this.operationName = builder.operationName;
+      this.collectionName = builder.collectionName;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static final class Builder {
+      private Function<CqlSession, BatchStatement> buildBatch;
+      private String spanName;
+      private String oldSpanName;
+      private String queryText;
+      private String oldStatement;
+      private String querySummary;
+      private Long batchSize;
+      private String operationName;
+      private String collectionName;
+
+      Builder buildBatch(Function<CqlSession, BatchStatement> buildBatch) {
+        this.buildBatch = buildBatch;
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
+      Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      Builder oldStatement(String oldStatement) {
+        this.oldStatement = oldStatement;
+        return this;
+      }
+
+      Builder querySummary(String querySummary) {
+        this.querySummary = querySummary;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder operationName(String operationName) {
+        this.operationName = operationName;
+        return this;
+      }
+
+      Builder collectionName(String collectionName) {
+        this.collectionName = collectionName;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }
