@@ -101,7 +101,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     SqlDialect dialect = getter.getSqlDialect(request);
 
     Long batchSize = getter.getDbOperationBatchSize(request);
-    boolean isBatch = batchSize != null && batchSize > 1;
+    // db.operation.batch.size is captured for every batch execution (including an empty batch with
+    // size 0); it is only omitted for a single-statement batch, which is reported as a non-batch
+    boolean emitBatchSize = batchSize != null && batchSize != 1;
+    boolean isBatch = emitBatchSize;
 
     if (emitOldDatabaseSemconv()) {
       if (rawQueryTexts.size() == 1) { // for backcompat(?)
@@ -118,7 +121,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     }
 
     if (emitStableDatabaseSemconv()) {
-      if (isBatch) {
+      if (emitBatchSize) {
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
       if (rawQueryTexts.size() == 1) {
@@ -149,6 +152,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         MultiQuery multiQuery = builder.build();
         attributes.put(DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
         attributes.put(DB_QUERY_SUMMARY, multiQuery.getQuerySummary());
+        if (singleOperationAndCollection) {
+          attributes.put(DB_OPERATION_NAME, multiQuery.getOperationName());
+          attributes.put(DB_COLLECTION_NAME, multiQuery.getCollectionName());
+        }
         attributes.put(DB_STORED_PROCEDURE_NAME, multiQuery.getStoredProcedureName());
       }
     }
