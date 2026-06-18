@@ -89,4 +89,4 @@ public final class JtdsUrlParser implements JdbcUrlParser {
       }
     }
   }
-
+}
