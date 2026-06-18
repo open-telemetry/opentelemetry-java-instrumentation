@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -109,6 +110,24 @@ final class RequestAccess {
   static List<?> getKeys(Object request) {
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getKeys, request, List.class);
+  }
+
+  /**
+   * Returns true if the given WriteRequest contains a PutRequest, false otherwise. Uses reflection
+   * to call getPutRequest() on the WriteRequest object.
+   */
+  static boolean hasPutRequest(Object writeRequest) {
+    WriteRequestAccess access = WriteRequestAccess.ACCESSORS.get(writeRequest.getClass());
+    return access.invokeGetPutRequest(writeRequest) != null;
+  }
+
+  /**
+   * Returns true if the given WriteRequest contains a DeleteRequest, false otherwise. Uses
+   * reflection to call getDeleteRequest() on the WriteRequest object.
+   */
+  static boolean hasDeleteRequest(Object writeRequest) {
+    WriteRequestAccess access = WriteRequestAccess.ACCESSORS.get(writeRequest.getClass());
+    return access.invokeGetDeleteRequest(writeRequest) != null;
   }
 
   @Nullable
@@ -215,6 +234,55 @@ final class RequestAccess {
         Class<?> lambdaConfigurationClass =
             Class.forName("com.amazonaws.services.lambda.model.FunctionConfiguration");
         return findAccessorOrNull(lambdaConfigurationClass, "getFunctionArn");
+      } catch (Throwable ignored) {
+        return null;
+      }
+    }
+  }
+
+  private static class WriteRequestAccess {
+    private static final ClassValue<WriteRequestAccess> ACCESSORS =
+        new ClassValue<WriteRequestAccess>() {
+          @Override
+          protected WriteRequestAccess computeValue(Class<?> type) {
+            return new WriteRequestAccess(type);
+          }
+        };
+
+    @Nullable private final Method getPutRequest;
+    @Nullable private final Method getDeleteRequest;
+
+    private WriteRequestAccess(Class<?> clz) {
+      getPutRequest = findMethodOrNull(clz, "getPutRequest");
+      getDeleteRequest = findMethodOrNull(clz, "getDeleteRequest");
+    }
+
+    @Nullable
+    Object invokeGetPutRequest(Object obj) {
+      return invokeMethod(getPutRequest, obj);
+    }
+
+    @Nullable
+    Object invokeGetDeleteRequest(Object obj) {
+      return invokeMethod(getDeleteRequest, obj);
+    }
+
+    @Nullable
+    private static Object invokeMethod(@Nullable Method method, Object obj) {
+      if (method == null) {
+        return null;
+      }
+      try {
+        return method.invoke(obj);
+      } catch (Throwable ignored) {
+        return null;
+      }
+    }
+
+    @Nullable
+    private static Method findMethodOrNull(Class<?> clz, String methodName) {
+      try {
+        return clz.getMethod(methodName);
       } catch (Throwable ignored) {
         return null;
       }
