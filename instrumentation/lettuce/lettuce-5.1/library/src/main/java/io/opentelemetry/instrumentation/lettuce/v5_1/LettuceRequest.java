@@ -96,12 +96,12 @@ final class LettuceRequest {
   }
 
   private static String pipelineOperationName(List<RedisCommand<?, ?, ?>> commands) {
-    String operationName = commands.get(0).getType().name();
+    String operationName = commands.get(0).getType().toString();
     if (commands.size() == 1) {
       return operationName;
     }
     for (int i = 1; i < commands.size(); i++) {
-      if (!operationName.equals(commands.get(i).getType().name())) {
+      if (!operationName.equals(commands.get(i).getType().toString())) {
         return "PIPELINE";
       }
     }
@@ -111,7 +111,7 @@ final class LettuceRequest {
   private String pipelineStatement(List<RedisCommand<?, ?, ?>> commands) {
     StringJoiner joiner = new StringJoiner(";");
     for (RedisCommand<?, ?, ?> command : commands) {
-      String commandName = command.getType().name();
+      String commandName = command.getType().toString();
       List<String> args =
           command.getArgs() == null
               ? emptyList()

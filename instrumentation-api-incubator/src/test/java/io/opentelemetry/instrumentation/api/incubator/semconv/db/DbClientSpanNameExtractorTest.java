@@ -35,6 +35,7 @@ class DbClientSpanNameExtractorTest {
     lenient()
         .when(sqlAttributesGetter.getSqlDialect(any()))
         .thenReturn(DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    lenient().when(sqlAttributesGetter.getDbOperationBatchSize(any())).thenReturn(null);
   }
 
   @Test
