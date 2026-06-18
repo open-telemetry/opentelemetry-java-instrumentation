@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -83,6 +84,14 @@ class VertxRedisClientTest {
         client.connect().toCompletionStage().toCompletableFuture().get(30, SECONDS);
     redis = RedisAPI.api(connection);
     cleanup.deferAfterAll(redis::close);
+
+    client
+        .batch(singletonList(Request.cmd(Command.PING)))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+    testing.waitForTraces(1);
+    testing.clearData();
   }
 
   @Test
