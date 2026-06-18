@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.39.1")
+  implementation("com.linecorp.armeria:armeria-junit5:1.40.0")
   implementation("com.google.errorprone:error_prone_annotations")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("com.google.protobuf:protobuf-java-util:4.35.1")
