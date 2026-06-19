@@ -57,36 +57,8 @@ class MetricBridgeFilterTest {
         "application.orders.processed",
         AbstractIterableAssert::isNotEmpty);
 
-    boolean hasJvmMemoryUsed = false;
-    boolean hasJvmGcPause = false;
-    boolean hasProcessCpuUsage = false;
-
-    for (MetricData metric : testing.metrics()) {
-      switch (metric.getName()) {
-        case "jvm.memory.used":
-          hasJvmMemoryUsed = true;
-          break;
-        case "jvm.gc.pause":
-          hasJvmGcPause = true;
-          break;
-        case "process.cpu.usage":
-          hasProcessCpuUsage = true;
-          break;
-        default:
-          break;
-      }
-    }
-
-    assertThat(hasJvmMemoryUsed)
-        .as("Micrometer jvm.memory.used should be suppressed to prevent semconv conflict.")
-        .isFalse();
-
-    assertThat(hasJvmGcPause)
-        .as("Metrics matching the jvm.* wildcard prefix must be dropped.")
-        .isFalse();
-
-    assertThat(hasProcessCpuUsage)
-        .as("The explicit process.cpu.usage metric must be dropped.")
-        .isFalse();
+    assertThat(testing.metrics())
+        .extracting(MetricData::getName)
+        .doesNotContain("jvm.memory.used", "jvm.gc.pause", "process.cpu.usage");
   }
 }
