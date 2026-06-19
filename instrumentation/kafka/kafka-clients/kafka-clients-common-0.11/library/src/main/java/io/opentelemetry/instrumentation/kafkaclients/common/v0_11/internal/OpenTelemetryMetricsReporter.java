@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
@@ -165,6 +166,11 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
     }
   }
 
+  @SuppressWarnings("OtelDeprecatedApiUsage")
+  private static String getGlobalDropMetricsConfig() {
+    return ConfigPropertiesUtil.getString("otel.instrumentation.metric-bridge.drop-metrics");
+  }
+
   @Override
   public void configure(Map<String, ?> configs) {
     OpenTelemetrySupplier openTelemetrySupplier =
@@ -175,10 +181,20 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
     String instrumentationVersion =
         EmbeddedInstrumentationProperties.findVersion(instrumentationName);
 
+    String dropConfig = null;
     Object filterObj = configs.get(CONFIG_KEY_OPENTELEMETRY_METRIC_DROP_FILTER);
-    if (filterObj instanceof MetricBridgeFilter) {
-      this.metricFilter = (MetricBridgeFilter) filterObj;
+    if (filterObj instanceof String) {
+      dropConfig = (String) filterObj;
     }
+
+    if (dropConfig == null) {
+      dropConfig = getGlobalDropMetricsConfig();
+    }
+
+    if (dropConfig == null) {
+      dropConfig = MetricBridgeFilter.DEFAULT_DROP_METRICS;
+    }
+    this.metricFilter = MetricBridgeFilter.create(dropConfig);
 
     MeterBuilder meterBuilder = openTelemetry.meterBuilder(instrumentationName);
     if (instrumentationVersion != null) {

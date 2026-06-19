@@ -11,7 +11,6 @@ import static java.util.Objects.requireNonNull;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
@@ -35,7 +34,7 @@ public final class KafkaTelemetryBuilder {
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
   private boolean messagingReceiveInstrumentationEnabled = false;
-  private MetricBridgeFilter metricFilter = MetricBridgeFilter.create(null);
+  private String metricDropFilterConfig = null;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = requireNonNull(openTelemetry);
@@ -48,7 +47,7 @@ public final class KafkaTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder setMetricBridgeFilter(String metricFilterConfig) {
-    this.metricFilter = MetricBridgeFilter.create(metricFilterConfig);
+    this.metricDropFilterConfig = metricFilterConfig;
     return this;
   }
 
@@ -135,6 +134,6 @@ public final class KafkaTelemetryBuilder {
         instrumenterFactory.createConsumerReceiveInstrumenter(consumerReceiveAttributesExtractors),
         instrumenterFactory.createConsumerProcessInstrumenter(consumerProcessAttributesExtractors),
         propagationEnabled,
-        metricFilter);
+        metricDropFilterConfig);
   }
 }
