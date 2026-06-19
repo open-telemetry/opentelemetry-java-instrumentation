@@ -5,35 +5,72 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.vertx.core.net.NetSocket;
+import io.vertx.redis.client.Request;
 import io.vertx.redis.client.impl.RedisURI;
+import io.vertx.redis.client.impl.RequestUtil;
 import java.util.List;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
 class VertxRedisClientRequest {
-  private final String command;
-  private final List<byte[]> args;
+  // Match RedisCommandSanitizer's per-command limit when joining batch query text.
+  private static final int BATCH_QUERY_TEXT_LIMIT = 32 * 1024;
+
+  private static final RedisCommandSanitizer sanitizer =
+      RedisCommandSanitizer.create(
+          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "vertx_redis_client"));
+
+  private final String operationName;
+  private final String queryText;
+  @Nullable private final Long operationBatchSize;
   private final RedisURI redisUri;
   private final NetSocket netSocket;
 
   VertxRedisClientRequest(
       String command, List<byte[]> args, RedisURI redisUri, NetSocket netSocket) {
-    this.command = command.toUpperCase(Locale.ROOT);
-    this.args = args;
+    this(command, sanitize(command.toUpperCase(Locale.ROOT), args), null, redisUri, netSocket);
+  }
+
+  private VertxRedisClientRequest(
+      String operationName,
+      String queryText,
+      @Nullable Long operationBatchSize,
+      RedisURI redisUri,
+      NetSocket netSocket) {
+    this.operationName = operationName.toUpperCase(Locale.ROOT);
+    this.queryText = queryText;
+    this.operationBatchSize = operationBatchSize;
     this.redisUri = redisUri;
     this.netSocket = netSocket;
   }
 
-  String getCommand() {
-    return command;
+  static VertxRedisClientRequest createBatch(
+      List<Request> requests, RedisURI redisUri, NetSocket netSocket) {
+    return new VertxRedisClientRequest(
+        batchOperationName(requests),
+        batchQueryText(requests),
+        requests.size() != 1 ? (long) requests.size() : null,
+        redisUri,
+        netSocket);
   }
 
-  List<byte[]> getArgs() {
-    return args;
+  String getQueryText() {
+    return queryText;
+  }
+
+  String getOperationName() {
+    return operationName;
   }
 
   @Nullable
+  Long getOperationBatchSize() {
+    return operationBatchSize;
+  }
+
   String getUser() {
     return redisUri.user();
   }
@@ -67,5 +104,48 @@ class VertxRedisClientRequest {
   Integer getPeerPort() {
     int port = netSocket.remoteAddress().port();
     return port != -1 ? port : null;
+  }
+
+  private static String batchOperationName(List<Request> requests) {
+    if (requests.isEmpty()) {
+      return "PIPELINE";
+    }
+    String operationName = VertxRedisClientSingletons.getCommandName(requests.get(0).command());
+    if (requests.size() == 1) {
+      return operationName;
+    }
+    for (int i = 1; i < requests.size(); i++) {
+      if (!operationName.equals(
+          VertxRedisClientSingletons.getCommandName(requests.get(i).command()))) {
+        return "PIPELINE";
+      }
+    }
+    return "PIPELINE " + operationName;
+  }
+
+  private static String batchQueryText(List<Request> requests) {
+    StringBuilder builder = new StringBuilder();
+    for (Request request : requests) {
+      String commandName =
+          VertxRedisClientSingletons.getCommandName(request.command()).toUpperCase(Locale.ROOT);
+      String queryText = sanitize(commandName, RequestUtil.getArgs(request));
+      int newLength = builder.length();
+      if (builder.length() > 0) {
+        newLength++;
+      }
+      newLength += queryText.length();
+      if (newLength > BATCH_QUERY_TEXT_LIMIT) {
+        break;
+      }
+      if (builder.length() > 0) {
+        builder.append(';');
+      }
+      builder.append(queryText);
+    }
+    return builder.toString();
+  }
+
+  private static String sanitize(String command, List<byte[]> args) {
+    return sanitizer.sanitize(command, args);
   }
 }
