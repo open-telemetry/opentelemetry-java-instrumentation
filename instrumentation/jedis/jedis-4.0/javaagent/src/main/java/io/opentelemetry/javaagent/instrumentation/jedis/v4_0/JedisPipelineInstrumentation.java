@@ -3,46 +3,54 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
+package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisSingletons.instrumenter;
-import static java.util.Arrays.asList;
-import static net.bytebuddy.matcher.ElementMatchers.is;
+import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import redis.clients.jedis.Connection;
-import redis.clients.jedis.commands.ProtocolCommand;
 
-class JedisConnectionInstrumentation implements TypeInstrumentation {
+class JedisPipelineInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("redis.clients.jedis.Connection");
+    return namedOneOf("redis.clients.jedis.Pipeline", "redis.clients.jedis.PipelineBase");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("sendCommand")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
-            .and(takesArgument(1, is(byte[][].class))),
-        getClass().getName() + "$SendCommandAdvice");
+        named("appendCommand"), getClass().getName() + "$QueueCommandAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("sync", "syncAndReturnAll"), getClass().getName() + "$SyncAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class SendCommandAdvice {
+  public static class QueueCommandAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.This Object pipeline) {
+      JedisPipelineContext.enter(pipeline);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopCollecting() {
+      JedisPipelineContext.exit();
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SyncAdvice {
 
     public static class AdviceScope {
       private final Context context;
@@ -56,14 +64,17 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope start(
-          Connection connection, ProtocolCommand command, byte[][] args) {
-        Context parentContext = currentContext();
-        JedisRequest request = JedisRequest.create(connection, command, asList(args));
-        // Capture pipeline commands for the batch span instead of starting an individual span.
-        if (JedisPipelineContext.capture(request)) {
+      public static AdviceScope start(Object pipeline) {
+        List<Object> capturedRequests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
+        if (capturedRequests.isEmpty()) {
           return null;
         }
+        List<JedisRequest> requests = new ArrayList<>(capturedRequests.size());
+        for (Object capturedRequest : capturedRequests) {
+          requests.add((JedisRequest) capturedRequest);
+        }
+        JedisRequest request = JedisRequest.createPipeline(requests);
+        Context parentContext = currentContext();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }
@@ -73,17 +84,14 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
+        instrumenter().end(context, request, null, throwable);
       }
     }
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(
-        @Advice.This Connection connection,
-        @Advice.Argument(0) ProtocolCommand command,
-        @Advice.Argument(1) byte[][] args) {
-      return AdviceScope.start(connection, command, args);
+    public static AdviceScope onEnter(@Advice.This Object pipeline) {
+      return AdviceScope.start(pipeline);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

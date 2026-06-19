@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
+package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
@@ -19,15 +19,15 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JedisInstrumentationModule extends InstrumentationModule {
 
   public JedisInstrumentationModule() {
-    super("jedis", "jedis-3.0");
+    super("jedis", "jedis-2.0");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 3.0
-    return hasClassesNamed("redis.clients.jedis.commands.BasicCommands")
-        // added in 4.0
-        .and(not(hasClassesNamed("redis.clients.jedis.CommandArguments")));
+    // added in 2.0
+    return hasClassesNamed("redis.clients.jedis.Pipeline")
+        // added in 3.0
+        .and(not(hasClassesNamed("redis.clients.jedis.commands.ProtocolCommand")));
   }
 
   @Override

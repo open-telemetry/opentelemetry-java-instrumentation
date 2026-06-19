@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
+package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static java.util.Collections.emptyList;
 

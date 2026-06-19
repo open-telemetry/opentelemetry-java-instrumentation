@@ -6,27 +6,27 @@ muzzle {
   pass {
     group.set("redis.clients")
     module.set("jedis")
-    versions.set("[3.0.0,4)")
-    skip("jedis-3.6.2")
+    versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("redis.clients:jedis:3.0.0")
+  library("redis.clients:jedis:2.0.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
-  // ensures jedis-1.4 instrumentation does not load with jedis 3.0+ by failing
-  // the tests in the event it does. The tests will end up with double spans
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation("org.testcontainers:testcontainers")
+
   testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
-  testInstrumentation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
-  latestDepTestLibrary("redis.clients:jedis:3.+") // see jedis-4.0 module
+  latestDepTestLibrary("redis.clients:jedis:2.+") // see jedis-3.0 module
 }
 
 tasks {
@@ -44,6 +44,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }

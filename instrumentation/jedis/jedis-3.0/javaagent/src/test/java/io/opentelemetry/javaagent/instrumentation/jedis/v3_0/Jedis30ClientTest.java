@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -32,13 +33,19 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Jedis30ClientTest {
@@ -190,5 +197,121 @@ class Jedis30ClientTest {
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void pipelineCommand(BatchScenario scenario) {
+    Pipeline pipeline = jedis.pipelined();
+    scenario.pipeline.accept(pipeline);
+    pipeline.sync();
+
+    if (scenario.operationName == null) {
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? scenario.operationName + " " + host + ":" + port
+                                : scenario.operationName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
+                            equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        // no span is created for empty pipelines
+        Arguments.argumentSet("empty", BatchScenario.builder().build()),
+        Arguments.argumentSet(
+            "single",
+            BatchScenario.builder()
+                .addCommand(pipeline -> pipeline.set("batch1", "v1"))
+                .operationName("SET")
+                .queryText("SET batch1 ?")
+                .build()),
+        Arguments.argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .addCommand(pipeline -> pipeline.set("batch1", "v1"))
+                .addCommand(pipeline -> pipeline.set("batch2", "v2"))
+                .operationName("PIPELINE SET")
+                .queryText("SET batch1 ?;SET batch2 ?")
+                .batchSize(2)
+                .build()),
+        Arguments.argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .addCommand(pipeline -> pipeline.set("batch1", "v1"))
+                .addCommand(pipeline -> pipeline.get("batch1"))
+                .operationName("PIPELINE")
+                .queryText("SET batch1 ?;GET batch1")
+                .batchSize(2)
+                .build()));
+  }
+
+  private static class BatchScenario {
+    private final Consumer<Pipeline> pipeline;
+    private final String operationName;
+    private final String queryText;
+    private final Long batchSize;
+
+    private BatchScenario(Builder builder) {
+      this.pipeline = builder.pipeline;
+      this.operationName = builder.operationName;
+      this.queryText = builder.queryText;
+      this.batchSize = builder.batchSize;
+    }
+
+    private static Builder builder() {
+      return new Builder();
+    }
+
+    private static class Builder {
+      private Consumer<Pipeline> pipeline = pipeline -> {};
+      private String operationName;
+      private String queryText;
+      private Long batchSize;
+
+      private Builder addCommand(Consumer<Pipeline> command) {
+        this.pipeline = this.pipeline.andThen(command);
+        return this;
+      }
+
+      private Builder operationName(String operationName) {
+        this.operationName = operationName;
+        return this;
+      }
+
+      private Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      private Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      private BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }

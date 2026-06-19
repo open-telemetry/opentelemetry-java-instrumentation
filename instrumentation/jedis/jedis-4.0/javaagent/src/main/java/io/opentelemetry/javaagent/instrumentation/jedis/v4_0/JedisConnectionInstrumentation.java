@@ -55,11 +55,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceScope {
-    private final Context context;
-    private final Scope scope;
+    @Nullable private final Context context;
+    @Nullable private final Scope scope;
     private final JedisRequest request;
 
-    private AdviceScope(Context context, Scope scope, JedisRequest request) {
+    private AdviceScope(@Nullable Context context, @Nullable Scope scope, JedisRequest request) {
       this.context = context;
       this.scope = scope;
       this.request = request;
@@ -68,6 +68,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Nullable
     public static AdviceScope start(JedisRequest request) {
       Context parentContext = currentContext();
+      // Capture pipeline commands for the batch span instead of starting an individual span.
+      if (JedisPipelineContext.capture(request)) {
+        // Return a scope so method exit can capture the socket after sendCommand connects.
+        return new AdviceScope(null, null, request);
+      }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
@@ -76,7 +81,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     }
 
     public void end(@Nullable Socket socket, @Nullable Throwable throwable) {
+      // sendCommand may connect after start(), so capture the socket after the command is sent.
       request.setSocket(socket);
+      if (scope == null || context == null) {
+        return;
+      }
       scope.close();
       JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }
