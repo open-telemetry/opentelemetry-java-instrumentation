@@ -8,8 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Collection;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -28,7 +30,9 @@ class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentat
     transformer.applyAdviceToMethod(
         named("onMessage").and(takesArgument(0, named("org.springframework.messaging.Message"))),
         getClass().getName() + "$OnMessageAdvice");
-    // TODO: onMessage(Collection<Message<T>> messages) not instrumented
+    transformer.applyAdviceToMethod(
+        named("onMessage").and(takesArgument(0, named("java.util.Collection"))),
+        getClass().getName() + "$OnMessagesAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -45,6 +49,22 @@ class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentat
         @Advice.Thrown @Nullable Throwable throwable) {
       if (scope != null) {
         scope.close(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class OnMessagesAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Scope methodEnter(@Advice.Argument(0) Collection<Message<?>> messages) {
+      return SpringAwsUtil.handleBatch(messages);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void methodExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
       }
     }
   }

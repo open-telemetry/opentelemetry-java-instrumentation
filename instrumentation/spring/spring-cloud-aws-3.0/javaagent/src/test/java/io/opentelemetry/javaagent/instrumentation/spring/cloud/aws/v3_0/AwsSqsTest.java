@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +31,7 @@ import io.awspring.cloud.sqs.operations.SqsTemplate;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.apache.pekko.http.scaladsl.Http;
 import org.assertj.core.api.AbstractStringAssert;
@@ -41,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.messaging.support.MessageBuilder;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @SpringBootTest(
@@ -175,5 +178,42 @@ class AwsSqsTest {
                                     + AwsSqsTestApplication.sqsPort
                                     + "/000000000000/test-queue"),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)))));
+  }
+
+  @Test
+  void sqsBatchListener() throws Exception {
+    String messageContent = "hello";
+    CompletableFuture<List<String>> messageFuture = new CompletableFuture<>();
+    AwsSqsTestApplication.batchMessageHandler =
+        strings -> testing.runWithSpan("callback", () -> messageFuture.complete(strings));
+
+    testing.runWithSpan(
+        "parent",
+        () ->
+            sqsTemplate.sendMany(
+                "test-batch-queue",
+                singletonList(MessageBuilder.withPayload(messageContent).build())));
+
+    List<String> result = messageFuture.get(10, SECONDS);
+    assertThat(result).containsExactly(messageContent);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("Sqs.GetQueueUrl")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("test-batch-queue publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(2)),
+                span ->
+                    span.hasName("Sqs.DeleteMessageBatch")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(2))));
   }
 }
