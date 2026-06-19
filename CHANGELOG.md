@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## Version 2.29.0 (2026-06-18)
+## Version 2.29.0 (2026-06-19)
 
 This release targets the OpenTelemetry SDK 1.63.0.
 
