@@ -305,7 +305,7 @@ class VertxSqlClientTest {
           .toCompletionStage()
           .toCompletableFuture()
           .get(30, SECONDS);
-    } catch (ExecutionException e) {
+    } catch (ExecutionException ignored) {
       // an empty batch fails to execute; the failure is recorded on the client span
     }
 
