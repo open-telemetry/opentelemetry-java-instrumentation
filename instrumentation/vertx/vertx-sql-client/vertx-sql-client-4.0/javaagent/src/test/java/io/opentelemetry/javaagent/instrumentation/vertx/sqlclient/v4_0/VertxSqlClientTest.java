@@ -29,6 +29,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,12 +52,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -280,17 +287,27 @@ class VertxSqlClientTest {
                             equalTo(SERVER_PORT, port))));
   }
 
-  @Test
-  void testBatch() throws Exception {
-    testing
-        .runWithSpan(
-            "parent",
-            () ->
-                pool.preparedQuery("insert into test values ($1, $2) returning *")
-                    .executeBatch(asList(Tuple.of(3, "Three"), Tuple.of(4, "Four"))))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, SECONDS);
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void testBatch(BatchScenario scenario) throws Exception {
+    // recreate a fresh batch_test table for each scenario so that batch row ids can be reused
+    // without worrying about collisions from previous scenarios
+    recreateBatchTestTable();
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    // an empty batch is rejected before sending, so its execution fails; non-empty batches succeed
+    try {
+      testing
+          .runWithSpan(
+              "parent",
+              () -> pool.preparedQuery(scenario.preparedQuery).executeBatch(scenario.tuples))
+          .toCompletionStage()
+          .toCompletableFuture()
+          .get(30, SECONDS);
+    } catch (ExecutionException ignored) {
+      // an empty batch fails to execute; the failure is recorded on the client span
+    }
 
     testing.waitAndAssertTraces(
         trace ->
@@ -299,8 +316,8 @@ class VertxSqlClientTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "BATCH insert test"
-                                : "INSERT tempdb.test")
+                                ? scenario.stableSpanName
+                                : "INSERT tempdb.batch_test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -309,23 +326,64 @@ class VertxSqlClientTest {
                                 emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "insert into test values ($1, $2) returning *"),
+                            equalTo(maybeStable(DB_STATEMENT), scenario.preparedQuery),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "BATCH insert test" : null),
+                                emitStableDatabaseSemconv() ? scenario.querySummary : null),
                             equalTo(
-                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT"),
                             equalTo(
                                 maybeStable(DB_SQL_TABLE),
-                                emitStableDatabaseSemconv() ? null : "test"),
+                                emitStableDatabaseSemconv() ? null : "batch_test"),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv() ? scenario.errorType : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
+  }
+
+  private static void recreateBatchTestTable() throws Exception {
+    pool.query("drop table if exists batch_test")
+        .execute()
+        .compose(r -> pool.query("create table batch_test(id int primary key, num int)").execute())
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        Arguments.argumentSet(
+            "empty",
+            BatchScenario.builder()
+                .preparedQuery("insert into batch_test values ($1, $2) returning *")
+                .tuples(emptyList())
+                .stableSpanName("insert batch_test")
+                .querySummary("insert batch_test")
+                .errorType("io.vertx.core.impl.NoStackTraceThrowable")
+                .build()),
+        Arguments.argumentSet(
+            "single",
+            BatchScenario.builder()
+                .preparedQuery("insert into batch_test values ($1, $2) returning *")
+                .tuples(singletonList(Tuple.of(1, 1)))
+                .stableSpanName("insert batch_test")
+                .querySummary("insert batch_test")
+                .build()),
+        Arguments.argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .preparedQuery("insert into batch_test values ($1, $2) returning *")
+                .tuples(asList(Tuple.of(1, 1), Tuple.of(2, 2)))
+                .stableSpanName("BATCH insert batch_test")
+                .querySummary("BATCH insert batch_test")
+                .batchSize(2)
+                .build()));
   }
 
   @Test
@@ -507,5 +565,70 @@ class VertxSqlClientTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
     testing.waitAndAssertTraces(assertions);
+  }
+
+  private static final class BatchScenario {
+    final String preparedQuery;
+    final List<Tuple> tuples;
+    final String stableSpanName;
+    final String querySummary;
+    final Long batchSize;
+    final String errorType;
+
+    BatchScenario(Builder builder) {
+      this.preparedQuery = builder.preparedQuery;
+      this.tuples = builder.tuples;
+      this.stableSpanName = builder.stableSpanName;
+      this.querySummary = builder.querySummary;
+      this.batchSize = builder.batchSize;
+      this.errorType = builder.errorType;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static final class Builder {
+      private String preparedQuery;
+      private List<Tuple> tuples;
+      private String stableSpanName;
+      private String querySummary;
+      private Long batchSize;
+      private String errorType;
+
+      Builder preparedQuery(String preparedQuery) {
+        this.preparedQuery = preparedQuery;
+        return this;
+      }
+
+      Builder tuples(List<Tuple> tuples) {
+        this.tuples = tuples;
+        return this;
+      }
+
+      Builder stableSpanName(String stableSpanName) {
+        this.stableSpanName = stableSpanName;
+        return this;
+      }
+
+      Builder querySummary(String querySummary) {
+        this.querySummary = querySummary;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder errorType(String errorType) {
+        this.errorType = errorType;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }
