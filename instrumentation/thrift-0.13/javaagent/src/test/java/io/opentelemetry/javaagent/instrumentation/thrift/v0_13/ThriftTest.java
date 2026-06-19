@@ -109,11 +109,8 @@ class ThriftTest extends AbstractThriftTest {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
                     span ->
-                        (hasAsyncServerNetworkAttributes()
-                                ? assertServerSpan(
-                                    span, CustomAsyncHandler.class.getName(), "say", port, null)
-                                : assertServerSpan(
-                                    span, CustomAsyncHandler.class.getName(), "say", null))
+                        assertServerSpan(
+                                span, CustomAsyncHandler.class.getName(), "say", port, null)
                             .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")
@@ -163,11 +160,8 @@ class ThriftTest extends AbstractThriftTest {
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span -> assertClientSpan(span, "withDelay", port).hasParent(trace.getSpan(0)),
                 span ->
-                    (hasAsyncServerNetworkAttributes()
-                            ? assertServerSpan(
-                                span, CustomAsyncHandler.class.getName(), "withDelay", port, null)
-                            : assertServerSpan(
-                                span, CustomAsyncHandler.class.getName(), "withDelay", null))
+                    assertServerSpan(
+                            span, CustomAsyncHandler.class.getName(), "withDelay", port, null)
                         .hasParent(trace.getSpan(1)),
                 span ->
                     span.hasName("callback")
@@ -209,11 +203,8 @@ class ThriftTest extends AbstractThriftTest {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span -> assertClientSpan(span, "oneWay", port).hasParent(trace.getSpan(0)),
                     span ->
-                        (hasAsyncServerNetworkAttributes()
-                                ? assertServerSpan(
-                                    span, CustomAsyncHandler.class.getName(), "oneWay", port, null)
-                                : assertServerSpan(
-                                    span, CustomAsyncHandler.class.getName(), "oneWay", null))
+                        assertServerSpan(
+                                span, CustomAsyncHandler.class.getName(), "oneWay", port, null)
                             .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")
@@ -264,18 +255,12 @@ class ThriftTest extends AbstractThriftTest {
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error()),
                     span ->
-                        (hasAsyncServerNetworkAttributes()
-                                ? assertServerSpan(
-                                    span,
-                                    CustomAsyncHandler.class.getName(),
-                                    "withError",
-                                    port,
-                                    IllegalStateException.class.getName())
-                                : assertServerSpan(
-                                    span,
-                                    CustomAsyncHandler.class.getName(),
-                                    "withError",
-                                    IllegalStateException.class.getName()))
+                        assertServerSpan(
+                                span,
+                                CustomAsyncHandler.class.getName(),
+                                "withError",
+                                port,
+                                IllegalStateException.class.getName())
                             .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")

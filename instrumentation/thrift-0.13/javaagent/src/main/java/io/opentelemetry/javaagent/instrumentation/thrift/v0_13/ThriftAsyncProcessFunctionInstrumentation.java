@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.AsyncMethodCallbackUtil;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerInProtocolDecorator;
@@ -27,11 +29,22 @@ public final class ThriftAsyncProcessFunctionInstrumentation implements TypeInst
   }
 
   @Override
-  public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("getResultHandler"), getClass().getName() + "$GetResultHandlerAdvice");
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.apache.thrift.AsyncProcessFunction");
   }
 
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        named("getResultHandler")
+            .and(
+                takesArgument(
+                    0,
+                    named("org.apache.thrift.server.AbstractNonblockingServer$AsyncFrameBuffer"))),
+        getClass().getName() + "$GetResultHandlerAdvice");
+  }
+
+  @SuppressWarnings("unused")
   public static class GetResultHandlerAdvice {
 
     @Advice.AssignReturned.ToReturned

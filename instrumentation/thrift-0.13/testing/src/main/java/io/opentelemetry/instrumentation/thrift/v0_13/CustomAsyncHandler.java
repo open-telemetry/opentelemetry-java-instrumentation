@@ -29,19 +29,17 @@ import custom.Address;
 import custom.CustomService;
 import custom.User;
 import custom.UserWithAddress;
-import org.apache.thrift.TException;
 import org.apache.thrift.async.AsyncMethodCallback;
 
 public class CustomAsyncHandler implements CustomService.AsyncIface {
 
   @Override
-  public void say(String text, String text2, AsyncMethodCallback<String> resultHandler)
-      throws TException {
+  public void say(String text, String text2, AsyncMethodCallback<String> resultHandler) {
     resultHandler.onComplete("Say " + text + " " + text2);
   }
 
   @Override
-  public void withDelay(int seconds, AsyncMethodCallback<String> resultHandler) throws TException {
+  public void withDelay(int seconds, AsyncMethodCallback<String> resultHandler) {
     try {
       SECONDS.sleep(seconds);
     } catch (InterruptedException e) {
@@ -51,32 +49,30 @@ public class CustomAsyncHandler implements CustomService.AsyncIface {
   }
 
   @Override
-  public void withoutArgs(AsyncMethodCallback<String> resultHandler) throws TException {
+  public void withoutArgs(AsyncMethodCallback<String> resultHandler) {
     resultHandler.onComplete("no args");
   }
 
   @Override
-  public void withError(AsyncMethodCallback<String> resultHandler) throws TException {
+  public void withError(AsyncMethodCallback<String> resultHandler) {
     resultHandler.onError(new IllegalStateException("fail"));
   }
 
   @Override
-  public void withCollision(String input, AsyncMethodCallback<String> resultHandler)
-      throws TException {
+  public void withCollision(String input, AsyncMethodCallback<String> resultHandler) {
     resultHandler.onComplete(input);
   }
 
   @Override
-  public void oneWay(AsyncMethodCallback<Void> resultHandler) throws TException {}
+  public void oneWay(AsyncMethodCallback<Void> resultHandler) {}
 
   @Override
-  public void oneWayWithError(AsyncMethodCallback<Void> resultHandler) throws TException {
+  public void oneWayWithError(AsyncMethodCallback<Void> resultHandler) {
     resultHandler.onError(new IllegalStateException("fail"));
   }
 
   @Override
-  public void save(User user, Address address, AsyncMethodCallback<UserWithAddress> resultHandler)
-      throws TException {
+  public void save(User user, Address address, AsyncMethodCallback<UserWithAddress> resultHandler) {
     resultHandler.onComplete(new UserWithAddress(user, address));
   }
 }

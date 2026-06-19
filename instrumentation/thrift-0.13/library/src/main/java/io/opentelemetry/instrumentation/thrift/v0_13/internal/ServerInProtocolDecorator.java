@@ -40,7 +40,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
 
   public ServerInProtocolDecorator(
       TProtocol protocol,
-      String serviceName,
+      @Nullable String serviceName,
       Instrumenter<ThriftRequest, ThriftResponse> instrumenter) {
     super(protocol);
     this.protocol = protocol;
