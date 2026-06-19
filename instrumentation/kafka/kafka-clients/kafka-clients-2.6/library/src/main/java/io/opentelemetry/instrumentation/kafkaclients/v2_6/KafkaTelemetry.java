@@ -68,7 +68,7 @@ public final class KafkaTelemetry {
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
       boolean producerPropagationEnabled,
-      MetricBridgeFilter metricFilter) { // ADDED parameter
+      MetricBridgeFilter metricFilter) {
     this.openTelemetry = openTelemetry;
     this.producerTelemetry =
         new KafkaProducerTelemetry(
@@ -77,7 +77,7 @@ public final class KafkaTelemetry {
             producerPropagationEnabled);
     this.consumerTelemetry =
         new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
-    this.metricFilter = metricFilter; // ADDED assignment
+    this.metricFilter = metricFilter;
   }
 
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */
