@@ -23,8 +23,6 @@ import javax.annotation.Nullable;
  */
 public final class MetricBridgeFilter {
 
-  public static final String DROP_METRICS_CONFIG_PROPERTY =
-      "otel.instrumentation.metric-bridge.drop-metrics";
   public static final String DEFAULT_DROP_METRICS = "";
 
   private final List<String> dropPrefixes;
