@@ -235,12 +235,8 @@ public abstract class AbstractCassandraTest {
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? scenario.querySummary : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    scenario.operationName),
-                                equalTo(
-                                    maybeStable(DB_CASSANDRA_TABLE),
-                                    scenario.collectionName),
+                                equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), scenario.collectionName),
                                 equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
                                 equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
                                 satisfies(

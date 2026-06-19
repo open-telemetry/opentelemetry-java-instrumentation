@@ -337,12 +337,8 @@ class CassandraClientTest {
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? scenario.querySummary : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                scenario.operationName),
-                            equalTo(
-                                maybeStable(DB_CASSANDRA_TABLE),
-                                scenario.collectionName))));
+                            equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(maybeStable(DB_CASSANDRA_TABLE), scenario.collectionName))));
   }
 
   private static Stream<Arguments> batchScenarios() {
