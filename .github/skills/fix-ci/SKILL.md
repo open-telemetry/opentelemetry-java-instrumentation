@@ -17,13 +17,11 @@ The first source of truth is always the deterministic CI bundle produced by [.gi
 ## Workflow
 
 1. Confirm the worktree is clean. If it is dirty, stop and ask the user how to handle the existing changes.
-2. Download the failing CI logs with the deterministic script:
+2. Download the failing CI logs with the deterministic script, which checks out the PR, discovers failed non-aggregate checks, downloads one representative log for each failed job family into `build/pr-triage/otel-ci-fix-<pr-number>/logs/`, writes `summary.json`, and restores the original branch:
 
    ```bash
    python .github/scripts/pr-triage/fix_ci.py <pr-number> --download-only
    ```
-
-   The script checks out the PR, discovers failed non-aggregate checks, downloads one representative log for each failed job family into `build/pr-triage/otel-ci-fix-<pr-number>/logs/`, writes `summary.json`, and restores the original branch.
 
 3. Read `build/pr-triage/otel-ci-fix-<pr-number>/summary.json` and the referenced log files. Treat them as the source of truth for what failed.
 4. Check out the PR branch again if the script restored you to another branch:
