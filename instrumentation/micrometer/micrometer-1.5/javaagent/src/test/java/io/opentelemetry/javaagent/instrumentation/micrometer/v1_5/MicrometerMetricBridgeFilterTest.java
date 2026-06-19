@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class MetricBridgeFilterTest {
+class MicrometerMetricBridgeFilterTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

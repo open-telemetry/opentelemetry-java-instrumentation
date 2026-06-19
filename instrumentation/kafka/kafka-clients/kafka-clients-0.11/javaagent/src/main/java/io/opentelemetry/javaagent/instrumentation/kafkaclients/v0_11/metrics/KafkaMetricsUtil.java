@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.metrics;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
@@ -53,7 +54,7 @@ public class KafkaMetricsUtil {
         INSTRUMENTATION_NAME);
 
     String dropConfig =
-        ConfigPropertiesUtil.getString("otel.instrumentation.metric-bridge.drop-metrics");
+        ConfigPropertiesUtil.getString(MetricBridgeFilter.DROP_METRICS_CONFIG_PROPERTY);
     if (dropConfig != null) {
       config.put(
           OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_METRIC_DROP_FILTER, dropConfig);

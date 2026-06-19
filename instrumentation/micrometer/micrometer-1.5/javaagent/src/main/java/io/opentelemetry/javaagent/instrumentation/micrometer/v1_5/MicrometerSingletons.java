@@ -23,7 +23,7 @@ public class MicrometerSingletons {
 
   @SuppressWarnings("OtelDeprecatedApiUsage")
   private static String getDropMetricsConfig() {
-    return ConfigPropertiesUtil.getString("otel.instrumentation.metric-bridge.drop-metrics");
+    return ConfigPropertiesUtil.getString(MetricBridgeFilter.DROP_METRICS_CONFIG_PROPERTY);
   }
 
   static {

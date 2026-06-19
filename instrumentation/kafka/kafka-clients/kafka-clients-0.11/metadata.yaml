@@ -26,3 +26,8 @@ configurations:
       only a span link connecting it to the producer trace.
     type: boolean
     default: false
+  - name: otel.instrumentation.metric-bridge.drop-metrics
+    declarative_name: java.common.metric_bridge.drop_metrics
+    description: A comma-separated list of exact metric names or wildcard prefixes to drop from being bridged to OpenTelemetry.
+    type: string
+    default: ''
