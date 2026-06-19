@@ -423,10 +423,22 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
       testProducer.flush();
 
       List<MetricData> metrics = testing().metrics();
-      Set<String> metricNames = metrics.stream().map(MetricData::getName).collect(toSet());
+      AttributeKey<String> clientIdKey = AttributeKey.stringKey("client-id");
 
-      assertThat(metricNames).contains("kafka.producer.byte_rate");
-      assertThat(metricNames).doesNotContain("kafka.producer.byte_total");
+      Set<String> testClientMetrics =
+          metrics.stream()
+              .filter(
+                  metric ->
+                      metric.getData().getPoints().stream()
+                          .anyMatch(
+                              point ->
+                                  "drop-filter-test-client"
+                                      .equals(point.getAttributes().get(clientIdKey))))
+              .map(MetricData::getName)
+              .collect(toSet());
+
+      assertThat(testClientMetrics).contains("kafka.producer.byte_rate");
+      assertThat(testClientMetrics).doesNotContain("kafka.producer.byte_total");
     }
   }
 

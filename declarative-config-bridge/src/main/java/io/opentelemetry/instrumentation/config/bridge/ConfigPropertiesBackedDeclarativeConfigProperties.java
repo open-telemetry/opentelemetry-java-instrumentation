@@ -82,6 +82,9 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     // Map the micrometer-scoped declarative property to the shared metric-bridge property
     SPECIAL_MAPPINGS.put(
         "java.micrometer.drop_metrics", "otel.instrumentation.metric-bridge.drop-metrics");
+    // Map the kafka-scoped declarative property to the shared metric-bridge property
+    SPECIAL_MAPPINGS.put(
+        "java.kafka.drop_metrics", "otel.instrumentation.metric-bridge.drop-metrics");
     // renaming to avoid top level config
     SPECIAL_MAPPINGS.put(
         "java.servlet.javascript_snippet/development", "otel.experimental.javascript-snippet");
