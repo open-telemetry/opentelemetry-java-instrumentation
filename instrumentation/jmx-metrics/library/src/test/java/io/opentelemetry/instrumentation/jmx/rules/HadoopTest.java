@@ -42,8 +42,8 @@ class HadoopTest extends TargetSystemTest {
                 "/hadoop/etc/hadoop/hadoop-env.sh")
             .withCreateContainerCmdModifier(cmd -> cmd.withHostName("test-host"))
             .withStartupTimeout(Duration.ofMinutes(3))
-            .withExposedPorts(50070)
-            .waitingFor(Wait.forListeningPorts(50070));
+            .withExposedPorts(50070, 50090)
+            .waitingFor(Wait.forListeningPorts(50070, 50090));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
