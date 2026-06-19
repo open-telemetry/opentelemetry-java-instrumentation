@@ -597,7 +597,7 @@ public abstract class AbstractCassandraTest {
       return new Builder();
     }
 
-    static final class Builder {
+    static class Builder {
       private Function<CqlSession, BatchStatement> buildBatch;
       private String spanName;
       private String oldSpanName;

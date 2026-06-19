@@ -563,7 +563,7 @@ class CassandraClientTest {
       return new Builder();
     }
 
-    static final class Builder {
+    static class Builder {
       private Function<Session, BatchStatement> buildBatch;
       private String spanName;
       private String oldSpanName;
