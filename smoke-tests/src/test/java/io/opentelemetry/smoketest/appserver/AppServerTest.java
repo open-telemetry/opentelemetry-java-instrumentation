@@ -81,6 +81,9 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
       assumeTrue(isOpenj9, "Reduced mode: TomEE runs openj9 only");
       return;
     }
+    if (this instanceof JettyJpmsSmokeTest) {
+      return;
+    }
     if (this instanceof WebsphereSmokeTest) {
       return;
     }

@@ -463,7 +463,7 @@ jobs:
           :smoke-tests:test
           -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
           ${{ inputs.reduced-smoke-tests && '-PreducedSmokeTests=true' || '' }}
-          ${{ inputs.skip-openj9-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
+          ${{ inputs.skip-openj9-tests && !inputs.reduced-smoke-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
