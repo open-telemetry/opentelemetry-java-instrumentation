@@ -30,9 +30,13 @@ public class KafkaSingletons {
   private static final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
   private static final MetricBridgeFilter metricFilter;
 
+  @SuppressWarnings("OtelDeprecatedApiUsage")
+  private static String getDropMetricsConfig() {
+    return ConfigPropertiesUtil.getString("otel.instrumentation.metric-bridge.drop-metrics");
+  }
+
   static {
-    String dropConfig =
-        ConfigPropertiesUtil.getString("otel.instrumentation.metric-bridge.drop-metrics");
+    String dropConfig = getDropMetricsConfig();
     if (dropConfig == null) {
       dropConfig = MetricBridgeFilter.DEFAULT_DROP_METRICS;
     }

@@ -37,16 +37,19 @@ public final class KafkaTelemetryBuilder {
   private boolean messagingReceiveInstrumentationEnabled = false;
   private MetricBridgeFilter metricFilter = MetricBridgeFilter.create(null);
 
-  /** Sets the {@link MetricBridgeFilter} used to drop bridged metrics. */
-  @CanIgnoreReturnValue
-  @SuppressWarnings("unused")
-  public KafkaTelemetryBuilder setMetricBridgeFilter(MetricBridgeFilter metricFilter) {
-    this.metricFilter = metricFilter;
-    return this;
-  }
-
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = requireNonNull(openTelemetry);
+  }
+
+  /**
+   * Sets the configuration used to drop bridged metrics.
+   *
+   * @param metricFilterConfig A comma-separated list of exact metric names or wildcard prefixes.
+   */
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder setMetricBridgeFilter(String metricFilterConfig) {
+    this.metricFilter = MetricBridgeFilter.create(metricFilterConfig);
+    return this;
   }
 
   @CanIgnoreReturnValue

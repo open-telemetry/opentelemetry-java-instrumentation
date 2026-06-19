@@ -21,18 +21,20 @@ public class MicrometerSingletons {
 
   private static final MeterRegistry meterRegistry;
 
+  @SuppressWarnings("OtelDeprecatedApiUsage")
+  private static String getDropMetricsConfig() {
+    return ConfigPropertiesUtil.getString("otel.instrumentation.metric-bridge.drop-metrics");
+  }
+
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "micrometer");
 
-    @SuppressWarnings("OtelDeprecatedApiUsage")
-    String dropConfig =
-        ConfigPropertiesUtil.getString("otel.instrumentation.metric-bridge.drop-metrics");
+    String dropConfig = getDropMetricsConfig();
 
     if (dropConfig == null) {
       dropConfig = MetricBridgeFilter.DEFAULT_DROP_METRICS;
     }
-    MetricBridgeFilter metricFilter = MetricBridgeFilter.create(dropConfig);
 
     meterRegistry =
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())
@@ -40,7 +42,7 @@ public class MicrometerSingletons {
             .setBaseTimeUnit(TimeUnitParser.parseConfigValue(config.getString("base_time_unit")))
             .setMicrometerHistogramGaugesEnabled(
                 config.get("histogram_gauges").getBoolean("enabled", false))
-            .setMetricBridgeFilter(metricFilter)
+            .setMetricBridgeFilter(dropConfig)
             .build();
   }
 

@@ -85,10 +85,14 @@ public final class OpenTelemetryMeterRegistryBuilder {
     return this;
   }
 
-  /** Sets the {@link MetricBridgeFilter} used to drop bridged metrics. */
+  /**
+   * Sets the configuration used to drop bridged metrics.
+   *
+   * @param metricFilterConfig A comma-separated list of exact metric names or wildcard prefixes.
+   */
   @CanIgnoreReturnValue
-  public OpenTelemetryMeterRegistryBuilder setMetricBridgeFilter(MetricBridgeFilter metricFilter) {
-    this.metricFilter = metricFilter;
+  public OpenTelemetryMeterRegistryBuilder setMetricBridgeFilter(String metricFilterConfig) {
+    this.metricFilter = MetricBridgeFilter.create(metricFilterConfig);
     return this;
   }
 

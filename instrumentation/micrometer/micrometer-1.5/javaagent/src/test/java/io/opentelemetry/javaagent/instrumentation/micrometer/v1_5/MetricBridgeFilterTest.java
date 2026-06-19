@@ -5,16 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import org.junit.jupiter.api.Assertions;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -31,18 +32,16 @@ class MetricBridgeFilterTest {
       Metrics.removeRegistry(registry);
     }
 
-    MetricBridgeFilter testFilter = MetricBridgeFilter.create("jvm.*,process.cpu.usage");
-
     MeterRegistry testRegistry =
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())
-            .setMetricBridgeFilter(testFilter)
+            .setMetricBridgeFilter("jvm.*,process.cpu.usage")
             .build();
 
     Metrics.addRegistry(testRegistry);
   }
 
   @Test
-  void shouldDropConflictingSemanticConventionMetrics() throws InterruptedException {
+  void shouldDropConflictingSemanticConventionMetrics() {
     Counter jvmMemoryUsed = Metrics.counter("jvm.memory.used");
     Counter jvmGcPause = Metrics.counter("jvm.gc.pause");
     Counter processCpuUsage = Metrics.counter("process.cpu.usage");
@@ -53,18 +52,17 @@ class MetricBridgeFilterTest {
     processCpuUsage.increment();
     customBusinessMetric.increment();
 
-    Thread.sleep(500);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.micrometer-1.5",
+        "application.orders.processed",
+        AbstractIterableAssert::isNotEmpty);
 
-    boolean hasCustomBusinessMetric = false;
     boolean hasJvmMemoryUsed = false;
     boolean hasJvmGcPause = false;
     boolean hasProcessCpuUsage = false;
 
     for (MetricData metric : testing.metrics()) {
       switch (metric.getName()) {
-        case "application.orders.processed":
-          hasCustomBusinessMetric = true;
-          break;
         case "jvm.memory.used":
           hasJvmMemoryUsed = true;
           break;
@@ -79,13 +77,16 @@ class MetricBridgeFilterTest {
       }
     }
 
-    Assertions.assertTrue(hasCustomBusinessMetric, "Standard business metrics must be preserved.");
-    Assertions.assertFalse(
-        hasJvmMemoryUsed,
-        "Micrometer jvm.memory.used should be suppressed to prevent semconv conflict.");
-    Assertions.assertFalse(
-        hasJvmGcPause, "Metrics matching the jvm.* wildcard prefix must be dropped.");
-    Assertions.assertFalse(
-        hasProcessCpuUsage, "The explicit process.cpu.usage metric must be dropped.");
+    assertThat(hasJvmMemoryUsed)
+        .as("Micrometer jvm.memory.used should be suppressed to prevent semconv conflict.")
+        .isFalse();
+
+    assertThat(hasJvmGcPause)
+        .as("Metrics matching the jvm.* wildcard prefix must be dropped.")
+        .isFalse();
+
+    assertThat(hasProcessCpuUsage)
+        .as("The explicit process.cpu.usage metric must be dropped.")
+        .isFalse();
   }
 }
