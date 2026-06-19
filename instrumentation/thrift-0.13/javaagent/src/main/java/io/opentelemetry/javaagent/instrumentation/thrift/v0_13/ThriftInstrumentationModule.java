@@ -34,6 +34,8 @@ public class ThriftInstrumentationModule extends InstrumentationModule {
         new ThriftServiceClientInstrumentation(),
         new ThriftAsyncClientInstrumentation(),
         new ThriftTBaseProcessorInstrumentation(),
+        new ThriftAsyncProcessFunctionInstrumentation(),
+        new ThriftTBaseAsyncProcessorInstrumentation(),
         new ThriftFrameBufferInstrumentation());
   }
 }
