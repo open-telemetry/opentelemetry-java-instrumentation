@@ -16,11 +16,13 @@ import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.config.MeterFilter;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.HistogramGauges;
 import io.micrometer.core.instrument.distribution.pause.PauseDetector;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
@@ -58,7 +60,8 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       TimeUnit baseTimeUnit,
       NamingConvention namingConvention,
       DistributionStatisticConfigModifier distributionStatisticConfigModifier,
-      io.opentelemetry.api.metrics.Meter otelMeter) {
+      io.opentelemetry.api.metrics.Meter otelMeter,
+      MetricBridgeFilter metricFilter) {
     super(clock);
     this.baseTimeUnit = baseTimeUnit;
     this.distributionStatisticConfigModifier = distributionStatisticConfigModifier;
@@ -66,6 +69,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
     this.config()
         .namingConvention(namingConvention)
+        .meterFilter(MeterFilter.deny(id -> metricFilter.shouldDrop(id.getName())))
         .onMeterRemoved(OpenTelemetryMeterRegistry::onMeterRemoved);
   }
 

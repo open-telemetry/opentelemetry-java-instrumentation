@@ -13,6 +13,7 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
+import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -40,12 +41,15 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
   public static final String CONFIG_KEY_OPENTELEMETRY_SUPPLIER = "opentelemetry.supplier";
   public static final String CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME =
       "opentelemetry.instrumentation_name";
+  public static final String CONFIG_KEY_OPENTELEMETRY_METRIC_DROP_FILTER =
+      "opentelemetry.metric_drop_filter";
 
   private static final Logger logger =
       Logger.getLogger(OpenTelemetryMetricsReporter.class.getName());
   @Nullable private static volatile Listener listener;
 
   @Nullable private volatile Meter meter;
+  private volatile MetricBridgeFilter metricFilter = MetricBridgeFilter.create(null);
   private final Object lock = new Object();
 
   @GuardedBy("lock")
@@ -82,6 +86,11 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
     Meter currentMeter = meter;
     if (currentMeter == null) {
       // Ignore if meter hasn't been initialized in configure(Map<String, ?)
+      return;
+    }
+
+    if (metricFilter.shouldDrop(metric.metricName().name())) {
+      logger.log(FINEST, "Metric dropped by configuration: {0}", metric.metricName().name());
       return;
     }
 
@@ -165,6 +174,11 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
         getProperty(configs, CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME, String.class);
     String instrumentationVersion =
         EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+
+    Object filterObj = configs.get(CONFIG_KEY_OPENTELEMETRY_METRIC_DROP_FILTER);
+    if (filterObj instanceof MetricBridgeFilter) {
+      this.metricFilter = (MetricBridgeFilter) filterObj;
+    }
 
     MeterBuilder meterBuilder = openTelemetry.meterBuilder(instrumentationName);
     if (instrumentationVersion != null) {

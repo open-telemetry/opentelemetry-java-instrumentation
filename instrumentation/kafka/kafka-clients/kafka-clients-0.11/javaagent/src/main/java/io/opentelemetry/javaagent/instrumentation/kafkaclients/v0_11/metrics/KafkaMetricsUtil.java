@@ -9,6 +9,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
+// ADDED: Import KafkaSingletons to access the filter
+import io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons;
 import java.util.List;
 import java.util.Map;
 import org.apache.kafka.clients.CommonClientConfigs;
@@ -50,6 +52,10 @@ public class KafkaMetricsUtil {
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
         INSTRUMENTATION_NAME);
+
+    config.put(
+        OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_METRIC_DROP_FILTER,
+        KafkaSingletons.metricFilter());
   }
 
   private KafkaMetricsUtil() {}

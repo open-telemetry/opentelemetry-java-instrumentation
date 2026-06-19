@@ -17,6 +17,7 @@ import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
 import java.util.concurrent.TimeUnit;
 
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
@@ -30,6 +31,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
   private TimeUnit baseTimeUnit = SECONDS;
   private boolean prometheusMode = false;
   private boolean histogramGaugesEnabled = false;
+  private MetricBridgeFilter metricFilter = MetricBridgeFilter.create(null);
 
   OpenTelemetryMeterRegistryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -83,6 +85,13 @@ public final class OpenTelemetryMeterRegistryBuilder {
     return this;
   }
 
+  /** Sets the {@link MetricBridgeFilter} used to drop bridged metrics. */
+  @CanIgnoreReturnValue
+  public OpenTelemetryMeterRegistryBuilder setMetricBridgeFilter(MetricBridgeFilter metricFilter) {
+    this.metricFilter = metricFilter;
+    return this;
+  }
+
   /**
    * Returns a new {@link OpenTelemetryMeterRegistry} with the settings of this {@link
    * OpenTelemetryMeterRegistryBuilder}.
@@ -103,6 +112,6 @@ public final class OpenTelemetryMeterRegistryBuilder {
       meterBuilder.setInstrumentationVersion(version);
     }
     return new OpenTelemetryMeterRegistry(
-        clock, baseTimeUnit, namingConvention, modifier, meterBuilder.build());
+        clock, baseTimeUnit, namingConvention, modifier, meterBuilder.build(), metricFilter);
   }
 }

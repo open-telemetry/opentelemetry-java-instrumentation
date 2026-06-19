@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+// ADDED: Import MetricBridgeFilter and ConfigPropertiesUtil
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
@@ -26,8 +29,16 @@ public class KafkaSingletons {
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
   private static final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private static final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
+  private static final MetricBridgeFilter metricFilter;
 
   static {
+    String dropConfig =
+        ConfigPropertiesUtil.getString("otel.instrumentation.metric-bridge.drop-metrics");
+    if (dropConfig == null) {
+      dropConfig = MetricBridgeFilter.DEFAULT_DROP_METRICS;
+    }
+    metricFilter = MetricBridgeFilter.create(dropConfig);
+
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
             .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
@@ -51,6 +62,10 @@ public class KafkaSingletons {
 
   public static Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
+  }
+
+  public static MetricBridgeFilter metricFilter() {
+    return metricFilter;
   }
 
   private KafkaSingletons() {}
