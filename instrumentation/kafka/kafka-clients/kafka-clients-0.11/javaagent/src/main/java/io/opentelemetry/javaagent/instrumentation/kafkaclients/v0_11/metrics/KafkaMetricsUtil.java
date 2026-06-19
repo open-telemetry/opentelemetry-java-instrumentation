@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.metrics;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
@@ -16,7 +17,7 @@ import org.apache.kafka.clients.CommonClientConfigs;
 public class KafkaMetricsUtil {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "OtelDeprecatedApiUsage"})
   public static void enhanceConfig(Map<? super String, Object> config) {
     // skip enhancing configuration when we have already enhanced it
     if (config.get(OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME)
@@ -50,6 +51,13 @@ public class KafkaMetricsUtil {
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
         INSTRUMENTATION_NAME);
+
+    String dropConfig =
+        ConfigPropertiesUtil.getString("otel.instrumentation.metric-bridge.drop-metrics");
+    if (dropConfig != null) {
+      config.put(
+          OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_METRIC_DROP_FILTER, dropConfig);
+    }
   }
 
   private KafkaMetricsUtil() {}

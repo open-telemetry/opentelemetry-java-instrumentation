@@ -15,7 +15,10 @@ import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegist
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import java.util.ArrayList;
+import java.util.List;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -25,19 +28,35 @@ class MetricBridgeFilterTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  private static final List<MeterRegistry> originalRegistries = new ArrayList<>();
+  private static MeterRegistry testRegistry;
+
   @BeforeAll
   static void setUpConfig() {
 
     for (MeterRegistry registry : Metrics.globalRegistry.getRegistries()) {
+      originalRegistries.add(registry);
       Metrics.removeRegistry(registry);
     }
 
-    MeterRegistry testRegistry =
+    testRegistry =
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())
             .setMetricBridgeFilter("jvm.*,process.cpu.usage")
             .build();
 
     Metrics.addRegistry(testRegistry);
+  }
+
+  @AfterAll
+  static void tearDownConfig() {
+    if (testRegistry != null) {
+      Metrics.removeRegistry(testRegistry);
+    }
+
+    for (MeterRegistry registry : originalRegistries) {
+      Metrics.addRegistry(registry);
+    }
+    originalRegistries.clear();
   }
 
   @Test
