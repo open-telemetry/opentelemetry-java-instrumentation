@@ -536,7 +536,7 @@ class CassandraClientTest {
     }
   }
 
-  private static final class BatchScenario {
+  private static class BatchScenario {
     final Function<Session, BatchStatement> buildBatch;
     final String spanName;
     final String oldSpanName;
