@@ -92,7 +92,8 @@ public final class OpenTelemetryMeterRegistryBuilder {
    * @param metricDropFilters A collection of exact metric names or wildcard prefixes.
    */
   @CanIgnoreReturnValue
-  public OpenTelemetryMeterRegistryBuilder setMetricBridgeFilter(Collection<String> metricDropFilters) {
+  public OpenTelemetryMeterRegistryBuilder setMetricBridgeFilter(
+      Collection<String> metricDropFilters) {
     this.metricFilter = MetricBridgeFilter.create(String.join(",", metricDropFilters));
     return this;
   }

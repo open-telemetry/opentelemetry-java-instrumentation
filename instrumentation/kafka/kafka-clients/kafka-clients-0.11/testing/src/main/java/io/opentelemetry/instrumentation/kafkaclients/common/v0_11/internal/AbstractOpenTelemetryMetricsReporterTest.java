@@ -410,13 +410,15 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
         "kafka.producer.byte_total");
 
     try (KafkaProducer<byte[], byte[]> testProducer = new KafkaProducer<>(config)) {
-      testProducer.send(
-          new ProducerRecord<>(
-              TOPICS.get(0),
-              0,
-              System.currentTimeMillis(),
-              "key".getBytes(UTF_8),
-              "value".getBytes(UTF_8))).get();
+      testProducer
+          .send(
+              new ProducerRecord<>(
+                  TOPICS.get(0),
+                  0,
+                  System.currentTimeMillis(),
+                  "key".getBytes(UTF_8),
+                  "value".getBytes(UTF_8)))
+          .get();
 
       testProducer.flush();
 

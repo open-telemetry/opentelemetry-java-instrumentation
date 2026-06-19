@@ -62,7 +62,8 @@ final class KafkaMetricRegistry {
   static String getInstrumentName(MetricName metricName) {
     Optional<String> matchingGroup =
         groups.stream().filter(group -> metricName.group().contains(group)).findFirst();
-    return matchingGroup.map(s -> "kafka." + s + "." + metricName.name().replace("-", "_"))
+    return matchingGroup
+        .map(s -> "kafka." + s + "." + metricName.name().replace("-", "_"))
         .orElse(null);
   }
 

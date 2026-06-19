@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
+import static java.util.Collections.singleton;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -12,7 +14,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import javax.annotation.Nullable;
@@ -37,7 +38,7 @@ public class MicrometerSingletons {
             .setBaseTimeUnit(TimeUnitParser.parseConfigValue(config.getString("base_time_unit")))
             .setMicrometerHistogramGaugesEnabled(
                 config.get("histogram_gauges").getBoolean("enabled", false))
-            .setMetricBridgeFilter(Collections.singleton(dropConfig))
+            .setMetricBridgeFilter(singleton(dropConfig))
             .build();
   }
 
