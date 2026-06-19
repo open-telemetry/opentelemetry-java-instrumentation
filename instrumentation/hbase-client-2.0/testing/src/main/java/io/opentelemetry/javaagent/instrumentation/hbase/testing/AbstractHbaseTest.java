@@ -580,7 +580,7 @@ public abstract class AbstractHbaseTest {
     return null;
   }
 
-  private static final class BatchScenario {
+  private static class BatchScenario {
     final List<Row> actions;
     final String operationName;
 
@@ -593,7 +593,7 @@ public abstract class AbstractHbaseTest {
       return new Builder();
     }
 
-    static final class Builder {
+    static class Builder {
       private final List<Row> actions = new ArrayList<>();
       private String operationName;
 
