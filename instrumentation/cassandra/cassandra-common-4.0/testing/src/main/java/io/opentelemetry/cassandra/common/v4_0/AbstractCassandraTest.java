@@ -570,7 +570,7 @@ public abstract class AbstractCassandraTest {
     return sessionBuilder;
   }
 
-  private static final class BatchScenario {
+  private static class BatchScenario {
     final Function<CqlSession, BatchStatement> buildBatch;
     final String spanName;
     final String oldSpanName;
