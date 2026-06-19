@@ -18,6 +18,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.lettuce.v5_1.internal.LettuceDbAttributesGetter;
+import io.opentelemetry.instrumentation.lettuce.v5_1.internal.LettuceRequest;
+import io.opentelemetry.instrumentation.lettuce.v5_1.internal.LettuceResponse;
 import javax.annotation.Nullable;
 
 /** A builder of {@link LettuceTelemetry}. */

@@ -38,4 +38,9 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
     // context is not propagated into callbacks
     return false;
   }
+
+  @Override
+  protected DeferredFlushSpanMode deferredFlushSpanMode() {
+    return DeferredFlushSpanMode.PER_COMMAND;
+  }
 }

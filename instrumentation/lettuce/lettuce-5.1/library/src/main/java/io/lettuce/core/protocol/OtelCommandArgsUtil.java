@@ -5,43 +5,18 @@
 
 package io.lettuce.core.protocol;
 
-import io.lettuce.core.codec.StringCodec;
-import io.lettuce.core.protocol.CommandArgs.KeyArgument;
-import io.lettuce.core.protocol.CommandArgs.SingularArgument;
-import io.lettuce.core.protocol.CommandArgs.ValueArgument;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
-import java.util.ArrayList;
 import java.util.List;
 
-// Helper class for accessing package private fields in CommandArgs and its inner classes.
-// https://github.com/lettuce-io/lettuce-core/blob/main/src/main/java/io/lettuce/core/protocol/CommandArgs.java
 public final class OtelCommandArgsUtil {
 
   /**
-   * Extract argument {@link List} from {@link CommandArgs} so that we wouldn't need to parse them
-   * from command {@link String} with {@link LettuceArgSplitter#splitArgs}.
+   * Extract argument {@link List} from {@link CommandArgs} using public API only. Helper classes
+   * can be loaded by a different class loader than Lettuce, so package-private field access is not
+   * safe even from the same package name.
    */
   public static List<String> getCommandArgs(CommandArgs<?, ?> commandArgs) {
-    List<String> result = new ArrayList<>();
-
-    for (SingularArgument argument : commandArgs.singularArguments) {
-      String value = getArgValue(StringCodec.UTF8, argument);
-      result.add(value);
-    }
-    return result;
-  }
-
-  @SuppressWarnings("unchecked") // type is checked before casting
-  private static String getArgValue(StringCodec stringCodec, SingularArgument argument) {
-    if (argument instanceof KeyArgument) {
-      KeyArgument<Object, ?> keyArg = (KeyArgument<Object, ?>) argument;
-      return stringCodec.decodeKey(keyArg.codec.encodeKey(keyArg.key));
-    }
-    if (argument instanceof ValueArgument) {
-      ValueArgument<?, Object> valueArg = (ValueArgument<?, Object>) argument;
-      return stringCodec.decodeValue(valueArg.codec.encodeValue(valueArg.val));
-    }
-    return argument.toString();
+    return LettuceArgSplitter.splitArgs(commandArgs.toCommandString());
   }
 
   private OtelCommandArgsUtil() {}

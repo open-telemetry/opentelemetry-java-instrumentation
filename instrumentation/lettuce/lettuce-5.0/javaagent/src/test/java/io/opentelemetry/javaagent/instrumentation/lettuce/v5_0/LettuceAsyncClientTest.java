@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServ
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -54,10 +55,14 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class LettuceAsyncClientTest extends AbstractLettuceClientTest {
@@ -463,7 +468,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     await().untilAsserted(() -> assertThat(cancelSuccess).isTrue());
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span ->
                     span.hasName("parent")
                         .hasKind(SpanKind.INTERNAL)
@@ -482,6 +487,129 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  // Lettuce auto-flush batching is traced as one aggregate span from flush through completion.
+  @ParameterizedTest
+  @MethodSource("deferredFlushScenarios")
+  void deferredFlushCommand(BatchScenario scenario) throws Exception {
+    asyncCommands.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
+
+    List<RedisFuture<?>> futures = new ArrayList<>();
+    for (BatchCommand command : scenario.commands) {
+      futures.add(command.run(asyncCommands));
+    }
+    asyncCommands.flushCommands();
+    for (RedisFuture<?> future : futures) {
+      future.get(10, SECONDS);
+    }
+
+    if (scenario.isEmpty()) {
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(scenario.operationName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
+                            equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null))));
+  }
+
+  private static Stream<Arguments> deferredFlushScenarios() {
+    return Stream.of(
+        Arguments.argumentSet("empty", BatchScenario.builder().build()),
+        Arguments.argumentSet(
+            "single",
+            BatchScenario.builder()
+                .addCommand(commands -> commands.set("batch1", "v1"))
+                .operationName("SET")
+                .queryText("SET batch1 ?")
+                .build()),
+        Arguments.argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .addCommand(commands -> commands.set("batch1", "v1"))
+                .addCommand(commands -> commands.set("batch2", "v2"))
+                .operationName("PIPELINE SET")
+                .queryText("SET batch1 ?;SET batch2 ?")
+                .batchSize(2)
+                .build()),
+        Arguments.argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .addCommand(commands -> commands.set("batch1", "v1"))
+                .addCommand(commands -> commands.get("batch1"))
+                .operationName("PIPELINE")
+                .queryText("SET batch1 ?;GET batch1")
+                .batchSize(2)
+                .build()));
+  }
+
+  private static class BatchScenario {
+    private final List<BatchCommand> commands;
+    private final String operationName;
+    private final String queryText;
+    private final Long batchSize;
+
+    private BatchScenario(Builder builder) {
+      this.commands = builder.commands;
+      this.operationName = builder.operationName;
+      this.queryText = builder.queryText;
+      this.batchSize = builder.batchSize;
+    }
+
+    private static Builder builder() {
+      return new Builder();
+    }
+
+    private boolean isEmpty() {
+      return commands.isEmpty();
+    }
+
+    private static class Builder {
+      private final List<BatchCommand> commands = new ArrayList<>();
+      private String operationName;
+      private String queryText;
+      private Long batchSize;
+
+      private Builder addCommand(BatchCommand command) {
+        commands.add(command);
+        return this;
+      }
+
+      private Builder operationName(String operationName) {
+        this.operationName = operationName;
+        return this;
+      }
+
+      private Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      private Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      private BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
+  }
+
+  private interface BatchCommand {
+    RedisFuture<?> run(RedisAsyncCommands<String, String> commands);
   }
 
   @Test

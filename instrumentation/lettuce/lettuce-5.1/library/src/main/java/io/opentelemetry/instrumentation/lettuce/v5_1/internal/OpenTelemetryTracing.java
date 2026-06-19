@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.lettuce.v5_1;
+package io.opentelemetry.instrumentation.lettuce.v5_1.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
@@ -28,11 +29,16 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
-final class OpenTelemetryTracing implements Tracing {
-
+/**
+ * OpenTelemetry {@link Tracing} implementation for Lettuce.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
+public final class OpenTelemetryTracing implements Tracing {
   private final TracerProvider tracerProvider;
 
-  OpenTelemetryTracing(
+  public OpenTelemetryTracing(
       Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
       RedisCommandSanitizer sanitizer,
       boolean encodingEventsEnabled) {
@@ -154,7 +160,7 @@ final class OpenTelemetryTracing implements Tracing {
   // defined. We go ahead and buffer all data until we know we have a span. This implementation is
   // particularly safe, synchronizing all accesses. Relying on implementation details would allow
   // reducing synchronization but the impact should be minimal.
-  private static class OpenTelemetrySpan extends Tracer.Span {
+  static class OpenTelemetrySpan extends Tracer.Span {
 
     private final Context parentContext;
     private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
@@ -163,18 +169,29 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Nullable private List<Object> events;
     @Nullable private Throwable error;
+    @Nullable private String errorMessage;
     @Nullable private LettuceResponse response;
     @Nullable private Context context;
+    @Nullable private LettuceBatchSupport.BatchScope batchScope;
+    private boolean aggregate;
 
     OpenTelemetrySpan(
         Context parentContext,
         Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
         RedisCommandSanitizer sanitizer,
         boolean encodingEventsEnabled) {
+      this(parentContext, instrumenter, new LettuceRequest(sanitizer), encodingEventsEnabled);
+    }
+
+    private OpenTelemetrySpan(
+        Context parentContext,
+        Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
+        LettuceRequest request,
+        boolean encodingEventsEnabled) {
       this.parentContext = parentContext;
       this.instrumenter = instrumenter;
       this.encodingEventsEnabled = encodingEventsEnabled;
-      this.request = new LettuceRequest(sanitizer);
+      this.request = request;
     }
 
     @Override
@@ -204,21 +221,18 @@ final class OpenTelemetryTracing implements Tracing {
         request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));
       }
 
+      if (captureBatch()) {
+        finishOnComplete(command);
+        return this;
+      }
+
       start();
 
       if (context == null) {
         return this;
       }
 
-      if (command instanceof CompleteableCommand) {
-        CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
-        completeableCommand.onComplete(
-            (o, throwable) -> {
-              CommandOutput<?, ?, ?> output = command.getOutput();
-              String errorMsg = output != null ? output.getError() : null;
-              finishWithResponse(new LettuceResponse(errorMsg, throwable));
-            });
-      }
+      finishOnComplete(command);
 
       return this;
     }
@@ -227,6 +241,10 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public synchronized Tracer.Span start() {
+      if (captureBatch()) {
+        return this;
+      }
+
       if (instrumenter.shouldStart(parentContext, request)) {
         context = instrumenter.start(parentContext, request);
 
@@ -241,6 +259,50 @@ final class OpenTelemetryTracing implements Tracing {
       }
 
       return this;
+    }
+
+    private void finishOnComplete(RedisCommand<?, ?, ?> command) {
+      if (command instanceof CompleteableCommand) {
+        CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
+        completeableCommand.onComplete(
+            (o, throwable) -> {
+              CommandOutput<?, ?, ?> output = command.getOutput();
+              String errorMsg = output != null ? output.getError() : null;
+              finishWithResponse(new LettuceResponse(errorMsg, throwable));
+            });
+      }
+    }
+
+    private boolean captureBatch() {
+      LettuceBatchSupport.BatchScope batchScope =
+          aggregate ? null : LettuceBatchSupport.captureCurrent(this);
+      if (batchScope == null) {
+        return false;
+      }
+      this.batchScope = batchScope;
+      return true;
+    }
+
+    OpenTelemetrySpan createAggregateSpan(List<RedisCommand<?, ?, ?>> commands) {
+      LettuceRequest aggregateRequest = request.copyAsPipeline(commands);
+      OpenTelemetrySpan span =
+          new OpenTelemetrySpan(
+              parentContext, instrumenter, aggregateRequest, encodingEventsEnabled);
+      span.aggregate = true;
+      span.start();
+      return span;
+    }
+
+    @Nullable
+    synchronized String getBatchErrorMessage() {
+      return response == null || response.getErrorMessage() == null
+          ? errorMessage
+          : response.getErrorMessage();
+    }
+
+    @Nullable
+    synchronized Throwable getError() {
+      return error;
     }
 
     @Override
@@ -281,6 +343,13 @@ final class OpenTelemetryTracing implements Tracing {
         }
         return this;
       }
+      if (key.equals("error")) {
+        errorMessage = value;
+        if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv() && context != null) {
+          Span.fromContext(context).setAttribute(key, value);
+        }
+        return this;
+      }
       // Under old semconv forward unknown tags as raw span attributes for backward compatibility;
       // under stable semconv these are either captured structurally (e.g. error.type) or not needed
       if (emitOldDatabaseSemconv() && context != null) {
@@ -296,6 +365,10 @@ final class OpenTelemetryTracing implements Tracing {
       return this;
     }
 
+    synchronized void finishWithResponse(@Nullable String errorMessage, @Nullable Throwable error) {
+      finishWithResponse(new LettuceResponse(errorMessage, error));
+    }
+
     private synchronized void finishWithResponse(LettuceResponse resp) {
       this.response = resp;
       if (this.error == null && resp.getThrowable() != null) {
@@ -306,6 +379,12 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Override
     public synchronized void finish() {
+      LettuceBatchSupport.BatchScope batchScope = this.batchScope;
+      if (batchScope != null) {
+        this.batchScope = null;
+        batchScope.finishOne(this);
+        return;
+      }
       if (context != null) {
         instrumenter.end(context, request, response, error);
         // Null out context to prevent double-ending if both the onComplete callback and Lettuce's
