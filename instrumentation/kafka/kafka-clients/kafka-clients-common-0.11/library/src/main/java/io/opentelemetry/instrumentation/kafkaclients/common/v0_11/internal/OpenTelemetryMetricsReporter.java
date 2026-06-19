@@ -89,8 +89,13 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
       return;
     }
 
-    if (metricFilter.shouldDrop(metric.metricName().name())) {
-      logger.log(FINEST, "Metric dropped by configuration: {0}", metric.metricName().name());
+    String otelInstrumentName = KafkaMetricRegistry.getInstrumentName(metric.metricName());
+    if (otelInstrumentName == null) {
+      return;
+    }
+
+    if (metricFilter.shouldDrop(otelInstrumentName)) {
+      logger.log(FINEST, "Metric dropped by configuration: {0}", otelInstrumentName);
       return;
     }
 

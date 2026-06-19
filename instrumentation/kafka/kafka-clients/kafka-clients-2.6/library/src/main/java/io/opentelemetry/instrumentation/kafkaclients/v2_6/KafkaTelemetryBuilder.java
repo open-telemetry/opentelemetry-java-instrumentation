@@ -43,11 +43,11 @@ public final class KafkaTelemetryBuilder {
   /**
    * Sets the configuration used to drop bridged metrics.
    *
-   * @param metricFilterConfig A comma-separated list of exact metric names or wildcard prefixes.
+   * @param metricDropFilters A collection of exact metric names or wildcard prefixes.
    */
   @CanIgnoreReturnValue
-  public KafkaTelemetryBuilder setMetricBridgeFilter(String metricFilterConfig) {
-    this.metricDropFilterConfig = metricFilterConfig;
+  public KafkaTelemetryBuilder setMetricBridgeFilter(Collection<String> metricDropFilters) {
+    this.metricDropFilterConfig = String.join(",", metricDropFilters);
     return this;
   }
 

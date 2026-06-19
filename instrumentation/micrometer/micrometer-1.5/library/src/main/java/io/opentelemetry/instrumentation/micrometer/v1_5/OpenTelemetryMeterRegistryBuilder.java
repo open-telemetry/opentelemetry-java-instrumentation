@@ -18,6 +18,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
@@ -88,11 +89,11 @@ public final class OpenTelemetryMeterRegistryBuilder {
   /**
    * Sets the configuration used to drop bridged metrics.
    *
-   * @param metricFilterConfig A comma-separated list of exact metric names or wildcard prefixes.
+   * @param metricDropFilters A collection of exact metric names or wildcard prefixes.
    */
   @CanIgnoreReturnValue
-  public OpenTelemetryMeterRegistryBuilder setMetricBridgeFilter(String metricFilterConfig) {
-    this.metricFilter = MetricBridgeFilter.create(metricFilterConfig);
+  public OpenTelemetryMeterRegistryBuilder setMetricBridgeFilter(Collection<String> metricDropFilters) {
+    this.metricFilter = MetricBridgeFilter.create(String.join(",", metricDropFilters));
     return this;
   }
 

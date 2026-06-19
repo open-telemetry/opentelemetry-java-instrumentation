@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.AfterAll;
@@ -41,7 +42,7 @@ class MicrometerMetricBridgeFilterTest {
 
     testRegistry =
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())
-            .setMetricBridgeFilter("jvm.*,process.cpu.usage")
+            .setMetricBridgeFilter(Collections.singleton("jvm.*,process.cpu.usage"))
             .build();
 
     Metrics.addRegistry(testRegistry);

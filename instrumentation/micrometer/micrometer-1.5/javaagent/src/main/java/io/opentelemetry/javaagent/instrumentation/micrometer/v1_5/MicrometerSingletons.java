@@ -9,10 +9,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.MetricBridgeFilter;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import javax.annotation.Nullable;
@@ -21,16 +21,11 @@ public class MicrometerSingletons {
 
   private static final MeterRegistry meterRegistry;
 
-  @SuppressWarnings("OtelDeprecatedApiUsage")
-  private static String getDropMetricsConfig() {
-    return ConfigPropertiesUtil.getString(MetricBridgeFilter.DROP_METRICS_CONFIG_PROPERTY);
-  }
-
   static {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "micrometer");
 
-    String dropConfig = getDropMetricsConfig();
+    String dropConfig = config.getString("drop_metrics");
 
     if (dropConfig == null) {
       dropConfig = MetricBridgeFilter.DEFAULT_DROP_METRICS;
@@ -42,7 +37,7 @@ public class MicrometerSingletons {
             .setBaseTimeUnit(TimeUnitParser.parseConfigValue(config.getString("base_time_unit")))
             .setMicrometerHistogramGaugesEnabled(
                 config.get("histogram_gauges").getBoolean("enabled", false))
-            .setMetricBridgeFilter(dropConfig)
+            .setMetricBridgeFilter(Collections.singleton(dropConfig))
             .build();
   }
 

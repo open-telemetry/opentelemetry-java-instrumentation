@@ -59,6 +59,14 @@ final class KafkaMetricRegistry {
   }
 
   @Nullable
+  static String getInstrumentName(MetricName metricName) {
+    Optional<String> matchingGroup =
+        groups.stream().filter(group -> metricName.group().contains(group)).findFirst();
+    return matchingGroup.map(s -> "kafka." + s + "." + metricName.name().replace("-", "_"))
+        .orElse(null);
+  }
+
+  @Nullable
   static RegisteredObservable getRegisteredObservable(Meter meter, KafkaMetric kafkaMetric) {
     // If metric is not a Measurable, we can't map it to an instrument
     Class<? extends Measurable> measurable = getMeasurable(kafkaMetric);
@@ -66,14 +74,10 @@ final class KafkaMetricRegistry {
       return null;
     }
     MetricName metricName = kafkaMetric.metricName();
-    Optional<String> matchingGroup =
-        groups.stream().filter(group -> metricName.group().contains(group)).findFirst();
-    // Only map metrics that have a matching group
-    if (!matchingGroup.isPresent()) {
+    String instrumentName = getInstrumentName(metricName);
+    if (instrumentName == null) {
       return null;
     }
-    String instrumentName =
-        "kafka." + matchingGroup.get() + "." + metricName.name().replace("-", "_");
     String instrumentDescription =
         descriptionCache.computeIfAbsent(instrumentName, s -> metricName.description());
     String instrumentType =
