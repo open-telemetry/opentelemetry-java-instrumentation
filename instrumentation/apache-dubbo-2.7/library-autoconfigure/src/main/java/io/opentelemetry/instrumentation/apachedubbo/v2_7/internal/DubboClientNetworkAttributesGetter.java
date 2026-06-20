@@ -37,7 +37,8 @@ public final class DubboClientNetworkAttributesGetter
     if (request.registryAddress() != null) {
       return null;
     }
-    return request.url().getPort();
+    int port = request.url().getPort();
+    return port > 0 ? port : null;
   }
 
   @Override
