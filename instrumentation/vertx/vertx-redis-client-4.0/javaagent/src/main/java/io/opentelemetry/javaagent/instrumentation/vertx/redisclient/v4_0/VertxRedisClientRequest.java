@@ -110,13 +110,16 @@ class VertxRedisClientRequest {
     if (requests.isEmpty()) {
       return "PIPELINE";
     }
-    String operationName = VertxRedisClientSingletons.getCommandName(requests.get(0).command());
+    // Fall back to a generic span name when a command name can't be resolved.
+    String operationName = commandName(requests.get(0));
+    if (operationName == null) {
+      return "PIPELINE";
+    }
     if (requests.size() == 1) {
       return operationName;
     }
     for (int i = 1; i < requests.size(); i++) {
-      if (!operationName.equals(
-          VertxRedisClientSingletons.getCommandName(requests.get(i).command()))) {
+      if (!operationName.equals(commandName(requests.get(i)))) {
         return "PIPELINE";
       }
     }
@@ -126,9 +129,12 @@ class VertxRedisClientRequest {
   private static String batchQueryText(List<Request> requests) {
     StringBuilder builder = new StringBuilder();
     for (Request request : requests) {
-      String commandName =
-          VertxRedisClientSingletons.getCommandName(request.command()).toUpperCase(Locale.ROOT);
-      String queryText = sanitize(commandName, RequestUtil.getArgs(request));
+      String commandName = commandName(request);
+      if (commandName == null) {
+        continue;
+      }
+      String queryText =
+          sanitize(commandName.toUpperCase(Locale.ROOT), RequestUtil.getArgs(request));
       int newLength = builder.length();
       if (builder.length() > 0) {
         newLength++;
@@ -143,6 +149,11 @@ class VertxRedisClientRequest {
       builder.append(queryText);
     }
     return builder.toString();
+  }
+
+  @Nullable
+  private static String commandName(@Nullable Request request) {
+    return request != null ? VertxRedisClientSingletons.getCommandName(request.command()) : null;
   }
 
   private static String sanitize(String command, List<byte[]> args) {

@@ -140,12 +140,6 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
         if (requests == null) {
           return null;
         }
-        for (Request request : requests) {
-          if (request == null
-              || VertxRedisClientSingletons.getCommandName(request.command()) == null) {
-            return null;
-          }
-        }
 
         RedisURI redisUri = VertxRedisClientSingletons.getRedisUri(connection);
         if (redisUri == null) {
