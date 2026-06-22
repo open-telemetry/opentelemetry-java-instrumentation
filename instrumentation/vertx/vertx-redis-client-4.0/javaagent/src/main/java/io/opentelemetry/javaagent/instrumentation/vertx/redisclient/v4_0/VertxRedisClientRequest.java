@@ -128,9 +128,9 @@ class VertxRedisClientRequest {
     if (requests.isEmpty()) {
       return "PIPELINE";
     }
-    // Fall back to a generic span name when a command name can't be resolved.
     String operationName = commandName(requests.get(0));
     if (operationName == null) {
+      // Fall back to a generic span name when a command name can't be resolved.
       return "PIPELINE";
     }
     if (requests.size() == 1) {
