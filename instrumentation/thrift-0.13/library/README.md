@@ -41,8 +41,8 @@ TProcessor configureServer(OpenTelemetry openTelemetry, TProcessor processor, St
 void configureServer(OpenTelemetry openTelemetry, TNonblockingServer.Args tnbArgs) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
   // TBinaryProtocol.Factory is the default
-  tnbArgs.inputProtocolFactory(telemetry.wrapServerInProtocolFactory(new TBinaryProtocol.Factory()));
-  tnbArgs.outputProtocolFactory(telemetry.wrapServerOutProtocolFactory(new TBinaryProtocol.Factory()));
+  tnbArgs.inputProtocolFactory(thriftTelemetry.wrapServerInProtocolFactory(new TBinaryProtocol.Factory()));
+  tnbArgs.outputProtocolFactory(thriftTelemetry.wrapServerOutProtocolFactory(new TBinaryProtocol.Factory()));
 }
 
 // For client-side, decorate protocol and client with a tracing wrappers.

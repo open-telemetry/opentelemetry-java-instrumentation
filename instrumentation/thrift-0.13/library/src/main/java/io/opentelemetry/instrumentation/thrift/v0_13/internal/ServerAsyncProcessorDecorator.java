@@ -48,13 +48,14 @@ public final class ServerAsyncProcessorDecorator implements TAsyncProcessor, TPr
       processor.process(fb);
     } catch (Throwable t) {
       error = t;
+      throw t;
     } finally {
       serverCallContext.end();
-    }
-    if (serverInProtocolDecorator.isOneway()
-        || serverOutProtocolDecorator.hasException()
-        || error != null) {
-      serverInProtocolDecorator.endSpan(error, serverOutProtocolDecorator.hasException());
+      if (serverInProtocolDecorator.isOneway()
+          || serverOutProtocolDecorator.hasException()
+          || error != null) {
+        serverInProtocolDecorator.endSpan(error, serverOutProtocolDecorator.hasException());
+      }
     }
   }
 

@@ -7,7 +7,7 @@ package org.apache.thrift;
 
 import java.util.Map;
 
-// Helper for accessing a non-public members.
+// Helper for accessing non-public members.
 public final class AsyncProcessorUtil {
 
   @SuppressWarnings("unchecked") // casting generic map to a more specific generic map
