@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 public final class LettuceBatchContext {
@@ -68,6 +69,7 @@ public final class LettuceBatchContext {
     private final Context context;
     private final LettuceBatchRequest request;
     private final AtomicInteger remaining;
+    private final AtomicReference<Throwable> error = new AtomicReference<>();
 
     private BatchScope(Context context, LettuceBatchRequest request, int remaining) {
       this.context = context;
@@ -109,8 +111,11 @@ public final class LettuceBatchContext {
         }
         throwable = null;
       }
+      if (throwable != null) {
+        error.compareAndSet(null, throwable);
+      }
       if (remaining.getAndDecrement() == 1) {
-        batchInstrumenter().end(context, request, null, throwable);
+        batchInstrumenter().end(context, request, null, error.get());
       }
     }
   }

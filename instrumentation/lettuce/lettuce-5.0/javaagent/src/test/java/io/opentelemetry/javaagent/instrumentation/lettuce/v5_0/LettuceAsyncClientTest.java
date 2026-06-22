@@ -502,7 +502,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     }
     asyncCommands.flushCommands();
     for (RedisFuture<?> future : futures) {
-      future.get(10, SECONDS);
+      Throwable thrown = catchThrowable(() -> future.get(10, SECONDS));
+      if (scenario.errorType == null) {
+        assertThat(thrown).isNull();
+      }
     }
 
     if (scenario.isEmpty()) {
@@ -522,7 +525,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? scenario.batchSize : null))));
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv() ? scenario.errorType : null))));
   }
 
   private static Stream<Arguments> deferredFlushScenarios() {
@@ -552,6 +558,16 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .operationName("PIPELINE")
                 .queryText("SET batch1 ?;GET batch1")
                 .batchSize(2)
+                .build()),
+        Arguments.argumentSet(
+            "earlierFailure",
+            BatchScenario.builder()
+                .addCommand(commands -> commands.configSet("not-a-real-config", "1"))
+                .addCommand(commands -> commands.set("batch-after-error", "v1"))
+                .operationName("PIPELINE")
+                .queryText("CONFIG SET not-a-real-config ?;SET batch-after-error ?")
+                .batchSize(2)
+                .errorType("io.lettuce.core.RedisCommandExecutionException")
                 .build()));
   }
 
@@ -560,12 +576,14 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     private final String operationName;
     private final String queryText;
     private final Long batchSize;
+    private final String errorType;
 
     private BatchScenario(Builder builder) {
       this.commands = builder.commands;
       this.operationName = builder.operationName;
       this.queryText = builder.queryText;
       this.batchSize = builder.batchSize;
+      this.errorType = builder.errorType;
     }
 
     private static Builder builder() {
@@ -581,6 +599,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
       private String operationName;
       private String queryText;
       private Long batchSize;
+      private String errorType;
 
       private Builder addCommand(BatchCommand command) {
         commands.add(command);
@@ -599,6 +618,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
       private Builder batchSize(long batchSize) {
         this.batchSize = batchSize;
+        return this;
+      }
+
+      private Builder errorType(String errorType) {
+        this.errorType = errorType;
         return this;
       }
 

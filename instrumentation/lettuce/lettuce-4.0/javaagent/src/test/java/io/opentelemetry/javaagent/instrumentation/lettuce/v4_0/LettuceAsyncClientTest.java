@@ -494,7 +494,10 @@ class LettuceAsyncClientTest {
     }
     asyncCommands.flushCommands();
     for (RedisFuture<?> future : futures) {
-      future.get(10, SECONDS);
+      Throwable thrown = catchThrowable(() -> future.get(10, SECONDS));
+      if (scenario.errorType == null) {
+        assertThat(thrown).isNull();
+      }
     }
 
     if (scenario.isEmpty()) {
@@ -513,7 +516,10 @@ class LettuceAsyncClientTest {
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? scenario.batchSize : null))));
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv() ? scenario.errorType : null))));
   }
 
   private static Stream<Arguments> deferredFlushScenarios() {
@@ -540,6 +546,15 @@ class LettuceAsyncClientTest {
                 .addCommand(commands -> commands.get("batch1"))
                 .operationName("PIPELINE")
                 .batchSize(2)
+                .build()),
+        Arguments.argumentSet(
+            "earlierFailure",
+            BatchScenario.builder()
+                .addCommand(commands -> commands.configSet("not-a-real-config", "1"))
+                .addCommand(commands -> commands.set("batch-after-error", "v1"))
+                .operationName("PIPELINE")
+                .batchSize(2)
+                .errorType("com.lambdaworks.redis.RedisCommandExecutionException")
                 .build()));
   }
 
@@ -547,11 +562,13 @@ class LettuceAsyncClientTest {
     private final List<BatchCommand> commands;
     private final String operationName;
     private final Long batchSize;
+    private final String errorType;
 
-    private BatchScenario(List<BatchCommand> commands, String operationName, Long batchSize) {
-      this.commands = commands;
-      this.operationName = operationName;
-      this.batchSize = batchSize;
+    private BatchScenario(Builder builder) {
+      this.commands = builder.commands;
+      this.operationName = builder.operationName;
+      this.batchSize = builder.batchSize;
+      this.errorType = builder.errorType;
     }
 
     private static Builder builder() {
@@ -566,6 +583,7 @@ class LettuceAsyncClientTest {
       private final List<BatchCommand> commands = new ArrayList<>();
       private String operationName;
       private Long batchSize;
+      private String errorType;
 
       private Builder addCommand(BatchCommand command) {
         commands.add(command);
@@ -582,8 +600,13 @@ class LettuceAsyncClientTest {
         return this;
       }
 
+      private Builder errorType(String errorType) {
+        this.errorType = errorType;
+        return this;
+      }
+
       private BatchScenario build() {
-        return new BatchScenario(commands, operationName, batchSize);
+        return new BatchScenario(this);
       }
     }
   }
