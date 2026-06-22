@@ -61,8 +61,6 @@ class VertxRedisClientTest {
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private static final String LONG_BATCH_KEY = String.join("", nCopies(1020, "x"));
-
   private static final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
   private static String host;
@@ -238,6 +236,7 @@ class VertxRedisClientTest {
   private static Stream<Arguments> batchScenarios() {
     // No empty scenario: Vert.x Redis never completes client.batch(emptyList()),
     // and times out before asserting instrumentation.
+    String longBatchKey = String.join("", nCopies(1020, "x"));
     return Stream.of(
         Arguments.argumentSet(
             "single",
@@ -268,11 +267,11 @@ class VertxRedisClientTest {
             "large",
             BatchScenario.builder()
                 .requests(
-                    Stream.generate(() -> Request.cmd(Command.GET).arg(LONG_BATCH_KEY))
+                    Stream.generate(() -> Request.cmd(Command.GET).arg(longBatchKey))
                         .limit(33)
                         .collect(toList()))
                 .operationName("PIPELINE GET")
-                .queryText(String.join(";", nCopies(31, "GET " + LONG_BATCH_KEY)))
+                .queryText(String.join(";", nCopies(31, "GET " + longBatchKey)))
                 .batchSize(33)
                 .build()));
   }
