@@ -1,0 +1,6 @@
+description: This instrumentation enables HTTP client spans with network phase timing attributes and HTTP client metrics for OkHttp 3.12+.
+display_name: OkHttp 3.12
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - HTTP_CLIENT_METRICS
+library_link: https://square.github.io/okhttp/
