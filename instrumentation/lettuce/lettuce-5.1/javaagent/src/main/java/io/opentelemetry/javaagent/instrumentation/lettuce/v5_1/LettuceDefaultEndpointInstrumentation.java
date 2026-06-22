@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.lettuce.core.RedisChannelWriter;
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.instrumentation.lettuce.v5_1.internal.LettuceBatchSupport;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;

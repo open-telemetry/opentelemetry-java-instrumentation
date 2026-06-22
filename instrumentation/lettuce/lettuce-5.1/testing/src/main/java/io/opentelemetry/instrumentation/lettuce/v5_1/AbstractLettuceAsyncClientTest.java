@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -404,7 +405,10 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     }
     statefulConnection.flushCommands();
     for (RedisFuture<?> future : futures) {
-      future.get(10, SECONDS);
+      Throwable thrown = catchThrowable(() -> future.get(10, SECONDS));
+      if (thrown != null) {
+        assertThat(thrown.getCause().getClass().getName()).isEqualTo(scenario.errorType);
+      }
     }
 
     if (scenario.isEmpty()) {
@@ -432,8 +436,11 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                       equalTo(maybeStable(DB_OPERATION), scenario.operationName),
                                       equalTo(
                                           DB_OPERATION_BATCH_SIZE,
+                                          emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                                      equalTo(
+                                          ERROR_TYPE,
                                           emitStableDatabaseSemconv()
-                                              ? scenario.batchSize
+                                              ? scenario.errorType
                                               : null)))));
       return;
     }
@@ -442,6 +449,14 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     // starts each command span as the command is written, so auto-flush batches cannot be
     // represented as a single aggregate span there. This is not the ideal shape, but documents the
     // current library behavior.
+    //
+    // The error scenario exists to exercise the javaagent BATCH error aggregation. In library mode
+    // the failing command's span shape (raw "error" tag vs structural error.type, plus exception
+    // events) is version- and semconv-dependent and is already covered by dedicated library error
+    // tests, so skip the per-command error assertions here.
+    if (scenario.errorType != null) {
+      return;
+    }
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (OldExpectedCommand command : scenario.oldExpectedCommands) {
       assertions.add(
@@ -498,6 +513,16 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                 .batchSize(2)
                 .addOldExpectedCommand("SET", "SET batch1 ?")
                 .addOldExpectedCommand("GET", "GET batch1")
+                .build()),
+        Arguments.argumentSet(
+            "earlierFailure",
+            BatchScenario.builder()
+                .addCommand(commands -> commands.configSet("not-a-real-config", "1"))
+                .addCommand(commands -> commands.set("batch-after-error", "v1"))
+                .operationName("PIPELINE")
+                .queryText("CONFIG SET not-a-real-config ?;SET batch-after-error ?")
+                .batchSize(2)
+                .errorType("io.lettuce.core.RedisCommandExecutionException")
                 .build()));
   }
 
@@ -506,6 +531,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     private final String operationName;
     private final String queryText;
     private final Long batchSize;
+    private final String errorType;
     private final List<OldExpectedCommand> oldExpectedCommands;
 
     private BatchScenario(
@@ -513,11 +539,13 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
         String operationName,
         String queryText,
         Long batchSize,
+        String errorType,
         List<OldExpectedCommand> oldExpectedCommands) {
       this.commands = commands;
       this.operationName = operationName;
       this.queryText = queryText;
       this.batchSize = batchSize;
+      this.errorType = errorType;
       this.oldExpectedCommands = oldExpectedCommands;
     }
 
@@ -534,6 +562,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
       private String operationName;
       private String queryText;
       private Long batchSize;
+      private String errorType;
       private final List<OldExpectedCommand> oldExpectedCommands = new ArrayList<>();
 
       private Builder addCommand(BatchCommand command) {
@@ -556,6 +585,11 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
         return this;
       }
 
+      private Builder errorType(String errorType) {
+        this.errorType = errorType;
+        return this;
+      }
+
       private Builder addOldExpectedCommand(String operationName, String queryText) {
         oldExpectedCommands.add(new OldExpectedCommand(operationName, queryText));
         return this;
@@ -563,7 +597,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
       private BatchScenario build() {
         return new BatchScenario(
-            commands, operationName, queryText, batchSize, oldExpectedCommands);
+            commands, operationName, queryText, batchSize, errorType, oldExpectedCommands);
       }
     }
   }

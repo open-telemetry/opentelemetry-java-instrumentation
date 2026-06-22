@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentelemetry.instrumentation.lettuce.v5_1.internal.LettuceBatchSupport;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;

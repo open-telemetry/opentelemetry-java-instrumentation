@@ -3,42 +3,61 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.lettuce.v5_1.internal;
+package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.RedisChannelWriter;
 import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.RedisCommand;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.lettuce.v5_1.internal.LettuceBatching;
+import io.opentelemetry.instrumentation.lettuce.v5_1.internal.LettuceBatching.BatchSpan;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 
 /**
- * Javaagent bridge for aggregating commands written while Lettuce auto-flush is disabled.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
+ * Agent-side aggregation of commands written while Lettuce auto-flush is disabled. Per-connection
+ * and per-command state is stored in {@link VirtualField}s, and the aggregate span lifecycle is
+ * driven through the {@link LettuceBatching} seam in the library module.
  */
-public final class LettuceBatchSupport {
-  private static final BatchStates<RedisChannelWriter> writerBatchStates = new BatchStates<>();
-  private static final Map<RedisCommand<?, ?, ?>, BatchScope> activeBatchCommands =
-      Collections.synchronizedMap(new WeakHashMap<>());
+public class LettuceBatchSupport implements LettuceBatching.BatchHook {
+
+  // Per-connection collection of commands written while auto-flush is disabled. Lettuce documents
+  // manual flushing as reliable only for single-threaded use or with external synchronization, so
+  // this state follows the same assumption.
+  private static final VirtualField<RedisChannelWriter, BatchState> writerBatchState =
+      VirtualField.find(RedisChannelWriter.class, BatchState.class);
+  // Links each command in a flushed batch back to its aggregate scope. Stored directly on the
+  // command via a virtual field, so the command hot path needs no shared map or lock.
+  private static final VirtualField<RedisCommand<?, ?, ?>, BatchScope> commandBatchScope =
+      VirtualField.find(RedisCommand.class, BatchScope.class);
   private static final ThreadLocal<BatchScope> currentBatchScope = new ThreadLocal<>();
 
+  static {
+    LettuceBatching.setHook(new LettuceBatchSupport());
+  }
+
+  private LettuceBatchSupport() {}
+
   public static void setAutoFlushCommands(RedisChannelWriter writer, boolean autoFlush) {
-    writerBatchStates.setAutoFlushCommands(writer, autoFlush);
+    writerBatchState.set(writer, autoFlush ? null : new BatchState());
   }
 
   public static void capture(RedisChannelWriter writer, RedisCommand<?, ?, ?> command) {
-    writerBatchStates.capture(writer, command);
+    BatchState batchState = writerBatchState.get(writer);
+    if (batchState != null) {
+      batchState.capture(command);
+    }
   }
 
   @Nullable
   public static BatchScope startBatch(RedisChannelWriter writer) {
-    return writerBatchStates.startBatch(writer);
+    BatchState batchState = writerBatchState.get(writer);
+    if (batchState == null) {
+      return null;
+    }
+    return batchState.start();
   }
 
   public static void finishBatch(BatchScope batch, @Nullable Throwable throwable) {
@@ -49,9 +68,9 @@ public final class LettuceBatchSupport {
   }
 
   public static void startCommand(RedisCommand<?, ?, ?> command) {
-    BatchScope batchScope = activeBatchCommands.get(command);
+    BatchScope batchScope = commandBatchScope.get(command);
     if (batchScope == null) {
-      batchScope = activeBatchCommands.get(CommandWrapper.unwrap(command));
+      batchScope = commandBatchScope.get(CommandWrapper.unwrap(command));
     }
     if (batchScope != null) {
       currentBatchScope.set(batchScope);
@@ -62,8 +81,9 @@ public final class LettuceBatchSupport {
     currentBatchScope.remove();
   }
 
+  @Override
   @Nullable
-  static BatchScope captureCurrent(OpenTelemetryTracing.OpenTelemetrySpan span) {
+  public BatchScope captureCurrent(BatchSpan span) {
     BatchScope batchScope = currentBatchScope.get();
     if (batchScope == null) {
       return null;
@@ -72,35 +92,7 @@ public final class LettuceBatchSupport {
     return batchScope;
   }
 
-  private static final class BatchStates<K> {
-    private final Map<K, BatchState> batchStates = Collections.synchronizedMap(new WeakHashMap<>());
-
-    private void setAutoFlushCommands(K key, boolean autoFlush) {
-      if (autoFlush) {
-        batchStates.remove(key);
-      } else {
-        batchStates.put(key, new BatchState());
-      }
-    }
-
-    private void capture(K key, RedisCommand<?, ?, ?> command) {
-      BatchState batchState = batchStates.get(key);
-      if (batchState != null) {
-        batchState.capture(command);
-      }
-    }
-
-    @Nullable
-    private BatchScope startBatch(K key) {
-      BatchState batchState = batchStates.get(key);
-      if (batchState == null) {
-        return null;
-      }
-      return batchState.start();
-    }
-  }
-
-  private static final class BatchState {
+  static class BatchState {
     private final List<RedisCommand<?, ?, ?>> commands = new ArrayList<>();
 
     private synchronized void capture(RedisCommand<?, ?, ?> command) {
@@ -119,16 +111,10 @@ public final class LettuceBatchSupport {
     }
   }
 
-  /**
-   * Active Lettuce batch span scope.
-   *
-   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
-   * at any time.
-   */
-  public static final class BatchScope {
+  public static class BatchScope implements LettuceBatching.BatchScope {
     private final List<RedisCommand<?, ?, ?>> commands;
     private final AtomicInteger remaining;
-    @Nullable private OpenTelemetryTracing.OpenTelemetrySpan aggregateSpan;
+    @Nullable private BatchSpan aggregateSpan;
     @Nullable private Throwable error;
     @Nullable private String errorMessage;
 
@@ -136,17 +122,18 @@ public final class LettuceBatchSupport {
       this.commands = commands;
       this.remaining = new AtomicInteger(commands.size());
       for (RedisCommand<?, ?, ?> command : commands) {
-        activeBatchCommands.put(command, this);
+        commandBatchScope.set(command, this);
       }
     }
 
-    private synchronized void capture(OpenTelemetryTracing.OpenTelemetrySpan span) {
+    private synchronized void capture(BatchSpan span) {
       if (aggregateSpan == null) {
         aggregateSpan = span.createAggregateSpan(commands);
       }
     }
 
-    synchronized void finishOne(OpenTelemetryTracing.OpenTelemetrySpan span) {
+    @Override
+    public synchronized void finishOne(BatchSpan span) {
       if (span.getBatchErrorMessage() != null && errorMessage == null) {
         errorMessage = span.getBatchErrorMessage();
       }
@@ -160,13 +147,13 @@ public final class LettuceBatchSupport {
     }
 
     private synchronized void finish(@Nullable Throwable throwable) {
-      OpenTelemetryTracing.OpenTelemetrySpan span = aggregateSpan;
+      BatchSpan span = aggregateSpan;
       if (span == null) {
         return;
       }
       aggregateSpan = null;
       for (RedisCommand<?, ?, ?> command : commands) {
-        activeBatchCommands.remove(command);
+        commandBatchScope.set(command, null);
       }
       if (throwable != null) {
         error = throwable;
@@ -174,6 +161,4 @@ public final class LettuceBatchSupport {
       span.finishWithResponse(errorMessage, error);
     }
   }
-
-  private LettuceBatchSupport() {}
 }

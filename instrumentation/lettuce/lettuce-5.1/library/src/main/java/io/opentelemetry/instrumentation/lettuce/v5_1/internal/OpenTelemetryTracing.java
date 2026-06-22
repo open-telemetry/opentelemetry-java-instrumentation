@@ -160,7 +160,7 @@ public final class OpenTelemetryTracing implements Tracing {
   // defined. We go ahead and buffer all data until we know we have a span. This implementation is
   // particularly safe, synchronizing all accesses. Relying on implementation details would allow
   // reducing synchronization but the impact should be minimal.
-  static class OpenTelemetrySpan extends Tracer.Span {
+  static class OpenTelemetrySpan extends Tracer.Span implements LettuceBatching.BatchSpan {
 
     private final Context parentContext;
     private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
@@ -172,7 +172,7 @@ public final class OpenTelemetryTracing implements Tracing {
     @Nullable private String errorMessage;
     @Nullable private LettuceResponse response;
     @Nullable private Context context;
-    @Nullable private LettuceBatchSupport.BatchScope batchScope;
+    @Nullable private LettuceBatching.BatchScope batchScope;
     private boolean aggregate;
 
     OpenTelemetrySpan(
@@ -274,8 +274,8 @@ public final class OpenTelemetryTracing implements Tracing {
     }
 
     private boolean captureBatch() {
-      LettuceBatchSupport.BatchScope batchScope =
-          aggregate ? null : LettuceBatchSupport.captureCurrent(this);
+      LettuceBatching.BatchScope batchScope =
+          aggregate ? null : LettuceBatching.captureCurrent(this);
       if (batchScope == null) {
         return false;
       }
@@ -283,7 +283,8 @@ public final class OpenTelemetryTracing implements Tracing {
       return true;
     }
 
-    OpenTelemetrySpan createAggregateSpan(List<RedisCommand<?, ?, ?>> commands) {
+    @Override
+    public OpenTelemetrySpan createAggregateSpan(List<RedisCommand<?, ?, ?>> commands) {
       LettuceRequest aggregateRequest = request.copyAsPipeline(commands);
       OpenTelemetrySpan span =
           new OpenTelemetrySpan(
@@ -293,15 +294,17 @@ public final class OpenTelemetryTracing implements Tracing {
       return span;
     }
 
+    @Override
     @Nullable
-    synchronized String getBatchErrorMessage() {
+    public synchronized String getBatchErrorMessage() {
       return response == null || response.getErrorMessage() == null
           ? errorMessage
           : response.getErrorMessage();
     }
 
+    @Override
     @Nullable
-    synchronized Throwable getError() {
+    public synchronized Throwable getError() {
       return error;
     }
 
@@ -365,7 +368,9 @@ public final class OpenTelemetryTracing implements Tracing {
       return this;
     }
 
-    synchronized void finishWithResponse(@Nullable String errorMessage, @Nullable Throwable error) {
+    @Override
+    public synchronized void finishWithResponse(
+        @Nullable String errorMessage, @Nullable Throwable error) {
       finishWithResponse(new LettuceResponse(errorMessage, error));
     }
 
@@ -379,7 +384,7 @@ public final class OpenTelemetryTracing implements Tracing {
 
     @Override
     public synchronized void finish() {
-      LettuceBatchSupport.BatchScope batchScope = this.batchScope;
+      LettuceBatching.BatchScope batchScope = this.batchScope;
       if (batchScope != null) {
         this.batchScope = null;
         batchScope.finishOne(this);
