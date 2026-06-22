@@ -48,8 +48,8 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This PipelineBase pipeline) {
-      // The nested Connection.sendCommand advice uses this thread-local pipeline to attach
-      // captured requests, which sync() consumes to construct the batch span.
+      // Attaches a thread-local pipeline that the nested Connection.sendCommand advice uses to
+      // collect captured requests; sync() then consumes them to build the batch span.
       JedisPipelineContext.enter(pipeline);
     }
 
