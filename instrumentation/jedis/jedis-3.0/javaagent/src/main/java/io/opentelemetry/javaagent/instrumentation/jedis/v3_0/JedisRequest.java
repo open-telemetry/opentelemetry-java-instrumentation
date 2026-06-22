@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.emptyList;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -28,15 +27,15 @@ public abstract class JedisRequest {
 
   public static JedisRequest create(
       Connection connection, ProtocolCommand command, List<byte[]> args) {
-    return new AutoValue_JedisRequest(connection, command, args, null, null, null);
+    String operationName = operationName(command);
+    return new AutoValue_JedisRequest(
+        connection, operationName, sanitizer.sanitize(operationName, args), null);
   }
 
   public static JedisRequest createPipeline(List<JedisRequest> requests) {
     JedisRequest first = requests.get(0);
     return new AutoValue_JedisRequest(
         first.getConnection(),
-        null,
-        emptyList(),
         pipelineOperationName(requests),
         pipelineQueryText(requests),
         requests.size() != 1 ? (long) requests.size() : null);
@@ -44,40 +43,20 @@ public abstract class JedisRequest {
 
   public abstract Connection getConnection();
 
-  @Nullable
-  public abstract ProtocolCommand getCommand();
+  public abstract String getOperationName();
 
-  public abstract List<byte[]> getArgs();
-
-  @Nullable
-  abstract String getOperationNameOverride();
-
-  @Nullable
-  abstract String getQueryTextOverride();
+  public abstract String getQueryText();
 
   @Nullable
   public abstract Long getBatchSize();
 
-  public String getOperationName() {
-    String operationName = getOperationNameOverride();
-    if (operationName != null) {
-      return operationName;
-    }
-    ProtocolCommand command = getCommand();
+  private static String operationName(ProtocolCommand command) {
     if (command instanceof Protocol.Command) {
       return ((Protocol.Command) command).name();
     }
     // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
     // us if that changes
     return new String(command.getRaw(), UTF_8);
-  }
-
-  public String getQueryText() {
-    String queryText = getQueryTextOverride();
-    if (queryText != null) {
-      return queryText;
-    }
-    return sanitizer.sanitize(getOperationName(), getArgs());
   }
 
   private static String pipelineOperationName(List<JedisRequest> requests) {
