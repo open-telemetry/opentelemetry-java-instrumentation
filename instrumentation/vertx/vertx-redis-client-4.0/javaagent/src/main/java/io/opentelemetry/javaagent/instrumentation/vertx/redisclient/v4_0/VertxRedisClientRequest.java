@@ -24,24 +24,32 @@ class VertxRedisClientRequest {
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "vertx_redis_client"));
 
-  private final String operationName;
-  private final String queryText;
+  @Nullable private final String operationName;
+  @Nullable private final String queryText;
   @Nullable private final Long operationBatchSize;
-  private final RedisURI redisUri;
+  @Nullable private final RedisURI redisUri;
   private final NetSocket netSocket;
 
   VertxRedisClientRequest(
-      String command, List<byte[]> args, RedisURI redisUri, NetSocket netSocket) {
-    this(command, sanitize(command.toUpperCase(Locale.ROOT), args), null, redisUri, netSocket);
+      @Nullable String command,
+      List<byte[]> args,
+      @Nullable RedisURI redisUri,
+      NetSocket netSocket) {
+    this(
+        command,
+        command == null ? null : sanitize(command.toUpperCase(Locale.ROOT), args),
+        null,
+        redisUri,
+        netSocket);
   }
 
   private VertxRedisClientRequest(
-      String operationName,
-      String queryText,
+      @Nullable String operationName,
+      @Nullable String queryText,
       @Nullable Long operationBatchSize,
-      RedisURI redisUri,
+      @Nullable RedisURI redisUri,
       NetSocket netSocket) {
-    this.operationName = operationName.toUpperCase(Locale.ROOT);
+    this.operationName = operationName == null ? null : operationName.toUpperCase(Locale.ROOT);
     this.queryText = queryText;
     this.operationBatchSize = operationBatchSize;
     this.redisUri = redisUri;
@@ -49,7 +57,7 @@ class VertxRedisClientRequest {
   }
 
   static VertxRedisClientRequest createBatch(
-      List<Request> requests, RedisURI redisUri, NetSocket netSocket) {
+      List<Request> requests, @Nullable RedisURI redisUri, NetSocket netSocket) {
     return new VertxRedisClientRequest(
         batchOperationName(requests),
         batchQueryText(requests),
@@ -58,10 +66,12 @@ class VertxRedisClientRequest {
         netSocket);
   }
 
+  @Nullable
   String getQueryText() {
     return queryText;
   }
 
+  @Nullable
   String getOperationName() {
     return operationName;
   }
@@ -71,12 +81,16 @@ class VertxRedisClientRequest {
     return operationBatchSize;
   }
 
+  @Nullable
   String getUser() {
-    return redisUri.user();
+    return redisUri == null ? null : redisUri.user();
   }
 
   @Nullable
   Long getDatabaseIndex() {
+    if (redisUri == null) {
+      return null;
+    }
     Integer select = redisUri.select();
     return select != null ? select.longValue() : null;
   }
@@ -86,12 +100,16 @@ class VertxRedisClientRequest {
     return null;
   }
 
+  @Nullable
   String getHost() {
-    return redisUri.socketAddress().host();
+    return redisUri == null ? null : redisUri.socketAddress().host();
   }
 
   @Nullable
   Integer getPort() {
+    if (redisUri == null) {
+      return null;
+    }
     int port = redisUri.socketAddress().port();
     return port != -1 ? port : null;
   }

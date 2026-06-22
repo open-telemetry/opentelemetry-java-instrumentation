@@ -44,6 +44,7 @@ class VertxRedisClientAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getDbQueryText(VertxRedisClientRequest request) {
     return request.getQueryText();
   }

@@ -63,9 +63,6 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
 
         String commandName = VertxRedisClientSingletons.getCommandName(request.command());
         RedisURI redisUri = VertxRedisClientSingletons.getRedisUri(connection);
-        if (commandName == null || redisUri == null) {
-          return null;
-        }
 
         VertxRedisClientRequest otelRequest =
             new VertxRedisClientRequest(
@@ -142,9 +139,6 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
         }
 
         RedisURI redisUri = VertxRedisClientSingletons.getRedisUri(connection);
-        if (redisUri == null) {
-          return null;
-        }
 
         VertxRedisClientRequest otelRequest =
             VertxRedisClientRequest.createBatch(requests, redisUri, netSocket);
