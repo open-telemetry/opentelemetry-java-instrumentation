@@ -94,12 +94,41 @@ class OkHttp3Test extends AbstractOkHttp3Test {
         });
   }
 
-  // build a call factory that never reuses a pooled connection so that the dns/connect timing
-  // phases are always recorded
-  private Call.Factory freshConnectionCallFactory() {
-    OkHttpClient.Builder clientBuilder =
-        new OkHttpClient.Builder().connectionPool(new ConnectionPool(0, 1, NANOSECONDS));
-    return createCallFactory(clientBuilder);
+  // a call factory with network timing capture enabled and a connection pool that never reuses a
+  // pooled connection, so that the dns/connect timing phases are always recorded
+  private static Call.Factory timingCallFactory() {
+    OkHttpClient client =
+        new OkHttpClient.Builder()
+            .protocols(singletonList(Protocol.HTTP_1_1))
+            .connectionPool(new ConnectionPool(0, 1, NANOSECONDS))
+            .build();
+    return OkHttpTelemetry.builder(testing.getOpenTelemetry())
+        .setCaptureNetworkTimings(true)
+        .build()
+        .createCallFactory(client);
+  }
+
+  @Test
+  void timingAttributesNotRecordedByDefault() throws Exception {
+    URI uri = resolveAddress("/success");
+    Request request = new Request.Builder().url(uri.toString()).build();
+
+    try (Response response = client.newCall(request).execute();
+        ResponseBody body = response.body()) {
+      assertThat(response.code()).isEqualTo(200);
+      body.string();
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap())
+                                    .doesNotContainKey(CALL_START)),
+                span -> span.hasKind(SpanKind.SERVER)));
   }
 
   @Test
@@ -111,7 +140,7 @@ class OkHttp3Test extends AbstractOkHttp3Test {
             .post(RequestBody.create(MediaType.parse("text/plain"), "hello"))
             .build();
 
-    try (Response response = freshConnectionCallFactory().newCall(request).execute();
+    try (Response response = timingCallFactory().newCall(request).execute();
         ResponseBody body = response.body()) {
       assertThat(response.code()).isEqualTo(200);
       body.string();
@@ -129,7 +158,7 @@ class OkHttp3Test extends AbstractOkHttp3Test {
             .post(RequestBody.create(MediaType.parse("text/plain"), "hello"))
             .build();
 
-    freshConnectionCallFactory()
+    timingCallFactory()
         .newCall(request)
         .enqueue(
             new Callback() {

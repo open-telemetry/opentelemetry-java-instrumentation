@@ -19,13 +19,15 @@ import okhttp3.Response;
 /**
  * Entrypoint for instrumenting OkHttp clients.
  *
- * <p>The client span lifecycle is driven by an okhttp {@link okhttp3.EventListener}, which allows
- * all network phase timings — including the response body read, which completes after the response
- * headers are received — to be recorded as attributes on the client span.
+ * <p>The client span lifecycle is driven by an okhttp {@link okhttp3.EventListener}. When network
+ * timing capture is enabled (see {@link OkHttpTelemetryBuilder#setCaptureNetworkTimings(boolean)}),
+ * the per-phase timings — including the response body read, which completes after the response
+ * headers are received — are recorded as attributes on the client span.
  */
 public final class OkHttpTelemetry {
   private final Instrumenter<Call, Response> instrumenter;
   private final ContextPropagators propagators;
+  private final boolean captureNetworkTimings;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static OkHttpTelemetry create(OpenTelemetry openTelemetry) {
@@ -37,9 +39,13 @@ public final class OkHttpTelemetry {
     return new OkHttpTelemetryBuilder(openTelemetry);
   }
 
-  OkHttpTelemetry(Instrumenter<Call, Response> instrumenter, ContextPropagators propagators) {
+  OkHttpTelemetry(
+      Instrumenter<Call, Response> instrumenter,
+      ContextPropagators propagators,
+      boolean captureNetworkTimings) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
+    this.captureNetworkTimings = captureNetworkTimings;
   }
 
   /**
@@ -63,6 +69,6 @@ public final class OkHttpTelemetry {
     builder.eventListenerFactory(
         new TracingEventListener.Factory(instrumenter, baseClient.eventListenerFactory()));
     OkHttpClient tracingClient = builder.build();
-    return new TracingCallFactory(tracingClient);
+    return new TracingCallFactory(tracingClient, captureNetworkTimings);
   }
 }

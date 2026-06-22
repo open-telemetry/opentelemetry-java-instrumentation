@@ -28,6 +28,7 @@ public final class OkHttpTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<Call, Response> builder;
   private final OpenTelemetry openTelemetry;
+  private boolean captureNetworkTimings = false;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = OkHttpClientInstrumenterBuilderFactory.create(openTelemetry);
@@ -93,8 +94,26 @@ public final class OkHttpTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Configures whether per-phase network timing attributes (DNS, connect, TLS, request/response
+   * headers and body, …) are recorded on the client span as relative-offset (nanoseconds from the
+   * call start) values.
+   *
+   * <p>Disabled by default. When disabled, the client span ends as soon as the response headers are
+   * available; when enabled, it ends once the call completes (after the response body is read) so
+   * that the body-phase timings can be captured.
+   *
+   * @param captureNetworkTimings {@code true} to record network timing attributes.
+   */
+  @CanIgnoreReturnValue
+  public OkHttpTelemetryBuilder setCaptureNetworkTimings(boolean captureNetworkTimings) {
+    this.captureNetworkTimings = captureNetworkTimings;
+    return this;
+  }
+
   /** Returns a new instance with the configured settings. */
   public OkHttpTelemetry build() {
-    return new OkHttpTelemetry(builder.build(), openTelemetry.getPropagators());
+    return new OkHttpTelemetry(
+        builder.build(), openTelemetry.getPropagators(), captureNetworkTimings);
   }
 }

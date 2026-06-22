@@ -24,12 +24,13 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 /**
- * An okhttp {@link EventListener} that drives the lifecycle of the client span: the span is started
- * on {@link #callStart(Call)} and ended on {@link #callEnd(Call)} / {@link #callFailed(Call,
- * IOException)}. Each network phase callback records the elapsed time since the call started as a
- * relative-offset (nanoseconds) attribute on the client span, so that all phases — including the
- * response body read, which completes after the response headers are received — are captured on the
- * span.
+ * An okhttp {@link EventListener} that drives the lifecycle of the client span. The span is started
+ * on {@link #callStart(Call)}. When network timing capture is enabled, each network phase callback
+ * records the elapsed time since the call started as a relative-offset (nanoseconds) attribute on
+ * the span, and the span is ended on {@link #callEnd(Call)} / {@link #callFailed(Call,
+ * IOException)} so that all phases — including the response body read, which completes after the
+ * response headers are received — are captured. When timing capture is disabled, the span is ended
+ * as soon as the application interceptor chain completes (see {@link OkHttpClientCallState}).
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -80,7 +81,7 @@ public final class TracingEventListener extends EventListener {
 
   private void record(AttributeKey<Long> key) {
     OkHttpClientCallState state = this.state;
-    if (state == null) {
+    if (state == null || !state.captureTimings()) {
       return;
     }
     Context context = state.context();
@@ -101,7 +102,7 @@ public final class TracingEventListener extends EventListener {
     }
     state.startSpan(instrumenter, call);
     Context context = state.context();
-    if (context != null) {
+    if (context != null && state.captureTimings()) {
       Span.fromContext(context).setAttribute(CALL_START, 0L);
     }
   }

@@ -10,8 +10,6 @@ instrumentationVersionClass {
 }
 
 dependencies {
-  compileOnly(project(":muzzle"))
-
   // okhttp 3.11.0 introduced the granular EventListener network-phase callbacks that this
   // instrumentation relies on; 3.12.0 adds Call.timeout(), which lets the call wrapper avoid a
   // reflection-based shim.

@@ -29,6 +29,7 @@ import okhttp3.Response;
 public final class OkHttpClientCallState {
 
   private final Context parentContext;
+  private final boolean captureTimings;
 
   @Nullable private Instrumenter<Call, Response> instrumenter;
   @Nullable private Context context;
@@ -41,13 +42,18 @@ public final class OkHttpClientCallState {
   private boolean applicationEnded;
   private boolean spanEnded;
 
-  public OkHttpClientCallState(Context parentContext) {
+  public OkHttpClientCallState(Context parentContext, boolean captureTimings) {
     this.parentContext = parentContext;
+    this.captureTimings = captureTimings;
   }
 
   @Nullable
   public static OkHttpClientCallState get(Call call) {
     return call.request().tag(OkHttpClientCallState.class);
+  }
+
+  boolean captureTimings() {
+    return captureTimings;
   }
 
   void startSpan(Instrumenter<Call, Response> instrumenter, Call call) {
@@ -94,11 +100,14 @@ public final class OkHttpClientCallState {
   }
 
   private void endIfReady(Call call) {
-    if (context == null
-        || instrumenter == null
-        || spanEnded
-        || !networkEnded
-        || !applicationEnded) {
+    if (context == null || instrumenter == null || spanEnded || !applicationEnded) {
+      return;
+    }
+    // When capturing network timings, wait for callEnd/callFailed so the response-body phase is
+    // recorded. Otherwise end as soon as the application interceptor chain completes, so the span
+    // is always exported even if the caller never reads/closes the response body (in which case
+    // okhttp never fires callEnd).
+    if (captureTimings && !networkEnded) {
       return;
     }
     spanEnded = true;

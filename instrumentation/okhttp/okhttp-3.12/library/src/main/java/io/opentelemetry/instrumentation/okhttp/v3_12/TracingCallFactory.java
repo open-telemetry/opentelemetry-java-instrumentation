@@ -19,9 +19,11 @@ import okio.Timeout;
 class TracingCallFactory implements Call.Factory {
 
   private final OkHttpClient okHttpClient;
+  private final boolean captureTimings;
 
-  TracingCallFactory(OkHttpClient okHttpClient) {
+  TracingCallFactory(OkHttpClient okHttpClient, boolean captureTimings) {
     this.okHttpClient = okHttpClient;
+    this.captureTimings = captureTimings;
   }
 
   @Override
@@ -30,18 +32,22 @@ class TracingCallFactory implements Call.Factory {
     Request requestWithState =
         request
             .newBuilder()
-            .tag(OkHttpClientCallState.class, new OkHttpClientCallState(callingContext))
+            .tag(
+                OkHttpClientCallState.class,
+                new OkHttpClientCallState(callingContext, captureTimings))
             .build();
-    return new TracingCall(okHttpClient.newCall(requestWithState), callingContext);
+    return new TracingCall(okHttpClient.newCall(requestWithState), callingContext, this);
   }
 
   static class TracingCall implements Call {
     private final Call delegate;
     private final Context callingContext;
+    private final TracingCallFactory factory;
 
-    TracingCall(Call delegate, Context callingContext) {
+    TracingCall(Call delegate, Context callingContext, TracingCallFactory factory) {
       this.delegate = delegate;
       this.callingContext = callingContext;
+      this.factory = factory;
     }
 
     @Override
@@ -51,9 +57,11 @@ class TracingCallFactory implements Call.Factory {
 
     @Override
     public Call clone() {
-      // we pull the current context here, because the cloning might be happening in a different
-      // context than the original call creation.
-      return new TracingCall(delegate.clone(), Context.current());
+      // A cloned call is a separate execution, so route it back through the factory to give it its
+      // own OkHttpClientCallState rather than sharing the original request's tag. We read the
+      // current context inside newCall because cloning may happen in a different context than the
+      // original call creation.
+      return factory.newCall(delegate.request());
     }
 
     @Override
