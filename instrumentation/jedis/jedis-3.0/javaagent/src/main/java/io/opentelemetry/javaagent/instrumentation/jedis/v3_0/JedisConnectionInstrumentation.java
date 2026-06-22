@@ -60,8 +60,8 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
           Connection connection, ProtocolCommand command, byte[][] args) {
         Context parentContext = currentContext();
         JedisRequest request = JedisRequest.create(connection, command, asList(args));
-        // Capture pipeline commands for the batch span instead of starting an individual span.
         if (JedisPipelineContext.capture(request)) {
+          // Capture pipeline commands for the batch span instead of starting an individual span.
           return null;
         }
         if (!instrumenter().shouldStart(parentContext, request)) {
