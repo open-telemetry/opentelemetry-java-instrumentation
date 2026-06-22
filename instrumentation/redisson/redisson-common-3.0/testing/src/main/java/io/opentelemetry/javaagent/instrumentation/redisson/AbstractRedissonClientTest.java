@@ -260,7 +260,7 @@ public abstract class AbstractRedissonClientTest {
     // `BatchResult<?> execute()` and `List<?> execute()`
     try {
       invokeExecute(batch);
-    } catch (ReflectiveOperationException e) {
+    } catch (ReflectiveOperationException ignored) {
       // an empty batch fails to execute
     }
 
