@@ -19,10 +19,10 @@ public final class JedisPipelineContext {
       VirtualField.find(PipelineBase.class, CapturedRequests.class);
 
   public static void enter(PipelineBase pipeline) {
-    // Only aggregate real pipelines. Transaction also extends MultiKeyPipelineBase but completes
-    // via exec()/discard() (not sync()), so its captured commands would never be flushed into a
-    // batch span; leaving them uncaptured keeps the per-command spans.
     if (pipeline instanceof Pipeline) {
+      // Only aggregate real pipelines. Transaction also extends MultiKeyPipelineBase but completes
+      // via exec()/discard() (not sync()), so its captured commands would never be flushed into a
+      // batch span; leaving them uncaptured keeps the per-command spans.
       currentPipeline.set(pipeline);
     }
   }

@@ -14,14 +14,14 @@ import redis.clients.jedis.Pipeline;
 
 public final class JedisPipelineContext {
   private static final ThreadLocal<Pipeline> currentPipeline = new ThreadLocal<>();
-  private static final VirtualField<Pipeline, CapturedRequests> requestsByPipeline =
+  private static final VirtualField<Pipeline, CapturedRequests> CAPTURED_REQUESTS =
       VirtualField.find(Pipeline.class, CapturedRequests.class);
 
   public static void enter(Object pipeline) {
-    // Only aggregate real pipelines. Transaction also extends MultiKeyPipelineBase but completes
-    // via exec()/discard() (not sync()), so its captured commands would never be flushed into a
-    // batch span; leaving them uncaptured keeps the per-command spans.
     if (pipeline instanceof Pipeline) {
+      // Only aggregate real pipelines. Transaction also extends MultiKeyPipelineBase but completes
+      // via exec()/discard() (not sync()), so its captured commands would never be flushed into a
+      // batch span; leaving them uncaptured keeps the per-command spans.
       currentPipeline.set((Pipeline) pipeline);
     }
   }
@@ -30,34 +30,34 @@ public final class JedisPipelineContext {
     currentPipeline.remove();
   }
 
-  public static boolean capture(Object request) {
+  public static boolean capture(JedisRequest request) {
     Pipeline pipeline = currentPipeline.get();
     if (pipeline == null) {
       return false;
     }
-    CapturedRequests requests = requestsByPipeline.get(pipeline);
+    CapturedRequests requests = CAPTURED_REQUESTS.get(pipeline);
     if (requests == null) {
       requests = new CapturedRequests();
-      requestsByPipeline.set(pipeline, requests);
+      CAPTURED_REQUESTS.set(pipeline, requests);
     }
     requests.add(request);
     return true;
   }
 
-  public static List<Object> getAndClearCapturedRequests(Object pipeline) {
-    CapturedRequests requests = requestsByPipeline.get((Pipeline) pipeline);
-    requestsByPipeline.set((Pipeline) pipeline, null);
+  public static List<JedisRequest> getAndClearCapturedRequests(Object pipeline) {
+    CapturedRequests requests = CAPTURED_REQUESTS.get((Pipeline) pipeline);
+    CAPTURED_REQUESTS.set((Pipeline) pipeline, null);
     return requests != null ? requests.requests() : emptyList();
   }
 
   private static class CapturedRequests {
-    private final List<Object> requests = new ArrayList<>();
+    private final List<JedisRequest> requests = new ArrayList<>();
 
-    private void add(Object request) {
+    private void add(JedisRequest request) {
       requests.add(request);
     }
 
-    private List<Object> requests() {
+    private List<JedisRequest> requests() {
       return requests;
     }
   }

@@ -68,8 +68,9 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Nullable
     public static AdviceScope start(JedisRequest request) {
       Context parentContext = currentContext();
-      // Capture pipeline commands for the batch span instead of starting an individual span.
       if (JedisPipelineContext.capture(request)) {
+        // A pipeline is active, so this command is captured and aggregated into the batch span
+        // created at sync() rather than getting its own span.
         // Return a scope so method exit can capture the socket after sendCommand connects.
         return new AdviceScope(null, null, request);
       }

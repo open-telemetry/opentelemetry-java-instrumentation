@@ -17,14 +17,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-// Handles Jedis 2.x object-style pipelines.
 class JedisPipelineInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -48,6 +46,8 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Object pipeline) {
+      // Attaches a thread-local pipeline that the nested Connection.sendCommand advice uses to
+      // collect captured requests; sync() then consumes them to build the batch span.
       JedisPipelineContext.enter(pipeline);
     }
 
@@ -73,15 +73,11 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(Object pipeline) {
-        List<Object> capturedRequests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
-        if (capturedRequests.isEmpty()) {
+        List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
+        if (requests.isEmpty()) {
           // An empty pipeline sends nothing to the server, and with no captured request there is no
           // connection to derive server attributes from, so it is not reported as a batch span.
           return null;
-        }
-        List<JedisRequest> requests = new ArrayList<>(capturedRequests.size());
-        for (Object capturedRequest : capturedRequests) {
-          requests.add((JedisRequest) capturedRequest);
         }
         JedisRequest request = JedisRequest.createPipeline(requests);
         Context parentContext = currentContext();

@@ -53,10 +53,11 @@ public abstract class JedisRequest {
   private static String operationName(ProtocolCommand command) {
     if (command instanceof Protocol.Command) {
       return ((Protocol.Command) command).name();
+    } else {
+      // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
+      // us if that changes
+      return new String(command.getRaw(), UTF_8);
     }
-    // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
-    // us if that changes
-    return new String(command.getRaw(), UTF_8);
   }
 
   private static String pipelineOperationName(List<JedisRequest> requests) {
