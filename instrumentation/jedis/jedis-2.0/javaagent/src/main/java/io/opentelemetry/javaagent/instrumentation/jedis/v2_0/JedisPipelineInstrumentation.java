@@ -75,6 +75,8 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(Object pipeline) {
         List<Object> capturedRequests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
         if (capturedRequests.isEmpty()) {
+          // An empty pipeline sends nothing to the server, and with no captured request there is no
+          // connection to derive server attributes from, so it is not reported as a batch span.
           return null;
         }
         List<JedisRequest> requests = new ArrayList<>(capturedRequests.size());
