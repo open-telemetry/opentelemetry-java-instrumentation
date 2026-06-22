@@ -258,11 +258,7 @@ public abstract class AbstractRedissonClientTest {
     scenario.commands.forEach(addCommand -> addCommand.accept(batch));
     // Adapt different method signature:
     // `BatchResult<?> execute()` and `List<?> execute()`
-    try {
-      invokeExecute(batch);
-    } catch (ReflectiveOperationException ignored) {
-      // an empty batch fails to execute
-    }
+    invokeExecute(batch);
 
     if (scenario.empty) {
       // an empty batch produces no span
