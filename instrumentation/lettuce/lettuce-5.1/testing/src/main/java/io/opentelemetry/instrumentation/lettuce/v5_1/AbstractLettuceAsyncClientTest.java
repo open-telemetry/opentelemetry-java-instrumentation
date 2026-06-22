@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -39,6 +40,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -424,6 +426,10 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                       span ->
                           span.hasName(spanName(scenario.operationName))
                               .hasKind(SpanKind.CLIENT)
+                              .hasStatus(
+                                  scenario.errorType != null
+                                      ? StatusData.error()
+                                      : StatusData.unset())
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
                                       equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -439,7 +445,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           emitStableDatabaseSemconv() ? scenario.batchSize : null),
                                       equalTo(
                                           ERROR_TYPE,
-                                          emitStableDatabaseSemconv()
+                                          emitStableDatabaseSemconv() && testLatestDeps()
                                               ? scenario.errorType
                                               : null)))));
       return;
