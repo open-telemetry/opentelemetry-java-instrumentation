@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.emptyList;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -40,14 +39,13 @@ public abstract class JedisRequest {
   public static JedisRequest create(
       @Nullable Object connection, ProtocolCommand command, List<byte[]> args) {
     JedisConnectionInfo connectionInfo = getConnectionInfo(connection);
+    String operationName = operationName(command);
     return new AutoValue_JedisRequest(
-        command,
-        args,
         connectionInfo != null ? connectionInfo.getServerAddress() : null,
         connectionInfo != null ? connectionInfo.getServerPort() : null,
         connectionInfo != null ? connectionInfo.getDatabaseIndex() : null,
-        null,
-        null,
+        operationName,
+        sanitizer.sanitize(operationName, args),
         null);
   }
 
@@ -74,8 +72,6 @@ public abstract class JedisRequest {
     JedisRequest first = requests.get(0);
     JedisRequest request =
         new AutoValue_JedisRequest(
-            null,
-            emptyList(),
             first.getServerAddress(),
             first.getServerPort(),
             first.getDatabaseIndex(),
@@ -94,11 +90,6 @@ public abstract class JedisRequest {
   }
 
   @Nullable
-  public abstract ProtocolCommand getCommand();
-
-  public abstract List<byte[]> getArgs();
-
-  @Nullable
   public abstract String getServerAddress();
 
   @Nullable
@@ -107,35 +98,20 @@ public abstract class JedisRequest {
   @Nullable
   public abstract Long getDatabaseIndex();
 
-  @Nullable
-  abstract String getOperationNameOverride();
+  public abstract String getOperationName();
 
-  @Nullable
-  abstract String getQueryTextOverride();
+  public abstract String getQueryText();
 
   @Nullable
   public abstract Long getBatchSize();
 
-  public String getOperationName() {
-    String operationName = getOperationNameOverride();
-    if (operationName != null) {
-      return operationName;
-    }
-    ProtocolCommand command = getCommand();
+  private static String operationName(ProtocolCommand command) {
     if (command instanceof Protocol.Command) {
       return ((Protocol.Command) command).name();
     }
     // Protocol.Command is the only implementation in the Jedis lib as of 3.1 but this will save
     // us if that changes
     return new String(command.getRaw(), UTF_8);
-  }
-
-  public String getQueryText() {
-    String queryText = getQueryTextOverride();
-    if (queryText != null) {
-      return queryText;
-    }
-    return sanitizer.sanitize(getOperationName(), getArgs());
   }
 
   private static String pipelineOperationName(List<JedisRequest> requests) {
