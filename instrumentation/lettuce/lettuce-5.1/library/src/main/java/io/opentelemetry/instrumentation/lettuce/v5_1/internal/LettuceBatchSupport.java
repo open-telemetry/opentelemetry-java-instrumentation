@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1.internal;
 
+import io.lettuce.core.RedisChannelWriter;
 import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.RedisCommand;
 import java.util.ArrayList;
@@ -22,34 +23,22 @@ import javax.annotation.Nullable;
  * at any time.
  */
 public final class LettuceBatchSupport {
-  private static final Map<Object, BatchState> batchStates =
-      Collections.synchronizedMap(new WeakHashMap<>());
+  private static final BatchStates<RedisChannelWriter> writerBatchStates = new BatchStates<>();
   private static final Map<RedisCommand<?, ?, ?>, BatchScope> activeBatchCommands =
       Collections.synchronizedMap(new WeakHashMap<>());
   private static final ThreadLocal<BatchScope> currentBatchScope = new ThreadLocal<>();
 
-  public static void setAutoFlushCommands(Object commands, boolean autoFlush) {
-    if (autoFlush) {
-      batchStates.remove(commands);
-    } else {
-      batchStates.put(commands, new BatchState());
-    }
+  public static void setAutoFlushCommands(RedisChannelWriter writer, boolean autoFlush) {
+    writerBatchStates.setAutoFlushCommands(writer, autoFlush);
   }
 
-  public static void capture(Object commands, RedisCommand<?, ?, ?> command) {
-    BatchState batchState = batchStates.get(commands);
-    if (batchState != null) {
-      batchState.capture(command);
-    }
+  public static void capture(RedisChannelWriter writer, RedisCommand<?, ?, ?> command) {
+    writerBatchStates.capture(writer, command);
   }
 
   @Nullable
-  public static BatchScope startBatch(Object commands) {
-    BatchState batchState = batchStates.get(commands);
-    if (batchState == null) {
-      return null;
-    }
-    return batchState.start();
+  public static BatchScope startBatch(RedisChannelWriter writer) {
+    return writerBatchStates.startBatch(writer);
   }
 
   public static void finishBatch(BatchScope batch, @Nullable Throwable throwable) {
@@ -81,6 +70,34 @@ public final class LettuceBatchSupport {
     }
     batchScope.capture(span);
     return batchScope;
+  }
+
+  private static final class BatchStates<K> {
+    private final Map<K, BatchState> batchStates = Collections.synchronizedMap(new WeakHashMap<>());
+
+    private void setAutoFlushCommands(K key, boolean autoFlush) {
+      if (autoFlush) {
+        batchStates.remove(key);
+      } else {
+        batchStates.put(key, new BatchState());
+      }
+    }
+
+    private void capture(K key, RedisCommand<?, ?, ?> command) {
+      BatchState batchState = batchStates.get(key);
+      if (batchState != null) {
+        batchState.capture(command);
+      }
+    }
+
+    @Nullable
+    private BatchScope startBatch(K key) {
+      BatchState batchState = batchStates.get(key);
+      if (batchState == null) {
+        return null;
+      }
+      return batchState.start();
+    }
   }
 
   private static final class BatchState {

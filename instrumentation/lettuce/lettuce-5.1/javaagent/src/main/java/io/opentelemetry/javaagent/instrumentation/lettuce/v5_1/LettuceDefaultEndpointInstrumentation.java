@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.lettuce.core.RedisChannelWriter;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.lettuce.v5_1.internal.LettuceBatchSupport;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -18,18 +19,18 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
+class LettuceDefaultEndpointInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.lettuce.core.AbstractRedisAsyncCommands");
+    return named("io.lettuce.core.protocol.DefaultEndpoint");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
-        getClass().getName() + "$DispatchAdvice");
+        named("write").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
+        getClass().getName() + "$WriteAdvice");
     transformer.applyAdviceToMethod(
         named("setAutoFlushCommands").and(takesArguments(1)),
         getClass().getName() + "$SetAutoFlushAdvice");
@@ -38,15 +39,15 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class DispatchAdvice {
+  public static class WriteAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This Object commands,
+        @Advice.This RedisChannelWriter endpoint,
         @Advice.Argument(0) RedisCommand<?, ?, ?> command,
         @Advice.Thrown @Nullable Throwable throwable) {
       if (throwable == null) {
-        LettuceBatchSupport.capture(commands, command);
+        LettuceBatchSupport.capture(endpoint, command);
       }
     }
   }
@@ -55,8 +56,9 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
   public static class SetAutoFlushAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object commands, @Advice.Argument(0) boolean autoFlush) {
-      LettuceBatchSupport.setAutoFlushCommands(commands, autoFlush);
+    public static void onExit(
+        @Advice.This RedisChannelWriter endpoint, @Advice.Argument(0) boolean autoFlush) {
+      LettuceBatchSupport.setAutoFlushCommands(endpoint, autoFlush);
     }
   }
 
@@ -65,8 +67,8 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static LettuceBatchSupport.BatchScope onEnter(@Advice.This Object commands) {
-      return LettuceBatchSupport.startBatch(commands);
+    public static LettuceBatchSupport.BatchScope onEnter(@Advice.This RedisChannelWriter endpoint) {
+      return LettuceBatchSupport.startBatch(endpoint);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

@@ -36,7 +36,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ClientResourcesInstrumentation(),
-        new LettuceAsyncCommandsInstrumentation(),
+        new LettuceDefaultEndpointInstrumentation(),
         new LettuceCommandHandlerInstrumentation(),
         new LettuceAsyncCommandInstrumentation());
   }
