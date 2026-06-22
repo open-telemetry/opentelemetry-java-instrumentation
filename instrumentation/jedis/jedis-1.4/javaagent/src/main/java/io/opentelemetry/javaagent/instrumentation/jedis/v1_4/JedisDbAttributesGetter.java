@@ -33,12 +33,6 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
-  @Nullable
-  public Long getDbOperationBatchSize(JedisRequest request) {
-    return request.getBatchSize();
-  }
-
-  @Override
   public String getServerAddress(JedisRequest request) {
     return request.getConnection().getHost();
   }

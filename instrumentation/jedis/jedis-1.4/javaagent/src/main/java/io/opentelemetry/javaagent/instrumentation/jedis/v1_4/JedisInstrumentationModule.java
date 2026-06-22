@@ -24,8 +24,8 @@ public class JedisInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 2.0
-    return not(hasClassesNamed("redis.clients.jedis.Pipeline"));
+    // Response was added in 2.0
+    return not(hasClassesNamed("redis.clients.jedis.Response"));
   }
 
   @Override
