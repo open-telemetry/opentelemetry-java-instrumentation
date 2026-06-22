@@ -234,9 +234,9 @@ class VertxRedisClientTest {
   }
 
   private static Stream<Arguments> batchScenarios() {
+    String longBatchKey = String.join("", nCopies(1020, "x"));
     // No empty scenario: Vert.x Redis never completes client.batch(emptyList()),
     // and times out before asserting instrumentation.
-    String longBatchKey = String.join("", nCopies(1020, "x"));
     return Stream.of(
         Arguments.argumentSet(
             "single",
