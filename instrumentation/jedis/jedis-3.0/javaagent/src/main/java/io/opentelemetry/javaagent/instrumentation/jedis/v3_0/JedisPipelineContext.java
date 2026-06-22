@@ -15,7 +15,7 @@ import redis.clients.jedis.PipelineBase;
 
 public final class JedisPipelineContext {
   private static final ThreadLocal<PipelineBase> currentPipeline = new ThreadLocal<>();
-  private static final VirtualField<PipelineBase, CapturedRequests> requestsByPipeline =
+  private static final VirtualField<PipelineBase, CapturedRequests> CAPTURED_REQUESTS =
       VirtualField.find(PipelineBase.class, CapturedRequests.class);
 
   public static void enter(Object pipeline) {
@@ -36,18 +36,18 @@ public final class JedisPipelineContext {
     if (pipeline == null) {
       return false;
     }
-    CapturedRequests requests = requestsByPipeline.get(pipeline);
+    CapturedRequests requests = CAPTURED_REQUESTS.get(pipeline);
     if (requests == null) {
       requests = new CapturedRequests();
-      requestsByPipeline.set(pipeline, requests);
+      CAPTURED_REQUESTS.set(pipeline, requests);
     }
     requests.add(request);
     return true;
   }
 
   public static List<Object> getAndClearCapturedRequests(Object pipeline) {
-    CapturedRequests requests = requestsByPipeline.get((PipelineBase) pipeline);
-    requestsByPipeline.set((PipelineBase) pipeline, null);
+    CapturedRequests requests = CAPTURED_REQUESTS.get((PipelineBase) pipeline);
+    CAPTURED_REQUESTS.set((PipelineBase) pipeline, null);
     return requests != null ? requests.requests() : emptyList();
   }
 
