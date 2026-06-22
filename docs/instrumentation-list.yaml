@@ -14085,8 +14085,6 @@ libraries:
       attributes:
       - name: jvm.thread.daemon
         type: BOOLEAN
-      - name: jvm.thread.state
-        type: STRING
   - when: default
     metrics:
     - name: jvm.buffer.count
