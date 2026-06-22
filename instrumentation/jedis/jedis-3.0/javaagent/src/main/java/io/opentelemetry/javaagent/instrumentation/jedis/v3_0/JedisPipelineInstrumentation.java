@@ -17,12 +17,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import redis.clients.jedis.PipelineBase;
 
 class JedisPipelineInstrumentation implements TypeInstrumentation {
   @Override
@@ -47,7 +47,7 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
   public static class QueueCommandAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.This Object pipeline) {
+    public static void onEnter(@Advice.This PipelineBase pipeline) {
       // The nested Connection.sendCommand advice uses this thread-local pipeline to attach
       // captured requests, which sync() consumes to construct the batch span.
       JedisPipelineContext.enter(pipeline);
@@ -74,14 +74,10 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope start(Object pipeline) {
-        List<Object> capturedRequests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
-        if (capturedRequests.isEmpty()) {
+      public static AdviceScope start(PipelineBase pipeline) {
+        List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
+        if (requests.isEmpty()) {
           return null;
-        }
-        List<JedisRequest> requests = new ArrayList<>(capturedRequests.size());
-        for (Object capturedRequest : capturedRequests) {
-          requests.add((JedisRequest) capturedRequest);
         }
         JedisRequest request = JedisRequest.createPipeline(requests);
         Context parentContext = currentContext();
@@ -100,7 +96,7 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.This Object pipeline) {
+    public static AdviceScope onEnter(@Advice.This PipelineBase pipeline) {
       return AdviceScope.start(pipeline);
     }
 

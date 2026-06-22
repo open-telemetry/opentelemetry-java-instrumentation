@@ -18,12 +18,12 @@ public final class JedisPipelineContext {
   private static final VirtualField<PipelineBase, CapturedRequests> CAPTURED_REQUESTS =
       VirtualField.find(PipelineBase.class, CapturedRequests.class);
 
-  public static void enter(Object pipeline) {
+  public static void enter(PipelineBase pipeline) {
     // Only aggregate real pipelines. Transaction also extends MultiKeyPipelineBase but completes
     // via exec()/discard() (not sync()), so its captured commands would never be flushed into a
     // batch span; leaving them uncaptured keeps the per-command spans.
     if (pipeline instanceof Pipeline) {
-      currentPipeline.set((PipelineBase) pipeline);
+      currentPipeline.set(pipeline);
     }
   }
 
@@ -31,7 +31,7 @@ public final class JedisPipelineContext {
     currentPipeline.remove();
   }
 
-  public static boolean capture(Object request) {
+  public static boolean capture(JedisRequest request) {
     PipelineBase pipeline = currentPipeline.get();
     if (pipeline == null) {
       return false;
@@ -45,20 +45,20 @@ public final class JedisPipelineContext {
     return true;
   }
 
-  public static List<Object> getAndClearCapturedRequests(Object pipeline) {
-    CapturedRequests requests = CAPTURED_REQUESTS.get((PipelineBase) pipeline);
-    CAPTURED_REQUESTS.set((PipelineBase) pipeline, null);
+  public static List<JedisRequest> getAndClearCapturedRequests(PipelineBase pipeline) {
+    CapturedRequests requests = CAPTURED_REQUESTS.get(pipeline);
+    CAPTURED_REQUESTS.set(pipeline, null);
     return requests != null ? requests.requests() : emptyList();
   }
 
   private static class CapturedRequests {
-    private final List<Object> requests = new ArrayList<>();
+    private final List<JedisRequest> requests = new ArrayList<>();
 
-    private void add(Object request) {
+    private void add(JedisRequest request) {
       requests.add(request);
     }
 
-    private List<Object> requests() {
+    private List<JedisRequest> requests() {
       return requests;
     }
   }
