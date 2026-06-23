@@ -535,6 +535,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   private static Stream<Arguments> deferredFlushScenarios() {
     return Stream.of(
+        // empty batch doesn't produce any span
         Arguments.argumentSet("empty", BatchScenario.builder().build()),
         Arguments.argumentSet(
             "single",
