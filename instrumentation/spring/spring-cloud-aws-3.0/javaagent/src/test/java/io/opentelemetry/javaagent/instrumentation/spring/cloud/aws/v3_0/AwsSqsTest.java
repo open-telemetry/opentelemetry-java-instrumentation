@@ -271,7 +271,7 @@ class AwsSqsTest {
                 span ->
                     span.hasName("Sqs.DeleteMessageBatch")
                         .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(3))
+                        .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_METHOD, "DeleteMessageBatch"),

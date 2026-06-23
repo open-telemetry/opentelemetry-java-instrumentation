@@ -85,6 +85,24 @@ public class SpringAwsUtil {
     return tracingContext.trace();
   }
 
+  @Nullable
+  public static Scope restoreBatchContext(Collection<Message<?>> messages) {
+    if (messages.isEmpty()) {
+      return null;
+    }
+    Message<?> message = messages.iterator().next();
+    TracingContext tracingContext = tracingContextField.get(message);
+    if (tracingContext == null) {
+      return null;
+    }
+    SqsMessage wrappedMessage = SqsMessageImpl.wrap(tracingContext.sqsMessage);
+    Context parentContext = tracingContext.receiveContext;
+    if (parentContext == null) {
+      parentContext = SqsParentContext.ofMessage(wrappedMessage, tracingContext.config);
+    }
+    return parentContext.makeCurrent();
+  }
+
   public static class MessageScope {
     private final Instrumenter<SqsProcessRequest, Response> instrumenter;
     private final Context context;
