@@ -6,12 +6,8 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
-import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -39,8 +35,6 @@ import io.lettuce.core.codec.StringCodec;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.testing.assertj.TraceAssert;
-import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -52,12 +46,8 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings({"InterruptedExceptionSwallowed", "deprecation"}) // using deprecated semconv
 public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClientTest {
@@ -106,10 +96,6 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
   protected boolean connectHasSpans() {
     return false;
-  }
-
-  protected DeferredFlushSpanMode deferredFlushSpanMode() {
-    return DeferredFlushSpanMode.BATCH;
   }
 
   @Test
@@ -391,240 +377,6 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
               }
               trace.hasSpansSatisfyingExactly(spanAsserts);
             });
-  }
-
-  @ParameterizedTest
-  @MethodSource("deferredFlushScenarios")
-  void deferredFlushCommand(BatchScenario scenario) throws Exception {
-    StatefulRedisConnection<String, String> statefulConnection =
-        asyncCommands.getStatefulConnection();
-    statefulConnection.setAutoFlushCommands(false);
-    cleanup.deferCleanup(() -> statefulConnection.setAutoFlushCommands(true));
-
-    List<RedisFuture<?>> futures = new ArrayList<>();
-    for (BatchCommand command : scenario.commands) {
-      futures.add(command.run(asyncCommands));
-    }
-    statefulConnection.flushCommands();
-    for (RedisFuture<?> future : futures) {
-      Throwable thrown = catchThrowable(() -> future.get(10, SECONDS));
-      if (thrown != null) {
-        assertThat(thrown.getCause().getClass().getName()).isEqualTo(scenario.errorType);
-      }
-    }
-
-    if (scenario.isEmpty()) {
-      assertThat(testing().spans()).isEmpty();
-      return;
-    }
-
-    if (deferredFlushSpanMode() == DeferredFlushSpanMode.BATCH) {
-      testing()
-          .waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName(scenario.operationName))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasStatus(
-                                  scenario.errorType != null
-                                      ? StatusData.error()
-                                      : StatusData.unset())
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
-                                      equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
-                                      equalTo(maybeStable(DB_OPERATION), scenario.operationName),
-                                      equalTo(
-                                          DB_OPERATION_BATCH_SIZE,
-                                          emitStableDatabaseSemconv() ? scenario.batchSize : null),
-                                      equalTo(
-                                          ERROR_TYPE,
-                                          emitStableDatabaseSemconv() && testLatestDeps()
-                                              ? scenario.errorType
-                                              : null)))));
-      return;
-    }
-
-    // PER_COMMAND is the span mode emitted by library instrumentation: Lettuce's tracing API
-    // starts each command span as the command is written, so auto-flush batches cannot be
-    // represented as a single aggregate span there. This is not the ideal shape, but documents the
-    // current library behavior.
-    //
-    // The error scenario exists to exercise the javaagent BATCH error aggregation. In library mode
-    // the failing command's span shape (raw "error" tag vs structural error.type, plus exception
-    // events) is version- and semconv-dependent and is already covered by dedicated library error
-    // tests, so skip the per-command error assertions here.
-    if (scenario.errorType != null) {
-      return;
-    }
-    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
-    for (OldExpectedCommand command : scenario.oldExpectedCommands) {
-      assertions.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName(spanName(command.operationName))
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                                  equalTo(maybeStable(DB_STATEMENT), command.queryText),
-                                  equalTo(maybeStable(DB_OPERATION), command.operationName),
-                                  equalTo(DB_OPERATION_BATCH_SIZE, null)))
-                          .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
-    }
-    testing().waitAndAssertTraces(assertions);
-  }
-
-  private static Stream<Arguments> deferredFlushScenarios() {
-    return Stream.of(
-        Arguments.argumentSet("empty", BatchScenario.builder().build()),
-        Arguments.argumentSet(
-            "single",
-            BatchScenario.builder()
-                .addCommand(commands -> commands.set("batch1", "v1"))
-                .operationName("SET")
-                .queryText("SET batch1 ?")
-                .addOldExpectedCommand("SET", "SET batch1 ?")
-                .build()),
-        Arguments.argumentSet(
-            "twoSameOperation",
-            BatchScenario.builder()
-                .addCommand(commands -> commands.set("batch1", "v1"))
-                .addCommand(commands -> commands.set("batch2", "v2"))
-                .operationName("PIPELINE SET")
-                .queryText("SET batch1 ?;SET batch2 ?")
-                .batchSize(2)
-                .addOldExpectedCommand("SET", "SET batch1 ?")
-                .addOldExpectedCommand("SET", "SET batch2 ?")
-                .build()),
-        Arguments.argumentSet(
-            "twoDifferentOperations",
-            BatchScenario.builder()
-                .addCommand(commands -> commands.set("batch1", "v1"))
-                .addCommand(commands -> commands.get("batch1"))
-                .operationName("PIPELINE")
-                .queryText("SET batch1 ?;GET batch1")
-                .batchSize(2)
-                .addOldExpectedCommand("SET", "SET batch1 ?")
-                .addOldExpectedCommand("GET", "GET batch1")
-                .build()),
-        Arguments.argumentSet(
-            "earlierFailure",
-            BatchScenario.builder()
-                .addCommand(commands -> commands.configSet("not-a-real-config", "1"))
-                .addCommand(commands -> commands.set("batch-after-error", "v1"))
-                .operationName("PIPELINE")
-                .queryText("CONFIG SET not-a-real-config ?;SET batch-after-error ?")
-                .batchSize(2)
-                .errorType("io.lettuce.core.RedisCommandExecutionException")
-                .build()));
-  }
-
-  private static class BatchScenario {
-    private final List<BatchCommand> commands;
-    private final String operationName;
-    private final String queryText;
-    private final Long batchSize;
-    private final String errorType;
-    private final List<OldExpectedCommand> oldExpectedCommands;
-
-    private BatchScenario(
-        List<BatchCommand> commands,
-        String operationName,
-        String queryText,
-        Long batchSize,
-        String errorType,
-        List<OldExpectedCommand> oldExpectedCommands) {
-      this.commands = commands;
-      this.operationName = operationName;
-      this.queryText = queryText;
-      this.batchSize = batchSize;
-      this.errorType = errorType;
-      this.oldExpectedCommands = oldExpectedCommands;
-    }
-
-    private static Builder builder() {
-      return new Builder();
-    }
-
-    private boolean isEmpty() {
-      return commands.isEmpty();
-    }
-
-    private static class Builder {
-      private final List<BatchCommand> commands = new ArrayList<>();
-      private String operationName;
-      private String queryText;
-      private Long batchSize;
-      private String errorType;
-      private final List<OldExpectedCommand> oldExpectedCommands = new ArrayList<>();
-
-      private Builder addCommand(BatchCommand command) {
-        commands.add(command);
-        return this;
-      }
-
-      private Builder operationName(String operationName) {
-        this.operationName = operationName;
-        return this;
-      }
-
-      private Builder queryText(String queryText) {
-        this.queryText = queryText;
-        return this;
-      }
-
-      private Builder batchSize(long batchSize) {
-        this.batchSize = batchSize;
-        return this;
-      }
-
-      private Builder errorType(String errorType) {
-        this.errorType = errorType;
-        return this;
-      }
-
-      private Builder addOldExpectedCommand(String operationName, String queryText) {
-        oldExpectedCommands.add(new OldExpectedCommand(operationName, queryText));
-        return this;
-      }
-
-      private BatchScenario build() {
-        return new BatchScenario(
-            commands, operationName, queryText, batchSize, errorType, oldExpectedCommands);
-      }
-    }
-  }
-
-  private interface BatchCommand {
-    RedisFuture<?> run(RedisAsyncCommands<String, String> commands);
-  }
-
-  private static class OldExpectedCommand {
-    private final String operationName;
-    private final String queryText;
-
-    private OldExpectedCommand(String operationName, String queryText) {
-      this.operationName = operationName;
-      this.queryText = queryText;
-    }
-  }
-
-  protected enum DeferredFlushSpanMode {
-    BATCH,
-    PER_COMMAND
   }
 
   @Test

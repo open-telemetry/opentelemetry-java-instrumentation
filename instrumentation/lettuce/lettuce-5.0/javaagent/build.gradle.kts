@@ -6,6 +6,8 @@ muzzle {
   pass {
     group.set("io.lettuce")
     module.set("lettuce-core")
+    // by default this module only applies to pre-5.1 (see classLoaderMatcher); under v3-preview it
+    // also covers 5.1+, but muzzle cannot evaluate that runtime branch
     versions.set("[5.0.0.RELEASE,5.1.0.RELEASE)")
     assertInverse.set(true)
   }
@@ -49,7 +51,16 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
+  // exercises the v3-preview path, where this advice-based module supersedes the SPI-based
+  // lettuce-5.1 javaagent module (which is disabled under v3-preview)
+  val testV3Preview by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testStableSemconv, testExperimental, testV3Preview)
   }
 }

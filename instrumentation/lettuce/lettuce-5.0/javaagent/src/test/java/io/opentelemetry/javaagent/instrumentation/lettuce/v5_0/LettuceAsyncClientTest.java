@@ -36,7 +36,7 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.lettuce.core.codec.Utf8StringCodec;
+import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -118,7 +118,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     ConnectionFuture<StatefulRedisConnection<String, String>> connectionFuture =
         testConnectionClient.connectAsync(
-            new Utf8StringCodec(), new RedisURI(host, port, 3, SECONDS));
+            StringCodec.UTF8, RedisURI.create("redis://" + host + ":" + port + "?timeout=3s"));
     StatefulRedisConnection<String, String> connection1 = connectionFuture.join();
     cleanup.deferCleanup(() -> shutdown(testConnectionClient));
     cleanup.deferCleanup(connection1);
@@ -149,7 +149,9 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             () -> {
               ConnectionFuture<StatefulRedisConnection<String, String>> connectionFuture =
                   testConnectionClient.connectAsync(
-                      new Utf8StringCodec(), new RedisURI(host, incorrectPort, 3, SECONDS));
+                      StringCodec.UTF8,
+                      RedisURI.create(
+                          "redis://" + host + ":" + incorrectPort + "?timeout=3s"));
               connectionFuture.get();
             });
 
@@ -398,8 +400,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   @Test
   void testCommandCompletesExceptionally() {
     // turn off auto flush to complete the command exceptionally manually
-    asyncCommands.setAutoFlushCommands(false);
-    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
+    connection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> connection.setAutoFlushCommands(true));
 
     RedisFuture<Long> redisFuture = asyncCommands.del("key1", "key2");
     boolean completedExceptionally =
@@ -414,7 +416,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           throw new RuntimeException(error);
         });
 
-    asyncCommands.flushCommands();
+    connection.flushCommands();
     Throwable thrown = catchThrowable(redisFuture::get);
 
     await()
@@ -448,8 +450,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   @Test
   void testCancelCommandBeforeItFinishes() {
-    asyncCommands.setAutoFlushCommands(false);
-    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
+    connection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> connection.setAutoFlushCommands(true));
 
     RedisFuture<Long> redisFuture =
         testing.runWithSpan("parent", () -> asyncCommands.sadd("SKEY", "1", "2"));
@@ -463,7 +465,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 }));
 
     boolean cancelSuccess = redisFuture.cancel(true);
-    asyncCommands.flushCommands();
+    connection.flushCommands();
 
     await().untilAsserted(() -> assertThat(cancelSuccess).isTrue());
     testing.waitAndAssertTraces(
@@ -493,14 +495,14 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   @ParameterizedTest
   @MethodSource("deferredFlushScenarios")
   void deferredFlushCommand(BatchScenario scenario) throws Exception {
-    asyncCommands.setAutoFlushCommands(false);
-    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
+    connection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> connection.setAutoFlushCommands(true));
 
     List<RedisFuture<?>> futures = new ArrayList<>();
     for (BatchCommand command : scenario.commands) {
       futures.add(command.run(asyncCommands));
     }
-    asyncCommands.flushCommands();
+    connection.flushCommands();
     for (RedisFuture<?> future : futures) {
       Throwable thrown = catchThrowable(() -> future.get(10, SECONDS));
       if (scenario.errorType == null) {

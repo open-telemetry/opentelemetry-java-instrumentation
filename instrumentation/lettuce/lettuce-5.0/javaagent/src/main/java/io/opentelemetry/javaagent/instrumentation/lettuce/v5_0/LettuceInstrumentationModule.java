@@ -26,8 +26,8 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     if (AgentCommonConfig.get().isV3Preview()) {
-      // under v3-preview this module handles all lettuce versions; the SPI-based lettuce-5.1
-      // javaagent module is disabled
+      // under v3-preview this advice-based module handles the whole supported lettuce range (5.0+);
+      // the SPI-based lettuce-5.1 javaagent module is disabled
       return hasClassesNamed("io.lettuce.core.AbstractRedisAsyncCommands");
     }
     // the tracing SPI was added in 5.1; by default this module only handles pre-5.1, while the
@@ -40,6 +40,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
     return asList(
         new LettuceAsyncCommandInstrumentation(),
         new LettuceAsyncCommandsInstrumentation(),
+        new LettuceEndpointInstrumentation(),
         new LettuceClientInstrumentation(),
         new LettuceReactiveCommandsInstrumentation());
   }

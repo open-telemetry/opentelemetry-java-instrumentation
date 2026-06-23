@@ -15,8 +15,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@AutoService(InstrumentationModule.class)
 @Deprecated // superseded by the lettuce-5.0 javaagent under v3-preview; to be removed in 3.0
+@AutoService(InstrumentationModule.class)
 public class LettuceInstrumentationModule extends InstrumentationModule {
 
   public LettuceInstrumentationModule() {
@@ -42,10 +42,6 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new ClientResourcesInstrumentation(),
-        new LettuceDefaultEndpointInstrumentation(),
-        new LettuceCommandHandlerInstrumentation(),
-        new LettuceAsyncCommandInstrumentation());
+    return asList(new ClientResourcesInstrumentation(), new LettuceAsyncCommandInstrumentation());
   }
 }

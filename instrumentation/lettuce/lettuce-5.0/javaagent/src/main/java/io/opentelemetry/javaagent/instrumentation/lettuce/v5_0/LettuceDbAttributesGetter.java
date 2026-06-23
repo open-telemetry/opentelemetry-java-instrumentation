@@ -47,6 +47,6 @@ final class LettuceDbAttributesGetter
 
   @Override
   public String getDbOperationName(RedisCommand<?, ?, ?> request) {
-    return request.getType().name();
+    return request.getType().toString();
   }
 }

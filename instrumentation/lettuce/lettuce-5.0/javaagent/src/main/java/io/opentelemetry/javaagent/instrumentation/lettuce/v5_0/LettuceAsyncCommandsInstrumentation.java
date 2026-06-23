@@ -6,15 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.lettuce.core.protocol.AsyncCommand;
-import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -36,142 +31,28 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("dispatch").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
         getClass().getName() + "$DispatchAdvice");
-    transformer.applyAdviceToMethod(
-        named("setAutoFlushCommands").and(takesArguments(1)),
-        getClass().getName() + "$SetAutoFlushAdvice");
-    transformer.applyAdviceToMethod(
-        named("flushCommands").and(takesArguments(0)), getClass().getName() + "$FlushAdvice");
   }
 
+  /**
+   * Exposes the caller's context under {@link
+   * io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons#COMMAND_CONTEXT_KEY}
+   * while a command is dispatched, so the {@code AsyncCommand} constructed by dispatch captures it
+   * for completion callbacks. The command span itself is started later in {@code
+   * DefaultEndpoint.write}, where batch membership is known.
+   */
   @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
-    public static class AdviceScope {
-      private final Object commands;
-      @Nullable private final Context context;
-      @Nullable private final Scope scope;
-      private final boolean captured;
-
-      public AdviceScope(
-          Object commands, @Nullable Context context, @Nullable Scope scope, boolean captured) {
-        this.commands = commands;
-        this.context = context;
-        this.scope = scope;
-        this.captured = captured;
-      }
-
-      public static AdviceScope captured(Object commands) {
-        Context parentContext = currentContext();
-        Context context = parentContext.with(COMMAND_CONTEXT_KEY, parentContext);
-        return new AdviceScope(commands, null, context.makeCurrent(), true);
-      }
-
-      public void end(
-          @Nullable Throwable throwable,
-          RedisCommand<?, ?, ?> command,
-          @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
-        if (captured) {
-          try {
-            LettuceBatchContext.capture(commands, command, asyncCommand);
-          } finally {
-            if (scope != null) {
-              scope.close();
-            }
-          }
-          return;
-        }
-        if (scope == null || context == null) {
-          return;
-        }
-        scope.close();
-
-        if (throwable != null || asyncCommand == null) {
-          instrumenter().end(context, command, null, throwable);
-          return;
-        }
-
-        // close spans on error or normal completion
-        if (expectsResponse(command)) {
-          asyncCommand.handleAsync(new EndCommandAsyncBiFunction<>(context, command));
-        } else {
-          instrumenter().end(context, command, null, null);
-        }
-      }
-    }
-
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static AdviceScope onEnter(
-        @Advice.This Object commands, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-      if (LettuceBatchContext.isCollecting(commands)) {
-        return AdviceScope.captured(commands);
-      }
-
+    public static Scope onEnter() {
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, command)) {
-        return null;
-      }
-
-      Context context = instrumenter().start(parentContext, command);
-      // remember the context that called dispatch, it is used in LettuceAsyncCommandInstrumentation
-      context = context.with(COMMAND_CONTEXT_KEY, parentContext);
-      return new AdviceScope(commands, context, context.makeCurrent(), false);
+      return parentContext.with(COMMAND_CONTEXT_KEY, parentContext).makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void stopSpan(
-        @Advice.Argument(0) RedisCommand<?, ?, ?> command,
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return @Nullable AsyncCommand<?, ?, ?> asyncCommand,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
-
-      if (adviceScope != null) {
-        adviceScope.end(throwable, command, asyncCommand);
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetAutoFlushAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object commands, @Advice.Argument(0) boolean autoFlush) {
-      LettuceBatchContext.setCollecting(commands, !autoFlush);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class FlushAdvice {
-
-    public static class FlushAdviceScope {
-      @Nullable private final LettuceBatchContext.BatchScope batchScope;
-
-      private FlushAdviceScope(@Nullable LettuceBatchContext.BatchScope batchScope) {
-        this.batchScope = batchScope;
-      }
-
-      public static FlushAdviceScope start(Object commands) {
-        return new FlushAdviceScope(LettuceBatchContext.start(commands));
-      }
-
-      public void end(@Nullable Throwable throwable) {
-        if (throwable != null && batchScope != null) {
-          batchScope.endOne(throwable);
-        }
-      }
-    }
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static FlushAdviceScope onEnter(@Advice.This Object commands) {
-      return FlushAdviceScope.start(commands);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable FlushAdviceScope adviceScope) {
-      if (adviceScope != null) {
-        adviceScope.end(throwable);
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
       }
     }
   }
