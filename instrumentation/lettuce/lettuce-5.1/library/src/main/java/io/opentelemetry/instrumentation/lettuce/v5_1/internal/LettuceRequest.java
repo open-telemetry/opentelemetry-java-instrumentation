@@ -25,33 +25,35 @@ import javax.annotation.Nullable;
 public final class LettuceRequest {
 
   private final RedisCommandSanitizer sanitizer;
-  @Nullable private String command;
-  @Nullable private List<String> argsList;
-  @Nullable private String argsString;
+  @Nullable private String operationName;
+  @Nullable private String queryText;
   @Nullable private InetSocketAddress address;
   @Nullable private Long databaseIndex;
   @Nullable private Long batchSize;
-  private boolean pipeline;
 
   LettuceRequest(RedisCommandSanitizer sanitizer) {
     this.sanitizer = sanitizer;
   }
 
   void setCommand(String command) {
-    this.command = command;
+    operationName = command;
   }
 
   @Nullable
   String getCommand() {
-    return command;
+    return operationName;
   }
 
   void setArgsList(List<String> argsList) {
-    this.argsList = argsList;
+    if (operationName != null) {
+      queryText = sanitizer.sanitize(operationName, argsList);
+    }
   }
 
   void setArgsString(String argsString) {
-    this.argsString = argsString;
+    if (operationName != null) {
+      queryText = sanitizer.sanitize(operationName, splitArgs(argsString));
+    }
   }
 
   void setAddress(InetSocketAddress address) {
@@ -67,14 +69,6 @@ public final class LettuceRequest {
     this.databaseIndex = databaseIndex;
   }
 
-  private void setPipeline(List<RedisCommand<?, ?, ?>> commands) {
-    command = pipelineOperationName(commands);
-    argsList = null;
-    argsString = pipelineStatement(commands);
-    batchSize = commands.size() > 1 ? (long) commands.size() : null;
-    pipeline = true;
-  }
-
   @Nullable
   Long getDatabaseIndex() {
     return databaseIndex;
@@ -87,7 +81,9 @@ public final class LettuceRequest {
 
   LettuceRequest copyAsPipeline(List<RedisCommand<?, ?, ?>> commands) {
     LettuceRequest request = new LettuceRequest(sanitizer);
-    request.setPipeline(commands);
+    request.operationName = pipelineOperationName(commands);
+    request.queryText = request.pipelineStatement(commands);
+    request.batchSize = commands.size() != 1 ? (long) commands.size() : null;
     request.address = address;
     request.databaseIndex = databaseIndex;
     return request;
@@ -95,18 +91,11 @@ public final class LettuceRequest {
 
   @Nullable
   String getStatement() {
-    String cmd = command;
-    if (cmd == null) {
-      return null;
+    if (queryText != null) {
+      return queryText;
     }
-    if (pipeline) {
-      return argsString;
-    }
-    List<String> args = argsList;
-    if (args == null) {
-      args = splitArgs(argsString);
-    }
-    return sanitizer.sanitize(cmd, args);
+    // command with no args (no setArgs* call); sanitize on demand
+    return operationName == null ? null : sanitizer.sanitize(operationName, emptyList());
   }
 
   private static String pipelineOperationName(List<RedisCommand<?, ?, ?>> commands) {
