@@ -240,6 +240,18 @@ class JedisClientTest {
                             equalTo(SERVER_PORT, port))));
   }
 
+  @Test
+  void transactionDiscardEmitsNoSpans() {
+    // A discarded transaction is abandoned: its queued commands are dropped and the framing
+    // MULTI/DISCARD commands do not produce any spans.
+    Transaction transaction = jedis.multi();
+    transaction.set("tx1", "v1");
+    transaction.get("tx1");
+    transaction.discard();
+
+    assertThat(testing.spans()).isEmpty();
+  }
+
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
         // no span is created for empty pipelines
