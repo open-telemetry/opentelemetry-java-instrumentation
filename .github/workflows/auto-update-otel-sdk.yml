@@ -17,7 +17,7 @@ jobs:
       latest-version: ${{ steps.check-versions.outputs.latest-version }}
       already-opened: ${{ steps.check-versions.outputs.already-opened }}
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - id: check-versions
         name: Check versions
@@ -55,7 +55,7 @@ jobs:
     needs:
       - check-versions
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Update version
         env:
