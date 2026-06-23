@@ -69,13 +69,21 @@ public abstract class JedisRequest {
   }
 
   public static JedisRequest createPipeline(List<JedisRequest> requests) {
+    return createBatch(requests, "PIPELINE");
+  }
+
+  public static JedisRequest createTransaction(List<JedisRequest> requests) {
+    return createBatch(requests, "MULTI");
+  }
+
+  private static JedisRequest createBatch(List<JedisRequest> requests, String prefix) {
     JedisRequest first = requests.get(0);
     JedisRequest request =
         new AutoValue_JedisRequest(
             first.getServerAddress(),
             first.getServerPort(),
             first.getDatabaseIndex(),
-            pipelineOperationName(requests),
+            batchOperationName(requests, prefix),
             pipelineQueryText(requests),
             requests.size() != 1 ? (long) requests.size() : null);
     request.remoteSocketAddress = first.getRemoteSocketAddress();
@@ -115,17 +123,17 @@ public abstract class JedisRequest {
     }
   }
 
-  private static String pipelineOperationName(List<JedisRequest> requests) {
+  private static String batchOperationName(List<JedisRequest> requests, String prefix) {
     if (requests.size() == 1) {
       return requests.get(0).getOperationName();
     }
     String commonOperationName = requests.get(0).getOperationName();
     for (int i = 1; i < requests.size(); i++) {
       if (!commonOperationName.equals(requests.get(i).getOperationName())) {
-        return "PIPELINE";
+        return prefix;
       }
     }
-    return "PIPELINE " + commonOperationName;
+    return prefix + " " + commonOperationName;
   }
 
   private static String pipelineQueryText(List<JedisRequest> requests) {

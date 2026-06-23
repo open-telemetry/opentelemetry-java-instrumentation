@@ -8,8 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -41,8 +43,11 @@ class JedisInstrumentation implements TypeInstrumentation {
                         "connect",
                         "resetState",
                         "getClient",
-                        "disconnect"))),
+                        "disconnect",
+                        "multi"))),
         getClass().getName() + "$JedisMethodAdvice");
+    transformer.applyAdviceToMethod(
+        named("multi").and(takesArguments(0)), getClass().getName() + "$MultiAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -60,6 +65,22 @@ class JedisInstrumentation implements TypeInstrumentation {
       if (requestContext != null) {
         requestContext.detachAndEnd();
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class MultiAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter() {
+      // The MULTI command frames a transaction that is reported as a single batch span at exec(),
+      // so its own command span is suppressed.
+      JedisPipelineContext.enterTransactionFraming();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit() {
+      JedisPipelineContext.exitTransactionFraming();
     }
   }
 }

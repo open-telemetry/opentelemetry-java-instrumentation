@@ -12,23 +12,38 @@ import java.util.ArrayList;
 import java.util.List;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.PipelineBase;
+import redis.clients.jedis.Transaction;
 
 public final class JedisPipelineContext {
   private static final ThreadLocal<PipelineBase> currentPipeline = new ThreadLocal<>();
+  private static final ThreadLocal<Boolean> inTransactionFraming = new ThreadLocal<>();
   private static final VirtualField<PipelineBase, CapturedRequests> CAPTURED_REQUESTS =
       VirtualField.find(PipelineBase.class, CapturedRequests.class);
 
   public static void enter(PipelineBase pipeline) {
-    if (pipeline instanceof Pipeline) {
-      // Only aggregate real pipelines. Transaction also extends MultiKeyPipelineBase but completes
-      // via exec()/discard() (not sync()), so its captured commands would never be flushed into a
-      // batch span; leaving them uncaptured keeps the per-command spans.
+    // Pipeline aggregates at sync(), Transaction at exec(); both capture their queued commands
+    // here.
+    // Other MultiKeyPipelineBase subtypes have no flush point, so leaving them uncaptured keeps
+    // their per-command spans.
+    if (pipeline instanceof Pipeline || pipeline instanceof Transaction) {
       currentPipeline.set(pipeline);
     }
   }
 
   public static void exit() {
     currentPipeline.remove();
+  }
+
+  public static void enterTransactionFraming() {
+    inTransactionFraming.set(Boolean.TRUE);
+  }
+
+  public static void exitTransactionFraming() {
+    inTransactionFraming.remove();
+  }
+
+  public static boolean inTransactionFraming() {
+    return Boolean.TRUE.equals(inTransactionFraming.get());
   }
 
   public static boolean capture(JedisRequest request) {

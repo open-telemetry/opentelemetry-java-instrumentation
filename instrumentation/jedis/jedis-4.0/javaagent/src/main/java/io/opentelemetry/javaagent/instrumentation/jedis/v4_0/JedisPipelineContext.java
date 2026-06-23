@@ -10,39 +10,91 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Transaction;
 
 public final class JedisPipelineContext {
-  private static final ThreadLocal<Pipeline> currentPipeline = new ThreadLocal<>();
-  private static final VirtualField<Pipeline, CapturedRequests> CAPTURED_REQUESTS =
+  // Pipeline and Transaction have no common supertype across the supported jedis range (Queable was
+  // removed in 5.0), so captured requests are keyed on each concrete type separately.
+  private static final ThreadLocal<Object> currentBatch = new ThreadLocal<>();
+  private static final ThreadLocal<Boolean> inTransactionFraming = new ThreadLocal<>();
+  private static final VirtualField<Pipeline, CapturedRequests> PIPELINE_REQUESTS =
       VirtualField.find(Pipeline.class, CapturedRequests.class);
+  private static final VirtualField<Transaction, CapturedRequests> TRANSACTION_REQUESTS =
+      VirtualField.find(Transaction.class, CapturedRequests.class);
 
-  public static void enter(Pipeline pipeline) {
-    currentPipeline.set(pipeline);
+  public static void enter(Object batch) {
+    // Pipeline aggregates at sync() and Transaction at exec(); both capture their queued commands
+    // here. Other batch subtypes have no flush point, so leaving them uncaptured keeps their
+    // per-command spans.
+    if (batch instanceof Pipeline || batch instanceof Transaction) {
+      currentBatch.set(batch);
+    }
   }
 
   public static void exit() {
-    currentPipeline.remove();
+    currentBatch.remove();
+  }
+
+  public static void enterTransactionFraming() {
+    inTransactionFraming.set(Boolean.TRUE);
+  }
+
+  public static void exitTransactionFraming() {
+    inTransactionFraming.remove();
+  }
+
+  public static boolean inTransactionFraming() {
+    return Boolean.TRUE.equals(inTransactionFraming.get());
   }
 
   public static boolean capture(JedisRequest request) {
-    Pipeline pipeline = currentPipeline.get();
-    if (pipeline == null) {
-      return false;
-    }
-    CapturedRequests requests = CAPTURED_REQUESTS.get(pipeline);
+    CapturedRequests requests = getOrCreateCapturedRequests(currentBatch.get());
     if (requests == null) {
-      requests = new CapturedRequests();
-      CAPTURED_REQUESTS.set(pipeline, requests);
+      return false;
     }
     requests.add(request);
     return true;
   }
 
-  public static List<JedisRequest> getAndClearCapturedRequests(Pipeline pipeline) {
-    CapturedRequests requests = CAPTURED_REQUESTS.get(pipeline);
-    CAPTURED_REQUESTS.set(pipeline, null);
-    return requests != null ? requests.requests() : emptyList();
+  @Nullable
+  private static CapturedRequests getOrCreateCapturedRequests(@Nullable Object batch) {
+    if (batch instanceof Pipeline) {
+      Pipeline pipeline = (Pipeline) batch;
+      CapturedRequests requests = PIPELINE_REQUESTS.get(pipeline);
+      if (requests == null) {
+        requests = new CapturedRequests();
+        PIPELINE_REQUESTS.set(pipeline, requests);
+      }
+      return requests;
+    }
+    if (batch instanceof Transaction) {
+      Transaction transaction = (Transaction) batch;
+      CapturedRequests requests = TRANSACTION_REQUESTS.get(transaction);
+      if (requests == null) {
+        requests = new CapturedRequests();
+        TRANSACTION_REQUESTS.set(transaction, requests);
+      }
+      return requests;
+    }
+    return null;
+  }
+
+  public static List<JedisRequest> getAndClearCapturedRequests(Object batch) {
+    if (batch instanceof Pipeline) {
+      Pipeline pipeline = (Pipeline) batch;
+      CapturedRequests requests = PIPELINE_REQUESTS.get(pipeline);
+      PIPELINE_REQUESTS.set(pipeline, null);
+      return requests != null ? requests.requests() : emptyList();
+    }
+    if (batch instanceof Transaction) {
+      Transaction transaction = (Transaction) batch;
+      CapturedRequests requests = TRANSACTION_REQUESTS.get(transaction);
+      TRANSACTION_REQUESTS.set(transaction, null);
+      return requests != null ? requests.requests() : emptyList();
+    }
+    return emptyList();
   }
 
   private static class CapturedRequests {

@@ -37,6 +37,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Transaction;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class JedisClientTest {
@@ -172,10 +173,46 @@ class JedisClientTest {
 
   @ParameterizedTest
   @MethodSource("batchScenarios")
-  void pipelineCommand(BatchScenario scenario) {
+  void pipelineCommand(BatchScenario<Pipeline> scenario) {
     Pipeline pipeline = jedis.pipelined();
-    scenario.pipeline.accept(pipeline);
+    scenario.commands.accept(pipeline);
     pipeline.sync();
+
+    if (scenario.operationName == null) {
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? scenario.operationName + " " + host + ":" + port
+                                : scenario.operationName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
+                            equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("transactionScenarios")
+  void transactionCommand(BatchScenario<Transaction> scenario) {
+    // A MULTI/EXEC transaction is reported as a single batch span (db.operation.name "MULTI"),
+    // mirroring how a pipeline is reported as "PIPELINE". The framing MULTI/EXEC commands and the
+    // individual queued commands do not get their own spans.
+    Transaction transaction = jedis.multi();
+    scenario.commands.accept(transaction);
+    transaction.exec();
 
     if (scenario.operationName == null) {
       assertThat(testing.spans()).isEmpty();
@@ -206,17 +243,17 @@ class JedisClientTest {
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
         // no span is created for empty pipelines
-        Arguments.argumentSet("empty", BatchScenario.builder().build()),
+        Arguments.argumentSet("empty", BatchScenario.<Pipeline>builder().build()),
         Arguments.argumentSet(
             "single",
-            BatchScenario.builder()
+            BatchScenario.<Pipeline>builder()
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
                 .operationName("SET")
                 .queryText("SET batch1 ?")
                 .build()),
         Arguments.argumentSet(
             "twoSameOperation",
-            BatchScenario.builder()
+            BatchScenario.<Pipeline>builder()
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
                 .addCommand(pipeline -> pipeline.set("batch2", "v2"))
                 .operationName("PIPELINE SET")
@@ -225,7 +262,7 @@ class JedisClientTest {
                 .build()),
         Arguments.argumentSet(
             "twoDifferentOperations",
-            BatchScenario.builder()
+            BatchScenario.<Pipeline>builder()
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
                 .addCommand(pipeline -> pipeline.get("batch1"))
                 .operationName("PIPELINE")
@@ -234,51 +271,82 @@ class JedisClientTest {
                 .build()));
   }
 
-  static class BatchScenario {
-    final Consumer<Pipeline> pipeline;
+  private static Stream<Arguments> transactionScenarios() {
+    return Stream.of(
+        // no span is created for empty transactions
+        Arguments.argumentSet("empty", BatchScenario.<Transaction>builder().build()),
+        Arguments.argumentSet(
+            "single",
+            BatchScenario.<Transaction>builder()
+                .addCommand(transaction -> transaction.set("tx1", "v1"))
+                .operationName("SET")
+                .queryText("SET tx1 ?")
+                .build()),
+        Arguments.argumentSet(
+            "twoSameOperation",
+            BatchScenario.<Transaction>builder()
+                .addCommand(transaction -> transaction.set("tx1", "v1"))
+                .addCommand(transaction -> transaction.set("tx2", "v2"))
+                .operationName("MULTI SET")
+                .queryText("SET tx1 ?;SET tx2 ?")
+                .batchSize(2)
+                .build()),
+        Arguments.argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.<Transaction>builder()
+                .addCommand(transaction -> transaction.set("tx1", "v1"))
+                .addCommand(transaction -> transaction.get("tx1"))
+                .operationName("MULTI")
+                .queryText("SET tx1 ?;GET tx1")
+                .batchSize(2)
+                .build()));
+  }
+
+  private static class BatchScenario<T> {
+    private final Consumer<T> commands;
     private final String operationName;
     private final String queryText;
     private final Long batchSize;
 
-    private BatchScenario(Builder builder) {
-      this.pipeline = builder.pipeline;
+    private BatchScenario(Builder<T> builder) {
+      this.commands = builder.commands;
       this.operationName = builder.operationName;
       this.queryText = builder.queryText;
       this.batchSize = builder.batchSize;
     }
 
-    private static Builder builder() {
-      return new Builder();
+    private static <T> Builder<T> builder() {
+      return new Builder<>();
     }
 
-    private static class Builder {
-      private Consumer<Pipeline> pipeline = pipeline -> {};
+    private static class Builder<T> {
+      private Consumer<T> commands = command -> {};
       private String operationName;
       private String queryText;
       private Long batchSize;
 
-      private Builder addCommand(Consumer<Pipeline> command) {
-        this.pipeline = this.pipeline.andThen(command);
+      private Builder<T> addCommand(Consumer<T> command) {
+        this.commands = this.commands.andThen(command);
         return this;
       }
 
-      private Builder operationName(String operationName) {
+      private Builder<T> operationName(String operationName) {
         this.operationName = operationName;
         return this;
       }
 
-      private Builder queryText(String queryText) {
+      private Builder<T> queryText(String queryText) {
         this.queryText = queryText;
         return this;
       }
 
-      private Builder batchSize(long batchSize) {
+      private Builder<T> batchSize(long batchSize) {
         this.batchSize = batchSize;
         return this;
       }
 
-      private BatchScenario build() {
-        return new BatchScenario(this);
+      private BatchScenario<T> build() {
+        return new BatchScenario<>(this);
       }
     }
   }

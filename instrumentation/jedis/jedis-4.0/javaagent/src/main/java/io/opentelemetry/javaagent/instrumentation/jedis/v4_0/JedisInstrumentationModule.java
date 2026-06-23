@@ -35,7 +35,8 @@ public class JedisInstrumentationModule extends InstrumentationModule
     return asList(
         new JedisConnectionInstrumentation(),
         new JedisInstrumentation(),
-        new JedisPipelineInstrumentation());
+        new JedisPipelineInstrumentation(),
+        new JedisTransactionInstrumentation());
   }
 
   @Override

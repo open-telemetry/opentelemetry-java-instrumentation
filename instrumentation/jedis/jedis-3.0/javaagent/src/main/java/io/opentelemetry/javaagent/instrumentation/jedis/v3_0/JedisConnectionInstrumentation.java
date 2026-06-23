@@ -58,11 +58,16 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(
           Connection connection, ProtocolCommand command, byte[][] args) {
+        if (JedisPipelineContext.inTransactionFraming()) {
+          // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI
+          // batch span rather than getting their own spans.
+          return null;
+        }
         Context parentContext = currentContext();
         JedisRequest request = JedisRequest.create(connection, command, asList(args));
         if (JedisPipelineContext.capture(request)) {
-          // A pipeline is active, so this command is captured and aggregated into the batch span
-          // created at sync() rather than getting its own span.
+          // A pipeline or transaction is active, so this command is captured and aggregated into
+          // the batch span created at sync()/exec() rather than getting its own span.
           return null;
         }
         if (!instrumenter().shouldStart(parentContext, request)) {

@@ -19,12 +19,20 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import redis.clients.jedis.Pipeline;
 
 class JedisPipelineInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf("redis.clients.jedis.Pipeline", "redis.clients.jedis.PipelineBase");
+    // appendCommand is declared on different pipeline/transaction base types across the supported
+    // jedis range (the names churn between 4.x, 5.x, and 7.x); match all of them so both pipelines
+    // and transactions are captured.
+    return namedOneOf(
+        "redis.clients.jedis.Pipeline",
+        "redis.clients.jedis.PipelineBase",
+        "redis.clients.jedis.Transaction",
+        "redis.clients.jedis.PipelinedTransactionBase",
+        "redis.clients.jedis.TransactionBase",
+        "redis.clients.jedis.PipeliningBase");
   }
 
   @Override
@@ -39,7 +47,7 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
   public static class QueueCommandAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.This Pipeline pipeline) {
+    public static void onEnter(@Advice.This Object pipeline) {
       // Attaches a thread-local pipeline that the nested Connection.sendCommand advice uses to
       // collect captured requests; sync() then consumes them to build the batch span.
       JedisPipelineContext.enter(pipeline);
@@ -66,7 +74,7 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope start(Pipeline pipeline) {
+      public static AdviceScope start(Object pipeline) {
         List<JedisRequest> requests = JedisPipelineContext.getAndClearCapturedRequests(pipeline);
         if (requests.isEmpty()) {
           // An empty pipeline sends nothing to the server, and with no captured request there is no
@@ -90,7 +98,7 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.This Pipeline pipeline) {
+    public static AdviceScope onEnter(@Advice.This Object pipeline) {
       return AdviceScope.start(pipeline);
     }
 

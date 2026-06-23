@@ -26,10 +26,14 @@ import net.bytebuddy.matcher.ElementMatcher;
 class JedisPipelineInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
+    // Transaction/BinaryTransaction declare the queued command methods directly in jedis 2.0.x
+    // (where they do not yet extend MultiKeyPipelineBase).
     return namedOneOf(
         "redis.clients.jedis.Pipeline",
         "redis.clients.jedis.PipelineBase",
-        "redis.clients.jedis.MultiKeyPipelineBase");
+        "redis.clients.jedis.MultiKeyPipelineBase",
+        "redis.clients.jedis.Transaction",
+        "redis.clients.jedis.BinaryTransaction");
   }
 
   @Override
