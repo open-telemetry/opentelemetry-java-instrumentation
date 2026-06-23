@@ -251,7 +251,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
 
   @Test
   void testNonReactiveCommandShouldNotProduceSpan() {
-    // digest computes a SHA locally without contacting redis, so it must not produce a span
+    // digest computes a SHA locally without contacting redis
     String res = reactiveCommands.digest("test");
 
     assertThat(res).isNotNull();
