@@ -138,35 +138,19 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class FlushAdvice {
 
-    public static class FlushAdviceScope {
-      @Nullable private final LettuceBatchContext.BatchScope batchScope;
-
-      private FlushAdviceScope(@Nullable LettuceBatchContext.BatchScope batchScope) {
-        this.batchScope = batchScope;
-      }
-
-      public static FlushAdviceScope start(AbstractRedisAsyncCommands<?, ?> commands) {
-        return new FlushAdviceScope(LettuceBatchContext.flush(commands));
-      }
-
-      public void end(@Nullable Throwable throwable) {
-        if (throwable != null && batchScope != null) {
-          batchScope.endOne(throwable);
-        }
-      }
-    }
-
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static FlushAdviceScope onEnter(@Advice.This AbstractRedisAsyncCommands<?, ?> commands) {
-      return FlushAdviceScope.start(commands);
+    @Nullable
+    public static LettuceBatchContext.BatchScope onEnter(
+        @Advice.This AbstractRedisAsyncCommands<?, ?> commands) {
+      return LettuceBatchContext.flush(commands);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable FlushAdviceScope adviceScope) {
-      if (adviceScope != null) {
-        adviceScope.end(throwable);
+        @Advice.Enter @Nullable LettuceBatchContext.BatchScope batchScope) {
+      if (throwable != null && batchScope != null) {
+        batchScope.endOne(throwable);
       }
     }
   }
