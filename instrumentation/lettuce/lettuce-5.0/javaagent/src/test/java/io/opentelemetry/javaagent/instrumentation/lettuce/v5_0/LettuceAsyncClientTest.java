@@ -150,8 +150,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
               ConnectionFuture<StatefulRedisConnection<String, String>> connectionFuture =
                   testConnectionClient.connectAsync(
                       StringCodec.UTF8,
-                      RedisURI.create(
-                          "redis://" + host + ":" + incorrectPort + "?timeout=3s"));
+                      RedisURI.create("redis://" + host + ":" + incorrectPort + "?timeout=3s"));
               connectionFuture.get();
             });
 

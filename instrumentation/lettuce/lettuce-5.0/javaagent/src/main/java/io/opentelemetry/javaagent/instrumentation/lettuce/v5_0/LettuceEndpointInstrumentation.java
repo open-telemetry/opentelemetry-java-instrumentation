@@ -25,10 +25,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Instruments {@code DefaultEndpoint} (the {@code RedisChannelWriter}), the single point where every
- * command is written regardless of whether the application drives auto-flush through the commands
- * object (older lettuce) or the connection (newer lettuce). Per-command spans and auto-flush batch
- * aggregation are both decided here so they work across the whole supported version range.
+ * Instruments {@code DefaultEndpoint} (the {@code RedisChannelWriter}), the single point where
+ * every command is written regardless of whether the application drives auto-flush through the
+ * commands object (older lettuce) or the connection (newer lettuce). Per-command spans and
+ * auto-flush batch aggregation are both decided here so they work across the whole supported
+ * version range.
  */
 class LettuceEndpointInstrumentation implements TypeInstrumentation {
 
@@ -63,7 +64,8 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       }
 
       // Reactive commands are not backed by an AsyncCommand future and are traced by
-      // LettuceReactiveCommandsInstrumentation; only async/sync commands (backed by an AsyncCommand)
+      // LettuceReactiveCommandsInstrumentation; only async/sync commands (backed by an
+      // AsyncCommand)
       // get their span created here, to avoid a duplicate span for reactive commands.
       if (asyncCommand == null) {
         return;
