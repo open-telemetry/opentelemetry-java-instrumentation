@@ -51,20 +51,20 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
       private final AbstractRedisAsyncCommands<?, ?> commands;
       @Nullable private final Context context;
       @Nullable private final Scope scope;
-      private final boolean captured;
+      private final boolean batching;
 
       public AdviceScope(
           AbstractRedisAsyncCommands<?, ?> commands,
           @Nullable Context context,
           @Nullable Scope scope,
-          boolean captured) {
+          boolean batching) {
         this.commands = commands;
         this.context = context;
         this.scope = scope;
-        this.captured = captured;
+        this.batching = batching;
       }
 
-      public static AdviceScope captured(AbstractRedisAsyncCommands<?, ?> commands) {
+      public static AdviceScope batching(AbstractRedisAsyncCommands<?, ?> commands) {
         Context parentContext = currentContext();
         Context context = parentContext.with(COMMAND_CONTEXT_KEY, parentContext);
         return new AdviceScope(commands, null, context.makeCurrent(), true);
@@ -74,21 +74,14 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
           @Nullable Throwable throwable,
           RedisCommand<?, ?, ?> command,
           @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
-        if (captured) {
-          try {
-            LettuceBatchContext.capture(commands, command, asyncCommand);
-          } finally {
-            if (scope != null) {
-              scope.close();
-            }
-          }
-          return;
+        if (scope != null) {
+          scope.close();
         }
-        if (scope == null || context == null) {
-          return;
+        if (batching) {
+          LettuceBatchContext.capture(commands, command, asyncCommand);
+        } else if (context != null) {
+          InstrumentationPoints.afterCommand(command, context, throwable, asyncCommand);
         }
-        scope.close();
-        InstrumentationPoints.afterCommand(command, context, throwable, asyncCommand);
       }
     }
 
@@ -97,8 +90,8 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
     public static AdviceScope onEnter(
         @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
         @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-      if (LettuceBatchContext.isCollecting(commands)) {
-        return AdviceScope.captured(commands);
+      if (LettuceBatchContext.isBatching(commands)) {
+        return AdviceScope.batching(commands);
       }
 
       Context parentContext = currentContext();
@@ -131,7 +124,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
         @Advice.Argument(0) boolean autoFlush) {
-      LettuceBatchContext.setCollecting(commands, !autoFlush);
+      LettuceBatchContext.setBatching(commands, !autoFlush);
     }
   }
 
@@ -149,6 +142,8 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable LettuceBatchContext.BatchScope batchScope) {
+      // the batch span is normally ended once all of its commands complete (BatchScope.endOne);
+      // end the batch early here if flushCommands() itself throws
       if (throwable != null && batchScope != null) {
         batchScope.endOne(throwable);
       }

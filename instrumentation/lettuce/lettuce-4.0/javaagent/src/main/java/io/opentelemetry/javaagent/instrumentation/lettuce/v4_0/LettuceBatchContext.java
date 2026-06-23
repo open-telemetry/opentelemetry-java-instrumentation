@@ -35,11 +35,11 @@ public final class LettuceBatchContext {
   private static final VirtualField<AbstractRedisAsyncCommands<?, ?>, BatchState> BATCH_STATE =
       VirtualField.find(AbstractRedisAsyncCommands.class, BatchState.class);
 
-  public static void setCollecting(AbstractRedisAsyncCommands<?, ?> commands, boolean collecting) {
-    BATCH_STATE.set(commands, collecting ? new BatchState() : null);
+  public static void setBatching(AbstractRedisAsyncCommands<?, ?> commands, boolean batching) {
+    BATCH_STATE.set(commands, batching ? new BatchState() : null);
   }
 
-  public static boolean isCollecting(AbstractRedisAsyncCommands<?, ?> commands) {
+  public static boolean isBatching(AbstractRedisAsyncCommands<?, ?> commands) {
     return BATCH_STATE.get(commands) != null;
   }
 

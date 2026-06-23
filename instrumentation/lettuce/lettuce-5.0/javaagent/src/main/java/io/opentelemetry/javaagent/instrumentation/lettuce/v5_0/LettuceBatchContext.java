@@ -35,11 +35,11 @@ public final class LettuceBatchContext {
   private static final VirtualField<DefaultEndpoint, BatchState> BATCH_STATE =
       VirtualField.find(DefaultEndpoint.class, BatchState.class);
 
-  public static void setCollecting(DefaultEndpoint endpoint, boolean collecting) {
-    BATCH_STATE.set(endpoint, collecting ? new BatchState() : null);
+  public static void setBatching(DefaultEndpoint endpoint, boolean batching) {
+    BATCH_STATE.set(endpoint, batching ? new BatchState() : null);
   }
 
-  public static boolean isCollecting(DefaultEndpoint endpoint) {
+  public static boolean isBatching(DefaultEndpoint endpoint) {
     return BATCH_STATE.get(endpoint) != null;
   }
 

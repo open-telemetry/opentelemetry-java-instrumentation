@@ -59,7 +59,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       AsyncCommand<?, ?, ?> asyncCommand = asAsyncCommand(command);
 
-      if (LettuceBatchContext.isCollecting(endpoint)) {
+      if (LettuceBatchContext.isBatching(endpoint)) {
         LettuceBatchContext.capture(endpoint, command, asyncCommand);
         return;
       }
@@ -113,7 +113,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) boolean autoFlush) {
-      LettuceBatchContext.setCollecting(endpoint, !autoFlush);
+      LettuceBatchContext.setBatching(endpoint, !autoFlush);
     }
   }
 
@@ -130,6 +130,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable LettuceBatchContext.BatchScope batchScope) {
+      // the batch span is normally ended once all of its commands complete (BatchScope.endOne)
       if (throwable != null && batchScope != null) {
         batchScope.endOne(throwable);
       }
