@@ -19,10 +19,10 @@ public final class JedisPipelineContext {
   // removed in 5.0), so captured requests are keyed on each concrete type separately.
   private static final ThreadLocal<Object> currentBatch = new ThreadLocal<>();
   private static final ThreadLocal<Boolean> inTransactionFraming = new ThreadLocal<>();
-  private static final VirtualField<Pipeline, CapturedRequests> PIPELINE_REQUESTS =
-      VirtualField.find(Pipeline.class, CapturedRequests.class);
-  private static final VirtualField<Transaction, CapturedRequests> TRANSACTION_REQUESTS =
-      VirtualField.find(Transaction.class, CapturedRequests.class);
+  private static final VirtualField<Pipeline, List<JedisRequest>> PIPELINE_REQUESTS =
+      VirtualField.find(Pipeline.class, List.class);
+  private static final VirtualField<Transaction, List<JedisRequest>> TRANSACTION_REQUESTS =
+      VirtualField.find(Transaction.class, List.class);
 
   public static void enter(Object batch) {
     // Pipeline aggregates at sync() and Transaction at exec(); both capture their queued commands
@@ -50,7 +50,7 @@ public final class JedisPipelineContext {
   }
 
   public static boolean capture(JedisRequest request) {
-    CapturedRequests requests = getOrCreateCapturedRequests(currentBatch.get());
+    List<JedisRequest> requests = getOrCreateCapturedRequests(currentBatch.get());
     if (requests == null) {
       return false;
     }
@@ -59,21 +59,21 @@ public final class JedisPipelineContext {
   }
 
   @Nullable
-  private static CapturedRequests getOrCreateCapturedRequests(@Nullable Object batch) {
+  private static List<JedisRequest> getOrCreateCapturedRequests(@Nullable Object batch) {
     if (batch instanceof Pipeline) {
       Pipeline pipeline = (Pipeline) batch;
-      CapturedRequests requests = PIPELINE_REQUESTS.get(pipeline);
+      List<JedisRequest> requests = PIPELINE_REQUESTS.get(pipeline);
       if (requests == null) {
-        requests = new CapturedRequests();
+        requests = new ArrayList<>();
         PIPELINE_REQUESTS.set(pipeline, requests);
       }
       return requests;
     }
     if (batch instanceof Transaction) {
       Transaction transaction = (Transaction) batch;
-      CapturedRequests requests = TRANSACTION_REQUESTS.get(transaction);
+      List<JedisRequest> requests = TRANSACTION_REQUESTS.get(transaction);
       if (requests == null) {
-        requests = new CapturedRequests();
+        requests = new ArrayList<>();
         TRANSACTION_REQUESTS.set(transaction, requests);
       }
       return requests;
@@ -84,29 +84,17 @@ public final class JedisPipelineContext {
   public static List<JedisRequest> getAndClearCapturedRequests(Object batch) {
     if (batch instanceof Pipeline) {
       Pipeline pipeline = (Pipeline) batch;
-      CapturedRequests requests = PIPELINE_REQUESTS.get(pipeline);
+      List<JedisRequest> requests = PIPELINE_REQUESTS.get(pipeline);
       PIPELINE_REQUESTS.set(pipeline, null);
-      return requests != null ? requests.requests() : emptyList();
+      return requests != null ? requests : emptyList();
     }
     if (batch instanceof Transaction) {
       Transaction transaction = (Transaction) batch;
-      CapturedRequests requests = TRANSACTION_REQUESTS.get(transaction);
+      List<JedisRequest> requests = TRANSACTION_REQUESTS.get(transaction);
       TRANSACTION_REQUESTS.set(transaction, null);
-      return requests != null ? requests.requests() : emptyList();
+      return requests != null ? requests : emptyList();
     }
     return emptyList();
-  }
-
-  private static class CapturedRequests {
-    private final List<JedisRequest> requests = new ArrayList<>();
-
-    private void add(JedisRequest request) {
-      requests.add(request);
-    }
-
-    private List<JedisRequest> requests() {
-      return requests;
-    }
   }
 
   private JedisPipelineContext() {}

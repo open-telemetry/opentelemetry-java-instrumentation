@@ -17,8 +17,8 @@ import redis.clients.jedis.Transaction;
 public final class JedisPipelineContext {
   private static final ThreadLocal<PipelineBase> currentPipeline = new ThreadLocal<>();
   private static final ThreadLocal<Boolean> inTransactionFraming = new ThreadLocal<>();
-  private static final VirtualField<PipelineBase, CapturedRequests> CAPTURED_REQUESTS =
-      VirtualField.find(PipelineBase.class, CapturedRequests.class);
+  private static final VirtualField<PipelineBase, List<JedisRequest>> CAPTURED_REQUESTS =
+      VirtualField.find(PipelineBase.class, List.class);
 
   public static void enter(PipelineBase pipeline) {
     // Pipeline aggregates at sync(), Transaction at exec(); both capture their queued commands
@@ -51,9 +51,9 @@ public final class JedisPipelineContext {
     if (pipeline == null) {
       return false;
     }
-    CapturedRequests requests = CAPTURED_REQUESTS.get(pipeline);
+    List<JedisRequest> requests = CAPTURED_REQUESTS.get(pipeline);
     if (requests == null) {
-      requests = new CapturedRequests();
+      requests = new ArrayList<>();
       CAPTURED_REQUESTS.set(pipeline, requests);
     }
     requests.add(request);
@@ -61,21 +61,9 @@ public final class JedisPipelineContext {
   }
 
   public static List<JedisRequest> getAndClearCapturedRequests(PipelineBase pipeline) {
-    CapturedRequests requests = CAPTURED_REQUESTS.get(pipeline);
+    List<JedisRequest> requests = CAPTURED_REQUESTS.get(pipeline);
     CAPTURED_REQUESTS.set(pipeline, null);
-    return requests != null ? requests.requests() : emptyList();
-  }
-
-  private static class CapturedRequests {
-    private final List<JedisRequest> requests = new ArrayList<>();
-
-    private void add(JedisRequest request) {
-      requests.add(request);
-    }
-
-    private List<JedisRequest> requests() {
-      return requests;
-    }
+    return requests != null ? requests : emptyList();
   }
 
   private JedisPipelineContext() {}
