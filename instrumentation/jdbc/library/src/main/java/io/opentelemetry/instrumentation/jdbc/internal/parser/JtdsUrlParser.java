@@ -66,9 +66,12 @@ public final class JtdsUrlParser implements JdbcUrlParser {
         instanceName = urlParams.get("instance");
       }
 
-      // If no path, use databasename param as fallback for database
-      if (ctx.databaseName() == null && urlParams.containsKey("databasename")) {
-        ctx.databaseName(urlParams.get("databasename"));
+      // If no path, use databasename or database param as fallback for database
+      if (ctx.databaseName() == null) {
+        String databaseName = MssqlUrlParser.getDatabaseNameParam(urlParams);
+        if (databaseName != null) {
+          ctx.databaseName(databaseName);
+        }
       }
     }
 

@@ -14,8 +14,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -32,19 +32,24 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PASSWORD;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.r2dbc.spi.Batch;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -298,10 +303,10 @@ public abstract class AbstractR2dbcStatementTest {
         SERVER_PORT);
   }
 
-  @Test
-  void testBatchQueries() {
-    assumeTrue(emitStableDatabaseSemconv());
-
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void batchQueries(BatchScenario scenario) {
     DbSystemProps props = systems.get(MARIADB.system);
     startContainer(props);
     ConnectionFactory connectionFactory =
@@ -316,42 +321,176 @@ public abstract class AbstractR2dbcStatementTest {
                 .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
                 .build());
 
-    getTesting()
-        .runWithSpan(
-            "parent",
-            () -> {
-              Mono.from(connectionFactory.create())
-                  .flatMapMany(
-                      connection ->
-                          Flux.from(
-                                  connection
-                                      .createBatch()
-                                      .add("SELECT 1")
-                                      .add("SELECT 2")
-                                      .execute())
-                              .flatMap(result -> result.map((row, metadata) -> ""))
-                              .concatWith(Mono.from(connection.close()).cast(String.class)))
-                  .blockLast(Duration.ofMinutes(1));
-            });
+    // recreate a fresh batch_test table for each scenario so that batch row ids can be reused
+    // without worrying about collisions from previous scenarios; the table also lets the collection
+    // name be captured (in db.query.summary and, under old semconv, db.sql.table)
+    recreateBatchTestTable(connectionFactory);
+    getTesting().waitForTraces(2);
+    getTesting().clearData();
 
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                getTesting()
+                    .runWithSpan(
+                        "parent",
+                        () -> {
+                          Mono.from(connectionFactory.create())
+                              .flatMapMany(
+                                  connection -> {
+                                    Batch batch = connection.createBatch();
+                                    for (String query : scenario.queries) {
+                                      batch.add(query);
+                                    }
+                                    return Flux.from(batch.execute())
+                                        .flatMap(result -> result.map((row, metadata) -> ""))
+                                        .concatWith(
+                                            Mono.from(connection.close()).cast(String.class));
+                                  })
+                              .blockLast(Duration.ofMinutes(1));
+                        }));
+
+    String connectionString = MARIADB.system + "://localhost:" + port;
+
+    if (scenario.queries.isEmpty()) {
+      // an empty batch fails to execute but still produces a client span
+      assertThat(thrown).isInstanceOf(NoSuchElementException.class);
+      getTesting()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                      span ->
+                          span.hasName(DB)
+                              .hasKind(SpanKind.CLIENT)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(
+                                      DB_CONNECTION_STRING,
+                                      emitStableDatabaseSemconv() ? null : connectionString),
+                                  equalTo(maybeStable(DB_SYSTEM), MARIADB.system),
+                                  equalTo(maybeStable(DB_NAME), DB),
+                                  equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                                  equalTo(
+                                      maybeStable(DB_STATEMENT),
+                                      emitStableDatabaseSemconv() ? null : ""),
+                                  equalTo(DB_OPERATION_BATCH_SIZE, null),
+                                  equalTo(maybeStablePeerService(), "test-peer-service"),
+                                  equalTo(SERVER_ADDRESS, container.getHost()),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(
+                                      ERROR_TYPE,
+                                      emitStableDatabaseSemconv()
+                                          ? "java.util.NoSuchElementException"
+                                          : null))));
+      return;
+    }
+
+    assertThat(thrown).isNull();
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("BATCH SELECT")
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? scenario.spanName
+                                    : scenario.oldSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, MARIADB.system),
-                                equalTo(DB_NAMESPACE, DB),
-                                equalTo(DB_QUERY_TEXT, "SELECT ?"),
-                                equalTo(DB_QUERY_SUMMARY, "BATCH SELECT"),
-                                equalTo(DB_OPERATION_BATCH_SIZE, 2),
+                                equalTo(
+                                    DB_CONNECTION_STRING,
+                                    emitStableDatabaseSemconv() ? null : connectionString),
+                                equalTo(maybeStable(DB_SYSTEM), MARIADB.system),
+                                equalTo(maybeStable(DB_NAME), DB),
+                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv()
+                                        ? scenario.queryText
+                                        : scenario.oldStatement),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? scenario.summary : null),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : scenario.oldOperation),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : scenario.oldCollection),
+                                equalTo(
+                                    DB_OPERATION_BATCH_SIZE,
+                                    emitStableDatabaseSemconv() ? scenario.batchSize : null),
                                 equalTo(maybeStablePeerService(), "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port))));
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        Arguments.argumentSet("empty", BatchScenario.builder().build()),
+        Arguments.argumentSet(
+            "single",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .spanName("INSERT batch_test")
+                .oldSpanName("INSERT " + DB + ".batch_test")
+                .summary("INSERT batch_test")
+                .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .oldStatement("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .oldOperation("INSERT")
+                .oldCollection("batch_test")
+                .build()),
+        Arguments.argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (2, 2)")
+                .spanName("BATCH INSERT batch_test")
+                .oldSpanName("INSERT " + DB + ".batch_test")
+                .summary("BATCH INSERT batch_test")
+                .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .oldStatement(
+                    "INSERT INTO batch_test (id, num) VALUES (?, ?); INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .oldOperation("INSERT")
+                .oldCollection("batch_test")
+                .batchSize(2)
+                .build()),
+        Arguments.argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .addQuery("UPDATE batch_test SET num = 5 WHERE id = 1")
+                .spanName("BATCH")
+                .oldSpanName("INSERT " + DB + ".batch_test")
+                .summary("BATCH")
+                .queryText(
+                    "INSERT INTO batch_test (id, num) VALUES (?, ?); UPDATE batch_test SET num = ? WHERE id = ?")
+                .oldStatement(
+                    "INSERT INTO batch_test (id, num) VALUES (?, ?); UPDATE batch_test SET num = ? WHERE id = ?")
+                .oldOperation("INSERT")
+                .oldCollection("batch_test")
+                .batchSize(2)
+                .build()));
+  }
+
+  private void recreateBatchTestTable(ConnectionFactory connectionFactory) {
+    Mono.from(connectionFactory.create())
+        .flatMapMany(
+            connection ->
+                Mono.from(connection.createStatement("DROP TABLE IF EXISTS batch_test").execute())
+                    .flatMapMany(result -> result.map((row, metadata) -> ""))
+                    .concatWith(
+                        Mono.from(
+                                connection
+                                    .createStatement(
+                                        "CREATE TABLE batch_test (id INTEGER PRIMARY KEY, num INTEGER)")
+                                    .execute())
+                            .flatMapMany(result -> result.map((row, metadata) -> "")))
+                    .concatWith(Mono.from(connection.close()).cast(String.class)))
+        .blockLast(Duration.ofMinutes(1));
   }
 
   private static class Parameter {
@@ -405,6 +544,95 @@ public abstract class AbstractR2dbcStatementTest {
         envVariables.put(keyValues[2 * i], keyValues[2 * i + 1]);
       }
       return this;
+    }
+  }
+
+  private static final class BatchScenario {
+    final List<String> queries;
+    final String spanName;
+    final String oldSpanName;
+    final String summary;
+    final String queryText;
+    final String oldStatement;
+    final String oldOperation;
+    final String oldCollection;
+    final Long batchSize;
+
+    BatchScenario(Builder builder) {
+      this.queries = builder.queries;
+      this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
+      this.summary = builder.summary;
+      this.queryText = builder.queryText;
+      this.oldStatement = builder.oldStatement;
+      this.oldOperation = builder.oldOperation;
+      this.oldCollection = builder.oldCollection;
+      this.batchSize = builder.batchSize;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static final class Builder {
+      private final List<String> queries = new ArrayList<>();
+      private String spanName;
+      private String oldSpanName;
+      private String summary;
+      private String queryText;
+      private String oldStatement;
+      private String oldOperation;
+      private String oldCollection;
+      private Long batchSize;
+
+      Builder addQuery(String query) {
+        queries.add(query);
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
+      Builder summary(String summary) {
+        this.summary = summary;
+        return this;
+      }
+
+      Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      Builder oldStatement(String oldStatement) {
+        this.oldStatement = oldStatement;
+        return this;
+      }
+
+      Builder oldOperation(String oldOperation) {
+        this.oldOperation = oldOperation;
+        return this;
+      }
+
+      Builder oldCollection(String oldCollection) {
+        this.oldCollection = oldCollection;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
     }
   }
 }

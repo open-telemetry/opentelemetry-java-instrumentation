@@ -38,5 +38,34 @@ public final class AsyncMethodCallbackUtil {
     };
   }
 
+  public static <T> AsyncMethodCallback<T> wrap(
+      AsyncMethodCallback<T> callback,
+      ServerInProtocolDecorator serverInProtocolDecorator,
+      ServerOutProtocolDecorator serverOutProtocolDecorator) {
+    Context context = Context.current();
+    return new AsyncMethodCallback<T>() {
+
+      @Override
+      public void onComplete(T response) {
+        Throwable error = null;
+        try (Scope ignore = context.makeCurrent()) {
+          callback.onComplete(response);
+        } catch (Throwable e) {
+          error = e;
+        }
+        serverInProtocolDecorator.endSpan(error, serverOutProtocolDecorator.hasException());
+      }
+
+      @Override
+      public void onError(Exception exception) {
+        try (Scope ignore = context.makeCurrent()) {
+          callback.onError(exception);
+        } finally {
+          serverInProtocolDecorator.endSpan(exception, serverOutProtocolDecorator.hasException());
+        }
+      }
+    };
+  }
+
   private AsyncMethodCallbackUtil() {}
 }

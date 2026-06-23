@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.statementInstrumenter;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -83,11 +84,11 @@ public class JdbcAdviceScope {
       }
       Long batchSize = JdbcData.getPreparedStatementBatchSize((PreparedStatement) statement);
       Map<String, String> parameters = JdbcData.getParameters((PreparedStatement) statement);
-      return DbRequest.create(statement, sql, batchSize, parameters, true);
+      return DbRequest.create(statement, sql, batchSize != null ? batchSize : 0L, parameters, true);
     } else {
       JdbcData.StatementBatchInfo batchInfo = JdbcData.getStatementBatchInfo(statement);
       if (batchInfo == null) {
-        return DbRequest.create(statement, null);
+        return DbRequest.create(statement, emptyList(), 0L, false);
       } else {
         return DbRequest.create(
             statement, batchInfo.getQueryTexts(), batchInfo.getBatchSize(), false);

@@ -12744,6 +12744,8 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: error.type
+        type: STRING
       - name: server.address
         type: STRING
       - name: server.port

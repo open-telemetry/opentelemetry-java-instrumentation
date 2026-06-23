@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TField;
 import org.apache.thrift.protocol.TMessage;
+import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolDecorator;
 import org.apache.thrift.protocol.TStruct;
@@ -29,8 +30,8 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
 
   private final TProtocol protocol;
   private final Instrumenter<ThriftRequest, ThriftResponse> instrumenter;
-  private final String serviceName;
-
+  private boolean isOneway;
+  @Nullable private String serviceName;
   @Nullable private String methodName;
   @Nullable private ThriftRequest currentRequest;
   @Nullable private Context currentContext;
@@ -39,7 +40,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
 
   public ServerInProtocolDecorator(
       TProtocol protocol,
-      String serviceName,
+      @Nullable String serviceName,
       Instrumenter<ThriftRequest, ThriftResponse> instrumenter) {
     super(protocol);
     this.protocol = protocol;
@@ -51,6 +52,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
   public TMessage readMessageBegin() throws TException {
     TMessage message = super.readMessageBegin();
     this.methodName = message.name;
+    this.isOneway = message.type == TMessageType.ONEWAY;
     structDepth = 0;
     return message;
   }
@@ -132,11 +134,23 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     }
     instrumenter.end(
         currentContext, currentRequest, failed ? ThriftResponse.FAILED : null, throwable);
+    // Avoid duplicate end invocations from exceptions in asynchronous workflows
+    currentContext = null;
+    currentRequest = null;
+    currentScope = null;
   }
 
   private boolean isContextPropagationField(TField field) {
     return structDepth == 1
         && field.id == ContextPropagationUtil.TRACE_CONTEXT_FIELD_ID
         && field.type == TType.MAP;
+  }
+
+  public void setServiceName(String serviceName) {
+    this.serviceName = serviceName;
+  }
+
+  public boolean isOneway() {
+    return isOneway;
   }
 }
