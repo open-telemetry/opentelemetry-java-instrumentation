@@ -123,7 +123,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static LettuceBatchContext.BatchScope onEnter(@Advice.This DefaultEndpoint endpoint) {
-      return LettuceBatchContext.start(endpoint);
+      return LettuceBatchContext.flush(endpoint);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

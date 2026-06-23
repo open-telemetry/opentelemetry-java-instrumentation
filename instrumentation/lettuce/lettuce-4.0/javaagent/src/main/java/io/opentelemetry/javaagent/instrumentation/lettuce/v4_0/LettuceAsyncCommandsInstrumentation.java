@@ -146,7 +146,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
       }
 
       public static FlushAdviceScope start(AbstractRedisAsyncCommands<?, ?> commands) {
-        return new FlushAdviceScope(LettuceBatchContext.start(commands));
+        return new FlushAdviceScope(LettuceBatchContext.flush(commands));
       }
 
       public void end(@Nullable Throwable throwable) {

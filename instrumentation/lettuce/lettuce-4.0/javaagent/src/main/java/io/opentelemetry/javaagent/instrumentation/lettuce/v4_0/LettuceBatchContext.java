@@ -56,9 +56,14 @@ public final class LettuceBatchContext {
   }
 
   @Nullable
-  public static BatchScope start(AbstractRedisAsyncCommands<?, ?> commands) {
+  public static BatchScope flush(AbstractRedisAsyncCommands<?, ?> commands) {
     BatchState state = BATCH_STATE.get(commands);
-    return state == null ? null : state.start();
+    if (state == null || state.isEmpty()) {
+      return null;
+    }
+    // hand off the collected commands and install a fresh buffer for the next flush
+    BATCH_STATE.set(commands, new BatchState());
+    return BatchScope.start(state.commands, state.asyncCommands, state.parentContext);
   }
 
   private LettuceBatchContext() {}
@@ -133,19 +138,8 @@ public final class LettuceBatchContext {
       }
     }
 
-    @Nullable
-    private BatchScope start() {
-      if (commands.isEmpty()) {
-        return null;
-      }
-
-      List<RedisCommand<?, ?, ?>> batchCommands = new ArrayList<>(commands);
-      commands.clear();
-      List<AsyncCommand<?, ?, ?>> batchAsyncCommands = new ArrayList<>(asyncCommands);
-      asyncCommands.clear();
-      Context batchParentContext = parentContext;
-      parentContext = null;
-      return BatchScope.start(batchCommands, batchAsyncCommands, batchParentContext);
+    private boolean isEmpty() {
+      return commands.isEmpty();
     }
   }
 }
