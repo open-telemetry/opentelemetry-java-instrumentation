@@ -483,7 +483,6 @@ class LettuceAsyncClientTest {
                         .hasParent(trace.getSpan(0))));
   }
 
-  // Lettuce auto-flush batching is traced as one aggregate span from flush through completion.
   @ParameterizedTest
   @MethodSource("deferredFlushScenarios")
   void deferredFlushCommand(BatchScenario scenario) throws Exception {
