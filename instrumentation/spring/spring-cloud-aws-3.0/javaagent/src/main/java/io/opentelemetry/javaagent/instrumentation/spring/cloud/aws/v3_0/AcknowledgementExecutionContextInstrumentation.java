@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
@@ -34,14 +33,17 @@ class AcknowledgementExecutionContextInstrumentation implements TypeInstrumentat
   public static class ExecuteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static Scope methodEnter(@Advice.Argument(0) Collection<Message<?>> messages) {
+    public static SpringAwsUtil.MessageScope methodEnter(
+        @Advice.Argument(0) Collection<Message<?>> messages) {
       return SpringAwsUtil.handleBatch(messages);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter @Nullable Scope scope) {
+    public static void methodExit(
+        @Advice.Enter @Nullable SpringAwsUtil.MessageScope scope,
+        @Advice.Thrown @Nullable Throwable throwable) {
       if (scope != null) {
-        scope.close();
+        scope.close(throwable);
       }
     }
   }

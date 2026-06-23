@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
@@ -57,7 +56,8 @@ class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentat
   public static class OnMessagesAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static SpringAwsUtil.MessageScope methodEnter(@Advice.Argument(0) Collection<Message<?>> messages) {
+    public static SpringAwsUtil.MessageScope methodEnter(
+        @Advice.Argument(0) Collection<Message<?>> messages) {
       return SpringAwsUtil.handleBatch(messages);
     }
 
