@@ -9,17 +9,16 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.batchInstrumenter;
 
+import com.lambdaworks.redis.AbstractRedisAsyncCommands;
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,26 +29,22 @@ public final class LettuceBatchContext {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
           .getBoolean("experimental_span_attributes/development", false);
 
-  private static final Map<Object, BatchState> states =
-      Collections.synchronizedMap(new WeakHashMap<>());
+  private static final VirtualField<AbstractRedisAsyncCommands<?, ?>, BatchState> BATCH_STATE =
+      VirtualField.find(AbstractRedisAsyncCommands.class, BatchState.class);
 
-  public static void setCollecting(Object commands, boolean collecting) {
-    if (collecting) {
-      states.put(commands, new BatchState());
-    } else {
-      states.remove(commands);
-    }
+  public static void setCollecting(AbstractRedisAsyncCommands<?, ?> commands, boolean collecting) {
+    BATCH_STATE.set(commands, collecting ? new BatchState() : null);
   }
 
-  public static boolean isCollecting(Object commands) {
-    return states.containsKey(commands);
+  public static boolean isCollecting(AbstractRedisAsyncCommands<?, ?> commands) {
+    return BATCH_STATE.get(commands) != null;
   }
 
   public static boolean capture(
-      Object commands,
+      AbstractRedisAsyncCommands<?, ?> commands,
       RedisCommand<?, ?, ?> command,
       @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
-    BatchState state = states.get(commands);
+    BatchState state = BATCH_STATE.get(commands);
     if (state == null) {
       return false;
     }
@@ -58,8 +53,8 @@ public final class LettuceBatchContext {
   }
 
   @Nullable
-  public static BatchScope start(Object commands) {
-    BatchState state = states.get(commands);
+  public static BatchScope start(AbstractRedisAsyncCommands<?, ?> commands) {
+    BatchState state = BATCH_STATE.get(commands);
     return state == null ? null : state.start();
   }
 

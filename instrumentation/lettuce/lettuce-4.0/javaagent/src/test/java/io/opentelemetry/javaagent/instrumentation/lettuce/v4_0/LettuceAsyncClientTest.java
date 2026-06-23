@@ -495,8 +495,8 @@ class LettuceAsyncClientTest {
     asyncCommands.flushCommands();
     for (RedisFuture<?> future : futures) {
       Throwable thrown = catchThrowable(() -> future.get(10, SECONDS));
-      if (scenario.errorType == null) {
-        assertThat(thrown).isNull();
+      if (thrown != null) {
+        assertThat(thrown.getCause().getClass().getName()).isEqualTo(scenario.errorType);
       }
     }
 

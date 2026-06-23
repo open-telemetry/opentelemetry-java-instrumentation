@@ -15,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.CommandWrapper;
+import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -55,7 +56,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This Object endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
+        @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       AsyncCommand<?, ?, ?> asyncCommand = asAsyncCommand(command);
 
       if (LettuceBatchContext.isCollecting(endpoint)) {
@@ -110,7 +111,8 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
   public static class SetAutoFlushAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object endpoint, @Advice.Argument(0) boolean autoFlush) {
+    public static void onExit(
+        @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) boolean autoFlush) {
       LettuceBatchContext.setCollecting(endpoint, !autoFlush);
     }
   }
@@ -120,7 +122,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static LettuceBatchContext.BatchScope onEnter(@Advice.This Object endpoint) {
+    public static LettuceBatchContext.BatchScope onEnter(@Advice.This DefaultEndpoint endpoint) {
       return LettuceBatchContext.start(endpoint);
     }
 

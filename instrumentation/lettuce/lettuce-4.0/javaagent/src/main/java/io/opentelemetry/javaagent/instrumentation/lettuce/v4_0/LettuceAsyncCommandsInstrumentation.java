@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.lambdaworks.redis.AbstractRedisAsyncCommands;
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
@@ -47,20 +48,23 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
   public static class DispatchAdvice {
 
     public static class AdviceScope {
-      private final Object commands;
+      private final AbstractRedisAsyncCommands<?, ?> commands;
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       private final boolean captured;
 
       public AdviceScope(
-          Object commands, @Nullable Context context, @Nullable Scope scope, boolean captured) {
+          AbstractRedisAsyncCommands<?, ?> commands,
+          @Nullable Context context,
+          @Nullable Scope scope,
+          boolean captured) {
         this.commands = commands;
         this.context = context;
         this.scope = scope;
         this.captured = captured;
       }
 
-      public static AdviceScope captured(Object commands) {
+      public static AdviceScope captured(AbstractRedisAsyncCommands<?, ?> commands) {
         Context parentContext = currentContext();
         Context context = parentContext.with(COMMAND_CONTEXT_KEY, parentContext);
         return new AdviceScope(commands, null, context.makeCurrent(), true);
@@ -91,7 +95,8 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static AdviceScope onEnter(
-        @Advice.This Object commands, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
+        @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
+        @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       if (LettuceBatchContext.isCollecting(commands)) {
         return AdviceScope.captured(commands);
       }
@@ -123,7 +128,9 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
   public static class SetAutoFlushAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object commands, @Advice.Argument(0) boolean autoFlush) {
+    public static void onExit(
+        @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
+        @Advice.Argument(0) boolean autoFlush) {
       LettuceBatchContext.setCollecting(commands, !autoFlush);
     }
   }
@@ -138,7 +145,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
         this.batchScope = batchScope;
       }
 
-      public static FlushAdviceScope start(Object commands) {
+      public static FlushAdviceScope start(AbstractRedisAsyncCommands<?, ?> commands) {
         return new FlushAdviceScope(LettuceBatchContext.start(commands));
       }
 
@@ -150,7 +157,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static FlushAdviceScope onEnter(@Advice.This Object commands) {
+    public static FlushAdviceScope onEnter(@Advice.This AbstractRedisAsyncCommands<?, ?> commands) {
       return FlushAdviceScope.start(commands);
     }
 
