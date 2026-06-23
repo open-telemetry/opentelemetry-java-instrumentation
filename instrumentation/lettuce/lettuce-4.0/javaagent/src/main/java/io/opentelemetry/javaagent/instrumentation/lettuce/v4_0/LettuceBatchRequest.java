@@ -20,7 +20,7 @@ final class LettuceBatchRequest {
 
   static LettuceBatchRequest create(List<RedisCommand<?, ?, ?>> commands) {
     return new LettuceBatchRequest(
-        operationName(commands), commands.size() > 1 ? (long) commands.size() : null);
+        operationName(commands), commands.size() != 1 ? (long) commands.size() : null);
   }
 
   String getOperationName() {

@@ -461,6 +461,8 @@ class LettuceAsyncClientTest {
     await().untilAsserted(() -> assertThat(cancelSuccess).isTrue());
     testing.waitAndAssertTraces(
         trace ->
+            // the command span and the user callback span both start asynchronously on
+            // cancellation, so the two sibling spans can appear in any order
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span ->
                     span.hasName("parent")

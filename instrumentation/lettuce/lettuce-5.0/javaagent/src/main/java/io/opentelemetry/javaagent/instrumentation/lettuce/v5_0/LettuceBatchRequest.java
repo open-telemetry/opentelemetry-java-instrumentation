@@ -36,7 +36,7 @@ final class LettuceBatchRequest {
     return new LettuceBatchRequest(
         operationName(commands),
         queryText(commands),
-        commands.size() > 1 ? (long) commands.size() : null);
+        commands.size() != 1 ? (long) commands.size() : null);
   }
 
   String getOperationName() {

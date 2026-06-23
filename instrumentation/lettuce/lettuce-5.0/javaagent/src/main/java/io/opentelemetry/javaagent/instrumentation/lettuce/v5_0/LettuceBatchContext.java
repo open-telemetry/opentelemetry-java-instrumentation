@@ -24,6 +24,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
+// Lettuce documents manual flushing as reliable only for single-threaded use or with external
+// synchronization, so the batch state tracked here follows the same assumption and is not
+// synchronized.
 public final class LettuceBatchContext {
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
@@ -120,8 +123,6 @@ public final class LettuceBatchContext {
     private final List<AsyncCommand<?, ?, ?>> asyncCommands = new ArrayList<>();
     @Nullable private Context parentContext;
 
-    // Lettuce documents manual flushing as reliable only for single-threaded use or with external
-    // synchronization, so this state follows the same assumption.
     private void add(RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
       commands.add(command);
       if (parentContext == null && asyncCommand != null) {
