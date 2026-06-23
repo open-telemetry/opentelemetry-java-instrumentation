@@ -246,11 +246,32 @@ class AwsSqsTest {
                                     + "/000000000000/test-batch-queue"),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
                 span ->
-                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(2)),
+                    span.hasName("test-batch-queue process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "aws-api"),
+                            equalTo(RPC_METHOD, "ReceiveMessage"),
+                            equalTo(RPC_SERVICE, "Sqs"),
+                            equalTo(HTTP_REQUEST_METHOD, POST),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                            satisfies(
+                                URL_FULL,
+                                val ->
+                                    val.startsWith(
+                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                            equalTo(MESSAGING_OPERATION, "process"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue")),
+                span ->
+                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(3)),
                 span ->
                     span.hasName("Sqs.DeleteMessageBatch")
                         .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(2))
+                        .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_METHOD, "DeleteMessageBatch"),
