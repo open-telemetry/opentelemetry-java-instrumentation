@@ -204,16 +204,71 @@ class AwsSqsTest {
                 span ->
                     span.hasName("Sqs.GetQueueUrl")
                         .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "aws-api"),
+                            equalTo(RPC_METHOD, "GetQueueUrl"),
+                            equalTo(RPC_SERVICE, "Sqs"),
+                            equalTo(HTTP_REQUEST_METHOD, POST),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                            satisfies(
+                                URL_FULL,
+                                val ->
+                                    val.startsWith(
+                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("test-batch-queue publish")
                         .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0)),
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "aws-api"),
+                            equalTo(RPC_METHOD, "SendMessageBatch"),
+                            equalTo(RPC_SERVICE, "Sqs"),
+                            equalTo(HTTP_REQUEST_METHOD, POST),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                            satisfies(
+                                URL_FULL,
+                                val ->
+                                    val.startsWith(
+                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue"),
+                            equalTo(
+                                AWS_SQS_QUEUE_URL,
+                                "http://localhost:"
+                                    + AwsSqsTestApplication.sqsPort
+                                    + "/000000000000/test-batch-queue"),
+                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(2)),
                 span ->
                     span.hasName("Sqs.DeleteMessageBatch")
                         .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(2))));
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "aws-api"),
+                            equalTo(RPC_METHOD, "DeleteMessageBatch"),
+                            equalTo(RPC_SERVICE, "Sqs"),
+                            equalTo(HTTP_REQUEST_METHOD, POST),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                            satisfies(
+                                URL_FULL,
+                                val ->
+                                    val.startsWith(
+                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                            equalTo(
+                                AWS_SQS_QUEUE_URL,
+                                "http://localhost:"
+                                    + AwsSqsTestApplication.sqsPort
+                                    + "/000000000000/test-batch-queue"),
+                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)))));
   }
 }
