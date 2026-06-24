@@ -231,9 +231,29 @@ the `transform()` method.
 > by the agent's class loader, and this string concatenation is an optimization that prevents
 > the actual advice class from being loaded into the agent's class loader.
 
-## Use advice classes to write code that will get injected to the instrumented library classes
+## Use advice classes to write instrumentation code
 
-Advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
+Two types of instrumentation are currently supported:
+- inlined instrumentation, where advice classes content is copied into the instrumented class files
+- non-inlined instrumentation, where advice classes are not copied into the instrumented class files but loaded in a dedicated classloader and called via `invokedynamic` bytecode instruction.
+
+The default depends on the agent version
+  - before 3.0.0: [inlined instrumentation](#inlined-instrumentation) is the default, users can opt-in to use non-inlined by setting the configuration option to `true`.
+  - from 3.0.0 and later: [non-inlined instrumentation](#non-inlined-instrumentation) is the default, users can opt-out to use inlined by setting the configuration option to `false` to restore the previous behavior.
+
+It is possible to select which instrumentation strategy is used through configuration:
+- set it to `true` for non-inlined instrumentation, set it to `false` for inlined instrumentation
+- use `otel.javaagent.experimental.indy` configuration option for auto-configuration, or `distribution.javaagent.indy/development` with declarative configuration
+
+### non-inlined instrumentation
+
+TODO: move section below here
+
+### inlined instrumentation
+
+As of 3.0.0, the default instrumentation strategy is [non-inlined](#non-inlined-instrumentation), this section is kept for historical reference and for users that want to opt-out of the new default behavior.
+
+With inlined instrumentation, advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
 the instrumented library class files. You should not treat them as ordinary, plain Java classes.
 
 Unfortunately many standard practices do not apply to advice classes:
@@ -324,7 +344,7 @@ the `javaagent-extension-api` artifact has a class `Java8BytecodeBridge` which p
 methods for accessing these default methods from advice. We suggest avoiding Java 8 language features
 in advice classes at all - sometimes you don't know what bytecode version is used by the instrumented class.
 
-### Associate instrumentation classes with instrumented library classes
+## Associate instrumentation classes with instrumented library classes
 
 Sometimes there is a need to associate some instrumentation class with an instrumented library class, and
 the library does not offer a way to do this. The OpenTelemetry javaagent provides `VirtualField`
@@ -344,7 +364,10 @@ compile time for it to work.
 Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
 ClassNotFoundException when trying to access the field.
 
-### Avoid using @Advice.Origin Method
+When using [non-inlined instrumentation](#non-inlined-instrumentation), the calls to `VirtualField.find()` must be done outside of the advice class and methods
+because those calls are re-written for efficiency. The `VirtualFieldChecker` class is used to check this at runtime when the advice class is loaded.
+
+## Avoid using @Advice.Origin Method
 
 You shouldn't use ByteBuddy's @Advice.Origin Method method, as it
 inserts a call to `Class.getMethod(...)` in a transformed method.
