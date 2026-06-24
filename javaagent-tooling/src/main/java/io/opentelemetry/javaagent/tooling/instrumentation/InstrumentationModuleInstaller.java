@@ -103,7 +103,7 @@ public final class InstrumentationModuleInstaller {
   }
 
   private boolean useIndy(InstrumentationModule instrumentationModule) {
-    // currently needs to be enabled with a flag
+    // enabled by default, can be opted-out through configuration
     if (!AgentDistributionConfig.get().isIndyEnabled()) {
       return false;
     }

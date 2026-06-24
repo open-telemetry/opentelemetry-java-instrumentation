@@ -90,7 +90,7 @@ public class AgentDistributionConfig {
       @Nullable @JsonProperty("exclude_class_loaders") List<String> excludeClassLoaders,
       @Nullable @JsonProperty("thread_details_enabled") Boolean threadDetailsEnabled,
       @Nullable @JsonProperty("instrumentation") InstrumentationConfig instrumentation) {
-    this.indyEnabled = indyEnabled != null ? indyEnabled : false;
+    this.indyEnabled = indyEnabled != null ? indyEnabled : true;
     this.forceSynchronousAgentListeners =
         forceSynchronousAgentListeners != null ? forceSynchronousAgentListeners : false;
     this.excludeClasses =
