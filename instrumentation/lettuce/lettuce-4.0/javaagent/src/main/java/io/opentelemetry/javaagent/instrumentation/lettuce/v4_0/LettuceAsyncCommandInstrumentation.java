@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.getContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.setContext;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -45,7 +46,7 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
       Context context = Java8BytecodeBridge.currentContext();
       // get the context that submitted this command and attach it, it will be used to run callbacks
       context = context.get(COMMAND_CONTEXT_KEY);
-      CONTEXT.set(asyncCommand, context);
+      setContext(asyncCommand, context);
     }
   }
 
@@ -55,7 +56,7 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
-      Context context = CONTEXT.get(asyncCommand);
+      Context context = getContext(asyncCommand);
       if (context == null) {
         return null;
       }

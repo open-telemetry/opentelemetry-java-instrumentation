@@ -277,12 +277,11 @@ class LettuceReactiveClientTest {
     String result =
         testing.runWithSpan(
             "test-parent",
-            () ->
-                reactiveCommands
-                    .set("a", "1")
-                    .flatMap(ignored -> reactiveCommands.get("a"))
-                    .toBlocking()
-                    .single());
+            () -> {
+              String setResult = reactiveCommands.set("a", "1").toBlocking().single();
+              assertThat(setResult).isEqualTo("OK");
+              return reactiveCommands.get("a").toBlocking().single();
+            });
 
     assertThat(result).isEqualTo("1");
     testing.waitAndAssertTraces(
@@ -310,8 +309,12 @@ class LettuceReactiveClientTest {
         () ->
             reactiveCommands
                 .set("a", "1")
-                .flatMap(ignored -> reactiveCommands.get("a"))
-                .subscribe(future::complete, future::completeExceptionally));
+                .subscribe(
+                    ignored ->
+                        reactiveCommands
+                            .get("a")
+                            .subscribe(future::complete, future::completeExceptionally),
+                    future::completeExceptionally));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -339,9 +342,14 @@ class LettuceReactiveClientTest {
         () ->
             reactiveCommands
                 .set("a", "1")
-                .flatMap(ignored -> reactiveCommands.get("a"))
                 .subscribeOn(Schedulers.io())
-                .subscribe(future::complete, future::completeExceptionally));
+                .subscribe(
+                    ignored ->
+                        reactiveCommands
+                            .get("a")
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(future::complete, future::completeExceptionally),
+                    future::completeExceptionally));
 
     testing.waitAndAssertTraces(
         trace ->

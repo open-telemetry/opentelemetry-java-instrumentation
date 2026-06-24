@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.clearContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.getContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.setContext;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -15,7 +18,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -57,7 +59,7 @@ class LettuceReactiveCommandInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This RedisCommand<?, ?, ?> command) {
       Context context = Java8BytecodeBridge.currentContext();
       if (context.get(COMMAND_CONTEXT_KEY) != null) {
-        VirtualField.find(RedisCommand.class, Context.class).set(command, context);
+        setContext(command, context);
       }
     }
   }
@@ -71,14 +73,12 @@ class LettuceReactiveCommandInstrumentation implements TypeInstrumentation {
         @Advice.This RedisCommand<?, ?, ?> command,
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(value = 0, optional = true) @Nullable Throwable commandError) {
-      VirtualField<RedisCommand<?, ?, ?>, Context> contextField =
-          VirtualField.find(RedisCommand.class, Context.class);
-      Context context = contextField.get(command);
+      Context context = getContext(command);
       if (context == null) {
         return null;
       }
 
-      contextField.set(command, null);
+      clearContext(command);
       InstrumentationPoints.endReactiveCommand(command, context, methodName, commandError);
       context = context.get(COMMAND_CONTEXT_KEY);
       return context.makeCurrent();

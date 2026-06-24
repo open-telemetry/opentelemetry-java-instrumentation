@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.getReactiveDispatcherContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.setReactiveDispatcherContext;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -17,7 +19,6 @@ import com.lambdaworks.redis.ReactiveCommandDispatcher;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.function.Supplier;
@@ -46,8 +47,7 @@ class LettuceReactiveCommandsInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This ReactiveCommandDispatcher<?, ?, ?> dispatcher) {
-      VirtualField.find(ReactiveCommandDispatcher.class, Context.class)
-          .set(dispatcher, currentContext());
+      setReactiveDispatcherContext(dispatcher, currentContext());
     }
   }
 
@@ -82,8 +82,7 @@ class LettuceReactiveCommandsInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue(value = "command") @Nullable RedisCommand<?, ?, ?> command,
         @Advice.FieldValue("commandSupplier")
             Supplier<? extends RedisCommand<?, ?, ?>> commandSupplier) {
-      Context parentContext =
-          VirtualField.find(ReactiveCommandDispatcher.class, Context.class).get(dispatcher);
+      Context parentContext = getReactiveDispatcherContext(dispatcher);
       if (parentContext == null) {
         return null;
       }
