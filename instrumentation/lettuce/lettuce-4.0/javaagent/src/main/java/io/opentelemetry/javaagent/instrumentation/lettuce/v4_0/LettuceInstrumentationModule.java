@@ -23,6 +23,8 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
     return asList(
         new LettuceAsyncCommandInstrumentation(),
         new LettuceAsyncCommandsInstrumentation(),
+        new LettuceReactiveCommandsInstrumentation(),
+        new LettuceReactiveCommandInstrumentation(),
         new LettuceConnectInstrumentation());
   }
 }
