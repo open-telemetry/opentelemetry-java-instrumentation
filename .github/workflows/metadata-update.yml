@@ -51,6 +51,15 @@ jobs:
           DEBUG_LOGGING: ${{ inputs.debug_logging || 'false' }}
         run: ./.github/scripts/metadata-ci-collect.sh
 
+      - name: Upload telemetry metadata
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: telemetry-metadata
+          path: instrumentation/**/.telemetry/*.yaml
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: true
+
       - name: Run documentation analyzer
         run: ./gradlew :instrumentation-docs:runAnalysis
 
