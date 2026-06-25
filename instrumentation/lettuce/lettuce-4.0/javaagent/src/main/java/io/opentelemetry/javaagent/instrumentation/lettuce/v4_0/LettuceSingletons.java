@@ -28,6 +28,7 @@ public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-4.0";
 
   private static final Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter;
+  private static final Instrumenter<LettuceBatchRequest, Void> batchInstrumenter;
   private static final Instrumenter<RedisURI, Void> connectInstrumenter;
 
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
@@ -50,6 +51,17 @@ public class LettuceSingletons {
 
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
+    LettuceBatchAttributesGetter batchAttributesGetter = new LettuceBatchAttributesGetter();
+    InstrumenterBuilder<LettuceBatchRequest, Void> batchBuilder =
+        Instrumenter.<LettuceBatchRequest, Void>builder(
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(batchAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(batchAttributesGetter))
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(batchBuilder);
+    batchInstrumenter = batchBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
+
     LettuceConnectNetworkAttributesGetter netAttributesGetter =
         new LettuceConnectNetworkAttributesGetter();
 
@@ -70,6 +82,10 @@ public class LettuceSingletons {
 
   public static Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static Instrumenter<LettuceBatchRequest, Void> batchInstrumenter() {
+    return batchInstrumenter;
   }
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
