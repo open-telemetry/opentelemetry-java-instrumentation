@@ -125,6 +125,7 @@ class ProcessResourceTest {
   }
 
   private static Resource createResource(Map<String, String> config) {
-    return new ProcessResourceProvider().createResource(DefaultConfigProperties.createFromMap(config));
+    return new ProcessResourceProvider()
+        .createResource(DefaultConfigProperties.createFromMap(config));
   }
 }
