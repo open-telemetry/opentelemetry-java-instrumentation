@@ -276,7 +276,7 @@ and is identified solely by its `declarative_name`, for example `url_template_ru
 
 ```yaml
 configurations:
-  - declarative_name: java.common.http.client.url_template_rules/development
+  - declarative_name: java.common.http.client.url_template_rules
     description: Rules for deriving low-cardinality URL templates from HTTP client request URLs.
     type: list
     default: ""

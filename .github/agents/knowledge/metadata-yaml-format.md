@@ -52,7 +52,7 @@ list, and named `properties` (each with `type`, optional `description`, optional
 `url_template_rules` is **declarative-only** (no flat property) — it omits `name`:
 
 ```yaml
-- declarative_name: java.common.http.client.url_template_rules/development
+- declarative_name: java.common.http.client.url_template_rules
   description: Rules for deriving low-cardinality URL templates from HTTP client request URLs.
   type: list
   default: ""

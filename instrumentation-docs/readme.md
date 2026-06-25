@@ -211,7 +211,7 @@ configurations:
       - "false"
   # Structured-list config: a list of objects in declarative config. `name` may be omitted for
   # declarative-only settings (identified solely by `declarative_name`).
-  - declarative_name: java.common.http.client.url_template_rules/development
+  - declarative_name: java.common.http.client.url_template_rules
     description: Rules for deriving low-cardinality URL templates from HTTP client request URLs.
     type: list
     default: ""

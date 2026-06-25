@@ -49,7 +49,7 @@ configurations:
       `http.client.response.size` metrics.
     type: boolean
     default: false
-  - declarative_name: java.common.http.client.url_template_rules/development
+  - declarative_name: java.common.http.client.url_template_rules
     description: >
       Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only
       applied when experimental HTTP client telemetry is enabled.
