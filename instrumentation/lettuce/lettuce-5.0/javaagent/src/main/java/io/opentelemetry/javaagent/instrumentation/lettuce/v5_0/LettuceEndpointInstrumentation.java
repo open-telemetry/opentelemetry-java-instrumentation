@@ -65,9 +65,8 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       }
 
       // Reactive commands are not backed by an AsyncCommand future and are traced by
-      // LettuceReactiveCommandsInstrumentation; only async/sync commands (backed by an
-      // AsyncCommand)
-      // get their span created here, to avoid a duplicate span for reactive commands.
+      // LettuceReactiveCommandsInstrumentation; only async/sync commands backed by an
+      // AsyncCommand get their span created here, to avoid a duplicate span for reactive commands.
       if (asyncCommand == null) {
         return;
       }
@@ -130,8 +129,9 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable LettuceBatchContext.BatchScope batchScope) {
-      // the batch span is normally ended once all of its commands complete (BatchScope.endOne)
       if (throwable != null && batchScope != null) {
+        // Normally, BatchScope.start attaches callbacks to the command futures, and those
+        // callbacks report completion to the batch scope.
         batchScope.endOne(throwable);
       }
     }

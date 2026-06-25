@@ -145,9 +145,9 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable LettuceBatchContext.BatchScope batchScope) {
-      // the batch span is normally ended once all of its commands complete (BatchScope.endOne);
-      // end the batch early here if flushCommands() itself throws
       if (throwable != null && batchScope != null) {
+        // Normally, BatchScope.start attaches callbacks to the command futures, and those
+        // callbacks report completion to the batch scope.
         batchScope.endOne(throwable);
       }
     }
