@@ -6,9 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.clearContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.getContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.setContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -59,7 +57,7 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This RedisCommand<?, ?, ?> command) {
       Context context = Java8BytecodeBridge.currentContext();
       if (context.get(COMMAND_CONTEXT_KEY) != null) {
-        setContext(command, context);
+        CONTEXT.set(command, context);
       }
     }
   }
@@ -73,12 +71,12 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
         @Advice.This RedisCommand<?, ?, ?> command,
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(value = 0, optional = true) @Nullable Throwable commandError) {
-      Context context = getContext(command);
+      Context context = CONTEXT.get(command);
       if (context == null) {
         return null;
       }
 
-      clearContext(command);
+      CONTEXT.set(command, null);
       InstrumentationPoints.endReactiveCommand(command, context, methodName, commandError);
       context = context.get(COMMAND_CONTEXT_KEY);
       return context.makeCurrent();

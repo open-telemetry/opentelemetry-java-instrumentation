@@ -7,9 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.getReactiveDispatcherContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.REACTIVE_DISPATCHER_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.setReactiveDispatcherContext;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -47,7 +46,7 @@ class ReactiveCommandDispatcherInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This ReactiveCommandDispatcher<?, ?, ?> dispatcher) {
-      setReactiveDispatcherContext(dispatcher, currentContext());
+      REACTIVE_DISPATCHER_CONTEXT.set(dispatcher, currentContext());
     }
   }
 
@@ -82,7 +81,7 @@ class ReactiveCommandDispatcherInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue(value = "command") @Nullable RedisCommand<?, ?, ?> command,
         @Advice.FieldValue("commandSupplier")
             Supplier<? extends RedisCommand<?, ?, ?>> commandSupplier) {
-      Context parentContext = getReactiveDispatcherContext(dispatcher);
+      Context parentContext = REACTIVE_DISPATCHER_CONTEXT.get(dispatcher);
       if (parentContext == null) {
         return null;
       }

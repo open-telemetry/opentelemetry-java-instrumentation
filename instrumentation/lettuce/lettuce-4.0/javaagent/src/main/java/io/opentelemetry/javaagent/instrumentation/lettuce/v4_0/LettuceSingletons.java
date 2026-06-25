@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import javax.annotation.Nullable;
 
 public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-4.0";
@@ -34,10 +33,10 @@ public class LettuceSingletons {
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v4_0-context-key");
 
-  private static final VirtualField<RedisCommand<?, ?, ?>, Context> CONTEXT =
+  public static final VirtualField<RedisCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(RedisCommand.class, Context.class);
 
-  private static final VirtualField<ReactiveCommandDispatcher<?, ?, ?>, Context>
+  public static final VirtualField<ReactiveCommandDispatcher<?, ?, ?>, Context>
       REACTIVE_DISPATCHER_CONTEXT =
           VirtualField.find(ReactiveCommandDispatcher.class, Context.class);
 
@@ -79,30 +78,6 @@ public class LettuceSingletons {
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
     return connectInstrumenter;
-  }
-
-  public static void setContext(RedisCommand<?, ?, ?> command, @Nullable Context context) {
-    CONTEXT.set(command, context);
-  }
-
-  @Nullable
-  public static Context getContext(RedisCommand<?, ?, ?> command) {
-    return CONTEXT.get(command);
-  }
-
-  public static void clearContext(RedisCommand<?, ?, ?> command) {
-    CONTEXT.set(command, null);
-  }
-
-  public static void setReactiveDispatcherContext(
-      ReactiveCommandDispatcher<?, ?, ?> dispatcher, @Nullable Context context) {
-    REACTIVE_DISPATCHER_CONTEXT.set(dispatcher, context);
-  }
-
-  @Nullable
-  public static Context getReactiveDispatcherContext(
-      ReactiveCommandDispatcher<?, ?, ?> dispatcher) {
-    return REACTIVE_DISPATCHER_CONTEXT.get(dispatcher);
   }
 
   private LettuceSingletons() {}
