@@ -13,13 +13,13 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import java.util.List;
-import java.util.StringJoiner;
 import javax.annotation.Nullable;
 
 final class LettuceBatchRequest {
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "lettuce"));
+  private static final int LIMIT = 32 * 1024;
 
   private final String operationName;
   @Nullable private final String queryText;
@@ -72,11 +72,16 @@ final class LettuceBatchRequest {
       return null;
     }
 
-    StringJoiner joiner = new StringJoiner(";");
+    StringBuilder builder = new StringBuilder();
     for (RedisCommand<?, ?, ?> command : commands) {
-      joiner.add(queryText(command));
+      String commandQueryText = queryText(command);
+      String separator = builder.length() == 0 ? "" : ";";
+      if (builder.length() + separator.length() + commandQueryText.length() > LIMIT) {
+        break;
+      }
+      builder.append(separator).append(commandQueryText);
     }
-    return joiner.toString();
+    return builder.toString();
   }
 
   private static String queryText(RedisCommand<?, ?, ?> command) {
