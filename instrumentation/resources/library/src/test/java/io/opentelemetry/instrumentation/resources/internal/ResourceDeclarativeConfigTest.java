@@ -21,7 +21,6 @@ import java.io.ByteArrayInputStream;
 import java.util.Set;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ResourceDeclarativeConfigTest {
@@ -44,7 +43,6 @@ class ResourceDeclarativeConfigTest {
             + "      - host:\n"
             + "      - process:\n";
 
-    boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
     OpenTelemetrySdk openTelemetrySdk =
         DeclarativeConfiguration.parseAndCreate(new ByteArrayInputStream(yaml.getBytes(UTF_8)))
             .getSdk();
@@ -67,12 +65,9 @@ class ResourceDeclarativeConfigTest {
               // OsResourceComponentProvider
               assertThat(attributeKeys).contains("os.description", "os.type");
               // ProcessResourceComponentProvider
-              assertThat(attributeKeys)
-                  .contains(
-                      java8 || OS.WINDOWS.isCurrentOs()
-                          ? "process.command_line"
-                          : "process.command_args");
               assertThat(attributeKeys).contains("process.executable.path", "process.pid");
+              assertThat(attributeKeys)
+                  .doesNotContain("process.command_args", "process.command_line");
               // ProcessRuntimeResourceComponentProvider
               assertThat(attributeKeys).contains("process.runtime.description");
               assertThat(attributeKeys).contains("process.runtime.name", "process.runtime.version");

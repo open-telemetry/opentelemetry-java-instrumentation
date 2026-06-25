@@ -39,7 +39,7 @@ public final class ProcessResource {
   private static final Pattern SCRUB_PATTERN =
       Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE);
 
-  private static final Resource INSTANCE = create();
+  private static final Resource INSTANCE = create(true);
 
   /**
    * Returns a factory for a {@link Resource} which provides information about the current running
@@ -54,7 +54,7 @@ public final class ProcessResource {
 
   /** Returns a {@link Resource} which provides information about the current running process. */
   public static Resource create() {
-    return create(true);
+    return create(false);
   }
 
   /**

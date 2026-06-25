@@ -38,14 +38,21 @@ class ProcessResourceTest {
   }
 
   @Test
-  void commandAttributesDisabled() {
-    Resource resource = ProcessResource.create(false);
+  void commandAttributesDisabledByDefault() {
+    Resource resource = ProcessResource.create();
     Attributes attributes = resource.getAttributes();
 
     assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
     assertThat(attributes.get(PROCESS_EXECUTABLE_PATH)).isNotNull();
     assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
     assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
+  }
+
+  @Test
+  void commandAttributesEnabled() {
+    Resource resource = ProcessResource.create(true);
+
+    assertCommandAttributes(resource.getAttributes());
   }
 
   @Test
@@ -101,7 +108,8 @@ class ProcessResourceTest {
     assertThat(attributes.get(PROCESS_EXECUTABLE_PATH))
         .matches(windows ? ".*[/\\\\]java\\.exe" : ".*[/\\\\]java");
 
-    assertCommandAttributes(attributes);
+    assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
+    assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
   }
 
   private static void assertCommandAttributes(Attributes attributes) {
