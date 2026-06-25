@@ -55,7 +55,7 @@ testing {
   }
 }
 
-val testInstrumentation by configurations.creating {
+val testInstrumentation = configurations.create("testInstrumentation") {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
@@ -66,7 +66,7 @@ tasks.shadowJar {
   archiveFileName.set("agent-testing.jar")
 }
 
-val agentForTesting by configurations.creating {
+val agentForTesting = configurations.create("agentForTesting") {
   isCanBeConsumed = false
   isCanBeResolved = true
 }

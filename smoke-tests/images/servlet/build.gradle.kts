@@ -188,12 +188,12 @@ val targets = mapOf(
 )
 
 tasks {
-  val buildLinuxTestImages by registering {
+  val buildLinuxTestImages = register<DefaultTask>("buildLinuxTestImages") {
     group = "build"
     description = "Builds all Linux Docker images for the test matrix"
   }
 
-  val buildWindowsTestImages by registering {
+  val buildWindowsTestImages = register<DefaultTask>("buildWindowsTestImages") {
     group = "build"
     description = "Builds all Windows Docker images for the test matrix"
   }
@@ -201,21 +201,21 @@ tasks {
   val linuxImages = createDockerTasks(buildLinuxTestImages, false)
   val windowsImages = createDockerTasks(buildWindowsTestImages, true)
 
-  val pushLinuxImages by registering(DockerPushImage::class) {
+  register<DockerPushImage>("pushLinuxImages") {
     dependsOn(buildLinuxTestImages)
     group = "publishing"
     description = "Push Linux Docker images for the test matrix"
     images.set(linuxImages)
   }
 
-  val pushWindowsImages by registering(DockerPushImage::class) {
+  register<DockerPushImage>("pushWindowsImages") {
     dependsOn(buildWindowsTestImages)
     group = "publishing"
     description = "Push Windows Docker images for the test matrix"
     images.set(windowsImages)
   }
 
-  val printSmokeTestsConfigurations by registering {
+  register<DefaultTask>("printSmokeTestsConfigurations") {
     doFirst {
       for ((server, matrices) in targets) {
         val smokeTestServer = findProperty("smokeTestServer")

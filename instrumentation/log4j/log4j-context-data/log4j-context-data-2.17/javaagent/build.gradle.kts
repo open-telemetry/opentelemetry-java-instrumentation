@@ -25,7 +25,7 @@ testing {
   suites {
     // Very different codepaths when threadlocals are enabled or not so we check both.
     // Regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2403
-    val testDisableThreadLocals by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testDisableThreadLocals") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
@@ -45,7 +45,7 @@ testing {
       }
     }
 
-    val testAddBaggage by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testAddBaggage") {
       dependencies {
         implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
       }
@@ -60,7 +60,7 @@ testing {
       }
     }
 
-    val testLoggingKeys by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testLoggingKeys") {
       dependencies {
         implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
       }

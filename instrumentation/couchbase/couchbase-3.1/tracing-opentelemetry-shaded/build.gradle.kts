@@ -22,7 +22,7 @@ tasks {
     )
   }
 
-  val extractShadowJar by registering(Copy::class) {
+  val extractShadowJar = register<Copy>("extractShadowJar") {
     dependsOn(shadowJar)
     from(zipTree(shadowJar.get().archiveFile))
     into("build/extracted/shadow")

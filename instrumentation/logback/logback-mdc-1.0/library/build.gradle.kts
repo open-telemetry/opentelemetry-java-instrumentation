@@ -4,7 +4,7 @@ plugins {
 
 testing {
   suites {
-    val addBaggageTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("addBaggageTest") {
       targets {
         all {
           testTask.configure {
@@ -14,7 +14,7 @@ testing {
       }
     }
 
-    val loggingKeysTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("loggingKeysTest") {
       targets {
         all {
           testTask.configure {
