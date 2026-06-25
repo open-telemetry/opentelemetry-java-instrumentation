@@ -576,3 +576,4 @@ sofa-rpc-5.4:javaagent
 sofa-rpc-5.4:library
 sofa-rpc-5.4:library-autoconfigure
 sofa-rpc-5.4:testing
+jedis-2.0:javaagent
