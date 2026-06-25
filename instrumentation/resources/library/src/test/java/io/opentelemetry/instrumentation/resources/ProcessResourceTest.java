@@ -57,7 +57,7 @@ class ProcessResourceTest {
 
   @Test
   void providerEmitsCommandAttributesByDefault() {
-    Resource resource = createResource(new HashMap<>());
+    Resource resource = createProcessResourceFromProvider(new HashMap<>());
 
     assertCommandAttributes(resource.getAttributes());
   }
@@ -68,7 +68,7 @@ class ProcessResourceTest {
     config.put(
         "otel.instrumentation.resources.experimental.process-command-attributes.enabled", "true");
 
-    Resource resource = createResource(config);
+    Resource resource = createProcessResourceFromProvider(config);
 
     assertCommandAttributes(resource.getAttributes());
   }
@@ -78,7 +78,7 @@ class ProcessResourceTest {
     Map<String, String> config = new HashMap<>();
     config.put("otel.instrumentation.common.v3-preview", "true");
 
-    Resource resource = createResource(config);
+    Resource resource = createProcessResourceFromProvider(config);
     Attributes attributes = resource.getAttributes();
 
     assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
@@ -94,7 +94,7 @@ class ProcessResourceTest {
     config.put(
         "otel.instrumentation.resources.experimental.process-command-attributes.enabled", "true");
 
-    Resource resource = createResource(config);
+    Resource resource = createProcessResourceFromProvider(config);
 
     assertCommandAttributes(resource.getAttributes());
   }
@@ -132,7 +132,7 @@ class ProcessResourceTest {
     return "1.8".equals(System.getProperty("java.specification.version"));
   }
 
-  private static Resource createResource(Map<String, String> config) {
+  private static Resource createProcessResourceFromProvider(Map<String, String> config) {
     return new ProcessResourceProvider()
         .createResource(DefaultConfigProperties.createFromMap(config));
   }

@@ -39,6 +39,7 @@ public final class ProcessResource {
   private static final Pattern SCRUB_PATTERN =
       Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE);
 
+  @Deprecated // to be removed in 3.0
   private static final Resource INSTANCE = create(true);
 
   /**
@@ -66,15 +67,6 @@ public final class ProcessResource {
    * emitCommandAttributes} to {@code true} when this risk is acceptable.
    */
   public static Resource create(boolean emitCommandAttributes) {
-    return buildResource(emitCommandAttributes);
-  }
-
-  // Visible for testing
-  static Resource buildResource() {
-    return create();
-  }
-
-  static Resource buildResource(boolean emitCommandAttributes) {
     try {
       return doBuildResource(emitCommandAttributes);
     } catch (LinkageError ignored) {
