@@ -65,7 +65,7 @@ dependencies {
 
 testing {
   suites {
-    val tapirTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("tapirTest") {
       dependencies {
         val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
         implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest()}")

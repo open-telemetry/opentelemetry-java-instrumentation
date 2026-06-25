@@ -66,7 +66,7 @@ tasks.named("collectReachabilityMetadata").configure {
 
 testing {
   suites {
-    val slf4j2ApiTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("slf4j2ApiTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
@@ -84,7 +84,7 @@ testing {
       }
     }
 
-    val logstashMarkerTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("logstashMarkerTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
@@ -107,7 +107,7 @@ testing {
       }
     }
 
-    val logstashStructuredArgsTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("logstashStructuredArgsTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
@@ -130,7 +130,7 @@ testing {
       }
     }
 
-    val asyncAppenderTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("asyncAppenderTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
@@ -156,13 +156,13 @@ testing {
 
 tasks {
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code")
   }
 
-  val testBothSemconv by registering(Test::class) {
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")

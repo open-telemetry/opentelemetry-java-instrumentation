@@ -43,11 +43,11 @@ fun findArtifact(version: String): File {
 // generate the api diff report for any module that is stable
 if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent") {
   afterEvaluate {
-    // Only apply japicmp to projects that have a jar task (i.e. not BOMs or platforms)
-    tasks.findByName("jar")?.let {
-      tasks {
-        val jApiCmp by registering(JapicmpTask::class) {
-          dependsOn("jar")
+     // Only apply japicmp to projects that have a jar task (i.e. not BOMs or platforms)
+     tasks.findByName("jar")?.let {
+       tasks {
+         val jApiCmp = register<JapicmpTask>("jApiCmp") {
+           dependsOn("jar")
 
           // the japicmp "new" version is either the user-specified one, or the locally built jar.
           val apiNewVersion: String? by project

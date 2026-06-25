@@ -29,7 +29,7 @@ dependencies {
 
 testing {
   suites {
-    val version272 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version272") {
       dependencies {
         implementation("redis.clients:jedis:2.7.2")
         implementation(project(":instrumentation:jedis:jedis-1.4:testing"))
@@ -44,7 +44,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

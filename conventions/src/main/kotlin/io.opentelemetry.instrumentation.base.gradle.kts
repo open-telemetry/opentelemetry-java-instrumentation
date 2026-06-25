@@ -104,15 +104,15 @@ abstract class TestLatestDepsRule : ComponentMetadataRule {
 }
 
 configurations {
-  val library by creating {
+  val library = configurations.create("library") {
     isCanBeResolved = false
     isCanBeConsumed = false
   }
-  val testLibrary by creating {
+  val testLibrary = configurations.create("testLibrary") {
     isCanBeResolved = false
     isCanBeConsumed = false
   }
-  val latestDepTestLibrary by creating {
+  val latestDepTestLibrary = configurations.create("latestDepTestLibrary") {
     isCanBeResolved = false
     isCanBeConsumed = false
   }
@@ -278,7 +278,7 @@ if (otelProps.testLatestDeps) {
 }
 
 tasks {
-  val generateInstrumentationVersionFile by registering {
+  val generateInstrumentationVersionFile = register<DefaultTask>("generateInstrumentationVersionFile") {
     val name = computeInstrumentationName()
     val version = project.version as String
     inputs.property("instrumentation.name", name)
