@@ -245,11 +245,7 @@ It is possible to select which instrumentation strategy is used through configur
 - set it to `true` for non-inlined instrumentation, set it to `false` for inlined instrumentation
 - use `otel.javaagent.experimental.indy` configuration option for auto-configuration, or `distribution.javaagent.indy/development` with declarative configuration
 
-### non-inlined instrumentation
-
-TODO: move section below here
-
-### inlined instrumentation
+## inlined instrumentation
 
 As of 3.0.0, the default instrumentation strategy is [non-inlined](#non-inlined-instrumentation), this section is kept for historical reference and for users that want to opt-out of the new default behavior.
 
@@ -344,47 +340,9 @@ the `javaagent-extension-api` artifact has a class `Java8BytecodeBridge` which p
 methods for accessing these default methods from advice. We suggest avoiding Java 8 language features
 in advice classes at all - sometimes you don't know what bytecode version is used by the instrumented class.
 
-## Using virtual fields to associate instrumentation classes to instrumented classes
-
-Sometimes there is a need to associate some instrumentation class with an instrumented library class, and
-the library does not offer a way to do this. The OpenTelemetry javaagent provides `VirtualField`
-for that purpose. Consider the following example:
-
-```java
-VirtualField<Runnable, Context> virtualField =
-    VirtualField.get(Runnable.class, Context.class);
-```
-
-A `VirtualField` has a very similar interface to a map. It is not a simple map though: the javaagent uses many
-bytecode tweaks to optimize it. Because of this, retrieving a `VirtualField` instance is rather
-limited: the `VirtualField#get()` method must receive class references as its parameters; it won't
-work with variables, method params, etc. Both the owner class and the field class must be known at
-compile time for it to work.
-
-Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
-ClassNotFoundException when trying to access the field.
-
-When using [non-inlined instrumentation](#non-inlined-instrumentation), the calls to `VirtualField.find()` must be done outside of the advice class and methods
-because those calls are re-written for efficiency. The `VirtualFieldChecker` class is used to check this at runtime when the advice class is loaded.
-
-## Avoid using @Advice.Origin Method
-
-You shouldn't use ByteBuddy's @Advice.Origin Method method, as it
-inserts a call to `Class.getMethod(...)` in a transformed method.
-
-Instead, get the declaring class and method name, as loading
-constants from a constant pool is a much simpler operation.
-
-For example:
-
-```
-@Advice.Origin("#t") Class<?> declaringClass,
-@Advice.Origin("#m") String methodName
-```
-
 [suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
 
-## Use non-inlined advice code with `invokedynamic`
+## non-inlined instrumentation
 
 Using non-inlined advice code is possible thanks to the `invokedynamic` instruction, this strategy
 is referred as "indy" in reference to this. By extension "indy modules" are the instrumentation
@@ -504,3 +462,42 @@ public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFiel
 
 It is possible to modify multiple fields at once by using an array, see usages of
 `@Advice.AssignReturned.ToFields` for detailed examples.
+
+
+## Using virtual fields to associate instrumentation classes to instrumented classes
+
+Sometimes there is a need to associate some instrumentation class with an instrumented library class, and
+the library does not offer a way to do this. The OpenTelemetry javaagent provides `VirtualField`
+for that purpose. Consider the following example:
+
+```java
+VirtualField<Runnable, Context> virtualField =
+    VirtualField.get(Runnable.class, Context.class);
+```
+
+A `VirtualField` has a very similar interface to a map. It is not a simple map though: the javaagent uses many
+bytecode tweaks to optimize it. Because of this, retrieving a `VirtualField` instance is rather
+limited: the `VirtualField#get()` method must receive class references as its parameters; it won't
+work with variables, method params, etc. Both the owner class and the field class must be known at
+compile time for it to work.
+
+Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
+ClassNotFoundException when trying to access the field.
+
+When using [non-inlined instrumentation](#non-inlined-instrumentation), the calls to `VirtualField.find()` must be done outside the advice class and methods
+because those calls are re-written for efficiency. The `VirtualFieldChecker` class is used to check this at runtime when the advice class is loaded.
+
+## Avoid using @Advice.Origin Method
+
+You shouldn't use ByteBuddy's @Advice.Origin Method method, as it
+inserts a call to `Class.getMethod(...)` in a transformed method.
+
+Instead, get the declaring class and method name, as loading
+constants from a constant pool is a much simpler operation.
+
+For example:
+
+```
+@Advice.Origin("#t") Class<?> declaringClass,
+@Advice.Origin("#m") String methodName
+```
