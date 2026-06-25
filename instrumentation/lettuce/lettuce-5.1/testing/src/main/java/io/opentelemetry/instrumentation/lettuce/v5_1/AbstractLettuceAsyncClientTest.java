@@ -7,10 +7,12 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -216,7 +218,12 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(
                                         maybeStable(DB_STATEMENT),
                                         "LPUSH " + WRONG_TYPE_KEY + " ?"),
-                                    equalTo(maybeStable(DB_OPERATION), "LPUSH")))
+                                    equalTo(maybeStable(DB_OPERATION), "LPUSH"),
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        emitStableDatabaseSemconv() && testLatestDeps()
+                                            ? "io.lettuce.core.RedisCommandExecutionException"
+                                            : null)))
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
   }
 

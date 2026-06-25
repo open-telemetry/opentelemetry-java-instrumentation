@@ -318,7 +318,12 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(
                                         maybeStable(DB_STATEMENT),
                                         "LPUSH " + WRONG_TYPE_KEY + " ?"),
-                                    equalTo(maybeStable(DB_OPERATION), "LPUSH")))
+                                    equalTo(maybeStable(DB_OPERATION), "LPUSH"),
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        emitStableDatabaseSemconv() && testLatestDeps()
+                                            ? "io.lettuce.core.RedisCommandExecutionException"
+                                            : null)))
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
   }
 
