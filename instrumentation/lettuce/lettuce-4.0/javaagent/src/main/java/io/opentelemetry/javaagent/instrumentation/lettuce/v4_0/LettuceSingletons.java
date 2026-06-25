@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
+import com.lambdaworks.redis.ReactiveCommandDispatcher;
 import com.lambdaworks.redis.RedisURI;
-import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -34,8 +34,12 @@ public class LettuceSingletons {
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v4_0-context-key");
 
-  public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
-      VirtualField.find(AsyncCommand.class, Context.class);
+  public static final VirtualField<RedisCommand<?, ?, ?>, Context> CONTEXT =
+      VirtualField.find(RedisCommand.class, Context.class);
+
+  public static final VirtualField<ReactiveCommandDispatcher<?, ?, ?>, Context>
+      REACTIVE_DISPATCHER_CONTEXT =
+          VirtualField.find(ReactiveCommandDispatcher.class, Context.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
