@@ -234,14 +234,17 @@ the `transform()` method.
 ## Use advice classes to write instrumentation code
 
 Two types of instrumentation are currently supported:
+
 - inlined instrumentation, where advice classes content is copied into the instrumented class files
 - non-inlined instrumentation, where advice classes are not copied into the instrumented class files but loaded in a dedicated classloader and called via `invokedynamic` bytecode instruction.
 
-The default depends on the agent version
-  - before 3.0.0: [inlined instrumentation](#inlined-instrumentation) is the default, users can opt-in to use non-inlined by setting the configuration option to `true`.
-  - from 3.0.0 and later: [non-inlined instrumentation](#non-inlined-instrumentation) is the default, users can opt-out to use inlined by setting the configuration option to `false` to restore the previous behavior.
+The default depends on the agent version:
+
+- before 3.0.0: [inlined instrumentation](#inlined-instrumentation) is the default, users can opt-in to use non-inlined by setting the configuration option to `true`.
+- from 3.0.0 and later: [non-inlined instrumentation](#non-inlined-instrumentation) is the default, users can opt-out to use inlined by setting the configuration option to `false` to restore the previous behavior.
 
 It is possible to select which instrumentation strategy is used through configuration:
+
 - set it to `true` for non-inlined instrumentation, set it to `false` for inlined instrumentation
 - use `otel.javaagent.experimental.indy` configuration option for auto-configuration, or `distribution.javaagent.indy/development` with declarative configuration
 
@@ -462,7 +465,6 @@ public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFiel
 
 It is possible to modify multiple fields at once by using an array, see usages of
 `@Advice.AssignReturned.ToFields` for detailed examples.
-
 
 ## Using virtual fields to associate instrumentation classes to instrumented classes
 
