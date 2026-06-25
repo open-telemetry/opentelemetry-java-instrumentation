@@ -127,7 +127,7 @@ dependencies {
 
 //Produces a copy of upstream javaagent with this extension jar included inside it
 //The location of extension directory inside agent jar is hard-coded in the agent source code
-val extendedAgent by tasks.registering(Jar::class) {
+val extendedAgent = tasks.register<Jar>("extendedAgent") {
   dependsOn(configurations.named("otel"))
   archiveFileName.set("opentelemetry-javaagent.jar")
   from(zipTree(configurations.named("otel").get().singleFile))

@@ -6,17 +6,17 @@ plugins {
 }
 
 // this configuration collects libs that will be placed in the bootstrap classloader
-val bootstrapLibs by configurations.creating {
+val bootstrapLibs = configurations.create("bootstrapLibs") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
 // this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
-val javaagentLibs by configurations.creating {
+val javaagentLibs = configurations.create("javaagentLibs") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
 // this configuration stores the upstream agent dep that's extended by this project
-val upstreamAgent by configurations.creating {
+val upstreamAgent = configurations.create("upstreamAgent") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }

@@ -117,7 +117,7 @@ configurations {
     isCanBeConsumed = false
   }
 
-  val testImplementation by getting
+  val testImplementation = configurations.getByName("testImplementation")
 
   // Collect latestDepTestLibrary overrides so we can apply them via resolutionStrategy.
   // This map is populated during configuration and read during resolution.
@@ -253,7 +253,7 @@ if (otelProps.testLatestDeps) {
     }
 
     if (tasks.names.contains("latestDepTest")) {
-      val latestDepTest by tasks.existing
+      val latestDepTest = tasks.named<Test>("latestDepTest")
       tasks.named("test").configure {
         dependsOn(latestDepTest)
       }
