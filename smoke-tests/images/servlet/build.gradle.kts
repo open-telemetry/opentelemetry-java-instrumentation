@@ -188,12 +188,12 @@ val targets = mapOf(
 )
 
 tasks {
-  val buildLinuxTestImages by registering {
+  val buildLinuxTestImages = register<DefaultTask>("buildLinuxTestImages") {
     group = "build"
     description = "Builds all Linux Docker images for the test matrix"
   }
 
-  val buildWindowsTestImages by registering {
+  val buildWindowsTestImages = register<DefaultTask>("buildWindowsTestImages") {
     group = "build"
     description = "Builds all Windows Docker images for the test matrix"
   }
@@ -201,21 +201,21 @@ tasks {
   val linuxImages = createDockerTasks(buildLinuxTestImages, false)
   val windowsImages = createDockerTasks(buildWindowsTestImages, true)
 
-  val pushLinuxImages by registering(DockerPushImage::class) {
+  register<DockerPushImage>("pushLinuxImages") {
     dependsOn(buildLinuxTestImages)
     group = "publishing"
     description = "Push Linux Docker images for the test matrix"
     images.set(linuxImages)
   }
 
-  val pushWindowsImages by registering(DockerPushImage::class) {
+  register<DockerPushImage>("pushWindowsImages") {
     dependsOn(buildWindowsTestImages)
     group = "publishing"
     description = "Push Windows Docker images for the test matrix"
     images.set(windowsImages)
   }
 
-  val printSmokeTestsConfigurations by registering {
+  register<DefaultTask>("printSmokeTestsConfigurations") {
     doFirst {
       for ((server, matrices) in targets) {
         val smokeTestServer = findProperty("smokeTestServer")
@@ -310,10 +310,10 @@ fun configureImage(
     } else {
       when (jdk) {
         "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:0b793df1b9217f3d25c5f820d47e85a20b0a78b0ccd0ab6deb9051502493c855"
-        "11" -> "eclipse-temurin:11.0.31_11-jdk@sha256:57bc74eb2a5ad92fe165abcc760a0f6cd1007c1a75aa004d16aa26d59eec0fac"
-        "17" -> "eclipse-temurin:17.0.19_10-jdk@sha256:859dc576f4af4fad89a179441e3f6dc9a549b86a2ffa5c740ed76b644810239b"
-        "21" -> "eclipse-temurin:21.0.11_10-jdk@sha256:949f7645022e8cd5cd65eac4b342e7505c86b721b6338f8b677c6f2edc180262"
-        "25" -> "eclipse-temurin:25.0.3_9-jdk@sha256:edb3aa0f621796d8f5f9d602c7611ffdf015cd89e6ddda1894d85a3a99d170a8"
+        "11" -> "eclipse-temurin:11.0.31_11-jdk@sha256:d0abfceaee12f0b0704fd116dc3d520078ec1c355f59115a4b48f0f50e16f975"
+        "17" -> "eclipse-temurin:17.0.19_10-jdk@sha256:91b6210cce02091f6f0798a83ec51aa223828242c5a21a85793bb8c28dc891c4"
+        "21" -> "eclipse-temurin:21.0.11_10-jdk@sha256:762d16be48b976c97801d198e5085b1f6facb13718a1e8fb67cb25d0b25337e1"
+        "25" -> "eclipse-temurin:25.0.3_9-jdk@sha256:dfc0093e3dbf43dae57827111c6e374f5b44fac19a9451584b2b336b81474d64"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }

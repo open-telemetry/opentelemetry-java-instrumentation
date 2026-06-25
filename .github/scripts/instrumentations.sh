@@ -191,6 +191,7 @@ readonly INSTRUMENTATIONS=(
   "lettuce:lettuce-5.0:javaagent:test"
   "lettuce:lettuce-5.0:javaagent:testExperimental"
   "lettuce:lettuce-5.0:javaagent:testStableSemconv"
+  "lettuce:lettuce-5.0:javaagent:testV3Preview"
   "lettuce:lettuce-5.1:javaagent:test"
   "mongo:mongo-3.1:javaagent:test"
   "mongo:mongo-3.1:javaagent:testStableSemconv"

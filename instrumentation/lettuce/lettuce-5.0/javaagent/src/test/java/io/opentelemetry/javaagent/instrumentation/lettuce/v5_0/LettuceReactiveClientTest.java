@@ -251,7 +251,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
 
   @Test
   void testNonReactiveCommandShouldNotProduceSpan() {
-    String res = reactiveCommands.digest(null);
+    // digest computes a SHA locally without contacting redis
+    String res = reactiveCommands.digest("test");
 
     assertThat(res).isNotNull();
     assertThat(testing.spans()).isEmpty();
@@ -363,7 +364,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
             reactiveCommands
                 .set("a", "1")
                 .then(reactiveCommands.get("a"))
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.parallel())
                 .subscribe());
 
     testing.waitAndAssertTraces(

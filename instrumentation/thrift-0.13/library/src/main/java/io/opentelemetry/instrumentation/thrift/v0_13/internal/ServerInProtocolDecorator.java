@@ -19,8 +19,10 @@ import org.apache.thrift.protocol.TMessage;
 import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolDecorator;
+import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.protocol.TStruct;
 import org.apache.thrift.protocol.TType;
+import org.apache.thrift.transport.TTransport;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -152,5 +154,28 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
 
   public boolean isOneway() {
     return isOneway;
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static class Factory implements TProtocolFactory {
+
+    private final TProtocolFactory protocolFactory;
+    private final Instrumenter<ThriftRequest, ThriftResponse> instrumenter;
+
+    public Factory(
+        TProtocolFactory protocolFactory,
+        Instrumenter<ThriftRequest, ThriftResponse> instrumenter) {
+      this.protocolFactory = protocolFactory;
+      this.instrumenter = instrumenter;
+    }
+
+    @Override
+    public TProtocol getProtocol(TTransport transport) {
+      TProtocol protocol = protocolFactory.getProtocol(transport);
+      return new ServerInProtocolDecorator(protocol, null, instrumenter);
+    }
   }
 }
