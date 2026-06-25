@@ -406,40 +406,7 @@ Using indy instrumentation has these advantages:
 
 - allows instrumentations to have breakpoints set in them and be debugged using standard debugging techniques (only once shading is removed)
 - provides clean isolation of instrumentation advice from the application and other instrumentations
-- allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#use-advice-classes-to-write-code-that-will-get-injected-to-the-instrumented-library-classes))
-
-### Indy modules and transition
-
-Making an instrumentation "indy" compatible (or native "indy") is not as straightforward as making it "inlined".
-However, ByteBuddy provides a set of tools and APIs that are mentioned below to make the process as smooth as possible.
-
-Due to the changes needed on most of the instrumentation modules the migration can't be achieved in a single step,
-we thus have to implement it in two steps:
-
-- `InstrumentationModule#isIndyModule` implementation return `true` (and changes needed to make it indy compatible)
-- set `inline = false` on advice methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit`
-
-The `otel.javaagent.experimental.indy` (default `false`) configuration option allows to opt-in for
-using "indy". When set to `true`, the `io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceTransformer`
-will transform advices automatically to make them "indy native". Using this option is temporary and will
-be removed once all the instrumentations are "indy native".
-
-This configuration is automatically enabled in CI with `testIndy*` checks or when the `-PtestIndy=true` parameter is added to gradle.
-
-In order to preserve compatibility with both instrumentation strategies, we have to omit the `inline = false`
-from the advice method annotations.
-
-We have three sets of instrumentation modules:
-
-- "inlined only": only compatible with "inlined", `isIndyModule` returns `false`.
-- "indy compatible": compatible with both "indy" and "inlined", do not override `isIndyModule`, advices are modified with `AdviceTransformer` to be made "indy native" or "inlined" at runtime.
-- "indy native": only compatible with "indy" `isIndyModule` returns `true`.
-
-The first step of the migration is to move all the "inlined only" to the "indy compatible" category
-by refactoring them with the limitations described below.
-
-Once everything is "indy compatible", we can evaluate changing the default value of `otel.javaagent.experimental.indy`
-to `true` and make it non-experimental.
+- allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#inlined-instrumentation))
 
 ### Shared classes and common classloader
 
