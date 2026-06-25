@@ -32,6 +32,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.util.concurrent.CompletableFuture;
@@ -47,6 +48,7 @@ import org.apache.dubbo.rpc.service.GenericService;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -529,7 +531,7 @@ public abstract class AbstractDubboTest {
             span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
                 .hasKind(SpanKind.CLIENT)
                 .hasNoParent()
-                .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                .hasStatus(StatusData.error())
                 .hasAttributesSatisfying(
                     equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                     equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
@@ -560,7 +562,7 @@ public abstract class AbstractDubboTest {
                           span.hasName("_OTHER")
                               .hasKind(SpanKind.SERVER)
                               .hasNoParent()
-                              .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                              .hasStatus(StatusData.error())
                               .hasAttributesSatisfying(
                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                   equalTo(RPC_METHOD, "_OTHER"),
@@ -590,7 +592,7 @@ public abstract class AbstractDubboTest {
                           span.hasName("_OTHER")
                               .hasKind(SpanKind.SERVER)
                               .hasParent(trace.getSpan(0))
-                              .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                              .hasStatus(StatusData.error())
                               .hasAttributesSatisfying(
                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                   equalTo(RPC_METHOD, "_OTHER"),
@@ -619,11 +621,11 @@ public abstract class AbstractDubboTest {
   @Test
   void testTripleUnknownService() throws ReflectiveOperationException {
     // Triple protocol requires Dubbo 3.x
-    org.junit.jupiter.api.Assumptions.assumeTrue(
+    Assumptions.assumeTrue(
         Boolean.getBoolean("testLatestDeps"), "Triple protocol requires Dubbo 3.x");
-    org.junit.jupiter.api.Assumptions.assumeTrue(
+    Assumptions.assumeTrue(
         canCaptureUnknownServiceSpans(), "Requires agent instrumentation");
-    org.junit.jupiter.api.Assumptions.assumeTrue(
+    Assumptions.assumeTrue(
         emitStableRpcSemconv(), "Requires stable RPC semconv");
 
     int port = PortUtils.findOpenPort();
@@ -678,7 +680,7 @@ public abstract class AbstractDubboTest {
                         span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
-                            .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                            .hasStatus(StatusData.error())
                             .hasAttributesSatisfying(
                                 equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                 equalTo(
@@ -690,7 +692,7 @@ public abstract class AbstractDubboTest {
                         span.hasName("_OTHER")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
-                            .hasStatus(io.opentelemetry.sdk.trace.data.StatusData.error())
+                            .hasStatus(StatusData.error())
                             .hasAttributesSatisfying(
                                 equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                 equalTo(RPC_METHOD, "_OTHER"),
