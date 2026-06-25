@@ -56,8 +56,21 @@ configurations:
   - name: otel.instrumentation.common.peer-service-mapping
     declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer services.
-    type: structured_list
+    type: map
     default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+        - peer
+        - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: >
@@ -66,6 +79,29 @@ configurations:
       `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules/development
+    description: >
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only
+      applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+        - pattern
+        - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          default: false
+          description: Whether this rule overrides an already-applied template.
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.

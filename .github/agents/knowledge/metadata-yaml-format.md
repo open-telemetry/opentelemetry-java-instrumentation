@@ -9,12 +9,62 @@
 
 Each configuration entry includes:
 
-- `name`: Flat system property (e.g., `otel.instrumentation.grpc.emit-message-events`)
+- `name`: Flat system property (e.g., `otel.instrumentation.grpc.emit-message-events`). Optional
+  only for declarative-only configs that have no flat property (see Structured Lists); such entries
+  MUST have a `declarative_name`.
 - `declarative_name`: YAML key path (e.g., `java.grpc.emit_message_events`)
-- `type`: `boolean`, `string`, `list`, `integer`
+- `type`: `boolean`, `string`, `list`, `integer`, `map`. Describes the **flat** form.
 - `description`: Human-readable explanation
 - `default`: Default value
 - `examples` (optional): Only for module-specific configs with non-obvious format
+- `declarative_type` (optional): Overrides the declarative-form shape when it differs from the flat
+  `type`. Currently only `structured_list` (see Structured Lists).
+- `declarative_schema` (optional): Per-item object schema, required when
+  `declarative_type: structured_list` (see Structured Lists).
+
+## Structured Lists
+
+Some declarative configs are **lists of objects** even though their flat form is a scalar/map. The
+flat `type` describes the flat system property; `declarative_type: structured_list` plus a
+`declarative_schema` describe the per-item object shape for the declarative builder. The schema
+mirrors the JSON-schema style used by opentelemetry-configuration: `type: object`, a `required`
+list, and named `properties` (each with `type`, optional `description`, optional `default`). The
+`required` keys must be a subset of `properties`.
+
+`service_peer_mapping` — flat form is a `host=service` map, declarative form is a list of
+`{peer, service_name}`:
+
+```yaml
+- name: otel.instrumentation.common.peer-service-mapping
+  declarative_name: java.common.service_peer_mapping
+  description: Used to specify a mapping from host names or IP addresses to peer services.
+  type: map
+  default: ""
+  declarative_type: structured_list
+  declarative_schema:
+    type: object
+    required: [peer, service_name]
+    properties:
+      peer: { type: string, description: Host name or IP address to match against. }
+      service_name: { type: string, description: Peer service name to record for matching peers. }
+```
+
+`url_template_rules` is **declarative-only** (no flat property) — it omits `name`:
+
+```yaml
+- declarative_name: java.common.http.client.url_template_rules/development
+  description: Rules for deriving low-cardinality URL templates from HTTP client request URLs.
+  type: list
+  default: ""
+  declarative_type: structured_list
+  declarative_schema:
+    type: object
+    required: [pattern, template]
+    properties:
+      pattern: { type: string }
+      template: { type: string }
+      override: { type: boolean, default: false }
+```
 
 ## Special Mappings
 
