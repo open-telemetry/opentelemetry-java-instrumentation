@@ -275,7 +275,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                         maybeStable(DB_STATEMENT),
                                         "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(maybeStable(DB_OPERATION), "LPUSH")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
