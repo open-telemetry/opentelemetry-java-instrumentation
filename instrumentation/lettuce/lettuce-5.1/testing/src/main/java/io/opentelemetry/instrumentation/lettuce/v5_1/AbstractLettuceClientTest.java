@@ -31,6 +31,8 @@ public abstract class AbstractLettuceClientTest {
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final int DB_INDEX = 0;
+  protected static final String WRONG_TYPE_KEY = "mykey";
+  protected static final String WRONG_TYPE_VALUE = "value";
 
   protected GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine")

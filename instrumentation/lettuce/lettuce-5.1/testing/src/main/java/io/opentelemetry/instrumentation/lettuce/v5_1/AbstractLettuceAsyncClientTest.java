@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -26,6 +28,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
@@ -35,6 +38,7 @@ import io.lettuce.core.codec.StringCodec;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -171,6 +175,47 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(maybeStable(DB_SYSTEM), REDIS),
                                     equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
                                     equalTo(maybeStable(DB_OPERATION), "SET")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+  }
+
+  @Test
+  void testLpushWrongTypeCommandSetsSpanStatus() throws Exception {
+    asyncCommands.set(WRONG_TYPE_KEY, WRONG_TYPE_VALUE).get(3, SECONDS);
+    testing().waitForTraces(1);
+    testing().clearData();
+
+    RedisFuture<Long> redisFuture = asyncCommands.lpush(WRONG_TYPE_KEY, WRONG_TYPE_VALUE);
+
+    Throwable thrown = catchThrowable(() -> redisFuture.get(3, SECONDS));
+
+    assertThat(thrown)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("LPUSH"))
+                            .hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    emitOldDatabaseSemconv()
+                                        ? satisfies(
+                                            stringKey("error"), val -> val.contains("WRONGTYPE"))
+                                        : equalTo(stringKey("error"), null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "LPUSH " + WRONG_TYPE_KEY + " ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "LPUSH")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 

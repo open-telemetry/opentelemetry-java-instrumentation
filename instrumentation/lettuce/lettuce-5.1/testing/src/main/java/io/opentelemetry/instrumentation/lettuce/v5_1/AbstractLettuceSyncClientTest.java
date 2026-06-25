@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.RedisException;
 import io.lettuce.core.ScriptOutputType;
@@ -41,6 +42,7 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -279,6 +281,43 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_PORT, containerConnection.port),
                                     equalTo(maybeStable(DB_SYSTEM), REDIS),
                                     equalTo(maybeStable(DB_STATEMENT), "LPUSH TESTLIST ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "LPUSH")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+  }
+
+  @Test
+  void testLpushWrongTypeCommandSetsSpanStatus() {
+    syncCommands.set(WRONG_TYPE_KEY, WRONG_TYPE_VALUE);
+    testing().waitForTraces(1);
+    testing().clearData();
+
+    Throwable thrown = catchThrowable(() -> syncCommands.lpush(WRONG_TYPE_KEY, WRONG_TYPE_VALUE));
+
+    assertThat(thrown).isInstanceOf(RedisCommandExecutionException.class);
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("LPUSH"))
+                            .hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    emitOldDatabaseSemconv()
+                                        ? satisfies(
+                                            stringKey("error"), val -> val.contains("WRONGTYPE"))
+                                        : equalTo(stringKey("error"), null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(maybeStable(DB_OPERATION), "LPUSH")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }

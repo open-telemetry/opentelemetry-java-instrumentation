@@ -163,6 +163,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Nullable private List<Object> events;
     @Nullable private Throwable error;
+    @Nullable private String errorMessage;
     @Nullable private LettuceResponse response;
     @Nullable private Context context;
 
@@ -269,6 +270,9 @@ final class OpenTelemetryTracing implements Tracing {
       if (value == null || value.isEmpty()) {
         return this;
       }
+      if (key.equals("error")) {
+        errorMessage = value;
+      }
       if (key.equals("redis.args")) {
         request.setArgsString(value);
         return this;
@@ -307,6 +311,11 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     public synchronized void finish() {
       if (context != null) {
+        LettuceResponse response = this.response;
+        if (response == null && errorMessage != null) {
+          response = new LettuceResponse(errorMessage, null);
+        }
+
         instrumenter.end(context, request, response, error);
         // Null out context to prevent double-ending if both the onComplete callback and Lettuce's
         // direct finish() call execute.
