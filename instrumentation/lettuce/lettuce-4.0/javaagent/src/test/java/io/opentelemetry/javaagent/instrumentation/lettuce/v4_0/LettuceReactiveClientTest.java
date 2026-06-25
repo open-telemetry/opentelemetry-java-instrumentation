@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import com.lambdaworks.redis.ClientOptions;
 import com.lambdaworks.redis.RedisClient;
@@ -316,6 +317,7 @@ class LettuceReactiveClientTest {
                             .subscribe(future::complete, future::completeExceptionally),
                     future::completeExceptionally));
 
+    await().untilAsserted(() -> assertThat(future).isCompletedWithValue("1"));
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -330,7 +332,6 @@ class LettuceReactiveClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(commandAttributes("GET"))));
-    assertThat(future).isCompletedWithValue("1");
   }
 
   @Test
@@ -351,6 +352,7 @@ class LettuceReactiveClientTest {
                             .subscribe(future::complete, future::completeExceptionally),
                     future::completeExceptionally));
 
+    await().untilAsserted(() -> assertThat(future).isCompletedWithValue("1"));
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -365,7 +367,6 @@ class LettuceReactiveClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(commandAttributes("GET"))));
-    assertThat(future).isCompletedWithValue("1");
   }
 
   private static StatefulRedisConnection<String, String> newContainerConnection() {
