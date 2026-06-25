@@ -43,9 +43,11 @@ public final class ProcessResource {
 
   /**
    * Returns a factory for a {@link Resource} which provides information about the current running
-   * process.
+   * process, including the command-line attributes.
    *
-   * @deprecated Use {@link #create()} instead. Will be removed in 3.0.
+   * @deprecated Use {@link #create(boolean) create(true)} to retain the current behavior, or {@link
+   *     #create()} to omit the potentially sensitive {@code process.command_args} and {@code
+   *     process.command_line} attributes. Will be removed in 3.0.
    */
   @Deprecated // to be removed in 3.0
   public static Resource get() {
