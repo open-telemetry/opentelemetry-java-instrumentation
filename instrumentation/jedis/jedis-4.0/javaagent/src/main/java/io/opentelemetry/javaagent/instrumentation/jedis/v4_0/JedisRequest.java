@@ -15,7 +15,6 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringJoiner;
 import javax.annotation.Nullable;
 import redis.clients.jedis.CommandArguments;
 import redis.clients.jedis.Connection;
@@ -29,6 +28,7 @@ public abstract class JedisRequest {
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jedis"));
+  private static final int LIMIT = 32 * 1024;
 
   @Nullable private SocketAddress remoteSocketAddress;
 
@@ -137,11 +137,16 @@ public abstract class JedisRequest {
   }
 
   private static String pipelineQueryText(List<JedisRequest> requests) {
-    StringJoiner joiner = new StringJoiner(";");
+    StringBuilder builder = new StringBuilder();
     for (JedisRequest request : requests) {
-      joiner.add(request.getQueryText());
+      String queryText = request.getQueryText();
+      String separator = builder.length() == 0 ? "" : ";";
+      if (builder.length() + separator.length() + queryText.length() > LIMIT) {
+        break;
+      }
+      builder.append(separator).append(queryText);
     }
-    return joiner.toString();
+    return builder.toString();
   }
 
   public void setSocket(@Nullable Socket socket) {
