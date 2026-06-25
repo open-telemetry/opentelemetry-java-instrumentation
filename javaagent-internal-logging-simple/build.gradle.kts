@@ -22,7 +22,7 @@ dependencies {
 }
 
 tasks {
-  val shadowJar by existing(ShadowJar::class) {
+  val shadowJar = named<ShadowJar>("shadowJar") {
     // required for META-INF/services files relocation
     mergeServiceFiles()
     // mergeServiceFiles requires that duplicate strategy is set to include

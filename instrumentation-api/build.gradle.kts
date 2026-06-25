@@ -45,13 +45,13 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  val testExceptionSignalLogs by registering(Test::class) {
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
   }
 
-  val testExceptionSignalLogsDup by registering(Test::class) {
+  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")

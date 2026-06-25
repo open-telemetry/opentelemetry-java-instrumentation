@@ -14,19 +14,18 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import redis.RedisCommand;
 
 public class RediscalaSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rediscala-1.8";
 
-  private static final Instrumenter<RedisCommand<?, ?>, Void> instrumenter;
+  private static final Instrumenter<RediscalaRequest, Void> instrumenter;
 
   static {
     RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();
 
-    InstrumenterBuilder<RedisCommand<?, ?>, Void> builder =
-        Instrumenter.<RedisCommand<?, ?>, Void>builder(
+    InstrumenterBuilder<RediscalaRequest, Void> builder =
+        Instrumenter.<RediscalaRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
@@ -37,7 +36,7 @@ public class RediscalaSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<RedisCommand<?, ?>, Void> instrumenter() {
+  public static Instrumenter<RediscalaRequest, Void> instrumenter() {
     return instrumenter;
   }
 

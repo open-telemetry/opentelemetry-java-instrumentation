@@ -53,7 +53,7 @@ tasks {
       "wildfly" to listOf("**/Wildfly*.*"),
     )
 
-    val smokeTestSuite: String? by project
+    val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
     val skipOpenJ9SmokeTests = (findProperty("skipOpenJ9SmokeTests") as String?) == "true"
     if (smokeTestSuite != null) {
       val suite = suites[smokeTestSuite]

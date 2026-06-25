@@ -20,7 +20,7 @@ repositories {
   gradlePluginPortal()
 }
 
-val bbGradlePlugin by configurations.creating
+val bbGradlePlugin = configurations.create("bbGradlePlugin")
 configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
