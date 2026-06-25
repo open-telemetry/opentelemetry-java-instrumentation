@@ -251,6 +251,8 @@ It is possible to select which instrumentation strategy is used through configur
 ## inlined instrumentation
 
 As of 3.0.0, the default instrumentation strategy is [non-inlined](#non-inlined-instrumentation), this section is kept for historical reference and for users that want to opt-out of the new default behavior.
+All internal instrumentation uses advices that have `inline = false` set to make them compatible with [non-inlined instrumentation](#non-inlined-instrumentation), but those advices
+will be inlined into the instrumented code if the user opts-out of non-inlined instrumentation.
 
 With inlined instrumentation, advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
 the instrumented library class files. You should not treat them as ordinary, plain Java classes.
