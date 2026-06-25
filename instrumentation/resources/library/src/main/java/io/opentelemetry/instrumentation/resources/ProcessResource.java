@@ -135,7 +135,7 @@ public final class ProcessResource {
       for (String arg : runtime.getInputArguments()) {
         commandLine.append(' ').append(scrub(arg));
       }
-      // sun.java.command isn't well document and may not be available on all systems.
+      // sun.java.command isn't well documented and may not be available on all systems.
       String javaCommand = System.getProperty("sun.java.command");
       if (javaCommand != null) {
         // This property doesn't include -jar when launching a jar directly.  Try to determine

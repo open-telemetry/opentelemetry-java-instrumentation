@@ -5,8 +5,9 @@ description: >
 features:
   - RESOURCE_DETECTOR
 configurations:
+  # No declarative_name: declarative resource detection uses the separate process detector schema,
+  # which currently has no toggle for these attributes.
   - name: otel.instrumentation.resources.experimental.process-command-attributes.enabled
-    declarative_name: java.resources.process_command_attributes/development.enabled
     description: >
       Enables capture of process command-line resource attributes when v3 preview suppresses them
       by default.
