@@ -280,6 +280,7 @@
     "org.apache.camel:camel-undertow#2.+": "2.25.4",
     "org.apache.cassandra:java-driver-core#+": "4.19.3",
     "org.apache.commons:commons-dbcp2#+": "2.14.0",
+    "org.apache.commons:commons-pool2#+": "2.13.1",
     "org.apache.cxf:cxf-rt-frontend-jaxrs#+": "4.2.2",
     "org.apache.cxf:cxf-rt-frontend-jaxrs#3.+": "3.6.11",
     "org.apache.cxf:cxf-rt-frontend-jaxws#+": "4.2.2",
