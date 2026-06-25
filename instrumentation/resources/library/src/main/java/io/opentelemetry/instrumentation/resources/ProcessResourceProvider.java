@@ -13,8 +13,18 @@ import io.opentelemetry.sdk.resources.Resource;
 /** {@link ResourceProvider} for automatically configuring {@link ProcessResource}. */
 @AutoService(ResourceProvider.class)
 public final class ProcessResourceProvider implements ResourceProvider {
+
+  private static final String V3_PREVIEW_CONFIG = "otel.instrumentation.common.v3-preview";
+  private static final String CAPTURE_COMMAND_ATTRIBUTES_CONFIG =
+      "otel.instrumentation.resources.experimental.process-command-attributes.enabled";
+
   @Override
   public Resource createResource(ConfigProperties config) {
-    return ProcessResource.get();
+    return ProcessResource.buildResource(emitCommandAttributes(config));
+  }
+
+  private static boolean emitCommandAttributes(ConfigProperties config) {
+    return !config.getBoolean(V3_PREVIEW_CONFIG, false)
+        || config.getBoolean(CAPTURE_COMMAND_ATTRIBUTES_CONFIG, false);
   }
 }

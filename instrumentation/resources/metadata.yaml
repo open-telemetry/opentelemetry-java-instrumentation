@@ -4,3 +4,11 @@ description: >
   the host, OS, process, and container environment. It does not emit any telemetry on its own.
 features:
   - RESOURCE_DETECTOR
+configurations:
+  - name: otel.instrumentation.resources.experimental.process-command-attributes.enabled
+    declarative_name: java.resources.process_command_attributes/development.enabled
+    description: >
+      Enables capture of process command-line resource attributes when v3 preview suppresses them
+      by default.
+    type: boolean
+    default: false
