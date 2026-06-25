@@ -6,10 +6,12 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
 
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -91,6 +93,21 @@ public abstract class AbstractLettuceClientTest {
         .hasEventsSatisfyingExactly(
             event -> event.hasName("redis.encode.start"),
             event -> event.hasName("redis.encode.end"));
+  }
+
+  protected static void assertCommandErrorEvents(SpanData span) {
+    if (testLatestDeps()) {
+      assertThat(span)
+          .hasException(
+              new RedisCommandExecutionException(
+                  "WRONGTYPE Operation against a key holding the wrong kind of value"))
+          .hasEventsSatisfyingExactly(
+              event -> event.hasName("redis.encode.start"),
+              event -> event.hasName("redis.encode.end"),
+              event -> event.hasName("exception"));
+    } else {
+      assertCommandEncodeEvents(span);
+    }
   }
 
   protected String spanName(String operation) {

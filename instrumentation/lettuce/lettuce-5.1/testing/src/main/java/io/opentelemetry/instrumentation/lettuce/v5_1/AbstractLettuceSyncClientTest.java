@@ -305,7 +305,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    emitOldDatabaseSemconv()
+                                    emitOldDatabaseSemconv() && !testLatestDeps()
                                         ? satisfies(
                                             stringKey("error"), val -> val.contains("WRONGTYPE"))
                                         : equalTo(stringKey("error"), null),
@@ -319,7 +319,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                         maybeStable(DB_STATEMENT),
                                         "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(maybeStable(DB_OPERATION), "LPUSH")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
   }
 
   @Test

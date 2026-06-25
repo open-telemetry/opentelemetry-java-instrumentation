@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -260,7 +261,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    emitOldDatabaseSemconv()
+                                    emitOldDatabaseSemconv() && !testLatestDeps()
                                         ? satisfies(
                                             stringKey("error"), val -> val.contains("WRONGTYPE"))
                                         : equalTo(stringKey("error"), null),
@@ -274,7 +275,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                         maybeStable(DB_STATEMENT),
                                         "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(maybeStable(DB_OPERATION), "LPUSH")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
+                            .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
   }
 
   @Test
