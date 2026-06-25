@@ -3,19 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
+package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -30,8 +25,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
@@ -42,14 +35,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
-import redis.clients.jedis.DefaultJedisClientConfig;
-import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Transaction;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class Jedis40ClientTest {
+class JedisClientTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -61,28 +52,22 @@ class Jedis40ClientTest {
 
   private static String host;
 
-  private static String ip;
-
   private static int port;
 
   private static Jedis jedis;
 
   @BeforeAll
-  static void setup() throws UnknownHostException {
+  static void setup() {
     redisServer.start();
     cleanup.deferAfterAll(redisServer::stop);
-    port = redisServer.getMappedPort(6379);
     host = redisServer.getHost();
-    ip = InetAddress.getByName(host).getHostAddress();
+    port = redisServer.getMappedPort(6379);
     jedis = new Jedis(host, port);
-    cleanup.deferAfterAll(jedis);
+    cleanup.deferAfterAll(jedis::disconnect);
   }
 
   @BeforeEach
   void reset() {
-    // jedis 4.x leaves the connection "in multi" after multi()/exec() (Transaction has no
-    // back-reference to clear Jedis state), so reset it before reusing the shared client.
-    jedis.resetState();
     jedis.select(0);
     jedis.flushAll();
     testing.clearData();
@@ -102,23 +87,17 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+                            equalTo(SERVER_PORT, port))));
 
     assertDurationMetric(
         testing,
-        "io.opentelemetry.jedis-4.0",
+        "io.opentelemetry.jedis-2.0",
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
-        DB_NAMESPACE,
         SERVER_ADDRESS,
-        SERVER_PORT,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT);
+        SERVER_PORT);
   }
 
   @Test
@@ -138,12 +117,9 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))),
+                            equalTo(SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -153,12 +129,9 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -178,12 +151,9 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))),
+                            equalTo(SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -196,78 +166,9 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
-  }
-
-  @Test
-  void selectCommandDoesNotChangeEstablishedDatabaseIndex() {
-    jedis.select(1);
-    jedis.set("foo", "bar");
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT " + host + ":" + port : "SELECT")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SELECT 1"),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
-  }
-
-  @Test
-  void configuredDatabaseIndex() {
-    try (Jedis databaseOne =
-        new Jedis(
-            new HostAndPort(host, port), DefaultJedisClientConfig.builder().database(1).build())) {
-      testing.clearData();
-      databaseOne.set("foo", "bar");
-    }
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+                            equalTo(SERVER_PORT, port))));
   }
 
   @ParameterizedTest
@@ -295,15 +196,60 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+                            equalTo(SERVER_PORT, port))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("transactionScenarios")
+  void transactionCommand(BatchScenario<Transaction> scenario) {
+    // A MULTI/EXEC transaction is reported as a single batch span (db.operation.name "MULTI"),
+    // mirroring how a pipeline is reported as "PIPELINE". The framing MULTI/EXEC commands and the
+    // individual queued commands do not get their own spans.
+    Transaction transaction = jedis.multi();
+    scenario.commands.accept(transaction);
+    transaction.exec();
+
+    if (scenario.operationName == null) {
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? scenario.operationName + " " + host + ":" + port
+                                : scenario.operationName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
+                            equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
+  }
+
+  @Test
+  void transactionDiscardEmitsNoSpans() {
+    // A discarded transaction is abandoned: its queued commands are dropped and the framing
+    // MULTI/DISCARD commands do not produce any spans.
+    Transaction transaction = jedis.multi();
+    transaction.set("tx1", "v1");
+    transaction.get("tx1");
+    transaction.discard();
+
+    assertThat(testing.spans()).isEmpty();
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -335,57 +281,6 @@ class Jedis40ClientTest {
                 .queryText("SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()));
-  }
-
-  @ParameterizedTest
-  @MethodSource("transactionScenarios")
-  void transactionCommand(BatchScenario<Transaction> scenario) {
-    // A MULTI/EXEC transaction is reported as a single batch span (db.operation.name "MULTI"),
-    // mirroring how a pipeline is reported as "PIPELINE". The framing MULTI/EXEC commands and the
-    // individual queued commands do not get their own spans.
-    Transaction transaction = jedis.multi();
-    scenario.commands.accept(transaction);
-    transaction.exec();
-
-    if (scenario.operationName == null) {
-      assertThat(testing.spans()).isEmpty();
-      return;
-    }
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? scenario.operationName + " " + host + ":" + port
-                                : scenario.operationName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
-                            equalTo(maybeStable(DB_OPERATION), scenario.operationName),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
-  }
-
-  @Test
-  void transactionDiscardEmitsNoSpans() {
-    // A discarded transaction is abandoned: its queued commands are dropped and the framing
-    // MULTI/DISCARD commands do not produce any spans.
-    Transaction transaction = jedis.multi();
-    transaction.set("tx1", "v1");
-    transaction.get("tx1");
-    transaction.discard();
-
-    assertThat(testing.spans()).isEmpty();
   }
 
   private static Stream<Arguments> transactionScenarios() {

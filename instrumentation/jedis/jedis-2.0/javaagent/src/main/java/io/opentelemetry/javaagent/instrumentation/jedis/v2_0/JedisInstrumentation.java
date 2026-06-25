@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
+package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 class JedisInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf("redis.clients.jedis.Jedis", "redis.clients.jedis.UnifiedJedis");
+    return namedOneOf("redis.clients.jedis.Jedis", "redis.clients.jedis.BinaryJedis");
   }
 
   @Override
@@ -44,10 +44,7 @@ class JedisInstrumentation implements TypeInstrumentation {
                         "resetState",
                         "getClient",
                         "disconnect",
-                        "getConnection",
-                        "isBroken",
-                        "multi",
-                        "toString"))),
+                        "multi"))),
         getClass().getName() + "$JedisMethodAdvice");
     transformer.applyAdviceToMethod(
         named("multi").and(takesArguments(0)), getClass().getName() + "$MultiAdvice");

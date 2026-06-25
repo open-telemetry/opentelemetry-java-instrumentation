@@ -155,6 +155,8 @@ readonly INSTRUMENTATIONS=(
   "jdbc:javaagent:testStableSemconv"
   "jedis:jedis-1.4:javaagent:test"
   "jedis:jedis-1.4:javaagent:testStableSemconv"
+  "jedis:jedis-2.0:javaagent:test"
+  "jedis:jedis-2.0:javaagent:testStableSemconv"
   "jedis:jedis-3.0:javaagent:test"
   "jedis:jedis-3.0:javaagent:testStableSemconv"
   "jedis:jedis-4.0:javaagent:test"

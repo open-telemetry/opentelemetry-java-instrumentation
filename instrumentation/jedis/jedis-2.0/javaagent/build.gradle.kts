@@ -6,27 +6,24 @@ muzzle {
   pass {
     group.set("redis.clients")
     module.set("jedis")
-    versions.set("[1.4.0,2.0.0)")
+    versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("redis.clients:jedis:1.4.0")
+  library("redis.clients:jedis:2.0.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-  testImplementation("org.testcontainers:testcontainers")
-
-  testInstrumentation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
-  latestDepTestLibrary("redis.clients:jedis:1.+") // see jedis-2.0 module
+  latestDepTestLibrary("redis.clients:jedis:2.+") // see jedis-3.0 module
 }
 
 tasks {
@@ -35,7 +32,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
