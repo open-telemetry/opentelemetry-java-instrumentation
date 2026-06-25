@@ -61,7 +61,7 @@ public final class LettuceBatchContext {
     if (state == null || state.isEmpty()) {
       return null;
     }
-    // hand off the collected commands and install a fresh buffer for the next flush
+    // flushCommands() does not re-enable auto-flush, so keep batching active with a fresh buffer
     BATCH_STATE.set(commands, new BatchState());
     return BatchScope.start(state.commands, state.asyncCommands, state.parentContext);
   }
@@ -97,6 +97,9 @@ public final class LettuceBatchContext {
         return null;
       }
       BatchScope scope = new BatchScope(context, request, asyncCommands.size());
+      // Redis executes batch commands in order, but the individual async command futures can
+      // complete in a different order. Observe every future so an earlier failure or cancellation
+      // is captured; the remaining counter decides when all responses have completed.
       for (AsyncCommand<?, ?, ?> asyncCommand : asyncCommands) {
         asyncCommand.handleAsync(
             (value, throwable) -> {
@@ -110,6 +113,7 @@ public final class LettuceBatchContext {
     public void endOne(@Nullable Throwable throwable) {
       if (throwable instanceof CancellationException) {
         if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+          // On a batch span this means at least one command was cancelled
           Span.fromContext(context).setAttribute("lettuce.command.cancelled", true);
         }
         throwable = null;

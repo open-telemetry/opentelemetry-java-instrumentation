@@ -48,26 +48,29 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
   public static class DispatchAdvice {
 
     public static class AdviceScope {
-      private final AbstractRedisAsyncCommands<?, ?> commands;
-      @Nullable private final Context context;
+      @Nullable private final AbstractRedisAsyncCommands<?, ?> batchingCommands;
+      @Nullable private final Context commandContext;
       @Nullable private final Scope scope;
-      private final boolean batching;
 
-      public AdviceScope(
-          AbstractRedisAsyncCommands<?, ?> commands,
-          @Nullable Context context,
-          @Nullable Scope scope,
-          boolean batching) {
-        this.commands = commands;
-        this.context = context;
+      private AdviceScope(
+          @Nullable AbstractRedisAsyncCommands<?, ?> batchingCommands,
+          @Nullable Context commandContext,
+          @Nullable Scope scope) {
+        this.batchingCommands = batchingCommands;
+        this.commandContext = commandContext;
         this.scope = scope;
-        this.batching = batching;
       }
 
-      public static AdviceScope batching(AbstractRedisAsyncCommands<?, ?> commands) {
+      public static AdviceScope captureForBatching(AbstractRedisAsyncCommands<?, ?> commands) {
         Context parentContext = currentContext();
+        // batch spans start on flush, but AsyncCommand construction still needs the dispatch
+        // caller context so callbacks run under it
         Context context = parentContext.with(COMMAND_CONTEXT_KEY, parentContext);
-        return new AdviceScope(commands, null, context.makeCurrent(), true);
+        return new AdviceScope(commands, null, context.makeCurrent());
+      }
+
+      public static AdviceScope startCommandSpan(Context commandContext) {
+        return new AdviceScope(null, commandContext, commandContext.makeCurrent());
       }
 
       public void end(
@@ -77,10 +80,10 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
         if (scope != null) {
           scope.close();
         }
-        if (batching) {
-          LettuceBatchContext.capture(commands, command, asyncCommand);
-        } else if (context != null) {
-          InstrumentationPoints.afterCommand(command, context, throwable, asyncCommand);
+        if (batchingCommands != null) {
+          LettuceBatchContext.capture(batchingCommands, command, asyncCommand);
+        } else if (commandContext != null) {
+          InstrumentationPoints.afterCommand(command, commandContext, throwable, asyncCommand);
         }
       }
     }
@@ -91,7 +94,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
         @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
         @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       if (LettuceBatchContext.isBatching(commands)) {
-        return AdviceScope.batching(commands);
+        return AdviceScope.captureForBatching(commands);
       }
 
       Context parentContext = currentContext();
@@ -102,7 +105,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
       Context context = instrumenter().start(parentContext, command);
       // remember the context that called dispatch, it is used in LettuceAsyncCommandInstrumentation
       context = context.with(COMMAND_CONTEXT_KEY, parentContext);
-      return new AdviceScope(commands, context, context.makeCurrent(), false);
+      return AdviceScope.startCommandSpan(context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
