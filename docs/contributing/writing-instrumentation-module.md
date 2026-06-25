@@ -344,7 +344,7 @@ the `javaagent-extension-api` artifact has a class `Java8BytecodeBridge` which p
 methods for accessing these default methods from advice. We suggest avoiding Java 8 language features
 in advice classes at all - sometimes you don't know what bytecode version is used by the instrumented class.
 
-## Associate instrumentation classes with instrumented library classes
+## Using virtual fields to associate instrumentation classes to instrumented classes
 
 Sometimes there is a need to associate some instrumentation class with an instrumented library class, and
 the library does not offer a way to do this. The OpenTelemetry javaagent provides `VirtualField`
@@ -404,7 +404,7 @@ invokedynamic bytecode instructions.
 
 Using indy instrumentation has these advantages:
 
-- allows instrumentations to have breakpoints set in them and be debugged using standard debugging techniques
+- allows instrumentations to have breakpoints set in them and be debugged using standard debugging techniques (only once shading is removed)
 - provides clean isolation of instrumentation advice from the application and other instrumentations
 - allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#use-advice-classes-to-write-code-that-will-get-injected-to-the-instrumented-library-classes))
 
@@ -461,7 +461,7 @@ This allows for example to access package-private methods that would not be acce
 
 ### Advice local variables
 
-With inlined advices, declaring an advice method argument with `@Advice.Local` allows defining
+With [inlined advices](#inlined-instrumentation), declaring an advice method argument with `@Advice.Local` allows defining
 a variable that is local to the advice execution for communication between the enter and exit advices.
 
 When advices are not inlined, usage of `@Advice.Local` is not possible. It is however possible to
