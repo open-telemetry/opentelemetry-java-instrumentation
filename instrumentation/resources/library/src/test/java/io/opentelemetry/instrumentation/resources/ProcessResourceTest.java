@@ -39,7 +39,7 @@ class ProcessResourceTest {
 
   @Test
   void commandAttributesDisabled() {
-    Resource resource = ProcessResource.buildResource(false);
+    Resource resource = ProcessResource.create(false);
     Attributes attributes = resource.getAttributes();
 
     assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
@@ -93,7 +93,7 @@ class ProcessResourceTest {
   }
 
   private static void assertResource(boolean windows) {
-    Resource resource = ProcessResource.buildResource();
+    Resource resource = ProcessResource.create();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     Attributes attributes = resource.getAttributes();
 

@@ -20,7 +20,7 @@ public final class ProcessResourceProvider implements ResourceProvider {
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    return ProcessResource.buildResource(emitCommandAttributes(config));
+    return ProcessResource.create(emitCommandAttributes(config));
   }
 
   private static boolean emitCommandAttributes(ConfigProperties config) {

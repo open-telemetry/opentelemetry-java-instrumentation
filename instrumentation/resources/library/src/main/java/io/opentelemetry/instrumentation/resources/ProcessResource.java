@@ -39,19 +39,37 @@ public final class ProcessResource {
   private static final Pattern SCRUB_PATTERN =
       Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE);
 
-  private static final Resource INSTANCE = buildResource(true);
+  private static final Resource INSTANCE = create();
 
   /**
    * Returns a factory for a {@link Resource} which provides information about the current running
    * process.
+   *
+   * @deprecated Use {@link #create()} instead. Will be removed in 3.0.
    */
+  @Deprecated // to be removed in 3.0
   public static Resource get() {
     return INSTANCE;
   }
 
+  /** Returns a {@link Resource} which provides information about the current running process. */
+  public static Resource create() {
+    return create(true);
+  }
+
+  /**
+   * Returns a {@link Resource} which provides information about the current running process.
+   *
+   * <p>Warning: command-line resource attributes may contain sensitive information. Only set {@code
+   * emitCommandAttributes} to {@code true} when this risk is acceptable.
+   */
+  public static Resource create(boolean emitCommandAttributes) {
+    return buildResource(emitCommandAttributes);
+  }
+
   // Visible for testing
   static Resource buildResource() {
-    return buildResource(true);
+    return create();
   }
 
   static Resource buildResource(boolean emitCommandAttributes) {
