@@ -9,7 +9,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -106,12 +105,6 @@ final class RequestAccess {
     return invokeOrNull(access.getRequestItems, request, Map.class);
   }
 
-  @Nullable
-  static List<?> getKeys(Object request) {
-    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
-    return invokeOrNull(access.getKeys, request, List.class);
-  }
-
   /**
    * Returns true if the given WriteRequest contains a PutRequest, false otherwise. Uses reflection
    * to call getPutRequest() on the WriteRequest object.
@@ -161,7 +154,6 @@ final class RequestAccess {
   }
 
   @Nullable private final MethodHandle getBucketName;
-  @Nullable private final MethodHandle getKeys;
   @Nullable private final MethodHandle getLambdaConfiguration;
   @Nullable private final MethodHandle getLambdaName;
   @Nullable private final MethodHandle getLambdaResourceMappingId;
@@ -182,7 +174,6 @@ final class RequestAccess {
     getQueueName = findAccessorOrNull(clz, "getQueueName");
     getStreamName = findAccessorOrNull(clz, "getStreamName");
     getTableName = findAccessorOrNull(clz, "getTableName");
-    getKeys = findAccessorOrNull(clz, "getKeys", List.class);
     getRequestItems = findAccessorOrNull(clz, "getRequestItems", Map.class);
     getTopicArn = findAccessorOrNull(clz, "getTopicArn");
     getTargetArn = findAccessorOrNull(clz, "getTargetArn");
