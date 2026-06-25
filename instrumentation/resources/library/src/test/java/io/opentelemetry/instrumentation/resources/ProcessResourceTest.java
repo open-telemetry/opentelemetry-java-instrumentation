@@ -48,24 +48,8 @@ class ProcessResourceTest {
   @Test
   void commandAttributesEnabled() {
     Resource resource = ProcessResource.create(true);
-
-    assertCommandAttributes(resource.getAttributes());
-  }
-
-  private static void assertResource(boolean windows) {
-    Resource resource = ProcessResource.create();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     Attributes attributes = resource.getAttributes();
 
-    assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
-    assertThat(attributes.get(PROCESS_EXECUTABLE_PATH))
-        .matches(windows ? ".*[/\\\\]java\\.exe" : ".*[/\\\\]java");
-
-    assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
-    assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
-  }
-
-  private static void assertCommandAttributes(Attributes attributes) {
     if (isJava8() || IS_WINDOWS) {
       assertThat(attributes.get(PROCESS_COMMAND_LINE))
           .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
@@ -79,6 +63,19 @@ class ProcessResourceTest {
           .contains("-DtestPassword=***")
           .contains("-DtestNotRedacted=test");
     }
+  }
+
+  private static void assertResource(boolean windows) {
+    Resource resource = ProcessResource.create();
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    Attributes attributes = resource.getAttributes();
+
+    assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
+    assertThat(attributes.get(PROCESS_EXECUTABLE_PATH))
+        .matches(windows ? ".*[/\\\\]java\\.exe" : ".*[/\\\\]java");
+
+    assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
+    assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
   }
 
   private static boolean isJava8() {
