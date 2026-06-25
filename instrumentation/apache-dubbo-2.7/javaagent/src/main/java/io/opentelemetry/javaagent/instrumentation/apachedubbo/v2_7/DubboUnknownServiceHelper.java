@@ -322,5 +322,9 @@ public final class DubboUnknownServiceHelper {
     }
   }
 
+  public static boolean isEnabled() {
+    return DubboSingletons.SERVER_INSTRUMENTER != null;
+  }
+
   private DubboUnknownServiceHelper() {}
 }

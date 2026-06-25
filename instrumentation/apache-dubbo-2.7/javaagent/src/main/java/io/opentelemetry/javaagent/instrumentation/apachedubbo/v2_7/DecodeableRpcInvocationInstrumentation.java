@@ -45,7 +45,7 @@ public class DecodeableRpcInvocationInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static long onEnter() {
-      if (DubboSingletons.SERVER_INSTRUMENTER == null) {
+      if (!DubboUnknownServiceHelper.isEnabled()) {
         return 0;
       }
       return System.currentTimeMillis();

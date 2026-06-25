@@ -42,7 +42,7 @@ public class GrpcRequestHandlerMappingInstrumentation implements TypeInstrumenta
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static long onEnter() {
-      if (DubboSingletons.SERVER_INSTRUMENTER == null) {
+      if (!DubboUnknownServiceHelper.isEnabled()) {
         return 0;
       }
       return System.currentTimeMillis();
