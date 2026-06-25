@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class ReactiveCommandDispatcherInstrumentation implements TypeInstrumentation {
+class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -92,7 +92,7 @@ class ReactiveCommandDispatcherInstrumentation implements TypeInstrumentation {
 
       Context context = instrumenter().start(parentContext, otelCommand);
       // remember the context that called dispatch, it is used in
-      // LettuceReactiveCommandInstrumentation
+      // LettuceObservableCommandInstrumentation
       context = context.with(COMMAND_CONTEXT_KEY, parentContext);
       return new AdviceScope(otelCommand, context);
     }
