@@ -194,7 +194,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .build(),
         arg("jdbc:mysql:failover://[::1]:3306") // IPv6 without slash
-            .setShortUrl("mysql:failover://::1:3306")
+            .setShortUrl("mysql:failover://[::1]:3306")
             .setSystem(MYSQL)
             .setSubtype("failover")
             .setHost("::1")
@@ -419,7 +419,7 @@ class JdbcConnectionUrlParserTest {
             .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:loadbalance://[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host/mdbdb")
-            .setShortUrl("mariadb:loadbalance://2001:0660:7401:0200:0000:0000:0edf:bdd7:33")
+            .setShortUrl("mariadb:loadbalance://[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33")
             .setSystem(MARIADB)
             .setSubtype("loadbalance")
             .setHost("2001:0660:7401:0200:0000:0000:0edf:bdd7")
@@ -449,7 +449,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .build(),
         arg("jdbc:mariadb:failover://[::1]:3306") // IPv6 without slash
-            .setShortUrl("mariadb:failover://::1:3306")
+            .setShortUrl("mariadb:failover://[::1]:3306")
             .setSystem(MARIADB)
             .setSubtype("failover")
             .setHost("::1")
