@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 import javax.annotation.Nullable;
 import org.apache.hadoop.hbase.TableName;
 
-public final class HbaseClientState {
+public class HbaseClientState {
 
   private static final ThreadLocal<TableName> tableNameThreadLocal = new ThreadLocal<>();
   private static final ThreadLocal<RequestAndContext> requestAndContextThreadLocal =

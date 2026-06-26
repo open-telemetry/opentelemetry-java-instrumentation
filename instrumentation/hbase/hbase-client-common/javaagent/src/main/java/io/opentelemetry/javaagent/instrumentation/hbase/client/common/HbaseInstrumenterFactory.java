@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class HbaseInstrumenterFactory {
+public class HbaseInstrumenterFactory {
 
   public static Instrumenter<HbaseRequest, Void> create(String instrumentationName) {
     HbaseAttributesGetter hbaseAttributesGetter = new HbaseAttributesGetter();
