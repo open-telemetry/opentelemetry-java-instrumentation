@@ -12,6 +12,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -53,22 +54,46 @@ class ApplicationLoggerFactoryTest {
 
   @Test
   void shouldOnlyInstallTheFirstBridge() {
-    when(logStore.currentSize()).thenReturn(1, 0, 0);
-    when(applicationLoggerBridge.create(any())).thenReturn(applicationLogger);
+    InternalLogger.Factory factory1 = mock(FirstFactory.class);
+    InternalLogger.Factory factory2 = mock(SecondFactory.class);
 
-    underTest.install(applicationLoggerBridge);
+    when(logStore.currentSize()).thenReturn(1, 0, 0);
+    when(factory2.create(any())).thenReturn(applicationLogger);
+
+    underTest.install(factory1);
 
     verify(logStore, times(3)).currentSize();
-    verify(logStore).flush(applicationLoggerBridge);
-    verify(logStore).setApplicationLoggerFactory(applicationLoggerBridge);
+    verify(logStore).flush(factory1);
+    verify(logStore).setApplicationLoggerFactory(factory1);
     verify(logStore).freeMemory();
 
-    underTest.install(applicationLoggerBridge);
+    underTest.install(factory2);
 
     // verify logged warning
-    verify(applicationLoggerBridge).create(ApplicationLoggerBridge.class.getName());
+    verify(factory2).create(ApplicationLoggerBridge.class.getName());
     verify(applicationLogger).log(eq(WARN), anyString(), isNull());
 
+    verifyNoMoreInteractions(logStore);
+  }
+
+  @Test
+  void shouldIgnoreSubsequentInstallationsOfSameClass() {
+    InternalLogger.Factory factory1 = mock(FirstFactory.class);
+    InternalLogger.Factory factory2 = mock(FirstFactory.class);
+
+    when(logStore.currentSize()).thenReturn(1, 0, 0);
+
+    underTest.install(factory1);
+
+    verify(logStore, times(3)).currentSize();
+    verify(logStore).flush(factory1);
+    verify(logStore).setApplicationLoggerFactory(factory1);
+    verify(logStore).freeMemory();
+
+    underTest.install(factory2);
+
+    // verify no warning logged and no factory interaction for second install
+    verify(factory2, never()).create(anyString());
     verifyNoMoreInteractions(logStore);
   }
 
@@ -89,5 +114,19 @@ class ApplicationLoggerFactoryTest {
     beforeInstall.log(INFO, "after", null);
     verify(applicationLogger).log(INFO, "after", null);
     verify(logStore, never()).write(InMemoryLog.create("logger", INFO, "after", null));
+  }
+
+  static class FirstFactory implements InternalLogger.Factory {
+    @Override
+    public InternalLogger create(String name) {
+      return null;
+    }
+  }
+
+  static class SecondFactory implements InternalLogger.Factory {
+    @Override
+    public InternalLogger create(String name) {
+      return null;
+    }
   }
 }

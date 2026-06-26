@@ -17,6 +17,7 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
 
   private final AtomicBoolean installed = new AtomicBoolean();
   @Nullable private volatile InternalLogger.Factory actual = null;
+  @Nullable private volatile Class<? extends InternalLogger.Factory> actualFactoryClass;
   private final ConcurrentMap<String, ApplicationLogger> inMemoryLoggers =
       new ConcurrentHashMap<>();
 
@@ -28,8 +29,12 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
 
   @Override
   protected void install(InternalLogger.Factory applicationLoggerFactory) {
+    Class<? extends InternalLogger.Factory> incomingClass = applicationLoggerFactory.getClass();
     // just use the first bridge that gets discovered and ignore the rest
     if (!installed.compareAndSet(false, true)) {
+      if (incomingClass.equals(actualFactoryClass)) {
+        return;
+      }
       applicationLoggerFactory
           .create(ApplicationLoggerBridge.class.getName())
           .log(
@@ -39,6 +44,7 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
               null);
       return;
     }
+    actualFactoryClass = incomingClass;
 
     // flushing may cause additional classes to be loaded (e.g. slf4j loads logback, which we
     // instrument), so we're doing this repeatedly to clear the in-memory store and preserve the
