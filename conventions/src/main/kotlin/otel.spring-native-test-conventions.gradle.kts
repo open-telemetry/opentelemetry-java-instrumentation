@@ -16,7 +16,7 @@ if (gradle.startParameter.taskNames.any { it.contains("nativeTest") }) {
   apply(plugin = "org.graalvm.buildtools.native")
 }
 
-val repositoryMetadata: Configuration by configurations.creating
+val repositoryMetadata = configurations.create("repositoryMetadata")
 
 dependencies {
   repositoryMetadata(
@@ -50,7 +50,7 @@ plugins.withId("org.graalvm.buildtools.native") {
   // Use a per-project output directory so parallel builds of sibling smoke-test modules don't
   // race on a single shared destination.
   val metadataRepoDir = layout.buildDirectory.dir("metadata-repository")
-  val extractRepositoryMetadata by tasks.registering(Copy::class) {
+  val extractRepositoryMetadata = tasks.register<Copy>("extractRepositoryMetadata") {
     from({ zipTree(repositoryMetadata.singleFile) })
     into(metadataRepoDir)
   }

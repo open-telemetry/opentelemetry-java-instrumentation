@@ -49,9 +49,13 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
 
     String operation = getOperationName(request.getOriginalRequest());
     Long batchSize = extractBatchSize(operation, request.getOriginalRequest());
+    WriteOperationType writeOpType =
+        "BatchWriteItem".equals(operation)
+            ? extractWriteOperationType(request.getOriginalRequest())
+            : WriteOperationType.NONE;
     if (emitStableDatabaseSemconv()) {
-      attributes.put(DB_OPERATION_NAME, getStableOperationName(operation, batchSize));
-      if (isBatch(batchSize)) {
+      attributes.put(DB_OPERATION_NAME, getStableOperationName(operation, batchSize, writeOpType));
+      if (shouldEmitBatchSize(batchSize)) {
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
     }
@@ -96,30 +100,32 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
 
   @Nullable
   private static String getStableOperationName(
-      @Nullable String operation, @Nullable Long batchSize) {
-    if ("BatchGetItem".equals(operation)) {
-      return getStableBatchOperationName(batchSize, "GetItem", operation);
-    }
+      @Nullable String operation, @Nullable Long batchSize, WriteOperationType writeOpType) {
     if ("BatchWriteItem".equals(operation)) {
-      return getStableBatchOperationName(batchSize, "WriteItem", operation);
+      return getStableWriteOperationName(batchSize, writeOpType);
     }
     return operation;
   }
 
-  private static String getStableBatchOperationName(
-      @Nullable Long batchSize, String itemOperation, String batchOperation) {
-    if (batchSize == null || batchSize == 0) {
-      return batchOperation;
+  private static String getStableWriteOperationName(
+      @Nullable Long batchSize, WriteOperationType writeOpType) {
+    if (batchSize == null || batchSize == 0 || writeOpType == WriteOperationType.NONE) {
+      return "BatchWriteItem";
     }
+    String itemOp = writeOpType == WriteOperationType.PUT ? "PutItem" : "DeleteItem";
     if (batchSize == 1) {
-      return itemOperation;
+      return itemOp;
     }
-    return "BATCH " + itemOperation;
+    // mixed operations collapse to bare BATCH (consistent with SQL/Cassandra)
+    if (writeOpType == WriteOperationType.MIXED) {
+      return "BATCH";
+    }
+    return "BATCH " + itemOp;
   }
 
   @Nullable
   private static Long extractBatchSize(@Nullable String operation, Object request) {
-    if (!"BatchGetItem".equals(operation) && !"BatchWriteItem".equals(operation)) {
+    if (!"BatchWriteItem".equals(operation)) {
       return null;
     }
 
@@ -128,22 +134,9 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
       return null;
     }
 
-    long batchSize =
-        "BatchGetItem".equals(operation)
-            ? countBatchGetItems(requestItems)
-            : countBatchWriteItems(requestItems);
-    return batchSize == 0 ? null : batchSize;
-  }
-
-  private static long countBatchGetItems(Map<?, ?> requestItems) {
-    long count = 0;
-    for (Object keysAndAttributes : requestItems.values()) {
-      List<?> keys = RequestAccess.getKeys(keysAndAttributes);
-      if (keys != null) {
-        count += keys.size();
-      }
-    }
-    return count;
+    long batchSize = countBatchWriteItems(requestItems);
+    // return the size for every batch request, including an empty batch with size 0
+    return batchSize;
   }
 
   private static long countBatchWriteItems(Map<?, ?> requestItems) {
@@ -156,8 +149,51 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     return count;
   }
 
-  private static boolean isBatch(@Nullable Long batchSize) {
-    return batchSize != null && batchSize > 1;
+  /**
+   * Extracts the write operation type from a BatchWriteItem request. Returns PUT if all requests
+   * are PutRequests, DELETE if all are DeleteRequests, MIXED if both types are present, or NONE if
+   * the request is empty or cannot be inspected.
+   */
+  private static WriteOperationType extractWriteOperationType(Object request) {
+    Map<?, ?> requestItems = RequestAccess.getRequestItems(request);
+    if (requestItems == null) {
+      return WriteOperationType.NONE;
+    }
+
+    WriteOperationType result = WriteOperationType.NONE;
+    for (Object writeRequests : requestItems.values()) {
+      if (writeRequests instanceof Collection) {
+        for (Object writeRequest : (Collection<?>) writeRequests) {
+          WriteOperationType opType = classifyWriteRequest(writeRequest);
+          if (opType == WriteOperationType.NONE) {
+            continue;
+          }
+          if (result == WriteOperationType.NONE) {
+            result = opType;
+          } else if (result != opType) {
+            return WriteOperationType.MIXED;
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  private static WriteOperationType classifyWriteRequest(Object writeRequest) {
+    // WriteRequest has getPutRequest() and getDeleteRequest() methods; exactly one returns non-null
+    if (RequestAccess.hasPutRequest(writeRequest)) {
+      return WriteOperationType.PUT;
+    }
+    if (RequestAccess.hasDeleteRequest(writeRequest)) {
+      return WriteOperationType.DELETE;
+    }
+    return WriteOperationType.NONE;
+  }
+
+  // db.operation.batch.size is captured for every batch request (including an empty batch with
+  // size 0); it is only omitted for a single-item batch, which is reported as a non-batch operation
+  private static boolean shouldEmitBatchSize(@Nullable Long batchSize) {
+    return batchSize != null && batchSize != 1;
   }
 
   @Nullable
@@ -177,4 +213,11 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
       Request<?> request,
       @Nullable Response<?> response,
       @Nullable Throwable error) {}
+
+  private enum WriteOperationType {
+    NONE,
+    PUT,
+    DELETE,
+    MIXED
+  }
 }

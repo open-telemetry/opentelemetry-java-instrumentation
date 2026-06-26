@@ -84,7 +84,7 @@ tasks {
     relocationPrefix = "io.opentelemetry.testing.internal"
   }
 
-  val extractShadowJar by registering(Copy::class) {
+  register<Copy>("extractShadowJar") {
     dependsOn(shadowJar)
     // there's both "LICENSE" file and "license" and without excluding one of these build fails on case insensitive file systems
     // there's a LICENSE.txt file that has the same contents anyway, so we're not losing anything excluding that
