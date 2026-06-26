@@ -519,6 +519,9 @@ targets:
       target: ':instrumentation:hbase:hbase-client-2.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:hbase:hbase-client-common:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:hibernate:hibernate-3.3:javaagent'
     - type: gradle
       path: ./

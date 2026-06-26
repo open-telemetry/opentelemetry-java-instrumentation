@@ -25,7 +25,6 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation(project(":instrumentation:hbase:hbase-client-common:testing"))
-  testInstrumentation(project(":instrumentation:hbase:hbase-client-1.4:javaagent"))
 
   latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // native on-by-default instrumentation after this version
 }
