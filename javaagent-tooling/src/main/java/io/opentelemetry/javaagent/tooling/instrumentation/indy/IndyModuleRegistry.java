@@ -106,8 +106,7 @@ public class IndyModuleRegistry {
   }
 
   /**
-   * Returns a newly created class loader containing only the provided module. Note that other
-   * modules from the same module group will not be installed in this class loader.
+   * Returns a newly created class loader containing only the provided module for muzzle.
    */
   public static InstrumentationModuleClassLoader createInstrumentationClassLoaderForMuzzle(
       InstrumentationModule module, ClassLoader instrumentedClassLoader) {
