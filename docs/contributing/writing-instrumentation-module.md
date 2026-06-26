@@ -420,7 +420,7 @@ to `true` and make it non-experimental.
 
 ### Shared classes and common classloader
 
-All the advices are loaded into a shared classloader:
+For each application classloader, all the advices are loaded into a shared classloader per application classloader.
 
 - one common classloader for internal instrumentation modules
 - one common classloader per extension
