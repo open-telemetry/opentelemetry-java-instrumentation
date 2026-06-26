@@ -20,6 +20,9 @@ import net.bytebuddy.utility.JavaModule;
 
 public class IndyModuleRegistry {
 
+  private static final ClassLoader INTERNAL_INSTRUMENTATION_CLASSLOADER_KEY =
+      InstrumentationModuleClassLoader.class.getClassLoader();
+
   private IndyModuleRegistry() {}
 
   private static final ConcurrentHashMap<String, InstrumentationModule> modulesByClassName =
@@ -27,8 +30,9 @@ public class IndyModuleRegistry {
 
   /**
    * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application class
-   * loader. For internal instrumentation, the key is the agent classloader instance, for extensions
-   * the key is the extension classloader. <br>
+   * loader. For internal instrumentation, a common {@link
+   * #INTERNAL_INSTRUMENTATION_CLASSLOADER_KEY} key is used, for extensions the key is the extension
+   * classloader. <br>
    * The {@link InstrumentationModuleClassLoader} are kept alive by a strong reference from the
    * instrumented class loader realized via {@link ClassLoaderValue}.
    */
@@ -92,7 +96,7 @@ public class IndyModuleRegistry {
     ClassLoader classLoaderKey;
     if (!(moduleCl instanceof ExtensionClassLoader)) {
       // internal instrumentation is using one CL per instrumented CL.
-      classLoaderKey = instrumentedClassLoader;
+      classLoaderKey = INTERNAL_INSTRUMENTATION_CLASSLOADER_KEY;
     } else {
       // extension module needs to use a common CL per extension and instrumented CL.
       classLoaderKey = moduleCl;
@@ -135,7 +139,7 @@ public class IndyModuleRegistry {
     if (!(agentOrExtensionCl instanceof ExtensionClassLoader)) {
       // non-extension modules are loaded in a common InstrumentationModuleClassLoader per
       // instrumented CL
-      classLoaderKey = classLoader;
+      classLoaderKey = INTERNAL_INSTRUMENTATION_CLASSLOADER_KEY;
     } else {
       // extension modules are loaded in a common InstrumentationModuleCLassLoader per extension and
       // instrumented CL
