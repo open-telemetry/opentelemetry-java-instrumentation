@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add Cassandra JMX metrics target system. 
+- Add Cassandra JMX metrics target system.
   ([#19080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19080))
 
 ## Version 2.29.0 (2026-06-19)
