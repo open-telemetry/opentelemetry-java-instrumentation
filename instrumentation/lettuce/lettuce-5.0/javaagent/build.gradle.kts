@@ -53,7 +53,7 @@ tasks {
 
   // exercises the v3-preview path, where this advice-based module supersedes the SPI-based
   // lettuce-5.1 javaagent module (which is disabled under v3-preview)
-  val testV3Preview by registering(Test::class) {
+  val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
