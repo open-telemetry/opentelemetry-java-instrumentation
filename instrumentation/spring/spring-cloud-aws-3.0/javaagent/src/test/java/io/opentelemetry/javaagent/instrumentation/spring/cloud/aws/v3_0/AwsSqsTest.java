@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -24,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,8 +34,11 @@ import io.awspring.cloud.sqs.operations.SqsTemplate;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pekko.http.scaladsl.Http;
 import org.assertj.core.api.AbstractStringAssert;
 import org.elasticmq.rest.sqs.SQSRestServer;
@@ -47,11 +52,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.messaging.support.MessageBuilder;
-import java.util.Collections;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicReference;
-import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @SpringBootTest(
@@ -72,25 +72,28 @@ class AwsSqsTest {
     // Wait for the listener containers to start and resolve Queue URLs
     long startTime = System.currentTimeMillis();
     while (System.currentTimeMillis() - startTime < 10000) {
-      long count = testing.spans().stream().filter(s -> s.getName().equals("Sqs.GetQueueUrl")).count();
+      long count =
+          testing.spans().stream().filter(s -> s.getName().equals("Sqs.GetQueueUrl")).count();
       if (count >= 2) {
         break;
       }
       Thread.sleep(100);
     }
-    
+
     // Warm up the templates so that the HTTP client is initialized (prevents Connection refused)
     sqsTemplate.send("test-queue", "warmup");
     sqsTemplate.sendMany(
-        "test-batch-queue",
-        Collections.singletonList(
-            MessageBuilder.withPayload("warmup1").build()));
-    
+        "test-batch-queue", singletonList(MessageBuilder.withPayload("warmup1").build()));
+
     // Wait for the warmup message to be processed so it doesn't pollute the test
     startTime = System.currentTimeMillis();
     while (System.currentTimeMillis() - startTime < 10000) {
-      long count = testing.spans().stream().filter(s -> s.getName().equals("test-queue process")).count();
-      long countBatch = testing.spans().stream().filter(s -> s.getName().equals("test-batch-queue process")).count();
+      long count =
+          testing.spans().stream().filter(s -> s.getName().equals("test-queue process")).count();
+      long countBatch =
+          testing.spans().stream()
+              .filter(s -> s.getName().equals("test-batch-queue process"))
+              .count();
       if (count >= 1 && countBatch >= 1) {
         break;
       }
@@ -159,7 +162,6 @@ class AwsSqsTest {
                                     + AwsSqsTestApplication.sqsPort
                                     + "/000000000000/test-queue"),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
-
                 span ->
                     span.hasName("test-queue process")
                         .hasKind(SpanKind.CONSUMER)
@@ -211,18 +213,21 @@ class AwsSqsTest {
   @Test
   void sqsBatchListener() throws Exception {
     registry.getContainerById("batchContainer").stop();
-    
+
     String messageContent1 = "hello";
     String messageContent2 = "hello2";
     List<String> collectedMessages = new CopyOnWriteArrayList<>();
     CompletableFuture<List<String>> messageFuture = new CompletableFuture<>();
     AwsSqsTestApplication.batchMessageHandler =
-        strings -> testing.runWithSpan("callback", () -> {
-          collectedMessages.addAll(strings);
-          if (collectedMessages.size() >= 2) {
-            messageFuture.complete(collectedMessages);
-          }
-        });
+        strings ->
+            testing.runWithSpan(
+                "callback",
+                () -> {
+                  collectedMessages.addAll(strings);
+                  if (collectedMessages.size() >= 2) {
+                    messageFuture.complete(collectedMessages);
+                  }
+                });
 
     testing.runWithSpan(
         "parent",
@@ -238,8 +243,7 @@ class AwsSqsTest {
     List<String> result = messageFuture.get(10, SECONDS);
     assertThat(result).containsExactlyInAnyOrder(messageContent1, messageContent2);
 
-    AtomicReference<SpanData> producer =
-        new AtomicReference<>();
+    AtomicReference<SpanData> producer = new AtomicReference<>();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -285,25 +289,22 @@ class AwsSqsTest {
                               assertThat(links)
                                   .satisfiesExactly(
                                       l -> {
-                                          assertThat(l.getSpanContext().getTraceId())
-                                              .isEqualTo(producer.get().getTraceId());
-                                          assertThat(l.getSpanContext().getSpanId())
-                                              .isEqualTo(producer.get().getSpanId());
+                                        assertThat(l.getSpanContext().getTraceId())
+                                            .isEqualTo(producer.get().getTraceId());
+                                        assertThat(l.getSpanContext().getSpanId())
+                                            .isEqualTo(producer.get().getSpanId());
                                       },
                                       l -> {
-                                          assertThat(l.getSpanContext().getTraceId())
-                                              .isEqualTo(producer.get().getTraceId());
-                                          assertThat(l.getSpanContext().getSpanId())
-                                              .isEqualTo(producer.get().getSpanId());
+                                        assertThat(l.getSpanContext().getTraceId())
+                                            .isEqualTo(producer.get().getTraceId());
+                                        assertThat(l.getSpanContext().getSpanId())
+                                            .isEqualTo(producer.get().getSpanId());
                                       });
                             })
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_OPERATION, "process"),
-                            equalTo(
-                                MessagingIncubatingAttributes
-                                    .MESSAGING_BATCH_MESSAGE_COUNT,
-                                2L),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
                             equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue")),
                 span ->
                     span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
