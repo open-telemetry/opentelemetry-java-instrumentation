@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.links;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -23,7 +24,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -182,7 +183,8 @@ class AwsSqsTest {
 
   @Test
   void sqsBatchListener() throws Exception {
-    String messageContent = "hello";
+    String messageContent1 = "hello";
+    String messageContent2 = "hello2";
     CompletableFuture<List<String>> messageFuture = new CompletableFuture<>();
     AwsSqsTestApplication.batchMessageHandler =
         strings -> testing.runWithSpan("callback", () -> messageFuture.complete(strings));
@@ -192,10 +194,15 @@ class AwsSqsTest {
         () ->
             sqsTemplate.sendMany(
                 "test-batch-queue",
-                singletonList(MessageBuilder.withPayload(messageContent).build())));
+                asList(
+                    MessageBuilder.withPayload(messageContent1).build(),
+                    MessageBuilder.withPayload(messageContent2).build())));
 
     List<String> result = messageFuture.get(10, SECONDS);
-    assertThat(result).containsExactly(messageContent);
+    assertThat(result).containsExactlyInAnyOrder(messageContent1, messageContent2);
+
+    java.util.concurrent.atomic.AtomicReference<io.opentelemetry.sdk.trace.data.SpanData> producer =
+        new java.util.concurrent.atomic.AtomicReference<>();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -219,59 +226,56 @@ class AwsSqsTest {
                                     val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
-                span ->
-                    span.hasName("test-batch-queue publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "SendMessageBatch"),
-                            equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(HTTP_REQUEST_METHOD, POST),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                            satisfies(
-                                URL_FULL,
-                                val ->
-                                    val.startsWith(
-                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(MESSAGING_OPERATION, "publish"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue"),
-                            equalTo(
-                                AWS_SQS_QUEUE_URL,
-                                "http://localhost:"
-                                    + AwsSqsTestApplication.sqsPort
-                                    + "/000000000000/test-batch-queue"),
-                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
+                span -> {
+                  span.hasName("test-batch-queue publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(RPC_SYSTEM, "aws-api"),
+                          equalTo(RPC_METHOD, "SendMessageBatch"),
+                          equalTo(RPC_SERVICE, "Sqs"),
+                          equalTo(HTTP_REQUEST_METHOD, POST),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                          satisfies(
+                              URL_FULL,
+                              val ->
+                                  val.startsWith(
+                                      "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                          equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                          equalTo(MESSAGING_OPERATION, "publish"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue"),
+                          equalTo(
+                              AWS_SQS_QUEUE_URL,
+                              "http://localhost:"
+                                  + AwsSqsTestApplication.sqsPort
+                                  + "/000000000000/test-batch-queue"),
+                          satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                  producer.set(trace.getSpan(2));
+                }),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("test-batch-queue process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2))
+                        .hasNoParent()
+                        .hasLinksSatisfying(
+                            links(producer.get().getSpanContext(), producer.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "ReceiveMessage"),
-                            equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(HTTP_REQUEST_METHOD, POST),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                            satisfies(
-                                URL_FULL,
-                                val ->
-                                    val.startsWith(
-                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(MESSAGING_OPERATION, "process"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue")),
+                            equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue"),
+                            equalTo(
+                                io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+                                    .MESSAGING_BATCH_MESSAGE_COUNT,
+                                2L)),
                 span ->
-                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(3)),
+                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("Sqs.DeleteMessageBatch")
                         .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(2))
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_METHOD, "DeleteMessageBatch"),

@@ -56,14 +56,14 @@ class MessagingMessageListenerAdapterInstrumentation implements TypeInstrumentat
   public static class OnMessagesAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static SpringAwsUtil.MessageScope methodEnter(
+    public static SpringAwsUtil.BatchMessageScope methodEnter(
         @Advice.Argument(0) Collection<Message<?>> messages) {
       return SpringAwsUtil.handleBatch(messages);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Enter @Nullable SpringAwsUtil.MessageScope scope,
+        @Advice.Enter @Nullable SpringAwsUtil.BatchMessageScope scope,
         @Advice.Thrown @Nullable Throwable throwable) {
       if (scope != null) {
         scope.close(throwable);

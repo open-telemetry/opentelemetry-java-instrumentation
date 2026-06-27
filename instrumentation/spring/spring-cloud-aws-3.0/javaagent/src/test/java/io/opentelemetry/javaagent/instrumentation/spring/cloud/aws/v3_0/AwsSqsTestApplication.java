@@ -24,6 +24,7 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 class AwsSqsTestApplication {
   static int sqsPort;
   static volatile Consumer<String> messageHandler;
+  static volatile Consumer<List<String>> batchMessageHandler;
 
   @Bean
   SqsTemplate sqsTemplate(SqsAsyncClient sqsAsyncClient) {
@@ -65,8 +66,6 @@ class AwsSqsTestApplication {
       messageHandler.accept(message);
     }
   }
-
-  static volatile Consumer<List<String>> batchMessageHandler;
 
   @SqsListener(value = "test-batch-queue", factory = "batchFactory")
   void receiveBatchMessages(List<String> messages) {
