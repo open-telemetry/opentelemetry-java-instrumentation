@@ -7348,7 +7348,7 @@ libraries:
     name: io.opentelemetry.jedis-1.4
   has_javaagent: true
   javaagent_target_versions:
-  - redis.clients:jedis:[1.4.0,3.0.0)
+  - redis.clients:jedis:[1.4.0,2.0.0)
   configurations:
   - name: otel.instrumentation.common.db.query-sanitization.enabled
     declarative_name: java.common.db.query_sanitization.enabled
@@ -7397,6 +7397,82 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.text
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+- name: jedis-2.0
+  display_name: Jedis
+  description: This instrumentation enables database client spans and database client
+    metrics for Jedis Redis operations.
+  semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+  library_link: https://github.com/redis/jedis
+  source_path: instrumentation/jedis/jedis-2.0
+  scope:
+    name: io.opentelemetry.jedis-2.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - redis.clients:jedis:[2.0.0,3.0.0)
+  configurations:
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
+    description: Enables query sanitization for database queries.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
+    description: Used to specify a mapping from host names or IP addresses to peer
+      services.
+    type: structured_list
+    default: ''
+  telemetry:
+  - when: default
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.operation
+        type: STRING
+      - name: db.statement
+        type: STRING
+      - name: db.system
+        type: STRING
+      - name: peer.service
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=database,service.peer
+    metrics:
+    - name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -7481,6 +7557,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -7565,6 +7643,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -9524,6 +9604,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -9590,6 +9672,37 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+  - when: otel.instrumentation.common.v3-preview=true
+    metrics:
+    - name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.text
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: peer.service
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.lettuce.experimental-span-attributes=true
     spans:
     - span_kind: CLIENT
@@ -9625,6 +9738,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -13378,6 +13493,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -17037,6 +17154,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
