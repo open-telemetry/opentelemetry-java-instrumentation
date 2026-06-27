@@ -315,6 +315,7 @@ public class SpringAwsUtil {
         return null;
       }
       Context context = instrumenter.start(parentContext, processRequest);
+      this.batchProcessContext = context;
       return new MessageScope(instrumenter, context, processRequest, response);
     }
   }
