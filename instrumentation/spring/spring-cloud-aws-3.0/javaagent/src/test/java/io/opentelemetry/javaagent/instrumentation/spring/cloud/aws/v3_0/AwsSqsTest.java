@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
-import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.links;
+
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -261,7 +261,13 @@ class AwsSqsTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasLinksSatisfying(
-                            links(producer.get().getSpanContext(), producer.get().getSpanContext()))
+                            links -> {
+                              assertThat(links).hasSize(2);
+                              assertThat(links.get(0).getSpanContext())
+                                  .isEqualTo(producer.get().getSpanContext());
+                              assertThat(links.get(1).getSpanContext())
+                                  .isEqualTo(producer.get().getSpanContext());
+                            })
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_OPERATION, "process"),
