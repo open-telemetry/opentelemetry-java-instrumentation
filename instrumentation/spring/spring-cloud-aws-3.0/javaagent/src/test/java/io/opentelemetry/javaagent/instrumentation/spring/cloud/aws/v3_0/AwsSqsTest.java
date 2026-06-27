@@ -263,10 +263,14 @@ class AwsSqsTest {
                         .hasLinksSatisfying(
                             links -> {
                               assertThat(links).hasSize(2);
-                              assertThat(links.get(0).getSpanContext())
-                                  .isEqualTo(producer.get().getSpanContext());
-                              assertThat(links.get(1).getSpanContext())
-                                  .isEqualTo(producer.get().getSpanContext());
+                              assertThat(links)
+                                  .satisfiesExactly(
+                                      l ->
+                                          assertThat(l.getSpanContext())
+                                              .isEqualTo(producer.get().getSpanContext()),
+                                      l ->
+                                          assertThat(l.getSpanContext())
+                                              .isEqualTo(producer.get().getSpanContext()));
                             })
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
