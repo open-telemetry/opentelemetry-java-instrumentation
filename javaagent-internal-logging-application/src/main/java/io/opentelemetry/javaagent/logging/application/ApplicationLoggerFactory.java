@@ -9,15 +9,15 @@ import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 final class ApplicationLoggerFactory extends ApplicationLoggerBridge
     implements InternalLogger.Factory {
 
-  private final AtomicBoolean installed = new AtomicBoolean();
+  private final AtomicReference<Class<? extends InternalLogger.Factory>> installedFactoryClass =
+      new AtomicReference<>();
   @Nullable private volatile InternalLogger.Factory actual = null;
-  @Nullable private volatile Class<? extends InternalLogger.Factory> actualFactoryClass;
   private final ConcurrentMap<String, ApplicationLogger> inMemoryLoggers =
       new ConcurrentHashMap<>();
 
@@ -30,9 +30,10 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
   @Override
   protected void install(InternalLogger.Factory applicationLoggerFactory) {
     Class<? extends InternalLogger.Factory> incomingClass = applicationLoggerFactory.getClass();
-    // just use the first bridge that gets discovered and ignore the rest
-    if (!installed.compareAndSet(false, true)) {
-      if (incomingClass.equals(actualFactoryClass)) {
+    // just use the first bridge that gets discovered and ignore the rest;
+    // CAS null → incomingClass so the winning class is visible to any thread that loses the race
+    if (!installedFactoryClass.compareAndSet(null, incomingClass)) {
+      if (incomingClass.equals(installedFactoryClass.get())) {
         return;
       }
       applicationLoggerFactory
@@ -44,7 +45,6 @@ final class ApplicationLoggerFactory extends ApplicationLoggerBridge
               null);
       return;
     }
-    actualFactoryClass = incomingClass;
 
     // flushing may cause additional classes to be loaded (e.g. slf4j loads logback, which we
     // instrument), so we're doing this repeatedly to clear the in-memory store and preserve the
