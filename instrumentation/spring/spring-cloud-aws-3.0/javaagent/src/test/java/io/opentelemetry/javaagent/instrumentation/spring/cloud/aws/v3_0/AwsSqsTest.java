@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
-
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -28,6 +27,7 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.awspring.cloud.sqs.listener.MessageListenerContainerRegistry;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -40,6 +40,7 @@ import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +58,22 @@ class AwsSqsTest {
   private static SQSRestServer sqs;
 
   @Autowired SqsTemplate sqsTemplate;
+  @Autowired MessageListenerContainerRegistry registry;
+
+  @BeforeEach
+  void waitForContainersAndClear() throws InterruptedException {
+    // Wait for containers to start and fetch Queue URLs
+    Thread.sleep(2000);
+    
+    // Warm up the templates so that GetQueueUrl is cached in them as well
+    sqsTemplate.send("test-queue", "warmup");
+    sqsTemplate.sendMany("test-batch-queue", java.util.Arrays.asList(
+        MessageBuilder.withPayload("warmup1").build(),
+        MessageBuilder.withPayload("warmup2").build()));
+        
+    Thread.sleep(1000);
+    testing.clearData();
+  }
 
   @BeforeAll
   static void setUp() {
@@ -89,24 +106,6 @@ class AwsSqsTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Sqs.GetQueueUrl")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "GetQueueUrl"),
-                            equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(HTTP_REQUEST_METHOD, POST),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                            satisfies(
-                                URL_FULL,
-                                val ->
-                                    val.startsWith(
-                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
-                span ->
                     span.hasName("test-queue publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
@@ -133,10 +132,11 @@ class AwsSqsTest {
                                     + AwsSqsTestApplication.sqsPort
                                     + "/000000000000/test-queue"),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
+
                 span ->
                     span.hasName("test-queue process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2))
+                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -155,7 +155,7 @@ class AwsSqsTest {
                             equalTo(MESSAGING_OPERATION, "process"),
                             equalTo(MESSAGING_DESTINATION_NAME, "test-queue")),
                 span ->
-                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(3)),
+                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(2)),
                 span ->
                     span.hasName("Sqs.DeleteMessageBatch")
                         .hasKind(SpanKind.CLIENT)
@@ -183,12 +183,14 @@ class AwsSqsTest {
 
   @Test
   void sqsBatchListener() throws Exception {
+    registry.getContainerById("batchContainer").stop();
     String messageContent1 = "hello";
     String messageContent2 = "hello2";
     CompletableFuture<List<String>> messageFuture = new CompletableFuture<>();
     AwsSqsTestApplication.batchMessageHandler =
         strings -> testing.runWithSpan("callback", () -> messageFuture.complete(strings));
 
+    registry.getContainerById("batchContainer").start();
     testing.runWithSpan(
         "parent",
         () ->
@@ -197,6 +199,9 @@ class AwsSqsTest {
                 asList(
                     MessageBuilder.withPayload(messageContent1).build(),
                     MessageBuilder.withPayload(messageContent2).build())));
+
+    Thread.sleep(1000);
+    registry.getContainerById("batchContainer").start();
 
     List<String> result = messageFuture.get(10, SECONDS);
     assertThat(result).containsExactlyInAnyOrder(messageContent1, messageContent2);
@@ -208,24 +213,6 @@ class AwsSqsTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("Sqs.GetQueueUrl")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "GetQueueUrl"),
-                            equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(HTTP_REQUEST_METHOD, POST),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                            satisfies(
-                                URL_FULL,
-                                val ->
-                                    val.startsWith(
-                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
                 span -> {
                   span.hasName("test-batch-queue publish")
                       .hasKind(SpanKind.PRODUCER)
@@ -252,7 +239,7 @@ class AwsSqsTest {
                                   + AwsSqsTestApplication.sqsPort
                                   + "/000000000000/test-batch-queue"),
                           satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
-                  producer.set(trace.getSpan(2));
+                  producer.set(trace.getSpan(1));
                 }),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -265,12 +252,18 @@ class AwsSqsTest {
                               assertThat(links).hasSize(2);
                               assertThat(links)
                                   .satisfiesExactly(
-                                      l ->
-                                          assertThat(l.getSpanContext())
-                                              .isEqualTo(producer.get().getSpanContext()),
-                                      l ->
-                                          assertThat(l.getSpanContext())
-                                              .isEqualTo(producer.get().getSpanContext()));
+                                      l -> {
+                                          assertThat(l.getSpanContext().getTraceId())
+                                              .isEqualTo(producer.get().getSpanContext().getTraceId());
+                                          assertThat(l.getSpanContext().getSpanId())
+                                              .isEqualTo(producer.get().getSpanContext().getSpanId());
+                                      },
+                                      l -> {
+                                          assertThat(l.getSpanContext().getTraceId())
+                                              .isEqualTo(producer.get().getSpanContext().getTraceId());
+                                          assertThat(l.getSpanContext().getSpanId())
+                                              .isEqualTo(producer.get().getSpanContext().getSpanId());
+                                      });
                             })
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),

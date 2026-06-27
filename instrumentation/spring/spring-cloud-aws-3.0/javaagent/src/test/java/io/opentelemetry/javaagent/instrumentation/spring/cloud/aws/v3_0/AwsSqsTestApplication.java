@@ -67,7 +67,7 @@ class AwsSqsTestApplication {
     }
   }
 
-  @SqsListener(value = "test-batch-queue", factory = "batchFactory")
+  @SqsListener(value = "test-batch-queue", factory = "batchFactory", id = "batchContainer")
   void receiveBatchMessages(List<String> messages) {
     if (batchMessageHandler != null) {
       batchMessageHandler.accept(messages);
