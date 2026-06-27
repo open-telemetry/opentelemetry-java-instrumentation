@@ -45,7 +45,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.messaging.support.MessageBuilder;
+import java.util.Collections;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @SpringBootTest(
@@ -59,7 +65,7 @@ class AwsSqsTest {
 
   @Autowired SqsTemplate sqsTemplate;
   @Autowired MessageListenerContainerRegistry registry;
-  @Autowired org.springframework.context.ApplicationContext applicationContext;
+  @Autowired ApplicationContext applicationContext;
 
   @BeforeEach
   void waitForContainersAndClear() throws InterruptedException {
@@ -77,8 +83,8 @@ class AwsSqsTest {
     sqsTemplate.send("test-queue", "warmup");
     sqsTemplate.sendMany(
         "test-batch-queue",
-        java.util.Collections.singletonList(
-            org.springframework.messaging.support.MessageBuilder.withPayload("warmup1").build()));
+        Collections.singletonList(
+            MessageBuilder.withPayload("warmup1").build()));
     
     // Wait for the warmup message to be processed so it doesn't pollute the test
     startTime = System.currentTimeMillis();
@@ -208,7 +214,7 @@ class AwsSqsTest {
     
     String messageContent1 = "hello";
     String messageContent2 = "hello2";
-    java.util.List<String> collectedMessages = new java.util.concurrent.CopyOnWriteArrayList<>();
+    List<String> collectedMessages = new CopyOnWriteArrayList<>();
     CompletableFuture<List<String>> messageFuture = new CompletableFuture<>();
     AwsSqsTestApplication.batchMessageHandler =
         strings -> testing.runWithSpan("callback", () -> {
@@ -232,8 +238,8 @@ class AwsSqsTest {
     List<String> result = messageFuture.get(10, SECONDS);
     assertThat(result).containsExactlyInAnyOrder(messageContent1, messageContent2);
 
-    java.util.concurrent.atomic.AtomicReference<io.opentelemetry.sdk.trace.data.SpanData> producer =
-        new java.util.concurrent.atomic.AtomicReference<>();
+    AtomicReference<SpanData> producer =
+        new AtomicReference<>();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -295,7 +301,7 @@ class AwsSqsTest {
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_OPERATION, "process"),
                             equalTo(
-                                io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+                                MessagingIncubatingAttributes
                                     .MESSAGING_BATCH_MESSAGE_COUNT,
                                 2L),
                             equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue")),
