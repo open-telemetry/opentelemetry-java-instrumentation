@@ -46,6 +46,7 @@ public class SpringAwsUtil {
               return "aws_sqs";
             }
 
+            @Nullable
             @Override
             public String getDestination(Collection<Message<?>> messages) {
               if (!messages.isEmpty()) {
@@ -55,8 +56,8 @@ public class SpringAwsUtil {
                   SdkRequest sdkRequest =
                       tracingContext.request.getAttribute(
                           TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
-                  if (sdkRequest instanceof ReceiveMessageRequest) {
-                    String queueUrl = ((ReceiveMessageRequest) sdkRequest).queueUrl();
+                  if (sdkRequest instanceof ReceiveMessageRequest receiveMessageRequest) {
+                    String queueUrl = receiveMessageRequest.queueUrl();
                     if (queueUrl != null) {
                       int i = queueUrl.lastIndexOf('/');
                       if (i > 0) {
