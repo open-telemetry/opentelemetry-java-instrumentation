@@ -94,7 +94,11 @@ class AwsSqsTest {
           testing.spans().stream()
               .filter(s -> s.getName().equals("test-batch-queue process"))
               .count();
-      if (count >= 1 && countBatch >= 1) {
+      long countDelete =
+          testing.spans().stream()
+              .filter(s -> s.getName().equals("Sqs.DeleteMessageBatch"))
+              .count();
+      if (count >= 1 && countBatch >= 1 && countDelete >= 2) {
         break;
       }
       Thread.sleep(100);
@@ -277,6 +281,26 @@ class AwsSqsTest {
                           satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                   producer.set(trace.getSpan(1));
                 }),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("Sqs.GetQueueUrl")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "aws-api"),
+                            equalTo(RPC_METHOD, "GetQueueUrl"),
+                            equalTo(RPC_SERVICE, "Sqs"),
+                            equalTo(HTTP_REQUEST_METHOD, POST),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                            satisfies(
+                                URL_FULL,
+                                val ->
+                                    val.startsWith(
+                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
