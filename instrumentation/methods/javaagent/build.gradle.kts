@@ -21,7 +21,7 @@ tasks.test {
 
 testing {
   suites {
-    val declarativeConfigTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("declarativeConfigTest") {
       targets {
         all {
           testTask.configure {

@@ -64,7 +64,7 @@ tasks {
     }
   }
 
-  val windowsBackendImagePrepare by registering(Copy::class) {
+  val windowsBackendImagePrepare = register<Copy>("windowsBackendImagePrepare") {
     dependsOn(shadowJar)
     into(backendDockerBuildDir)
     from("src/docker/backend")
@@ -73,7 +73,7 @@ tasks {
     }
   }
 
-  val windowsBackendImageBuild by registering(DockerBuildImage::class) {
+  val windowsBackendImageBuild = register<DockerBuildImage>("windowsBackendImageBuild") {
     dependsOn(windowsBackendImagePrepare)
     inputDir.set(backendDockerBuildDir)
 
@@ -81,7 +81,7 @@ tasks {
     dockerFile.set(File(backendDockerBuildDir.get().asFile, "windows.dockerfile"))
   }
 
-  val dockerPush by registering(DockerPushImage::class) {
+  register<DockerPushImage>("dockerPush") {
     group = "publishing"
     description = "Push all Docker images for the test backend"
     dependsOn(windowsBackendImageBuild)

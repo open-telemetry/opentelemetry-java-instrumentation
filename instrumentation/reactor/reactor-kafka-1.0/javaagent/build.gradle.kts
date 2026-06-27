@@ -37,7 +37,7 @@ dependencies {
 
 testing {
   suites {
-    val testV1_3_3 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testV1_3_3") {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
@@ -56,7 +56,7 @@ testing {
       }
     }
 
-    val testV1_3_21 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testV1_3_21") {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
@@ -83,7 +83,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -92,7 +92,7 @@ tasks {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
   }
 
-  val testReceiveSpansDisabled by registering(Test::class) {
+  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
