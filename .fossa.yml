@@ -63,6 +63,12 @@ targets:
       target: ':instrumentation:alibaba-druid-1.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-commons-pool2-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-commons-pool2-2.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-dbcp-2.0:javaagent'
     - type: gradle
       path: ./
@@ -94,12 +100,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:camel-2.20:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:commons-pool2-2.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:commons-pool2-2.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:executors:bootstrap'
