@@ -420,12 +420,13 @@ to `true` and make it non-experimental.
 
 ### Shared classes and common classloader
 
-By default, all the advices of an instrumentation module will be loaded into isolated classloaders,
-one per instrumentation module. Some instrumentations require to use a common classloader in order
-to preserve the semantics of `static` fields and to share classes.
+For each application classloader, all the advices are loaded into a shared classloader per application classloader.
 
-In order to load multiple `InstrumentationModule` implementations in the same classloader, you need to
-override the `ExperimentalInstrumentationModule#getModuleGroup` to return an identical value.
+- one common classloader for internal instrumentation modules
+- one common classloader per extension
+
+This allows to share classes between internal instrumentation modules, however each extension is isolated from others and from the internal instrumentation modules.
+This means that extensions should not depend on internal instrumentation modules or rely on classes to be shared between them.
 
 ### Classes injected in application classloader
 

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.extension.instrumentation.internal;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -32,18 +31,6 @@ public interface ExperimentalInstrumentationModule {
    */
   default List<String> injectedClassNames() {
     return emptyList();
-  }
-
-  /**
-   * By default every InstrumentationModule is loaded by an isolated classloader, even if multiple
-   * modules instrument the same application classloader.
-   *
-   * <p>Sometimes this is not desired, e.g. when instrumenting modular libraries such as the AWS
-   * SDK. In such cases the {@link InstrumentationModule}s which want to share a classloader can
-   * return the same group name from this method.
-   */
-  default String getModuleGroup() {
-    return getClass().getName();
   }
 
   /**
