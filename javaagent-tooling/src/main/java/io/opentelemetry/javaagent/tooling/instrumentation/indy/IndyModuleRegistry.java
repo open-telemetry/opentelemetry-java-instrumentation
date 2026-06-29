@@ -93,15 +93,7 @@ public class IndyModuleRegistry {
     if (map == null) {
       return null;
     }
-    ClassLoader classLoaderKey;
-    if (!(moduleCl instanceof ExtensionClassLoader)) {
-      // internal instrumentation is using one CL per instrumented CL.
-      classLoaderKey = INTERNAL_INSTRUMENTATION_CLASSLOADER_KEY;
-    } else {
-      // extension module needs to use a common CL per extension and instrumented CL.
-      classLoaderKey = moduleCl;
-    }
-    return map.get(classLoaderKey);
+    return map.get(moduleCl);
   }
 
   /** Returns a newly created class loader containing only the provided module for muzzle. */
