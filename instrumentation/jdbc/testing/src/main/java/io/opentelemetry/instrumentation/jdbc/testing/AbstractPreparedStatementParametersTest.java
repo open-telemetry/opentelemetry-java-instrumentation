@@ -388,7 +388,7 @@ public abstract class AbstractPreparedStatementParametersTest {
       String url,
       String table)
       throws SQLException {
-    // only H2 and SQLite accept setObject() with an unknown custom type; other drivers reject it at execute time
+    // Derby and HSQLDB reject setObject() with an unknown custom type at execution time
     Assumptions.assumeFalse(system.equalsIgnoreCase("derby"));
     Assumptions.assumeFalse(system.equalsIgnoreCase("hsqldb"));
 
