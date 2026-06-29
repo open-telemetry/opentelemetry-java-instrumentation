@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -75,6 +75,50 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
     }
 
     assertTraces(testHeaders, testExperimental);
+    assertMessagingMetrics();
+  }
+
+  private void assertMessagingMetrics() {
+    testing.waitAndAssertMetrics(
+        KafkaTelemetryBuilder.INSTRUMENTATION_NAME,
+        "messaging.publish.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasName("messaging.publish.duration")
+                        .hasUnit("s")
+                        .hasDescription("Measures the duration of publish operation.")));
+
+    // receive metrics come only from the receive instrumenter (gated by receive telemetry); the
+    // process instrumenter does not record them, matching the Pulsar instrumentation
+    if (!isReceiveTelemetryEnabled()) {
+      return;
+    }
+    testing.waitAndAssertMetrics(
+        KafkaTelemetryBuilder.INSTRUMENTATION_NAME,
+        "messaging.receive.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasName("messaging.receive.duration")
+                        .hasUnit("s")
+                        .hasDescription("Measures the duration of receive operation.")));
+    testing.waitAndAssertMetrics(
+        KafkaTelemetryBuilder.INSTRUMENTATION_NAME,
+        "messaging.receive.messages",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasName("messaging.receive.messages")
+                        .hasUnit("{message}")
+                        .hasDescription("Measures the number of received messages.")));
+  }
+
+  boolean isReceiveTelemetryEnabled() {
+    return false;
   }
 
   abstract void configure(KafkaTelemetryBuilder builder);
