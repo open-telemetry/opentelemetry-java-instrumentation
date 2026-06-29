@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -387,6 +388,10 @@ public abstract class AbstractPreparedStatementParametersTest {
       String url,
       String table)
       throws SQLException {
+    // only H2 and SQLite accept setObject() with an unknown custom type; other drivers reject it at execute time
+    Assumptions.assumeFalse(system.equalsIgnoreCase("derby"));
+    Assumptions.assumeFalse(system.equalsIgnoreCase("hsqldb"));
+
     test(
         system,
         connection,
