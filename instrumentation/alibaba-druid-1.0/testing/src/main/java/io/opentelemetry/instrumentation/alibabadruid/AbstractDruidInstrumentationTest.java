@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.alibabadruid;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -15,7 +16,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import io.opentelemetry.instrumentation.testing.junit.db.MockDriver;
 import java.sql.SQLException;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -173,7 +173,7 @@ public abstract class AbstractDruidInstrumentationTest {
                         assertThat(
                                 metric.getLongSumData().getPoints().stream()
                                     .map(point -> point.getAttributes().get(POOL_NAME_KEY))
-                                    .collect(Collectors.toSet()))
+                                    .collect(toSet()))
                             .containsExactlyInAnyOrder(poolNames)));
   }
 }
