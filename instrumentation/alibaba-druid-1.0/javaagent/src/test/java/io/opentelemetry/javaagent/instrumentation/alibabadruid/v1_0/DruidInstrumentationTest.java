@@ -10,6 +10,7 @@ import com.alibaba.druid.stat.DruidDataSourceStatManager;
 import io.opentelemetry.instrumentation.alibabadruid.AbstractDruidInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
@@ -30,5 +31,21 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
   @Override
   protected void shutdown(DruidDataSource dataSource) throws Exception {
     DruidDataSourceStatManager.removeDataSource(dataSource);
+  }
+
+  @Test
+  void shouldUseUnknownDataSourceNameWhenNameIsNull() throws Exception {
+    DruidDataSource dataSource = createDataSource();
+
+    try {
+      configure(dataSource, null);
+
+      assertConnectionUsagePoolNames("DruidDataSource-unknown");
+    } finally {
+      dataSource.close();
+      shutdown(dataSource);
+    }
+
+    assertNoMetrics();
   }
 }
