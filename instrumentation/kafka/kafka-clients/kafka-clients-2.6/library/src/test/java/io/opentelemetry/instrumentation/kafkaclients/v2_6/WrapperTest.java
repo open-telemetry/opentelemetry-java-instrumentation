@@ -96,6 +96,62 @@ class WrapperTest extends AbstractWrapperTest {
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1))));
+
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                metric.getName().equals("messaging.publish.duration")
+                    || metric.getName().equals("messaging.receive.duration")
+                    || metric.getName().equals("messaging.receive.messages"))
+        .satisfiesExactlyInAnyOrder(
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.publish.duration")
+                    .hasUnit("s")
+                    .hasDescription("Measures the duration of publish operation.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_SYSTEM, "kafka"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                                            equalTo(MESSAGING_OPERATION, "publish"),
+                                            satisfies(
+                                                MESSAGING_DESTINATION_PARTITION_ID,
+                                                AbstractStringAssert::isNotEmpty)))),
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.receive.duration")
+                    .hasUnit("s")
+                    .hasDescription("Measures the duration of receive operation.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_SYSTEM, "kafka"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                                            equalTo(MESSAGING_OPERATION, "receive")))),
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.receive.messages")
+                    .hasUnit("{message}")
+                    .hasDescription("Measures the number of received messages.")
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValueGreaterThan(0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_SYSTEM, "kafka"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                                            equalTo(MESSAGING_OPERATION, "receive")))));
   }
 
   protected static List<AttributeAssertion> sendAttributes(

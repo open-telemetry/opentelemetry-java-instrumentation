@@ -15,6 +15,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
@@ -90,6 +92,7 @@ public final class KafkaInstrumenterFactory {
                 buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
             .addAttributesExtractors(extractors)
             .addAttributesExtractor(new KafkaProducerAttributesExtractor())
+            .addOperationMetrics(MessagingProducerMetrics.get())
             .setErrorCauseExtractor(errorCauseExtractor);
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new KafkaProducerExperimentalAttributesExtractor());
@@ -116,6 +119,7 @@ public final class KafkaInstrumenterFactory {
                 buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addAttributesExtractors(extractors)
+            .addOperationMetrics(MessagingConsumerMetrics.get())
             .setErrorCauseExtractor(errorCauseExtractor)
             .setEnabled(messagingReceiveInstrumentationEnabled);
     setMessagingReceiveExceptionEventExtractor(builder);
@@ -172,6 +176,7 @@ public final class KafkaInstrumenterFactory {
             .addSpanLinksExtractor(
                 new KafkaBatchProcessSpanLinksExtractor(
                     openTelemetry.getPropagators().getTextMapPropagator()))
+            .addOperationMetrics(MessagingConsumerMetrics.get())
             .setErrorCauseExtractor(errorCauseExtractor);
     setMessagingProcessExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());

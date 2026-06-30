@@ -8,10 +8,12 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
@@ -62,6 +64,32 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                     span.hasName("producer callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                metric.getName().equals("messaging.publish.duration")
+                    || metric.getName().equals("messaging.receive.duration")
+                    || metric.getName().equals("messaging.receive.messages"))
+        .satisfiesExactlyInAnyOrder(
+            metric ->
+                assertThat(metric)
+                    .hasName("messaging.publish.duration")
+                    .hasUnit("s")
+                    .hasDescription("Measures the duration of publish operation.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(MESSAGING_SYSTEM, "kafka"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                                            equalTo(MESSAGING_OPERATION, "publish"),
+                                            satisfies(
+                                                MESSAGING_DESTINATION_PARTITION_ID,
+                                                AbstractStringAssert::isNotEmpty)))));
   }
 
   static List<AttributeAssertion> sendAttributes(boolean testHeaders, boolean testExperimental) {
