@@ -28,7 +28,7 @@ otelJava {
 
 testing {
   suites {
-    val reactiveTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("reactiveTest") {
       dependencies {
         implementation("org.springframework.data:spring-data-r2dbc:3.0.0")
         implementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")

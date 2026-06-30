@@ -70,7 +70,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
       publisher = publisher.doOnSubscribe(mdc);
       // register the call back to close the span only if necessary
       if (!finishSpanOnClose) {
-        publisher = publisher.doOnSuccessOrError(mdc);
+        publisher = mdc.finishSpanOnTerminal(publisher);
       }
       return publisher;
     }

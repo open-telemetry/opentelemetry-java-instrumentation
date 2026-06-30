@@ -12,20 +12,15 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
-import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -38,7 +33,6 @@ import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.TopicMetadata;
 import org.apache.pulsar.client.api.transaction.Transaction;
-import org.apache.pulsar.common.naming.TopicName;
 import org.junit.jupiter.api.Test;
 
 class PulsarClientTest extends AbstractPulsarClientTest {
@@ -771,14 +765,11 @@ class PulsarClientTest extends AbstractPulsarClientTest {
       producer.newMessage().key(String.valueOf(i)).value(msg).send();
     }
 
+    Thread.sleep(1_000); // wait so that messages would be received as one batch
+
     Messages<String> receivedMsg = consumer.batchReceive();
     consumer.acknowledge(receivedMsg);
     assertThat(receivedMsg).hasSize(4);
-
-    Map<String, Long> receivedMessagesByTopic = new HashMap<>();
-    for (Message<String> message : receivedMsg) {
-      receivedMessagesByTopic.merge(message.getTopicName(), 1L, Long::sum);
-    }
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.pulsar-2.8",
@@ -792,23 +783,15 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .satisfies(
                             data ->
                                 assertThat(data.getLongSumData().getPoints())
-                                    .hasSize(receivedMessagesByTopic.size())
+                                    .hasSize(1)
                                     .allSatisfy(
                                         point -> {
-                                          String destination =
-                                              requireNonNull(
-                                                  point
-                                                      .getAttributes()
-                                                      .get(MESSAGING_DESTINATION_NAME));
-                                          assertThat(point.getValue())
-                                              .isEqualTo(receivedMessagesByTopic.get(destination));
+                                          assertThat(point.getValue()).isEqualTo(4);
                                           assertThat(
                                                   point
                                                       .getAttributes()
-                                                      .get(MESSAGING_DESTINATION_PARTITION_ID))
-                                              .isEqualTo(
-                                                  String.valueOf(
-                                                      TopicName.getPartitionIndex(destination)));
+                                                      .get(MESSAGING_DESTINATION_NAME))
+                                              .isEqualTo(topic);
                                           assertThat(point.getAttributes().get(MESSAGING_OPERATION))
                                               .isEqualTo("receive");
                                           assertThat(point.getAttributes().get(MESSAGING_SYSTEM))

@@ -60,6 +60,8 @@ public class PulsarSingletons {
   private static final Instrumenter<PulsarRequest, Void> producerInstrumenter =
       createProducerInstrumenter();
 
+  private static final ThreadLocal<Boolean> suppressReceive = new ThreadLocal<>();
+
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
   }
@@ -252,6 +254,10 @@ public class PulsarSingletons {
 
   public static CompletableFuture<Message<?>> wrap(
       CompletableFuture<Message<?>> future, Timer timer, Consumer<?> consumer) {
+    if (isSuppressingReceive()) {
+      return future;
+    }
+
     boolean listenerContextActive = MessageListenerContext.isProcessing();
     Context parent = Context.current();
     CompletableFuture<Message<?>> result = new CompletableFuture<>();
@@ -279,6 +285,10 @@ public class PulsarSingletons {
 
   public static CompletableFuture<Messages<?>> wrapBatch(
       CompletableFuture<Messages<?>> future, Timer timer, Consumer<?> consumer) {
+    if (isSuppressingReceive()) {
+      return future;
+    }
+
     Context parent = Context.current();
     CompletableFuture<Messages<?>> result = new CompletableFuture<>();
     future.whenComplete(
@@ -307,6 +317,18 @@ public class PulsarSingletons {
     } else {
       runnable.run();
     }
+  }
+
+  public static void startSuppressingReceive() {
+    suppressReceive.set(true);
+  }
+
+  public static void endSuppressingReceive() {
+    suppressReceive.remove();
+  }
+
+  private static boolean isSuppressingReceive() {
+    return Boolean.TRUE.equals(suppressReceive.get());
   }
 
   private PulsarSingletons() {}

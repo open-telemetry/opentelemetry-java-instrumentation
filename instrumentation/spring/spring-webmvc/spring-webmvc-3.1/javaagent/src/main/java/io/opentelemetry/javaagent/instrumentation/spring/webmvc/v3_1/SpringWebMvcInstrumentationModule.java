@@ -43,11 +43,6 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String getModuleGroup() {
-    return "servlet";
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new DispatcherServletInstrumentation(), new HandlerAdapterInstrumentation());
   }

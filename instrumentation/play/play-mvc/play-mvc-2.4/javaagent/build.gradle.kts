@@ -49,7 +49,7 @@ dependencies {
 
 testing {
   suites {
-    val play24Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("play24Test") {
       dependencies {
         val version = baseVersion("2.4.0").orLatest("2.4.+")
         implementation("com.typesafe.play:play-java_2.11:$version")
@@ -70,7 +70,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
