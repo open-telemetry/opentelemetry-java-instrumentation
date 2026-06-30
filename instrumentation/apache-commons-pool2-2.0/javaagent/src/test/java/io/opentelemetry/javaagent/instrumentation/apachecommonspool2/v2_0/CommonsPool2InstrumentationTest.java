@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CommonsPool2InstrumentationTest extends AbstractCommonsPool2InstrumentationTest {
@@ -33,4 +34,40 @@ class CommonsPool2InstrumentationTest extends AbstractCommonsPool2Instrumentatio
 
   @Override
   protected void shutdown(GenericKeyedObjectPool<?, ?> pool) {}
+
+  @Test
+  void shouldUseJmxNamePrefixWhenJmxNameIsUnavailable() throws Exception {
+    GenericObjectPool<Object> pool = createGenericObjectPool("customPool", false);
+    Object borrowed = null;
+    try {
+      borrowed = pool.borrowObject();
+
+      assertObjectCountPoolNames("GenericObjectPool-customPool");
+    } finally {
+      if (borrowed != null) {
+        pool.returnObject(borrowed);
+      }
+      pool.close();
+    }
+
+    assertNoMetrics();
+  }
+
+  @Test
+  void shouldUseUnknownWhenJmxNameAndPrefixAreUnavailable() throws Exception {
+    GenericObjectPool<Object> pool = createGenericObjectPool(null, false);
+    Object borrowed = null;
+    try {
+      borrowed = pool.borrowObject();
+
+      assertObjectCountPoolNames("GenericObjectPool-unknown");
+    } finally {
+      if (borrowed != null) {
+        pool.returnObject(borrowed);
+      }
+      pool.close();
+    }
+
+    assertNoMetrics();
+  }
 }

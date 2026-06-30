@@ -32,7 +32,9 @@ class BaseGenericObjectPoolInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.commons.pool2.impl.BaseObjectPoolConfig"))),
+            .and(takesArgument(0, named("org.apache.commons.pool2.impl.BaseObjectPoolConfig")))
+            .and(takesArgument(1, named("java.lang.String")))
+            .and(takesArgument(2, named("java.lang.String"))),
         getClass().getName() + "$ConstructorAdvice");
 
     transformer.applyAdviceToMethod(
@@ -43,7 +45,8 @@ class BaseGenericObjectPoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.This BaseGenericObjectPool<?> pool) {
+    public static void onExit(
+        @Advice.This BaseGenericObjectPool<?> pool, @Advice.Argument(2) String jmxNamePrefix) {
       ObjectName objectName = pool.getJmxName();
 
       String type = objectName == null ? null : objectName.getKeyProperty("type");
@@ -59,7 +62,7 @@ class BaseGenericObjectPoolInstrumentation implements TypeInstrumentation {
 
       String name = objectName == null ? null : objectName.getKeyProperty("name");
       if (name == null) {
-        name = "pool";
+        name = jmxNamePrefix == null ? "unknown" : jmxNamePrefix;
       }
 
       telemetry().registerMetrics(pool, type + "-" + name);
