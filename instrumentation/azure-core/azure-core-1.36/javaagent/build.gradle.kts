@@ -49,7 +49,7 @@ testing {
   suites {
     // using a test suite to ensure that classes from library-instrumentation-shaded that were
     // extracted to the output directory are not available during tests
-    val testAzure by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testAzure") {
       dependencies {
         implementation("com.azure:azure-core:${baseVersion("1.36.0").orLatest("1.52.0")}")
         implementation("com.azure:azure-core-test:${baseVersion("1.14.1").orLatest("1.26.2")}")

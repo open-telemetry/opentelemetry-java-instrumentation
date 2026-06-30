@@ -44,7 +44,7 @@ dependencies {
 
 testing {
   suites {
-    val testReceiveSpansDisabled by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testReceiveSpansDisabled") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
         // this is just to avoid a bit more copy-pasting

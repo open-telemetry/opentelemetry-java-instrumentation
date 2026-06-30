@@ -101,7 +101,7 @@ tasks {
   }
 
   // GC-specific tests that require Java 17+
-  val testG1 by registering(Test::class) {
+  val testG1 = register<Test>("testG1") {
     dependsOn("compileTestJava17Java")
     testClassesDirs = sourceSets["testJava17"].output.classesDirs
     classpath = sourceSets["testJava17"].runtimeClasspath
@@ -113,7 +113,7 @@ tasks {
     systemProperty("metadataConfig", "Java17")
   }
 
-  val testPS by registering(Test::class) {
+  val testPS = register<Test>("testPS") {
     dependsOn("compileTestJava17Java")
     testClassesDirs = sourceSets["testJava17"].output.classesDirs
     classpath = sourceSets["testJava17"].runtimeClasspath
@@ -125,7 +125,7 @@ tasks {
     systemProperty("metadataConfig", "Java17")
   }
 
-  val testSerial by registering(Test::class) {
+  val testSerial = register<Test>("testSerial") {
     dependsOn("compileTestJava17Java")
     testClassesDirs = sourceSets["testJava17"].output.classesDirs
     classpath = sourceSets["testJava17"].runtimeClasspath
@@ -138,7 +138,7 @@ tasks {
   }
 
   // Run other Java 17 tests (not GC-specific)
-  val testJava17 by registering(Test::class) {
+  val testJava17 = register<Test>("testJava17") {
     dependsOn("compileTestJava17Java")
     testClassesDirs = sourceSets["testJava17"].output.classesDirs
     classpath = sourceSets["testJava17"].runtimeClasspath

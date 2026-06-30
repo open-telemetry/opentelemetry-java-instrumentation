@@ -37,7 +37,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -45,7 +45,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
