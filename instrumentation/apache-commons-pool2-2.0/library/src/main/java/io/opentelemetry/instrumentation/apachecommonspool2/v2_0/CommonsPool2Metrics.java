@@ -9,20 +9,21 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntSupplier;
 import javax.annotation.Nullable;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolMXBean;
 import org.apache.commons.pool2.impl.GenericObjectPoolMXBean;
 
-final class ConnectionPoolMetrics {
+final class CommonsPool2Metrics {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-commons-pool2-2.0";
 
   // a weak map does not make sense here because each Meter holds a reference to the pool
   // use identity comparison because pools are mutable lifecycle objects
   private static final Map<IdentityPoolKey, BatchCallback> poolMetrics = new ConcurrentHashMap<>();
+  private static final Map<String, AtomicInteger> poolNameCounters = new ConcurrentHashMap<>();
 
   static void registerMetrics(OpenTelemetry openTelemetry, Object pool, String poolName) {
     if (pool instanceof GenericObjectPoolMXBean) {
@@ -66,7 +67,28 @@ final class ConnectionPoolMetrics {
         new IdentityPoolKey(pool),
         unused ->
             createCallback(
-                openTelemetry, poolName, active, idle, minIdle, maxIdle, maxTotal, waiters));
+                openTelemetry,
+                rewritePoolName(poolName),
+                active,
+                idle,
+                minIdle,
+                maxIdle,
+                maxTotal,
+                waiters));
+  }
+
+  private static String rewritePoolName(String poolName) {
+    int count;
+    while (true) {
+      count =
+          poolNameCounters
+              .computeIfAbsent(poolName, unused -> new AtomicInteger())
+              .incrementAndGet();
+      if (count == 1) {
+        return poolName;
+      }
+      poolName += count;
+    }
   }
 
   private static BatchCallback createCallback(
@@ -78,32 +100,30 @@ final class ConnectionPoolMetrics {
       IntSupplier maxIdle,
       IntSupplier maxTotal,
       IntSupplier waiters) {
-    DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
+    ObjectPoolMetrics metrics =
+        ObjectPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
 
-    ObservableLongMeasurement connections = metrics.connections();
-    ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
-    ObservableLongMeasurement maxIdleConnections = metrics.maxIdleConnections();
-    ObservableLongMeasurement maxConnections = metrics.maxConnections();
-    ObservableLongMeasurement pendingRequests = metrics.pendingRequestsForConnection();
+    ObservableLongMeasurement objects = metrics.objects();
+    ObservableLongMeasurement minIdleObjects = metrics.minIdleObjects();
+    ObservableLongMeasurement maxIdleObjects = metrics.maxIdleObjects();
+    ObservableLongMeasurement maxObjects = metrics.maxObjects();
+    ObservableLongMeasurement pendingRequests = metrics.pendingRequestsForObject();
 
     Attributes attributes = metrics.getAttributes();
-    Attributes usedConnectionsAttributes = metrics.getUsedConnectionsAttributes();
-    Attributes idleConnectionsAttributes = metrics.getIdleConnectionsAttributes();
 
     return metrics.batchCallback(
         () -> {
-          connections.record(active.getAsInt(), usedConnectionsAttributes);
-          connections.record(idle.getAsInt(), idleConnectionsAttributes);
-          minIdleConnections.record(minIdle.getAsInt(), attributes);
-          maxIdleConnections.record(maxIdle.getAsInt(), attributes);
-          maxConnections.record(maxTotal.getAsInt(), attributes);
+          objects.record(active.getAsInt(), metrics.getUsedObjectsAttributes());
+          objects.record(idle.getAsInt(), metrics.getIdleObjectsAttributes());
+          minIdleObjects.record(minIdle.getAsInt(), attributes);
+          maxIdleObjects.record(maxIdle.getAsInt(), attributes);
+          maxObjects.record(maxTotal.getAsInt(), attributes);
           pendingRequests.record(waiters.getAsInt(), attributes);
         },
-        connections,
-        minIdleConnections,
-        maxIdleConnections,
-        maxConnections,
+        objects,
+        minIdleObjects,
+        maxIdleObjects,
+        maxObjects,
         pendingRequests);
   }
 
@@ -133,5 +153,5 @@ final class ConnectionPoolMetrics {
     }
   }
 
-  private ConnectionPoolMetrics() {}
+  private CommonsPool2Metrics() {}
 }

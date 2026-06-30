@@ -5,11 +5,16 @@
 
 package io.opentelemetry.instrumentation.apachecommonspool2;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
+import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -23,6 +28,9 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractCommonsPool2InstrumentationTest {
 
   protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-commons-pool2-2.0";
+  private static final AttributeKey<String> POOL_NAME = stringKey("apache.commons_pool2.pool.name");
+  private static final AttributeKey<String> OBJECT_STATE =
+      stringKey("apache.commons_pool2.object.state");
 
   protected abstract InstrumentationExtension testing();
 
@@ -46,14 +54,12 @@ public abstract class AbstractCommonsPool2InstrumentationTest {
   }
 
   private void testGenericObjectPoolMetrics(boolean jmxEnabled) throws Exception {
-    GenericObjectPool<Object> pool = createGenericObjectPool("pool", jmxEnabled);
+    GenericObjectPool<Object> pool =
+        createGenericObjectPool(jmxEnabled ? "objectPool" : "pool", jmxEnabled);
     Object borrowed = null;
     try {
       String poolName =
-          "GenericObjectPool-"
-              + (jmxEnabled
-                  ? pool.getJmxName().getKeyProperty("name")
-                  : String.valueOf(System.identityHashCode(pool)));
+          "GenericObjectPool-" + (jmxEnabled ? pool.getJmxName().getKeyProperty("name") : "pool");
       configure(pool, poolName);
 
       borrowed = pool.borrowObject();
@@ -81,14 +87,13 @@ public abstract class AbstractCommonsPool2InstrumentationTest {
   }
 
   private void testGenericKeyedObjectPoolMetrics(boolean jmxEnabled) throws Exception {
-    GenericKeyedObjectPool<String, Object> pool = createGenericKeyedObjectPool("pool", jmxEnabled);
+    GenericKeyedObjectPool<String, Object> pool =
+        createGenericKeyedObjectPool(jmxEnabled ? "keyedObjectPool" : "pool", jmxEnabled);
     Object borrowed = null;
     try {
       String poolName =
           "GenericKeyedObjectPool-"
-              + (jmxEnabled
-                  ? pool.getJmxName().getKeyProperty("name")
-                  : String.valueOf(System.identityHashCode(pool)));
+              + (jmxEnabled ? pool.getJmxName().getKeyProperty("name") : "pool");
       configure(pool, poolName);
 
       borrowed = pool.borrowObject("key");
@@ -129,12 +134,101 @@ public abstract class AbstractCommonsPool2InstrumentationTest {
   }
 
   private void assertPoolMetrics(String poolName) {
-    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, poolName)
-        .disableConnectionTimeouts()
-        .disableCreateTime()
-        .disableWaitTime()
-        .disableUseTime()
-        .assertConnectionPoolEmitsMetrics();
+    verifyObjectCount(poolName);
+    verifyMinIdleObjects(poolName);
+    verifyMaxIdleObjects(poolName);
+    verifyMaxObjects(poolName);
+    verifyPendingRequests(poolName);
+  }
+
+  private void verifyObjectCount(String poolName) {
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "apache.commons_pool2.object.count",
+            metrics -> metrics.anySatisfy(metric -> verifyObjectCountMetric(metric, poolName)));
+  }
+
+  private static void verifyObjectCountMetric(MetricData metric, String poolName) {
+    assertThat(metric)
+        .hasUnit("{object}")
+        .hasDescription(
+            "The number of objects currently in the state described by the state attribute.")
+        .hasLongSumSatisfying(
+            sum ->
+                sum.isNotMonotonic()
+                    .hasPointsSatisfying(
+                        point ->
+                            point.hasAttributesSatisfying(
+                                equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "idle")),
+                        point ->
+                            point.hasAttributesSatisfying(
+                                equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used"))));
+  }
+
+  private void verifyMinIdleObjects(String poolName) {
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "apache.commons_pool2.object.idle.min",
+            metrics -> metrics.anySatisfy(metric -> verifyMinIdleObjectsMetric(metric, poolName)));
+  }
+
+  private static void verifyMinIdleObjectsMetric(MetricData metric, String poolName) {
+    assertThat(metric)
+        .hasUnit("{object}")
+        .hasDescription("The minimum number of idle objects allowed in the pool.")
+        .hasLongSumSatisfying(sum -> verifyPoolName(sum, poolName));
+  }
+
+  private void verifyMaxIdleObjects(String poolName) {
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "apache.commons_pool2.object.idle.max",
+            metrics -> metrics.anySatisfy(metric -> verifyMaxIdleObjectsMetric(metric, poolName)));
+  }
+
+  private static void verifyMaxIdleObjectsMetric(MetricData metric, String poolName) {
+    assertThat(metric)
+        .hasUnit("{object}")
+        .hasDescription("The maximum number of idle objects allowed in the pool.")
+        .hasLongSumSatisfying(sum -> verifyPoolName(sum, poolName));
+  }
+
+  private void verifyMaxObjects(String poolName) {
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "apache.commons_pool2.object.max",
+            metrics -> metrics.anySatisfy(metric -> verifyMaxObjectsMetric(metric, poolName)));
+  }
+
+  private static void verifyMaxObjectsMetric(MetricData metric, String poolName) {
+    assertThat(metric)
+        .hasUnit("{object}")
+        .hasDescription("The maximum number of objects allowed in the pool.")
+        .hasLongSumSatisfying(sum -> verifyPoolName(sum, poolName));
+  }
+
+  private void verifyPendingRequests(String poolName) {
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "apache.commons_pool2.request.pending",
+            metrics -> metrics.anySatisfy(metric -> verifyPendingRequestsMetric(metric, poolName)));
+  }
+
+  private static void verifyPendingRequestsMetric(MetricData metric, String poolName) {
+    assertThat(metric)
+        .hasUnit("{request}")
+        .hasDescription("The number of requests currently waiting for an object from the pool.")
+        .hasLongSumSatisfying(sum -> verifyPoolName(sum, poolName));
+  }
+
+  private static void verifyPoolName(LongSumAssert sum, String poolName) {
+    sum.isNotMonotonic()
+        .hasPointsSatisfying(point -> point.hasAttributes(Attributes.of(POOL_NAME, poolName)));
   }
 
   protected void assertNoMetrics() {

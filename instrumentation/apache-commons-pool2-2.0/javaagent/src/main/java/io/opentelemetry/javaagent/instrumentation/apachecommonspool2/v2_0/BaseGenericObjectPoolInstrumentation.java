@@ -59,7 +59,7 @@ class BaseGenericObjectPoolInstrumentation implements TypeInstrumentation {
 
       String name = objectName == null ? null : objectName.getKeyProperty("name");
       if (name == null) {
-        name = String.valueOf(System.identityHashCode(pool));
+        name = "pool";
       }
 
       telemetry().registerMetrics(pool, type + "-" + name);

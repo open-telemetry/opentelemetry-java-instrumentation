@@ -24,11 +24,11 @@ public final class CommonsPool2Telemetry {
 
   /** Start collecting metrics for the given supported object pool. */
   public void registerMetrics(Object pool, String poolName) {
-    ConnectionPoolMetrics.registerMetrics(openTelemetry, pool, poolName);
+    CommonsPool2Metrics.registerMetrics(openTelemetry, pool, poolName);
   }
 
   /** Stop collecting metrics for the given supported object pool. */
   public void unregisterMetrics(Object pool) {
-    ConnectionPoolMetrics.unregisterMetrics(pool);
+    CommonsPool2Metrics.unregisterMetrics(pool);
   }
 }

@@ -1,18 +1,5 @@
 display_name: Apache Commons Pool 2
 description: >
-  This instrumentation enables database connection pool metrics for Apache Commons Pool 2
+  This instrumentation enables object pool metrics for Apache Commons Pool 2
   GenericObjectPool and GenericKeyedObjectPool instances.
 library_link: https://commons.apache.org/proper/commons-pool/
-semantic_conventions:
-  - DATABASE_POOL_METRICS
-configurations:
-  - name: otel.semconv-stability.opt-in
-    declarative_name: general.semconv_stability.opt_in
-    description: >
-      Opt-in to emit stable semantic conventions instead of the old
-      experimental semantic conventions. Accepts a comma-separated list of semantic convention
-      groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new
-      conventions simultaneously. Stable semantic conventions will become the default in version
-      3.0 of the agent.
-    type: list
-    default: ""
