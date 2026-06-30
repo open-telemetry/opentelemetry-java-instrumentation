@@ -10,8 +10,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntSupplier;
 import javax.annotation.Nullable;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolMXBean;
@@ -22,8 +22,9 @@ final class CommonsPool2Metrics {
 
   // a weak map does not make sense here because each Meter holds a reference to the pool
   // use identity comparison because pools are mutable lifecycle objects
-  private static final Map<IdentityPoolKey, BatchCallback> poolMetrics = new ConcurrentHashMap<>();
-  private static final Map<String, AtomicInteger> poolNameCounters = new ConcurrentHashMap<>();
+  private static final Map<IdentityPoolKey, PoolMetricsRegistration> poolMetrics =
+      new ConcurrentHashMap<>();
+  private static final Set<String> activePoolNames = ConcurrentHashMap.newKeySet();
 
   static void registerMetrics(OpenTelemetry openTelemetry, Object pool, String poolName) {
     if (pool instanceof GenericObjectPoolMXBean) {
@@ -65,29 +66,31 @@ final class CommonsPool2Metrics {
       IntSupplier waiters) {
     poolMetrics.computeIfAbsent(
         new IdentityPoolKey(pool),
-        unused ->
-            createCallback(
-                openTelemetry,
-                rewritePoolName(poolName),
-                active,
-                idle,
-                minIdle,
-                maxIdle,
-                maxTotal,
-                waiters));
+        unused -> {
+          String rewrittenPoolName = reservePoolName(poolName);
+          return new PoolMetricsRegistration(
+              createCallback(
+                  openTelemetry,
+                  rewrittenPoolName,
+                  active,
+                  idle,
+                  minIdle,
+                  maxIdle,
+                  maxTotal,
+                  waiters),
+              rewrittenPoolName);
+        });
   }
 
-  private static String rewritePoolName(String poolName) {
-    int count;
-    while (true) {
-      count =
-          poolNameCounters
-              .computeIfAbsent(poolName, unused -> new AtomicInteger())
-              .incrementAndGet();
-      if (count == 1) {
-        return poolName;
+  private static String reservePoolName(String poolName) {
+    if (activePoolNames.add(poolName)) {
+      return poolName;
+    }
+    for (int count = 2; ; count++) {
+      String candidate = poolName + "-" + count;
+      if (activePoolNames.add(candidate)) {
+        return candidate;
       }
-      poolName += count;
     }
   }
 
@@ -128,8 +131,23 @@ final class CommonsPool2Metrics {
   }
 
   static void unregisterMetrics(Object pool) {
-    BatchCallback callback = poolMetrics.remove(new IdentityPoolKey(pool));
-    if (callback != null) {
+    PoolMetricsRegistration registration = poolMetrics.remove(new IdentityPoolKey(pool));
+    if (registration != null) {
+      registration.close();
+    }
+  }
+
+  private static final class PoolMetricsRegistration {
+    private final BatchCallback callback;
+    private final String poolName;
+
+    private PoolMetricsRegistration(BatchCallback callback, String poolName) {
+      this.callback = callback;
+      this.poolName = poolName;
+    }
+
+    private void close() {
+      activePoolNames.remove(poolName);
       callback.close();
     }
   }

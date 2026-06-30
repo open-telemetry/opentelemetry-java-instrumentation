@@ -14,7 +14,11 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
 import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -51,6 +55,77 @@ public abstract class AbstractCommonsPool2InstrumentationTest {
   @Test
   void shouldReportGenericObjectPoolMetricsWhenJmxDisabled() throws Exception {
     testGenericObjectPoolMetrics(false);
+  }
+
+  @Test
+  void shouldRewriteDuplicatePoolNames() throws Exception {
+    GenericObjectPool<Object> first = createGenericObjectPool("pool", false);
+    GenericObjectPool<Object> second = createGenericObjectPool("pool", false);
+    Object firstBorrowed = null;
+    Object secondBorrowed = null;
+    try {
+      String poolName = "GenericObjectPool-pool";
+      configure(first, poolName);
+      configure(second, poolName);
+
+      firstBorrowed = first.borrowObject();
+      secondBorrowed = second.borrowObject();
+
+      assertObjectCountPoolNames(poolName, poolName + "-2");
+    } finally {
+      if (firstBorrowed != null) {
+        first.returnObject(firstBorrowed);
+      }
+      if (secondBorrowed != null) {
+        second.returnObject(secondBorrowed);
+      }
+      shutdown(first);
+      shutdown(second);
+      first.close();
+      second.close();
+    }
+
+    assertNoMetrics();
+  }
+
+  @Test
+  void shouldReusePoolNameAfterShutdown() throws Exception {
+    String poolName = "GenericObjectPool-pool";
+    GenericObjectPool<Object> first = createGenericObjectPool("pool", false);
+    Object firstBorrowed = null;
+    try {
+      configure(first, poolName);
+
+      firstBorrowed = first.borrowObject();
+
+      assertPoolMetrics(poolName);
+    } finally {
+      if (firstBorrowed != null) {
+        first.returnObject(firstBorrowed);
+      }
+      shutdown(first);
+      first.close();
+    }
+
+    assertNoMetrics();
+
+    GenericObjectPool<Object> second = createGenericObjectPool("pool", false);
+    Object secondBorrowed = null;
+    try {
+      configure(second, poolName);
+
+      secondBorrowed = second.borrowObject();
+
+      assertPoolMetrics(poolName);
+    } finally {
+      if (secondBorrowed != null) {
+        second.returnObject(secondBorrowed);
+      }
+      shutdown(second);
+      second.close();
+    }
+
+    assertNoMetrics();
   }
 
   private void testGenericObjectPoolMetrics(boolean jmxEnabled) throws Exception {
@@ -110,7 +185,7 @@ public abstract class AbstractCommonsPool2InstrumentationTest {
     assertNoMetrics();
   }
 
-  private static GenericObjectPool<Object> createGenericObjectPool(
+  protected static GenericObjectPool<Object> createGenericObjectPool(
       String poolName, boolean jmxEnabled) {
     GenericObjectPoolConfig config = new GenericObjectPoolConfig();
     config.setJmxEnabled(jmxEnabled);
@@ -147,6 +222,31 @@ public abstract class AbstractCommonsPool2InstrumentationTest {
             INSTRUMENTATION_NAME,
             "apache.commons_pool2.object.count",
             metrics -> metrics.anySatisfy(metric -> verifyObjectCountMetric(metric, poolName)));
+  }
+
+  protected void assertObjectCountPoolNames(String... poolNames) {
+    List<Consumer<LongPointAssert>> assertions = new ArrayList<>();
+    for (String poolName : poolNames) {
+      assertions.add(
+          point ->
+              point.hasAttributesSatisfying(
+                  equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "idle")));
+      assertions.add(
+          point ->
+              point.hasAttributesSatisfying(
+                  equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used")));
+    }
+
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            "apache.commons_pool2.object.count",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasLongSumSatisfying(
+                                sum -> sum.isNotMonotonic().hasPointsSatisfying(assertions))));
   }
 
   private static void verifyObjectCountMetric(MetricData metric, String poolName) {
