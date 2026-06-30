@@ -12,7 +12,7 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id("com.gradleup.shadow") version "9.4.2"
+  id("com.gradleup.shadow") version "9.4.3"
   id("com.diffplug.spotless") version "8.8.0"
 
   id("io.opentelemetry.instrumentation.muzzle-generation") version "2.30.0-alpha-SNAPSHOT"
