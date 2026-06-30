@@ -10,21 +10,13 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ReactorNettyInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
     super("spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-server");
-  }
-
-  @Override
-  public String getModuleGroup() {
-    // relies on netty
-    return "netty";
   }
 
   @Override

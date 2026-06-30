@@ -7,14 +7,14 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.3.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.2"
+    id("org.graalvm.buildtools.native") version "1.1.3"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.6.0"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.7.0"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -395,7 +395,7 @@ include(":instrumentation:jdbc:javaagent")
 include(":instrumentation:jdbc:library")
 include(":instrumentation:jdbc:testing")
 include(":instrumentation:jedis:jedis-1.4:javaagent")
-include(":instrumentation:jedis:jedis-1.4:testing")
+include(":instrumentation:jedis:jedis-2.0:javaagent")
 include(":instrumentation:jedis:jedis-3.0:javaagent")
 include(":instrumentation:jedis:jedis-4.0:javaagent")
 include(":instrumentation:jedis:jedis-common-1.4:javaagent")

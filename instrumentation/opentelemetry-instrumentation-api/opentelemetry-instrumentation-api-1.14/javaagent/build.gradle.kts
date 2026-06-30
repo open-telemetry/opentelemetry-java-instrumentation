@@ -34,7 +34,7 @@ val oldServerSpanVersion = "1.13.0-alpha"
 
 testing {
   suites {
-    val testOldServerSpan by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testOldServerSpan") {
       dependencies {
         implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:$oldServerSpanVersion")
         implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
@@ -67,13 +67,13 @@ configurations.configureEach {
 
 tasks {
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code")
   }
 
-  val testBothSemconv by registering(Test::class) {
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
