@@ -147,7 +147,7 @@ class WrapperTest extends AbstractWrapperTest {
                             sum.hasPointsSatisfying(
                                 point ->
                                     point
-                                        .hasValueGreaterThan(0)
+                                        .hasValue(1)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_SYSTEM, "kafka"),
                                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
