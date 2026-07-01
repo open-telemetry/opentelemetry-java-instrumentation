@@ -238,21 +238,14 @@ Two types of instrumentation are currently supported:
 - inlined instrumentation, where advice classes content is copied into the instrumented class files
 - non-inlined instrumentation, where advice classes are not copied into the instrumented class files but loaded in a dedicated classloader.
 
-The default depends on the agent version:
+The choice between the two strategies is made by instrumentation author by using the `inline` property of the `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotations.
 
-- before 3.0.0: [inlined instrumentation](#inlined-instrumentation) is the default, users can opt-in to use non-inlined by setting the configuration option to `true`.
-- from 3.0.0 and later: [non-inlined instrumentation](#non-inlined-instrumentation) is the default, users can opt-out to use inlined by setting the configuration option to `false` to restore the previous behavior.
-
-It is possible to select which instrumentation strategy is used through configuration:
-
-- set it to `true` for non-inlined instrumentation, set it to `false` for inlined instrumentation
-- use `otel.javaagent.experimental.indy` configuration option for auto-configuration, or `distribution.javaagent.indy/development` with declarative configuration
+- if `inline` property is not set or set to `true` (default), the advice is inlined into the instrumented class files
+- if `inline` property is explicitly set to `false`
+  - before 3.0.0: the advice is inlined
+  - as of 3.0.0 and later: the advice is not inlined
 
 ## inlined instrumentation
-
-As of 3.0.0, the default instrumentation strategy is [non-inlined](#non-inlined-instrumentation), this section is kept for historical reference and for users that want to opt-out of the new default behavior.
-All internal instrumentation uses advices that have `inline = false` set to make them compatible with [non-inlined instrumentation](#non-inlined-instrumentation), but those advices
-will be inlined into the instrumented code if the user opts-out of non-inlined instrumentation.
 
 With inlined instrumentation, advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
 the instrumented library class files. You should not treat them as ordinary, plain Java classes.
