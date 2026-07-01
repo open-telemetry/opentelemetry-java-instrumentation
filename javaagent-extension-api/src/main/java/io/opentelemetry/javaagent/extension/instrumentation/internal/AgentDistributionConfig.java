@@ -9,7 +9,6 @@ import static java.util.Collections.singletonList;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -91,7 +90,7 @@ public class AgentDistributionConfig {
       @Nullable @JsonProperty("exclude_class_loaders") List<String> excludeClassLoaders,
       @Nullable @JsonProperty("thread_details_enabled") Boolean threadDetailsEnabled,
       @Nullable @JsonProperty("instrumentation") InstrumentationConfig instrumentation) {
-    this.indyEnabled = indyEnabled != null ? indyEnabled : AgentCommonConfig.get().isV3Preview();
+    this.indyEnabled = indyEnabled != null ? indyEnabled : false;
     this.forceSynchronousAgentListeners =
         forceSynchronousAgentListeners != null ? forceSynchronousAgentListeners : false;
     this.excludeClasses =
@@ -230,15 +229,20 @@ public class AgentDistributionConfig {
     private final ConfigProperties configProperties;
 
     ConfigPropertiesAgentDistributionConfig(ConfigProperties configProperties) {
+      this(
+          configProperties,
+          configProperties.getBoolean("otel.instrumentation.common.v3-preview", false));
+    }
+
+    private ConfigPropertiesAgentDistributionConfig(
+        ConfigProperties configProperties, boolean v3Preview) {
       super(
-          configProperties.getBoolean("otel.javaagent.experimental.indy", false),
+          configProperties.getBoolean("otel.javaagent.experimental.indy", v3Preview),
           configProperties.getBoolean(
               "otel.javaagent.experimental.force-synchronous-agent-listeners", false),
           configProperties.getList("otel.javaagent.exclude-classes"),
           configProperties.getList("otel.javaagent.exclude-class-loaders"),
-          configProperties.getBoolean(
-              "otel.javaagent.add-thread-details",
-              !configProperties.getBoolean("otel.instrumentation.common.v3-preview", false)),
+          configProperties.getBoolean("otel.javaagent.add-thread-details", !v3Preview),
           null);
       this.configProperties = configProperties;
     }

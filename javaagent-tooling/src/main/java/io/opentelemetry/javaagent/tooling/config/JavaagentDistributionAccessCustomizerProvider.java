@@ -19,6 +19,10 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigura
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionPropertyModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalInstrumentationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalLanguageSpecificInstrumentationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalLanguageSpecificInstrumentationPropertyModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -55,22 +59,64 @@ public final class JavaagentDistributionAccessCustomizerProvider
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     customizer.addModelCustomizer(
         model -> {
-          AgentDistributionConfig.set(parseConfig(model.getDistribution()));
+          boolean isV3Preview = isV3Preview(model);
+          AgentDistributionConfig distributionConfig =
+              parseConfig(model.getDistribution(), isV3Preview);
+          AgentDistributionConfig.set(distributionConfig);
           return model;
         });
   }
 
-  private static AgentDistributionConfig parseConfig(DistributionModel distribution) {
-    if (distribution != null) {
-      DistributionPropertyModel javaagent = distribution.getAdditionalProperties().get("javaagent");
-      if (javaagent != null) {
-        try {
-          return mapper.convertValue(javaagent, AgentDistributionConfig.class);
-        } catch (IllegalArgumentException e) {
-          logger.log(WARNING, "Failed to parse distribution.javaagent configuration", e);
-        }
+  // to be removed for 3.0.0
+  private static boolean isV3Preview(OpenTelemetryConfigurationModel model) {
+    ExperimentalInstrumentationModel instrumentationDevelopment =
+        model.getInstrumentationDevelopment();
+    if (instrumentationDevelopment == null) {
+      return false;
+    }
+    ExperimentalLanguageSpecificInstrumentationModel java = instrumentationDevelopment.getJava();
+    if (java == null) {
+      return false;
+    }
+    ExperimentalLanguageSpecificInstrumentationPropertyModel common =
+        java.getAdditionalProperties().get("common");
+    if (common == null) {
+      return false;
+    }
+    return Boolean.TRUE.equals(common.getAdditionalProperties().get("v3_preview"));
+  }
+
+  private static AgentDistributionConfig parseConfig(
+      DistributionModel distribution, boolean v3Preview) {
+
+    // to be removed for 3.0.0
+    // defaults 'distribution.javaagent.indy/development' to 'true' for v3 preview if unset
+    if (v3Preview) {
+      // creating distribution.javaagent is required to add indy/development to it
+      DistributionPropertyModel javaagent;
+      if (distribution == null) {
+        distribution = new DistributionModel();
+      }
+      javaagent = distribution.getAdditionalProperties().get("javaagent");
+      if (javaagent == null) {
+        javaagent = new DistributionPropertyModel();
+        distribution.withAdditionalProperty("javaagent", javaagent);
+      }
+      // when v3 preview is enabled we enable indy by default when not explicitly set
+      if (javaagent.getAdditionalProperties().get("indy/development") == null) {
+        javaagent.withAdditionalProperty("indy/development", true);
       }
     }
+
+    if (distribution != null) {
+      DistributionPropertyModel javaagent = distribution.getAdditionalProperties().get("javaagent");
+      try {
+        return mapper.convertValue(javaagent, AgentDistributionConfig.class);
+      } catch (IllegalArgumentException e) {
+        logger.log(WARNING, "Failed to parse distribution.javaagent configuration", e);
+      }
+    }
+
     return AgentDistributionConfig.create();
   }
 }
