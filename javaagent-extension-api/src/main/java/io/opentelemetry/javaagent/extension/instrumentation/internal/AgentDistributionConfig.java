@@ -9,6 +9,7 @@ import static java.util.Collections.singletonList;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -90,7 +91,7 @@ public class AgentDistributionConfig {
       @Nullable @JsonProperty("exclude_class_loaders") List<String> excludeClassLoaders,
       @Nullable @JsonProperty("thread_details_enabled") Boolean threadDetailsEnabled,
       @Nullable @JsonProperty("instrumentation") InstrumentationConfig instrumentation) {
-    this.indyEnabled = indyEnabled != null ? indyEnabled : true;
+    this.indyEnabled = indyEnabled != null ? indyEnabled : AgentCommonConfig.get().isV3Preview();
     this.forceSynchronousAgentListeners =
         forceSynchronousAgentListeners != null ? forceSynchronousAgentListeners : false;
     this.excludeClasses =
