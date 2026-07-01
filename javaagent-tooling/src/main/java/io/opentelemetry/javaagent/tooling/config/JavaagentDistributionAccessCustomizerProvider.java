@@ -23,9 +23,9 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalIn
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalLanguageSpecificInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalLanguageSpecificInstrumentationPropertyModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Allows access to the Javaagent distribution node, which cannot be accessed using the {@link
