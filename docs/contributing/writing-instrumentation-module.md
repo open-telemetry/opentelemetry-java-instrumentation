@@ -367,7 +367,7 @@ invokedynamic bytecode instructions.
 
 Using indy instrumentation has these advantages:
 
-- allows instrumentations to have breakpoints set in them and be debugged using standard debugging techniques (only once shading is removed)
+- allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques (this is however limited to classes that are not shaded).
 - provides clean isolation of instrumentation advice from the application and other instrumentations
 - allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#inlined-instrumentation))
 
