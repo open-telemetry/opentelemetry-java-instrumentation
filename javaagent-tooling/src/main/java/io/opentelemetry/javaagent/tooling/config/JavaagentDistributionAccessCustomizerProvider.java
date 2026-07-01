@@ -23,6 +23,7 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalIn
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalLanguageSpecificInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.ExperimentalLanguageSpecificInstrumentationPropertyModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -87,7 +88,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
   }
 
   private static AgentDistributionConfig parseConfig(
-      DistributionModel distribution, boolean v3Preview) {
+      @Nullable DistributionModel distribution, boolean v3Preview) {
 
     // to be removed for 3.0.0
     // defaults 'distribution.javaagent.indy/development' to 'true' for v3 preview if unset
@@ -110,10 +111,12 @@ public final class JavaagentDistributionAccessCustomizerProvider
 
     if (distribution != null) {
       DistributionPropertyModel javaagent = distribution.getAdditionalProperties().get("javaagent");
-      try {
-        return mapper.convertValue(javaagent, AgentDistributionConfig.class);
-      } catch (IllegalArgumentException e) {
-        logger.log(WARNING, "Failed to parse distribution.javaagent configuration", e);
+      if (javaagent != null) {
+        try {
+          return mapper.convertValue(javaagent, AgentDistributionConfig.class);
+        } catch (IllegalArgumentException e) {
+          logger.log(WARNING, "Failed to parse distribution.javaagent configuration", e);
+        }
       }
     }
 
