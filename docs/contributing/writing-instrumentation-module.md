@@ -236,7 +236,7 @@ the `transform()` method.
 Two types of instrumentation are currently supported:
 
 - inlined instrumentation, where advice classes content is copied into the instrumented class files
-- non-inlined instrumentation, where advice classes are not copied into the instrumented class files but loaded in a dedicated classloader and called via `invokedynamic` bytecode instruction.
+- non-inlined instrumentation, where advice classes are not copied into the instrumented class files but loaded in a dedicated classloader.
 
 The default depends on the agent version:
 
