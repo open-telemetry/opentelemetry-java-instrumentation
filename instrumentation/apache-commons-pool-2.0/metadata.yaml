@@ -1,0 +1,5 @@
+display_name: Apache Commons Pool
+description: >
+  This instrumentation enables object pool metrics for Apache Commons Pool
+  GenericObjectPool and GenericKeyedObjectPool instances.
+library_link: https://commons.apache.org/proper/commons-pool/
