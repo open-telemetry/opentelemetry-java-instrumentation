@@ -32,6 +32,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.SchedulerListener;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -140,5 +141,29 @@ public abstract class AbstractQuartzTest {
     public void execute(JobExecutionContext context) {
       throw new IllegalStateException("Bad job");
     }
+  }
+
+  @Test
+  void schedulerError() throws SchedulerException {
+    SchedulerException cause = new SchedulerException("boom");
+
+    // A real scheduler error is hard to provoke deterministically in a unit test, so we invoke the
+    // registered SchedulerListener directly to verify the span it produces.
+    for (SchedulerListener listener : scheduler.getListenerManager().getSchedulerListeners()) {
+      listener.schedulerError("Something went wrong", cause);
+    }
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("Quartz scheduler error")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasException(cause)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("quartz.scheduler.name"), "default"))));
   }
 }

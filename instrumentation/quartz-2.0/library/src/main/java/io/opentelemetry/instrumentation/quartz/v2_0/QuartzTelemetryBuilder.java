@@ -91,6 +91,16 @@ public final class QuartzTelemetryBuilder {
         CodeAttributesExtractor.create(new QuartzCodeAttributesGetter()));
     instrumenter.addAttributesExtractors(additionalExtractors);
 
-    return new QuartzTelemetry(new TracingJobListener(instrumenter.buildInstrumenter()));
+    // Separate instrumenter for scheduler-level events: the request type differs from job
+    // execution, and these are point-in-time events rather than start/end-bracketed work.
+    Instrumenter<SchedulerError, Void> schedulerErrorInstrumenter =
+        Instrumenter.<SchedulerError, Void>builder(
+                openTelemetry, INSTRUMENTATION_NAME, request -> "Quartz scheduler error")
+            .setErrorCauseExtractor(new QuartzErrorCauseExtractor())
+            .addAttributesExtractor(new SchedulerErrorAttributesExtractor())
+            .buildInstrumenter();
+
+    return new QuartzTelemetry(
+        new TracingJobListener(instrumenter.buildInstrumenter()), schedulerErrorInstrumenter);
   }
 }
