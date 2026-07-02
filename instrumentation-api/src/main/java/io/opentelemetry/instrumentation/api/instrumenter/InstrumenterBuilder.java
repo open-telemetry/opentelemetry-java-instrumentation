@@ -96,8 +96,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     this.openTelemetry = openTelemetry;
     this.instrumentationName = instrumentationName;
     this.spanNameExtractor = spanNameExtractor;
-    this.instrumentationVersion =
-        EmbeddedInstrumentationProperties.findVersion(instrumentationName);
   }
 
   /**
@@ -303,6 +301,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
 
     applyCustomizers(this);
+
+    if (instrumentationVersion == null) {
+      instrumentationVersion = EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+    }
 
     this.spanKindExtractor = spanKindExtractor;
     return constructor.create(this);

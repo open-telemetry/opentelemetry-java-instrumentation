@@ -12,21 +12,22 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import javax.annotation.Nullable;
+import org.apache.hadoop.hbase.TableName;
 
 public class HbaseSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hbase-client-2.0";
-  private static final ThreadLocal<String> tableNameThreadLocal = new ThreadLocal<>();
+  private static final ThreadLocal<TableName> tableNameThreadLocal = new ThreadLocal<>();
   private static final ThreadLocal<RequestAndContext> requestAndContextThreadLocal =
       new ThreadLocal<>();
   private static final Instrumenter<HbaseRequest, Void> instrumenter = createInstrumenter();
 
-  public static void setTableName(String tableName) {
+  public static void setTableName(TableName tableName) {
     tableNameThreadLocal.set(tableName);
   }
 
   @Nullable
-  public static String getTableName() {
+  public static TableName getTableName() {
     return tableNameThreadLocal.get();
   }
 

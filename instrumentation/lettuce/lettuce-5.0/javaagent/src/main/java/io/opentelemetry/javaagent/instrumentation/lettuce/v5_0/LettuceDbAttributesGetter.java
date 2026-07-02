@@ -47,6 +47,8 @@ final class LettuceDbAttributesGetter
 
   @Override
   public String getDbOperationName(RedisCommand<?, ?, ?> request) {
-    return request.getType().name();
+    // use toString() (not name()) so it stays compatible with lettuce 6.5+, where ProtocolKeyword
+    // no longer declares name()
+    return request.getType().toString();
   }
 }

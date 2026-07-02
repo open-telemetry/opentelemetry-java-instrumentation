@@ -16,12 +16,13 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -51,6 +53,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.redisson.Redisson;
 import org.redisson.api.BatchOptions;
 import org.redisson.api.RAtomicLong;
@@ -245,27 +250,80 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
-  @Test
-  void batchCommand() throws ReflectiveOperationException {
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void batchCommand(BatchScenario scenario) throws ReflectiveOperationException {
     RBatch batch = createBatch(redisson);
     assertThat(batch).isNotNull();
-    batch.getBucket("batch1").setAsync("v1");
-    batch.getBucket("batch2").setAsync("v2");
+    scenario.commands.forEach(addCommand -> addCommand.accept(batch));
     // Adapt different method signature:
     // `BatchResult<?> execute()` and `List<?> execute()`
     invokeExecute(batch);
+
+    if (scenario.empty) {
+      // an empty batch produces no span
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? scenario.operationName
+                                : scenario.oldSpanName)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET batch1 ?;SET batch2 ?"))));
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.operationName
+                                    : scenario.oldOperation),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(maybeStable(DB_STATEMENT), scenario.queryText))));
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        // an empty batch fails to execute and produces no span
+        Arguments.argumentSet("empty", BatchScenario.builder().empty().build()),
+        Arguments.argumentSet(
+            "single",
+            BatchScenario.builder()
+                .addCommand(batch -> batch.getBucket("batch1").setAsync("v1"))
+                .operationName("SET")
+                .oldSpanName("SET")
+                .oldOperation("SET")
+                .queryText("SET batch1 ?")
+                .build()),
+        Arguments.argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .addCommand(batch -> batch.getBucket("batch1").setAsync("v1"))
+                .addCommand(batch -> batch.getBucket("batch2").setAsync("v2"))
+                .operationName("PIPELINE SET")
+                .oldSpanName("DB Query")
+                .batchSize(2)
+                .queryText("SET batch1 ?;SET batch2 ?")
+                .build()),
+        Arguments.argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .addCommand(batch -> batch.getBucket("batch1").setAsync("v1"))
+                .addCommand(batch -> batch.getBucket("batch1").getAsync())
+                .operationName("PIPELINE")
+                .oldSpanName("DB Query")
+                .batchSize(2)
+                .queryText("SET batch1 ?;GET batch1")
+                .build()));
   }
 
   private static void invokeExecute(RBatch batch) throws ReflectiveOperationException {
@@ -292,13 +350,18 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? "PIPELINE SET" : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() ? "PIPELINE SET" : null),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 4L : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "SET " + bucketName + " ?;SET " + bucketName + " ?"))));
@@ -324,18 +387,24 @@ public abstract class AbstractRedissonClientTest {
           batch.execute();
         });
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("redis", "DB Query", "SET", "EXEC"),
+        orderByRootSpanName("MULTI SET", "DB Query", "SET", "EXEC"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? "MULTI SET" : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() ? "MULTI SET" : null),
+                            // db.operation.batch.size is not emitted because MULTI transaction
+                            // telemetry is split across wrapper and command spans, so this span
+                            // does not represent the full logical batch.
                             equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
@@ -562,5 +631,78 @@ public abstract class AbstractRedissonClientTest {
 
   protected RBatch createBatch(RedissonClient redisson) {
     return redisson.createBatch(BatchOptions.defaults());
+  }
+
+  private static final class BatchScenario {
+    final List<Consumer<RBatch>> commands;
+    final String operationName;
+    final String oldSpanName;
+    final Long batchSize;
+    final String oldOperation;
+    final String queryText;
+    final boolean empty;
+
+    BatchScenario(Builder builder) {
+      this.commands = builder.commands;
+      this.operationName = builder.operationName;
+      this.oldSpanName = builder.oldSpanName;
+      this.batchSize = builder.batchSize;
+      this.oldOperation = builder.oldOperation;
+      this.queryText = builder.queryText;
+      this.empty = builder.empty;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static final class Builder {
+      private final List<Consumer<RBatch>> commands = new ArrayList<>();
+      private String operationName;
+      private String oldSpanName;
+      private Long batchSize;
+      private String oldOperation;
+      private String queryText;
+      private boolean empty;
+
+      Builder addCommand(Consumer<RBatch> addCommand) {
+        this.commands.add(addCommand);
+        return this;
+      }
+
+      Builder operationName(String operationName) {
+        this.operationName = operationName;
+        return this;
+      }
+
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder oldOperation(String oldOperation) {
+        this.oldOperation = oldOperation;
+        return this;
+      }
+
+      Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      Builder empty() {
+        this.empty = true;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }

@@ -33,7 +33,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
@@ -47,7 +47,7 @@ tasks {
 
 testing {
   suites {
-    val testCompatibility by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testCompatibility") {
       dependencies {
         implementation("io.lettuce:lettuce-core:6.1.10.RELEASE")
         implementation("io.projectreactor:reactor-core:3.5.3")

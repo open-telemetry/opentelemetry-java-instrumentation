@@ -33,7 +33,7 @@ tasks {
       .withPathSensitivity(PathSensitivity.RELATIVE)
   }
 
-  val runAnalysis by registering(JavaExec::class) {
+  register<JavaExec>("runAnalysis") {
     dependsOn(classes)
 
     systemProperty("basePath", project.rootDir)
@@ -41,7 +41,7 @@ tasks {
     classpath(sourceSets["main"].runtimeClasspath)
   }
 
-  val docSiteAudit by registering(JavaExec::class) {
+  register<JavaExec>("docSiteAudit") {
     dependsOn(classes)
 
     systemProperty("basePath", project.rootDir)

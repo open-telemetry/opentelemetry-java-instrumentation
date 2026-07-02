@@ -33,6 +33,11 @@ class AgentDistributionConfigTest {
   }
 
   @Test
+  void testThreadDetailsEnabled() {
+    assertThat(AgentDistributionConfig.get().isThreadDetailsEnabled()).isTrue();
+  }
+
+  @Test
   void testExcludeClasses() {
     assertThat(AgentDistributionConfig.get().getExcludeClasses())
         .containsExactly("com.example.excluded.Class1", "com.example.excluded.Class2");

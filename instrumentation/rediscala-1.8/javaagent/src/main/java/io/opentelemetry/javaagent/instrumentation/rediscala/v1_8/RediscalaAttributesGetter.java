@@ -7,32 +7,35 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.util.Locale;
 import javax.annotation.Nullable;
-import redis.RedisCommand;
 
-final class RediscalaAttributesGetter
-    implements DbClientAttributesGetter<RedisCommand<?, ?>, Void> {
+final class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
 
   @Override
-  public String getDbSystemName(RedisCommand<?, ?> redisCommand) {
+  public String getDbSystemName(RediscalaRequest request) {
     return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override
   @Nullable
-  public String getDbNamespace(RedisCommand<?, ?> redisCommand) {
+  public String getDbNamespace(RediscalaRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getDbQueryText(RedisCommand<?, ?> redisCommand) {
+  public String getDbQueryText(RediscalaRequest request) {
     return null;
   }
 
   @Override
-  public String getDbOperationName(RedisCommand<?, ?> redisCommand) {
-    return redisCommand.getClass().getSimpleName().toUpperCase(Locale.ROOT);
+  public String getDbOperationName(RediscalaRequest request) {
+    return request.getOperationName();
+  }
+
+  @Override
+  @Nullable
+  public Long getDbOperationBatchSize(RediscalaRequest request) {
+    return request.getBatchSize();
   }
 }

@@ -61,6 +61,16 @@ class ThriftTest extends AbstractThriftTest {
   }
 
   @Override
+  protected TProtocolFactory configureServerInProtocolFactory(TProtocolFactory protocolFactory) {
+    return telemetry.wrapServerInProtocolFactory(protocolFactory);
+  }
+
+  @Override
+  protected TProtocolFactory configureServerOutProtocolFactory(TProtocolFactory protocolFactory) {
+    return telemetry.wrapServerOutProtocolFactory(protocolFactory);
+  }
+
+  @Override
   protected boolean hasAsyncServerNetworkAttributes() {
     return false;
   }

@@ -59,7 +59,7 @@ dependencies {
 
 testing {
   suites {
-    val mojarra12Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("mojarra12Test") {
       dependencies {
         implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
         implementation("javax.faces:jsf-api:1.2")
@@ -70,7 +70,7 @@ testing {
       }
     }
 
-    val mojarra2Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("mojarra2Test") {
       dependencies {
         implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
 

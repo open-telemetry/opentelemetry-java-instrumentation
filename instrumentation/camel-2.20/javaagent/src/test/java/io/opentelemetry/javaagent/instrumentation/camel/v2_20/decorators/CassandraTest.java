@@ -27,11 +27,14 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
+import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import java.time.Duration;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.AfterAll;
@@ -97,10 +100,17 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
   }
 
   static void cassandraSetup() {
+    DriverConfigLoader configLoader =
+        DriverConfigLoader.programmaticBuilder()
+            .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
+            .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(10))
+            .build();
+
     try (CqlSession cqlSession =
         CqlSession.builder()
             .addContactPoint(cassandra.getContactPoint())
             .withLocalDatacenter(cassandra.getLocalDatacenter())
+            .withConfigLoader(configLoader)
             .build()) {
       cqlSession.execute(
           "CREATE KEYSPACE IF NOT EXISTS test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};");

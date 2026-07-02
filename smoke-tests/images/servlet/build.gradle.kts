@@ -188,12 +188,12 @@ val targets = mapOf(
 )
 
 tasks {
-  val buildLinuxTestImages by registering {
+  val buildLinuxTestImages = register<DefaultTask>("buildLinuxTestImages") {
     group = "build"
     description = "Builds all Linux Docker images for the test matrix"
   }
 
-  val buildWindowsTestImages by registering {
+  val buildWindowsTestImages = register<DefaultTask>("buildWindowsTestImages") {
     group = "build"
     description = "Builds all Windows Docker images for the test matrix"
   }
@@ -201,21 +201,21 @@ tasks {
   val linuxImages = createDockerTasks(buildLinuxTestImages, false)
   val windowsImages = createDockerTasks(buildWindowsTestImages, true)
 
-  val pushLinuxImages by registering(DockerPushImage::class) {
+  register<DockerPushImage>("pushLinuxImages") {
     dependsOn(buildLinuxTestImages)
     group = "publishing"
     description = "Push Linux Docker images for the test matrix"
     images.set(linuxImages)
   }
 
-  val pushWindowsImages by registering(DockerPushImage::class) {
+  register<DockerPushImage>("pushWindowsImages") {
     dependsOn(buildWindowsTestImages)
     group = "publishing"
     description = "Push Windows Docker images for the test matrix"
     images.set(windowsImages)
   }
 
-  val printSmokeTestsConfigurations by registering {
+  register<DefaultTask>("printSmokeTestsConfigurations") {
     doFirst {
       for ((server, matrices) in targets) {
         val smokeTestServer = findProperty("smokeTestServer")
@@ -301,19 +301,19 @@ fun configureImage(
     } else if (isWindows) {
       when (jdk) {
         "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:2f2dc58147a9877ecde8644961b1e3c0f26f838af038ec8b8fc04dfbea61a4d0"
-        "11" -> "eclipse-temurin:11.0.31_11-jdk-windowsservercore-ltsc2022@sha256:3e71677571b5051303c766611a9c1757cf5d2c2c2396ddca8de72e73fbfacec2"
-        "17" -> "eclipse-temurin:17.0.19_10-jdk-windowsservercore-ltsc2022@sha256:ca28871d7889e4206b90e2213f3b42aa6ddd77af666c0839af934140b774fe23"
-        "21" -> "eclipse-temurin:21.0.11_10-jdk-windowsservercore-ltsc2022@sha256:4298c2f09584dea72e4f8269c326ba6fb42af6603eb68b65f0d34e2f0b8bf1e8"
-        "25" -> "eclipse-temurin:25.0.3_9-jdk-windowsservercore-ltsc2022@sha256:d63a5d50f3afb74f9b02b5a1915a871b423850bf1560d81943cf3fd9c5d557ca"
+        "11" -> "eclipse-temurin:11.0.31_11-jdk-windowsservercore-ltsc2022@sha256:e17748c6e41dd3545eb4c8337e03baf71b70c6369b11a709d596f1e50451906e"
+        "17" -> "eclipse-temurin:17.0.19_10-jdk-windowsservercore-ltsc2022@sha256:2e3bf0b5145354247e7ab8ab71d3de824984bb71f723bde8db17686237469573"
+        "21" -> "eclipse-temurin:21.0.11_10-jdk-windowsservercore-ltsc2022@sha256:7302d592e1aaa383bd83dd430643a64a1a16bf68a817dc7eb795e6cf28f73834"
+        "25" -> "eclipse-temurin:25.0.3_9-jdk-windowsservercore-ltsc2022@sha256:5dc0f37d57a3d066eedff87929853353261032ea6a873315484b91d3c96e19ba"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
       }
     } else {
       when (jdk) {
         "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:0b793df1b9217f3d25c5f820d47e85a20b0a78b0ccd0ab6deb9051502493c855"
-        "11" -> "eclipse-temurin:11.0.31_11-jdk@sha256:1d5e03cb02c10e21884f2ceae93e6d91c3d8474113e4912fb21b6b1f7330e781"
-        "17" -> "eclipse-temurin:17.0.19_10-jdk@sha256:b04a8c5d46e210873ffd1af6ad5f4d62c69ed3a6736993556eae60bba1373a23"
-        "21" -> "eclipse-temurin:21.0.11_10-jdk@sha256:b9142586f9712700c6c9e07adcedfb18608b1a3a056e4001423a3354adfa9d80"
-        "25" -> "eclipse-temurin:25.0.3_9-jdk@sha256:c2b7ea21649875fb9052237ac4e3cd4ef63968a2a389a0a1b1a72a5e53e5c93f"
+        "11" -> "eclipse-temurin:11.0.31_11-jdk@sha256:d0abfceaee12f0b0704fd116dc3d520078ec1c355f59115a4b48f0f50e16f975"
+        "17" -> "eclipse-temurin:17.0.19_10-jdk@sha256:91b6210cce02091f6f0798a83ec51aa223828242c5a21a85793bb8c28dc891c4"
+        "21" -> "eclipse-temurin:21.0.11_10-jdk@sha256:762d16be48b976c97801d198e5085b1f6facb13718a1e8fb67cb25d0b25337e1"
+        "25" -> "eclipse-temurin:25.0.3_9-jdk@sha256:dfc0093e3dbf43dae57827111c6e374f5b44fac19a9451584b2b336b81474d64"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }
