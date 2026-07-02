@@ -137,7 +137,7 @@ class CassandraTest extends TargetSystemTest {
                         attributeGroup(attribute("cassandra.operation", "read")),
                         attributeGroup(attribute("cassandra.operation", "write"))))
         .add(
-            "cassandra.client.request.error.count",
+            "cassandra.client.request.error",
             metric ->
                 metric
                     .hasDescription("Number of request errors by operation.")

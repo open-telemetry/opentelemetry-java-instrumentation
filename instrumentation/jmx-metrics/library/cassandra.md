@@ -5,7 +5,7 @@ Here is the list of metrics based on MBeans exposed by Cassandra.
 | Metric Name                                     | Type          | Unit      | Attributes                            | Description                                                  |
 | ----------------------------------------------- | ------------- | --------- | ------------------------------------- | ------------------------------------------------------------ |
 | cassandra.client.request.count                  | Counter       | {request} | cassandra.operation                   | Number of requests by operation.                              |
-| cassandra.client.request.error.count            | Counter       | {error}   | cassandra.operation, cassandra.status | Number of request errors by operation.                        |
+| cassandra.client.request.error                  | Counter       | {error}   | cassandra.operation, cassandra.status | Number of request errors by operation.                        |
 | cassandra.client.request.latency.p50            | Gauge         | s         | cassandra.operation                   | Request latency 50th percentile by operation.                 |
 | cassandra.client.request.latency.p99            | Gauge         | s         | cassandra.operation                   | Request latency 99th percentile by operation.                 |
 | cassandra.client.request.latency.max            | Gauge         | s         | cassandra.operation                   | Maximum request latency by operation.                         |

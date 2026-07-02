@@ -88,7 +88,7 @@ rules:
       cassandra.status: const(unavailable)
     mapping:
       Count:
-        metric: &error cassandra.client.request.error.count
+        metric: &error cassandra.client.request.error
         type: &errortype counter
         unit: &errorunit "{error}"
         desc: &errordesc Number of request errors by operation.
