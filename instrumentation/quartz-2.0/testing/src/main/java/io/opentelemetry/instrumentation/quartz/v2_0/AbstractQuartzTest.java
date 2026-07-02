@@ -164,6 +164,9 @@ public abstract class AbstractQuartzTest {
                             .hasStatus(StatusData.error())
                             .hasException(cause)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("quartz.scheduler.name"), "default"))));
+                                equalTo(stringKey("quartz.scheduler.name"), "default"),
+                                equalTo(
+                                    stringKey("quartz.scheduler.error.message"),
+                                    "Something went wrong"))));
   }
 }

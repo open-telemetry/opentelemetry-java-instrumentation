@@ -13,13 +13,20 @@ import javax.annotation.Nullable;
 
 final class SchedulerErrorAttributesExtractor implements AttributesExtractor<SchedulerError, Void> {
 
-  // Experimental attribute: name/shape may change until scheduler instrumentation stabilizes.
+  // Experimental attributes: names/shapes may change until scheduler instrumentation stabilizes.
   private static final AttributeKey<String> SCHEDULER_NAME =
       AttributeKey.stringKey("quartz.scheduler.name");
+  private static final AttributeKey<String> ERROR_MESSAGE =
+      AttributeKey.stringKey("quartz.scheduler.error.message");
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, SchedulerError request) {
     attributes.put(SCHEDULER_NAME, request.getSchedulerName());
+    // Quartz's top-level error message. QuartzErrorCauseExtractor unwraps the SchedulerException to
+    // its underlying cause, so this message is often the only carrier of the top-level context.
+    if (request.getMessage() != null) {
+      attributes.put(ERROR_MESSAGE, request.getMessage());
+    }
   }
 
   @Override
