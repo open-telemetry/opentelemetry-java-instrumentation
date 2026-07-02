@@ -111,6 +111,33 @@ public abstract class AbstractQuartzTest {
                             .hasAttributesSatisfyingExactly(assertions)));
   }
 
+  @Test
+  void schedulerError() throws SchedulerException {
+    SchedulerException cause = new SchedulerException("boom");
+
+    // A real scheduler error is hard to provoke deterministically in a unit test, so we invoke the
+    // registered SchedulerListener directly to verify the span it produces.
+    for (SchedulerListener listener : scheduler.getListenerManager().getSchedulerListeners()) {
+      listener.schedulerError("Something went wrong", cause);
+    }
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("Quartz scheduler error")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasException(cause)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("quartz.scheduler.name"), "default"),
+                                equalTo(
+                                    stringKey("quartz.scheduler.error.message"),
+                                    "Something went wrong"))));
+  }
+
   private static Scheduler createScheduler() throws Exception {
     StdSchedulerFactory factory = new StdSchedulerFactory();
     Properties properties = new Properties();
@@ -141,32 +168,5 @@ public abstract class AbstractQuartzTest {
     public void execute(JobExecutionContext context) {
       throw new IllegalStateException("Bad job");
     }
-  }
-
-  @Test
-  void schedulerError() throws SchedulerException {
-    SchedulerException cause = new SchedulerException("boom");
-
-    // A real scheduler error is hard to provoke deterministically in a unit test, so we invoke the
-    // registered SchedulerListener directly to verify the span it produces.
-    for (SchedulerListener listener : scheduler.getListenerManager().getSchedulerListeners()) {
-      listener.schedulerError("Something went wrong", cause);
-    }
-
-    getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("Quartz scheduler error")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(cause)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("quartz.scheduler.name"), "default"),
-                                equalTo(
-                                    stringKey("quartz.scheduler.error.message"),
-                                    "Something went wrong"))));
   }
 }
