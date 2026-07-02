@@ -473,6 +473,104 @@ class InstrumenterTest {
   }
 
   @Test
+  void operationListenersCanPropagateToDifferentInstrumenterEnd() {
+    AtomicReference<Boolean> startContext = new AtomicReference<>();
+    AtomicReference<Boolean> endContext = new AtomicReference<>();
+
+    OperationListener operationListener =
+        new OperationListener() {
+          @Override
+          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+            startContext.set(true);
+            return context;
+          }
+
+          @Override
+          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+            endContext.set(true);
+          }
+        };
+
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationListener(operationListener);
+    builder.propagateOperationListenersToOnEnd = true;
+    Instrumenter<Map<String, String>, Map<String, String>> startingInstrumenter =
+        builder.buildServerInstrumenter(new MapGetter());
+    Instrumenter<Map<String, String>, Map<String, String>> endingInstrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .buildServerInstrumenter(new MapGetter());
+
+    Context context = startingInstrumenter.start(Context.root(), REQUEST);
+    endingInstrumenter.end(context, REQUEST, RESPONSE, null);
+
+    assertThat(startContext.get()).isTrue();
+    assertThat(endContext.get()).isTrue();
+  }
+
+  @Test
+  void operationListenersFromNestedInstrumenterPropagateToDifferentInstrumenterEnd() {
+    AtomicReference<Boolean> parentEndContext = new AtomicReference<>();
+    AtomicReference<Boolean> childStartContext = new AtomicReference<>();
+    AtomicReference<Boolean> childEndContext = new AtomicReference<>();
+
+    OperationListener parentOperationListener =
+        new OperationListener() {
+          @Override
+          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+            return context;
+          }
+
+          @Override
+          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+            parentEndContext.set(true);
+          }
+        };
+    OperationListener childOperationListener =
+        new OperationListener() {
+          @Override
+          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+            childStartContext.set(true);
+            return context;
+          }
+
+          @Override
+          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+            childEndContext.set(true);
+          }
+        };
+
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> parentBuilder =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationListener(parentOperationListener);
+    parentBuilder.propagateOperationListenersToOnEnd = true;
+    Instrumenter<Map<String, String>, Map<String, String>> parentInstrumenter =
+        parentBuilder.buildServerInstrumenter(new MapGetter());
+    Instrumenter<Map<String, String>, Map<String, String>> childStartingInstrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationListener(childOperationListener)
+            .buildServerInstrumenter(new MapGetter());
+    Instrumenter<Map<String, String>, Map<String, String>> childEndingInstrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .buildServerInstrumenter(new MapGetter());
+
+    Context parentContext = parentInstrumenter.start(Context.root(), REQUEST);
+    Context childContext = childStartingInstrumenter.start(parentContext, REQUEST);
+    childEndingInstrumenter.end(childContext, REQUEST, RESPONSE, null);
+
+    assertThat(childStartContext.get()).isTrue();
+    assertThat(childEndContext.get()).isTrue();
+    assertThat(parentEndContext.get()).isNull();
+
+    parentInstrumenter.end(parentContext, REQUEST, RESPONSE, null);
+  }
+
+  @Test
   void operationMetrics() {
     AtomicReference<Context> startContext = new AtomicReference<>();
     AtomicReference<Context> endContext = new AtomicReference<>();
