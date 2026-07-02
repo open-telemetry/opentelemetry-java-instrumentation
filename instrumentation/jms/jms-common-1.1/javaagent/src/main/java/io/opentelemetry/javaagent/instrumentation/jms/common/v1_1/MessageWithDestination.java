@@ -53,7 +53,8 @@ public abstract class MessageWithDestination {
       MessageAdapter message, DestinationAdapter queue) {
 
     String queueName = getDestinationName(queue, DestinationAdapter::getQueueName);
-    boolean temporary = queue.isTemporaryQueue() || queueName.startsWith(TIBCO_TMP_PREFIX);
+    boolean temporary =
+        queue.isTemporaryQueue() || (queueName != null && queueName.startsWith(TIBCO_TMP_PREFIX));
 
     return new AutoValue_MessageWithDestination(message, queueName, temporary);
   }
