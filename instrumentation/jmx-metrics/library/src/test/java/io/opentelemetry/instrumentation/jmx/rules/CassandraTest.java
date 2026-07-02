@@ -56,7 +56,7 @@ class CassandraTest extends TargetSystemTest {
             "cassandra.compaction.tasks.completed",
             metric ->
                 metric
-                    .hasDescription("Number of completed compactions since server [re]start")
+                    .hasDescription("Number of completed compactions since server start.")
                     .hasUnit("{task}")
                     .isCounter()
                     .hasDataPointsWithoutAttributes())
@@ -64,15 +64,15 @@ class CassandraTest extends TargetSystemTest {
             "cassandra.compaction.tasks.pending",
             metric ->
                 metric
-                    .hasDescription("Estimated number of compactions remaining to perform")
+                    .hasDescription("Estimated number of compactions remaining to perform.")
                     .hasUnit("{task}")
                     .isGauge()
                     .hasDataPointsWithoutAttributes())
         .add(
-            "cassandra.storage.load.count",
+            "cassandra.storage.load",
             metric ->
                 metric
-                    .hasDescription("Size of the on disk data size this node manages")
+                    .hasDescription("Size of the on disk data size this node manages.")
                     .hasUnit("By")
                     .isUpDownCounter()
                     .hasDataPointsWithoutAttributes())
@@ -80,15 +80,15 @@ class CassandraTest extends TargetSystemTest {
             "cassandra.storage.total_hints.count",
             metric ->
                 metric
-                    .hasDescription("Number of hint messages written to this node since [re]start")
+                    .hasDescription("Number of hint messages written to this node since server start.")
                     .hasUnit("{hint}")
                     .isCounter()
                     .hasDataPointsWithoutAttributes())
         .add(
-            "cassandra.storage.total_hints.in_progress.count",
+            "cassandra.storage.total_hints.in_progress",
             metric ->
                 metric
-                    .hasDescription("Number of hints attempting to be sent currently")
+                    .hasDescription("Number of hints attempting to be sent currently.")
                     .hasUnit("{hint}")
                     .isUpDownCounter()
                     .hasDataPointsWithoutAttributes())
@@ -96,63 +96,63 @@ class CassandraTest extends TargetSystemTest {
             "cassandra.client.request.latency.p50",
             metric ->
                 metric
-                    .hasDescription("Request latency 50th percentile by operation")
-                    .hasUnit("us")
+                    .hasDescription("Request latency 50th percentile by operation.")
+                    .hasUnit("s")
                     .isGauge()
                     .hasDataPointsWithAttributes(
-                        attributeGroup(attribute("cassandra.operation", "Read")),
-                        attributeGroup(attribute("cassandra.operation", "Write")),
-                        attributeGroup(attribute("cassandra.operation", "RangeSlice"))))
+                        attributeGroup(attribute("cassandra.operation", "read")),
+                        attributeGroup(attribute("cassandra.operation", "write")),
+                        attributeGroup(attribute("cassandra.operation", "rangeslice"))))
         .add(
             "cassandra.client.request.latency.p99",
             metric ->
                 metric
-                    .hasDescription("Request latency 99th percentile by operation")
-                    .hasUnit("us")
+                    .hasDescription("Request latency 99th percentile by operation.")
+                    .hasUnit("s")
                     .isGauge()
                     .hasDataPointsWithAttributes(
-                        attributeGroup(attribute("cassandra.operation", "Read")),
-                        attributeGroup(attribute("cassandra.operation", "Write")),
-                        attributeGroup(attribute("cassandra.operation", "RangeSlice"))))
+                        attributeGroup(attribute("cassandra.operation", "read")),
+                        attributeGroup(attribute("cassandra.operation", "write")),
+                        attributeGroup(attribute("cassandra.operation", "rangeslice"))))
         .add(
             "cassandra.client.request.latency.max",
             metric ->
                 metric
-                    .hasDescription("Maximum request latency by operation")
-                    .hasUnit("us")
+                    .hasDescription("Maximum request latency by operation.")
+                    .hasUnit("s")
                     .isGauge()
                     .hasDataPointsWithAttributes(
-                        attributeGroup(attribute("cassandra.operation", "Read")),
-                        attributeGroup(attribute("cassandra.operation", "Write")),
-                        attributeGroup(attribute("cassandra.operation", "RangeSlice"))))
+                        attributeGroup(attribute("cassandra.operation", "read")),
+                        attributeGroup(attribute("cassandra.operation", "write")),
+                        attributeGroup(attribute("cassandra.operation", "rangeslice"))))
         .add(
             "cassandra.client.request.count",
             metric ->
                 metric
-                    .hasDescription("Number of requests by operation")
+                    .hasDescription("Number of requests by operation.")
                     .hasUnit("{request}")
                     .isCounter()
                     .hasDataPointsWithAttributes(
-                        attributeGroup(attribute("cassandra.operation", "RangeSlice")),
-                        attributeGroup(attribute("cassandra.operation", "Read")),
-                        attributeGroup(attribute("cassandra.operation", "Write"))))
+                        attributeGroup(attribute("cassandra.operation", "rangeslice")),
+                        attributeGroup(attribute("cassandra.operation", "read")),
+                        attributeGroup(attribute("cassandra.operation", "write"))))
         .add(
             "cassandra.client.request.error.count",
             metric ->
                 metric
-                    .hasDescription("Number of request errors by operation")
+                    .hasDescription("Number of request errors by operation.")
                     .hasUnit("{error}")
                     .isCounter()
                     .hasDataPointsWithAttributes(
-                        errorAttrs("RangeSlice", "Timeout"),
-                        errorAttrs("RangeSlice", "Failure"),
-                        errorAttrs("RangeSlice", "Unavailable"),
-                        errorAttrs("Read", "Timeout"),
-                        errorAttrs("Read", "Failure"),
-                        errorAttrs("Read", "Unavailable"),
-                        errorAttrs("Write", "Timeout"),
-                        errorAttrs("Write", "Failure"),
-                        errorAttrs("Write", "Unavailable")));
+                        errorAttrs("rangeslice", "timeout"),
+                        errorAttrs("rangeslice", "failure"),
+                        errorAttrs("rangeslice", "unavailable"),
+                        errorAttrs("read", "timeout"),
+                        errorAttrs("read", "failure"),
+                        errorAttrs("read", "unavailable"),
+                        errorAttrs("write", "timeout"),
+                        errorAttrs("write", "failure"),
+                        errorAttrs("write", "unavailable")));
   }
 
   private static AttributeMatcherGroup errorAttrs(String operation, String status) {
