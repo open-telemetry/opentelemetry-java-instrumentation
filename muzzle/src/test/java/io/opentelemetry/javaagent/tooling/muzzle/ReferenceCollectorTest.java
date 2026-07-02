@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
@@ -393,19 +394,19 @@ class ReferenceCollectorTest {
   @SuppressWarnings("unused")
   private static List<Arguments> shouldNotCollectVirtualFieldsForInvalidScenario() {
     return asList(
-        Arguments.argumentSet(
+        argumentSet(
             "passing arbitrary variables or parameters to VirtualField.find()",
             VirtualFieldTestClasses.NotUsingClassRefAdvice.class.getName()),
-        Arguments.argumentSet(
+        argumentSet(
             "storing class ref in a local var",
             VirtualFieldTestClasses.PassingVariableAdvice.class.getName()),
-        Arguments.argumentSet(
+        argumentSet(
             "using array type as the field owner type",
             VirtualFieldTestClasses.UsingArrayAsOwnerAdvice.class.getName()),
-        Arguments.argumentSet(
+        argumentSet(
             "using primitive type as the field owner type",
             VirtualFieldTestClasses.UsingPrimitiveAsOwnerAdvice.class.getName()),
-        Arguments.argumentSet(
+        argumentSet(
             "using primitive type as the field type",
             VirtualFieldTestClasses.UsingPrimitiveAsFieldAdvice.class.getName()));
   }

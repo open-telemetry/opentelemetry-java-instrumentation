@@ -16,6 +16,8 @@ import sys
 import argparse
 from pathlib import Path
 
+OLD_PARAMETERIZED_TEST_PATTERN = re.compile(r'@ParameterizedTest\s*\(\s*name\s*=\s*"\{0\}"\s*\)')
+
 
 # ---------------------------------------------------------------------------
 # Brace / paren matching helpers
@@ -207,8 +209,7 @@ def parse_old_pattern_tests(text):
     we can do targeted (not global) annotation replacement.
     """
     results = []
-    old_annotation = re.compile(r'@ParameterizedTest\s*\(\s*name\s*=\s*"\{0\}"\s*\)')
-    for ann_match in old_annotation.finditer(text):
+    for ann_match in OLD_PARAMETERIZED_TEST_PATTERN.finditer(text):
         snippet = text[ann_match.end() : ann_match.end() + 600]
 
         # Must have @MethodSource (not @CsvSource etc.)
@@ -304,7 +305,7 @@ def main():
     root = Path(args.root)
     target_files = [
         p for p in root.rglob('*.java')
-        if '@ParameterizedTest(name = "{0}")' in p.read_text(encoding='utf-8', errors='ignore')
+        if OLD_PARAMETERIZED_TEST_PATTERN.search(p.read_text(encoding='utf-8', errors='ignore'))
     ]
 
     print(f'Found {len(target_files)} file(s) with old pattern')

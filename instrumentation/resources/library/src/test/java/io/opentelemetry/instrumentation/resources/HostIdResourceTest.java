@@ -12,6 +12,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -39,9 +40,9 @@ class HostIdResourceTest {
 
   private static Stream<Arguments> createResourceLinuxCases() {
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "default", "test", (Function<Path, List<String>>) path -> singletonList("test")),
-        Arguments.argumentSet(
+        argumentSet(
             "empty file or error reading",
             null,
             (Function<Path, List<String>>) path -> emptyList()));
@@ -57,7 +58,7 @@ class HostIdResourceTest {
 
   private static Stream<Arguments> createResourceWindowsCases() {
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "default",
             "test",
             (Supplier<List<String>>)
@@ -65,8 +66,7 @@ class HostIdResourceTest {
                     asList(
                         "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography",
                         "    MachineGuid    REG_SZ    test")),
-        Arguments.argumentSet(
-            "short output", null, (Supplier<List<String>>) Collections::emptyList));
+        argumentSet("short output", null, (Supplier<List<String>>) Collections::emptyList));
   }
 
   private static void assertHostId(String expectedValue, HostIdResource hostIdResource) {

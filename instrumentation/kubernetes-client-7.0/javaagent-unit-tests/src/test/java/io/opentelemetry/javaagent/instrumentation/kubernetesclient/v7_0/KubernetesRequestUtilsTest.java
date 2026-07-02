@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient.v7_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -102,30 +103,30 @@ class KubernetesRequestUtilsTest {
     KubernetesResource namedFooStatus =
         new KubernetesResource("example.io", "v1alpha1", "foos", "status", "default", "foo");
     return Stream.of(
-        Arguments.argumentSet("cluster-scoped list", "/apis/apps/v1/deployments", deploymentsList),
-        Arguments.argumentSet(
+        argumentSet("cluster-scoped list", "/apis/apps/v1/deployments", deploymentsList),
+        argumentSet(
             "namespaced list",
             "/apis/apps/v1/namespaces/default/deployments",
             namespacedDeployments),
-        Arguments.argumentSet(
+        argumentSet(
             "namespaced named",
             "/apis/apps/v1/namespaces/default/deployments/foo",
             namedDeployment),
-        Arguments.argumentSet(
+        argumentSet(
             "namespaced named subresource",
             "/apis/apps/v1/namespaces/default/deployments/foo/status",
             namedDeploymentStatus),
-        Arguments.argumentSet(
+        argumentSet(
             "custom resource cluster-scoped list", "/apis/example.io/v1alpha1/foos", foosList),
-        Arguments.argumentSet(
+        argumentSet(
             "custom resource namespaced list",
             "/apis/example.io/v1alpha1/namespaces/default/foos",
             namespacedFoos),
-        Arguments.argumentSet(
+        argumentSet(
             "custom resource namespaced named",
             "/apis/example.io/v1alpha1/namespaces/default/foos/foo",
             namedFoo),
-        Arguments.argumentSet(
+        argumentSet(
             "custom resource namespaced named subresource",
             "/apis/example.io/v1alpha1/namespaces/default/foos/foo/status",
             namedFooStatus));
@@ -139,10 +140,10 @@ class KubernetesRequestUtilsTest {
     KubernetesResource namedPodExec =
         new KubernetesResource("", "v1", "pods", "exec", "default", "foo");
     return Stream.of(
-        Arguments.argumentSet("cluster-scoped list", "/api/v1/pods", podsList),
-        Arguments.argumentSet("namespaced list", "/api/v1/namespaces/default/pods", namespacedPods),
-        Arguments.argumentSet("namespaced named", "/api/v1/namespaces/default/pods/foo", namedPod),
-        Arguments.argumentSet(
+        argumentSet("cluster-scoped list", "/api/v1/pods", podsList),
+        argumentSet("namespaced list", "/api/v1/namespaces/default/pods", namespacedPods),
+        argumentSet("namespaced named", "/api/v1/namespaces/default/pods/foo", namedPod),
+        argumentSet(
             "namespaced named subresource",
             "/api/v1/namespaces/default/pods/foo/exec",
             namedPodExec));

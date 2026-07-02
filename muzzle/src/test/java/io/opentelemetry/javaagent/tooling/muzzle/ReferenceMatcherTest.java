@@ -20,6 +20,7 @@ import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import external.LibraryBaseClass;
 import io.opentelemetry.instrumentation.TestHelperClasses;
@@ -161,49 +162,49 @@ class ReferenceMatcherTest {
 
   private static Stream<Arguments> methodMatchProvider() {
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "match method declared in class",
             "method",
             Type.getMethodType(Type.getType(String.class), Type.getType(String.class)),
             emptySet(),
             Nested.B.class,
             null),
-        Arguments.argumentSet(
+        argumentSet(
             "match method declared in superclass",
             "hashCode",
             Type.getMethodType(Type.INT_TYPE),
             emptySet(),
             Nested.B.class,
             null),
-        Arguments.argumentSet(
+        argumentSet(
             "match method declared in interface",
             "someMethod",
             Type.getMethodType(Type.VOID_TYPE),
             emptySet(),
             Nested.SomeInterface.class,
             null),
-        Arguments.argumentSet(
+        argumentSet(
             "match private method",
             "privateStuff",
             Type.getMethodType(Type.VOID_TYPE),
             singleton(PRIVATE_OR_HIGHER),
             Nested.B.class,
             null),
-        Arguments.argumentSet(
+        argumentSet(
             "fail match private in supertype",
             "privateStuff",
             Type.getMethodType(Type.VOID_TYPE),
             singleton(PROTECTED_OR_HIGHER),
             Nested.B2.class,
             Mismatch.MissingFlag.class),
-        Arguments.argumentSet(
+        argumentSet(
             "static method mismatch",
             "staticMethod",
             Type.getMethodType(Type.VOID_TYPE),
             singleton(NON_STATIC),
             Nested.B.class,
             Mismatch.MissingFlag.class),
-        Arguments.argumentSet(
+        argumentSet(
             "missing method mismatch",
             "missingMethod",
             Type.getMethodType(Type.VOID_TYPE),
@@ -243,56 +244,56 @@ class ReferenceMatcherTest {
 
   private static Stream<Arguments> fieldMatchProvider() {
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "mismatch missing field",
             "missingField",
             Type.getType(String.class),
             emptySet(),
             Nested.A.class,
             Mismatch.MissingField.class),
-        Arguments.argumentSet(
+        argumentSet(
             "mismatch field type signature",
             "privateField",
             Type.getType(String.class),
             emptySet(),
             Nested.A.class,
             Mismatch.MissingField.class),
-        Arguments.argumentSet(
+        argumentSet(
             "match private field",
             "privateField",
             Type.getType(Object.class),
             singleton(PRIVATE_OR_HIGHER),
             Nested.A.class,
             null),
-        Arguments.argumentSet(
+        argumentSet(
             "mismatch private field in supertype",
             "privateField",
             Type.getType(Object.class),
             singleton(PROTECTED_OR_HIGHER),
             Nested.A2.class,
             Mismatch.MissingFlag.class),
-        Arguments.argumentSet(
+        argumentSet(
             "mismatch static field",
             "protectedField",
             Type.getType(Object.class),
             singleton(STATIC),
             Nested.A.class,
             Mismatch.MissingFlag.class),
-        Arguments.argumentSet(
+        argumentSet(
             "match static field",
             "staticB",
             Type.getType(Nested.B.class),
             new HashSet<>(asList(STATIC, PROTECTED_OR_HIGHER)),
             Nested.A.class,
             null),
-        Arguments.argumentSet(
+        argumentSet(
             "match primitive int",
             "number",
             Type.INT_TYPE,
             singleton(PACKAGE_OR_HIGHER),
             Nested.Primitives.class,
             null),
-        Arguments.argumentSet(
+        argumentSet(
             "match primitive boolean",
             "flag",
             Type.BOOLEAN_TYPE,

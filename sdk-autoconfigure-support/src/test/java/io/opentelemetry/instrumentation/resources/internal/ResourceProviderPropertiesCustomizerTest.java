@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -73,17 +74,17 @@ class ResourceProviderPropertiesCustomizerTest {
 
   private static Stream<Arguments> enabledTestCases() {
     return Stream.of(
-        Arguments.argumentSet("explicitEnabled", true, emptySet(), emptySet(), true),
-        Arguments.argumentSet("explicitEnabledFalse", false, emptySet(), emptySet(), false),
-        Arguments.argumentSet("enabledProvidersEmpty", false, emptySet(), emptySet(), null),
-        Arguments.argumentSet(
+        argumentSet("explicitEnabled", true, emptySet(), emptySet(), true),
+        argumentSet("explicitEnabledFalse", false, emptySet(), emptySet(), false),
+        argumentSet("enabledProvidersEmpty", false, emptySet(), emptySet(), null),
+        argumentSet(
             "enabledProvidersContains", true, singleton(PROVIDER_CLASS_NAME), emptySet(), null),
-        Arguments.argumentSet(
+        argumentSet(
             "enabledProvidersNotContains", false, singleton("otherClassName"), emptySet(), null),
-        Arguments.argumentSet(
+        argumentSet(
             "disabledProvidersContains", false, emptySet(), singleton(PROVIDER_CLASS_NAME), null),
-        Arguments.argumentSet(
+        argumentSet(
             "disabledProvidersNotContains", false, emptySet(), singleton("otherClassName"), null),
-        Arguments.argumentSet("defaultEnabledFalse", false, emptySet(), emptySet(), null));
+        argumentSet("defaultEnabledFalse", false, emptySet(), emptySet(), null));
   }
 }
