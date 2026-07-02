@@ -80,7 +80,8 @@ class CassandraTest extends TargetSystemTest {
             "cassandra.storage.total_hints.count",
             metric ->
                 metric
-                    .hasDescription("Number of hint messages written to this node since server start.")
+                    .hasDescription(
+                        "Number of hint messages written to this node since server start.")
                     .hasUnit("{hint}")
                     .isCounter()
                     .hasDataPointsWithoutAttributes())
