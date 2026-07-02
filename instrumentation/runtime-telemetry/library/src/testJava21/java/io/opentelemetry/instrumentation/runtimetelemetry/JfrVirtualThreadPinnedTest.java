@@ -12,8 +12,9 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.LockSupport;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JfrVirtualThreadPinnedTest {
@@ -26,12 +27,10 @@ class JfrVirtualThreadPinnedTest {
             jfrConfig.enableFeature(JfrFeature.VIRTUAL_THREAD_METRICS);
           });
 
+  // synchronized pinning was removed in Java 24 (JEP 491)
   @Test
+  @EnabledForJreRange(min = JRE.JAVA_21, max = JRE.JAVA_23)
   void shouldHaveVirtualThreadPinnedEvents() throws InterruptedException {
-    // Thread.ofVirtual() is GA in Java 21; synchronized pinning was removed in Java 24 (JEP 491)
-    int feature = Runtime.version().feature();
-    Assumptions.assumeTrue(feature >= 21 && feature < 24, "Requires Java 21-23");
-
     CountDownLatch latch = new CountDownLatch(1);
 
     // Run a synchronized block inside a virtual thread to trigger pinning
