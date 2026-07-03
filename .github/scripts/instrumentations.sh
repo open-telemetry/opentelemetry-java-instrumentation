@@ -114,7 +114,6 @@ readonly INSTRUMENTATIONS=(
   "grpc-1.6:javaagent:testStableSemconv"
   "grpc-1.6:javaagent:testExperimental"
   "gwt-2.0:javaagent:test"
-<<<<<<< feature/hbase-1.4
   "hbase:hbase-client-1.4:javaagent:test"
   "hbase:hbase-client-1.4:javaagent:testStableSemconv"
   "hbase:hbase-client-1.4:javaagent:shadedClientTest"
@@ -123,10 +122,6 @@ readonly INSTRUMENTATIONS=(
   "hbase:hbase-client-2.0:javaagent:testStableSemconv"
   "hbase:hbase-client-2.0:javaagent:shadedClientTest"
   "hbase:hbase-client-2.0:javaagent:shadedClientTestStableSemconv"
-=======
-  "hbase-client-2.0:javaagent:test"
-  "hbase-client-2.0:javaagent:testStableSemconv"
->>>>>>> main
   "helidon-4.3:javaagent:test"
   "hibernate:hibernate-3.3:javaagent:test"
   "hibernate:hibernate-3.3:javaagent:testExperimental"

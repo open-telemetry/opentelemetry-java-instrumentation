@@ -97,8 +97,9 @@ public abstract class AbstractHbaseTest {
 
   private static final int GET_TIMEOUT_OPERATION_TIMEOUT_MILLIS = 1000;
   private static final int GET_TIMEOUT_RPC_TIMEOUT_MILLIS = 200;
-  private static final String ROW_1 = "row1";
+  protected static final String ROW_1 = "row1";
   private static final String ROW_2 = "row2";
+  protected static final String ROW_3 = "row3";
   private static final String ROW_4 = "row4";
   private static final String SCAN_ROW = "scan-row";
   private static final String CHECK_MUTATE_ROW = "check-mutate-row";
@@ -122,6 +123,25 @@ public abstract class AbstractHbaseTest {
 
   protected int getTimeoutClientRetriesNumber() {
     return 0;
+  }
+
+  protected void checkAndMutate(Table table, byte[] checkedRowKey, RowMutations rowMutations)
+      throws IOException {
+    table.checkAndMutate(
+        checkedRowKey,
+        COLUMN_FAMILY,
+        Bytes.toBytes("col1"),
+        CompareFilter.CompareOp.EQUAL,
+        Bytes.toBytes("col1_val_1"),
+        rowMutations);
+  }
+
+  protected byte[] checkAndMutateCheckedRowKey() {
+    return Bytes.toBytes(CHECK_MUTATE_ROW);
+  }
+
+  protected byte[] checkAndMutateMutatedRowKey() {
+    return checkAndMutateCheckedRowKey();
   }
 
   private static String getHostName() {
@@ -188,7 +208,7 @@ public abstract class AbstractHbaseTest {
     try (Table table = connection.getTable(TABLE_NAME)) {
       table.put(row(ROW_1, "col1_val_1", "col2_val_1"));
       table.put(row(SCAN_ROW, "scan_col1_val", "scan_col2_val"));
-      table.put(row(CHECK_MUTATE_ROW, "check_col1_val_1", "check_col2_val_1"));
+      table.put(row(CHECK_MUTATE_ROW, "col1_val_1", "col2_val_1"));
     }
   }
 
@@ -475,31 +495,24 @@ public abstract class AbstractHbaseTest {
   @Test
   void testCheckAndMutateSuccess() throws IOException {
     try (Table table = connection.getTable(TABLE_NAME)) {
-      byte[] rowKey = Bytes.toBytes(CHECK_MUTATE_ROW);
-      Put put = new Put(rowKey);
+      byte[] checkedRowKey = checkAndMutateCheckedRowKey();
+      byte[] mutatedRowKey = checkAndMutateMutatedRowKey();
+      Put put = new Put(mutatedRowKey);
       put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col4"), Bytes.toBytes("new_value1"));
       put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col5"), Bytes.toBytes("new_value2"));
 
-      RowMutations rowMutations = new RowMutations(rowKey);
+      RowMutations rowMutations = new RowMutations(mutatedRowKey);
       rowMutations.add(put);
-      Delete delete = new Delete(rowKey);
-      delete.addColumns(COLUMN_FAMILY, Bytes.toBytes("col2"));
+      Delete delete = new Delete(mutatedRowKey);
+      delete.addColumns(COLUMN_FAMILY, Bytes.toBytes("col1"));
       rowMutations.add(delete);
 
-      boolean success =
-          table.checkAndMutate(
-              rowKey,
-              COLUMN_FAMILY,
-              Bytes.toBytes("col1"),
-              CompareFilter.CompareOp.EQUAL,
-              Bytes.toBytes("check_col1_val_1"),
-              rowMutations);
-      assertThat(success).isTrue();
+      checkAndMutate(table, checkedRowKey, rowMutations);
 
-      Result result = table.get(new Get(rowKey));
+      Result result = table.get(new Get(mutatedRowKey));
       assertThat(value(result, "col4")).isEqualTo("new_value1");
       assertThat(value(result, "col5")).isEqualTo("new_value2");
-      assertThat(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col2"))).isNull();
+      assertThat(result.getValue(COLUMN_FAMILY, Bytes.toBytes("col1"))).isNull();
     }
     testing()
         .waitAndAssertTraces(

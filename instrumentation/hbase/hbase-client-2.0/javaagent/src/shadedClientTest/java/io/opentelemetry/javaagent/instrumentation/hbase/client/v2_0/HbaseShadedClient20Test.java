@@ -9,11 +9,15 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.hbase.testing.AbstractHbaseTest;
 import java.io.IOException;
+import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
 import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
+import org.apache.hadoop.hbase.client.RowMutations;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -42,5 +46,25 @@ class HbaseShadedClient20Test extends AbstractHbaseTest {
             .setColumnFamily(columnFamilyDescriptor)
             .build();
     admin.createTable(tableDescriptor);
+  }
+
+  @Override
+  protected void checkAndMutate(Table table, byte[] checkedRowKey, RowMutations rowMutations)
+      throws IOException {
+    table
+        .checkAndMutate(checkedRowKey, COLUMN_FAMILY)
+        .qualifier(Bytes.toBytes("col1"))
+        .ifMatches(CompareOperator.EQUAL, Bytes.toBytes("col1_val_1"))
+        .thenMutate(rowMutations);
+  }
+
+  @Override
+  protected byte[] checkAndMutateCheckedRowKey() {
+    return Bytes.toBytes(ROW_1);
+  }
+
+  @Override
+  protected byte[] checkAndMutateMutatedRowKey() {
+    return Bytes.toBytes(ROW_3);
   }
 }
