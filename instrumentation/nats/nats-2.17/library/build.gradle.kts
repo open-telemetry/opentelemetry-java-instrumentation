@@ -2,6 +2,12 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+otelJava {
+  // OpenTelemetryDispatcherFactory needs package-private access to io.nats.client.impl, which
+  // doesn't work in OSGi where each bundle has its own class loader
+  osgiEnabled.set(false)
+}
+
 dependencies {
   library("io.nats:jnats:2.17.2")
 

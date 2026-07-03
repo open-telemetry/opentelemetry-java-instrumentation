@@ -14,7 +14,11 @@ plugins {
 // after each module's build script has set the otelJava properties below.
 tasks.named<Jar>("jar") {
   val otelJava = project.the<OtelJavaExtension>()
-  if (otelJava.osgiEnabled.get()) {
+  if (!otelJava.osgiEnabled.get()) {
+    // the bnd plugin unconditionally adds a "buildBundle" action to the jar task when applied;
+    // remove it so opted-out modules (e.g. split-package libraries) get a plain manifest
+    actions.removeIf { it is Describable && it.displayName.contains("buildBundle") }
+  } else {
     bundle {
       // javax.annotation.* is always an optional import; modules can add more (typically
       // corresponding to compileOnly dependencies). The trailing "*" imports everything else.
