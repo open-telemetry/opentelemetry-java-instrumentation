@@ -1,0 +1,6 @@
+name: jmx-metrics
+description: This registry contains the semantic conventions for the JMX metrics instrumentation
+schema_url: https://github.com/open-telemetry/opentelemetry-java-instrumentation/instrumentation/jmx-metrics/
+dependencies:
+  - name: otel
+    registry_path: https://github.com/open-telemetry/semantic-conventions[model]
