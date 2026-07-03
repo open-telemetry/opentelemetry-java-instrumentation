@@ -21,7 +21,7 @@ import jdk.jfr.consumer.RecordedEvent;
 public final class VirtualThreadSubmitFailedHandler implements RecordedEventHandler {
   private static final String METRIC_NAME = "jvm.thread.virtual.submit_failed";
   private static final String METRIC_DESCRIPTION =
-      "Number of times a virtual thread failed to be submitted to its scheduler";
+      "Number of times a virtual thread failed to be submitted to its scheduler.";
   private static final String EVENT_NAME = "jdk.VirtualThreadSubmitFailed";
 
   private final LongCounter counter;

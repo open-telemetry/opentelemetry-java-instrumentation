@@ -22,7 +22,7 @@ import jdk.jfr.consumer.RecordedEvent;
  */
 public final class VirtualThreadPinnedHandler implements RecordedEventHandler {
   private static final String METRIC_NAME = "jvm.thread.virtual.pinned";
-  private static final String METRIC_DESCRIPTION = "Duration of virtual thread pinning";
+  private static final String METRIC_DESCRIPTION = "Duration of virtual thread pinning.";
   private static final String EVENT_NAME = "jdk.VirtualThreadPinned";
 
   private final DoubleHistogram histogram;
