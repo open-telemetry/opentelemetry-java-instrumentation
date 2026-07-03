@@ -30,7 +30,7 @@ rules:
   - bean: org.apache.cassandra.metrics:type=Storage,name=TotalHints
     mapping:
       Count:
-        metric: cassandra.storage.total_hints.count
+        metric: cassandra.storage.hints.count
         type: counter
         unit: "{hint}"
         desc: Number of hint messages written to this node since server start.
@@ -38,7 +38,7 @@ rules:
   - bean: org.apache.cassandra.metrics:type=Storage,name=TotalHintsInProgress
     mapping:
       Count:
-        metric: cassandra.storage.total_hints.in_progress
+        metric: cassandra.storage.hints.in_progress
         type: updowncounter
         unit: "{hint}"
         desc: Number of hints attempting to be sent currently.

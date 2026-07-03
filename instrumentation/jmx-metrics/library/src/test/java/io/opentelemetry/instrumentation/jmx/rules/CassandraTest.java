@@ -77,7 +77,7 @@ class CassandraTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasDataPointsWithoutAttributes())
         .add(
-            "cassandra.storage.total_hints.count",
+            "cassandra.storage.hints.count",
             metric ->
                 metric
                     .hasDescription(
@@ -86,7 +86,7 @@ class CassandraTest extends TargetSystemTest {
                     .isCounter()
                     .hasDataPointsWithoutAttributes())
         .add(
-            "cassandra.storage.total_hints.in_progress",
+            "cassandra.storage.hints.in_progress",
             metric ->
                 metric
                     .hasDescription("Number of hints attempting to be sent currently.")
@@ -145,18 +145,18 @@ class CassandraTest extends TargetSystemTest {
                     .hasUnit("{error}")
                     .isCounter()
                     .hasDataPointsWithAttributes(
-                        errorAttrs("rangeslice", "timeout"),
-                        errorAttrs("rangeslice", "failure"),
-                        errorAttrs("rangeslice", "unavailable"),
-                        errorAttrs("read", "timeout"),
-                        errorAttrs("read", "failure"),
-                        errorAttrs("read", "unavailable"),
-                        errorAttrs("write", "timeout"),
-                        errorAttrs("write", "failure"),
-                        errorAttrs("write", "unavailable")));
+                        errorAttributesGroup("rangeslice", "timeout"),
+                        errorAttributesGroup("rangeslice", "failure"),
+                        errorAttributesGroup("rangeslice", "unavailable"),
+                        errorAttributesGroup("read", "timeout"),
+                        errorAttributesGroup("read", "failure"),
+                        errorAttributesGroup("read", "unavailable"),
+                        errorAttributesGroup("write", "timeout"),
+                        errorAttributesGroup("write", "failure"),
+                        errorAttributesGroup("write", "unavailable")));
   }
 
-  private static AttributeMatcherGroup errorAttrs(String operation, String status) {
+  private static AttributeMatcherGroup errorAttributesGroup(String operation, String status) {
     return attributeGroup(
         attribute("cassandra.operation", operation), attribute("cassandra.status", status));
   }
