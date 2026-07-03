@@ -6,14 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.lettuce.core.protocol.AsyncCommand;
-import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -37,62 +33,26 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$DispatchAdvice");
   }
 
+  /**
+   * Exposes the caller's context under {@link
+   * io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons#COMMAND_CONTEXT_KEY}
+   * while a command is dispatched, so the {@code AsyncCommand} constructed by dispatch captures it
+   * for completion callbacks. The command span itself is started later in {@code
+   * DefaultEndpoint.write}, where batch membership is known.
+   */
   @SuppressWarnings("unused")
   public static class DispatchAdvice {
 
-    public static class AdviceScope {
-      private final Context context;
-      private final Scope scope;
-
-      public AdviceScope(Context context, Scope scope) {
-        this.context = context;
-        this.scope = scope;
-      }
-
-      public void end(
-          @Nullable Throwable throwable,
-          RedisCommand<?, ?, ?> command,
-          @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
-        scope.close();
-
-        if (throwable != null || asyncCommand == null) {
-          instrumenter().end(context, command, null, throwable);
-          return;
-        }
-
-        // close spans on error or normal completion
-        if (expectsResponse(command)) {
-          asyncCommand.handleAsync(new EndCommandAsyncBiFunction<>(context, command));
-        } else {
-          instrumenter().end(context, command, null, null);
-        }
-      }
-    }
-
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-
+    public static Scope onEnter() {
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, command)) {
-        return null;
-      }
-
-      Context context = instrumenter().start(parentContext, command);
-      // remember the context that called dispatch, it is used in LettuceAsyncCommandInstrumentation
-      context = context.with(COMMAND_CONTEXT_KEY, parentContext);
-      return new AdviceScope(context, context.makeCurrent());
+      return parentContext.with(COMMAND_CONTEXT_KEY, parentContext).makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void stopSpan(
-        @Advice.Argument(0) RedisCommand<?, ?, ?> command,
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return @Nullable AsyncCommand<?, ?, ?> asyncCommand,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
-
-      if (adviceScope != null) {
-        adviceScope.end(throwable, command, asyncCommand);
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
       }
     }
   }

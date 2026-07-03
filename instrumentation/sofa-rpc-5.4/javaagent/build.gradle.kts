@@ -19,7 +19,7 @@ dependencies {
 
 testing {
   suites {
-    val testSofaRpc by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSofaRpc") {
       dependencies {
         implementation(project(":instrumentation:sofa-rpc-5.4:testing"))
         implementation("com.alipay.sofa:sofa-rpc-all:${baseVersion("5.4.0").orLatest()}")

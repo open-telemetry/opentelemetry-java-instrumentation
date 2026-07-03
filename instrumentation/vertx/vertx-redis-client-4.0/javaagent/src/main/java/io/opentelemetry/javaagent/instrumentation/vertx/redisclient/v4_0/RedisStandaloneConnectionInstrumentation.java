@@ -20,6 +20,7 @@ import io.vertx.redis.client.Response;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
 import io.vertx.redis.client.impl.RequestUtil;
+import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -35,6 +36,7 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(named("send"), getClass().getName() + "$SendAdvice");
+    transformer.applyAdviceToMethod(named("batch"), getClass().getName() + "$BatchAdvice");
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
   }
 
@@ -61,9 +63,6 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
 
         String commandName = VertxRedisClientSingletons.getCommandName(request.command());
         RedisURI redisUri = VertxRedisClientSingletons.getRedisUri(connection);
-        if (commandName == null || redisUri == null) {
-          return null;
-        }
 
         VertxRedisClientRequest otelRequest =
             new VertxRedisClientRequest(
@@ -107,6 +106,81 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Return @Nullable Future<Response> responseFuture,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
+
+      if (adviceScope != null) {
+        return adviceScope.end(responseFuture, throwable);
+      }
+
+      return responseFuture;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class BatchAdvice {
+    public static class BatchAdviceScope {
+      private final VertxRedisClientRequest otelRequest;
+      private final Context context;
+      private final Scope scope;
+
+      private BatchAdviceScope(VertxRedisClientRequest otelRequest, Context context, Scope scope) {
+        this.otelRequest = otelRequest;
+        this.context = context;
+        this.scope = scope;
+      }
+
+      @Nullable
+      public static BatchAdviceScope start(
+          RedisStandaloneConnection connection,
+          @Nullable List<Request> requests,
+          NetSocket netSocket) {
+
+        if (requests == null) {
+          return null;
+        }
+
+        RedisURI redisUri = VertxRedisClientSingletons.getRedisUri(connection);
+
+        VertxRedisClientRequest otelRequest =
+            VertxRedisClientRequest.createBatch(requests, redisUri, netSocket);
+        Context parentContext = Context.current();
+        if (!instrumenter().shouldStart(parentContext, otelRequest)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, otelRequest);
+        return new BatchAdviceScope(otelRequest, context, context.makeCurrent());
+      }
+
+      @Nullable
+      public Future<List<Response>> end(
+          @Nullable Future<List<Response>> responseFuture, @Nullable Throwable throwable) {
+        scope.close();
+        if (throwable != null) {
+          instrumenter().end(context, otelRequest, null, throwable);
+        } else {
+          responseFuture =
+              VertxRedisClientSingletons.wrapEndSpan(responseFuture, context, otelRequest);
+        }
+        return responseFuture;
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static BatchAdviceScope onEnter(
+        @Advice.This RedisStandaloneConnection connection,
+        @Advice.Argument(0) @Nullable List<Request> requests,
+        @Advice.FieldValue("netSocket") NetSocket netSocket) {
+
+      return BatchAdviceScope.start(connection, requests, netSocket);
+    }
+
+    @Nullable
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static Future<List<Response>> onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return @Nullable Future<List<Response>> responseFuture,
+        @Advice.Enter @Nullable BatchAdviceScope adviceScope) {
 
       if (adviceScope != null) {
         return adviceScope.end(responseFuture, throwable);
