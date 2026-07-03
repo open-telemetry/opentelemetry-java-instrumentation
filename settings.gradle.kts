@@ -148,7 +148,6 @@ include(":instrumentation-annotations-support-testing")
 // misc
 include(":dependencyManagement")
 include(":instrumentation-docs")
-include(":osgi-test")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:dependencies-shaded-for-testing")
@@ -171,6 +170,8 @@ include(":smoke-tests:images:servlet:servlet-5.0")
 include(":smoke-tests:images:spring-boot")
 include(":smoke-tests:extensions:testapp")
 include(":smoke-tests:extensions:extension")
+
+include(":smoke-tests-osgi")
 
 include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")

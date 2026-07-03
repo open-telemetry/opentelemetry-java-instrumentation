@@ -120,7 +120,7 @@ val DEPENDENCIES = listOf(
   "org.elasticmq:elasticmq-rest-sqs_2.13:1.7.1",
   "io.github.netmikey.logunit:logunit-jul:2.0.0",
 
-  // OSGi runtime verification (see :osgi-test). Versions track opentelemetry-java's osgi tests.
+  // OSGi runtime verification (see :smoke-tests-osgi). Versions track opentelemetry-java's osgi tests.
   "org.apache.felix:org.apache.felix.framework:7.0.5",
   "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7",
   "org.osgi:osgi.core:8.0.0",
