@@ -58,37 +58,6 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   }
 
   @Test
-  void shouldRewriteDuplicatePoolNames() throws Exception {
-    GenericObjectPool<Object> first = createGenericObjectPool("pool", false);
-    GenericObjectPool<Object> second = createGenericObjectPool("pool", false);
-    Object firstBorrowed = null;
-    Object secondBorrowed = null;
-    try {
-      String poolName = "GenericObjectPool-pool";
-      configure(first, poolName);
-      configure(second, poolName);
-
-      firstBorrowed = first.borrowObject();
-      secondBorrowed = second.borrowObject();
-
-      assertObjectCountPoolNames(poolName, poolName + "-2");
-    } finally {
-      if (firstBorrowed != null) {
-        first.returnObject(firstBorrowed);
-      }
-      if (secondBorrowed != null) {
-        second.returnObject(secondBorrowed);
-      }
-      shutdown(first);
-      shutdown(second);
-      first.close();
-      second.close();
-    }
-
-    assertNoMetrics();
-  }
-
-  @Test
   void shouldReusePoolNameAfterShutdown() throws Exception {
     String poolName = "GenericObjectPool-pool";
     GenericObjectPool<Object> first = createGenericObjectPool("pool", false);
@@ -315,7 +284,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "apache.commons_pool.request.pending",
+            "apache.commons_pool.object.pending_requests",
             metrics -> metrics.anySatisfy(metric -> verifyPendingRequestsMetric(metric, poolName)));
   }
 

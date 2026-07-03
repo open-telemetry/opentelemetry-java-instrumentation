@@ -82,7 +82,7 @@ final class ObjectPoolMetrics {
 
   ObservableLongMeasurement pendingRequestsForObject() {
     return meter
-        .upDownCounterBuilder("apache.commons_pool.request.pending")
+        .upDownCounterBuilder("apache.commons_pool.object.pending_requests")
         .setUnit("{request}")
         .setDescription("The number of requests currently waiting for an object from the pool.")
         .buildObserver();
