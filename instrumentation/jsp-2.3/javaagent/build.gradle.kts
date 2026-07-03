@@ -63,7 +63,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true")
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

@@ -603,6 +603,9 @@ targets:
       target: ':instrumentation:jedis:jedis-1.4:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:jedis:jedis-2.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jedis:jedis-3.0:javaagent'
     - type: gradle
       path: ./

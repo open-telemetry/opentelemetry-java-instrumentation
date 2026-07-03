@@ -31,7 +31,7 @@ dependencies {
 
 testing {
   suites {
-    val shadedClientTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("shadedClientTest") {
       dependencies {
         implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("2.0.0").orLatest("2.4.+")}")
         implementation(project(":instrumentation:hbase:hbase-client-common:testing"))

@@ -19,7 +19,7 @@ tasks {
     }
   }
 
-  val testAddBaggage by registering(Test::class) {
+  val testAddBaggage = register<Test>("testAddBaggage") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -28,7 +28,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
   }
 
-  val testLoggingKeys by registering(Test::class) {
+  val testLoggingKeys = register<Test>("testLoggingKeys") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

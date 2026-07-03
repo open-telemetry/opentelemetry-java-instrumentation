@@ -27,7 +27,7 @@ plugins {
 
 val LANGUAGES = listOf("java", "scala", "kotlin")
 
-val codegen by configurations.creating {
+val codegen = configurations.create("codegen") {
   isCanBeConsumed = false
   isCanBeResolved = true
 }

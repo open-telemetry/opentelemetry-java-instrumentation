@@ -32,7 +32,7 @@ dependencies {
 
 testing {
   suites {
-    val version35Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version35Test") {
       dependencies {
         val version = baseVersion("3.5.0").orLatest("3.+")
         implementation("org.hsqldb:hsqldb:2.3.4")
@@ -45,7 +45,7 @@ testing {
       }
     }
 
-    val version41Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version41Test") {
       dependencies {
         val version = baseVersion("4.1.0").orLatest("4.+")
         implementation("org.hsqldb:hsqldb:2.3.4")
@@ -58,7 +58,7 @@ testing {
       }
     }
 
-    val version5Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version5Test") {
       dependencies {
         val version = baseVersion("5.0.0").orLatest()
         implementation("org.hsqldb:hsqldb:2.3.4")

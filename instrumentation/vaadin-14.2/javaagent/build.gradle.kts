@@ -47,21 +47,21 @@ dependencies {
 
 testing {
   suites {
-    val vaadin142Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("vaadin142Test") {
       dependencies {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
         implementation("com.vaadin:vaadin-spring-boot-starter:14.2.0")
       }
     }
 
-    val vaadin16Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("vaadin16Test") {
       dependencies {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
         implementation("com.vaadin:vaadin-spring-boot-starter:16.0.0")
       }
     }
 
-    val vaadin14LatestTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("vaadin14LatestTest") {
       dependencies {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
         // 14.12 requires license
@@ -69,7 +69,7 @@ testing {
       }
     }
 
-    val vaadinLatestTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("vaadinLatestTest") {
       dependencies {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
         // tests fail with 24.4.1
