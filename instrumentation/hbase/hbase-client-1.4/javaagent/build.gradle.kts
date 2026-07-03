@@ -2,6 +2,11 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+otelJava {
+  // HBase 1.4.x test stack is not reliable on JDK 25+.
+  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
+}
+
 muzzle {
   pass {
     group.set("org.apache.hbase")
@@ -12,23 +17,30 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:hbase:hbase-client-common:javaagent"))
+  implementation(project(":instrumentation:hbase:hbase-client-common-1.4:javaagent"))
 
   library("org.apache.hbase:hbase-client:1.4.0")
 
   compileOnly("org.apache.hbase:hbase-shaded-client:1.4.0")
 
-  testImplementation(project(":instrumentation:hbase:hbase-client-common:testing"))
+  testImplementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))
+  testInstrumentation(project(":instrumentation:hbase:hbase-client-2.0:javaagent"))
 
   latestDepTestLibrary("org.apache.hbase:hbase-client:1.7.+") // see hbase-client-2.0 module
 }
 
+configurations
+  .matching { it.name == "testRuntimeClasspath" || it.name == "shadedClientTestRuntimeClasspath" }
+  .configureEach {
+    resolutionStrategy.force("com.google.guava:guava:19.0")
+  }
+
 testing {
   suites {
-    val shadedClientTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("shadedClientTest") {
       dependencies {
         implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.4.0").orLatest("1.7.+")}")
-        implementation(project(":instrumentation:hbase:hbase-client-common:testing"))
+        implementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))
       }
     }
   }

@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.Hba
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetRequestAndContext;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setRequestAndContext;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4.HbaseSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4.HbaseSingletons.methodDescriptorName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -63,15 +64,13 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Object md,
         @Advice.Argument(4) User ticket,
         @Advice.Argument(5) InetSocketAddress addr) {
-      String tableName = null;
-      try {
-        tableName = (String) md.getClass().getMethod("getName").invoke(md);
-      } catch (ReflectiveOperationException ignored) {
-        // ignored
-      }
       HbaseRequest request =
           HbaseRequest.create(
-              tableName, getTableName(), ticket.getName(), addr.getHostString(), addr.getPort());
+              methodDescriptorName(md),
+              getTableName(),
+              ticket.getName(),
+              addr.getHostString(),
+              addr.getPort());
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
