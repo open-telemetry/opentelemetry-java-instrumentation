@@ -23,7 +23,7 @@ class CassandraTest extends TargetSystemTest {
 
   @Test
   void testCassandraMetrics() {
-    List<String> yamlFiles = singletonList("cassandra.yaml");
+    List<String> yamlFiles = singletonList("experimental-cassandra.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
 
