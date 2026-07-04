@@ -69,7 +69,10 @@ class AwsSqsTest {
 
   @BeforeEach
   void waitForContainersAndClear() throws InterruptedException {
-    // Wait for the listener containers to start and resolve Queue URLs
+    // The Spring SQS listener containers start asynchronously and resolve queue URLs in
+    // background threads. We need to wait for them to be ready, then send warmup messages
+    // and wait for them to be fully processed (including async Sqs.DeleteMessageBatch calls)
+    // before clearing data — otherwise those spans leak into the test assertions.
     long startTime = System.currentTimeMillis();
     while (System.currentTimeMillis() - startTime < 10000) {
       long count =
@@ -216,6 +219,8 @@ class AwsSqsTest {
 
   @Test
   void sqsBatchListener() throws Exception {
+    // Stop the container before sending messages so they accumulate in the queue, then start
+    // the container again to ensure both messages are received and processed as a single batch.
     registry.getContainerById("batchContainer").stop();
 
     String messageContent1 = "hello";
