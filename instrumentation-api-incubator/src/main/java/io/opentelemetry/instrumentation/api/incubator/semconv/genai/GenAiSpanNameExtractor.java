@@ -20,7 +20,8 @@ public final class GenAiSpanNameExtractor<REQUEST> implements SpanNameExtractor<
    *   <li>Embeddings - {@code embeddings <gen_ai.request.model>}.
    *   <li>Execute tool - {@code execute_tool <gen_ai.tool.name>}.
    *   <li>Create/Invoke agent - {@code <gen_ai.operation.name> <gen_ai.agent.name>}.
-   *   <li>Retrieval - {@code retrieval}.
+   *   <li>Retrieval - {@code retrieval <gen_ai.data_source.id>}, or {@code retrieval} when the data
+   *       source id is unavailable.
    * </ul>
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
