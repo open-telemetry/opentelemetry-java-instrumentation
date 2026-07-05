@@ -27,6 +27,14 @@ public interface GenAiRetrievalAttributesGetter<REQUEST, RESPONSE>
   String getQueryText(REQUEST request);
 
   /**
+   * Returns the value of {@code gen_ai.retrieval.top_k} - the maximum number of documents the
+   * retriever was asked to return for the query (also known as {@code k}, {@code limit}, or {@code
+   * max_num_results}).
+   */
+  @Nullable
+  Long getTopK(REQUEST request);
+
+  /**
    * Returns the operation target used to build the span name. Defaults to {@link #getDataSourceId}.
    *
    * <p>Per spec, the retrieval span name is {@code retrieval <gen_ai.data_source.id>} when the data

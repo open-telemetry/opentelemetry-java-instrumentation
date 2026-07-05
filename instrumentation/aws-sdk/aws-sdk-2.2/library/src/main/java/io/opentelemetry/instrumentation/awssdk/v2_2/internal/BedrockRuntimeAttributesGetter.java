@@ -31,14 +31,6 @@ class BedrockRuntimeAttributesGetter
     return GenAiProviderNameIncubatingValues.AWS_BEDROCK;
   }
 
-  // getSystem is the abstract anchor on the upstream interface during the migration to
-  // getProviderName; the override is required so the deprecation only applies to the method itself.
-  @SuppressWarnings("deprecation")
-  @Override
-  public String getSystem(ExecutionAttributes executionAttributes) {
-    return getProviderName(executionAttributes);
-  }
-
   @Nullable
   @Override
   public String getRequestModel(ExecutionAttributes executionAttributes) {

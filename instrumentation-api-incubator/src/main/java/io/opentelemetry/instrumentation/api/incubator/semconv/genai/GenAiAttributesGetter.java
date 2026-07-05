@@ -23,25 +23,19 @@ import javax.annotation.Nullable;
 public interface GenAiAttributesGetter<REQUEST, RESPONSE>
     extends GenAiOperationAttributesGetter<REQUEST, RESPONSE> {
 
-  /**
-   * Returns the value of {@code gen_ai.provider.name}. Defaults to {@link #getSystem} so existing
-   * implementations that only override the (now deprecated) {@code getSystem} continue to work.
-   * New implementations should override this method instead.
-   */
-  @SuppressWarnings("deprecation")
-  default String getProviderName(REQUEST request) {
-    return getSystem(request);
-  }
+  /** Returns the value of {@code gen_ai.provider.name}. */
+  String getProviderName(REQUEST request);
 
   /**
    * Returns the legacy {@code gen_ai.system} value.
    *
-   * @deprecated Override {@link #getProviderName} instead. This method is retained as the
-   *     abstract anchor so that existing external implementations continue to compile, and will be
-   *     removed in a future release once the migration period ends.
+   * @deprecated Use {@link #getProviderName} instead. This method will be removed in a future
+   *     release once the migration period ends.
    */
   @Deprecated
-  String getSystem(REQUEST request);
+  default String getSystem(REQUEST request) {
+    return getProviderName(request);
+  }
 
   /**
    * Returns the request model. For inference operations this also doubles as the {@link

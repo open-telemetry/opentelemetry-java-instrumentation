@@ -31,14 +31,6 @@ final class ChatAttributesGetter
     return GenAiAttributes.GenAiProviderNameIncubatingValues.OPENAI;
   }
 
-  // getSystem is the abstract anchor on the upstream interface during the migration to
-  // getProviderName; the override is required so the deprecation only applies to the method itself.
-  @SuppressWarnings("deprecation")
-  @Override
-  public String getSystem(ChatCompletionCreateParams request) {
-    return getProviderName(request);
-  }
-
   @Override
   public String getRequestModel(ChatCompletionCreateParams request) {
     return request.model().asString();

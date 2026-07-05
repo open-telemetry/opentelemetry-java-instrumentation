@@ -6,10 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_AGENT_DESCRIPTION;
-import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_AGENT_ID;
-import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_AGENT_NAME;
-import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.INVOKE_AGENT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,17 +19,22 @@ import org.junit.jupiter.api.Test;
 
 class GenAiAgentAttributesExtractorTest {
 
-  private static final AttributeKey<String> GEN_AI_AGENT_VERSION = stringKey("gen_ai.agent.version");
+  // GenAiIncubatingAttributes is deprecated in semconv 1.42 (GenAI conventions moved to the
+  // semantic-conventions-genai repo), so the expected keys are declared inline here.
+  private static final AttributeKey<String> GEN_AI_OPERATION_NAME =
+      stringKey("gen_ai.operation.name");
+  private static final AttributeKey<String> GEN_AI_AGENT_ID = stringKey("gen_ai.agent.id");
+  private static final AttributeKey<String> GEN_AI_AGENT_NAME = stringKey("gen_ai.agent.name");
+  private static final AttributeKey<String> GEN_AI_AGENT_DESCRIPTION =
+      stringKey("gen_ai.agent.description");
+  private static final AttributeKey<String> GEN_AI_AGENT_VERSION =
+      stringKey("gen_ai.agent.version");
 
   @Test
   void shouldExtractAllAgentAttributes() {
     AgentRequest request =
         new AgentRequest(
-            INVOKE_AGENT,
-            "agent-123",
-            "weather-agent",
-            "Provides weather forecasts",
-            "1.0.0");
+            INVOKE_AGENT, "agent-123", "weather-agent", "Provides weather forecasts", "1.0.0");
 
     AttributesExtractor<AgentRequest, Void> extractor =
         GenAiAgentAttributesExtractor.create(new TestAgentGetter());

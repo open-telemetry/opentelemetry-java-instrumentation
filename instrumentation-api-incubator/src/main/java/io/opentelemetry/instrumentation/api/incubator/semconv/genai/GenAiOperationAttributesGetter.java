@@ -16,7 +16,9 @@ import javax.annotation.Nullable;
  */
 public interface GenAiOperationAttributesGetter<REQUEST, RESPONSE> {
 
-  /** Returns the value of {@code gen_ai.operation.name} (e.g. {@code chat}, {@code invoke_agent}). */
+  /**
+   * Returns the value of {@code gen_ai.operation.name} (e.g. {@code chat}, {@code invoke_agent}).
+   */
   String getOperationName(REQUEST request);
 
   /**

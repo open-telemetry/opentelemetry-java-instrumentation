@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -27,8 +28,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class GenAiSpanNameExtractorTest {
 
   @Mock GenAiOperationAttributesGetter<Request, Void> getter;
-  @Mock GenAiAgentAttributesGetter<Request, Void> agentGetter;
-  @Mock GenAiToolAttributesGetter<Request, Void> toolGetter;
+
+  @Mock(answer = Answers.CALLS_REAL_METHODS)
+  GenAiAgentAttributesGetter<Request, Void> agentGetter;
+
+  @Mock(answer = Answers.CALLS_REAL_METHODS)
+  GenAiToolAttributesGetter<Request, Void> toolGetter;
 
   @ParameterizedTest
   @MethodSource("spanNameParams")
@@ -58,25 +63,25 @@ class GenAiSpanNameExtractorTest {
   }
 
   @Test
-  void agentSpanNameShouldUseGetterOperationName() {
+  void agentGetterDefaultsOperationTargetToAgentName() {
     Request request = new Request();
-    when(agentGetter.getOperationName(request)).thenReturn(CREATE_AGENT);
-    when(agentGetter.getAgentName(request)).thenReturn("summary_agent");
+    when(agentGetter.getOperationName(request)).thenReturn(INVOKE_AGENT);
+    when(agentGetter.getAgentName(request)).thenReturn("order_assistant");
 
-    SpanNameExtractor<Request> underTest = GenAiAgentSpanNameExtractor.forInvokeAgent(agentGetter);
+    SpanNameExtractor<Request> underTest = GenAiSpanNameExtractor.create(agentGetter);
 
-    assertThat(underTest.extract(request)).isEqualTo("create_agent summary_agent");
+    assertThat(underTest.extract(request)).isEqualTo("invoke_agent order_assistant");
   }
 
   @Test
-  void toolSpanNameShouldUseGetterOperationName() {
+  void toolGetterDefaultsOperationTargetToToolName() {
     Request request = new Request();
-    when(toolGetter.getOperationName(request)).thenReturn("custom_tool_operation");
+    when(toolGetter.getOperationName(request)).thenReturn(EXECUTE_TOOL);
     when(toolGetter.getToolName(request)).thenReturn("get_weather");
 
-    SpanNameExtractor<Request> underTest = GenAiToolSpanNameExtractor.create(toolGetter);
+    SpanNameExtractor<Request> underTest = GenAiSpanNameExtractor.create(toolGetter);
 
-    assertThat(underTest.extract(request)).isEqualTo("custom_tool_operation get_weather");
+    assertThat(underTest.extract(request)).isEqualTo("execute_tool get_weather");
   }
 
   static class Request {}

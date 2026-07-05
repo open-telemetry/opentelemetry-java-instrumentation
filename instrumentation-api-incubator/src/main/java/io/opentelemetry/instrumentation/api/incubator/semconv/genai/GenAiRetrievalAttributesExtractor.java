@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_OPERATION_NAME;
 
@@ -32,10 +33,10 @@ public final class GenAiRetrievalAttributesExtractor<REQUEST, RESPONSE>
       stringKey("gen_ai.data_source.id");
   private static final AttributeKey<String> GEN_AI_RETRIEVAL_QUERY_TEXT =
       stringKey("gen_ai.retrieval.query.text");
+  private static final AttributeKey<Long> GEN_AI_RETRIEVAL_TOP_K =
+      longKey("gen_ai.retrieval.top_k");
 
-  /**
-   * Creates a GenAI retrieval attributes extractor that does not capture sensitive query text.
-   */
+  /** Creates a GenAI retrieval attributes extractor that does not capture sensitive query text. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       GenAiRetrievalAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
     return create(attributesGetter, false);
@@ -65,6 +66,7 @@ public final class GenAiRetrievalAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     attributes.put(GEN_AI_OPERATION_NAME, getter.getOperationName(request));
     attributes.put(GEN_AI_DATA_SOURCE_ID, getter.getDataSourceId(request));
+    attributes.put(GEN_AI_RETRIEVAL_TOP_K, getter.getTopK(request));
     if (captureMessageContent) {
       attributes.put(GEN_AI_RETRIEVAL_QUERY_TEXT, getter.getQueryText(request));
     }
