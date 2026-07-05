@@ -9,19 +9,56 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * An interface for getting GenAI attributes.
+ * An interface for getting GenAI inference attributes (chat completion, text completion,
+ * embeddings, generate content).
  *
  * <p>Instrumentation authors will create implementations of this interface for their specific
- * library/framework. It will be used by the {@link GenAiAttributesExtractor} to obtain the various
+ * library/framework. It will be used by {@link GenAiAttributesExtractor} to obtain the various
  * GenAI attributes in a type-generic way.
+ *
+ * <p>If an attribute is not available in this library, it is appropriate to return {@code null}
+ * from the attribute methods, but implement as many as possible for best compliance with the
+ * OpenTelemetry specification.
  */
-public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
-  String getOperationName(REQUEST request);
+public interface GenAiAttributesGetter<REQUEST, RESPONSE>
+    extends GenAiOperationAttributesGetter<REQUEST, RESPONSE> {
 
+  /**
+   * Returns the value of {@code gen_ai.provider.name}. Defaults to {@link #getSystem} so existing
+   * implementations that only override the (now deprecated) {@code getSystem} continue to work.
+   * New implementations should override this method instead.
+   */
+  @SuppressWarnings("deprecation")
+  default String getProviderName(REQUEST request) {
+    return getSystem(request);
+  }
+
+  /**
+   * Returns the legacy {@code gen_ai.system} value.
+   *
+   * @deprecated Override {@link #getProviderName} instead. This method is retained as the
+   *     abstract anchor so that existing external implementations continue to compile, and will be
+   *     removed in a future release once the migration period ends.
+   */
+  @Deprecated
   String getSystem(REQUEST request);
 
+  /**
+   * Returns the request model. For inference operations this also doubles as the {@link
+   * #getOperationTarget operation target} used to build the span name.
+   */
   @Nullable
   String getRequestModel(REQUEST request);
+
+  /**
+   * Returns the {@link GenAiOperationAttributesGetter#getOperationTarget operation target} for
+   * inference operations, which is the request model by default.
+   */
+  @Override
+  @Nullable
+  default String getOperationTarget(REQUEST request) {
+    return getRequestModel(request);
+  }
 
   @Nullable
   Long getRequestSeed(REQUEST request);
@@ -49,6 +86,30 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   Double getRequestTopP(REQUEST request);
+
+  /**
+   * Returns the value of {@code gen_ai.request.choice.count}. Conditionally Required: if available
+   * in the request and the value is not 1.
+   */
+  @Nullable
+  default Long getChoiceCount(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * Returns the value of {@code gen_ai.output.type} (e.g. {@code text}, {@code json}, {@code
+   * image}, {@code speech}).
+   */
+  @Nullable
+  default String getOutputType(REQUEST request) {
+    return null;
+  }
+
+  /** Returns the value of {@code gen_ai.conversation.id}. */
+  @Nullable
+  default String getConversationId(REQUEST request) {
+    return null;
+  }
 
   List<String> getResponseFinishReasons(REQUEST request, @Nullable RESPONSE response);
 
