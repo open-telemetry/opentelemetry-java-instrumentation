@@ -26,6 +26,7 @@ import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -68,6 +69,8 @@ class TargetSystemTest {
   private GenericContainer<?> targetSystem;
   private Collection<GenericContainer<?>> targetDependencies;
 
+  private WeaverContainer weaver;
+
   @BeforeAll
   static void beforeAll() {
     otlpServer = new OtlpGrpcServer();
@@ -90,6 +93,13 @@ class TargetSystemTest {
   @BeforeEach
   void beforeEach() {
     otlpServer.reset();
+
+    Path registryRoot = Paths.get(System.getProperty("io.opentelemetry.registry.path"));
+    assertThat(Files.isDirectory(registryRoot)).isTrue();
+
+    weaver = new WeaverContainer(registryRoot);
+
+    weaver.start();
   }
 
   @AfterEach
@@ -103,6 +113,8 @@ class TargetSystemTest {
       }
     }
     targetDependencies = emptyList();
+
+    stop(weaver);
   }
 
   private static void stop(GenericContainer<?> container) {
