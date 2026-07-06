@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.quartz.v2_0;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -91,16 +92,11 @@ public final class QuartzTelemetryBuilder {
         CodeAttributesExtractor.create(new QuartzCodeAttributesGetter()));
     instrumenter.addAttributesExtractors(additionalExtractors);
 
-    // Separate instrumenter for scheduler-level events: the request type differs from job
-    // execution, and these are point-in-time events rather than start/end-bracketed work.
-    Instrumenter<SchedulerError, Void> schedulerErrorInstrumenter =
-        Instrumenter.<SchedulerError, Void>builder(
-                openTelemetry, INSTRUMENTATION_NAME, request -> "Quartz scheduler error")
-            .setErrorCauseExtractor(new QuartzErrorCauseExtractor())
-            .addAttributesExtractor(new SchedulerErrorAttributesExtractor())
-            .buildInstrumenter();
+    // Scheduler-level errors are point-in-time occurrences with no duration, so they are emitted as
+    // events (log records) rather than spans.
+    Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
 
     return new QuartzTelemetry(
-        new TracingJobListener(instrumenter.buildInstrumenter()), schedulerErrorInstrumenter);
+        new TracingJobListener(instrumenter.buildInstrumenter()), eventLogger);
   }
 }

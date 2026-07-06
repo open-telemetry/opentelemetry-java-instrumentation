@@ -5,9 +5,14 @@
 
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.quartz.SchedulerException;
 import org.quartz.listeners.SchedulerListenerSupport;
 
@@ -18,11 +23,17 @@ import org.quartz.listeners.SchedulerListenerSupport;
  */
 final class TracingSchedulerListener extends SchedulerListenerSupport {
 
-  private final Instrumenter<SchedulerError, Void> instrumenter;
+  private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
+  // Experimental attributes: names/shapes may change until scheduler instrumentation stabilizes.
+  private static final AttributeKey<String> SCHEDULER_NAME = stringKey("quartz.scheduler.name");
+  private static final AttributeKey<String> ERROR_MESSAGE =
+      stringKey("quartz.scheduler.error.message");
+
+  private final Logger eventLogger;
   private final String schedulerName;
 
-  TracingSchedulerListener(Instrumenter<SchedulerError, Void> instrumenter, String schedulerName) {
-    this.instrumenter = instrumenter;
+  TracingSchedulerListener(Logger eventLogger, String schedulerName) {
+    this.eventLogger = eventLogger;
     this.schedulerName = schedulerName;
   }
 
@@ -32,21 +43,24 @@ final class TracingSchedulerListener extends SchedulerListenerSupport {
 
     // Quartz also reports job execution failures through schedulerError, on the same thread while
     // the job execution span is still current. That failure is already recorded on the job span, so
-    // emitting another span here would just duplicate it. Only instrument genuine scheduler-level
-    // errors, i.e. when no span is currently active.
+    // reporting it again here would just duplicate it. Only report genuine scheduler-level errors,
+    // i.e. when no span is currently active.
     if (Span.fromContext(parentContext).getSpanContext().isValid()) {
       return;
     }
 
-    SchedulerError request = new SchedulerError(schedulerName, msg);
-    if (!instrumenter.shouldStart(parentContext, request)) {
-      return;
+    // A scheduler error is a point-in-time occurrence with no duration, so it is emitted as an
+    // event (log record) rather than a span.
+    LogRecordBuilder logRecordBuilder =
+        eventLogger
+            .logRecordBuilder()
+            .setContext(parentContext)
+            .setSeverity(Severity.ERROR)
+            .setAttribute(EVENT_NAME, "quartz.scheduler.error")
+            .setAttribute(SCHEDULER_NAME, schedulerName);
+    if (msg != null) {
+      logRecordBuilder.setAttribute(ERROR_MESSAGE, msg);
     }
-
-    // schedulerError is a point-in-time event with no start/end bracket around work, so we start
-    // and immediately end a span that records the failure. The span has no children but surfaces
-    // the scheduler error (and the SchedulerException) in traces.
-    Context context = instrumenter.start(parentContext, request);
-    instrumenter.end(context, request, null, cause);
+    logRecordBuilder.emit();
   }
 }

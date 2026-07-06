@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.api.logs.Logger;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
 import org.quartz.Matcher;
@@ -18,7 +18,7 @@ import org.quartz.impl.matchers.EverythingMatcher;
 /** Entrypoint for telemetry instrumentation of Quartz jobs. */
 public final class QuartzTelemetry {
   private final JobListener jobListener;
-  private final Instrumenter<SchedulerError, Void> schedulerErrorInstrumenter;
+  private final Logger eventLogger;
 
   /** Returns a new {@link QuartzTelemetry} configured with the given {@link OpenTelemetry}. */
   public static QuartzTelemetry create(OpenTelemetry openTelemetry) {
@@ -32,10 +32,9 @@ public final class QuartzTelemetry {
     return new QuartzTelemetryBuilder(openTelemetry);
   }
 
-  QuartzTelemetry(
-      JobListener jobListener, Instrumenter<SchedulerError, Void> schedulerErrorInstrumenter) {
+  QuartzTelemetry(JobListener jobListener, Logger eventLogger) {
     this.jobListener = jobListener;
-    this.schedulerErrorInstrumenter = schedulerErrorInstrumenter;
+    this.eventLogger = eventLogger;
   }
 
   /**
@@ -84,12 +83,11 @@ public final class QuartzTelemetry {
     }
     try {
       // The scheduler name is only available here (at configuration time), so we capture it now
-      // and hand it to the listener to use as a span attribute.
+      // and hand it to the listener to use as an event attribute.
       String schedulerName = scheduler.getSchedulerName();
       scheduler
           .getListenerManager()
-          .addSchedulerListener(
-              new TracingSchedulerListener(schedulerErrorInstrumenter, schedulerName));
+          .addSchedulerListener(new TracingSchedulerListener(eventLogger, schedulerName));
     } catch (SchedulerException e) {
       throw new IllegalStateException("Could not add SchedulerListener to Scheduler", e);
     }

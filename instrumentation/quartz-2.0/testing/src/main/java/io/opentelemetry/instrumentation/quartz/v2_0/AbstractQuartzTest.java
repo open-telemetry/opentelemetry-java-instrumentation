@@ -13,6 +13,7 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -116,26 +117,20 @@ public abstract class AbstractQuartzTest {
     SchedulerException cause = new SchedulerException("boom");
 
     // A real scheduler error is hard to provoke deterministically in a unit test, so we invoke the
-    // registered SchedulerListener directly to verify the span it produces.
+    // registered SchedulerListener directly to verify the event it emits.
     for (SchedulerListener listener : scheduler.getListenerManager().getSchedulerListeners()) {
       listener.schedulerError("Something went wrong", cause);
     }
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("Quartz scheduler error")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(cause)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("quartz.scheduler.name"), "default"),
-                                equalTo(
-                                    stringKey("quartz.scheduler.error.message"),
-                                    "Something went wrong"))));
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasSeverity(Severity.ERROR)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("event.name"), "quartz.scheduler.error"),
+                        equalTo(stringKey("quartz.scheduler.name"), "default"),
+                        equalTo(stringKey("quartz.scheduler.error.message"), "Something went wrong")));
   }
 
   private static Scheduler createScheduler() throws Exception {
