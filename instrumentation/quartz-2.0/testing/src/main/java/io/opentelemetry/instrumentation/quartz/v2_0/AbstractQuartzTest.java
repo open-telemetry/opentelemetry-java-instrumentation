@@ -130,7 +130,8 @@ public abstract class AbstractQuartzTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(stringKey("event.name"), "quartz.scheduler.error"),
                         equalTo(stringKey("quartz.scheduler.name"), "default"),
-                        equalTo(stringKey("quartz.scheduler.error.message"), "Something went wrong")));
+                        equalTo(
+                            stringKey("quartz.scheduler.error.message"), "Something went wrong")));
   }
 
   private static Scheduler createScheduler() throws Exception {
