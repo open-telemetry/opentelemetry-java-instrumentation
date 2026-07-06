@@ -4,3 +4,4 @@ schema_url: https://github.com/open-telemetry/opentelemetry-java-instrumentation
 dependencies:
   - name: otel
     registry_path: https://github.com/open-telemetry/semantic-conventions[model]
+
