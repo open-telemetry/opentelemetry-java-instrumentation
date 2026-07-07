@@ -49,7 +49,7 @@ tasks {
       listOf(
         "-Dio.opentelemetry.javaagent.path=${agentJar.get().asFile.absolutePath}",
         "-Dio.opentelemetry.testapp.path=${testAppWar.get().asFile.absolutePath}",
-        "-Dio.opentelemetry.registry.path=$projectDir/../model",
+        "-Dio.opentelemetry.registry.path=${layout.projectDirectory}/../model",
         "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJar.get().asFile.absolutePath}",
       )
     }
