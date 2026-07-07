@@ -92,6 +92,10 @@ public abstract class AbstractCassandraTest {
     cassandra =
         new GenericContainer<>("cassandra:4.0")
             .withEnv("JVM_OPTS", "-Xmx128m -Xms128m")
+            // speed up single-node startup
+            .withEnv(
+                "JVM_EXTRA_OPTS",
+                "-Dcassandra.skip_wait_for_gossip_to_settle=0 -Dcassandra.initial_token=0")
             .withExposedPorts(9042)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
