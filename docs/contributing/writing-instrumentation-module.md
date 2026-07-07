@@ -235,8 +235,8 @@ the `transform()` method.
 
 Two types of instrumentation are currently supported:
 
-- inlined instrumentation, where advice classes content is copied into the instrumented class files
-- non-inlined instrumentation, where advice classes are not copied into the instrumented class files but loaded in a dedicated classloader.
+- inlined instrumentation, where advice classes method body bytecode is copied into the instrumented class files
+- non-inlined instrumentation, where advice classes are loaded as regular class files.
 
 The choice between the two strategies is made by instrumentation author by using the `inline` property of the `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotations.
 
@@ -245,7 +245,7 @@ The choice between the two strategies is made by instrumentation author by using
   - before 3.0.0: the advice is inlined
   - as of 3.0.0 and later: the advice is not inlined
 
-## inlined instrumentation
+## Inlined instrumentation
 
 With inlined instrumentation, advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
 the instrumented library class files. You should not treat them as ordinary, plain Java classes.
@@ -340,14 +340,10 @@ in advice classes at all - sometimes you don't know what bytecode version is use
 
 [suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
 
-## non-inlined instrumentation
-
-Using non-inlined advice code is possible thanks to the `invokedynamic` instruction, this strategy
-is referred as "indy" in reference to this. By extension "indy modules" are the instrumentation
-modules using this instrumentation strategy.
+## Non-inlined instrumentation
 
 The most common way to instrument code with ByteBuddy relies on inlining, this strategy will be
-referred as "inlined" strategy as opposed to "indy".
+referred as "inlined" strategy as opposed to "non-inlined".
 
 For inlined advices, the advice code is directly copied into the instrumented method.
 In addition, all helper classes are injected into the classloader of the instrumented classes.
@@ -360,9 +356,11 @@ invokedynamic bytecode instructions.
 
 Using indy instrumentation has these advantages:
 
-- allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques (this is however limited to classes that are not shaded).
+- allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques.
 - provides clean isolation of instrumentation advice from the application and other instrumentations
 - allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#inlined-instrumentation))
+- advice classes have access to agent code so communicating between advice and agent does not need an api in boot loader
+- advice classes code does not require to be compatible with instrumented class, for example we can call a static interface method in advice when instrumented class is compiled for Java 7 or older.
 
 ### Shared classes and common classloader
 
