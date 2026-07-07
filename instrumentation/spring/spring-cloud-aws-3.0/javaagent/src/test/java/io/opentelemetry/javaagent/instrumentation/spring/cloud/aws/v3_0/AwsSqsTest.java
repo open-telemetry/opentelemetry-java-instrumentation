@@ -67,56 +67,52 @@ class AwsSqsTest {
   @Autowired MessageListenerContainerRegistry registry;
   @Autowired ApplicationContext applicationContext;
 
-  @BeforeEach
-  void waitForContainersAndClear() throws InterruptedException {
-    // The Spring SQS listener containers start asynchronously and resolve queue URLs in
-    // background threads. We need to wait for them to be ready, then send warmup messages
-    // and wait for them to be fully processed (including async Sqs.DeleteMessageBatch calls)
-    // before clearing data — otherwise those spans leak into the test assertions.
-    long startTime = System.currentTimeMillis();
-    while (System.currentTimeMillis() - startTime < 10000) {
-      long count =
-          testing.spans().stream().filter(s -> s.getName().equals("Sqs.GetQueueUrl")).count();
-      if (count >= 2) {
-        break;
-      }
-      Thread.sleep(100);
-    }
-
-    // Warm up the templates so that the HTTP client is initialized (prevents Connection refused)
-    sqsTemplate.send("test-queue", "warmup");
-    sqsTemplate.sendMany(
-        "test-batch-queue", singletonList(MessageBuilder.withPayload("warmup1").build()));
-
-    // Wait for the warmup message to be processed so it doesn't pollute the test
-    startTime = System.currentTimeMillis();
-    while (System.currentTimeMillis() - startTime < 10000) {
-      long count =
-          testing.spans().stream().filter(s -> s.getName().equals("test-queue process")).count();
-      long countBatch =
-          testing.spans().stream()
-              .filter(s -> s.getName().equals("test-batch-queue process"))
-              .count();
-      long countDelete =
-          testing.spans().stream()
-              .filter(s -> s.getName().equals("Sqs.DeleteMessageBatch"))
-              .count();
-      if (count >= 1 && countBatch >= 1 && countDelete >= 2) {
-        break;
-      }
-      Thread.sleep(100);
-    }
-
-    testing.clearData();
-    AwsSqsTestApplication.messageHandler = null;
-    AwsSqsTestApplication.batchMessageHandler = null;
-  }
+  // Warmup is performed only once for the entire test class to avoid each test waiting for
+  // the Spring SQS listener containers (which start asynchronously) to resolve queue URLs
+  // and process an initial message before telemetry data can be reliably cleared.
+  private static volatile boolean initialized = false;
 
   @BeforeAll
   static void setUp() {
     sqs = SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
     Http.ServerBinding server = sqs.waitUntilStarted();
     AwsSqsTestApplication.sqsPort = server.localAddress().getPort();
+  }
+
+  @BeforeEach
+  void clearAndWarmup() throws InterruptedException {
+    if (!initialized) {
+      initialized = true;
+      // Send a warmup message to each queue so the listener containers fully initialize
+      // (resolve queue URLs, start polling) and process at least one message. We wait for
+      // both process spans and the async Sqs.DeleteMessageBatch to complete before clearing
+      // data — otherwise those spans leak into subsequent test assertions.
+      sqsTemplate.send("test-queue", "warmup");
+      sqsTemplate.sendMany(
+          "test-batch-queue", singletonList(MessageBuilder.withPayload("warmup1").build()));
+
+      long startTime = System.currentTimeMillis();
+      while (System.currentTimeMillis() - startTime < 30000) {
+        long count =
+            testing.spans().stream().filter(s -> s.getName().equals("test-queue process")).count();
+        long countBatch =
+            testing.spans().stream()
+                .filter(s -> s.getName().equals("test-batch-queue process"))
+                .count();
+        long countDelete =
+            testing.spans().stream()
+                .filter(s -> s.getName().equals("Sqs.DeleteMessageBatch"))
+                .count();
+        if (count >= 1 && countBatch >= 1 && countDelete >= 2) {
+          break;
+        }
+        Thread.sleep(100);
+      }
+    }
+
+    testing.clearData();
+    AwsSqsTestApplication.messageHandler = null;
+    AwsSqsTestApplication.batchMessageHandler = null;
   }
 
   @AfterAll
