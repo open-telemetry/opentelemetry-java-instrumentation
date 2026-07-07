@@ -14,6 +14,9 @@ dependencies {
   testImplementation("com.linecorp.armeria:armeria-grpc:1.31.3")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.5.0-alpha")
   testImplementation("io.github.netmikey.logunit:logunit-jul")
+
+  testImplementation(platform("io.grpc:grpc-bom:1.82.1"))
+  testImplementation("io.grpc:grpc-netty-shaded")
 }
 
 tasks {

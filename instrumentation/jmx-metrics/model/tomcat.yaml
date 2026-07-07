@@ -117,9 +117,3 @@ groups:
     instrument: updowncounter
     attributes:
       - ref: tomcat.thread.pool.name
-
-imports:
-  entities:
-    - service
-    - service.instance
-    - telemetry.sdk

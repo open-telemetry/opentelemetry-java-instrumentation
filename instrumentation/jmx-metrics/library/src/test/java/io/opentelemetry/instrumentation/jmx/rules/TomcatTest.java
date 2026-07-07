@@ -46,6 +46,8 @@ class TomcatTest extends TargetSystemTest {
     // metric
     copyTestWebAppToTarget(target, "/usr/local/tomcat/webapps/ROOT.war");
 
+    startWeaverValidation("tomcat", "tomcat.yaml");
+
     startTarget(target);
 
     verifyMetrics(createMetricsVerifier());

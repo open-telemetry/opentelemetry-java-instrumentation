@@ -1,0 +1,15 @@
+
+# When testing, we have to use imports to add existing entities and their attributes to the registry.
+# This is not part supported platforms and is only captured from the test environment
+imports:
+  entities:
+    - service
+    - service.instance
+    - telemetry.sdk
+    - container
+    - os
+    - host
+    - process
+    - process.runtime
+    - process.executable
+    - telemetry.distro

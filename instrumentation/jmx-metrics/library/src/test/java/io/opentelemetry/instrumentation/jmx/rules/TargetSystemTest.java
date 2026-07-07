@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.jmx.rules;
 
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,6 +17,7 @@ import static org.awaitility.Awaitility.await;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.grpc.GrpcService;
 import com.linecorp.armeria.testing.junit5.server.ServerExtension;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
@@ -38,6 +41,9 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -70,6 +76,7 @@ class TargetSystemTest {
   private Collection<GenericContainer<?>> targetDependencies;
 
   private WeaverContainer weaver;
+  private String systemPrefix;
 
   @BeforeAll
   static void beforeAll() {
@@ -93,13 +100,21 @@ class TargetSystemTest {
   @BeforeEach
   void beforeEach() {
     otlpServer.reset();
+  }
+
+  void startWeaverValidation(String systemPrefix, String... registryFiles) {
+    if (registryFiles == null || registryFiles.length == 0) {
+      throw new IllegalArgumentException("at least one registry file expected");
+    }
 
     Path registryRoot = Paths.get(System.getProperty("io.opentelemetry.registry.path"));
     assertThat(Files.isDirectory(registryRoot)).isTrue();
 
-    weaver = new WeaverContainer(registryRoot);
-
+    this.systemPrefix = systemPrefix;
+    weaver = new WeaverContainer(registryRoot, registryFiles);
     weaver.start();
+
+    otlpServer.setForwardEndpoint(weaver.getOtlpEndpoint());
   }
 
   @AfterEach
@@ -115,6 +130,85 @@ class TargetSystemTest {
     targetDependencies = emptyList();
 
     stop(weaver);
+
+    // checking weaver validation results
+
+    WeaverContainer.WeaverValidationResult result = weaver.getResult();
+    AtomicInteger violationCount = new AtomicInteger(0);
+    result
+        .getValidationAdvices()
+        .forEach(
+            advice -> {
+              if(shouldIgnoreAdvice(advice)){
+                return;
+              }
+
+              String signalOrResource = advice.getSignalName();
+              if(signalOrResource == null){
+                signalOrResource = "resource attribute";
+              }
+              switch (advice.getLevel()) {
+                case "information":
+                  logger.info(
+                      "weaver reported information on {} : {}",
+                      signalOrResource,
+                      advice.getMessage());
+                  break;
+                case "violation":
+                  logger.error(
+                      "weaver reported violation on {} : {}",
+                      signalOrResource,
+                      advice.getMessage());
+                  violationCount.getAndIncrement();
+                  break;
+                case "improvement":
+                  logger.warn(
+                      "weaver reported improvement on {} : {}",
+                      signalOrResource,
+                      advice.getMessage());
+                  break;
+                default:
+                  throw new IllegalStateException("unknown advice level " + advice.getLevel());
+              }
+            });
+
+    assertThat(violationCount.get())
+        .describedAs("no registry violation should be reported")
+        .isEqualTo(0);
+
+    // validate that we don't have any metrics or attributes with system prefix that are missing in
+    // registry
+    result
+        .getSeenNonRegistryMetrics()
+        .forEach(
+            metric ->
+                assertThat(metric)
+                    .describedAs(
+                        "metric with prefix %s is expected to be part of registry", systemPrefix)
+                    .doesNotStartWith(systemPrefix));
+    result
+        .getSeenNonRegistryAttributes()
+        .forEach(
+            attribute ->
+                assertThat(attribute)
+                    .describedAs(
+                        "attribute with prefix %s is expected to be part of registry", systemPrefix)
+                    .doesNotStartWith(systemPrefix));
+  }
+
+  private static boolean shouldIgnoreAdvice(WeaverContainer.WeaverValidationAdvice advice) {
+    if(advice.getSignalName() == null){
+      return false;
+    }
+    // ignore old sdk metrics that are not part of semantic conventions
+    switch (advice.getSignalName()) {
+      case "otlp.exporter.seen":
+      case "otlp.exporter.exported":
+      case "otel.sdk.metric_reader.collection.duration":
+        return true;
+      default:
+        return false;
+    }
   }
 
   private static void stop(GenericContainer<?> container) {
@@ -298,6 +392,16 @@ class TargetSystemTest {
   /** Minimal OTLP gRPC backend to capture metrics */
   private static class OtlpGrpcServer extends ServerExtension {
 
+    @Nullable private MetricsServiceGrpc.MetricsServiceFutureStub forwardStub;
+
+    void setForwardEndpoint(@Nullable String endpoint) {
+      forwardStub =
+          null == endpoint
+              ? null
+              : MetricsServiceGrpc.newFutureStub(
+                  ManagedChannelBuilder.forTarget(endpoint).usePlaintext().build());
+    }
+
     private final BlockingQueue<ExportMetricsServiceRequest> metricRequests =
         new LinkedBlockingDeque<>();
 
@@ -319,6 +423,14 @@ class TargetSystemTest {
                     public void export(
                         ExportMetricsServiceRequest request,
                         StreamObserver<ExportMetricsServiceResponse> responseObserver) {
+
+                      // fire-and-forget to forward backend
+                      requireNonNull(forwardStub, "forwardStub is null");
+                      try {
+                        forwardStub.export(request).get(10, MILLISECONDS);
+                      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                        throw new RuntimeException(e);
+                      }
 
                       // verbose but helpful to diagnose what is received
                       logger.debug("receiving metrics {}", request);
