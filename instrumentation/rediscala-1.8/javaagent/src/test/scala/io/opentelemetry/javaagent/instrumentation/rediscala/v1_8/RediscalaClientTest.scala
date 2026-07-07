@@ -250,7 +250,7 @@ class RediscalaClientTest {
 
   private def transactionScenarios(): Stream[Arguments] =
     Stream.of(
-      Arguments.argumentSet("empty", BatchScenario(operationName = "MULTI")),
+      Arguments.argumentSet("empty", BatchScenario(operationName = "MULTI", batchSize = 0L)),
       Arguments.argumentSet(
         "single",
         BatchScenario(

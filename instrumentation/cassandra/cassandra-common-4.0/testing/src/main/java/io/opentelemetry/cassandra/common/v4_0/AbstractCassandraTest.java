@@ -258,6 +258,7 @@ public abstract class AbstractCassandraTest {
                 .buildBatch(session -> BatchStatement.newInstance(DefaultBatchType.LOGGED))
                 .spanName("cassandra")
                 .oldSpanName("DB Query")
+                .batchSize(0)
                 .build()),
         Arguments.argumentSet(
             "single",
@@ -291,6 +292,8 @@ public abstract class AbstractCassandraTest {
                 .queryText("INSERT INTO batch_test.records (id, num) values (?, ?)")
                 .querySummary("BATCH INSERT batch_test.records")
                 .batchSize(2)
+                .operationName("INSERT")
+                .collectionName("batch_test.records")
                 .build()),
         Arguments.argumentSet(
             "twoDifferentOperations",
@@ -311,6 +314,8 @@ public abstract class AbstractCassandraTest {
                     "INSERT INTO batch_test.records (id, num) values (4, ?); UPDATE batch_test.records SET num = ? WHERE id = ?")
                 .querySummary("BATCH")
                 .batchSize(2)
+                .operationName("BATCH")
+                .collectionName("batch_test.records")
                 .build()));
   }
 
