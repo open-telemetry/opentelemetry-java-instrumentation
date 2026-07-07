@@ -102,6 +102,12 @@ class TargetSystemTest {
     otlpServer.reset();
   }
 
+  /**
+   * Enables opt-in JMX registry validation for the target system
+   *
+   * @param systemPrefix System prefix namespace to check, for example "tomcat"
+   * @param registryFiles list of file names to include in registry
+   */
   void startWeaverValidation(String systemPrefix, String... registryFiles) {
     if (registryFiles == null || registryFiles.length == 0) {
       throw new IllegalArgumentException("at least one registry file expected");
@@ -129,22 +135,25 @@ class TargetSystemTest {
     }
     targetDependencies = emptyList();
 
-    stop(weaver);
+    if (weaver != null) {
+      stop(weaver);
+      validateWeaverResults(weaver.getResult(), systemPrefix);
+    }
+  }
 
-    // checking weaver validation results
-
-    WeaverContainer.WeaverValidationResult result = weaver.getResult();
+  private static void validateWeaverResults(
+      WeaverContainer.WeaverValidationResult result, String systemPrefix) {
     AtomicInteger violationCount = new AtomicInteger(0);
     result
         .getValidationAdvices()
         .forEach(
             advice -> {
-              if(shouldIgnoreAdvice(advice)){
+              if (shouldIgnoreAdvice(advice)) {
                 return;
               }
 
               String signalOrResource = advice.getSignalName();
-              if(signalOrResource == null){
+              if (signalOrResource == null) {
                 signalOrResource = "resource attribute";
               }
               switch (advice.getLevel()) {
@@ -197,7 +206,7 @@ class TargetSystemTest {
   }
 
   private static boolean shouldIgnoreAdvice(WeaverContainer.WeaverValidationAdvice advice) {
-    if(advice.getSignalName() == null){
+    if (advice.getSignalName() == null) {
       return false;
     }
     // ignore old sdk metrics that are not part of semantic conventions
@@ -394,12 +403,15 @@ class TargetSystemTest {
 
     @Nullable private MetricsServiceGrpc.MetricsServiceFutureStub forwardStub;
 
-    void setForwardEndpoint(@Nullable String endpoint) {
+    /**
+     * Sets the forwarding endpoint where the server should forward data to
+     *
+     * @param endpoint endpoint host:port
+     */
+    void setForwardEndpoint(String endpoint) {
       forwardStub =
-          null == endpoint
-              ? null
-              : MetricsServiceGrpc.newFutureStub(
-                  ManagedChannelBuilder.forTarget(endpoint).usePlaintext().build());
+          MetricsServiceGrpc.newFutureStub(
+              ManagedChannelBuilder.forTarget(endpoint).usePlaintext().build());
     }
 
     private final BlockingQueue<ExportMetricsServiceRequest> metricRequests =
@@ -424,12 +436,14 @@ class TargetSystemTest {
                         ExportMetricsServiceRequest request,
                         StreamObserver<ExportMetricsServiceResponse> responseObserver) {
 
-                      // fire-and-forget to forward backend
-                      requireNonNull(forwardStub, "forwardStub is null");
-                      try {
-                        forwardStub.export(request).get(10, MILLISECONDS);
-                      } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                        throw new RuntimeException(e);
+                      if (forwardStub != null) {
+                        // fire-and-forget to forward backend
+                        requireNonNull(forwardStub, "forwardStub is null");
+                        try {
+                          forwardStub.export(request).get(10, MILLISECONDS);
+                        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                          throw new RuntimeException(e);
+                        }
                       }
 
                       // verbose but helpful to diagnose what is received
