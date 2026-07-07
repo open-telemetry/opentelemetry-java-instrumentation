@@ -104,6 +104,7 @@ class JavaagentTestArgumentsProvider(
       "-Dotel.javaagent.testing.fail-on-context-leak=$failOnContextLeak",
       // prevent sporadic gradle deadlocks, see SafeLogger for more details
       "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
+      "-Dotel.javaagent.testing.check-virtual-filed-usage.enabled=true",
       // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
       // in smoke tests instead.
       "-Dotel.javaagent.add-thread-details=false",
