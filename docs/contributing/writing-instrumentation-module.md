@@ -480,7 +480,8 @@ compile time for it to work.
 Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
 ClassNotFoundException when trying to access the field.
 
-When using [non-inlined instrumentation](#non-inlined-instrumentation), the calls to `VirtualField.find()` must be done outside the advice class and methods
+The call to `VirtualField.find()` is expensive, so it is best to call it once and cache the result in a field.
+In addition, when using [non-inlined instrumentation](#non-inlined-instrumentation), the calls to `VirtualField.find()` must be done outside the advice class and methods
 because those calls are re-written for efficiency. The `VirtualFieldChecker` class is used to check this at runtime when the advice class is loaded.
 
 ## Avoid using @Advice.Origin Method
