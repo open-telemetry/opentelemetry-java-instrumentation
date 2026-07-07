@@ -463,7 +463,7 @@ It is possible to modify multiple fields at once by using an array, see usages o
 ## Using virtual fields to associate instrumentation classes to instrumented classes
 
 Sometimes there is a need to associate some instrumentation class with an instrumented library class, and
-the library does not offer a way to do this. The OpenTelemetry javaagent provides `VirtualField`
+the library does not offer a way to do this. The Java javaagent provides `VirtualField`
 for that purpose. Consider the following example:
 
 ```java
