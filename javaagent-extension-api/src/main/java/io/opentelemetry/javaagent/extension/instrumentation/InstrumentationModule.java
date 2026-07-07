@@ -165,4 +165,58 @@ public abstract class InstrumentationModule implements Ordered {
   public List<String> getAdditionalHelperClassNames() {
     return emptyList();
   }
+
+  /**
+   * Returns a list of helper classes that will be defined in the class loader of the instrumented
+   * library.
+   *
+   * <p>This method only takes effect when using {@link HelperClassStrategy#ISOLATED} strategy, with
+   * {@link HelperClassStrategy#INJECTED} strategy all helper classes are already injected into the
+   * class loader of the instrumented library.
+   */
+  public List<String> injectedClassNames() {
+    return emptyList();
+  }
+
+  /**
+   * Returns a list of instrumentation helper classes that are exposed to the application class
+   * loader.
+   *
+   * <p>When using {@link HelperClassStrategy#ISOLATED} strategy helper classes are loaded into a
+   * separate class loader. Classes from that class loader aren't visible to the instrumented
+   * application. This method can be used to expose some of the helper classes to the application
+   * class loader, so that they can be loaded through the loadClass method of the application class
+   * loader. This can for example be used to add a SPI implementation that can be loaded via the
+   * ServiceLoader.
+   */
+  public List<String> exposedClassNames() {
+    return emptyList();
+  }
+
+  /**
+   * Allows instrumentation modules to choose whether the helper classes should be injected into the
+   * same class loader as the instrumented library, or into an isolated class loader.
+   */
+  public HelperClassStrategy helperClassStrategy() {
+    return HelperClassStrategy.DEFAULT;
+  }
+
+  /** Enum describing helper class handling strategies. */
+  public enum HelperClassStrategy {
+    /**
+     * Depending on whether the instrumentation uses inline advice or not, helper classes are either
+     * loaded in the same classloader as the instrumented library, or into an isolated classloader.
+     */
+    DEFAULT,
+    /**
+     * Helper classes are loaded in the same classloader as the instrumented library, and are
+     * visible to the application.
+     */
+    INJECTED,
+    /**
+     * Helper classes are loaded into an isolated classloader, and aren't visible to the
+     * application.
+     */
+    ISOLATED
+  }
 }

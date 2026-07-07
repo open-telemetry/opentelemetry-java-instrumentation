@@ -171,20 +171,20 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       ExperimentalInstrumentationModule experimentalModule =
           (ExperimentalInstrumentationModule) module;
       hiddenAgentPackages.addAll(experimentalModule.agentPackagesToHide());
-      if (!forMuzzleCheck && !experimentalModule.exposedClassNames().isEmpty()) {
-        // Using a weak reference because HelperInjector.addExposedClass places the supplier into
-        // a weak map where instrumentedCl is the key. We must ensure that the value of the map
-        // does not strongly reference the key, otherwise we would leak class loaders.
-        WeakReference<ClassLoader> classLoaderWeakReference = new WeakReference<>(this);
-        for (String className : experimentalModule.exposedClassNames()) {
-          HelperInjector.addExposedClass(
-              instrumentedCl,
-              className,
-              () -> {
-                ClassLoader cl = classLoaderWeakReference.get();
-                return cl != null ? tryLoad(cl, className) : null;
-              });
-        }
+    }
+    if (!forMuzzleCheck && !module.exposedClassNames().isEmpty()) {
+      // Using a weak reference because HelperInjector.addExposedClass places the supplier into
+      // a weak map where instrumentedCl is the key. We must ensure that the value of the map
+      // does not strongly reference the key, otherwise we would leak class loaders.
+      WeakReference<ClassLoader> classLoaderWeakReference = new WeakReference<>(this);
+      for (String className : module.exposedClassNames()) {
+        HelperInjector.addExposedClass(
+            instrumentedCl,
+            className,
+            () -> {
+              ClassLoader cl = classLoaderWeakReference.get();
+              return cl != null ? tryLoad(cl, className) : null;
+            });
       }
     }
   }
@@ -203,9 +203,8 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     // TODO (Jonas): Make muzzle include advice classes as helper classes
     // so that we don't have to include them here
     toInject.addAll(getModuleAdviceNames(module));
-    if (module instanceof ExperimentalInstrumentationModule) {
-      toInject.removeAll(((ExperimentalInstrumentationModule) module).injectedClassNames());
-    }
+    toInject.removeAll(module.injectedClassNames());
+
     return toInject;
   }
 
