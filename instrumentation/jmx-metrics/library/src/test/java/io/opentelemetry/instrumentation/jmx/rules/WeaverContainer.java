@@ -58,8 +58,7 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
     }
     // Common definitions used when testing to inherit existing definitions.
     // Adding this allows to lower the noise level of validation errors for things that are not
-    // directly
-    // part of the registry under test.
+    // directly part of the registry under test.
     super.withCopyFileToContainer(
         MountableFile.forClasspathResource("jmx/registry/test-common.yaml"),
         "/registry/test-common.yaml");
@@ -72,7 +71,7 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
 
   @Override
   public void stop() {
-    String uri = "http://" + this.getHost() + ":" + this.getMappedPort(4320) + "/";
+    String uri = "http://" + this.getHost() + ":" + this.getMappedPort(ADMIN_PORT) + "/";
     WebClient client = WebClient.of(uri);
     try (HttpData result = client.post("/stop", new byte[0]).aggregate().join().content()) {
       this.result = OBJECT_MAPPER.readTree(result.toInputStream());
