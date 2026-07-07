@@ -19,6 +19,8 @@ dependencies {
   testImplementation("io.grpc:grpc-netty-shaded")
 }
 
+var modelPath = "${project.projectDir}/../model"
+
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -49,7 +51,7 @@ tasks {
       listOf(
         "-Dio.opentelemetry.javaagent.path=${agentJar.get().asFile.absolutePath}",
         "-Dio.opentelemetry.testapp.path=${testAppWar.get().asFile.absolutePath}",
-        "-Dio.opentelemetry.registry.path=${project.projectDir}/../model",
+        "-Dio.opentelemetry.registry.path=${modelPath}",
         "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJar.get().asFile.absolutePath}",
       )
     }
