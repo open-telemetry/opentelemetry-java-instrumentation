@@ -43,7 +43,7 @@ val asmVersion = "9.10.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.18"
-val semConvVersion = "1.42.0"
+val semConvVersion = "1.43.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
