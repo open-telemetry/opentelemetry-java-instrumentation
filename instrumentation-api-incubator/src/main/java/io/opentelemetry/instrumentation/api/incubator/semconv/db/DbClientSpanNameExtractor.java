@@ -243,6 +243,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     private boolean isBatch(REQUEST request) {
       Long batchSize = getter.getDbOperationBatchSize(request);
+      // Empty batches with size 0 are batches; single-statement batches are reported as non-batch.
       return batchSize != null && batchSize != 1;
     }
   }
