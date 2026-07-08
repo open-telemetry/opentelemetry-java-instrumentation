@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jmx.rules;
 
 import static java.util.Collections.emptyList;
-import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
