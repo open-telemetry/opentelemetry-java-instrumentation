@@ -33,6 +33,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 import static org.junit.jupiter.api.Named.named;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.CqlSessionBuilder;
@@ -256,14 +257,14 @@ public abstract class AbstractCassandraTest {
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "empty",
             BatchScenario.builder()
                 .buildBatch(session -> BatchStatement.newInstance(DefaultBatchType.LOGGED))
                 .spanName("cassandra")
                 .oldSpanName("DB Query")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "single",
             BatchScenario.builder()
                 .buildBatch(
@@ -280,7 +281,7 @@ public abstract class AbstractCassandraTest {
                 .operationName("INSERT")
                 .collectionName("batch_test.records")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .buildBatch(
@@ -296,7 +297,7 @@ public abstract class AbstractCassandraTest {
                 .querySummary("BATCH INSERT batch_test.records")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
                 .buildBatch(

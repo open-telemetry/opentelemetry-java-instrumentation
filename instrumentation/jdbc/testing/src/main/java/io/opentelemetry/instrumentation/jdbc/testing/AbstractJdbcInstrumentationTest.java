@@ -34,6 +34,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -1881,13 +1882,13 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   static Stream<Arguments> batchCasesStream() {
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "empty",
             BatchScenario.builder()
                 .spanName(DATABASE_NAME_LOWER)
                 .oldSpanName(DATABASE_NAME_LOWER)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "single",
             BatchScenario.builder()
                 .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
@@ -1899,7 +1900,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                 .oldOperation("INSERT")
                 .oldTable("batch_test")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
@@ -1910,7 +1911,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                 .summary("BATCH INSERT batch_test")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
                 .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
