@@ -437,8 +437,7 @@ class TargetSystemTest {
                         StreamObserver<ExportMetricsServiceResponse> responseObserver) {
 
                       if (forwardStub != null) {
-                        // fire-and-forget to forward backend
-                        requireNonNull(forwardStub, "forwardStub is null");
+                        // forward to another backend if needed
                         try {
                           forwardStub.export(request).get(10, MILLISECONDS);
                         } catch (InterruptedException | ExecutionException | TimeoutException e) {

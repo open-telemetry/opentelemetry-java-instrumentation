@@ -1,6 +1,8 @@
 
 # When testing, we have to use imports to add existing entities and their attributes to the registry.
-# This is not part supported platforms and is only captured from the test environment
+# This is not part of the JMX metrics themselves but is reported in the test environment.
+# Adding those here allows to lower the noise level otherwise related attributes would be reported
+# as errors because they are not part of the JMX registry.
 imports:
   entities:
     - service
