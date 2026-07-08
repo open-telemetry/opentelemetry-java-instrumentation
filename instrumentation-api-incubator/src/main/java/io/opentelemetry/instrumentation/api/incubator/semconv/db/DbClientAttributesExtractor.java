@@ -96,8 +96,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     Long batchSize = getter.getDbOperationBatchSize(request);
     // db.operation.batch.size is captured for every batch execution (including an empty batch with
     // size 0); it is only omitted for a single-statement batch, which is reported as a non-batch
-    boolean emitBatchSize = batchSize != null && batchSize != 1;
-    boolean isBatch = emitBatchSize;
+    boolean isBatch = batchSize != null && batchSize != 1;
 
     if (emitStableDatabaseSemconv()) {
       attributes.put(
@@ -107,7 +106,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       attributes.put(DB_QUERY_TEXT, getter.getDbQueryText(request));
       attributes.put(DB_OPERATION_NAME, getter.getDbOperationName(request));
       attributes.put(DB_QUERY_SUMMARY, getter.getDbQuerySummary(request));
-      if (emitBatchSize) {
+      if (isBatch) {
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
     }
