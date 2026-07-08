@@ -264,7 +264,7 @@ public abstract class AbstractCassandraTest {
             "empty",
             BatchScenario.builder()
                 .buildBatch(session -> BatchStatement.newInstance(DefaultBatchType.LOGGED))
-                .spanName("cassandra")
+                .spanName("BATCH")
                 .oldSpanName("DB Query")
                 .batchSize(0)
                 .build()),
@@ -300,7 +300,7 @@ public abstract class AbstractCassandraTest {
                 .queryText("INSERT INTO batch_test.records (id, num) values (?, ?)")
                 .querySummary("BATCH INSERT batch_test.records")
                 .batchSize(2)
-                .operationName("INSERT")
+                .operationName("BATCH INSERT")
                 .collectionName("batch_test.records")
                 .build()),
         Arguments.argumentSet(
