@@ -45,11 +45,13 @@ tasks {
       .withPropertyName("camelTestApp")
       .withNormalizer(ClasspathNormalizer::class)
 
+    val registryDir = layout.projectDirectory.dir("../model").asFile.absolutePath
+
     jvmArgumentProviders += CommandLineArgumentProvider {
       listOf(
         "-Dio.opentelemetry.javaagent.path=${agentJar.get().asFile.absolutePath}",
         "-Dio.opentelemetry.testapp.path=${testAppWar.get().asFile.absolutePath}",
-        "-Dio.opentelemetry.registry.path=${layout.projectDirectory}/../model",
+        "-Dio.opentelemetry.registry.path=$registryDir",
         "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJar.get().asFile.absolutePath}",
       )
     }
