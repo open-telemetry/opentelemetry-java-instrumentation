@@ -126,9 +126,9 @@ public abstract class AbstractQuartzTest {
         .waitAndAssertLogRecords(
             logRecord ->
                 logRecord
+                    .hasEventName("quartz.scheduler.error")
                     .hasSeverity(Severity.ERROR)
                     .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("event.name"), "quartz.scheduler.error"),
                         equalTo(stringKey("quartz.scheduler.name"), "default"),
                         equalTo(
                             stringKey("quartz.scheduler.error.message"), "Something went wrong")));

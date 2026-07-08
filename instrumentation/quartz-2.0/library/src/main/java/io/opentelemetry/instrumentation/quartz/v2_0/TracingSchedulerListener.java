@@ -23,7 +23,6 @@ import org.quartz.listeners.SchedulerListenerSupport;
  */
 final class TracingSchedulerListener extends SchedulerListenerSupport {
 
-  private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
   // Experimental attributes: names/shapes may change until scheduler instrumentation stabilizes.
   private static final AttributeKey<String> SCHEDULER_NAME = stringKey("quartz.scheduler.name");
   private static final AttributeKey<String> ERROR_MESSAGE =
@@ -54,9 +53,9 @@ final class TracingSchedulerListener extends SchedulerListenerSupport {
     LogRecordBuilder logRecordBuilder =
         eventLogger
             .logRecordBuilder()
+            .setEventName("quartz.scheduler.error")
             .setContext(parentContext)
             .setSeverity(Severity.ERROR)
-            .setAttribute(EVENT_NAME, "quartz.scheduler.error")
             .setAttribute(SCHEDULER_NAME, schedulerName);
     if (msg != null) {
       logRecordBuilder.setAttribute(ERROR_MESSAGE, msg);
