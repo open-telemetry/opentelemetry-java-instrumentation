@@ -342,8 +342,16 @@ class CassandraClientTest {
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? scenario.querySummary : null),
-                            equalTo(maybeStable(DB_OPERATION), scenario.operationName),
-                            equalTo(maybeStable(DB_CASSANDRA_TABLE), scenario.collectionName))));
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.operationName
+                                    : scenario.oldOperationName()),
+                            equalTo(
+                                maybeStable(DB_CASSANDRA_TABLE),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.collectionName
+                                    : scenario.oldCollectionName()))));
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -352,8 +360,9 @@ class CassandraClientTest {
             "empty",
             BatchScenario.builder()
                 .buildBatch(session -> new BatchStatement())
-                .spanName("cassandra")
+                .spanName("BATCH")
                 .oldSpanName("DB Query")
+                .batchSize(0)
                 .build()),
         argumentSet(
             "single",
@@ -566,6 +575,14 @@ class CassandraClientTest {
 
     static Builder builder() {
       return new Builder();
+    }
+
+    String oldOperationName() {
+      return batchSize == null ? operationName : null;
+    }
+
+    String oldCollectionName() {
+      return batchSize == null ? collectionName : null;
     }
 
     static class Builder {

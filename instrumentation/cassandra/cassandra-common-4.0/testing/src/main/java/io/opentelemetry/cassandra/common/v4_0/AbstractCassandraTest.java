@@ -240,8 +240,16 @@ public abstract class AbstractCassandraTest {
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? scenario.querySummary : null),
-                                equalTo(maybeStable(DB_OPERATION), scenario.operationName),
-                                equalTo(maybeStable(DB_CASSANDRA_TABLE), scenario.collectionName),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv()
+                                        ? scenario.operationName
+                                        : scenario.oldOperationName()),
+                                equalTo(
+                                    maybeStable(DB_CASSANDRA_TABLE),
+                                    emitStableDatabaseSemconv()
+                                        ? scenario.collectionName
+                                        : scenario.oldCollectionName()),
                                 equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
                                 equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
                                 satisfies(
@@ -261,8 +269,9 @@ public abstract class AbstractCassandraTest {
             "empty",
             BatchScenario.builder()
                 .buildBatch(session -> BatchStatement.newInstance(DefaultBatchType.LOGGED))
-                .spanName("cassandra")
+                .spanName("BATCH")
                 .oldSpanName("DB Query")
+                .batchSize(0)
                 .build()),
         argumentSet(
             "single",
@@ -600,6 +609,14 @@ public abstract class AbstractCassandraTest {
 
     static Builder builder() {
       return new Builder();
+    }
+
+    String oldOperationName() {
+      return batchSize == null ? operationName : null;
+    }
+
+    String oldCollectionName() {
+      return batchSize == null ? collectionName : null;
     }
 
     static class Builder {
