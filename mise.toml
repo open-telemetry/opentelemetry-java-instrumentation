@@ -3,7 +3,7 @@
 # Linters
 "aqua:grafana/flint" = "0.22.6"
 lychee = "0.24.2"
-rumdl = "0.2.26"
+rumdl = "0.2.28"
 
 [env]
 FLINT_CONFIG_DIR = ".github/config"
