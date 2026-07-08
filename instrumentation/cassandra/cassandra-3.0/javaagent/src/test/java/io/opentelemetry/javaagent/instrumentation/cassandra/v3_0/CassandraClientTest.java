@@ -395,6 +395,8 @@ class CassandraClientTest {
                 .queryText("INSERT INTO batch_test.records (id, num) values (?, ?)")
                 .querySummary("BATCH INSERT batch_test.records")
                 .batchSize(2)
+                .operationName("BATCH INSERT")
+                .collectionName("batch_test.records")
                 .build()),
         argumentSet(
             "twoDifferentOperations",
@@ -415,6 +417,8 @@ class CassandraClientTest {
                     "INSERT INTO batch_test.records (id, num) values (4, ?); UPDATE batch_test.records SET num = ? WHERE id = ?")
                 .querySummary("BATCH")
                 .batchSize(2)
+                .operationName("BATCH")
+                .collectionName("batch_test.records")
                 .build()));
   }
 
