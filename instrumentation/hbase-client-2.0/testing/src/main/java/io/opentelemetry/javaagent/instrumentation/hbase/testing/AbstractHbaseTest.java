@@ -392,7 +392,7 @@ public abstract class AbstractHbaseTest {
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
         // an empty batch is a batch operation with size 0
-        argumentSet("empty", BatchScenario.builder().operationName(MULTI).batchSize(0L).build()),
+        argumentSet("empty", BatchScenario.builder().operationName("BATCH").batchSize(0L).build()),
         // a single operation is modeled as a non-batch operation (no db.operation.batch.size)
         argumentSet(
             "single", BatchScenario.builder().addAction(get(ROW_1)).operationName(GET).build()),
@@ -401,7 +401,7 @@ public abstract class AbstractHbaseTest {
             BatchScenario.builder()
                 .addAction(get(ROW_1))
                 .addAction(get(ROW_2))
-                .operationName(MULTI + " " + GET)
+                .operationName("BATCH " + GET)
                 .batchSize(2L)
                 .build()),
         argumentSet(
@@ -409,7 +409,7 @@ public abstract class AbstractHbaseTest {
             BatchScenario.builder()
                 .addAction(put("batch-mutation-row-1"))
                 .addAction(put("batch-mutation-row-2"))
-                .operationName(MULTI + " " + MUTATE)
+                .operationName("BATCH " + MUTATE)
                 .batchSize(2L)
                 .build()),
         argumentSet(
@@ -417,7 +417,7 @@ public abstract class AbstractHbaseTest {
             BatchScenario.builder()
                 .addAction(put("batch-mixed-put-row"))
                 .addAction(get(ROW_1))
-                .operationName(MULTI)
+                .operationName("BATCH")
                 .batchSize(2L)
                 .build()));
   }
