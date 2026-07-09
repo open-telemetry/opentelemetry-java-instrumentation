@@ -27,7 +27,8 @@ public abstract class HbaseBatchMetadata {
   private static final String MUTATE = "Mutate";
   private static final String BATCH = "BATCH";
 
-  // Derives the stable-semconv operation name and batch size for a call to Table.batch(...).
+  // Derives the operation name and db.operation.batch.size for a Table.batch(...) call, per the
+  // database semantic conventions for batch operations. Called only under stable semconv.
   public static HbaseBatchMetadata create(List<? extends Row> actions) {
     int size = actions.size();
     if (size == 0) {

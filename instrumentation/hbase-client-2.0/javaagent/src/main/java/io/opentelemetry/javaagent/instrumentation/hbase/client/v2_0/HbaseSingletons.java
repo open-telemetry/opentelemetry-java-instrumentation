@@ -46,11 +46,13 @@ public class HbaseSingletons {
     tableNameThreadLocal.remove();
   }
 
-  // Derives batch metadata for a Table.batch(...) call so the RPC-layer Multi span can report the
-  // stable-semconv operation name and db.operation.batch.size. Only stable semconv distinguishes
-  // batch operations; under old semconv the RPC span keeps reporting the raw "Multi" operation.
-  // Returns a scope that carries the batch metadata in context (propagated to the RPC pool thread),
-  // or null when there is nothing to propagate.
+  // Prepares a Table.batch(...) call for stable-semconv reporting. Under old semconv this is a
+  // no-op (returns null) and the RPC-layer span keeps reporting the raw "Multi" operation.
+  // Otherwise the derived batch metadata is placed in the context so the executor instrumentation
+  // propagates it to the pool thread that issues the Multi RPC, letting that span report the batch
+  // operation name and db.operation.batch.size; the returned scope must be closed when the batch
+  // call returns. An empty batch issues no RPC, so its span is emitted here directly and null is
+  // returned.
   @Nullable
   public static Scope startBatch(@Nullable TableName tableName, List<? extends Row> actions) {
     if (!emitStableDatabaseSemconv()) {
@@ -59,7 +61,6 @@ public class HbaseSingletons {
     HbaseBatchMetadata metadata = HbaseBatchMetadata.create(actions);
     Long batchSize = metadata.getOperationBatchSize();
     if (batchSize != null && batchSize == 0L) {
-      // an empty batch issues no RPC, so emit the batch span directly here
       startAndEndBatchSpan(tableName, metadata);
       return null;
     }
@@ -71,6 +72,8 @@ public class HbaseSingletons {
     return context.get(BATCH_METADATA_KEY);
   }
 
+  // Emits a self-contained span for an empty batch. No RPC is issued, so there is no user, host or
+  // port to record -- only the operation name, batch size and table namespace/collection.
   private static void startAndEndBatchSpan(
       @Nullable TableName tableName, HbaseBatchMetadata metadata) {
     HbaseRequest request =
