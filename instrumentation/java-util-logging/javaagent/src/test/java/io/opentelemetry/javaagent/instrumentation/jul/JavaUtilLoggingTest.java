@@ -25,8 +25,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -127,28 +125,29 @@ class JavaUtilLoggingTest {
           .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
           .hasSeverity(expectedSeverity)
           .hasSeverityText(expectedSeverityText);
-      List<AttributeAssertion> expectedAttributes = new ArrayList<>();
-      expectedAttributes.add(equalTo(THREAD_NAME, experimental(Thread.currentThread().getName())));
-      expectedAttributes.add(equalTo(THREAD_ID, experimental(Thread.currentThread().getId())));
-      if (logException) {
-        expectedAttributes.add(equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()));
-        expectedAttributes.add(equalTo(EXCEPTION_MESSAGE, "hello"));
-        expectedAttributes.add(
-            satisfies(
-                EXCEPTION_STACKTRACE, val -> val.contains(JavaUtilLoggingTest.class.getName())));
-      }
-      // logging via the Supplier + Throwable overload used above for logException doesn't support
+      // logging via the Supplier + Throwable overload used below for logException doesn't support
       // parameters, so the template/arguments attributes are only captured in the plain
       // withParam case
-      if (withParam && !logException) {
-        if (CAPTURE_TEMPLATE) {
-          expectedAttributes.add(equalTo(LOG_BODY_TEMPLATE, "xyz: {0}"));
-        }
-        if (CAPTURE_ARGUMENTS) {
-          expectedAttributes.add(equalTo(LOG_BODY_PARAMETERS, singletonList("123")));
-        }
-      }
-      assertThat(log).hasAttributesSatisfyingExactly(expectedAttributes);
+      boolean withTemplateOrArguments = withParam && !logException;
+      assertThat(log)
+          .hasAttributesSatisfyingExactly(
+              equalTo(THREAD_NAME, experimental(Thread.currentThread().getName())),
+              equalTo(THREAD_ID, experimental(Thread.currentThread().getId())),
+              equalTo(EXCEPTION_TYPE, logException ? IllegalStateException.class.getName() : null),
+              equalTo(EXCEPTION_MESSAGE, logException ? "hello" : null),
+              satisfies(
+                  EXCEPTION_STACKTRACE,
+                  val -> {
+                    if (logException) {
+                      val.contains(JavaUtilLoggingTest.class.getName());
+                    }
+                  }),
+              equalTo(
+                  LOG_BODY_TEMPLATE,
+                  CAPTURE_TEMPLATE && withTemplateOrArguments ? "xyz: {0}" : null),
+              equalTo(
+                  LOG_BODY_PARAMETERS,
+                  CAPTURE_ARGUMENTS && withTemplateOrArguments ? singletonList("123") : null));
 
       if (withParent) {
         assertThat(log).hasSpanContext(testing.spans().get(0).getSpanContext());
