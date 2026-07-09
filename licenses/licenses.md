@@ -19,19 +19,19 @@
 > - **Embedded license files**: [jackson-annotations-2.22.jar/META-INF/LICENSE](jackson-annotations-2.22.jar/META-INF/LICENSE)
     - [jackson-annotations-2.22.jar/META-INF/NOTICE](jackson-annotations-2.22.jar/META-INF/NOTICE)
 
-**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.22.0`
+**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.22.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.22.0.jar/META-INF/LICENSE](jackson-core-2.22.0.jar/META-INF/LICENSE)
-    - [jackson-core-2.22.0.jar/META-INF/NOTICE](jackson-core-2.22.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.22.1.jar/META-INF/LICENSE](jackson-core-2.22.1.jar/META-INF/LICENSE)
+    - [jackson-core-2.22.1.jar/META-INF/NOTICE](jackson-core-2.22.1.jar/META-INF/NOTICE)
 
-**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.22.0`
+**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.22.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-databind-2.22.0.jar/META-INF/LICENSE](jackson-databind-2.22.0.jar/META-INF/LICENSE)
-    - [jackson-databind-2.22.0.jar/META-INF/NOTICE](jackson-databind-2.22.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-databind-2.22.1.jar/META-INF/LICENSE](jackson-databind-2.22.1.jar/META-INF/LICENSE)
+    - [jackson-databind-2.22.1.jar/META-INF/NOTICE](jackson-databind-2.22.1.jar/META-INF/NOTICE)
 
 **6** **Group:** `com.googlecode.concurrentlinkedhashmap` **Name:** `concurrentlinkedhashmap-lru` **Version:** `1.4.2`
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
