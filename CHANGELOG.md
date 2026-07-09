@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-### 🌟 New instrumentation
+### 📈 Enhancements
 
 - Add `captureTemplate` and `captureArguments` options to the log4j, java-util-logging, and
   jboss-logmanager logging instrumentations, capturing the log message template and arguments as
