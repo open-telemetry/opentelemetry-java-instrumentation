@@ -50,6 +50,8 @@ class JvmTest extends TargetSystemTest {
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
 
+    startWeaverValidation("jvm", "jvm.yaml");
+
     startTarget(target);
 
     AttributeMatcher poolNameAttribute = attributeWithAnyValue("jvm.memory.pool.name");
