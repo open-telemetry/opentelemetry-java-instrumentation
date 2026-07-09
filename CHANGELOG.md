@@ -9,6 +9,7 @@
   separate `log.body.template` / `log.body.parameters` attributes. This extends the same option
   that was previously added for logback in
   [#15423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15423).
+  ([#19154](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19154))
 
 ## Version 2.29.0 (2026-06-19)
 
