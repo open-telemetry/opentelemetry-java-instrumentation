@@ -333,7 +333,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  void largeBatchCommandTruncatesQueryText() throws ReflectiveOperationException {
+  void batchCommandTruncatesQueryText() throws ReflectiveOperationException {
     RBatch batch = createBatch(redisson);
     assertThat(batch).isNotNull();
     StringBuilder bucketNameBuilder = new StringBuilder("bucket");
