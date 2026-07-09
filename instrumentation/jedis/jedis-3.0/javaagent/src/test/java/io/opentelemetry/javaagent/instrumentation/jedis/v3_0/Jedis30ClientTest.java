@@ -26,6 +26,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -290,15 +291,15 @@ class Jedis30ClientTest {
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
         // no span is created for empty pipelines
-        Arguments.argumentSet("empty", BatchScenario.<Pipeline>builder().build()),
-        Arguments.argumentSet(
+        argumentSet("empty", BatchScenario.<Pipeline>builder().build()),
+        argumentSet(
             "single",
             BatchScenario.<Pipeline>builder()
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
                 .operationName("SET")
                 .queryText("SET batch1 ?")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.<Pipeline>builder()
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
@@ -307,7 +308,7 @@ class Jedis30ClientTest {
                 .queryText("SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.<Pipeline>builder()
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
@@ -321,15 +322,15 @@ class Jedis30ClientTest {
   private static Stream<Arguments> transactionScenarios() {
     return Stream.of(
         // no span is created for empty transactions
-        Arguments.argumentSet("empty", BatchScenario.<Transaction>builder().build()),
-        Arguments.argumentSet(
+        argumentSet("empty", BatchScenario.<Transaction>builder().build()),
+        argumentSet(
             "single",
             BatchScenario.<Transaction>builder()
                 .addCommand(transaction -> transaction.set("tx1", "v1"))
                 .operationName("SET")
                 .queryText("SET tx1 ?")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.<Transaction>builder()
                 .addCommand(transaction -> transaction.set("tx1", "v1"))
@@ -338,7 +339,7 @@ class Jedis30ClientTest {
                 .queryText("SET tx1 ?;SET tx2 ?")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.<Transaction>builder()
                 .addCommand(transaction -> transaction.set("tx1", "v1"))
