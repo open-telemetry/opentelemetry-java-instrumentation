@@ -342,9 +342,9 @@ public abstract class AbstractRedissonClientTest {
     }
     String bucketName = bucketNameBuilder.toString();
     int batchSize = 4;
-    int queryTextCommandCount = 2;
-    for (int commandIndex = 0; commandIndex < batchSize; commandIndex++) {
-      batch.getBucket(bucketName).setAsync("v" + commandIndex);
+    int truncatedQueryTextCommandCount = 2;
+    for (int i = 0; i < batchSize; i++) {
+      batch.getBucket(bucketName).setAsync("v" + i);
     }
     // Adapt different method signature:
     // `BatchResult<?> execute()` and `List<?> execute()`
@@ -370,7 +370,9 @@ public abstract class AbstractRedissonClientTest {
                                 maybeStable(DB_STATEMENT),
                                 String.join(
                                     ";",
-                                  nCopies(queryTextCommandCount, "SET " + bucketName + " ?"))))));
+                                    nCopies(
+                                        truncatedQueryTextCommandCount,
+                                        "SET " + bucketName + " ?"))))));
   }
 
   @Test
