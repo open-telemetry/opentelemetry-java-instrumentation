@@ -30,3 +30,22 @@ tasks.test {
   jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true")
   jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
 }
+
+tasks {
+  val testCaptureTemplateAndArguments = register<Test>("testCaptureTemplateAndArguments") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs(
+      "-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=*",
+      "-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true",
+      "-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true",
+      "-Dotel.instrumentation.jboss-logmanager.experimental.capture-template=true",
+      "-Dotel.instrumentation.jboss-logmanager.experimental.capture-arguments=true",
+    )
+  }
+
+  check {
+    dependsOn(testCaptureTemplateAndArguments)
+  }
+}

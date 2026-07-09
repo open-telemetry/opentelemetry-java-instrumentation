@@ -15,25 +15,40 @@ import static java.util.logging.Level.FINEST;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 public class JavaUtilLoggingHelper {
 
+  private static final AttributeKey<String> LOG_BODY_TEMPLATE =
+      AttributeKey.stringKey("log.body.template");
+  private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
+      AttributeKey.stringArrayKey("log.body.parameters");
+
   private static final Formatter formatter = new AccessibleFormatter();
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
           .getBoolean("experimental_log_attributes/development", false);
+  private static final boolean captureTemplate =
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
+          .getBoolean("capture_template/development", false);
+  private static final boolean captureArguments =
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
+          .getBoolean("capture_arguments/development", false);
 
   public static void capture(application.java.util.logging.Logger logger, LogRecord logRecord) {
 
@@ -91,6 +106,17 @@ public class JavaUtilLoggingHelper {
     Throwable throwable = logRecord.getThrown();
     if (throwable != null) {
       builder.setException(throwable);
+    }
+
+    Object[] parameters = logRecord.getParameters();
+    if (parameters != null && parameters.length > 0) {
+      if (captureTemplate) {
+        attributes.put(LOG_BODY_TEMPLATE, logRecord.getMessage());
+      }
+      if (captureArguments) {
+        attributes.put(
+            LOG_BODY_PARAMETERS, Arrays.stream(parameters).map(String::valueOf).collect(toList()));
+      }
     }
 
     if (captureExperimentalAttributes) {

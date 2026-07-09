@@ -13,16 +13,21 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Collections.singletonList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -32,8 +37,17 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JavaUtilLoggingTest {
+  private static final AttributeKey<String> LOG_BODY_TEMPLATE =
+      AttributeKey.stringKey("log.body.template");
+  private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
+      AttributeKey.stringArrayKey("log.body.parameters");
+
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.java-util-logging.experimental-log-attributes");
+  private static final boolean CAPTURE_TEMPLATE =
+      Boolean.getBoolean("otel.instrumentation.java-util-logging.experimental.capture-template");
+  private static final boolean CAPTURE_ARGUMENTS =
+      Boolean.getBoolean("otel.instrumentation.java-util-logging.experimental.capture-arguments");
 
   private static final Logger logger = Logger.getLogger("abc");
 
@@ -113,22 +127,29 @@ class JavaUtilLoggingTest {
           .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
           .hasSeverity(expectedSeverity)
           .hasSeverityText(expectedSeverityText);
+      List<AttributeAssertion> expectedAttributes = new ArrayList<>();
+      expectedAttributes.add(equalTo(THREAD_NAME, experimental(Thread.currentThread().getName())));
+      expectedAttributes.add(equalTo(THREAD_ID, experimental(Thread.currentThread().getId())));
       if (logException) {
-        assertThat(log)
-            .hasAttributesSatisfyingExactly(
-                equalTo(THREAD_NAME, experimental(Thread.currentThread().getName())),
-                equalTo(THREAD_ID, experimental(Thread.currentThread().getId())),
-                equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                equalTo(EXCEPTION_MESSAGE, "hello"),
-                satisfies(
-                    EXCEPTION_STACKTRACE,
-                    val -> val.contains(JavaUtilLoggingTest.class.getName())));
-      } else {
-        assertThat(log)
-            .hasAttributesSatisfyingExactly(
-                equalTo(THREAD_NAME, experimental(Thread.currentThread().getName())),
-                equalTo(THREAD_ID, experimental(Thread.currentThread().getId())));
+        expectedAttributes.add(equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()));
+        expectedAttributes.add(equalTo(EXCEPTION_MESSAGE, "hello"));
+        expectedAttributes.add(
+            satisfies(
+                EXCEPTION_STACKTRACE, val -> val.contains(JavaUtilLoggingTest.class.getName())));
       }
+      // logging via the Supplier + Throwable overload used above for logException doesn't support
+      // parameters, so the template/arguments attributes are only captured in the plain
+      // withParam case
+      if (withParam && !logException) {
+        if (CAPTURE_TEMPLATE) {
+          expectedAttributes.add(equalTo(LOG_BODY_TEMPLATE, "xyz: {0}"));
+        }
+        if (CAPTURE_ARGUMENTS) {
+          expectedAttributes.add(equalTo(LOG_BODY_PARAMETERS, singletonList("123")));
+        }
+      }
+      assertThat(log)
+          .hasAttributesSatisfyingExactly(expectedAttributes.toArray(new AttributeAssertion[0]));
 
       if (withParent) {
         assertThat(log).hasSpanContext(testing.spans().get(0).getSpanContext());
