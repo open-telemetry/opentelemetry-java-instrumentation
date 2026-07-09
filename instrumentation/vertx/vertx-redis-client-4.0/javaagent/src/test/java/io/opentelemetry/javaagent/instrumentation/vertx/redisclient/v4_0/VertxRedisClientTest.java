@@ -236,6 +236,8 @@ class VertxRedisClientTest {
 
   private static Stream<Arguments> batchScenarios() {
     String longBatchKey = String.join("", nCopies(1020, "x"));
+    int largeBatchSize = 33;
+    int largeQueryTextCommandCount = 31;
     // No empty scenario: Vert.x Redis never completes client.batch(emptyList()),
     // and times out before asserting instrumentation.
     return Stream.of(
@@ -265,15 +267,16 @@ class VertxRedisClientTest {
                 .batchSize(2)
                 .build()),
         argumentSet(
-            "large",
+              "largeTruncatedQueryText",
             BatchScenario.builder()
                 .requests(
                     Stream.generate(() -> Request.cmd(Command.GET).arg(longBatchKey))
-                        .limit(33)
+                    .limit(largeBatchSize)
                         .collect(toList()))
                 .operationName("PIPELINE GET")
-                .queryText(String.join(";", nCopies(31, "GET " + longBatchKey)))
-                .batchSize(33)
+                .queryText(
+                  String.join(";", nCopies(largeQueryTextCommandCount, "GET " + longBatchKey)))
+                .batchSize(largeBatchSize)
                 .build()));
   }
 
