@@ -365,7 +365,7 @@ public abstract class AbstractRedissonClientTest {
                                 emitStableDatabaseSemconv() ? "PIPELINE SET" : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? (long) batchSize : null),
+                                emitStableDatabaseSemconv() ? Long.valueOf(batchSize) : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 String.join(
