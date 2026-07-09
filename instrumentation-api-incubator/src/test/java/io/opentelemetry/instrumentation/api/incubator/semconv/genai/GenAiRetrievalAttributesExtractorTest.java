@@ -57,7 +57,9 @@ class GenAiRetrievalAttributesExtractorTest {
     RetrievalRequest request = new RetrievalRequest("products-index", "weather in Paris", 5L);
 
     AttributesExtractor<RetrievalRequest, Void> extractor =
-        GenAiRetrievalAttributesExtractor.create(new TestRetrievalGetter(), true);
+        GenAiRetrievalAttributesExtractor.builder(new TestRetrievalGetter())
+            .setCaptureMessageContent(true)
+            .build();
 
     AttributesBuilder startBuilder = Attributes.builder();
     extractor.onStart(startBuilder, Context.root(), request);
@@ -77,7 +79,9 @@ class GenAiRetrievalAttributesExtractorTest {
     RetrievalRequest request = new RetrievalRequest(null, null, null);
 
     AttributesExtractor<RetrievalRequest, Void> extractor =
-        GenAiRetrievalAttributesExtractor.create(new TestRetrievalGetter(), true);
+        GenAiRetrievalAttributesExtractor.builder(new TestRetrievalGetter())
+            .setCaptureMessageContent(true)
+            .build();
 
     AttributesBuilder startBuilder = Attributes.builder();
     extractor.onStart(startBuilder, Context.root(), request);

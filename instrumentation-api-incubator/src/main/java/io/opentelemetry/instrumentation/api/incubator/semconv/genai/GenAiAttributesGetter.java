@@ -29,8 +29,8 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE>
   /**
    * Returns the legacy {@code gen_ai.system} value.
    *
-   * @deprecated Use {@link #getProviderName} instead. This method will be removed in a future
-   *     release once the migration period ends.
+   * @deprecated Use {@link #getProviderName} instead. This method will be removed in the next
+   *     release.
    */
   @Deprecated
   default String getSystem(REQUEST request) {

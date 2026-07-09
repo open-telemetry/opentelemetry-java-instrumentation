@@ -36,27 +36,26 @@ public final class GenAiRetrievalAttributesExtractor<REQUEST, RESPONSE>
   private static final AttributeKey<Long> GEN_AI_RETRIEVAL_TOP_K =
       longKey("gen_ai.retrieval.top_k");
 
-  /** Creates a GenAI retrieval attributes extractor that does not capture sensitive query text. */
+  /** Creates a GenAI retrieval attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       GenAiRetrievalAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
-    return create(attributesGetter, false);
+    return builder(attributesGetter).build();
   }
 
   /**
-   * Creates a GenAI retrieval attributes extractor.
-   *
-   * @param captureMessageContent whether to capture the retrieval query text (sensitive data)
+   * Returns a new {@link GenAiRetrievalAttributesExtractorBuilder} that can be used to configure
+   * the GenAI retrieval attributes extractor.
    */
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      GenAiRetrievalAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      boolean captureMessageContent) {
-    return new GenAiRetrievalAttributesExtractor<>(attributesGetter, captureMessageContent);
+  public static <REQUEST, RESPONSE>
+      GenAiRetrievalAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+          GenAiRetrievalAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+    return new GenAiRetrievalAttributesExtractorBuilder<>(attributesGetter);
   }
 
   private final GenAiRetrievalAttributesGetter<REQUEST, RESPONSE> getter;
   private final boolean captureMessageContent;
 
-  private GenAiRetrievalAttributesExtractor(
+  GenAiRetrievalAttributesExtractor(
       GenAiRetrievalAttributesGetter<REQUEST, RESPONSE> getter, boolean captureMessageContent) {
     this.getter = getter;
     this.captureMessageContent = captureMessageContent;
