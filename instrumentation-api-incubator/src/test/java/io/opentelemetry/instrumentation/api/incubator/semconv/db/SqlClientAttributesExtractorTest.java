@@ -319,6 +319,57 @@ class SqlClientAttributesExtractorTest {
   }
 
   @Test
+  void shouldExtractSingleQueryEmptyBatchAttributes() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.namespace", "potatoes");
+    request.put("db.query.texts", singleton("INSERT INTO potato VALUES(?)"));
+    request.put(DB_OPERATION_BATCH_SIZE.getKey(), 0L);
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.create(new TestMultiAttributesGetter());
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, request, null, null);
+
+    // then
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DB_NAME, "potatoes"),
+              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
+              entry(DB_OPERATION, "INSERT"),
+              entry(DB_SQL_TABLE, "potato"),
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 0L));
+    } else if (emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DB_NAME, "potatoes"),
+              entry(DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
+              entry(DB_OPERATION, "INSERT"),
+              entry(DB_SQL_TABLE, "potato"));
+    } else if (emitStableDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 0L));
+    }
+
+    assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
   void shouldExtractMultiQueryBatchAttributes() {
     // given
     Map<String, Object> request = new HashMap<>();

@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
@@ -377,10 +378,9 @@ class ReferenceCollectorTest {
             entry(VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName()));
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource
-  public void shouldNotCollectVirtualFieldsForInvalidScenario(
-      @SuppressWarnings("unused") String desc, String adviceClassName) {
+  public void shouldNotCollectVirtualFieldsForInvalidScenario(String adviceClassName) {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
 
     assertThatExceptionOfType(MuzzleCompilationException.class)
@@ -394,19 +394,19 @@ class ReferenceCollectorTest {
   @SuppressWarnings("unused")
   private static List<Arguments> shouldNotCollectVirtualFieldsForInvalidScenario() {
     return asList(
-        Arguments.of(
+        argumentSet(
             "passing arbitrary variables or parameters to VirtualField.find()",
             VirtualFieldTestClasses.NotUsingClassRefAdvice.class.getName()),
-        Arguments.of(
+        argumentSet(
             "storing class ref in a local var",
             VirtualFieldTestClasses.PassingVariableAdvice.class.getName()),
-        Arguments.of(
+        argumentSet(
             "using array type as the field owner type",
             VirtualFieldTestClasses.UsingArrayAsOwnerAdvice.class.getName()),
-        Arguments.of(
+        argumentSet(
             "using primitive type as the field owner type",
             VirtualFieldTestClasses.UsingPrimitiveAsOwnerAdvice.class.getName()),
-        Arguments.of(
+        argumentSet(
             "using primitive type as the field type",
             VirtualFieldTestClasses.UsingPrimitiveAsFieldAdvice.class.getName()));
   }

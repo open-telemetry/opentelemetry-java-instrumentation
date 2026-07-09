@@ -28,6 +28,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -294,8 +295,8 @@ public abstract class AbstractRedissonClientTest {
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
         // an empty batch fails to execute and produces no span
-        Arguments.argumentSet("empty", BatchScenario.builder().empty().build()),
-        Arguments.argumentSet(
+        argumentSet("empty", BatchScenario.builder().empty().build()),
+        argumentSet(
             "single",
             BatchScenario.builder()
                 .addCommand(batch -> batch.getBucket("batch1").setAsync("v1"))
@@ -304,7 +305,7 @@ public abstract class AbstractRedissonClientTest {
                 .oldOperation("SET")
                 .queryText("SET batch1 ?")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .addCommand(batch -> batch.getBucket("batch1").setAsync("v1"))
@@ -314,7 +315,7 @@ public abstract class AbstractRedissonClientTest {
                 .batchSize(2)
                 .queryText("SET batch1 ?;SET batch2 ?")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
                 .addCommand(batch -> batch.getBucket("batch1").setAsync("v1"))

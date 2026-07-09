@@ -33,6 +33,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -358,7 +359,7 @@ class VertxSqlClientTest {
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "empty",
             BatchScenario.builder()
                 .preparedQuery("insert into batch_test values ($1, $2) returning *")
@@ -367,7 +368,7 @@ class VertxSqlClientTest {
                 .querySummary("insert batch_test")
                 .errorType("io.vertx.core.impl.NoStackTraceThrowable")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "single",
             BatchScenario.builder()
                 .preparedQuery("insert into batch_test values ($1, $2) returning *")
@@ -375,7 +376,7 @@ class VertxSqlClientTest {
                 .stableSpanName("insert batch_test")
                 .querySummary("insert batch_test")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .preparedQuery("insert into batch_test values ($1, $2) returning *")

@@ -28,6 +28,7 @@ import static java.util.Collections.nCopies;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -238,14 +239,14 @@ class VertxRedisClientTest {
     // No empty scenario: Vert.x Redis never completes client.batch(emptyList()),
     // and times out before asserting instrumentation.
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "single",
             BatchScenario.builder()
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .operationName("SET")
                 .queryText("SET batch1 ?")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
@@ -254,7 +255,7 @@ class VertxRedisClientTest {
                 .queryText("SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
@@ -263,7 +264,7 @@ class VertxRedisClientTest {
                 .queryText("SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "large",
             BatchScenario.builder()
                 .requests(
