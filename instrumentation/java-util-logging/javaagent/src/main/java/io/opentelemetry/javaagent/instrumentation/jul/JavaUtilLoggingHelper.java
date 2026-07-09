@@ -21,6 +21,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
@@ -40,15 +41,19 @@ public class JavaUtilLoggingHelper {
 
   private static final Formatter formatter = new AccessibleFormatter();
 
-  private static final boolean captureExperimentalAttributes =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
-          .getBoolean("experimental_log_attributes/development", false);
-  private static final boolean captureTemplate =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
-          .getBoolean("capture_template/development", false);
-  private static final boolean captureArguments =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
-          .getBoolean("capture_arguments/development", false);
+  private static final boolean captureExperimentalAttributes;
+  private static final boolean captureTemplate;
+  private static final boolean captureArguments;
+
+  static {
+    DeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(
+            GlobalOpenTelemetry.get(), "java_util_logging");
+    captureExperimentalAttributes =
+        config.getBoolean("experimental_log_attributes/development", false);
+    captureTemplate = config.getBoolean("capture_template/development", false);
+    captureArguments = config.getBoolean("capture_arguments/development", false);
+  }
 
   public static void capture(application.java.util.logging.Logger logger, LogRecord logRecord) {
 

@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
@@ -39,15 +40,19 @@ public class LoggingEventMapper {
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
 
-  private static final boolean captureExperimentalAttributes =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jboss_logmanager")
-          .getBoolean("experimental_log_attributes/development", false);
-  private static final boolean captureTemplate =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jboss_logmanager")
-          .getBoolean("capture_template/development", false);
-  private static final boolean captureArguments =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jboss_logmanager")
-          .getBoolean("capture_arguments/development", false);
+  private static final boolean captureExperimentalAttributes;
+  private static final boolean captureTemplate;
+  private static final boolean captureArguments;
+
+  static {
+    DeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(
+            GlobalOpenTelemetry.get(), "jboss_logmanager");
+    captureExperimentalAttributes =
+        config.getBoolean("experimental_log_attributes/development", false);
+    captureTemplate = config.getBoolean("capture_template/development", false);
+    captureArguments = config.getBoolean("capture_arguments/development", false);
+  }
 
   private final List<AttributeKey<String>> captureMdcAttributeKeys;
 
