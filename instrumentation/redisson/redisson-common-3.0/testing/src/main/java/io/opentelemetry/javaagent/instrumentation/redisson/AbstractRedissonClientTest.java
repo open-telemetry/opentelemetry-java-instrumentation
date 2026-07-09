@@ -27,6 +27,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Collections.nCopies;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -332,7 +333,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  void largeBatchCommand() throws ReflectiveOperationException {
+  void batchCommandTruncatesQueryText() throws ReflectiveOperationException {
     RBatch batch = createBatch(redisson);
     assertThat(batch).isNotNull();
     StringBuilder bucketNameBuilder = new StringBuilder("bucket");
@@ -340,8 +341,9 @@ public abstract class AbstractRedissonClientTest {
       bucketNameBuilder.append("a");
     }
     String bucketName = bucketNameBuilder.toString();
-    // run 4 command but only 2 will be added to the query text because of the max length limit
-    for (int i = 0; i < 4; i++) {
+    int batchSize = 4;
+    int truncatedQueryTextCommandCount = 2;
+    for (int i = 0; i < batchSize; i++) {
       batch.getBucket(bucketName).setAsync("v" + i);
     }
     // Adapt different method signature:
@@ -362,10 +364,15 @@ public abstract class AbstractRedissonClientTest {
                                 DB_OPERATION_NAME,
                                 emitStableDatabaseSemconv() ? "PIPELINE SET" : null),
                             equalTo(
-                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 4L : null),
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? (long) batchSize : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "SET " + bucketName + " ?;SET " + bucketName + " ?"))));
+                                String.join(
+                                    ";",
+                                    nCopies(
+                                        truncatedQueryTextCommandCount,
+                                        "SET " + bucketName + " ?"))))));
   }
 
   @Test
