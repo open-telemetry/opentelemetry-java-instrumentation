@@ -22,7 +22,8 @@ final class SchedulerNameAttributesExtractor
     try {
       attributes.put(
           QuartzExperimentalAttributes.SCHEDULER_NAME, job.getScheduler().getSchedulerName());
-    } catch (SchedulerException e) {
+    } catch (SchedulerException ignored) {
+      // Scheduler name is unavailable; skip the attribute.
     }
   }
 
