@@ -23,10 +23,8 @@ import org.quartz.listeners.SchedulerListenerSupport;
  */
 final class TracingSchedulerListener extends SchedulerListenerSupport {
 
-  // Experimental attributes: names/shapes may change until scheduler instrumentation stabilizes.
+  // Experimental attribute: name/shape may change until scheduler instrumentation stabilizes.
   private static final AttributeKey<String> SCHEDULER_NAME = stringKey("quartz.scheduler.name");
-  private static final AttributeKey<String> ERROR_MESSAGE =
-      stringKey("quartz.scheduler.error.message");
 
   private final Logger eventLogger;
   private final String schedulerName;
@@ -57,8 +55,10 @@ final class TracingSchedulerListener extends SchedulerListenerSupport {
             .setContext(parentContext)
             .setSeverity(Severity.ERROR)
             .setAttribute(SCHEDULER_NAME, schedulerName);
+    // The error message is the primary content of the event, so it goes in the body (matching how
+    // OTel log bridges map a log message) rather than an attribute.
     if (msg != null) {
-      logRecordBuilder.setAttribute(ERROR_MESSAGE, msg);
+      logRecordBuilder.setBody(msg);
     }
     logRecordBuilder.emit();
   }

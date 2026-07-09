@@ -128,10 +128,9 @@ public abstract class AbstractQuartzTest {
                 logRecord
                     .hasEventName("quartz.scheduler.error")
                     .hasSeverity(Severity.ERROR)
+                    .hasBody("Something went wrong")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("quartz.scheduler.name"), "default"),
-                        equalTo(
-                            stringKey("quartz.scheduler.error.message"), "Something went wrong")));
+                        equalTo(stringKey("quartz.scheduler.name"), "default")));
   }
 
   private static Scheduler createScheduler() throws Exception {
