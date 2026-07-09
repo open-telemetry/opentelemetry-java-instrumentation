@@ -54,6 +54,7 @@ public final class HbaseInstrumentationModule extends InstrumentationModule
         new RegionServerCallableInstrumentation(),
         new AbstractRpcClientInstrumentation(),
         new RpcConnectionInstrumentation(),
-        new IpcCallInstrumentation());
+        new IpcCallInstrumentation(),
+        new HTableInstrumentation());
   }
 }

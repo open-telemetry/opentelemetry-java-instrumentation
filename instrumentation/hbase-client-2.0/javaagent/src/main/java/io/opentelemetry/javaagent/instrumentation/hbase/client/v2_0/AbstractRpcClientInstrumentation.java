@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.getBatchMetadata;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.getTableName;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.resetRequestAndContext;
@@ -64,9 +65,22 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
         port = address.getPort();
         hostname = address.getHostString();
       }
-      HbaseRequest request =
-          HbaseRequest.create(md.getName(), getTableName(), ticket.getName(), hostname, port);
+      String operation = md.getName();
+      Long batchSize = null;
       Context parentContext = Java8BytecodeBridge.currentContext();
+      // A Table.batch(...) call is issued as a "Multi" RPC. When batch metadata is propagated in
+      // the
+      // context, report the derived batch operation name and db.operation.batch.size instead.
+      if ("Multi".equals(operation)) {
+        HbaseBatchMetadata batchMetadata = getBatchMetadata(parentContext);
+        if (batchMetadata != null) {
+          operation = batchMetadata.getOperation();
+          batchSize = batchMetadata.getOperationBatchSize();
+        }
+      }
+      HbaseRequest request =
+          HbaseRequest.create(
+              operation, getTableName(), ticket.getName(), hostname, port, batchSize);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }

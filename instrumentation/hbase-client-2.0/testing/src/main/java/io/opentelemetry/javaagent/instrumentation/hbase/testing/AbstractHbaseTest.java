@@ -12,6 +12,9 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -33,6 +36,7 @@ import com.github.dockerjava.api.model.Ports;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
@@ -366,35 +370,55 @@ public abstract class AbstractHbaseTest {
       table.batch(scenario.actions, new Object[scenario.actions.size()]);
     }
 
-    if (scenario.actions.isEmpty()) {
-      assertThat(testing().spans()).isEmpty();
+    if (!emitStableDatabaseSemconv()) {
+      // old semconv reports every batch RPC as "Multi" and produces no span for an empty batch
+      if (scenario.actions.isEmpty()) {
+        assertThat(testing().spans()).isEmpty();
+        return;
+      }
+      testing()
+          .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
       return;
     }
 
+    // stable semconv derives the batch operation name and db.operation.batch.size; an empty batch
+    // issues no RPC, so it is reported as a span with no server attributes
     testing()
         .waitAndAssertTraces(
-            traceAssertConsumer(TABLE_NAME, scenario.operationName, REGION_SERVER_PORT, true));
+            batchTraceAssertConsumer(
+                scenario.operationName, scenario.batchSize, !scenario.actions.isEmpty()));
   }
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
-        // an empty batch produces no span
-        argumentSet("empty", BatchScenario.builder().build()),
+        // an empty batch is a batch operation with size 0
+        argumentSet("empty", BatchScenario.builder().operationName("BATCH").batchSize(0L).build()),
+        // a single operation is modeled as a non-batch operation (no db.operation.batch.size)
         argumentSet(
-            "single", BatchScenario.builder().addAction(get(ROW_1)).operationName(MULTI).build()),
+            "single", BatchScenario.builder().addAction(get(ROW_1)).operationName(GET).build()),
         argumentSet(
-            "twoSameOperation",
+            "twoGets",
             BatchScenario.builder()
                 .addAction(get(ROW_1))
                 .addAction(get(ROW_2))
-                .operationName(MULTI)
+                .operationName("BATCH " + GET)
+                .batchSize(2L)
                 .build()),
         argumentSet(
-            "twoDifferentOperations",
+            "twoMutations",
             BatchScenario.builder()
-                .addAction(put("batch-matrix-put-row"))
+                .addAction(put("batch-mutation-row-1"))
+                .addAction(put("batch-mutation-row-2"))
+                .operationName("BATCH " + MUTATE)
+                .batchSize(2L)
+                .build()),
+        argumentSet(
+            "mixed",
+            BatchScenario.builder()
+                .addAction(put("batch-mixed-put-row"))
                 .addAction(get(ROW_1))
-                .operationName(MULTI)
+                .operationName("BATCH")
+                .batchSize(2L)
                 .build()));
   }
 
@@ -581,13 +605,42 @@ public abstract class AbstractHbaseTest {
     return null;
   }
 
+  // Asserts a stable-semconv batch span, optionally including db.operation.batch.size and (for
+  // batches that issue an RPC) the server address/port. Empty batches emit no RPC, so they carry no
+  // server attributes.
+  private Consumer<TraceAssert> batchTraceAssertConsumer(
+      String operation, Long batchSize, boolean hasServer) {
+    String spanName = operation + " " + TABLE_NAME.getNameAsString();
+    return trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              List<AttributeAssertion> assertions = new ArrayList<>();
+              assertions.add(equalTo(DB_SYSTEM_NAME, maybeStableDbSystemName(DB_SYSTEM_VALUE)));
+              assertions.add(equalTo(DB_NAMESPACE, TABLE_NAME.getNamespaceAsString()));
+              assertions.add(equalTo(DB_COLLECTION_NAME, TABLE_NAME.getNameAsString()));
+              assertions.add(equalTo(DB_OPERATION_NAME, operation));
+              if (batchSize != null) {
+                assertions.add(equalTo(DB_OPERATION_BATCH_SIZE, batchSize));
+              }
+              if (hasServer) {
+                assertions.add(equalTo(SERVER_ADDRESS, hostname));
+                assertions.add(equalTo(SERVER_PORT, REGION_SERVER_PORT));
+              }
+              span.hasName(spanName)
+                  .hasKind(SpanKind.CLIENT)
+                  .hasAttributesSatisfyingExactly(assertions);
+            });
+  }
+
   private static class BatchScenario {
     final List<Row> actions;
     final String operationName;
+    final Long batchSize;
 
     BatchScenario(Builder builder) {
       this.actions = builder.actions;
       this.operationName = builder.operationName;
+      this.batchSize = builder.batchSize;
     }
 
     static Builder builder() {
@@ -597,9 +650,15 @@ public abstract class AbstractHbaseTest {
     static class Builder {
       private final List<Row> actions = new ArrayList<>();
       private String operationName;
+      private Long batchSize;
 
       Builder operationName(String operationName) {
         this.operationName = operationName;
+        return this;
+      }
+
+      Builder batchSize(Long batchSize) {
+        this.batchSize = batchSize;
         return this;
       }
 
