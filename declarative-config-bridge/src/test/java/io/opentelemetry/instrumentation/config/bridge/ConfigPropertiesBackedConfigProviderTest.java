@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,7 @@ class ConfigPropertiesBackedConfigProviderTest {
                 ConfigPropertiesBackedConfigProvider.builder()
                     .addMapping(
                         "java.common.http.known_methods", "otel.instrumentation.http.known-methods")
-                    .build(DefaultConfigProperties.createFromMap(Map.of())))
+                    .build(DefaultConfigProperties.createFromMap(Collections.emptyMap())))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("java.common.http.known_methods");
   }
