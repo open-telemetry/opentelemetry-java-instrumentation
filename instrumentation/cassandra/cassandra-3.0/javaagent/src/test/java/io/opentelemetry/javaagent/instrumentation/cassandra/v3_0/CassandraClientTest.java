@@ -26,6 +26,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 import static org.junit.jupiter.api.Named.named;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Cluster;
@@ -81,6 +82,10 @@ class CassandraClientTest {
     cassandra =
         new GenericContainer<>("cassandra:3")
             .withEnv("JVM_OPTS", "-Xmx128m -Xms128m")
+            // speed up single-node startup
+            .withEnv(
+                "JVM_EXTRA_OPTS",
+                "-Dcassandra.skip_wait_for_gossip_to_settle=0 -Dcassandra.initial_token=0")
             .withExposedPorts(9042)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
@@ -337,20 +342,29 @@ class CassandraClientTest {
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? scenario.querySummary : null),
-                            equalTo(maybeStable(DB_OPERATION), scenario.operationName),
-                            equalTo(maybeStable(DB_CASSANDRA_TABLE), scenario.collectionName))));
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.operationName
+                                    : scenario.oldOperationName()),
+                            equalTo(
+                                maybeStable(DB_CASSANDRA_TABLE),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.collectionName
+                                    : scenario.oldCollectionName()))));
   }
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "empty",
             BatchScenario.builder()
                 .buildBatch(session -> new BatchStatement())
-                .spanName("cassandra")
+                .spanName("BATCH")
                 .oldSpanName("DB Query")
+                .batchSize(0)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "single",
             BatchScenario.builder()
                 .buildBatch(
@@ -367,7 +381,7 @@ class CassandraClientTest {
                 .operationName("INSERT")
                 .collectionName("batch_test.records")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .buildBatch(
@@ -381,8 +395,10 @@ class CassandraClientTest {
                 .queryText("INSERT INTO batch_test.records (id, num) values (?, ?)")
                 .querySummary("BATCH INSERT batch_test.records")
                 .batchSize(2)
+                .operationName("BATCH INSERT")
+                .collectionName("batch_test.records")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
                 .buildBatch(
@@ -401,6 +417,8 @@ class CassandraClientTest {
                     "INSERT INTO batch_test.records (id, num) values (4, ?); UPDATE batch_test.records SET num = ? WHERE id = ?")
                 .querySummary("BATCH")
                 .batchSize(2)
+                .operationName("BATCH")
+                .collectionName("batch_test.records")
                 .build()));
   }
 
@@ -561,6 +579,14 @@ class CassandraClientTest {
 
     static Builder builder() {
       return new Builder();
+    }
+
+    String oldOperationName() {
+      return batchSize == null ? operationName : null;
+    }
+
+    String oldCollectionName() {
+      return batchSize == null ? collectionName : null;
     }
 
     static class Builder {
