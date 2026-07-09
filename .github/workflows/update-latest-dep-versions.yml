@@ -52,7 +52,7 @@ jobs:
         if: steps.check-changes.outputs.changed == 'true'
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
+          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request
