@@ -9,8 +9,10 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDiale
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -461,6 +463,66 @@ class SqlClientAttributesExtractorTest {
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldExtractMultiQueryBatchOperationNameWhenSingleOperationAndCollection() {
+    // given
+    Map<String, Object> sameOperation = new HashMap<>();
+    sameOperation.put("db.namespace", "potatoes");
+    sameOperation.put(
+        "db.query.texts", asList("INSERT INTO potato VALUES(1)", "INSERT INTO potato VALUES(2)"));
+    sameOperation.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
+
+    Map<String, Object> mixedOperations = new HashMap<>();
+    mixedOperations.put("db.namespace", "potatoes");
+    mixedOperations.put(
+        "db.query.texts",
+        asList("INSERT INTO potato VALUES(1)", "UPDATE potato SET name='bob' WHERE id=1"));
+    mixedOperations.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
+
+    Map<String, Object> mixedCollections = new HashMap<>();
+    mixedCollections.put("db.namespace", "potatoes");
+    mixedCollections.put(
+        "db.query.texts", asList("INSERT INTO potato VALUES(1)", "INSERT INTO tomato VALUES(2)"));
+    mixedCollections.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.builder(new TestMultiAttributesGetter())
+            .setSingleOperationAndCollection(true)
+            .build();
+
+    // when
+    AttributesBuilder sameOperationAttributes = Attributes.builder();
+    underTest.onStart(sameOperationAttributes, context, sameOperation);
+
+    AttributesBuilder mixedOperationsAttributes = Attributes.builder();
+    underTest.onStart(mixedOperationsAttributes, context, mixedOperations);
+
+    AttributesBuilder mixedCollectionsAttributes = Attributes.builder();
+    underTest.onStart(mixedCollectionsAttributes, context, mixedCollections);
+
+    // then
+    if (emitStableDatabaseSemconv()) {
+      assertThat(sameOperationAttributes.build())
+          .containsEntry(DB_OPERATION_NAME, "BATCH INSERT")
+          .containsEntry(DB_COLLECTION_NAME, "potato")
+          .containsEntry(DB_QUERY_SUMMARY, "BATCH INSERT potato");
+      assertThat(mixedOperationsAttributes.build())
+          .containsEntry(DB_OPERATION_NAME, "BATCH")
+          .containsEntry(DB_COLLECTION_NAME, "potato")
+          .containsEntry(DB_QUERY_SUMMARY, "BATCH");
+      // different collections -> db.collection.name is omitted, db.operation.name is BATCH INSERT
+      assertThat(mixedCollectionsAttributes.build())
+          .containsEntry(DB_OPERATION_NAME, "BATCH INSERT")
+          .doesNotContainKey(DB_COLLECTION_NAME);
+    } else {
+      assertThat(sameOperationAttributes.build().get(DB_OPERATION_NAME)).isNull();
+      assertThat(mixedOperationsAttributes.build().get(DB_OPERATION_NAME)).isNull();
+      assertThat(mixedCollectionsAttributes.build().get(DB_OPERATION_NAME)).isNull();
+    }
   }
 
   @Test
