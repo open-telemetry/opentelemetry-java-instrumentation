@@ -35,11 +35,13 @@ public abstract class HbaseBatchMetadata {
       return new AutoValue_HbaseBatchMetadata(BATCH, 0L);
     }
 
+    // common holds the shared operation name while all actions match; it is cleared to null as soon
+    // as an action differs (or if the first action is an unrecognized type), which also stops the
+    // loop. A non-null value after the loop means the batch is homogeneous.
     String common = actionOperation(actions.get(0));
-    boolean homogeneous = common != null;
-    for (int i = 1; homogeneous && i < size; i++) {
+    for (int i = 1; common != null && i < size; i++) {
       if (!common.equals(actionOperation(actions.get(i)))) {
-        homogeneous = false;
+        common = null;
       }
     }
 
@@ -47,7 +49,7 @@ public abstract class HbaseBatchMetadata {
       // a single operation is modeled as a non-batch operation (no db.operation.batch.size)
       return new AutoValue_HbaseBatchMetadata(common != null ? common : BATCH, null);
     }
-    if (homogeneous) {
+    if (common != null) {
       return new AutoValue_HbaseBatchMetadata(BATCH + " " + common, (long) size);
     }
     return new AutoValue_HbaseBatchMetadata(BATCH, (long) size);
