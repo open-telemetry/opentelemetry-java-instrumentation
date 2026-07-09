@@ -13,7 +13,7 @@ Each configuration entry includes:
   only for declarative-only configs that have no flat property (see Structured Lists); such entries
   MUST have a `declarative_name`.
 - `declarative_name`: YAML key path (e.g., `java.grpc.emit_message_events`)
-- `type`: `boolean`, `string`, `list`, `integer`, `map`. Describes the **flat** form.
+- `type`: `boolean`, `string`, `list`, `int`, `map`. Describes the **flat** form.
 - `description`: Human-readable explanation
 - `default`: Default value
 - `examples` (optional): Only for module-specific configs with non-obvious format
