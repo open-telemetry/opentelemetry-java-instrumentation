@@ -503,6 +503,7 @@ class LettuceAsyncClientTest {
     }
 
     if (scenario.isEmpty()) {
+      // Empty flush writes no Redis commands, so there is no database client request to report.
       assertThat(testing.spans()).isEmpty();
       return;
     }
@@ -526,7 +527,7 @@ class LettuceAsyncClientTest {
 
   private static Stream<Arguments> deferredFlushScenarios() {
     return Stream.of(
-        // empty batch doesn't produce any span
+        // Empty flush writes no Redis commands.
         argumentSet("empty", BatchScenario.builder().build()),
         argumentSet(
             "single",
