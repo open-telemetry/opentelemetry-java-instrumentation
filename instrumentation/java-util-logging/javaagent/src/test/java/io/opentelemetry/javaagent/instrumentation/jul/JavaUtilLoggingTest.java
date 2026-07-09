@@ -148,8 +148,7 @@ class JavaUtilLoggingTest {
           expectedAttributes.add(equalTo(LOG_BODY_PARAMETERS, singletonList("123")));
         }
       }
-      assertThat(log)
-          .hasAttributesSatisfyingExactly(expectedAttributes.toArray(new AttributeAssertion[0]));
+      assertThat(log).hasAttributesSatisfyingExactly(expectedAttributes);
 
       if (withParent) {
         assertThat(log).hasSpanContext(testing.spans().get(0).getSpanContext());
