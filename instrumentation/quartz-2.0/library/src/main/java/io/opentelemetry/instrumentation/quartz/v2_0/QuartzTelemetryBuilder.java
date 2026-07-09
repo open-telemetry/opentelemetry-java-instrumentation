@@ -86,6 +86,7 @@ public final class QuartzTelemetryBuilder {
     if (captureExperimentalSpanAttributes) {
       instrumenter.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "quartz"));
+      instrumenter.addAttributesExtractor(new SchedulerNameAttributesExtractor());
     }
     instrumenter.setErrorCauseExtractor(new QuartzErrorCauseExtractor());
     instrumenter.addAttributesExtractor(
@@ -97,6 +98,8 @@ public final class QuartzTelemetryBuilder {
     Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
 
     return new QuartzTelemetry(
-        new TracingJobListener(instrumenter.buildInstrumenter()), eventLogger);
+        new TracingJobListener(instrumenter.buildInstrumenter()),
+        eventLogger,
+        captureExperimentalSpanAttributes);
   }
 }

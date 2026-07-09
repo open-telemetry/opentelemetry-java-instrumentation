@@ -71,6 +71,8 @@ public abstract class AbstractQuartzTest {
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(SuccessfulJob.class, "execute");
     assertions.add(equalTo(stringKey("job.system"), EXPERIMENTAL_ATTRIBUTES ? "quartz" : null));
+    assertions.add(
+        equalTo(stringKey("quartz.scheduler.name"), EXPERIMENTAL_ATTRIBUTES ? "default" : null));
 
     getTesting()
         .waitAndAssertTraces(
@@ -98,6 +100,8 @@ public abstract class AbstractQuartzTest {
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(FailingJob.class, "execute");
     assertions.add(equalTo(stringKey("job.system"), EXPERIMENTAL_ATTRIBUTES ? "quartz" : null));
+    assertions.add(
+        equalTo(stringKey("quartz.scheduler.name"), EXPERIMENTAL_ATTRIBUTES ? "default" : null));
 
     getTesting()
         .waitAndAssertTraces(
@@ -126,11 +130,14 @@ public abstract class AbstractQuartzTest {
         .waitAndAssertLogRecords(
             logRecord ->
                 logRecord
-                    .hasEventName("quartz.scheduler.error")
+                    .hasEventName("quartz.scheduler.exception")
                     .hasSeverity(Severity.ERROR)
                     .hasBody("Something went wrong")
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("quartz.scheduler.name"), "default")));
+                    .hasException(cause)
+                    .hasAttributesSatisfying(
+                        equalTo(
+                            stringKey("quartz.scheduler.name"),
+                            EXPERIMENTAL_ATTRIBUTES ? "default" : null)));
   }
 
   private static Scheduler createScheduler() throws Exception {
