@@ -151,6 +151,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         MultiQuery multiQuery = builder.build();
         attributes.put(DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
         attributes.put(DB_QUERY_SUMMARY, multiQuery.getQuerySummary());
+        if (singleOperationAndCollection) {
+          attributes.put(DB_OPERATION_NAME, multiQuery.getOperationName());
+          attributes.put(DB_COLLECTION_NAME, multiQuery.getCollectionName());
+        }
         attributes.put(DB_STORED_PROCEDURE_NAME, multiQuery.getStoredProcedureName());
       }
     }
