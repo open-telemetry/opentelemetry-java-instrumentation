@@ -17,9 +17,12 @@ import org.apache.hadoop.hbase.client.RowMutations;
 public abstract class HbaseBatchMetadata {
 
   // HBase operation names, matching the casing HBase reports for single operations. Batch
-  // operations use the semconv-standard "BATCH" prefix rather than HBase's wire-protocol "Multi"
-  // verb, so the value stays consistent across HBase access interfaces (native client, Thrift,
-  // REST, Phoenix) and with other databases.
+  // operations use the semconv-standard "BATCH" prefix rather than "Multi": "Multi" is only the
+  // internal name of the native RPC method (rpc Multi in ClientService); it is not database
+  // terminology exposed to users. The user-facing API is Table.batch(...), and other HBase
+  // interfaces name the same operation differently (Thrift getMultiple/putMultiple/deleteMultiple,
+  // REST multiget, Phoenix JDBC batches). "BATCH" keeps the value consistent across interfaces and
+  // with other databases.
   private static final String GET = "Get";
   private static final String MUTATE = "Mutate";
   private static final String BATCH = "BATCH";

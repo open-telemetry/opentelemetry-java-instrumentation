@@ -69,8 +69,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       Long batchSize = null;
       Context parentContext = Java8BytecodeBridge.currentContext();
       // A Table.batch(...) call is issued as a "Multi" RPC. When batch metadata is propagated in
-      // the
-      // context, report the derived batch operation name and db.operation.batch.size instead.
+      // the context, report the derived batch operation name and db.operation.batch.size instead.
       if ("Multi".equals(operation)) {
         HbaseBatchMetadata batchMetadata = getBatchMetadata(parentContext);
         if (batchMetadata != null) {
