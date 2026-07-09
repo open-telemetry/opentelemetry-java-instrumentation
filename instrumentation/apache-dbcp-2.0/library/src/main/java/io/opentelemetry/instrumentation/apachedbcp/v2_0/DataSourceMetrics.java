@@ -12,16 +12,24 @@ import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.dbcp2.BasicDataSourceMXBean;
 
-final class DataSourceMetrics {
+/** Utility for Apache DBCP data source metric registration. */
+public final class DataSourceMetrics {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-dbcp-2.0";
+  private static final AtomicInteger idGenerator = new AtomicInteger(1);
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
   // all instrumented/known implementations of BasicDataSourceMXBean do not implement
   // equals()/hashCode(), so it's safe to keep them in a plain ConcurrentHashMap
   private static final Map<BasicDataSourceMXBean, BatchCallback> dataSourceMetrics =
       new ConcurrentHashMap<>();
+
+  /** Returns a generated default name for an unnamed Apache DBCP data source. */
+  public static String getDefaultName() {
+    return "dbcp2-" + idGenerator.getAndIncrement();
+  }
 
   static void registerMetrics(
       OpenTelemetry openTelemetry, BasicDataSourceMXBean dataSource, String dataSourceName) {
