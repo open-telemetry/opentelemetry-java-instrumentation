@@ -46,45 +46,26 @@ public class HbaseSingletons {
     tableNameThreadLocal.remove();
   }
 
-  // Prepares a Table.batch(...) call for stable-semconv reporting. Under old semconv this is a
-  // no-op (returns null) and the RPC-layer span keeps reporting the raw "Multi" operation.
-  // Otherwise the derived batch metadata is placed in the context so the executor instrumentation
-  // propagates it to the pool thread that issues the Multi RPC, letting that span report the batch
-  // operation name and db.operation.batch.size; the returned scope must be closed when the batch
-  // call returns. An empty batch issues no RPC, so its span is emitted here directly and null is
-  // returned.
+  // Prepares a Table.batch(...) call for stable-semconv reporting, returning the scope to close
+  // when the call completes, or null if there is nothing to do. Only stable semconv distinguishes
+  // batch operations; under old semconv the RPC-layer span keeps reporting the raw "Multi"
+  // operation. An empty batch sends nothing to the server (no RPC, and no connection to derive
+  // server attributes from), so -- like the Redis pipeline instrumentation -- it is not reported as
+  // a span. Otherwise the derived batch metadata is placed in the context so the executor
+  // instrumentation propagates it to the pool thread that issues the Multi RPC, letting that span
+  // report the batch operation name and db.operation.batch.size.
   @Nullable
-  public static Scope startBatch(@Nullable TableName tableName, List<? extends Row> actions) {
-    if (!emitStableDatabaseSemconv()) {
+  public static Scope startBatch(List<? extends Row> actions) {
+    if (!emitStableDatabaseSemconv() || actions.isEmpty()) {
       return null;
     }
     HbaseBatchMetadata metadata = HbaseBatchMetadata.create(actions);
-    Long batchSize = metadata.getOperationBatchSize();
-    if (batchSize != null && batchSize == 0L) {
-      startAndEndBatchSpan(tableName, metadata);
-      return null;
-    }
     return Context.current().with(BATCH_METADATA_KEY, metadata).makeCurrent();
   }
 
   @Nullable
   public static HbaseBatchMetadata getBatchMetadata(Context context) {
     return context.get(BATCH_METADATA_KEY);
-  }
-
-  // Emits a self-contained span for an empty batch. No RPC is issued, so there is no user, host or
-  // port to record -- only the operation name, batch size and table namespace/collection.
-  private static void startAndEndBatchSpan(
-      @Nullable TableName tableName, HbaseBatchMetadata metadata) {
-    HbaseRequest request =
-        HbaseRequest.create(
-            metadata.getOperation(), tableName, null, null, null, metadata.getOperationBatchSize());
-    Context parentContext = Context.current();
-    if (!instrumenter.shouldStart(parentContext, request)) {
-      return;
-    }
-    Context context = instrumenter.start(parentContext, request);
-    instrumenter.end(context, request, null, null);
   }
 
   public static void setRequestAndContext(RequestAndContext requestAndContext) {

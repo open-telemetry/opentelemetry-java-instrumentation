@@ -370,29 +370,28 @@ public abstract class AbstractHbaseTest {
       table.batch(scenario.actions, new Object[scenario.actions.size()]);
     }
 
+    // an empty batch sends nothing to the server, so no span is produced under either semconv
+    if (scenario.actions.isEmpty()) {
+      assertThat(testing().spans()).isEmpty();
+      return;
+    }
+
     if (!emitStableDatabaseSemconv()) {
-      // old semconv reports every batch RPC as "Multi" and produces no span for an empty batch
-      if (scenario.actions.isEmpty()) {
-        assertThat(testing().spans()).isEmpty();
-        return;
-      }
+      // old semconv reports every batch RPC as the raw "Multi" operation
       testing()
           .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
       return;
     }
 
-    // stable semconv derives the batch operation name and db.operation.batch.size; an empty batch
-    // issues no RPC, so it is reported as a span with no server attributes
+    // stable semconv derives the batch operation name and db.operation.batch.size
     testing()
-        .waitAndAssertTraces(
-            batchTraceAssertConsumer(
-                scenario.operationName, scenario.batchSize, !scenario.actions.isEmpty()));
+        .waitAndAssertTraces(batchTraceAssertConsumer(scenario.operationName, scenario.batchSize));
   }
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
-        // an empty batch is a batch operation with size 0
-        argumentSet("empty", BatchScenario.builder().operationName("BATCH").batchSize(0L).build()),
+        // an empty batch sends nothing to the server, so it produces no span
+        argumentSet("empty", BatchScenario.builder().build()),
         // a single operation is modeled as a non-batch operation (no db.operation.batch.size)
         argumentSet(
             "single", BatchScenario.builder().addAction(get(ROW_1)).operationName(GET).build()),
@@ -605,11 +604,9 @@ public abstract class AbstractHbaseTest {
     return null;
   }
 
-  // Asserts a stable-semconv batch span, optionally including db.operation.batch.size and (for
-  // batches that issue an RPC) the server address/port. Empty batches emit no RPC, so they carry no
-  // server attributes.
-  private Consumer<TraceAssert> batchTraceAssertConsumer(
-      String operation, Long batchSize, boolean hasServer) {
+  // Asserts a stable-semconv batch span, including db.operation.batch.size when the batch reports
+  // one (multi-action batches; single-action batches are modeled as non-batch and omit it).
+  private Consumer<TraceAssert> batchTraceAssertConsumer(String operation, Long batchSize) {
     String spanName = operation + " " + TABLE_NAME.getNameAsString();
     return trace ->
         trace.hasSpansSatisfyingExactly(
@@ -622,10 +619,8 @@ public abstract class AbstractHbaseTest {
               if (batchSize != null) {
                 assertions.add(equalTo(DB_OPERATION_BATCH_SIZE, batchSize));
               }
-              if (hasServer) {
-                assertions.add(equalTo(SERVER_ADDRESS, hostname));
-                assertions.add(equalTo(SERVER_PORT, REGION_SERVER_PORT));
-              }
+              assertions.add(equalTo(SERVER_ADDRESS, hostname));
+              assertions.add(equalTo(SERVER_PORT, REGION_SERVER_PORT));
               span.hasName(spanName)
                   .hasKind(SpanKind.CLIENT)
                   .hasAttributesSatisfyingExactly(assertions);

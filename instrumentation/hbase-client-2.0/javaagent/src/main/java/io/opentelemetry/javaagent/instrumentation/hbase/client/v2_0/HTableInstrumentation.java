@@ -40,15 +40,14 @@ class HTableInstrumentation implements TypeInstrumentation {
   public static class BatchAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     @Nullable
-    public static Scope onEnter(
-        @Advice.This HTable table, @Advice.Argument(0) List<? extends Row> actions) {
+    public static Scope onEnter(@Advice.Argument(0) List<? extends Row> actions) {
       // batch(List, Object[]) delegates to batch(List, Object[], int); only record for the
-      // outermost call so the batch metadata (and any empty-batch span) is produced once.
+      // outermost call so the batch metadata is produced once.
       CallDepth callDepth = CallDepth.forClass(HTable.class);
       if (callDepth.getAndIncrement() > 0) {
         return null;
       }
-      return startBatch(table.getName(), actions);
+      return startBatch(actions);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

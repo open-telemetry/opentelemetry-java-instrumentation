@@ -27,14 +27,11 @@ public abstract class HbaseBatchMetadata {
   private static final String MUTATE = "Mutate";
   private static final String BATCH = "BATCH";
 
-  // Derives the operation name and db.operation.batch.size for a Table.batch(...) call, per the
-  // database semantic conventions for batch operations. Called only under stable semconv.
+  // Derives the operation name and db.operation.batch.size for a non-empty Table.batch(...) call,
+  // per the database semantic conventions for batch operations. Called only under stable semconv;
+  // empty batches are filtered out by the caller, since they issue no RPC and produce no span.
   public static HbaseBatchMetadata create(List<? extends Row> actions) {
     int size = actions.size();
-    if (size == 0) {
-      // an empty batch request is still a batch operation with size 0
-      return new AutoValue_HbaseBatchMetadata(BATCH, 0L);
-    }
 
     // common holds the shared operation name while all actions match; it is cleared to null as soon
     // as an action differs (or if the first action is an unrecognized type), which also stops the
