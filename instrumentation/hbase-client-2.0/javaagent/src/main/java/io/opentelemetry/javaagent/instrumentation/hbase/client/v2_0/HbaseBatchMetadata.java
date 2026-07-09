@@ -17,17 +17,18 @@ import org.apache.hadoop.hbase.client.RowMutations;
 public abstract class HbaseBatchMetadata {
 
   // HBase RPC operation names, matching the casing HBase itself reports for single operations.
+  // "Multi" is HBase's own batch verb; the stable semconv allows a database-specific term in place
+  // of the generic "BATCH" prefix, so batch operations are named "Multi", "Multi Get", etc.
   private static final String GET = "Get";
   private static final String MUTATE = "Mutate";
   private static final String MULTI = "Multi";
-  private static final String BATCH = "BATCH";
 
   // Derives the stable-semconv operation name and batch size for a call to Table.batch(...).
   public static HbaseBatchMetadata create(List<? extends Row> actions) {
     int size = actions.size();
     if (size == 0) {
       // an empty batch request is still a batch operation with size 0
-      return new AutoValue_HbaseBatchMetadata(BATCH, 0L);
+      return new AutoValue_HbaseBatchMetadata(MULTI, 0L);
     }
 
     String common = actionOperation(actions.get(0));
@@ -43,9 +44,9 @@ public abstract class HbaseBatchMetadata {
       return new AutoValue_HbaseBatchMetadata(common != null ? common : MULTI, null);
     }
     if (homogeneous) {
-      return new AutoValue_HbaseBatchMetadata(BATCH + " " + common, (long) size);
+      return new AutoValue_HbaseBatchMetadata(MULTI + " " + common, (long) size);
     }
-    return new AutoValue_HbaseBatchMetadata(BATCH, (long) size);
+    return new AutoValue_HbaseBatchMetadata(MULTI, (long) size);
   }
 
   @Nullable
