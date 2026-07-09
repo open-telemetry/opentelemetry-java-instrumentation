@@ -552,9 +552,9 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.set("batch2", "v2"))
                 .operationName("PIPELINE SET")
                 .queryText(
-                  emitStableDatabaseSemconv()
-                    ? "SET batch1 ?; SET batch2 ?"
-                    : "SET batch1 ?;SET batch2 ?")
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; SET batch2 ?"
+                        : "SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -564,9 +564,9 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.get("batch1"))
                 .operationName("PIPELINE")
                 .queryText(
-                  emitStableDatabaseSemconv()
-                    ? "SET batch1 ?; GET batch1"
-                    : "SET batch1 ?;GET batch1")
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; GET batch1"
+                        : "SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()),
         argumentSet(

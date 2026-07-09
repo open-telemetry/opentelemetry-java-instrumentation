@@ -306,9 +306,9 @@ class Jedis30ClientTest {
                 .addCommand(pipeline -> pipeline.set("batch2", "v2"))
                 .operationName("PIPELINE SET")
                 .queryText(
-                  emitStableDatabaseSemconv()
-                    ? "SET batch1 ?; SET batch2 ?"
-                    : "SET batch1 ?;SET batch2 ?")
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; SET batch2 ?"
+                        : "SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -318,9 +318,9 @@ class Jedis30ClientTest {
                 .addCommand(pipeline -> pipeline.get("batch1"))
                 .operationName("PIPELINE")
                 .queryText(
-                  emitStableDatabaseSemconv()
-                    ? "SET batch1 ?; GET batch1"
-                    : "SET batch1 ?;GET batch1")
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; GET batch1"
+                        : "SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()));
   }
@@ -343,9 +343,7 @@ class Jedis30ClientTest {
                 .addCommand(transaction -> transaction.set("tx2", "v2"))
                 .operationName("MULTI SET")
                 .queryText(
-                  emitStableDatabaseSemconv()
-                    ? "SET tx1 ?; SET tx2 ?"
-                    : "SET tx1 ?;SET tx2 ?")
+                    emitStableDatabaseSemconv() ? "SET tx1 ?; SET tx2 ?" : "SET tx1 ?;SET tx2 ?")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -354,10 +352,7 @@ class Jedis30ClientTest {
                 .addCommand(transaction -> transaction.set("tx1", "v1"))
                 .addCommand(transaction -> transaction.get("tx1"))
                 .operationName("MULTI")
-                .queryText(
-                    emitStableDatabaseSemconv()
-                        ? "SET tx1 ?; GET tx1"
-                        : "SET tx1 ?;GET tx1")
+                .queryText(emitStableDatabaseSemconv() ? "SET tx1 ?; GET tx1" : "SET tx1 ?;GET tx1")
                 .batchSize(2)
                 .build()));
   }

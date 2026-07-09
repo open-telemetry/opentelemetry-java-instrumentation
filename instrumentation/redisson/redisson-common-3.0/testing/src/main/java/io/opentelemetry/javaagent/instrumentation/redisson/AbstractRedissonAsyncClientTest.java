@@ -260,10 +260,10 @@ public abstract class AbstractRedissonAsyncClientTest {
                             // telemetry is split across wrapper and command spans, so this span
                             // does not represent the full logical batch.
                             equalTo(
-                              maybeStable(DB_STATEMENT),
-                              emitStableDatabaseSemconv()
-                                ? "MULTI; SET batch1 ?"
-                                : "MULTI;SET batch1 ?"))
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? "MULTI; SET batch1 ?"
+                                    : "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
