@@ -551,7 +551,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.set("batch1", "v1"))
                 .addCommand(commands -> commands.set("batch2", "v2"))
                 .operationName("PIPELINE SET")
-                .queryText("SET batch1 ?;SET batch2 ?")
+                .queryText(
+                  emitStableDatabaseSemconv()
+                    ? "SET batch1 ?; SET batch2 ?"
+                    : "SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -560,7 +563,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.set("batch1", "v1"))
                 .addCommand(commands -> commands.get("batch1"))
                 .operationName("PIPELINE")
-                .queryText("SET batch1 ?;GET batch1")
+                .queryText(
+                  emitStableDatabaseSemconv()
+                    ? "SET batch1 ?; GET batch1"
+                    : "SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -569,7 +575,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.configSet("not-a-real-config", "1"))
                 .addCommand(commands -> commands.set("batch-after-error", "v1"))
                 .operationName("PIPELINE")
-                .queryText("CONFIG SET not-a-real-config ?;SET batch-after-error ?")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "CONFIG SET not-a-real-config ?; SET batch-after-error ?"
+                        : "CONFIG SET not-a-real-config ?;SET batch-after-error ?")
                 .batchSize(2)
                 .errorType("io.lettuce.core.RedisCommandExecutionException")
                 .build()));

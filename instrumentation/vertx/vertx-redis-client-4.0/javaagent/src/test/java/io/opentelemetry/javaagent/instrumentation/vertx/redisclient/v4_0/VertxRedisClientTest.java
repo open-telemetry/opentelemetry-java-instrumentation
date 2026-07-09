@@ -252,7 +252,10 @@ class VertxRedisClientTest {
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .addRequest(Request.cmd(Command.SET).arg("batch2").arg("v2"))
                 .operationName("PIPELINE SET")
-                .queryText("SET batch1 ?;SET batch2 ?")
+                .queryText(
+                  emitStableDatabaseSemconv()
+                    ? "SET batch1 ?; SET batch2 ?"
+                    : "SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -261,7 +264,10 @@ class VertxRedisClientTest {
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .addRequest(Request.cmd(Command.GET).arg("batch1"))
                 .operationName("PIPELINE")
-                .queryText("SET batch1 ?;GET batch1")
+                .queryText(
+                  emitStableDatabaseSemconv()
+                    ? "SET batch1 ?; GET batch1"
+                    : "SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -272,7 +278,10 @@ class VertxRedisClientTest {
                         .limit(33)
                         .collect(toList()))
                 .operationName("PIPELINE GET")
-                .queryText(String.join(";", nCopies(31, "GET " + longBatchKey)))
+                    .queryText(
+                      String.join(
+                        emitStableDatabaseSemconv() ? "; " : ";",
+                        nCopies(31, "GET " + longBatchKey)))
                 .batchSize(33)
                 .build()));
   }
