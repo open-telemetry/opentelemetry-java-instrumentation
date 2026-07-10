@@ -126,9 +126,8 @@ public class OpenTelemetryAutoConfiguration {
       }
 
       /**
-       * Bridges the legacy {@link ConfigProperties}-based configuration
-       * into a {@link ConfigProvider}, since instrumentation only reads config through {@link
-       * ConfigProvider}.
+       * Bridges the legacy {@link ConfigProperties}-based configuration into a {@link
+       * ConfigProvider}, since instrumentation only reads config through {@link ConfigProvider}.
        */
       @Bean
       ConfigProvider configProvider(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
