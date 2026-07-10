@@ -80,7 +80,7 @@ class LogbackAppenderTest {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:" + configurationFile);
     if (declarativeConfig) {
-      properties.put("otel.file_format", "1.0");
+      properties.put("otel.file_format", "1.1");
       properties.put(
           "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
           "*");
@@ -174,7 +174,7 @@ class LogbackAppenderTest {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test.xml");
     if (declarativeConfig) {
-      properties.put("otel.file_format", "1.0");
+      properties.put("otel.file_format", "1.1");
       properties.put(
           "otel.distribution.spring_starter.instrumentation.disabled[0]", "logback_appender");
       properties.put("otel.instrumentation/development.java.logback_mdc.add_baggage", "true");
