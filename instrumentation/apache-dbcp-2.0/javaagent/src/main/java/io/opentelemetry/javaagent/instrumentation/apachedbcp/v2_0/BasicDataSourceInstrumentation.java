@@ -5,18 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDefaultName;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.apachedbcp.v2_0.DataSourceMetrics;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import javax.management.ObjectName;
-import javax.sql.DataSource;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,8 +30,8 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer typeTransformer) {
     typeTransformer.applyAdviceToMethod(
-        named("createDataSource").and(takesArguments(0)),
-        getClass().getName() + "$CreateDataSourceAdvice");
+        named("startPoolMaintenance").and(takesArguments(0)),
+        getClass().getName() + "$StartPoolMaintenanceAdvice");
 
     typeTransformer.applyAdviceToMethod(
         isPublic().and(namedOneOf("close", "postDeregister")).and(takesArguments(0)),
@@ -41,16 +39,9 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class CreateDataSourceAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.This BasicDataSource dataSource,
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return @Nullable DataSource createdDataSource) {
-      if (throwable != null || createdDataSource == null) {
-        return;
-      }
-
+  public static class StartPoolMaintenanceAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(@Advice.This BasicDataSource dataSource) {
       String dataSourceName = dataSource.getJmxName();
       if (dataSourceName == null) {
         ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
@@ -62,7 +53,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         }
       }
       if (dataSourceName == null) {
-        dataSourceName = DataSourceMetrics.getDefaultName();
+        dataSourceName = getDefaultName();
       }
       telemetry().registerMetrics(dataSource, dataSourceName);
     }
