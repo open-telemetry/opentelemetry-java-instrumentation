@@ -9,7 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -56,7 +56,6 @@ public final class ContextDataKeys {
     return new ContextDataKeys(traceIdKey, spanIdKey, traceFlagsKey);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated ConfigPropertiesUtil
   private static String getConfig(
       DeclarativeConfigProperties config,
       String newDeclarativeKey,
@@ -80,11 +79,14 @@ public final class ContextDataKeys {
               + " or equivalent declarative configuration instead.");
       return value;
     }
-    value = ConfigPropertiesUtil.getString(newProperty);
+    // The context data provider is loaded through the Log4j SPI and has no programmatic
+    // configuration API. Declarative instrumentation configuration is not stable yet, so a
+    // system-property fallback is still needed.
+    value = SystemProperty.getString(newProperty);
     if (value != null) {
       return value;
     }
-    value = ConfigPropertiesUtil.getString(oldProperty);
+    value = SystemProperty.getString(oldProperty);
     if (value != null) {
       logDeprecationWarning(
           oldProperty,
