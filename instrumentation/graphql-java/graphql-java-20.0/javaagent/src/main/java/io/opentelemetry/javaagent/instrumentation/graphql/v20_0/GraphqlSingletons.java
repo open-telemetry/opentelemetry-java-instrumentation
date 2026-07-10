@@ -31,6 +31,9 @@ public class GraphqlSingletons {
             .setDataFetcherInstrumentationEnabled(config.dataFetcherEnabled)
             .setTrivialDataFetcherInstrumentationEnabled(config.trivialDataFetcherEnabled)
             .setOperationNameInSpanNameEnabled(config.operationNameInSpanNameEnabled)
+            .setOperationSpanEnabled(config.operationSpanEnabled)
+            .setAddAttributesToLocalRootSpan(config.addAttributesToLocalRootSpan)
+            .setPromoteErrorStatusToLocalRootSpan(config.promoteErrorStatusToLocalRootSpan)
             .build();
   }
 
@@ -51,6 +54,10 @@ public class GraphqlSingletons {
   //         enabled: false
   //       operation_name_in_span_name:
   //         enabled: false
+  //       operation_span:
+  //         enabled: true
+  //       add_attributes_to_local_root_span: false
+  //       promote_error_status_to_local_root_span: false
   private static final class Configuration {
 
     private final boolean captureQuery;
@@ -58,6 +65,9 @@ public class GraphqlSingletons {
     private final boolean dataFetcherEnabled;
     private final boolean trivialDataFetcherEnabled;
     private final boolean operationNameInSpanNameEnabled;
+    private final boolean operationSpanEnabled;
+    private final boolean addAttributesToLocalRootSpan;
+    private final boolean promoteErrorStatusToLocalRootSpan;
 
     Configuration(OpenTelemetry openTelemetry) {
       DeclarativeConfigProperties config =
@@ -68,6 +78,11 @@ public class GraphqlSingletons {
       this.dataFetcherEnabled = config.get("data_fetcher").getBoolean("enabled", false);
       this.trivialDataFetcherEnabled =
           config.get("trivial_data_fetcher").getBoolean("enabled", false);
+      this.operationSpanEnabled = config.get("operation_span").getBoolean("enabled", true);
+      this.addAttributesToLocalRootSpan =
+          config.getBoolean("add_attributes_to_local_root_span", false);
+      this.promoteErrorStatusToLocalRootSpan =
+          config.getBoolean("promote_error_status_to_local_root_span", false);
       Boolean deprecatedAddOperationNameToSpanName =
           config.get("add_operation_name_to_span_name").getBoolean("enabled");
       if (deprecatedAddOperationNameToSpanName != null) {
