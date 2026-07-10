@@ -116,7 +116,8 @@ class GraphqlLocalRootSpanTest {
                     span.hasName(SERVER_SPAN_NAME)
                         .hasKind(SpanKind.SERVER)
                         .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
-                        .hasAttribute(GRAPHQL_OPERATION_TYPE, "query"),
+                        .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")
+                        .hasAttribute(GRAPHQL_DOCUMENT, "query findBookById{bookById(id:?){name}}"),
                 span ->
                     span.hasName("query")
                         .hasKind(SpanKind.INTERNAL)
