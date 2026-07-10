@@ -24,8 +24,6 @@ import org.apache.hadoop.hbase.client.Row;
 public class HbaseSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hbase-client-2.0";
-  // Batch metadata is carried in the context so it survives the hop from the Table.batch(...)
-  // caller thread to the pool thread that issues the underlying Multi RPC.
   private static final ContextKey<HbaseBatchMetadata> BATCH_METADATA_KEY =
       ContextKey.named("opentelemetry-hbase-batch-metadata");
   private static final ThreadLocal<TableName> tableNameThreadLocal = new ThreadLocal<>();
