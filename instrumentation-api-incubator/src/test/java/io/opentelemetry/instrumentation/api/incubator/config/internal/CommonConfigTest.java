@@ -31,7 +31,7 @@ class CommonConfigTest {
     when(commonConfig.getBoolean("v3_preview", false)).thenReturn(true);
     when(commonConfig.get("http").getScalarList(eq("known_methods"), eq(String.class), anyList()))
         .thenReturn(new ArrayList<>());
-    when(commonConfig.get("logging").getString("trace_id")).thenReturn("deprecated_trace_id");
+    when(commonConfig.get("logging").getString("trace_id")).thenReturn("custom_trace_id");
 
     CommonConfig config = new CommonConfig(openTelemetry);
 

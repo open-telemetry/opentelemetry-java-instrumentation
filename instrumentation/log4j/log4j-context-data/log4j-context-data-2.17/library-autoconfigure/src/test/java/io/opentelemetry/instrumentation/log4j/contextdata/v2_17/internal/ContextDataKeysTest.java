@@ -24,7 +24,7 @@ class ContextDataKeysTest {
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
     when(commonConfig.getBoolean("v3_preview")).thenReturn(true);
-    when(commonConfig.get("logging").getString("trace_id")).thenReturn("deprecated_trace_id");
+    when(commonConfig.get("logging").getString("trace_id")).thenReturn("custom_trace_id");
 
     ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
 
