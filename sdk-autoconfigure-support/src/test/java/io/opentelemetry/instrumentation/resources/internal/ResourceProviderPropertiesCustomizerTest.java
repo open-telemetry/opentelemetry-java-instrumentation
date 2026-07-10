@@ -9,7 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -39,10 +39,9 @@ class ResourceProviderPropertiesCustomizerTest {
   }
 
   @SuppressWarnings("BooleanParameter")
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("enabledTestCases")
   void enabled(
-      String name,
       boolean expectedEnabled,
       Set<String> enabledProviders,
       Set<String> disabledProviders,
@@ -75,17 +74,17 @@ class ResourceProviderPropertiesCustomizerTest {
 
   private static Stream<Arguments> enabledTestCases() {
     return Stream.of(
-        arguments("explicitEnabled", true, emptySet(), emptySet(), true),
-        arguments("explicitEnabledFalse", false, emptySet(), emptySet(), false),
-        arguments("enabledProvidersEmpty", false, emptySet(), emptySet(), null),
-        arguments(
+        argumentSet("explicitEnabled", true, emptySet(), emptySet(), true),
+        argumentSet("explicitEnabledFalse", false, emptySet(), emptySet(), false),
+        argumentSet("enabledProvidersEmpty", false, emptySet(), emptySet(), null),
+        argumentSet(
             "enabledProvidersContains", true, singleton(PROVIDER_CLASS_NAME), emptySet(), null),
-        arguments(
+        argumentSet(
             "enabledProvidersNotContains", false, singleton("otherClassName"), emptySet(), null),
-        arguments(
+        argumentSet(
             "disabledProvidersContains", false, emptySet(), singleton(PROVIDER_CLASS_NAME), null),
-        arguments(
+        argumentSet(
             "disabledProvidersNotContains", false, emptySet(), singleton("otherClassName"), null),
-        arguments("defaultEnabledFalse", false, emptySet(), emptySet(), null));
+        argumentSet("defaultEnabledFalse", false, emptySet(), emptySet(), null));
   }
 }

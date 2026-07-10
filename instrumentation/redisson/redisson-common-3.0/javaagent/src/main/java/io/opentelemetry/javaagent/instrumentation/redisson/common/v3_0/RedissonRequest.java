@@ -142,8 +142,12 @@ public abstract class RedissonRequest {
       case 1:
         return sanitizedQueries.get(0);
       default:
-        return String.join(";", sanitizedQueries);
+        return String.join(batchQuerySeparator(), sanitizedQueries);
     }
+  }
+
+  private static String batchQuerySeparator() {
+    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 
   private List<String> sanitizeQuery() {

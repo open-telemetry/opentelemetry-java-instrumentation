@@ -35,6 +35,7 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.SpanKind;
@@ -361,7 +362,7 @@ public abstract class AbstractR2dbcStatementTest {
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                       span ->
-                          span.hasName(DB)
+                          span.hasName(emitStableDatabaseSemconv() ? "BATCH" : DB)
                               .hasKind(SpanKind.CLIENT)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
@@ -374,7 +375,9 @@ public abstract class AbstractR2dbcStatementTest {
                                   equalTo(
                                       maybeStable(DB_STATEMENT),
                                       emitStableDatabaseSemconv() ? null : ""),
-                                  equalTo(DB_OPERATION_BATCH_SIZE, null),
+                                  equalTo(
+                                      DB_OPERATION_BATCH_SIZE,
+                                      emitStableDatabaseSemconv() ? 0L : null),
                                   equalTo(maybeStablePeerService(), "test-peer-service"),
                                   equalTo(SERVER_ADDRESS, container.getHost()),
                                   equalTo(SERVER_PORT, port),
@@ -430,8 +433,8 @@ public abstract class AbstractR2dbcStatementTest {
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
-        Arguments.argumentSet("empty", BatchScenario.builder().build()),
-        Arguments.argumentSet(
+        argumentSet("empty", BatchScenario.builder().build()),
+        argumentSet(
             "single",
             BatchScenario.builder()
                 .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
@@ -443,7 +446,7 @@ public abstract class AbstractR2dbcStatementTest {
                 .oldOperation("INSERT")
                 .oldCollection("batch_test")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
@@ -458,7 +461,7 @@ public abstract class AbstractR2dbcStatementTest {
                 .oldCollection("batch_test")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
                 .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")

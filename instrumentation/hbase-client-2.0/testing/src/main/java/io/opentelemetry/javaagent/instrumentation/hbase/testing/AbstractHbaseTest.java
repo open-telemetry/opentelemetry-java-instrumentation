@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
@@ -378,17 +379,17 @@ public abstract class AbstractHbaseTest {
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
         // an empty batch produces no span
-        Arguments.argumentSet("empty", BatchScenario.builder().build()),
-        Arguments.argumentSet(
+        argumentSet("empty", BatchScenario.builder().build()),
+        argumentSet(
             "single", BatchScenario.builder().addAction(get(ROW_1)).operationName(MULTI).build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .addAction(get(ROW_1))
                 .addAction(get(ROW_2))
                 .operationName(MULTI)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
                 .addAction(put("batch-matrix-put-row"))

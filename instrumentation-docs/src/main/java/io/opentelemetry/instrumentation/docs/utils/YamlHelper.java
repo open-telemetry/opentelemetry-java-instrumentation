@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
+import io.opentelemetry.instrumentation.docs.internal.DeclarativeSchema;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
@@ -252,7 +253,10 @@ public class YamlHelper {
 
   private static Map<String, Object> configurationToMap(ConfigurationOption configuration) {
     Map<String, Object> conf = new LinkedHashMap<>();
-    conf.put("name", configuration.name());
+    // Declarative-only configs (e.g. url_template_rules) have no flat system property name.
+    if (configuration.name() != null) {
+      conf.put("name", configuration.name());
+    }
     if (configuration.declarativeName() != null) {
       conf.put("declarative_name", configuration.declarativeName());
     }
@@ -268,7 +272,38 @@ public class YamlHelper {
     if (configuration.examples() != null && !configuration.examples().isEmpty()) {
       conf.put("examples", configuration.examples());
     }
+    if (configuration.declarativeType() != null) {
+      conf.put("declarative_type", configuration.declarativeType().toString());
+    }
+    if (configuration.declarativeSchema() != null) {
+      conf.put("declarative_schema", declarativeSchemaToMap(configuration.declarativeSchema()));
+    }
     return conf;
+  }
+
+  private static Map<String, Object> declarativeSchemaToMap(DeclarativeSchema schema) {
+    Map<String, Object> schemaMap = new LinkedHashMap<>();
+    schemaMap.put("type", schema.type());
+    if (schema.required() != null && !schema.required().isEmpty()) {
+      schemaMap.put("required", schema.required());
+    }
+    Map<String, Object> properties = new LinkedHashMap<>();
+    schema
+        .properties()
+        .forEach(
+            (key, property) -> {
+              Map<String, Object> propertyMap = new LinkedHashMap<>();
+              propertyMap.put("type", property.type());
+              if (property.description() != null) {
+                propertyMap.put("description", property.description());
+              }
+              if (property.defaultValue() != null) {
+                propertyMap.put("default", property.defaultValue());
+              }
+              properties.put(key, propertyMap);
+            });
+    schemaMap.put("properties", properties);
+    return schemaMap;
   }
 
   private static List<Map<String, Object>> getSortedAttributeMaps(

@@ -12,7 +12,7 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id("com.gradleup.shadow") version "9.4.3"
+  id("com.gradleup.shadow") version "9.5.1"
   id("com.diffplug.spotless") version "8.8.0"
 
   id("io.opentelemetry.instrumentation.muzzle-generation") version "2.30.0-alpha-SNAPSHOT"
@@ -101,7 +101,7 @@ dependencies {
 
   //All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:2.0.5")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
   testImplementation("com.google.protobuf:protobuf-java-util:4.35.1")
   testImplementation("com.squareup.okhttp3:okhttp:5.4.0")
   testImplementation("io.opentelemetry:opentelemetry-api")
