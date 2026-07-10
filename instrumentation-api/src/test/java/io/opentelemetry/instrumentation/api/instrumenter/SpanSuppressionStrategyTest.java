@@ -39,7 +39,7 @@ class SpanSuppressionStrategyTest {
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "none")
-  void shouldSetStrategyProgrammatically() {
+  void programmaticSpanSuppressionStrategyShouldOverrideDeprecatedProperty() {
     InstrumenterBuilder<String, String> builder =
         Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test");
     Experimental.setSpanSuppressionStrategy(builder, "span-kind");
