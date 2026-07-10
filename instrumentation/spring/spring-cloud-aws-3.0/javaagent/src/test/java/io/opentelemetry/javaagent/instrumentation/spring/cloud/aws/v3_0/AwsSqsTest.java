@@ -78,8 +78,38 @@ class AwsSqsTest {
     }
   }
 
+  // Warmup is performed only once for the entire test class to avoid each test waiting for
+  // the Spring SQS listener containers (which start asynchronously) to resolve queue URLs
+  // and process an initial message before telemetry data can be reliably cleared.
+  private static volatile boolean initialized = false;
+
   @BeforeEach
-  void clearData() {
+  void clearAndWarmup() throws InterruptedException {
+    if (!initialized) {
+      initialized = true;
+      sqsTemplate.send("test-queue", "warmup");
+      sqsTemplate.sendMany(
+          "test-batch-queue", java.util.Collections.singletonList(MessageBuilder.withPayload("warmup1").build()));
+
+      long startTime = System.currentTimeMillis();
+      while (System.currentTimeMillis() - startTime < 30000) {
+        long count =
+            testing.spans().stream().filter(s -> s.getName().equals("test-queue process")).count();
+        long countBatch =
+            testing.spans().stream()
+                .filter(s -> s.getName().equals("test-batch-queue process"))
+                .count();
+        long countDelete =
+            testing.spans().stream()
+                .filter(s -> s.getName().equals("Sqs.DeleteMessageBatch"))
+                .count();
+        if (count >= 1 && countBatch >= 1 && countDelete >= 2) {
+          break;
+        }
+        Thread.sleep(100);
+      }
+    }
+
     testing.clearData();
     AwsSqsTestApplication.messageHandler = null;
     AwsSqsTestApplication.batchMessageHandler = null;
