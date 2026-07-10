@@ -89,8 +89,7 @@ class AwsSqsTest {
       initialized = true;
       sqsTemplate.send("test-queue", "warmup");
       sqsTemplate.sendMany(
-          "test-batch-queue",
-          java.util.singletonList(MessageBuilder.withPayload("warmup1").build()));
+          "test-batch-queue", asList(MessageBuilder.withPayload("warmup1").build()));
 
       long startTime = System.currentTimeMillis();
       while (System.currentTimeMillis() - startTime < 30000) {
