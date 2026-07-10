@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 
 import com.google.auto.value.AutoValue;
@@ -77,12 +78,16 @@ public abstract class JedisRequest {
     StringBuilder builder = new StringBuilder();
     for (JedisRequest request : requests) {
       String queryText = request.getQueryText();
-      String separator = builder.length() == 0 ? "" : ";";
+      String separator = builder.length() == 0 ? "" : batchQuerySeparator();
       if (builder.length() + separator.length() + queryText.length() > LIMIT) {
         break;
       }
       builder.append(separator).append(queryText);
     }
     return builder.toString();
+  }
+
+  private static String batchQuerySeparator() {
+    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 }

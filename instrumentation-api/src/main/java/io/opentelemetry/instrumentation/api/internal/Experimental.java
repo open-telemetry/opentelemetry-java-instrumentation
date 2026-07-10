@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import static java.util.Collections.emptySet;
-
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
@@ -49,17 +47,6 @@ public final class Experimental {
       spanSuppressionStrategySetter;
 
   private Experimental() {}
-
-  /**
-   * @deprecated Use {@link #setSensitiveQueryParameters(HttpClientAttributesExtractorBuilder, Set)}
-   *     instead.
-   */
-  @Deprecated
-  public static void setRedactQueryParameters(
-      HttpClientAttributesExtractorBuilder<?, ?> builder, boolean redactQueryParameters) {
-    setSensitiveQueryParameters(
-        builder, redactQueryParameters ? HttpConstants.SENSITIVE_QUERY_PARAMETERS : emptySet());
-  }
 
   public static void setSensitiveQueryParameters(
       HttpClientAttributesExtractorBuilder<?, ?> builder, Set<String> sensitiveQueryParameters) {
