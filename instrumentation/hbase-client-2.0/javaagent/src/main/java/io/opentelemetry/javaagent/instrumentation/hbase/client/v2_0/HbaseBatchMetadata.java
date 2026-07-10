@@ -20,12 +20,10 @@ public abstract class HbaseBatchMetadata {
   private static final String GET = "Get";
   private static final String MUTATE = "Mutate";
 
-  // The semconv-standard "BATCH" prefix, used rather than HBase's "Multi" verb: "Multi" is only the
-  // internal name of the native RPC method (rpc Multi in ClientService), not database terminology
-  // exposed to users. The user-facing API is Table.batch(...), and other HBase interfaces name the
-  // same operation differently (Thrift getMultiple/putMultiple/deleteMultiple, REST multiget,
-  // Phoenix JDBC batches). "BATCH" keeps the value consistent across interfaces and with other
-  // databases.
+  // The default semconv "BATCH" prefix, used rather than HBase's "Multi" verb. "Multi" is only an
+  // internal implementation detail of the native RPC (rpc Multi in ClientService) that users are
+  // not aware of; the user-facing API is Table.batch(...). The default semantic-convention
+  // terminology is used instead.
   private static final String BATCH = "BATCH";
 
   // Derives the operation name and db.operation.batch.size for a non-empty Table.batch(...) call,
