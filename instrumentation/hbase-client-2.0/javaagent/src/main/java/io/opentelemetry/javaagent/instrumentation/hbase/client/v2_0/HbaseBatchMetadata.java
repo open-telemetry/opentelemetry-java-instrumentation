@@ -51,7 +51,8 @@ public abstract class HbaseBatchMetadata {
     if (action instanceof Get) {
       return GET;
     }
-    // Put, Delete, Append and Increment all extend Mutation; RowMutations groups mutations.
+    // Match the "Mutate" reported for single Put/Delete/Append/Increment operations; those all
+    // extend Mutation, and RowMutations groups such mutations.
     if (action instanceof Mutation || action instanceof RowMutations) {
       return MUTATE;
     }
