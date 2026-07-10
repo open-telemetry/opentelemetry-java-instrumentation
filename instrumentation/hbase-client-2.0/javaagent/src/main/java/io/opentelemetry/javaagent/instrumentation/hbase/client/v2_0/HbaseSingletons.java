@@ -46,14 +46,10 @@ public class HbaseSingletons {
     tableNameThreadLocal.remove();
   }
 
-  // Prepares a Table.batch(...) call for stable-semconv reporting, returning the scope to close
-  // when the call completes, or null if there is nothing to do. Only stable semconv distinguishes
-  // batch operations; under old semconv the RPC-layer span keeps reporting the raw "Multi"
-  // operation. An empty batch sends nothing to the server (no RPC, and no connection to derive
-  // server attributes from), so it is not reported as a span. Otherwise the derived batch metadata
-  // is placed in the context so the executor instrumentation propagates it to the pool thread that
-  // issues the Multi RPC, letting that span report the batch operation name and
-  // db.operation.batch.size.
+  // Stores derived batch metadata in the context so the "Multi" RPC span reports the stable
+  // batch operation name and db.operation.batch.size. Returns the scope to close when the call
+  // completes, or null when there is nothing to do: under old semconv, or for an empty batch
+  // (which issues no RPC and so produces no span).
   @Nullable
   public static Scope startBatch(List<? extends Row> actions) {
     if (!emitStableDatabaseSemconv() || actions.isEmpty()) {
