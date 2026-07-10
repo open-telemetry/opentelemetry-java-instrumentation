@@ -20,8 +20,8 @@ public abstract class HbaseBatchMetadata {
   private static final String GET = "Get";
   private static final String MUTATE = "Mutate";
 
-  // "Multi" is only an internal implementation detail of the native RPC that users are not aware
-  // of. The default semantic-convention "BATCH" prefix is used instead.
+  // "Multi" is only an internal implementation detail of the native RPC that users are
+  // not aware of, so the default semantic-convention "BATCH" prefix is used.
   private static final String BATCH = "BATCH";
 
   // The caller only invokes this for a non-empty batch under stable semconv, so the first
