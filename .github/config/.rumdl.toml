@@ -3,6 +3,11 @@
 [global]
 # disable link text should be descriptive check
 disable = ["MD059", "line-length", "no-inline-html", "MD041", "MD022", "ul-style", "fenced-code-language"]
+# MD060 (table-cell-alignment) is off by default in rumdl; enable it explicitly
+# so misaligned table columns are caught (previously only caught by spotless's
+# prettier markdown formatting). Use extend-enable, NOT enable — `enable` is an
+# allowlist ("only these rules") and would silently disable everything else.
+extend-enable = ["MD060"]
 
 [per-file-ignores]
 ".github/workflows/*.md" = ["MD046"]
