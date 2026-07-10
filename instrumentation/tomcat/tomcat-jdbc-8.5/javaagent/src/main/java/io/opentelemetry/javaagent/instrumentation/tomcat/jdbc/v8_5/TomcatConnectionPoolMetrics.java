@@ -17,7 +17,9 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.tomcat.jdbc.pool.DataSourceProxy;
+import org.apache.tomcat.jdbc.pool.PoolProperties;
 
 public class TomcatConnectionPoolMetrics {
 
@@ -31,7 +33,12 @@ public class TomcatConnectionPoolMetrics {
           // keep the pre-rename scope name so existing dashboards/filters on
           // otel.scope.name="io.opentelemetry.tomcat-jdbc" continue to work
           : "io.opentelemetry.tomcat-jdbc";
+  private static final String DEFAULT_POOL_NAME = "jdbc";
+  private static final String TOMCAT_DEFAULT_POOL_NAME_PREFIX = "Tomcat Connection Pool[";
+  private static final String TOMCAT_DEFAULT_POOL_NAME_SUFFIX =
+      "-" + System.identityHashCode(PoolProperties.class) + "]";
   private static final Meter meter = buildMeter();
+  private static final AtomicInteger idGenerator = new AtomicInteger(1);
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
   // DataSourceProxy does not implement equals()/hashCode(), so it's safe to keep them in a plain
@@ -49,7 +56,7 @@ public class TomcatConnectionPoolMetrics {
   @SuppressWarnings("deprecation")
   private static BatchCallback createInstruments(DataSourceProxy dataSource) {
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(meter, dataSource.getPoolName());
+        DbConnectionPoolMetrics.create(meter, getPoolName(dataSource));
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
@@ -75,6 +82,19 @@ public class TomcatConnectionPoolMetrics {
         maxIdleConnections,
         maxConnections,
         pendingRequestsForConnection);
+  }
+
+  private static String getPoolName(DataSourceProxy dataSource) {
+    String poolName = dataSource.getPoolName();
+    if (poolName == null || isDefaultTomcatPoolName(poolName)) {
+      return DEFAULT_POOL_NAME + "-" + idGenerator.getAndIncrement();
+    }
+    return poolName;
+  }
+
+  private static boolean isDefaultTomcatPoolName(String poolName) {
+    return poolName.startsWith(TOMCAT_DEFAULT_POOL_NAME_PREFIX)
+        && poolName.endsWith(TOMCAT_DEFAULT_POOL_NAME_SUFFIX);
   }
 
   public static void unregisterMetrics(DataSourceProxy dataSource) {

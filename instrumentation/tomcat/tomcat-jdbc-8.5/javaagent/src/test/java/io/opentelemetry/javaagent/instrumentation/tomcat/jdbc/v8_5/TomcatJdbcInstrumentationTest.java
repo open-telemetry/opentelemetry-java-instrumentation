@@ -24,6 +24,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class TomcatJdbcInstrumentationTest {
 
+  private static final String DEFAULT_POOL_NAME = "jdbc";
+
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -32,30 +34,36 @@ class TomcatJdbcInstrumentationTest {
 
   @Test
   void shouldReportMetrics() throws SQLException {
-    // given
     when(dataSourceMock.getConnection()).thenReturn(connectionMock);
 
-    DataSource tomcatDataSource = new DataSource();
-    tomcatDataSource.setDataSource(dataSourceMock);
-
     // there shouldn't be any problems if this method gets called more than once
-    tomcatDataSource.createPool();
-    tomcatDataSource.createPool();
+    DataSource firstTomcatDataSource = newDataSource();
+    firstTomcatDataSource.createPool();
+    assertConnectionPoolMetrics(firstTomcatDataSource, DEFAULT_POOL_NAME + "-1");
+    firstTomcatDataSource.close();
 
-    // when
-    Connection connection = tomcatDataSource.getConnection();
+    DataSource secondTomcatDataSource = newDataSource();
+    assertConnectionPoolMetrics(secondTomcatDataSource, DEFAULT_POOL_NAME + "-2");
+
+    DataSource namedTomcatDataSource = newDataSource();
+    namedTomcatDataSource.setName("testPool");
+    assertConnectionPoolMetrics(namedTomcatDataSource, "testPool");
+  }
+
+  private DataSource newDataSource() {
+    DataSource dataSource = new DataSource();
+    dataSource.setDataSource(dataSourceMock);
+    return dataSource;
+  }
+
+  private static void assertConnectionPoolMetrics(DataSource dataSource, String poolName)
+      throws SQLException {
+    dataSource.createPool();
+    Connection connection = dataSource.getConnection();
     connection.close();
-
-    // then
-    assertConnectionPoolMetrics(tomcatDataSource.getPoolName());
-
-    // when
-    // this one too shouldn't cause any problems when called more than once
-    tomcatDataSource.close();
-    tomcatDataSource.close();
+    assertConnectionPoolMetrics(poolName);
+    dataSource.close();
     testing.clearData();
-
-    // then
     assertNoConnectionPoolMetrics();
   }
 
