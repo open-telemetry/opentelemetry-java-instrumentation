@@ -96,31 +96,19 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   Collection<String> getRawQueryTexts(REQUEST request);
 
   /**
-   * Returns whether the query is parameterized. Prepared statements are always considered
-   * parameterized even if no parameters are bound. By using a parameterized query the user is
-   * giving a strong signal that any sensitive data will be passed as parameter values, and so the
-   * query does not need to be sanitized. See <a
+   * Returns whether the query at {@code queryIndex} in {@link #getRawQueryTexts(Object)} is
+   * parameterized. Prepared statements are always considered parameterized even if no parameters
+   * are bound. By using a parameterized query the user is giving a strong signal that any sensitive
+   * data will be passed as parameter values, and so the query does not need to be sanitized. See <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sanitization-of-dbquerytext">sanitization
    * of db.query.text</a>.
-   *
-   * @deprecated use {@link #isParameterizedQuery(Object, int)} instead
-   */
-  @Deprecated
-  default boolean isParameterizedQuery(REQUEST request) {
-    return false;
-  }
-
-  /**
-   * Returns whether the query at {@code queryIndex} in {@link #getRawQueryTexts(Object)} is
-   * parameterized.
    *
    * <p>The {@code queryIndex} is zero-based and follows the iteration order of {@link
    * #getRawQueryTexts(Object)}. This supports batch operations where individual entries may have
    * different parameterization.
    */
   // TODO: make this required to implement
-  @SuppressWarnings("deprecation")
   default boolean isParameterizedQuery(REQUEST request, int queryIndex) {
-    return isParameterizedQuery(request);
+    return false;
   }
 }

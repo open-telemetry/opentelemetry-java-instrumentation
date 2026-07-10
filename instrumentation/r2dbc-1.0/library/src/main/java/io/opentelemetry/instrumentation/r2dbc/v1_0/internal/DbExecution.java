@@ -110,7 +110,10 @@ public final class DbExecution {
                     R2dbcSqlCommenterUtil.getOriginalQuery(queryInfo.getConnectionInfo(), query))
             .collect(toList());
     int queryInfoBatchSize = queryInfo.getBatchSize();
-    this.batchSize = queryInfoBatchSize > 1 ? (long) queryInfoBatchSize : null;
+    // r2dbc-proxy reports 0 as the default size for ordinary non-batch executions. Those still
+    // have a query text; an empty Batch.execute() is represented with no query texts.
+    boolean emptyBatch = rawQueryTexts.isEmpty();
+    this.batchSize = queryInfoBatchSize > 1 || emptyBatch ? (long) queryInfoBatchSize : null;
     this.parameterizedQuery =
         queryInfo.getQueries().stream()
             .anyMatch(queryInfo1 -> !queryInfo1.getBindingsList().isEmpty());
