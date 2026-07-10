@@ -9,6 +9,27 @@
 
 New `include(...)` entries must be in **alphabetical order** within the surrounding group.
 
+## Markdown Formatting Is Root-Project-Only
+
+Spotless formats `**/*.md` (prettier), but that block is registered only
+`if (project == rootProject)` in `conventions/src/main/kotlin/otel.spotless-conventions.gradle.kts`.
+Running a module-scoped `./gradlew :some:module:spotlessApply` does **not** touch markdown —
+including files under `.github/agents/knowledge/`. Any change that adds or edits `.md` files
+anywhere in the repo needs a root-level run:
+
+```
+./gradlew spotlessMarkdownApply   # or spotlessApply / spotlessCheck from the repo root
+```
+
+Before pushing a docs-only or knowledge-base PR, run this even if no Java/Kotlin files changed —
+it's easy to skip because there's no corresponding module to scope it to.
+
+Note for anyone relying on a personal `rumdl`/flint pre-push hook instead: `rumdl` has a
+table-alignment rule (`MD060`, alias `table-format`) that can catch the same class of issue, but
+it is **not enabled** in this repo's `.github/config/.rumdl.toml` (that file only sets a
+`disable` list, no `enable` list, and `MD060` isn't on by default). Don't rely on a personal
+rumdl hook to catch markdown formatting issues here — run the Gradle command above.
+
 ## Muzzle Configuration
 
 Javaagent modules must have a `muzzle` block in `build.gradle.kts`. Each `pass` block must
