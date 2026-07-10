@@ -81,7 +81,7 @@ jobs:
         if: steps.diffcheck.outputs.has_diff == 'true' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
 
       - name: Find or create metadata update branch
