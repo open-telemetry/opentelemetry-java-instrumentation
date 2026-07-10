@@ -88,8 +88,8 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
 
     ObjectName objectName =
         new ObjectName("org.apache.commons.dbcp2:type=BasicDataSource,name=registeredPool");
-    MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-    mBeanServer.registerMBean(dataSource, objectName);
+    MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+    mbeanServer.registerMBean(dataSource, objectName);
 
     try {
       dataSource.getConnection().close();
@@ -97,8 +97,8 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
       assertDataSourceMetrics("configuredPool");
     } finally {
       dataSource.close();
-      if (mBeanServer.isRegistered(objectName)) {
-        mBeanServer.unregisterMBean(objectName);
+      if (mbeanServer.isRegistered(objectName)) {
+        mbeanServer.unregisterMBean(objectName);
       }
       shutdown(dataSource);
     }
@@ -112,8 +112,8 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
 
     ObjectName objectName =
         new ObjectName("org.apache.commons.dbcp2:type=BasicDataSource,name=registeredPoolFallback");
-    MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-    mBeanServer.registerMBean(dataSource, objectName);
+    MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+    mbeanServer.registerMBean(dataSource, objectName);
 
     try {
       dataSource.getConnection().close();
@@ -121,8 +121,8 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
       assertDataSourceMetrics("registeredPoolFallback");
     } finally {
       dataSource.close();
-      if (mBeanServer.isRegistered(objectName)) {
-        mBeanServer.unregisterMBean(objectName);
+      if (mbeanServer.isRegistered(objectName)) {
+        mbeanServer.unregisterMBean(objectName);
       }
       shutdown(dataSource);
     }
