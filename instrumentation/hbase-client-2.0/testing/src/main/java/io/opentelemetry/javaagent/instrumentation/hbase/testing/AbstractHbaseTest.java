@@ -535,7 +535,12 @@ public abstract class AbstractHbaseTest {
     }
     testing()
         .waitAndAssertTraces(
-            traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true),
+            traceAssertConsumer(
+                TABLE_NAME,
+                emitStableDatabaseSemconv() ? "BATCH " + MUTATE : MULTI,
+                REGION_SERVER_PORT,
+                true,
+                2L),
             traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
   }
 
@@ -574,6 +579,11 @@ public abstract class AbstractHbaseTest {
 
   protected Consumer<TraceAssert> traceAssertConsumer(
       TableName table, String operation, int port, boolean hasTable) {
+    return traceAssertConsumer(table, operation, port, hasTable, null);
+  }
+
+  private Consumer<TraceAssert> traceAssertConsumer(
+      TableName table, String operation, int port, boolean hasTable, Long batchSize) {
     String spanName;
     if (hasTable) {
       spanName = operation + " " + table.getNameAsString();
@@ -592,6 +602,9 @@ public abstract class AbstractHbaseTest {
                         equalTo(maybeStable(DB_OPERATION), operation),
                         equalTo(maybeStable(DB_NAME), dbNamespace(table, hasTable)),
                         equalTo(DB_COLLECTION_NAME, dbCollectionName(table, hasTable)),
+                        equalTo(
+                            DB_OPERATION_BATCH_SIZE,
+                            emitStableDatabaseSemconv() ? batchSize : null),
                         equalTo(SERVER_ADDRESS, hostname),
                         equalTo(SERVER_PORT, port),
                         satisfies(
