@@ -25,7 +25,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -50,8 +49,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
-import org.springframework.messaging.support.MessageBuilder;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @SpringBootTest(
@@ -65,12 +62,6 @@ class AwsSqsTest {
 
   @Autowired SqsTemplate sqsTemplate;
   @Autowired MessageListenerContainerRegistry registry;
-  @Autowired ApplicationContext applicationContext;
-
-  // Warmup is performed only once for the entire test class to avoid each test waiting for
-  // the Spring SQS listener containers (which start asynchronously) to resolve queue URLs
-  // and process an initial message before telemetry data can be reliably cleared.
-  private static volatile boolean initialized = false;
 
   @BeforeAll
   static void setUp() {
@@ -79,47 +70,18 @@ class AwsSqsTest {
     AwsSqsTestApplication.sqsPort = server.localAddress().getPort();
   }
 
-  @BeforeEach
-  void clearAndWarmup() throws InterruptedException {
-    if (!initialized) {
-      initialized = true;
-      // Send a warmup message to each queue so the listener containers fully initialize
-      // (resolve queue URLs, start polling) and process at least one message. We wait for
-      // both process spans and the async Sqs.DeleteMessageBatch to complete before clearing
-      // data — otherwise those spans leak into subsequent test assertions.
-      sqsTemplate.send("test-queue", "warmup");
-      sqsTemplate.sendMany(
-          "test-batch-queue", singletonList(MessageBuilder.withPayload("warmup1").build()));
-
-      long startTime = System.currentTimeMillis();
-      while (System.currentTimeMillis() - startTime < 30000) {
-        long count =
-            testing.spans().stream().filter(s -> s.getName().equals("test-queue process")).count();
-        long countBatch =
-            testing.spans().stream()
-                .filter(s -> s.getName().equals("test-batch-queue process"))
-                .count();
-        long countDelete =
-            testing.spans().stream()
-                .filter(s -> s.getName().equals("Sqs.DeleteMessageBatch"))
-                .count();
-        if (count >= 1 && countBatch >= 1 && countDelete >= 2) {
-          break;
-        }
-        Thread.sleep(100);
-      }
-    }
-
-    testing.clearData();
-    AwsSqsTestApplication.messageHandler = null;
-    AwsSqsTestApplication.batchMessageHandler = null;
-  }
-
   @AfterAll
   static void cleanUp() {
     if (sqs != null) {
       sqs.stopAndWait();
     }
+  }
+
+  @BeforeEach
+  void clearData() {
+    testing.clearData();
+    AwsSqsTestApplication.messageHandler = null;
+    AwsSqsTestApplication.batchMessageHandler = null;
   }
 
   @Test
