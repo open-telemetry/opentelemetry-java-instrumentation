@@ -91,37 +91,25 @@ public class OpenTelemetryAutoConfiguration {
     @Conditional(DeclarativeConfigDisabled.class)
     static class PropertiesConfig {
 
-      /**
-       * For internal use only
-       */
       @Bean
-      public ResourceProvider otelSpringResourceProvider(
-          Optional<BuildProperties> buildProperties) {
+      ResourceProvider otelSpringResourceProvider(Optional<BuildProperties> buildProperties) {
         return new SpringResourceProvider(buildProperties);
       }
 
-      /**
-       * For internal use only
-       */
       @Bean
-      public ResourceProvider otelDistroVersionResourceProvider() {
+      ResourceProvider otelDistroVersionResourceProvider() {
         return new DistroVersionResourceProvider();
       }
 
-      /**
-       * For internal use only
-       */
       @Bean
       @ConfigurationPropertiesBinding
       OtelMapConverter otelMapConverter() {
         return new OtelMapConverter();
       }
 
-      /**
-       * For internal use only - use {@link ConfigProvider} and {@link OpenTelemetry} instead
-       */
+      /** Use {@link ConfigProvider} and {@link OpenTelemetry} instead. */
       @Bean
-      public AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk(
+      AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk(
           Environment env,
           OtlpExporterProperties otlpExporterProperties,
           OtelResourceProperties resourceProperties,
@@ -137,9 +125,13 @@ public class OpenTelemetryAutoConfiguration {
             .build();
       }
 
+      /**
+       * Bridges the legacy {@link ConfigProperties}-based configuration
+       * into a {@link ConfigProvider}, since instrumentation only reads config through {@link
+       * ConfigProvider}.
+       */
       @Bean
-      ConfigProvider configProvider( AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk
-          ) {
+      ConfigProvider configProvider(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
         return ConfigPropertiesBackedConfigProvider.create(
             requireNonNull(AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk)));
       }
@@ -175,27 +167,35 @@ public class OpenTelemetryAutoConfiguration {
     @Conditional(DeclarativeConfigEnabled.class)
     static class EmbeddedConfigFileConfig {
 
-      /**
-       * For internal use only - use {@link ConfigProvider} instead
-       */
+      /** Use {@link ConfigProvider} instead. */
       @Bean
-      public OpenTelemetryConfigurationModel openTelemetryConfigurationModel(
+      OpenTelemetryConfigurationModel openTelemetryConfigurationModel(
           ConfigurableEnvironment environment) {
         return EmbeddedConfigFile.extractModel(environment);
       }
 
+      /**
+       * Unlike {@link
+       * OpenTelemetrySdkConfig.PropertiesConfig#configProvider(AutoConfiguredOpenTelemetrySdk)},
+       * this reads config directly from the declarative {@link OpenTelemetryConfigurationModel}
+       * instead of bridging from {@link ConfigProperties}.
+       */
       @Bean
       ConfigProvider configProvider(
           OpenTelemetryConfigurationModel model, ApplicationContext applicationContext) {
-        return SpringConfigProvider.create(model,
-            new OpenTelemetrySdkComponentLoader(applicationContext));
+        return SpringConfigProvider.create(
+            model, new OpenTelemetrySdkComponentLoader(applicationContext));
       }
 
       @Bean
       public OpenTelemetry openTelemetry(
-          OpenTelemetryConfigurationModel model, ApplicationContext applicationContext, ConfigProvider configProvider) {
-        OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model,
-            new OpenTelemetrySdkComponentLoader(applicationContext)).getSdk();
+          OpenTelemetryConfigurationModel model,
+          ApplicationContext applicationContext,
+          ConfigProvider configProvider) {
+        OpenTelemetrySdk sdk =
+            DeclarativeConfiguration.create(
+                    model, new OpenTelemetrySdkComponentLoader(applicationContext))
+                .getSdk();
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
         return new SpringOpenTelemetrySdk(sdk, configProvider);
@@ -219,27 +219,18 @@ public class OpenTelemetryAutoConfiguration {
                     .getInstrumentationConfig());
       }
 
-      /**
-       * For internal use only
-       */
       @Bean
-      public DeclarativeConfigurationCustomizerProvider distroConfigurationCustomizerProvider() {
+      DeclarativeConfigurationCustomizerProvider distroConfigurationCustomizerProvider() {
         return new ResourceCustomizerProvider();
       }
 
-      /**
-       * For internal use only
-       */
       @Bean
-      public DeclarativeConfigurationCustomizerProvider threadDetailsCustomizerProvider() {
+      DeclarativeConfigurationCustomizerProvider threadDetailsCustomizerProvider() {
         return new ThreadDetailsCustomizerProvider();
       }
 
-      /**
-       * For internal use only
-       */
       @Bean
-      public ComponentProvider distroComponentProvider() {
+      ComponentProvider distroComponentProvider() {
         return new DistroComponentProvider();
       }
     }
@@ -274,8 +265,7 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
-    ConfigProvider configProvider(
-        ) {
+    ConfigProvider configProvider() {
       return ConfigProvider.noop();
     }
 
@@ -310,6 +300,11 @@ public class OpenTelemetryAutoConfiguration {
     }
   }
 
+  /**
+   * Backstops setups where a custom {@link OpenTelemetry} bean is supplied (so {@link
+   * OpenTelemetrySdkConfig} doesn't apply) and no {@link ConfigProvider} bean is otherwise defined,
+   * so that instrumentation can always rely on a {@link ConfigProvider} bean being present.
+   */
   @Configuration
   @ConditionalOnBean(OpenTelemetry.class)
   @ConditionalOnMissingBean({ConfigProvider.class})

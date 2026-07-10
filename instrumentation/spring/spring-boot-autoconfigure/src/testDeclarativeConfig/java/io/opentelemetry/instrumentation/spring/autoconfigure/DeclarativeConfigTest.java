@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.SpringWebInstrumentationAutoConfiguration;
@@ -49,7 +50,9 @@ class DeclarativeConfigTest {
                 assertThat(context)
                     .hasBean("customOpenTelemetry")
                     .doesNotHaveBean("openTelemetry")
-                    .hasBean("otelProperties"));
+                    .hasBean("otelProperties")
+                    .getBean("configProvider")
+                    .isEqualTo(ConfigProvider.noop()));
   }
 
   @Test
@@ -57,19 +60,21 @@ class DeclarativeConfigTest {
       "when Application Context DOES NOT contain OpenTelemetry bean should initialize openTelemetry")
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner.run(
-        context ->
-            assertThat(context)
-                .getBean("openTelemetry", OpenTelemetry.class)
-                .isNotNull()
-                .satisfies(
-                    o -> {
-                      DeclarativeConfigProperties config =
-                          DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
-                      assertThat(config.getString("string_key")).isEqualTo("string_value");
-                      assertThat(config.getBoolean("bool_key")).isTrue();
-                      assertThat(config.getDouble("double_key")).isEqualTo(3.14);
-                      assertThat(config.getLong("int_key")).isEqualTo(42);
-                    }));
+        context -> {
+          assertThat(context)
+              .getBean("openTelemetry", OpenTelemetry.class)
+              .isNotNull()
+              .satisfies(
+                  o -> {
+                    DeclarativeConfigProperties config =
+                        DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
+                    assertThat(config.getString("string_key")).isEqualTo("string_value");
+                    assertThat(config.getBoolean("bool_key")).isTrue();
+                    assertThat(config.getDouble("double_key")).isEqualTo(3.14);
+                    assertThat(config.getLong("int_key")).isEqualTo(42);
+                  });
+          assertThat(context).getBean("configProvider", ConfigProvider.class).isNotNull();
+        });
   }
 
   @Test
@@ -164,8 +169,10 @@ class DeclarativeConfigTest {
             "otel.disabled=true",
             "otel.resource.attributes=service.name=workflow-backend-dev,service.version=3c8f9ce9")
         .run(
-            context ->
-                assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop()));
+            context -> {
+              assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop());
+              assertThat(context).getBean("configProvider").isEqualTo(ConfigProvider.noop());
+            });
   }
 
   @Test
