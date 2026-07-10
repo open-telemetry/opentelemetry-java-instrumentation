@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.graphql.common.v12_0.internal;
 
 import graphql.execution.instrumentation.InstrumentationState;
 import graphql.language.OperationDefinition.Operation;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
@@ -16,6 +17,8 @@ import javax.annotation.Nullable;
  */
 public class OpenTelemetryInstrumentationState implements InstrumentationState {
   @Nullable private Context context;
+  @Nullable private Span localRootSpan;
+  private boolean operationSpanCreated;
   @Nullable private Operation operation;
   @Nullable private String operationName;
   @Nullable private String query;
@@ -27,6 +30,29 @@ public class OpenTelemetryInstrumentationState implements InstrumentationState {
 
   public void setContext(Context context) {
     this.context = context;
+  }
+
+  /** Whether this instrumentation created its own GraphQL operation span. */
+  public boolean isOperationSpanCreated() {
+    return operationSpanCreated;
+  }
+
+  public void setOperationSpanCreated(boolean operationSpanCreated) {
+    this.operationSpanCreated = operationSpanCreated;
+  }
+
+  /**
+   * The local root span captured from the parent context, used when enriching it with GraphQL
+   * telemetry. {@code null} when there is no enclosing local root or when local-root enrichment is
+   * disabled.
+   */
+  @Nullable
+  public Span getLocalRootSpan() {
+    return localRootSpan;
+  }
+
+  public void setLocalRootSpan(@Nullable Span localRootSpan) {
+    this.localRootSpan = localRootSpan;
   }
 
   @Nullable

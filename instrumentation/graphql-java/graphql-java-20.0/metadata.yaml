@@ -32,3 +32,26 @@ configurations:
     description: Whether to create spans for trivial data fetchers. A trivial data fetcher is one that simply maps data from an object to a field.
     type: boolean
     default: false
+  - name: otel.instrumentation.graphql.operation-span.enabled
+    declarative_name: java.graphql.operation_span.enabled
+    description: >
+      Whether to create the GraphQL operation span. When disabled, no `GraphQL Operation` span is created; data
+      fetcher spans, if enabled, are unaffected.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.graphql.add-attributes-to-local-root-span
+    declarative_name: java.graphql.add_attributes_to_local_root_span
+    description: >
+      Whether to add GraphQL attributes (graphql.operation.name, graphql.operation.type, graphql.document) and
+      exception events to the local root span (typically the enclosing HTTP server span), in addition to or instead
+      of the operation span.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.graphql.promote-error-status-to-local-root-span
+    declarative_name: java.graphql.promote_error_status_to_local_root_span
+    description: >
+      Whether to set the local root span status to ERROR when the GraphQL result contains any errors. WARNING: This
+      marks the enclosing (e.g. server) span as errored for any GraphQL error, including partial errors on an HTTP 200
+      response.
+    type: boolean
+    default: false
