@@ -12,9 +12,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
-import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -183,12 +181,13 @@ public abstract class AbstractHbaseTest {
           TableDescriptorBuilder.newBuilder(TABLE_NAME)
               .setColumnFamily(columnFamilyDescriptor)
               .build();
-      admin.createTable(tableDescriptor);
+      admin.createTable(tableDescriptor, new byte[][] {Bytes.toBytes("m")});
     }
   }
 
   private void seedRows() throws IOException {
     try (Table table = connection.getTable(TABLE_NAME)) {
+      table.put(row("batch-seed-row", "col1_val", "col2_val"));
       table.put(row(ROW_1, "col1_val_1", "col2_val_1"));
       table.put(row(SCAN_ROW, "scan_col1_val", "scan_col2_val"));
     }
@@ -387,19 +386,8 @@ public abstract class AbstractHbaseTest {
     // scenario.batchSize is null and the attribute is asserted absent)
     testing()
         .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(scenario.operationName + " " + TABLE_NAME.getNameAsString())
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, maybeStableDbSystemName(DB_SYSTEM_VALUE)),
-                                equalTo(DB_NAMESPACE, TABLE_NAME.getNamespaceAsString()),
-                                equalTo(DB_COLLECTION_NAME, TABLE_NAME.getNameAsString()),
-                                equalTo(DB_OPERATION_NAME, scenario.operationName),
-                                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                                equalTo(SERVER_ADDRESS, hostname),
-                                equalTo(SERVER_PORT, REGION_SERVER_PORT))));
+            traceAssertConsumer(
+                TABLE_NAME, scenario.operationName, REGION_SERVER_PORT, true, scenario.batchSize));
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -425,8 +413,9 @@ public abstract class AbstractHbaseTest {
                 .operationName("BATCH " + MUTATE)
                 .batchSize(2L)
                 .build()),
+        // The mutation and get are on opposite sides of the table's split key.
         argumentSet(
-            "mixed",
+            "mixedAcrossRegions",
             BatchScenario.builder()
                 .addAction(put("batch-mixed-put-row"))
                 .addAction(get(ROW_1))
