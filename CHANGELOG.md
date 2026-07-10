@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### 🚫 Deprecations
+
+- Deprecate `otel.instrumentation.experimental.span-suppression-strategy` in favor of
+  `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration.
+  The system property is ignored when v3 preview is enabled and will be removed in 3.0.
+
 ## Version 2.29.0 (2026-06-19)
 
 This release targets the OpenTelemetry SDK 1.63.0.

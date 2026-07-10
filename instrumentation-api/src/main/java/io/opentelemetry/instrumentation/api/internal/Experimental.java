@@ -44,6 +44,10 @@ public final class Experimental {
   private static volatile BiConsumer<InstrumenterBuilder<?, ?>, InternalExceptionEventExtractor<?>>
       exceptionEventExtractorSetter;
 
+  @Nullable
+  private static volatile BiConsumer<InstrumenterBuilder<?, ?>, String>
+      spanSuppressionStrategySetter;
+
   private Experimental() {}
 
   /**
@@ -140,5 +144,21 @@ public final class Experimental {
       BiConsumer<InstrumenterBuilder<REQUEST, ?>, InternalExceptionEventExtractor<? super REQUEST>>
           exceptionEventExtractorSetter) {
     Experimental.exceptionEventExtractorSetter = (BiConsumer) exceptionEventExtractorSetter;
+  }
+
+  /**
+   * Sets the span suppression strategy. Supported values are {@code none}, {@code span-kind}, and
+   * {@code semconv}.
+   */
+  public static void setSpanSuppressionStrategy(
+      InstrumenterBuilder<?, ?> builder, String spanSuppressionStrategy) {
+    if (spanSuppressionStrategySetter != null) {
+      spanSuppressionStrategySetter.accept(builder, spanSuppressionStrategy);
+    }
+  }
+
+  public static void internalSetSpanSuppressionStrategy(
+      BiConsumer<InstrumenterBuilder<?, ?>, String> spanSuppressionStrategySetter) {
+    Experimental.spanSuppressionStrategySetter = spanSuppressionStrategySetter;
   }
 }

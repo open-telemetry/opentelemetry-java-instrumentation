@@ -9,10 +9,12 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,10 +24,43 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
 class SpanSuppressionStrategyTest {
 
   static final Span span = Span.getInvalid();
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "none")
+  void shouldSetStrategyProgrammatically() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test");
+    Experimental.setSpanSuppressionStrategy(builder, "span-kind");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void shouldReadDeprecatedPropertyWhenV3PreviewIsDisabled() {
+    assertThat(InstrumenterBuilder.getDeprecatedSpanSuppressionStrategyProperty(false))
+        .isEqualTo("span-kind");
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void shouldIgnoreDeprecatedPropertyWhenV3PreviewIsEnabled() {
+    assertThat(InstrumenterBuilder.getDeprecatedSpanSuppressionStrategyProperty(true)).isNull();
+  }
 
   @ParameterizedTest
   @MethodSource("configArgs")
