@@ -382,9 +382,24 @@ public abstract class AbstractHbaseTest {
       return;
     }
 
-    // stable semconv derives the batch operation name and db.operation.batch.size
+    // stable semconv derives the batch operation name and db.operation.batch.size; the batch size
+    // is present only for multi-action batches (a single-action batch is a non-batch operation, so
+    // scenario.batchSize is null and the attribute is asserted absent)
     testing()
-        .waitAndAssertTraces(batchTraceAssertConsumer(scenario.operationName, scenario.batchSize));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(scenario.operationName + " " + TABLE_NAME.getNameAsString())
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, maybeStableDbSystemName(DB_SYSTEM_VALUE)),
+                                equalTo(DB_NAMESPACE, TABLE_NAME.getNamespaceAsString()),
+                                equalTo(DB_COLLECTION_NAME, TABLE_NAME.getNameAsString()),
+                                equalTo(DB_OPERATION_NAME, scenario.operationName),
+                                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                                equalTo(SERVER_ADDRESS, hostname),
+                                equalTo(SERVER_PORT, REGION_SERVER_PORT))));
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -601,25 +616,6 @@ public abstract class AbstractHbaseTest {
       return table.getNameAsString();
     }
     return null;
-  }
-
-  // Asserts a stable-semconv batch span. db.operation.batch.size is present only for multi-action
-  // batches; a single-action batch is modeled as a non-batch operation, so batchSize is null and
-  // the attribute is asserted absent.
-  private Consumer<TraceAssert> batchTraceAssertConsumer(String operation, Long batchSize) {
-    return trace ->
-        trace.hasSpansSatisfyingExactly(
-            span ->
-                span.hasName(operation + " " + TABLE_NAME.getNameAsString())
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, maybeStableDbSystemName(DB_SYSTEM_VALUE)),
-                        equalTo(DB_NAMESPACE, TABLE_NAME.getNamespaceAsString()),
-                        equalTo(DB_COLLECTION_NAME, TABLE_NAME.getNameAsString()),
-                        equalTo(DB_OPERATION_NAME, operation),
-                        equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
-                        equalTo(SERVER_ADDRESS, hostname),
-                        equalTo(SERVER_PORT, REGION_SERVER_PORT)));
   }
 
   private static class BatchScenario {
