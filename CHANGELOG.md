@@ -4,6 +4,8 @@
 
 ### 📈 Enhancements
 
+- Add Cassandra JMX metrics target system.
+  ([#19080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19080))
 - Add `captureTemplate` and `captureArguments` options to the log4j, java-util-logging, and
   jboss-logmanager logging instrumentations, capturing the log message template and arguments as
   separate `log.body.template` / `log.body.parameters` attributes. This extends the same option
