@@ -50,10 +50,10 @@ public class HbaseSingletons {
   // when the call completes, or null if there is nothing to do. Only stable semconv distinguishes
   // batch operations; under old semconv the RPC-layer span keeps reporting the raw "Multi"
   // operation. An empty batch sends nothing to the server (no RPC, and no connection to derive
-  // server attributes from), so -- like the Redis pipeline instrumentation -- it is not reported as
-  // a span. Otherwise the derived batch metadata is placed in the context so the executor
-  // instrumentation propagates it to the pool thread that issues the Multi RPC, letting that span
-  // report the batch operation name and db.operation.batch.size.
+  // server attributes from), so it is not reported as a span. Otherwise the derived batch metadata
+  // is placed in the context so the executor instrumentation propagates it to the pool thread that
+  // issues the Multi RPC, letting that span report the batch operation name and
+  // db.operation.batch.size.
   @Nullable
   public static Scope startBatch(List<? extends Row> actions) {
     if (!emitStableDatabaseSemconv() || actions.isEmpty()) {
