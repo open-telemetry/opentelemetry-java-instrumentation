@@ -46,7 +46,32 @@ class TomcatTest extends TargetSystemTest {
     // metric
     copyTestWebAppToTarget(target, "/usr/local/tomcat/webapps/ROOT.war");
 
-    startWeaverValidation("tomcat", "tomcat.yaml");
+    startWeaverValidation(
+        "tomcat.yaml",
+        result -> {
+          // ensure that all tomcat.* metrics and attributes are registered
+          checkNothingUnregisteredWithPrefix(result, "tomcat.");
+          // ensure that we have all the metrics and attributes we expect
+          checkRegistered(
+              "tomcat.",
+              result.getSeenRegistryMetrics(),
+              "tomcat.network.io",
+              "tomcat.thread.busy.count",
+              "tomcat.request.duration.sum",
+              "tomcat.request.count",
+              "tomcat.thread.count",
+              "tomcat.session.active.count",
+              "tomcat.session.active.limit",
+              "tomcat.error.count",
+              "tomcat.request.duration.max",
+              "tomcat.thread.limit");
+          checkRegistered(
+              "tomcat.",
+              result.getSeenRegistryAttributes(),
+              "tomcat.request.processor.name",
+              "tomcat.context",
+              "tomcat.thread.pool.name");
+        });
 
     startTarget(target);
 

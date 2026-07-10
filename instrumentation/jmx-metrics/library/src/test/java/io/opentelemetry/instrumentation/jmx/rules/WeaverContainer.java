@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
@@ -97,14 +98,20 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
     private final List<WeaverValidationAdvice> advices;
     private final Set<String> seenNonRegistryMetrics;
     private final Set<String> seenNonRegistryAttributes;
+    private final Set<String> seenRegistryMetrics;
+    private final Set<String> seenRegistryAttributes;
 
     private WeaverValidationResult(
         List<WeaverValidationAdvice> advices,
         Set<String> seenNonRegistryMetrics,
-        Set<String> seenNonRegistryAttributes) {
+        Set<String> seenNonRegistryAttributes,
+        Set<String> seenRegistryMetrics,
+        Set<String> seenRegistryAttributes) {
       this.advices = advices;
       this.seenNonRegistryMetrics = seenNonRegistryMetrics;
       this.seenNonRegistryAttributes = seenNonRegistryAttributes;
+      this.seenRegistryMetrics = seenRegistryMetrics;
+      this.seenRegistryAttributes = seenRegistryAttributes;
     }
 
     private static WeaverValidationResult fromJson(JsonNode json) {
@@ -139,19 +146,20 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
                 }
               });
 
-      JsonNode statistics = json.get("statistics");
-      Set<String> seenNonRegistryMetrics = new HashSet<>();
-      statistics
-          .get("seen_non_registry_metrics")
-          .fieldNames()
-          .forEachRemaining(seenNonRegistryMetrics::add);
-      Set<String> seenNonRegistryAttributes = new HashSet<>();
-      statistics
-          .get("seen_non_registry_attributes")
-          .fieldNames()
-          .forEachRemaining(seenNonRegistryAttributes::add);
+      BiFunction<JsonNode, String, Set<String>> doParse =
+          (jsonNode, key) -> {
+            Set<String> result = new HashSet<>();
+            jsonNode.get(key).fieldNames().forEachRemaining(result::add);
+            return result;
+          };
 
-      return new WeaverValidationResult(advices, seenNonRegistryMetrics, seenNonRegistryAttributes);
+      JsonNode statistics = json.get("statistics");
+      return new WeaverValidationResult(
+          advices,
+          doParse.apply(statistics, "seen_non_registry_metrics"),
+          doParse.apply(statistics, "seen_non_registry_attributes"),
+          doParse.apply(statistics, "seen_registry_metrics"),
+          doParse.apply(statistics, "seen_registry_attributes"));
     }
 
     /**
@@ -179,6 +187,24 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
      */
     public Set<String> getSeenNonRegistryAttributes() {
       return seenNonRegistryAttributes;
+    }
+
+    /**
+     * Get reported metrics that are defined in registry
+     *
+     * @return set of metrics that were reported and are part of tested registry
+     */
+    public Set<String> getSeenRegistryMetrics() {
+      return seenRegistryMetrics;
+    }
+
+    /**
+     * Get reported attributes that are defined in registry
+     *
+     * @return set of attributes that were reported and are part of tested registry
+     */
+    public Set<String> getSeenRegistryAttributes() {
+      return seenRegistryAttributes;
     }
   }
 

@@ -37,11 +37,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -75,7 +77,7 @@ class TargetSystemTest {
   private Collection<GenericContainer<?>> targetDependencies;
 
   private WeaverContainer weaver;
-  private String systemPrefix;
+  @Nullable private Consumer<WeaverContainer.WeaverValidationResult> weaverMetricsVerify = null;
 
   @BeforeAll
   static void beforeAll() {
@@ -104,19 +106,16 @@ class TargetSystemTest {
   /**
    * Enables opt-in JMX registry validation for the target system
    *
-   * @param systemPrefix System prefix namespace to check, for example "tomcat"
-   * @param registryFiles list of file names to include in registry
+   * @param registryFile registry file to include
    */
-  void startWeaverValidation(String systemPrefix, String... registryFiles) {
-    if (registryFiles == null || registryFiles.length == 0) {
-      throw new IllegalArgumentException("at least one registry file expected");
-    }
+  void startWeaverValidation(
+      String registryFile, Consumer<WeaverContainer.WeaverValidationResult> weaverMetricsVerify) {
 
     Path registryRoot = Paths.get(System.getProperty("io.opentelemetry.registry.path"));
     assertThat(Files.isDirectory(registryRoot)).isTrue();
 
-    this.systemPrefix = systemPrefix;
-    weaver = new WeaverContainer(registryRoot, registryFiles);
+    this.weaverMetricsVerify = weaverMetricsVerify;
+    weaver = new WeaverContainer(registryRoot, registryFile);
     weaver.start();
 
     otlpServer.setForwardEndpoint(weaver.getOtlpEndpoint());
@@ -136,12 +135,12 @@ class TargetSystemTest {
 
     if (weaver != null) {
       stop(weaver);
-      validateWeaverResults(weaver.getResult(), systemPrefix);
+      validateWeaverResultCommon(weaver.getResult());
+      weaverMetricsVerify.accept(weaver.getResult());
     }
   }
 
-  private static void validateWeaverResults(
-      WeaverContainer.WeaverValidationResult result, String systemPrefix) {
+  private static void validateWeaverResultCommon(WeaverContainer.WeaverValidationResult result) {
     AtomicInteger violationCount = new AtomicInteger(0);
     result
         .getValidationAdvices()
@@ -183,25 +182,30 @@ class TargetSystemTest {
     assertThat(violationCount.get())
         .describedAs("no registry violation should be reported")
         .isEqualTo(0);
+  }
 
-    // validate that we don't have any metrics or attributes with system prefix that are missing in
-    // registry
+  protected void checkNothingUnregisteredWithPrefix(
+      WeaverContainer.WeaverValidationResult result, String prefix) {
     result
         .getSeenNonRegistryMetrics()
         .forEach(
-            metric ->
-                assertThat(metric)
-                    .describedAs(
-                        "metric with prefix %s is expected to be part of registry", systemPrefix)
-                    .doesNotStartWith(systemPrefix));
+            attribute ->
+                assertThat(attribute)
+                    .describedAs("no un-registered metric with prefix %s expected", prefix)
+                    .doesNotStartWith(prefix));
     result
         .getSeenNonRegistryAttributes()
         .forEach(
             attribute ->
                 assertThat(attribute)
-                    .describedAs(
-                        "attribute with prefix %s is expected to be part of registry", systemPrefix)
-                    .doesNotStartWith(systemPrefix));
+                    .describedAs("no un-registered attribute with prefix %s expected", prefix)
+                    .doesNotStartWith(prefix));
+  }
+
+  protected void checkRegistered(String prefix, Set<String> collection, String... items) {
+    assertThat(collection)
+        .filteredOn(item -> item.startsWith(prefix))
+        .containsExactlyInAnyOrder(items);
   }
 
   private static boolean shouldIgnoreAdvice(WeaverContainer.WeaverValidationAdvice advice) {

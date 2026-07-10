@@ -50,7 +50,47 @@ class JvmTest extends TargetSystemTest {
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
 
-    startWeaverValidation("jvm", "jvm.yaml");
+    startWeaverValidation(
+        "jvm.yaml",
+        result -> {
+          // ensure that all jvm.* metrics and attributes are registered
+          checkNothingUnregisteredWithPrefix(result, "jvm.");
+          // ensure that we have all the metrics and attributes we expect
+          checkRegistered(
+              "jvm.",
+              result.getSeenRegistryMetrics(),
+              "jvm.memory.committed",
+              "jvm.system.cpu.utilization",
+              "jvm.class.unloaded",
+              "jvm.file_descriptor.limit",
+              "jvm.cpu.recent_utilization",
+              "jvm.memory.used_after_last_gc",
+              "jvm.buffer.memory.limit",
+              "jvm.cpu.count",
+              "jvm.class.count",
+              "jvm.memory.used",
+              "jvm.memory.init",
+              "jvm.class.loaded",
+              "jvm.memory.limit",
+              "jvm.buffer.memory.used",
+              "jvm.buffer.count",
+              "jvm.file_descriptor.count",
+              "jvm.gc.duration",
+              "jvm.system.cpu.load_1m",
+              "jvm.cpu.time",
+              "jvm.thread.count");
+          checkRegistered(
+              "jvm.",
+              result.getSeenRegistryAttributes(),
+              "jvm.buffer.pool.name",
+              "jvm.gc.action",
+              "jvm.gc.cause",
+              "jvm.gc.name",
+              "jvm.memory.pool.name",
+              "jvm.memory.type",
+              "jvm.thread.daemon",
+              "jvm.thread.state");
+        });
 
     startTarget(target);
 
