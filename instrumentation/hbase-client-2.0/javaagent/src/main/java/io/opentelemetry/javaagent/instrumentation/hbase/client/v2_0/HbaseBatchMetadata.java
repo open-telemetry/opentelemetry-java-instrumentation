@@ -16,7 +16,7 @@ import org.apache.hadoop.hbase.client.RowMutations;
 @AutoValue
 public abstract class HbaseBatchMetadata {
 
-  // Operation names matching the casing HBase reports for single operations.
+  // Match the operation names reported for the corresponding single operations.
   private static final String GET = "Get";
   private static final String MUTATE = "Mutate";
 
