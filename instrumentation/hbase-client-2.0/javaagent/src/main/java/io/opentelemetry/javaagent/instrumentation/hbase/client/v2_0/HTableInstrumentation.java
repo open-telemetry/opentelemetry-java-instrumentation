@@ -37,7 +37,7 @@ class HTableInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BatchAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter(@Advice.Argument(0) List<? extends Row> actions) {
       // batch(List, Object[]) delegates to batch(List, Object[], int); only record for the
