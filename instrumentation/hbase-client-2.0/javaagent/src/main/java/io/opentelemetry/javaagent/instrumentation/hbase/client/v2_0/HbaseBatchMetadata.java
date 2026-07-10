@@ -20,10 +20,9 @@ public abstract class HbaseBatchMetadata {
   private static final String GET = "Get";
   private static final String MUTATE = "Mutate";
 
-  // The default semconv "BATCH" prefix, used rather than HBase's "Multi" verb. "Multi" is only an
-  // internal implementation detail of the native RPC (rpc Multi in ClientService) that users are
-  // not aware of; the user-facing API is Table.batch(...). The default semantic-convention
-  // terminology is used instead.
+  // "Multi" is only an internal implementation detail of the native RPC (rpc Multi in
+  // ClientService) that users are not aware of; the user-facing API is Table.batch(...). The
+  // default semantic-convention "BATCH" prefix is used instead.
   private static final String BATCH = "BATCH";
 
   // The caller only invokes this for a non-empty batch under stable semconv, so the first
@@ -31,9 +30,8 @@ public abstract class HbaseBatchMetadata {
   public static HbaseBatchMetadata create(List<? extends Row> actions) {
     int size = actions.size();
 
-    // common holds the shared operation name while all actions match; it is cleared to null as soon
-    // as an action differs (or if the first action is an unrecognized type), which also stops the
-    // loop. A non-null value after the loop means the batch is homogeneous.
+    // common is the shared operation name, or null if the action types differ or any action is of
+    // an unrecognized type; a non-null value after the loop means the batch is homogeneous.
     String common = actionOperation(actions.get(0));
     for (int i = 1; common != null && i < size; i++) {
       if (!common.equals(actionOperation(actions.get(i)))) {
