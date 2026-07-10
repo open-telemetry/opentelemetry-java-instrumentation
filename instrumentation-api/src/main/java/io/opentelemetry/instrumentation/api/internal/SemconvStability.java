@@ -40,7 +40,7 @@ public final class SemconvStability {
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
     DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
-    v3Preview = resolveV3Preview(openTelemetry);
+    v3Preview = v3Preview(openTelemetry);
     SemconvSelectionResolver semconvSelection =
         new SemconvSelectionResolver(openTelemetry, generalConfig, v3Preview);
 
@@ -66,7 +66,7 @@ public final class SemconvStability {
   }
 
   @SuppressWarnings("deprecation") // using deprecated config property fallback
-  private static boolean resolveV3Preview(OpenTelemetry openTelemetry) {
+  public static boolean v3Preview(OpenTelemetry openTelemetry) {
     Boolean value = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview");
     if (value != null) {
       return value;

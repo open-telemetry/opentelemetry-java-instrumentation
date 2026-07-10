@@ -417,7 +417,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
 
     String result = commonConfig.getString("span_suppression_strategy/development");
-    if (result == null && !SemconvStability.v3Preview()) {
+    if (result == null && !SemconvStability.v3Preview(openTelemetry)) {
       result = getDeprecatedSpanSuppressionStrategyProperty();
     }
     return SpanSuppressionStrategy.fromConfig(result);
