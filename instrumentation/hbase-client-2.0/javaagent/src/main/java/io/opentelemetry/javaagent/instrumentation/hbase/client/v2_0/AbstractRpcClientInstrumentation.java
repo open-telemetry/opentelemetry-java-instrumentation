@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.getBatchMetadata;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.getTableName;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.resetRequestAndContext;
@@ -25,7 +25,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hadoop.hbase.net.Address;
 import org.apache.hadoop.hbase.security.User;
+import org.apache.hadoop.hbase.shaded.protobuf.generated.ClientProtos;
 import org.apache.hbase.thirdparty.com.google.protobuf.Descriptors;
+import org.apache.hbase.thirdparty.com.google.protobuf.Message;
 
 class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
@@ -52,6 +54,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static RequestAndContext onEnter(
         @Advice.Argument(0) Descriptors.MethodDescriptor md,
+        @Advice.Argument(2) Message param,
         @Advice.Argument(4) User ticket,
         @Advice.Argument(5) Object addr) {
       String hostname = null;
@@ -67,19 +70,16 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       }
       String operation = md.getName();
       Long batchSize = null;
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      // A Table.batch(...) call is issued as a "Multi" RPC. When batch metadata is propagated in
-      // the context, report the derived batch operation name and db.operation.batch.size instead.
-      if ("Multi".equals(operation)) {
-        HbaseBatchMetadata batchMetadata = getBatchMetadata(parentContext);
-        if (batchMetadata != null) {
-          operation = batchMetadata.getOperation();
-          batchSize = batchMetadata.getOperationBatchSize();
-        }
+      if (emitStableDatabaseSemconv() && param instanceof ClientProtos.MultiRequest) {
+        HbaseBatchMetadata batchMetadata =
+            HbaseBatchMetadata.create((ClientProtos.MultiRequest) param);
+        operation = batchMetadata.getOperation();
+        batchSize = batchMetadata.getOperationBatchSize();
       }
       HbaseRequest request =
           HbaseRequest.create(
               operation, getTableName(), ticket.getName(), hostname, port, batchSize);
+      Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }

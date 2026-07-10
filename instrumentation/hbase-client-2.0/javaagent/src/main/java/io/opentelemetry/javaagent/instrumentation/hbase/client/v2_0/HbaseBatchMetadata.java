@@ -6,12 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
 import com.google.auto.value.AutoValue;
-import java.util.List;
 import javax.annotation.Nullable;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Mutation;
-import org.apache.hadoop.hbase.client.Row;
-import org.apache.hadoop.hbase.client.RowMutations;
+import org.apache.hadoop.hbase.shaded.protobuf.generated.ClientProtos;
 
 @AutoValue
 public abstract class HbaseBatchMetadata {
@@ -24,20 +20,23 @@ public abstract class HbaseBatchMetadata {
   // not aware of, so the default semantic-convention "BATCH" prefix is used.
   private static final String BATCH = "BATCH";
 
-  // The caller only invokes this for a non-empty batch under stable semconv, so the first
-  // action is always present.
-  public static HbaseBatchMetadata create(List<? extends Row> actions) {
-    int size = actions.size();
-
-    String common = actionOperation(actions.get(0));
-    for (int i = 1; common != null && i < size; i++) {
-      if (!common.equals(actionOperation(actions.get(i)))) {
-        common = null;
+  public static HbaseBatchMetadata create(ClientProtos.MultiRequest request) {
+    int size = 0;
+    String common = null;
+    for (ClientProtos.RegionAction regionAction : request.getRegionActionList()) {
+      for (ClientProtos.Action action : regionAction.getActionList()) {
+        String operation = actionOperation(action);
+        if (size == 0) {
+          common = operation;
+        } else if (common != null && !common.equals(operation)) {
+          common = null;
+        }
+        size++;
       }
     }
 
-    if (size == 1) {
-      // a single operation is modeled as a non-batch operation (no db.operation.batch.size)
+    if (size <= 1) {
+      // Zero actions have no operation to classify; one action is modeled as non-batch.
       return new AutoValue_HbaseBatchMetadata(common != null ? common : BATCH, null);
     }
     if (common != null) {
@@ -46,15 +45,12 @@ public abstract class HbaseBatchMetadata {
     return new AutoValue_HbaseBatchMetadata(BATCH, (long) size);
   }
 
-  // Returns the operation name that the given action reports as a single (non-batch) operation:
-  // "Get" for Get, or "Mutate" for a Put/Delete/Append/Increment (Mutation subtypes) or
-  // RowMutations. Returns null for any other, unrecognized action type.
   @Nullable
-  private static String actionOperation(Row action) {
-    if (action instanceof Get) {
+  private static String actionOperation(ClientProtos.Action action) {
+    if (action.hasGet()) {
       return GET;
     }
-    if (action instanceof Mutation || action instanceof RowMutations) {
+    if (action.hasMutation()) {
       return MUTATE;
     }
     return null;
