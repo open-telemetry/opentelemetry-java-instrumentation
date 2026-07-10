@@ -32,8 +32,7 @@ class HTableInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     // matches both batch(List, Object[]) and batch(List, Object[], int)
     transformer.applyAdviceToMethod(
-        named("batch").and(takesArgument(0, named("java.util.List"))),
-        getClass().getName() + "$BatchAdvice");
+        named("batch").and(takesArgument(0, List.class)), getClass().getName() + "$BatchAdvice");
   }
 
   @SuppressWarnings("unused")
