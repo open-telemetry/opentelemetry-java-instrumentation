@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -144,6 +145,27 @@ class GraphqlLocalRootSpanTest {
   }
 
   @Test
+  void dataFetcherSpanReparentsToLocalRootWhenOperationSpanDisabled() {
+    // With the operation span disabled, data fetcher spans must nest directly under the enclosing
+    // server span rather than a (missing) GraphQL operation span.
+    GraphQL graphql =
+        graphql(b -> b.setOperationSpanEnabled(false).setDataFetcherInstrumentationEnabled(true));
+
+    ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
+    assertThat(result.getErrors()).isEmpty();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(SERVER_SPAN_NAME).hasKind(SpanKind.SERVER).hasNoParent(),
+                span ->
+                    span.hasName("bookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttribute(stringKey("graphql.field.name"), "bookById")));
+  }
+
+  @Test
   void errorsEnrichedOntoLocalRootStatusNotPromoted() {
     GraphQL graphql = graphql(b -> b.setAddAttributesToLocalRootSpan(true));
 
@@ -185,6 +207,7 @@ class GraphqlLocalRootSpanTest {
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfying(
                             attrs -> {
+                              assertThat(attrs.get(GRAPHQL_OPERATION_NAME)).isNull();
                               assertThat(attrs.get(GRAPHQL_OPERATION_TYPE)).isNull();
                               assertThat(attrs.get(GRAPHQL_DOCUMENT)).isNull();
                             }),
