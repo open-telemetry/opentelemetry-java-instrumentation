@@ -12,31 +12,41 @@ import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PR
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.SchemaUrls;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
-import org.junitpioneer.jupiter.SetSystemProperty;
 
-class ProcessResourceTest {
+class ProcessResourceProviderTest {
 
   private static final boolean IS_WINDOWS = OS.WINDOWS.isCurrentOs();
 
   @Test
-  @SetSystemProperty(key = "os.name", value = "Linux 4.12")
-  void notWindows() {
-    assertResource(false);
+  void emitsCommandAttributesByDefault() {
+    Resource resource = createProcessResource(new HashMap<>());
+
+    assertCommandAttributes(resource.getAttributes());
   }
 
   @Test
-  @SetSystemProperty(key = "os.name", value = "Windows 10")
-  void windows() {
-    assertResource(true);
+  void emitsCommandAttributesWithOptInOnly() {
+    Map<String, String> config = new HashMap<>();
+    config.put(
+        "otel.instrumentation.resources.experimental.process-command-attributes.enabled", "true");
+
+    Resource resource = createProcessResource(config);
+
+    assertCommandAttributes(resource.getAttributes());
   }
 
   @Test
-  void commandAttributesDisabledByDefault() {
-    Resource resource = ProcessResource.create();
+  void suppressesCommandAttributesWithV3Preview() {
+    Map<String, String> config = new HashMap<>();
+    config.put("otel.instrumentation.common.v3-preview", "true");
+
+    Resource resource = createProcessResource(config);
     Attributes attributes = resource.getAttributes();
 
     assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
@@ -46,10 +56,18 @@ class ProcessResourceTest {
   }
 
   @Test
-  void commandAttributesEnabled() {
-    Resource resource = ProcessResource.create(true);
-    Attributes attributes = resource.getAttributes();
+  void emitsCommandAttributesWithV3PreviewAndOptIn() {
+    Map<String, String> config = new HashMap<>();
+    config.put("otel.instrumentation.common.v3-preview", "true");
+    config.put(
+        "otel.instrumentation.resources.experimental.process-command-attributes.enabled", "true");
 
+    Resource resource = createProcessResource(config);
+
+    assertCommandAttributes(resource.getAttributes());
+  }
+
+  private static void assertCommandAttributes(Attributes attributes) {
     if (isJava8() || IS_WINDOWS) {
       assertThat(attributes.get(PROCESS_COMMAND_LINE))
           .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
@@ -65,20 +83,12 @@ class ProcessResourceTest {
     }
   }
 
-  private static void assertResource(boolean windows) {
-    Resource resource = ProcessResource.create();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    Attributes attributes = resource.getAttributes();
-
-    assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
-    assertThat(attributes.get(PROCESS_EXECUTABLE_PATH))
-        .matches(windows ? ".*[/\\\\]java\\.exe" : ".*[/\\\\]java");
-
-    assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
-    assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
-  }
-
   private static boolean isJava8() {
     return "1.8".equals(System.getProperty("java.specification.version"));
+  }
+
+  private static Resource createProcessResource(Map<String, String> config) {
+    return new ProcessResourceProvider()
+        .createResource(DefaultConfigProperties.createFromMap(config));
   }
 }

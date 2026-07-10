@@ -164,7 +164,7 @@ jobs:
         id: otelbot-token
         if: steps.changes.outputs.committed == 'true'
         with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
+          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create PR
