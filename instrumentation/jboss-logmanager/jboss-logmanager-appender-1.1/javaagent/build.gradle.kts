@@ -24,11 +24,16 @@ if (otelProps.testLatestDeps) {
   }
 }
 
+// TODO run tests both with and without experimental log attributes
+val commonTestJvmArgs =
+  listOf(
+    "-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=*",
+    "-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true",
+    "-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true",
+  )
+
 tasks.test {
-  // TODO run tests both with and without experimental log attributes
-  jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=*")
-  jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true")
-  jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
+  jvmArgs(commonTestJvmArgs)
 }
 
 tasks {
@@ -36,10 +41,8 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    jvmArgs(commonTestJvmArgs)
     jvmArgs(
-      "-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=*",
-      "-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true",
-      "-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true",
       "-Dotel.instrumentation.jboss-logmanager.experimental.capture-template=true",
       "-Dotel.instrumentation.jboss-logmanager.experimental.capture-arguments=true",
     )
