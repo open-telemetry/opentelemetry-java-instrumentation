@@ -49,7 +49,7 @@ class HTableInstrumentation implements TypeInstrumentation {
       return startBatch(actions);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Scope scope) {
       CallDepth callDepth = CallDepth.forClass(HTable.class);
       if (callDepth.decrementAndGet() > 0) {
