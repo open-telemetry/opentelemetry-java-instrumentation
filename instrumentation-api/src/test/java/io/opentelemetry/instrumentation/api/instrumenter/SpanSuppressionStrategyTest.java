@@ -49,17 +49,9 @@ class SpanSuppressionStrategyTest {
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "span-kind")
-  void shouldReadDeprecatedPropertyWhenV3PreviewIsDisabled() {
-    assertThat(InstrumenterBuilder.getDeprecatedSpanSuppressionStrategyProperty(false))
+  void shouldReadDeprecatedProperty() {
+    assertThat(InstrumenterBuilder.getDeprecatedSpanSuppressionStrategyProperty())
         .isEqualTo("span-kind");
-  }
-
-  @Test
-  @SetSystemProperty(
-      key = "otel.instrumentation.experimental.span-suppression-strategy",
-      value = "span-kind")
-  void shouldIgnoreDeprecatedPropertyWhenV3PreviewIsEnabled() {
-    assertThat(InstrumenterBuilder.getDeprecatedSpanSuppressionStrategyProperty(true)).isNull();
   }
 
   @ParameterizedTest

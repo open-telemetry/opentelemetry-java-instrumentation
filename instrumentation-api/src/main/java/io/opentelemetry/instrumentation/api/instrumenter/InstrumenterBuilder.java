@@ -417,18 +417,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
 
     String result = commonConfig.getString("span_suppression_strategy/development");
-    if (result == null) {
-      result = getDeprecatedSpanSuppressionStrategyProperty(SemconvStability.v3Preview());
+    if (result == null && !SemconvStability.v3Preview()) {
+      result = getDeprecatedSpanSuppressionStrategyProperty();
     }
     return SpanSuppressionStrategy.fromConfig(result);
   }
 
   @Nullable
   @SuppressWarnings("deprecation") // support deprecated config property until 3.0
-  static String getDeprecatedSpanSuppressionStrategyProperty(boolean v3Preview) {
-    if (v3Preview) {
-      return null;
-    }
+  static String getDeprecatedSpanSuppressionStrategyProperty() {
     String value =
         ConfigPropertiesUtil.getString(
             "otel.instrumentation.experimental.span-suppression-strategy");
