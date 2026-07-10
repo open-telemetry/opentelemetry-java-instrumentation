@@ -46,13 +46,14 @@ public abstract class HbaseBatchMetadata {
     return new AutoValue_HbaseBatchMetadata(BATCH, (long) size);
   }
 
+  // Returns the operation name that the given action reports as a single (non-batch) operation:
+  // "Get" for Get, or "Mutate" for a Put/Delete/Append/Increment (Mutation subtypes) or
+  // RowMutations. Returns null for any other, unrecognized action type.
   @Nullable
   private static String actionOperation(Row action) {
     if (action instanceof Get) {
       return GET;
     }
-    // Match the "Mutate" reported for single Put/Delete/Append/Increment operations; those all
-    // extend Mutation, and RowMutations groups such mutations.
     if (action instanceof Mutation || action instanceof RowMutations) {
       return MUTATE;
     }
