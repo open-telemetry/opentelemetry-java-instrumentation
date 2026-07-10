@@ -263,7 +263,8 @@ public abstract class AbstractRedissonClientTest {
     invokeExecute(batch);
 
     if (scenario.empty) {
-      // an empty batch produces no span
+      // An empty batch fails before Redisson sends a Redis command, so there is no database client
+      // request to report.
       assertThat(testing.spans()).isEmpty();
       return;
     }
@@ -295,7 +296,7 @@ public abstract class AbstractRedissonClientTest {
 
   private static Stream<Arguments> batchScenarios() {
     return Stream.of(
-        // an empty batch fails to execute and produces no span
+        // An empty batch fails to execute before any Redis command is sent.
         argumentSet("empty", BatchScenario.builder().empty().build()),
         argumentSet(
             "single",
