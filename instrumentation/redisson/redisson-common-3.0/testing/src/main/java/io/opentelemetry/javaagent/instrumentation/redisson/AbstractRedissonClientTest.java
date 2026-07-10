@@ -315,7 +315,10 @@ public abstract class AbstractRedissonClientTest {
                 .operationName("PIPELINE SET")
                 .oldSpanName("DB Query")
                 .batchSize(2)
-                .queryText("SET batch1 ?;SET batch2 ?")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; SET batch2 ?"
+                        : "SET batch1 ?;SET batch2 ?")
                 .build()),
         argumentSet(
             "twoDifferentOperations",
@@ -325,7 +328,10 @@ public abstract class AbstractRedissonClientTest {
                 .operationName("PIPELINE")
                 .oldSpanName("DB Query")
                 .batchSize(2)
-                .queryText("SET batch1 ?;GET batch1")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; GET batch1"
+                        : "SET batch1 ?;GET batch1")
                 .build()));
   }
 
@@ -370,7 +376,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 String.join(
-                                    ";",
+                                    emitStableDatabaseSemconv() ? "; " : ";",
                                     nCopies(
                                         truncatedQueryTextCommandCount,
                                         "SET " + bucketName + " ?"))))));
@@ -414,7 +420,11 @@ public abstract class AbstractRedissonClientTest {
                             // db.operation.batch.size is not emitted because MULTI transaction
                             // telemetry is split across wrapper and command spans, so this span
                             // does not represent the full logical batch.
-                            equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? "MULTI; SET batch1 ?"
+                                    : "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
