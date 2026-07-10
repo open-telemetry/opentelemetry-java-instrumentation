@@ -9,7 +9,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -98,6 +97,7 @@ public final class CommonConfig {
     loggingTraceIdKey =
         getConfig(
             logging,
+            v3Preview,
             "trace_id_key",
             "trace_id",
             "otel.instrumentation.common.logging.trace-id-key",
@@ -106,6 +106,7 @@ public final class CommonConfig {
     loggingSpanIdKey =
         getConfig(
             logging,
+            v3Preview,
             "span_id_key",
             "span_id",
             "otel.instrumentation.common.logging.span-id-key",
@@ -114,6 +115,7 @@ public final class CommonConfig {
     loggingTraceFlagsKey =
         getConfig(
             logging,
+            v3Preview,
             "trace_flags_key",
             "trace_flags",
             "otel.instrumentation.common.logging.trace-flags-key",
@@ -123,6 +125,7 @@ public final class CommonConfig {
 
   private static String getConfig(
       DeclarativeConfigProperties config,
+      boolean v3Preview,
       String newDeclarativeKey,
       String oldDeclarativeKey,
       String newProperty,
@@ -132,7 +135,7 @@ public final class CommonConfig {
     if (value != null) {
       return value;
     }
-    if (!SemconvStability.v3Preview()) {
+    if (!v3Preview) {
       value = config.getString(oldDeclarativeKey);
       if (value != null) {
         if (warnedDeprecatedProperties.add(oldProperty)) {
