@@ -26,9 +26,8 @@ public abstract class HbaseBatchMetadata {
   // terminology is used instead.
   private static final String BATCH = "BATCH";
 
-  // Derives the operation name and db.operation.batch.size for a non-empty Table.batch(...) call,
-  // per the database semantic conventions for batch operations. Called only under stable semconv;
-  // empty batches are filtered out by the caller, since they issue no RPC and produce no span.
+  // The caller only invokes this for a non-empty batch under stable semconv, so the first
+  // action is always present.
   public static HbaseBatchMetadata create(List<? extends Row> actions) {
     int size = actions.size();
 
