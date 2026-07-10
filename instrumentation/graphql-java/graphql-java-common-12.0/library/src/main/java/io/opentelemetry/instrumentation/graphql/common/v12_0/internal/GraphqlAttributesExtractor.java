@@ -21,11 +21,10 @@ import javax.annotation.Nullable;
 final class GraphqlAttributesExtractor
     implements AttributesExtractor<OpenTelemetryInstrumentationState, ExecutionResult> {
   // copied from GraphqlIncubatingAttributes
-  private static final AttributeKey<String> GRAPHQL_DOCUMENT =
-      AttributeKey.stringKey("graphql.document");
-  private static final AttributeKey<String> GRAPHQL_OPERATION_NAME =
+  static final AttributeKey<String> GRAPHQL_DOCUMENT = AttributeKey.stringKey("graphql.document");
+  static final AttributeKey<String> GRAPHQL_OPERATION_NAME =
       AttributeKey.stringKey("graphql.operation.name");
-  private static final AttributeKey<String> GRAPHQL_OPERATION_TYPE =
+  static final AttributeKey<String> GRAPHQL_OPERATION_TYPE =
       AttributeKey.stringKey("graphql.operation.type");
 
   @Override
