@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 
 import io.lettuce.core.protocol.RedisCommand;
@@ -75,7 +76,7 @@ final class LettuceBatchRequest {
     StringBuilder builder = new StringBuilder();
     for (RedisCommand<?, ?, ?> command : commands) {
       String commandQueryText = queryText(command);
-      String separator = builder.length() == 0 ? "" : ";";
+      String separator = builder.length() == 0 ? "" : batchQuerySeparator();
       if (builder.length() + separator.length() + commandQueryText.length() > LIMIT) {
         break;
       }
@@ -91,5 +92,9 @@ final class LettuceBatchRequest {
             ? emptyList()
             : LettuceArgSplitter.splitArgs(command.getArgs().toCommandString());
     return sanitizer.sanitize(commandName, args);
+  }
+
+  private static String batchQuerySeparator() {
+    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 }
