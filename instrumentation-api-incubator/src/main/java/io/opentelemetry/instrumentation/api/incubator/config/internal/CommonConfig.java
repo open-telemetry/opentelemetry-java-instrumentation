@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -131,18 +132,20 @@ public final class CommonConfig {
     if (value != null) {
       return value;
     }
-    value = config.getString(oldDeclarativeKey);
-    if (value != null) {
-      if (warnedDeprecatedProperties.add(oldProperty)) {
-        logger.warning(
-            "The "
-                + oldProperty
-                + " setting and the equivalent declarative configuration property"
-                + " are deprecated and will be removed in 3.0. Use "
-                + newProperty
-                + " or equivalent declarative configuration instead.");
+    if (!SemconvStability.v3Preview()) {
+      value = config.getString(oldDeclarativeKey);
+      if (value != null) {
+        if (warnedDeprecatedProperties.add(oldProperty)) {
+          logger.warning(
+              "The "
+                  + oldProperty
+                  + " setting and the equivalent declarative configuration property"
+                  + " are deprecated and will be removed in 3.0. Use "
+                  + newProperty
+                  + " or equivalent declarative configuration instead.");
+        }
+        return value;
       }
-      return value;
     }
     return defaultValue;
   }

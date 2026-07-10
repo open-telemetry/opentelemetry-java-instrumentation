@@ -75,15 +75,17 @@ public final class DbConfig {
       return value;
     }
 
-    // this variant was never a regular (non-declarative) configuration property name
-    Boolean deprecatedValue =
-        commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled");
-    if (deprecatedValue != null) {
-      warnIfDeprecatedDeclarativeConfigurationUsed(
-          "instrumentation/development: java: common: database:"
-              + " sqlcommenter/development: enabled",
-          "instrumentation/development: java: common: db: sqlcommenter/development: enabled");
-      return deprecatedValue;
+    if (!SemconvStability.v3Preview()) {
+      // this variant was never a regular (non-declarative) configuration property name
+      Boolean deprecatedValue =
+          commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled");
+      if (deprecatedValue != null) {
+        warnIfDeprecatedDeclarativeConfigurationUsed(
+            "instrumentation/development: java: common: database:"
+                + " sqlcommenter/development: enabled",
+            "instrumentation/development: java: common: db: sqlcommenter/development: enabled");
+        return deprecatedValue;
+      }
     }
 
     return null;

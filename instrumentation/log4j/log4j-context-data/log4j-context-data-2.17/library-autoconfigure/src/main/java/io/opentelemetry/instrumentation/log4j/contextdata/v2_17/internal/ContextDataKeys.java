@@ -10,6 +10,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -68,32 +69,37 @@ public final class ContextDataKeys {
     if (value != null) {
       return value;
     }
-    value = config.getString(oldDeclarativeKey);
-    if (value != null) {
-      logDeprecationWarning(
-          oldProperty,
-          "The "
-              + oldProperty
-              + " setting and the equivalent declarative configuration property"
-              + " are deprecated and will be removed in 3.0. Use "
-              + newProperty
-              + " or equivalent declarative configuration instead.");
-      return value;
+    boolean v3Preview = SemconvStability.v3Preview();
+    if (!v3Preview) {
+      value = config.getString(oldDeclarativeKey);
+      if (value != null) {
+        logDeprecationWarning(
+            oldProperty,
+            "The "
+                + oldProperty
+                + " setting and the equivalent declarative configuration property"
+                + " are deprecated and will be removed in 3.0. Use "
+                + newProperty
+                + " or equivalent declarative configuration instead.");
+        return value;
+      }
     }
     value = ConfigPropertiesUtil.getString(newProperty);
     if (value != null) {
       return value;
     }
-    value = ConfigPropertiesUtil.getString(oldProperty);
-    if (value != null) {
-      logDeprecationWarning(
-          oldProperty,
-          "The '"
-              + oldProperty
-              + "' system property is deprecated and will be removed in 3.0. Use '"
-              + newProperty
-              + "' instead.");
-      return value;
+    if (!v3Preview) {
+      value = ConfigPropertiesUtil.getString(oldProperty);
+      if (value != null) {
+        logDeprecationWarning(
+            oldProperty,
+            "The '"
+                + oldProperty
+                + "' system property is deprecated and will be removed in 3.0. Use '"
+                + newProperty
+                + "' instead.");
+        return value;
+      }
     }
     return defaultValue;
   }
