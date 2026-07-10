@@ -10,6 +10,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -29,9 +30,11 @@ public final class ContextDataKeys {
   public static ContextDataKeys create(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties logging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("logging");
+    boolean v3Preview = SemconvStability.v3Preview(openTelemetry);
     String traceIdKey =
         getConfig(
             logging,
+            v3Preview,
             "trace_id_key",
             "trace_id",
             "otel.instrumentation.common.logging.trace-id-key",
@@ -40,6 +43,7 @@ public final class ContextDataKeys {
     String spanIdKey =
         getConfig(
             logging,
+            v3Preview,
             "span_id_key",
             "span_id",
             "otel.instrumentation.common.logging.span-id-key",
@@ -48,6 +52,7 @@ public final class ContextDataKeys {
     String traceFlagsKey =
         getConfig(
             logging,
+            v3Preview,
             "trace_flags_key",
             "trace_flags",
             "otel.instrumentation.common.logging.trace-flags-key",
@@ -58,6 +63,7 @@ public final class ContextDataKeys {
 
   private static String getConfig(
       DeclarativeConfigProperties config,
+      boolean v3Preview,
       String newDeclarativeKey,
       String oldDeclarativeKey,
       String newProperty,
@@ -67,17 +73,19 @@ public final class ContextDataKeys {
     if (value != null) {
       return value;
     }
-    value = config.getString(oldDeclarativeKey);
-    if (value != null) {
-      logDeprecationWarning(
-          oldProperty,
-          "The "
-              + oldProperty
-              + " setting and the equivalent declarative configuration property"
-              + " are deprecated and will be removed in 3.0. Use "
-              + newProperty
-              + " or equivalent declarative configuration instead.");
-      return value;
+    if (!v3Preview) {
+      value = config.getString(oldDeclarativeKey);
+      if (value != null) {
+        logDeprecationWarning(
+            oldProperty,
+            "The "
+                + oldProperty
+                + " setting and the equivalent declarative configuration property"
+                + " are deprecated and will be removed in 3.0. Use "
+                + newProperty
+                + " or equivalent declarative configuration instead.");
+        return value;
+      }
     }
     // The context data provider is loaded through the Log4j SPI and has no programmatic
     // configuration API. Declarative instrumentation configuration is not stable yet, so a
@@ -86,16 +94,18 @@ public final class ContextDataKeys {
     if (value != null) {
       return value;
     }
-    value = SystemProperty.getString(oldProperty);
-    if (value != null) {
-      logDeprecationWarning(
-          oldProperty,
-          "The '"
-              + oldProperty
-              + "' system property is deprecated and will be removed in 3.0. Use '"
-              + newProperty
-              + "' instead.");
-      return value;
+    if (!v3Preview) {
+      value = SystemProperty.getString(oldProperty);
+      if (value != null) {
+        logDeprecationWarning(
+            oldProperty,
+            "The '"
+                + oldProperty
+                + "' system property is deprecated and will be removed in 3.0. Use '"
+                + newProperty
+                + "' instead.");
+        return value;
+      }
     }
     return defaultValue;
   }

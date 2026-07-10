@@ -30,9 +30,7 @@ public class MetricsRegistration {
 
   private static final AtomicBoolean registered = new AtomicBoolean();
 
-  // deprecated registerObservers(Meter) overloads exist solely so we can keep emitting the legacy
-  // io.opentelemetry.oshi scope by default; both go away in 3.0 once v3-preview becomes default
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // deprecated overloads keep the legacy scope by default
   public static void register() {
     if (registered.compareAndSet(false, true)) {
       Meter meter = buildMeter();
