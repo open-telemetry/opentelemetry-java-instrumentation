@@ -36,7 +36,6 @@ import com.github.dockerjava.api.model.Ports;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
@@ -604,27 +603,23 @@ public abstract class AbstractHbaseTest {
     return null;
   }
 
-  // Asserts a stable-semconv batch span, including db.operation.batch.size when the batch reports
-  // one (multi-action batches; single-action batches are modeled as non-batch and omit it).
+  // Asserts a stable-semconv batch span. db.operation.batch.size is present only for multi-action
+  // batches; a single-action batch is modeled as a non-batch operation, so batchSize is null and
+  // the attribute is asserted absent.
   private Consumer<TraceAssert> batchTraceAssertConsumer(String operation, Long batchSize) {
-    String spanName = operation + " " + TABLE_NAME.getNameAsString();
     return trace ->
         trace.hasSpansSatisfyingExactly(
-            span -> {
-              List<AttributeAssertion> assertions = new ArrayList<>();
-              assertions.add(equalTo(DB_SYSTEM_NAME, maybeStableDbSystemName(DB_SYSTEM_VALUE)));
-              assertions.add(equalTo(DB_NAMESPACE, TABLE_NAME.getNamespaceAsString()));
-              assertions.add(equalTo(DB_COLLECTION_NAME, TABLE_NAME.getNameAsString()));
-              assertions.add(equalTo(DB_OPERATION_NAME, operation));
-              if (batchSize != null) {
-                assertions.add(equalTo(DB_OPERATION_BATCH_SIZE, batchSize));
-              }
-              assertions.add(equalTo(SERVER_ADDRESS, hostname));
-              assertions.add(equalTo(SERVER_PORT, REGION_SERVER_PORT));
-              span.hasName(spanName)
-                  .hasKind(SpanKind.CLIENT)
-                  .hasAttributesSatisfyingExactly(assertions);
-            });
+            span ->
+                span.hasName(operation + " " + TABLE_NAME.getNameAsString())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, maybeStableDbSystemName(DB_SYSTEM_VALUE)),
+                        equalTo(DB_NAMESPACE, TABLE_NAME.getNamespaceAsString()),
+                        equalTo(DB_COLLECTION_NAME, TABLE_NAME.getNameAsString()),
+                        equalTo(DB_OPERATION_NAME, operation),
+                        equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
+                        equalTo(SERVER_ADDRESS, hostname),
+                        equalTo(SERVER_PORT, REGION_SERVER_PORT)));
   }
 
   private static class BatchScenario {
