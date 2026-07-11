@@ -170,7 +170,7 @@ public abstract class AbstractRedissonClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                  span.hasName(spanName("SET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -183,7 +183,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET")),
                 span ->
-                  span.hasName(spanName("GET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + address : "GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -207,7 +207,7 @@ public abstract class AbstractRedissonClientTest {
           instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
           trace.hasSpansSatisfyingExactly(
               span ->
-                  span.hasName(spanName("SET"))
+                  span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
                       .hasKind(CLIENT)
                       .hasAttributesSatisfyingExactly(
                           equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -237,11 +237,13 @@ public abstract class AbstractRedissonClientTest {
     keyObject.set("bar");
     keyObject.get();
     testing.waitAndAssertSortedTraces(
-      orderByRootSpanName(spanName("SET"), spanName("GET")),
+        orderByRootSpanName(
+            emitStableDatabaseSemconv() ? "SET " + address : "SET",
+            emitStableDatabaseSemconv() ? "GET " + address : "GET"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("SET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -255,7 +257,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("GET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + address : "GET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -291,7 +293,7 @@ public abstract class AbstractRedissonClientTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                          ? spanName(scenario.operationName)
+                                ? scenario.operationName + " " + address
                                 : scenario.oldSpanName)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -378,8 +380,8 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                        span.hasName(
-                          emitStableDatabaseSemconv() ? spanName("PIPELINE SET") : "DB Query")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "PIPELINE SET " + address : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -423,14 +425,16 @@ public abstract class AbstractRedissonClientTest {
           batch.execute();
         });
     testing.waitAndAssertSortedTraces(
-      orderByRootSpanName(
-        spanName("MULTI SET"), "DB Query", spanName("SET"), spanName("EXEC")),
+        orderByRootSpanName(
+            emitStableDatabaseSemconv() ? "MULTI SET " + address : "MULTI SET",
+            "DB Query",
+            emitStableDatabaseSemconv() ? "SET " + address : "SET",
+            emitStableDatabaseSemconv() ? "EXEC " + address : "EXEC"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
                 span ->
-                        span.hasName(
-                          emitStableDatabaseSemconv() ? spanName("MULTI SET") : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? "MULTI SET " + address : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -452,7 +456,7 @@ public abstract class AbstractRedissonClientTest {
                                     : "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(spanName("SET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -465,7 +469,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(maybeStable(DB_OPERATION), "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(spanName("EXEC"))
+                    span.hasName(emitStableDatabaseSemconv() ? "EXEC " + address : "EXEC")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -489,7 +493,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("RPUSH"))
+                    span.hasName(emitStableDatabaseSemconv() ? "RPUSH " + address : "RPUSH")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -516,7 +520,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("EVAL"))
+                    span.hasName(emitStableDatabaseSemconv() ? "EVAL " + address : "EVAL")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -532,7 +536,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("HGET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "HGET " + address : "HGET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -555,7 +559,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("SADD"))
+                    span.hasName(emitStableDatabaseSemconv() ? "SADD " + address : "SADD")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -580,11 +584,11 @@ public abstract class AbstractRedissonClientTest {
     invokeAddAll(sortSet, scores);
 
     testing.waitAndAssertSortedTraces(
-      orderByRootSpanName(spanName("ZADD")),
+        orderByRootSpanName(emitStableDatabaseSemconv() ? "ZADD " + address : "ZADD"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("ZADD"))
+                    span.hasName(emitStableDatabaseSemconv() ? "ZADD " + address : "ZADD")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -612,7 +616,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("INCR"))
+                    span.hasName(emitStableDatabaseSemconv() ? "INCR " + address : "INCR")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -640,7 +644,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("EVAL"))
+                    span.hasName(emitStableDatabaseSemconv() ? "EVAL " + address : "EVAL")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -655,7 +659,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("EVAL"))
+                    span.hasName(emitStableDatabaseSemconv() ? "EVAL " + address : "EVAL")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -671,7 +675,7 @@ public abstract class AbstractRedissonClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(spanName("DEL"))
+                      span.hasName(emitStableDatabaseSemconv() ? "DEL " + address : "DEL")
                           .hasKind(CLIENT)
                           .hasAttributesSatisfyingExactly(
                               equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -685,10 +689,6 @@ public abstract class AbstractRedissonClientTest {
     }
 
     testing.waitAndAssertSortedTraces(orderByRootSpanKind(SpanKind.CLIENT), traceAsserts);
-  }
-
-  private String spanName(String operation) {
-    return emitStableDatabaseSemconv() ? operation + " " + address : operation;
   }
 
   protected boolean useRedisProtocol() {

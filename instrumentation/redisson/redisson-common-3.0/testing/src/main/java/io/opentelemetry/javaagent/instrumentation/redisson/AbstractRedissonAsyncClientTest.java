@@ -143,7 +143,7 @@ public abstract class AbstractRedissonAsyncClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                  span.hasName(spanName("SET"))
+                    span.hasName(spanName("SET"))
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -179,7 +179,7 @@ public abstract class AbstractRedissonAsyncClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                  span.hasName(spanName("SADD"))
+                    span.hasName(spanName("SADD"))
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -249,13 +249,12 @@ public abstract class AbstractRedissonAsyncClientTest {
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
     testing.waitAndAssertSortedTraces(
-      orderByRootSpanName("parent", spanName("SADD"), "callback"),
+        orderByRootSpanName("parent", spanName("SADD"), "callback"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                        span.hasName(
-                          emitStableDatabaseSemconv() ? spanName("MULTI SET") : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? spanName("MULTI SET") : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
