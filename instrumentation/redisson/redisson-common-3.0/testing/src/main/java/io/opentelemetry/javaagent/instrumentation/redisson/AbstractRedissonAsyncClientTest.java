@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
-import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -143,7 +142,7 @@ public abstract class AbstractRedissonAsyncClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("SET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -179,7 +178,7 @@ public abstract class AbstractRedissonAsyncClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("SADD"))
+                    span.hasName(emitStableDatabaseSemconv() ? "SADD " + address : "SADD")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -248,13 +247,12 @@ public abstract class AbstractRedissonAsyncClientTest {
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", spanName("SADD"), "callback"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? spanName("MULTI SET") : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? "MULTI SET " + address : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -276,7 +274,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                                     : "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(spanName("SET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -289,7 +287,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(maybeStable(DB_OPERATION), "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(spanName("EXEC"))
+                    span.hasName(emitStableDatabaseSemconv() ? "EXEC " + address : "EXEC")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -302,10 +300,6 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(maybeStable(DB_OPERATION), "EXEC"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
-  }
-
-  private String spanName(String operation) {
-    return emitStableDatabaseSemconv() ? operation + " " + address : operation;
   }
 
   protected boolean useRedisProtocol() {

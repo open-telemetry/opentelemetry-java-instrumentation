@@ -424,11 +424,7 @@ public abstract class AbstractRedissonClientTest {
           batch.getBucket("batch2").setAsync("v2");
           batch.execute();
         });
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName(
-            emitStableDatabaseSemconv() ? "MULTI SET " + address : "DB Query",
-            emitStableDatabaseSemconv() ? "SET " + address : "SET",
-            emitStableDatabaseSemconv() ? "EXEC " + address : "EXEC"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
