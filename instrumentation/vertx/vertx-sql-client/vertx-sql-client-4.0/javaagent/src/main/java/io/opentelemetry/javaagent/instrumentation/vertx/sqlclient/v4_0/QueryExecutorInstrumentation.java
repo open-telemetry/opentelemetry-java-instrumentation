@@ -101,7 +101,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           }
           if (methodName.equals("executeBatchQuery") && argument instanceof Collection) {
             int size = ((Collection<?>) argument).size();
-            batchSize = size > 1 ? (long) size : null;
+            // an explicit empty batch (size 0) is still a batch; only a single-item batch is
+            // reported as a non-batch operation
+            batchSize = size != 1 ? (long) size : null;
           }
         }
         if (sql == null || promiseInternal == null) {

@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
+import io.r2dbc.proxy.core.ExecutionType;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.proxy.test.MockConnectionInfo;
@@ -60,6 +61,7 @@ class DbExecutionTest {
         MockQueryExecutionInfo.builder()
             .queryInfo(new QueryInfo("INSERT INTO person VALUES(1)"))
             .queryInfo(new QueryInfo("INSERT INTO person VALUES(2)"))
+            .type(ExecutionType.BATCH)
             .batchSize(2)
             .connectionInfo(MockConnectionInfo.builder().build())
             .build();
@@ -74,10 +76,29 @@ class DbExecutionTest {
   }
 
   @Test
+  void dbExecutionWithEmptyBatch() {
+    QueryExecutionInfo queryExecutionInfo =
+        MockQueryExecutionInfo.builder()
+            .type(ExecutionType.BATCH)
+            .batchSize(0)
+            .connectionInfo(MockConnectionInfo.builder().build())
+            .build();
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db");
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
+
+    // an explicit empty batch is still a batch and reports db.operation.batch.size=0
+    assertThat(dbExecution.getRawQueryTexts()).isEmpty();
+    assertThat(dbExecution.getBatchSize()).isEqualTo(0);
+  }
+
+  @Test
   void dbExecutionWithBatchSizeOne() {
     QueryExecutionInfo queryExecutionInfo =
         MockQueryExecutionInfo.builder()
             .queryInfo(new QueryInfo("INSERT INTO person VALUES(1)"))
+            .type(ExecutionType.BATCH)
             .batchSize(1)
             .connectionInfo(MockConnectionInfo.builder().build())
             .build();
