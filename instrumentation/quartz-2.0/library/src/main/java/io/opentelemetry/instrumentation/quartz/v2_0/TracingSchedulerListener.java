@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.quartz.v2_0;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import org.quartz.SchedulerException;
 import org.quartz.listeners.SchedulerListenerSupport;
@@ -35,7 +34,7 @@ final class TracingSchedulerListener extends SchedulerListenerSupport {
   public void schedulerError(String msg, SchedulerException cause) {
     Context parentContext = Context.current();
 
-    if (Span.fromContext(parentContext).getSpanContext().isValid()) {
+    if (parentContext.get(TracingJobListener.JOB_CONTEXT_KEY) != null) {
       return;
     }
 
