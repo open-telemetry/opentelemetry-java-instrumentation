@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -50,5 +51,19 @@ final class LettuceDbAttributesGetter
     // use toString() (not name()) so it stays compatible with lettuce 6.5+, where ProtocolKeyword
     // no longer declares name()
     return request.getType().toString();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(RedisCommand<?, ?, ?> request) {
+    InetSocketAddress address = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    return address != null ? address.getHostString() : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(RedisCommand<?, ?, ?> request) {
+    InetSocketAddress address = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    return address != null ? address.getPort() : null;
   }
 }

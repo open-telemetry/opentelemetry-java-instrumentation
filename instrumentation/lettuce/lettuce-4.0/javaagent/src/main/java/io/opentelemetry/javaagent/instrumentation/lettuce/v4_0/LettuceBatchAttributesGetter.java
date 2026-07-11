@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class LettuceBatchAttributesGetter
@@ -38,5 +39,19 @@ final class LettuceBatchAttributesGetter
   @Nullable
   public Long getDbOperationBatchSize(LettuceBatchRequest request) {
     return request.getBatchSize();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(LettuceBatchRequest request) {
+    InetSocketAddress address = request.getAddress();
+    return address != null ? address.getHostString() : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(LettuceBatchRequest request) {
+    InetSocketAddress address = request.getAddress();
+    return address != null ? address.getPort() : null;
   }
 }

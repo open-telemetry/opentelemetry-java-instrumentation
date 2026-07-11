@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
@@ -64,6 +67,7 @@ class LettuceReactiveClientTest {
 
   private static RedisReactiveCommands<String, String> reactiveCommands;
   private static String host;
+  private static int port;
 
   @BeforeAll
   static void setUp() {
@@ -71,7 +75,7 @@ class LettuceReactiveClientTest {
     cleanup.deferAfterAll(redisServer::stop);
 
     host = redisServer.getHost();
-    int port = redisServer.getMappedPort(6379);
+    port = redisServer.getMappedPort(6379);
     String embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
     RedisClient redisClient = RedisClient.create(embeddedDbUri);
@@ -117,7 +121,7 @@ class LettuceReactiveClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SET")
+                    span.hasName(spanName("SET"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(commandAttributes("SET")),
@@ -147,7 +151,7 @@ class LettuceReactiveClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET")
+                    span.hasName(spanName("GET"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(commandAttributes("GET"))));
   }
@@ -183,7 +187,7 @@ class LettuceReactiveClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(spanName("GET"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(commandAttributes("GET")),
                 span ->
@@ -204,7 +208,7 @@ class LettuceReactiveClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("RANDOMKEY")
+                    span.hasName(spanName("RANDOMKEY"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(commandAttributes("RANDOMKEY"))));
   }
@@ -221,7 +225,7 @@ class LettuceReactiveClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("COMMAND")
+                    span.hasName(spanName("COMMAND"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(commandAttributes("COMMAND"))));
   }
@@ -242,7 +246,7 @@ class LettuceReactiveClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("COMMAND")
+                    span.hasName(spanName("COMMAND"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(commandAttributes("COMMAND"))));
   }
@@ -258,19 +262,20 @@ class LettuceReactiveClientTest {
   @Test
   void testShutdownCommandShouldProduceSpan() {
     // Test Causes redis to crash therefore it needs its own container
-    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
-    cleanup.deferCleanup(statefulConnection);
+    ContainerConnection containerConnection = newContainerConnection();
+    cleanup.deferCleanup(containerConnection.connection);
 
-    RedisReactiveCommands<String, String> commands = statefulConnection.reactive();
+    RedisReactiveCommands<String, String> commands = containerConnection.connection.reactive();
     commands.shutdown(false).subscribe();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SHUTDOWN")
+                    span.hasName(spanName("SHUTDOWN", containerConnection.port))
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(commandAttributes("SHUTDOWN"))));
+                        .hasAttributesSatisfyingExactly(
+                            commandAttributes("SHUTDOWN", containerConnection.port))));
   }
 
   @Test
@@ -290,12 +295,12 @@ class LettuceReactiveClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("SET")
+                    span.hasName(spanName("SET"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(commandAttributes("SET")),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(spanName("GET"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(commandAttributes("GET"))));
@@ -323,12 +328,12 @@ class LettuceReactiveClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("SET")
+                    span.hasName(spanName("SET"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(commandAttributes("SET")),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(spanName("GET"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(commandAttributes("GET"))));
@@ -358,18 +363,18 @@ class LettuceReactiveClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("test-parent").hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("SET")
+                    span.hasName(spanName("SET"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(commandAttributes("SET")),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(spanName("GET"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(commandAttributes("GET"))));
   }
 
-  private static StatefulRedisConnection<String, String> newContainerConnection() {
+  private static ContainerConnection newContainerConnection() {
     GenericContainer<?> server =
         new GenericContainer<>(CONTAINER_IMAGE)
             .withExposedPorts(6379)
@@ -378,7 +383,7 @@ class LettuceReactiveClientTest {
     server.start();
     cleanup.deferCleanup(server::stop);
 
-    long serverPort = server.getMappedPort(6379);
+    int serverPort = server.getMappedPort(6379);
 
     RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
     client.setOptions(CLIENT_OPTIONS);
@@ -390,12 +395,37 @@ class LettuceReactiveClientTest {
     testing.waitForTraces(1);
     testing.clearData();
 
-    return statefulConnection;
+    return new ContainerConnection(statefulConnection, serverPort);
   }
 
   private static AttributeAssertion[] commandAttributes(String operation) {
+    return commandAttributes(operation, port);
+  }
+
+  private static AttributeAssertion[] commandAttributes(String operation, int serverPort) {
     return new AttributeAssertion[] {
-      equalTo(maybeStable(DB_SYSTEM), REDIS), equalTo(maybeStable(DB_OPERATION), operation)
+      equalTo(maybeStable(DB_SYSTEM), REDIS),
+      equalTo(maybeStable(DB_OPERATION), operation),
+      equalTo(SERVER_ADDRESS, host),
+      equalTo(SERVER_PORT, serverPort)
     };
+  }
+
+  private static String spanName(String operation) {
+    return spanName(operation, port);
+  }
+
+  private static String spanName(String operation, int serverPort) {
+    return emitStableDatabaseSemconv() ? operation + " " + host + ":" + serverPort : operation;
+  }
+
+  private static class ContainerConnection {
+    private final StatefulRedisConnection<String, String> connection;
+    private final int port;
+
+    private ContainerConnection(StatefulRedisConnection<String, String> connection, int port) {
+      this.connection = connection;
+      this.port = port;
+    }
   }
 }

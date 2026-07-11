@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECT_URI_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
@@ -79,6 +80,7 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
       }
 
       Context context = connectInstrumenter().start(parentContext, redisUri);
+      context = context.with(CONNECT_URI_KEY, redisUri);
       return new AdviceScope(context, context.makeCurrent());
     }
 

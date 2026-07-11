@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import com.lambdaworks.redis.ReactiveCommandDispatcher;
+import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.RedisURI;
+import com.lambdaworks.redis.api.StatefulConnection;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -23,6 +25,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.net.InetSocketAddress;
 
 public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-4.0";
@@ -40,6 +43,12 @@ public class LettuceSingletons {
   public static final VirtualField<ReactiveCommandDispatcher<?, ?, ?>, Context>
       REACTIVE_DISPATCHER_CONTEXT =
           VirtualField.find(ReactiveCommandDispatcher.class, Context.class);
+
+  public static final VirtualField<RedisChannelHandler<?, ?>, InetSocketAddress>
+      CONNECTION_ADDRESS = VirtualField.find(RedisChannelHandler.class, InetSocketAddress.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
+      VirtualField.find(RedisCommand.class, InetSocketAddress.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -94,6 +103,13 @@ public class LettuceSingletons {
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
     return connectInstrumenter;
+  }
+
+  public static void attachAddress(
+      RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
+    if (connection instanceof RedisChannelHandler) {
+      COMMAND_ADDRESS.set(command, CONNECTION_ADDRESS.get((RedisChannelHandler<?, ?>) connection));
+    }
   }
 
   private LettuceSingletons() {}

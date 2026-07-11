@@ -7,8 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
+import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.AsyncCommand;
+import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -23,6 +26,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.net.InetSocketAddress;
 
 public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.0";
@@ -34,8 +38,17 @@ public class LettuceSingletons {
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v5_0-context-key");
 
+  public static final ContextKey<RedisURI> CONNECT_URI_KEY =
+      ContextKey.named("opentelemetry-lettuce-v5_0-connect-uri-key");
+
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
+
+  public static final VirtualField<DefaultEndpoint, InetSocketAddress> ENDPOINT_ADDRESS =
+      VirtualField.find(DefaultEndpoint.class, InetSocketAddress.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
+      VirtualField.find(RedisCommand.class, InetSocketAddress.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -91,6 +104,16 @@ public class LettuceSingletons {
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
     return connectInstrumenter;
+  }
+
+  public static void attachAddress(
+      RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
+    if (connection instanceof RedisChannelHandler) {
+      Object channelWriter = ((RedisChannelHandler<?, ?>) connection).getChannelWriter();
+      if (channelWriter instanceof DefaultEndpoint) {
+        COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get((DefaultEndpoint) channelWriter));
+      }
+    }
   }
 
   private LettuceSingletons() {}

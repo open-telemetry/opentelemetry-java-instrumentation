@@ -13,6 +13,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -25,19 +26,25 @@ final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
+  @Nullable private final InetSocketAddress address;
 
   private LettuceBatchRequest(
-      String operationName, @Nullable String queryText, @Nullable Long batchSize) {
+      String operationName,
+      @Nullable String queryText,
+      @Nullable Long batchSize,
+      @Nullable InetSocketAddress address) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
+    this.address = address;
   }
 
   static LettuceBatchRequest create(List<RedisCommand<?, ?, ?>> commands) {
     return new LettuceBatchRequest(
         operationName(commands),
         queryText(commands),
-        commands.size() != 1 ? (long) commands.size() : null);
+        commands.size() != 1 ? (long) commands.size() : null,
+        commands.isEmpty() ? null : LettuceSingletons.COMMAND_ADDRESS.get(commands.get(0)));
   }
 
   String getOperationName() {
@@ -52,6 +59,11 @@ final class LettuceBatchRequest {
   @Nullable
   Long getBatchSize() {
     return batchSize;
+  }
+
+  @Nullable
+  InetSocketAddress getAddress() {
+    return address;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {
