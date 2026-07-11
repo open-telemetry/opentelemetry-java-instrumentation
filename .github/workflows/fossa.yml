@@ -18,3 +18,13 @@ jobs:
         with:
           api-key: ${{secrets.FOSSA_API_KEY}}
           team: OpenTelemetry
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - fossa
+    if: always()
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@7c49790392da7de86fdb4bb968446f9cb8461eb8 # v0.3.1
+    with:
+      success: ${{ needs.fossa.result == 'success' }}
