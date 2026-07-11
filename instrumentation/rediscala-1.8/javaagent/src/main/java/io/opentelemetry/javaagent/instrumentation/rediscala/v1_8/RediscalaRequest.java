@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
+import java.net.InetSocketAddress;
 import java.util.Locale;
 import javax.annotation.Nullable;
 import redis.Operation;
@@ -15,18 +16,23 @@ import scala.collection.immutable.Queue;
 class RediscalaRequest {
   private final String operationName;
   @Nullable private final Long batchSize;
+  @Nullable private final InetSocketAddress address;
 
-  static RediscalaRequest create(RedisCommand<?, ?> command) {
-    return new RediscalaRequest(operationName(command), null);
+  static RediscalaRequest create(RedisCommand<?, ?> command, @Nullable InetSocketAddress address) {
+    return new RediscalaRequest(operationName(command), null, address);
   }
 
-  static RediscalaRequest createTransaction(Queue<Operation<?, ?>> operations) {
-    return new RediscalaRequest(transactionOperationName(operations), batchSize(operations));
+  static RediscalaRequest createTransaction(
+      Queue<Operation<?, ?>> operations, @Nullable InetSocketAddress address) {
+    return new RediscalaRequest(
+        transactionOperationName(operations), batchSize(operations), address);
   }
 
-  private RediscalaRequest(String operationName, @Nullable Long batchSize) {
+  private RediscalaRequest(
+      String operationName, @Nullable Long batchSize, @Nullable InetSocketAddress address) {
     this.operationName = operationName;
     this.batchSize = batchSize;
+    this.address = address;
   }
 
   String getOperationName() {
@@ -36,6 +42,11 @@ class RediscalaRequest {
   @Nullable
   Long getBatchSize() {
     return batchSize;
+  }
+
+  @Nullable
+  InetSocketAddress getAddress() {
+    return address;
   }
 
   private static String transactionOperationName(Queue<Operation<?, ?>> operations) {

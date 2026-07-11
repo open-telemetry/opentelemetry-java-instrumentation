@@ -18,12 +18,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.ActorRequest;
 import redis.BufferedRequest;
+import redis.RedisClientActorLike;
 import redis.RedisCommand;
 import redis.Request;
 import redis.RoundRobinPoolRequest;
@@ -77,7 +79,12 @@ class RequestInstrumentation implements TypeInstrumentation {
           return null;
         }
 
-        RediscalaRequest request = RediscalaRequest.create(cmd);
+        InetSocketAddress address = null;
+        if (action instanceof RedisClientActorLike) {
+          RedisClientActorLike client = (RedisClientActorLike) action;
+          address = InetSocketAddress.createUnresolved(client.host(), client.port());
+        }
+        RediscalaRequest request = RediscalaRequest.create(cmd, address);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
