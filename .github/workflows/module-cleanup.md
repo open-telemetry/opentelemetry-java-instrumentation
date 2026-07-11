@@ -180,18 +180,6 @@ jobs:
           WORKFLOW_FILE: module-cleanup.lock.yml
         run: gh workflow run "$WORKFLOW_FILE" --repo "$GITHUB_REPOSITORY"
 
-  workflow-notification:
-    permissions:
-      issues: write
-    needs:
-      - dispatch
-      - agent
-      - finalize
-    if: always()
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@7c49790392da7de86fdb4bb968446f9cb8461eb8 # v0.3.1
-    with:
-      success: ${{ needs.dispatch.result == 'success' && (needs.agent.result == 'success' || needs.agent.result == 'skipped') && (needs.finalize.result == 'success' || needs.finalize.result == 'skipped') }}
-
 if: ${{ needs.dispatch.outputs.has_work == 'true' }}
 
 steps:
