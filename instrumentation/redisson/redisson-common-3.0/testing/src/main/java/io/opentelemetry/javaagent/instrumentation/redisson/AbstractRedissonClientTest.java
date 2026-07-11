@@ -426,8 +426,7 @@ public abstract class AbstractRedissonClientTest {
         });
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
-            emitStableDatabaseSemconv() ? "MULTI SET " + address : "MULTI SET",
-            "DB Query",
+            emitStableDatabaseSemconv() ? "MULTI SET " + address : "DB Query",
             emitStableDatabaseSemconv() ? "SET " + address : "SET",
             emitStableDatabaseSemconv() ? "EXEC " + address : "EXEC"),
         trace ->
