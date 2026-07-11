@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
@@ -43,14 +42,12 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
   @Nullable
   @Override
   public String getServerAddress(RediscalaRequest request) {
-    InetSocketAddress address = request.getAddress();
-    return address != null ? address.getHostString() : null;
+    return request.getHost();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RediscalaRequest request) {
-    InetSocketAddress address = request.getAddress();
-    return address != null ? address.getPort() : null;
+    return request.getPort();
   }
 }

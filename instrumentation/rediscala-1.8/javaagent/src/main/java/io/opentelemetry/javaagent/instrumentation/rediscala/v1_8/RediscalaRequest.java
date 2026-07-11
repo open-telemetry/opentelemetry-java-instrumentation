@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
-import java.net.InetSocketAddress;
 import java.util.Locale;
 import javax.annotation.Nullable;
 import redis.Operation;
@@ -16,23 +15,29 @@ import scala.collection.immutable.Queue;
 class RediscalaRequest {
   private final String operationName;
   @Nullable private final Long batchSize;
-  @Nullable private final InetSocketAddress address;
+  @Nullable private final String host;
+  @Nullable private final Integer port;
 
-  static RediscalaRequest create(RedisCommand<?, ?> command, @Nullable InetSocketAddress address) {
-    return new RediscalaRequest(operationName(command), null, address);
+  static RediscalaRequest create(
+      RedisCommand<?, ?> command, @Nullable String host, @Nullable Integer port) {
+    return new RediscalaRequest(operationName(command), null, host, port);
   }
 
   static RediscalaRequest createTransaction(
-      Queue<Operation<?, ?>> operations, @Nullable InetSocketAddress address) {
+      Queue<Operation<?, ?>> operations, @Nullable String host, @Nullable Integer port) {
     return new RediscalaRequest(
-        transactionOperationName(operations), batchSize(operations), address);
+        transactionOperationName(operations), batchSize(operations), host, port);
   }
 
   private RediscalaRequest(
-      String operationName, @Nullable Long batchSize, @Nullable InetSocketAddress address) {
+      String operationName,
+      @Nullable Long batchSize,
+      @Nullable String host,
+      @Nullable Integer port) {
     this.operationName = operationName;
     this.batchSize = batchSize;
-    this.address = address;
+    this.host = host;
+    this.port = port;
   }
 
   String getOperationName() {
@@ -45,8 +50,13 @@ class RediscalaRequest {
   }
 
   @Nullable
-  InetSocketAddress getAddress() {
-    return address;
+  String getHost() {
+    return host;
+  }
+
+  @Nullable
+  Integer getPort() {
+    return port;
   }
 
   private static String transactionOperationName(Queue<Operation<?, ?>> operations) {

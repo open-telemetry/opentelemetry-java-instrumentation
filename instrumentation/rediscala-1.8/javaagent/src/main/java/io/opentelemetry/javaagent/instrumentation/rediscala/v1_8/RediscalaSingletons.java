@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.net.InetSocketAddress;
 import redis.commands.TransactionBuilder;
 
 public class RediscalaSingletons {
@@ -24,8 +23,8 @@ public class RediscalaSingletons {
 
   private static final Instrumenter<RediscalaRequest, Void> instrumenter;
 
-  public static final VirtualField<TransactionBuilder, InetSocketAddress> TRANSACTION_ADDRESS =
-      VirtualField.find(TransactionBuilder.class, InetSocketAddress.class);
+  public static final VirtualField<TransactionBuilder, ServerEndpoint> TRANSACTION_ENDPOINT =
+      VirtualField.find(TransactionBuilder.class, ServerEndpoint.class);
 
   static {
     RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();

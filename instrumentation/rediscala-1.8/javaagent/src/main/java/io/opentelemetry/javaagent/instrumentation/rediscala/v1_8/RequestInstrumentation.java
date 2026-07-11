@@ -18,7 +18,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -79,12 +78,14 @@ class RequestInstrumentation implements TypeInstrumentation {
           return null;
         }
 
-        InetSocketAddress address = null;
+        String host = null;
+        Integer port = null;
         if (action instanceof RedisClientActorLike) {
           RedisClientActorLike client = (RedisClientActorLike) action;
-          address = InetSocketAddress.createUnresolved(client.host(), client.port());
+          host = client.host();
+          port = client.port();
         }
-        RediscalaRequest request = RediscalaRequest.create(cmd, address);
+        RediscalaRequest request = RediscalaRequest.create(cmd, host, port);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
-import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_ADDRESS;
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_ENDPOINT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.InetSocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -42,8 +41,8 @@ class TransactionBuilderInstrumentation implements TypeInstrumentation {
         @Advice.This RedisClientActorLike client,
         @Advice.Return TransactionBuilder transactionBuilder) {
       if (transactionBuilder != null) {
-        TRANSACTION_ADDRESS.set(
-            transactionBuilder, InetSocketAddress.createUnresolved(client.host(), client.port()));
+        TRANSACTION_ENDPOINT.set(
+            transactionBuilder, new ServerEndpoint(client.host(), client.port()));
       }
     }
   }
