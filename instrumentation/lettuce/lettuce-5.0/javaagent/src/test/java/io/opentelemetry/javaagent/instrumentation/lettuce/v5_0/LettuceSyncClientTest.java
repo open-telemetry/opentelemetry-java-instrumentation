@@ -34,6 +34,7 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.OS;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -69,8 +70,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
     syncCommands.set("TESTKEY", "TESTVAL");
     syncCommands.hmset("TESTHM", testHashMap);
 
-    // 2 sets + 1 connect trace
-    testing.waitForTraces(3);
+    testing.waitForTraces(connectionTelemetryEnabled() ? 3 : 2);
     testing.clearData();
   }
 
@@ -82,6 +82,9 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
+      matches = "true")
   void testConnect() {
     RedisClient testConnectionClient = RedisClient.create(embeddedDbUri);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
@@ -104,6 +107,9 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
+      matches = "true")
   void testConnectException() {
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent);
     testConnectionClient.setOptions(CLIENT_OPTIONS);

@@ -57,6 +57,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -96,8 +97,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     syncCommands.set("TESTKEY", "TESTVAL");
 
-    // 1 set + 1 connect trace
-    testing.waitForTraces(2);
+    testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
     testing.clearData();
   }
 
@@ -110,6 +110,9 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   @SuppressWarnings("deprecation") // RedisURI constructor
   @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
+      matches = "true")
   void testConnectUsingGetOnConnectionFuture() {
     RedisClient testConnectionClient = RedisClient.create(embeddedDbUri);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
@@ -138,6 +141,9 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   @SuppressWarnings("deprecation") // RedisURI constructor
   @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
+      matches = "true")
   void testConnectExceptionInsideTheConnectionFuture() {
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent);
     testConnectionClient.setOptions(CLIENT_OPTIONS);

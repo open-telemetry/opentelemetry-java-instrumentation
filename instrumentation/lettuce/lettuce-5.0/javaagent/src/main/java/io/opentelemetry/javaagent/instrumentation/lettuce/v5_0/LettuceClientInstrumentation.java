@@ -48,11 +48,11 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
   public static class ConnectAdvice {
 
     public static class AdviceScope {
-      private final Context context;
+      @Nullable private final Context connectContext;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
-        this.context = context;
+      public AdviceScope(@Nullable Context connectContext, Scope scope) {
+        this.connectContext = connectContext;
         this.scope = scope;
       }
 
@@ -63,11 +63,14 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
 
         scope.close();
 
-        if (throwable != null || connectionFuture == null) {
-          connectInstrumenter().end(context, redisUri, null, throwable);
+        if (connectContext == null) {
           return;
         }
-        connectionFuture.handleAsync(new EndConnectAsyncBiFunction<>(context, redisUri));
+        if (throwable != null || connectionFuture == null) {
+          connectInstrumenter().end(connectContext, redisUri, null, throwable);
+          return;
+        }
+        connectionFuture.handleAsync(new EndConnectAsyncBiFunction<>(connectContext, redisUri));
       }
     }
 
@@ -75,13 +78,13 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
     @Nullable
     public static AdviceScope onEnter(@Advice.Argument(1) RedisURI redisUri) {
       Context parentContext = currentContext();
-      if (!connectInstrumenter().shouldStart(parentContext, redisUri)) {
-        return null;
+      if (connectInstrumenter().shouldStart(parentContext, redisUri)) {
+        Context connectContext = connectInstrumenter().start(parentContext, redisUri);
+        Scope scope = connectContext.with(CONNECT_URI_KEY, redisUri).makeCurrent();
+        return new AdviceScope(connectContext, scope);
       }
 
-      Context context = connectInstrumenter().start(parentContext, redisUri);
-      context = context.with(CONNECT_URI_KEY, redisUri);
-      return new AdviceScope(context, context.makeCurrent());
+      return new AdviceScope(null, parentContext.with(CONNECT_URI_KEY, redisUri).makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

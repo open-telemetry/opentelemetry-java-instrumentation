@@ -74,6 +74,10 @@ abstract class AbstractLettuceClientTest {
 
   protected String embeddedDbUri;
 
+  protected static boolean connectionTelemetryEnabled() {
+    return Boolean.getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled");
+  }
+
   protected String commandSpanName(String operationName) {
     return commandSpanName(operationName, port);
   }
@@ -126,8 +130,9 @@ abstract class AbstractLettuceClientTest {
     StatefulRedisConnection<String, String> statefulConnection = client.connect();
     cleanup.deferCleanup(statefulConnection);
 
-    // 1 connect trace
-    testing.waitForTraces(1);
+    if (connectionTelemetryEnabled()) {
+      testing.waitForTraces(1);
+    }
     testing.clearData();
 
     return statefulConnection;
