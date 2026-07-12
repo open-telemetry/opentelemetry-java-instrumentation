@@ -38,12 +38,13 @@ final class LettuceBatchRequest {
     this.serverEndpoint = serverEndpoint;
   }
 
-  static LettuceBatchRequest create(List<RedisCommand<?, ?, ?>> commands) {
+  static LettuceBatchRequest create(
+      List<RedisCommand<?, ?, ?>> commands, @Nullable ServerEndpoint serverEndpoint) {
     return new LettuceBatchRequest(
         operationName(commands),
         queryText(commands),
         commands.size() != 1 ? (long) commands.size() : null,
-        commands.isEmpty() ? null : LettuceSingletons.COMMAND_ADDRESS.get(commands.get(0)));
+        serverEndpoint);
   }
 
   String getOperationName() {

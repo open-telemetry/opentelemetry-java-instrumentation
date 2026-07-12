@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.batchInstrumenter;
 
 import io.lettuce.core.protocol.AsyncCommand;
@@ -63,7 +64,8 @@ public final class LettuceBatchContext {
     }
     // flushCommands() does not re-enable auto-flush, so keep batching active with a fresh buffer
     BATCH_STATE.set(endpoint, new BatchState());
-    return BatchScope.start(state.commands, state.asyncCommands, state.parentContext);
+    return BatchScope.start(
+        state.commands, state.asyncCommands, state.parentContext, ENDPOINT_ADDRESS.get(endpoint));
   }
 
   private LettuceBatchContext() {}
@@ -84,8 +86,9 @@ public final class LettuceBatchContext {
     private static BatchScope start(
         List<RedisCommand<?, ?, ?>> commands,
         List<AsyncCommand<?, ?, ?>> asyncCommands,
-        @Nullable Context capturedParentContext) {
-      LettuceBatchRequest request = LettuceBatchRequest.create(commands);
+        @Nullable Context capturedParentContext,
+        @Nullable ServerEndpoint serverEndpoint) {
+      LettuceBatchRequest request = LettuceBatchRequest.create(commands, serverEndpoint);
       Context parentContext =
           capturedParentContext == null ? currentContext() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {
