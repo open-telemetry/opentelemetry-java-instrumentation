@@ -80,7 +80,7 @@
 name: "Module Cleanup"
 "on":
   schedule:
-  - cron: "28 */1 * * *"
+  - cron: "26 */1 * * *"
     # Friendly format: every 1h (scattered)
   workflow_dispatch:
     inputs:
