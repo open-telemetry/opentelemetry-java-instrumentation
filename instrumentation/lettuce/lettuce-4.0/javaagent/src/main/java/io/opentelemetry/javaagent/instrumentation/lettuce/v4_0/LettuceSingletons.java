@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 
 public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-4.0";
@@ -106,9 +107,14 @@ public class LettuceSingletons {
 
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
-    if (connection instanceof RedisChannelHandler) {
-      COMMAND_ADDRESS.set(command, CONNECTION_ADDRESS.get((RedisChannelHandler<?, ?>) connection));
-    }
+    COMMAND_ADDRESS.set(command, serverEndpoint(connection));
+  }
+
+  @Nullable
+  static ServerEndpoint serverEndpoint(StatefulConnection<?, ?> connection) {
+    return connection instanceof RedisChannelHandler
+        ? CONNECTION_ADDRESS.get((RedisChannelHandler<?, ?>) connection)
+        : null;
   }
 
   private LettuceSingletons() {}
