@@ -5,16 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.lettuce.core.ClientOptions;
@@ -23,10 +13,6 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -76,39 +62,6 @@ abstract class AbstractLettuceClientTest {
 
   protected static boolean connectionTelemetryEnabled() {
     return Boolean.getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled");
-  }
-
-  protected String commandSpanName(String operationName) {
-    return commandSpanName(operationName, port);
-  }
-
-  protected String commandSpanName(String operationName, int serverPort) {
-    return emitStableDatabaseSemconv()
-        ? operationName + " " + host + ":" + serverPort
-        : operationName;
-  }
-
-  protected List<AttributeAssertion> commandAttributes(
-      String operationName, String statement, AttributeAssertion... additionalAssertions) {
-    return commandAttributes(operationName, statement, port, additionalAssertions);
-  }
-
-  @SuppressWarnings("OtelDeprecatedApiUsage") // using deprecated semconv
-  protected List<AttributeAssertion> commandAttributes(
-      String operationName,
-      String statement,
-      int serverPort,
-      AttributeAssertion... additionalAssertions) {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(SERVER_ADDRESS, host),
-                equalTo(SERVER_PORT, serverPort),
-                equalTo(maybeStable(DB_SYSTEM), REDIS),
-                equalTo(maybeStable(DB_STATEMENT), statement),
-                equalTo(maybeStable(DB_OPERATION), operationName)));
-    Collections.addAll(assertions, additionalAssertions);
-    return assertions;
   }
 
   protected StatefulRedisConnection<String, String> newContainerConnection() {

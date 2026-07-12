@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
@@ -15,6 +16,8 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -158,10 +161,14 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(commandSpanName("SET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            commandAttributes("SET", "SET TESTSETKEY ?"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
 
     assertDurationMetric(
         testing,
@@ -181,9 +188,14 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(commandSpanName("GET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(commandAttributes("GET", "GET TESTKEY"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   @Test
@@ -195,10 +207,14 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(commandSpanName("GET"))
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            commandAttributes("GET", "GET NON_EXISTENT_KEY"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   @Test
@@ -210,10 +226,17 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(commandSpanName("RANDOMKEY"))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "RANDOMKEY " + host + ":" + port
+                                : "RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            commandAttributes("RANDOMKEY", "RANDOMKEY"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
+                            equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"))));
   }
 
   @Test
@@ -225,10 +248,15 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(commandSpanName("LPUSH"))
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "LPUSH " + host + ":" + port : "LPUSH")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            commandAttributes("LPUSH", "LPUSH TESTLIST ?"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "LPUSH TESTLIST ?"),
+                            equalTo(maybeStable(DB_OPERATION), "LPUSH"))));
   }
 
   @Test
@@ -240,11 +268,17 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(commandSpanName("HMSET"))
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "HMSET " + host + ":" + port : "HMSET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            commandAttributes(
-                                "HMSET", "HMSET user firstname ? lastname ? age ?"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "HMSET user firstname ? lastname ? age ?"),
+                            equalTo(maybeStable(DB_OPERATION), "HMSET"))));
   }
 
   @Test
@@ -256,10 +290,17 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(commandSpanName("HGETALL"))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "HGETALL " + host + ":" + port
+                                : "HGETALL")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            commandAttributes("HGETALL", "HGETALL TESTHM"))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM"),
+                            equalTo(maybeStable(DB_OPERATION), "HGETALL"))));
   }
 
   @Test
@@ -274,10 +315,17 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(commandSpanName("DEBUG", secondaryPort))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "DEBUG " + host + ":" + secondaryPort
+                                : "DEBUG")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            commandAttributes("DEBUG", "DEBUG SEGFAULT", secondaryPort))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, secondaryPort),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
+                            equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
   }
 
   @Test
@@ -292,9 +340,16 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(commandSpanName("SHUTDOWN", secondaryPort))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SHUTDOWN " + host + ":" + secondaryPort
+                                : "SHUTDOWN")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            commandAttributes("SHUTDOWN", "SHUTDOWN NOSAVE", secondaryPort))));
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, secondaryPort),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
+                            equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
   }
 }
