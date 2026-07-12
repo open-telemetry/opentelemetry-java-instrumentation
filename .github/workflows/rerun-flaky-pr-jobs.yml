@@ -1,7 +1,8 @@
 name: Rerun flaky PR jobs
 
 on:
-  workflow_run:
+  # Uses only the trusted default-branch rerun script and treats the run ID as data.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
     workflows:
       - "Build pull request"
       - "CodeQL"

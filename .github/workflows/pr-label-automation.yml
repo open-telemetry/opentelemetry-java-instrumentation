@@ -4,14 +4,15 @@ on:
     types: [created]
 
 permissions:
-  contents: read
-  issues: write
-  pull-requests: write
+  pull-requests: write # zizmor: ignore[excessive-permissions]
 
 jobs:
   auto-label:
     # Only run on pull request comments
-    if: github.event.issue.pull_request != null
+    if: >-
+      github.event.issue.pull_request != null &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+      github.event.comment.author_association)
     runs-on: ubuntu-latest
     steps:
       - name: Add breaking change label

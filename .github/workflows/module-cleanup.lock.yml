@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"ae701414a5de2f1865ef972a01cf00719feda0bcc0fb6530a0b8c9d3ccdb07a4","compiler_version":"v0.74.0","agent_id":"copilot","agent_model":"${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"4d1225e6029079d894498aeaa8026984e058cafee3088830097f05896f9e456a","compiler_version":"v0.74.0","agent_id":"copilot","agent_model":"${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN","OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"de0fac2e4500dabe0009e67214ff5f5447ce83dd"},{"repo":"actions/create-github-app-token","sha":"bcd2ba49218906704ab6c1aa796996da409d3eb1","version":"bcd2ba49218906704ab6c1aa796996da409d3eb1"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-java","sha":"be666c2fcd27ec809703dec50e508c2fdc7f6654","version":"be666c2fcd27ec809703dec50e508c2fdc7f6654"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"28ffccfcaa92868c8160807f95519789a590defc","version":"v0.74.0"},{"repo":"gradle/actions/setup-gradle","sha":"50e97c2cd7a37755bbfafc9c5b7cafaece252f6e","version":"50e97c2cd7a37755bbfafc9c5b7cafaece252f6e"}],"containers":[{"image":"ghcr.io/github/github-mcp-server:v1.0.3","digest":"sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -80,7 +80,7 @@
 name: "Module Cleanup"
 "on":
   schedule:
-  - cron: "26 */1 * * *"
+  - cron: "28 */1 * * *"
     # Friendly format: every 1h (scattered)
   workflow_dispatch:
     inputs:
@@ -210,20 +210,20 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_4a39c96ff64446e3_EOF'
+          cat << 'GH_AW_PROMPT_c841b15c9133e3f0_EOF'
           <system>
-          GH_AW_PROMPT_4a39c96ff64446e3_EOF
+          GH_AW_PROMPT_c841b15c9133e3f0_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_4a39c96ff64446e3_EOF'
+          cat << 'GH_AW_PROMPT_c841b15c9133e3f0_EOF'
           <safe-output-tools>
           Tools: missing_tool, missing_data, noop, suppress_default_create_issue
           </safe-output-tools>
-          GH_AW_PROMPT_4a39c96ff64446e3_EOF
+          GH_AW_PROMPT_c841b15c9133e3f0_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_4a39c96ff64446e3_EOF'
+          cat << 'GH_AW_PROMPT_c841b15c9133e3f0_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if __GH_AW_GITHUB_ACTOR__ }}
@@ -252,13 +252,13 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_4a39c96ff64446e3_EOF
+          GH_AW_PROMPT_c841b15c9133e3f0_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_4a39c96ff64446e3_EOF'
+          cat << 'GH_AW_PROMPT_c841b15c9133e3f0_EOF'
           </system>
           {{#runtime-import .github/agents/module-cleanup.agent.md}}
           {{#runtime-import .github/workflows/module-cleanup.md}}
-          GH_AW_PROMPT_4a39c96ff64446e3_EOF
+          GH_AW_PROMPT_c841b15c9133e3f0_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -490,9 +490,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_c5dc1ab97d6197ee_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_aea3ee4b43f6878d_EOF'
           {"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"report_incomplete":{},"suppress_default_create_issue":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_c5dc1ab97d6197ee_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_aea3ee4b43f6878d_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -667,7 +667,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_04f53912585e169a_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_4721566e7d80e3d1_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -708,7 +708,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_04f53912585e169a_EOF
+          GH_AW_MCP_CONFIG_4721566e7d80e3d1_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -1075,6 +1075,8 @@ jobs:
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # bcd2ba49218906704ab6c1aa796996da409d3eb1
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          permission-contents: write
+          permission-pull-requests: write
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
