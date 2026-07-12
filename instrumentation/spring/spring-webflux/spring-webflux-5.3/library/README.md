@@ -83,6 +83,15 @@ public class WebClientConfig {
 }
 ```
 
+### Reactor context propagation hook
+
+Spring WebFlux runs on Project Reactor, which can switch threads across a reactive pipeline.
+OTel context is stored in a `ThreadLocal` and will not survive these switches without the Reactor context propagation hook.
+
+**When you need the hook:**
+Use `createWebFilterAndRegisterReactorHook()` or `addFilterAndRegisterReactorHook()` when application code or downstream instrumentation needs the current OpenTelemetry context to be available inside Reactor callbacks and the OpenTelemetry Reactor hook has not already been registered.
+Otherwise, use `createWebFilter()` or `addFilter()`.
+
 ## Starter Guide
 
 Check
