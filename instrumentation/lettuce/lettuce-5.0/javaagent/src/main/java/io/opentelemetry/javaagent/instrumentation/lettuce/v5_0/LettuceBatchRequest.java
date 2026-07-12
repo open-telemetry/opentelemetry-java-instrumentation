@@ -13,7 +13,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
-import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -26,17 +25,17 @@ final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
-  @Nullable private final InetSocketAddress address;
+  @Nullable private final ServerEndpoint serverEndpoint;
 
   private LettuceBatchRequest(
       String operationName,
       @Nullable String queryText,
       @Nullable Long batchSize,
-      @Nullable InetSocketAddress address) {
+      @Nullable ServerEndpoint serverEndpoint) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
-    this.address = address;
+    this.serverEndpoint = serverEndpoint;
   }
 
   static LettuceBatchRequest create(List<RedisCommand<?, ?, ?>> commands) {
@@ -62,8 +61,8 @@ final class LettuceBatchRequest {
   }
 
   @Nullable
-  InetSocketAddress getAddress() {
-    return address;
+  ServerEndpoint getServerEndpoint() {
+    return serverEndpoint;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {

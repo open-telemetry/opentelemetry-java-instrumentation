@@ -25,7 +25,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.net.InetSocketAddress;
 
 public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-4.0";
@@ -44,11 +43,11 @@ public class LettuceSingletons {
       REACTIVE_DISPATCHER_CONTEXT =
           VirtualField.find(ReactiveCommandDispatcher.class, Context.class);
 
-  public static final VirtualField<RedisChannelHandler<?, ?>, InetSocketAddress>
-      CONNECTION_ADDRESS = VirtualField.find(RedisChannelHandler.class, InetSocketAddress.class);
+  public static final VirtualField<RedisChannelHandler<?, ?>, ServerEndpoint> CONNECTION_ADDRESS =
+      VirtualField.find(RedisChannelHandler.class, ServerEndpoint.class);
 
-  public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
-      VirtualField.find(RedisCommand.class, InetSocketAddress.class);
+  public static final VirtualField<RedisCommand<?, ?, ?>, ServerEndpoint> COMMAND_ADDRESS =
+      VirtualField.find(RedisCommand.class, ServerEndpoint.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();

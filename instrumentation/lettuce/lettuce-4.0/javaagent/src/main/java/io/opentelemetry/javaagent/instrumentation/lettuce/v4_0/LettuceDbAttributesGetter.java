@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class LettuceDbAttributesGetter
@@ -39,14 +38,14 @@ final class LettuceDbAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(RedisCommand<?, ?, ?> request) {
-    InetSocketAddress address = LettuceSingletons.COMMAND_ADDRESS.get(request);
-    return address != null ? address.getHostString() : null;
+    ServerEndpoint serverEndpoint = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    return serverEndpoint != null ? serverEndpoint.getAddress() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RedisCommand<?, ?, ?> request) {
-    InetSocketAddress address = LettuceSingletons.COMMAND_ADDRESS.get(request);
-    return address != null ? address.getPort() : null;
+    ServerEndpoint serverEndpoint = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    return serverEndpoint != null ? serverEndpoint.getPort() : null;
   }
 }

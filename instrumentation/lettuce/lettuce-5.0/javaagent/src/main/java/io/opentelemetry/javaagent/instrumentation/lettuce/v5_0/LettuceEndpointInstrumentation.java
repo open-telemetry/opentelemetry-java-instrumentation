@@ -25,7 +25,6 @@ import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -65,8 +64,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This DefaultEndpoint endpoint) {
       RedisURI redisUri = currentContext().get(CONNECT_URI_KEY);
       if (redisUri != null && redisUri.getHost() != null) {
-        ENDPOINT_ADDRESS.set(
-            endpoint, InetSocketAddress.createUnresolved(redisUri.getHost(), redisUri.getPort()));
+        ENDPOINT_ADDRESS.set(endpoint, new ServerEndpoint(redisUri.getHost(), redisUri.getPort()));
       }
     }
   }
