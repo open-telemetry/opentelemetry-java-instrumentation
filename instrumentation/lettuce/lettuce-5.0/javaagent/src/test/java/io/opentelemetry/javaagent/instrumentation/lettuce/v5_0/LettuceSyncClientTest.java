@@ -305,51 +305,51 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
 
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
-    // Test causes redis to crash therefore it needs its own container
-    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
-    cleanup.deferCleanup(statefulConnection);
-    RedisCommands<String, String> commands = statefulConnection.sync();
-    commands.debugSegfault();
+    withIsolatedContainer(
+        (connection, port) -> {
+          RedisCommands<String, String> commands = connection.sync();
+          commands.debugSegfault();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "DEBUG " + host + ":" + serverPort
-                                : "DEBUG")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, serverPort),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
-                            equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName(
+                                  emitStableDatabaseSemconv()
+                                      ? "DEBUG " + host + ":" + port
+                                      : "DEBUG")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                  equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
+                                  equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
+        });
   }
 
   @Test
   void testShutdownCommandShouldProduceSpan() {
-    // Test causes redis to crash therefore it needs its own container
-    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
-    cleanup.deferCleanup(statefulConnection);
-    RedisCommands<String, String> commands = statefulConnection.sync();
-    commands.shutdown(false);
+    withIsolatedContainer(
+        (connection, port) -> {
+          RedisCommands<String, String> commands = connection.sync();
+          commands.shutdown(false);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "SHUTDOWN " + host + ":" + serverPort
-                                : "SHUTDOWN")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, serverPort),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
-                            equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName(
+                                  emitStableDatabaseSemconv()
+                                      ? "SHUTDOWN " + host + ":" + port
+                                      : "SHUTDOWN")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
+                                  equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
+        });
   }
 }

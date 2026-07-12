@@ -29,6 +29,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiConsumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -293,27 +294,26 @@ class LettuceReactiveClientTest {
 
   @Test
   void testShutdownCommandShouldProduceSpan() {
-    // Test Causes redis to crash therefore it needs its own container
-    ContainerConnection containerConnection = newContainerConnection();
-    cleanup.deferCleanup(containerConnection.connection);
+    withIsolatedContainer(
+        (connection, port) -> {
+          RedisReactiveCommands<String, String> commands = connection.reactive();
+          commands.shutdown(false).subscribe();
 
-    RedisReactiveCommands<String, String> commands = containerConnection.connection.reactive();
-    commands.shutdown(false).subscribe();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "SHUTDOWN " + host + ":" + containerConnection.port
-                                : "SHUTDOWN")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, containerConnection.port))));
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName(
+                                  emitStableDatabaseSemconv()
+                                      ? "SHUTDOWN " + host + ":" + port
+                                      : "SHUTDOWN")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                  equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port))));
+        });
   }
 
   @Test
@@ -436,7 +436,8 @@ class LettuceReactiveClientTest {
                             equalTo(SERVER_PORT, port))));
   }
 
-  private static ContainerConnection newContainerConnection() {
+  private static void withIsolatedContainer(
+      BiConsumer<StatefulRedisConnection<String, String>, Integer> action) {
     GenericContainer<?> server =
         new GenericContainer<>(CONTAINER_IMAGE)
             .withExposedPorts(6379)
@@ -445,28 +446,20 @@ class LettuceReactiveClientTest {
     server.start();
     cleanup.deferCleanup(server::stop);
 
-    int serverPort = server.getMappedPort(6379);
+    int containerPort = server.getMappedPort(6379);
 
-    RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
+    RedisClient client =
+        RedisClient.create("redis://" + host + ":" + containerPort + "/" + DB_INDEX);
     client.setOptions(CLIENT_OPTIONS);
     cleanup.deferCleanup(client::shutdown);
 
     StatefulRedisConnection<String, String> statefulConnection = client.connect();
+    cleanup.deferCleanup(statefulConnection);
 
     // 1 connect trace
     testing.waitForTraces(1);
     testing.clearData();
 
-    return new ContainerConnection(statefulConnection, serverPort);
-  }
-
-  private static class ContainerConnection {
-    private final StatefulRedisConnection<String, String> connection;
-    private final int port;
-
-    private ContainerConnection(StatefulRedisConnection<String, String> connection, int port) {
-      this.connection = connection;
-      this.port = port;
-    }
+    action.accept(statefulConnection, containerPort);
   }
 }
