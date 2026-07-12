@@ -296,12 +296,12 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "DEBUG " + host + ":" + secondaryPort
+                                ? "DEBUG " + host + ":" + serverPort
                                 : "DEBUG")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, secondaryPort),
+                            equalTo(SERVER_PORT, serverPort),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
                             equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
@@ -322,12 +322,12 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SHUTDOWN " + host + ":" + secondaryPort
+                                ? "SHUTDOWN " + host + ":" + serverPort
                                 : "SHUTDOWN")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, secondaryPort),
+                            equalTo(SERVER_PORT, serverPort),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
                             equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));

@@ -56,7 +56,7 @@ abstract class AbstractLettuceClientTest {
 
   protected int port;
 
-  protected int secondaryPort;
+  protected int serverPort;
 
   protected String embeddedDbUri;
 
@@ -73,10 +73,9 @@ abstract class AbstractLettuceClientTest {
     server.start();
     cleanup.deferCleanup(server::stop);
 
-    secondaryPort = server.getMappedPort(6379);
+    serverPort = server.getMappedPort(6379);
 
-    RedisClient client =
-        RedisClient.create("redis://" + host + ":" + secondaryPort + "/" + DB_INDEX);
+    RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
     client.setOptions(CLIENT_OPTIONS);
     cleanup.deferCleanup(client::shutdown);
 
