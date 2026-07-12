@@ -64,7 +64,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This DefaultEndpoint endpoint) {
       RedisURI redisUri = currentContext().get(CONNECT_URI_KEY);
       if (redisUri != null && redisUri.getHost() != null) {
-        ENDPOINT_ADDRESS.set(endpoint, new ServerEndpoint(redisUri.getHost(), redisUri.getPort()));
+        ENDPOINT_ADDRESS.set(endpoint, redisUri);
       }
     }
   }

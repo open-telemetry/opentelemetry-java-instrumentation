@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static java.util.Collections.emptyList;
 
+import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
@@ -55,14 +56,14 @@ final class LettuceDbAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(RedisCommand<?, ?, ?> request) {
-    ServerEndpoint serverEndpoint = LettuceSingletons.COMMAND_ADDRESS.get(request);
-    return serverEndpoint != null ? serverEndpoint.getAddress() : null;
+    RedisURI redisUri = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    return redisUri != null ? redisUri.getHost() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RedisCommand<?, ?, ?> request) {
-    ServerEndpoint serverEndpoint = LettuceSingletons.COMMAND_ADDRESS.get(request);
-    return serverEndpoint != null ? serverEndpoint.getPort() : null;
+    RedisURI redisUri = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    return redisUri != null ? redisUri.getPort() : null;
   }
 }

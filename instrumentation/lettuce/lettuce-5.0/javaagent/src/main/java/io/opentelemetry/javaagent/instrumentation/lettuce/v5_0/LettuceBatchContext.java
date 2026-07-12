@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSin
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.batchInstrumenter;
 
+import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
@@ -87,8 +88,8 @@ public final class LettuceBatchContext {
         List<RedisCommand<?, ?, ?>> commands,
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
-        @Nullable ServerEndpoint serverEndpoint) {
-      LettuceBatchRequest request = LettuceBatchRequest.create(commands, serverEndpoint);
+        @Nullable RedisURI redisUri) {
+      LettuceBatchRequest request = LettuceBatchRequest.create(commands, redisUri);
       Context parentContext =
           capturedParentContext == null ? currentContext() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {

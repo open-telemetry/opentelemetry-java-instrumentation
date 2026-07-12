@@ -43,11 +43,11 @@ public class LettuceSingletons {
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
 
-  public static final VirtualField<DefaultEndpoint, ServerEndpoint> ENDPOINT_ADDRESS =
-      VirtualField.find(DefaultEndpoint.class, ServerEndpoint.class);
+  public static final VirtualField<DefaultEndpoint, RedisURI> ENDPOINT_ADDRESS =
+      VirtualField.find(DefaultEndpoint.class, RedisURI.class);
 
-  public static final VirtualField<RedisCommand<?, ?, ?>, ServerEndpoint> COMMAND_ADDRESS =
-      VirtualField.find(RedisCommand.class, ServerEndpoint.class);
+  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_ADDRESS =
+      VirtualField.find(RedisCommand.class, RedisURI.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
