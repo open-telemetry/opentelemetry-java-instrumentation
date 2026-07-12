@@ -40,10 +40,7 @@ class LettuceConnectionInstrumentation implements TypeInstrumentation {
       RedisChannelHandler<?, ?> connection = builder.connection();
       SocketAddress address = builder.socketAddress();
       if (connection != null && address instanceof InetSocketAddress) {
-        InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
-        CONNECTION_ADDRESS.set(
-            connection,
-            new ServerEndpoint(inetSocketAddress.getHostString(), inetSocketAddress.getPort()));
+        CONNECTION_ADDRESS.set(connection, (InetSocketAddress) address);
       }
     }
   }
