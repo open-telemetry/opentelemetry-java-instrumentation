@@ -7,17 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_ADDRESS;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECT_URI_KEY;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_URI;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_URI;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.DefaultEndpoint;
@@ -46,7 +43,6 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("write").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
         getClass().getName() + "$WriteAdvice");
@@ -58,25 +54,13 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class ConstructorAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This DefaultEndpoint endpoint) {
-      RedisURI redisUri = currentContext().get(CONNECT_URI_KEY);
-      if (redisUri != null && redisUri.getHost() != null) {
-        ENDPOINT_ADDRESS.set(endpoint, redisUri);
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
   public static class WriteAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       AsyncCommand<?, ?, ?> asyncCommand = asAsyncCommand(command);
-      COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get(endpoint));
+      COMMAND_URI.set(command, ENDPOINT_URI.get(endpoint));
 
       if (LettuceBatchContext.isBatching(endpoint)) {
         LettuceBatchContext.capture(endpoint, command, asyncCommand);

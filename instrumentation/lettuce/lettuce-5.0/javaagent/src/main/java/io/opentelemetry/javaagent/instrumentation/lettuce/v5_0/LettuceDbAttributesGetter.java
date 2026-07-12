@@ -56,14 +56,14 @@ final class LettuceDbAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(RedisCommand<?, ?, ?> request) {
-    RedisURI redisUri = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    RedisURI redisUri = LettuceSingletons.COMMAND_URI.get(request);
     return redisUri != null ? redisUri.getHost() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RedisCommand<?, ?, ?> request) {
-    RedisURI redisUri = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    RedisURI redisUri = LettuceSingletons.COMMAND_URI.get(request);
     return redisUri != null ? redisUri.getPort() : null;
   }
 }

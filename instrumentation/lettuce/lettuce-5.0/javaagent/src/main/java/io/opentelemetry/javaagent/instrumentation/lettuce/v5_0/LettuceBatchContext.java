@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_URI;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.batchInstrumenter;
 
 import io.lettuce.core.RedisURI;
@@ -66,7 +66,7 @@ public final class LettuceBatchContext {
     // flushCommands() does not re-enable auto-flush, so keep batching active with a fresh buffer
     BATCH_STATE.set(endpoint, new BatchState());
     return BatchScope.start(
-        state.commands, state.asyncCommands, state.parentContext, ENDPOINT_ADDRESS.get(endpoint));
+        state.commands, state.asyncCommands, state.parentContext, ENDPOINT_URI.get(endpoint));
   }
 
   private LettuceBatchContext() {}

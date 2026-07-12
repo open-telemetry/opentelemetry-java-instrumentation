@@ -37,16 +37,13 @@ public class LettuceSingletons {
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v5_0-context-key");
 
-  public static final ContextKey<RedisURI> CONNECT_URI_KEY =
-      ContextKey.named("opentelemetry-lettuce-v5_0-connect-uri-key");
-
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
 
-  public static final VirtualField<DefaultEndpoint, RedisURI> ENDPOINT_ADDRESS =
+  public static final VirtualField<DefaultEndpoint, RedisURI> ENDPOINT_URI =
       VirtualField.find(DefaultEndpoint.class, RedisURI.class);
 
-  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_ADDRESS =
+  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_URI =
       VirtualField.find(RedisCommand.class, RedisURI.class);
 
   static {
@@ -110,7 +107,7 @@ public class LettuceSingletons {
     if (connection instanceof RedisChannelHandler) {
       Object channelWriter = ((RedisChannelHandler<?, ?>) connection).getChannelWriter();
       if (channelWriter instanceof DefaultEndpoint) {
-        COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get((DefaultEndpoint) channelWriter));
+        COMMAND_URI.set(command, ENDPOINT_URI.get((DefaultEndpoint) channelWriter));
       }
     }
   }
