@@ -20,11 +20,10 @@ final class TrieImpl<V> implements Trie<V> {
     this.root = root;
   }
 
-  @Nullable
   @Override
-  public V getOrNull(CharSequence str) {
+  public V getOrDefault(CharSequence str, V defaultValue) {
     Node<V> node = root;
-    V lastMatchedValue = null;
+    V lastMatchedValue = defaultValue;
 
     for (int i = 0; i < str.length(); ++i) {
       char c = str.charAt(i);
