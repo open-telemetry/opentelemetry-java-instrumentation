@@ -93,8 +93,6 @@ public final class QuartzTelemetryBuilder {
         CodeAttributesExtractor.create(new QuartzCodeAttributesGetter()));
     instrumenter.addAttributesExtractors(additionalExtractors);
 
-    // Scheduler-level errors are point-in-time occurrences with no duration, so they are emitted as
-    // events (log records) rather than spans.
     Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
 
     return new QuartzTelemetry(

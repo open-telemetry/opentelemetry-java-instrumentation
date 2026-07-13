@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.quartz.v2_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Objects.requireNonNull;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
@@ -134,7 +135,10 @@ public abstract class AbstractQuartzTest {
                     .hasSeverity(Severity.ERROR)
                     .hasBody("Something went wrong")
                     .hasException(cause)
-                    .hasAttributesSatisfying(
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("exception.type"), SchedulerException.class.getName()),
+                        equalTo(stringKey("exception.message"), "boom"),
+                        satisfies(stringKey("exception.stacktrace"), value -> value.isNotEmpty()),
                         equalTo(
                             stringKey("quartz.scheduler.name"),
                             EXPERIMENTAL_ATTRIBUTES ? "default" : null)));

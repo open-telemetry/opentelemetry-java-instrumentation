@@ -54,14 +54,8 @@ public final class QuartzTelemetry {
   }
 
   private void addJobListener(Scheduler scheduler) {
-    try {
-      for (JobListener listener : scheduler.getListenerManager().getJobListeners()) {
-        if (listener instanceof TracingJobListener) {
-          return;
-        }
-      }
-    } catch (SchedulerException ignored) {
-      // Ignore
+    if (isJobListenerRegistered(scheduler)) {
+      return;
     }
     try {
       // We must pass a matcher to work around a bug in Quartz 2.0.0. It's unlikely anyone uses
@@ -75,18 +69,12 @@ public final class QuartzTelemetry {
   }
 
   private void addSchedulerListener(Scheduler scheduler) {
-    try {
-      for (SchedulerListener listener : scheduler.getListenerManager().getSchedulerListeners()) {
-        if (listener instanceof TracingSchedulerListener) {
-          return;
-        }
-      }
-    } catch (SchedulerException ignored) {
-      // Ignore
+    if (isSchedulerListenerRegistered(scheduler)) {
+      return;
     }
     try {
-      // The scheduler name is only available here (at configuration time), so we capture it now
-      // and hand it to the listener to use as an event attribute.
+      // The scheduler name is only available at configuration time, so capture it now and hand it
+      // to the listener.
       String schedulerName = scheduler.getSchedulerName();
       scheduler
           .getListenerManager()
@@ -96,5 +84,31 @@ public final class QuartzTelemetry {
     } catch (SchedulerException e) {
       throw new IllegalStateException("Could not add SchedulerListener to Scheduler", e);
     }
+  }
+
+  private static boolean isJobListenerRegistered(Scheduler scheduler) {
+    try {
+      for (JobListener listener : scheduler.getListenerManager().getJobListeners()) {
+        if (listener instanceof TracingJobListener) {
+          return true;
+        }
+      }
+    } catch (SchedulerException ignored) {
+      // Can't read the listeners, so fall through and try to register.
+    }
+    return false;
+  }
+
+  private static boolean isSchedulerListenerRegistered(Scheduler scheduler) {
+    try {
+      for (SchedulerListener listener : scheduler.getListenerManager().getSchedulerListeners()) {
+        if (listener instanceof TracingSchedulerListener) {
+          return true;
+        }
+      }
+    } catch (SchedulerException ignored) {
+      // Can't read the listeners, so fall through and try to register.
+    }
+    return false;
   }
 }

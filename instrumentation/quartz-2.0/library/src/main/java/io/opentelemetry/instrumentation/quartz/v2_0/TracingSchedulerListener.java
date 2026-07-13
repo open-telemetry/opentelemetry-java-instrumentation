@@ -34,6 +34,10 @@ final class TracingSchedulerListener extends SchedulerListenerSupport {
   public void schedulerError(String msg, SchedulerException cause) {
     Context parentContext = Context.current();
 
+    // Quartz also reports job failures through schedulerError, while the job is still executing.
+    // The job span already records that error, so skip it here instead of reporting it twice. We
+    // look for the marker set by TracingJobListener rather than just any active span, because an
+    // unrelated span may be current when a real scheduler error happens.
     if (parentContext.get(TracingJobListener.JOB_CONTEXT_KEY) != null) {
       return;
     }
