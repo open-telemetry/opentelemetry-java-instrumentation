@@ -51,7 +51,10 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "publish"),
-                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer"))),
+                            satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                            satisfies(
+                                stringKey("messaging.kafka.cluster.id"),
+                                AbstractStringAssert::isNotEmpty)),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
@@ -68,6 +71,9 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                                 MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                             satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                            satisfies(
+                                stringKey("messaging.kafka.cluster.id"),
+                                AbstractStringAssert::isNotEmpty),
                             equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"),
                             equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2")),
                 span ->

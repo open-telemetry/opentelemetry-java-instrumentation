@@ -115,9 +115,9 @@ class WrapperTest extends AbstractWrapperTest {
           equalTo(
               MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testExperimental) {
-      assertions.add(
-          satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
       assertions.add(
           satisfies(
               stringKey("messaging.kafka.bootstrap.servers"),
@@ -139,14 +139,14 @@ class WrapperTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(
           equalTo(
               MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     if (testExperimental) {
-      assertions.add(
-          satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }
@@ -164,10 +164,8 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
-    if (testExperimental) {
-      assertions.add(
-          satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
-    }
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(
           equalTo(
