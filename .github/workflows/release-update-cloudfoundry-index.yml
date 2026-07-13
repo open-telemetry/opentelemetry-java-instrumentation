@@ -61,3 +61,13 @@ jobs:
             --head otelbot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }} \
             --title 'Release updates for Cloudfoundry Repo' \
             --body '[Created by Github action]'
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - update-cloudfoundry-index-yml
+    if: always()
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@7c49790392da7de86fdb4bb968446f9cb8461eb8 # v0.3.1
+    with:
+      success: ${{ needs.update-cloudfoundry-index-yml.result == 'success' }}

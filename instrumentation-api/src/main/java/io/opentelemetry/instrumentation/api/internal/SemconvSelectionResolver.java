@@ -23,11 +23,11 @@ class SemconvSelectionResolver {
 
   // Stable opt-in values, used when no explicit per-domain semconv config is present. Reads
   // general.stability_opt_in_list first, and falls back to OpenTelemetry-backed /
-  // ConfigPropertiesUtil-backed otel.semconv-stability.opt-in values.
+  // SystemProperty-backed otel.semconv-stability.opt-in values.
   private final Set<String> stableFlags;
 
   // Preview flags for service.peer, rpc, and messaging. Reads through OpenTelemetry-backed
-  // java.common.semconv_stability.preview config, and falls back to ConfigPropertiesUtil for
+  // java.common.semconv_stability.preview config, and falls back to SystemProperty for
   // otel.semconv-stability.preview in library instrumentation.
   private final Set<String> previewFlags;
 
@@ -245,11 +245,12 @@ class SemconvSelectionResolver {
         commonConfig.get("semconv_stability"), "preview", "otel.semconv-stability.preview");
   }
 
-  @SuppressWarnings("deprecation") // using deprecated config property fallback
   private static Set<String> resolveStringList(
       DeclarativeConfigProperties config, String key, String fallbackProperty) {
+    // Library instrumentation tests configure these modes using JVM system properties, so a direct
+    // system-property fallback is needed.
     return resolveStringListWithFallbackValue(
-        config, key, ConfigPropertiesUtil.getString(fallbackProperty));
+        config, key, SystemProperty.getString(fallbackProperty));
   }
 
   static Set<String> resolveStringListWithFallbackValue(

@@ -362,6 +362,7 @@ class CassandraClientTest {
                 .buildBatch(session -> new BatchStatement())
                 .spanName("BATCH")
                 .oldSpanName("DB Query")
+                .querySummary("BATCH")
                 .batchSize(0)
                 .build()),
         argumentSet(
