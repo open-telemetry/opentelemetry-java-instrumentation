@@ -107,7 +107,10 @@ public class OpenTelemetryAutoConfiguration {
         return new OtelMapConverter();
       }
 
-      /** Use {@link ConfigProvider} and {@link OpenTelemetry} instead. */
+      /**
+       * Backs the {@link ConfigProvider} and {@link OpenTelemetry} beans below; not meant to be
+       * injected directly.
+       */
       @Bean
       AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk(
           Environment env,
@@ -136,7 +139,7 @@ public class OpenTelemetryAutoConfiguration {
       }
 
       @Bean
-      public OpenTelemetry openTelemetry(
+      OpenTelemetry openTelemetry(
           AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk,
           ConfigProvider configProvider) {
         logStart();
@@ -156,7 +159,7 @@ public class OpenTelemetryAutoConfiguration {
        */
       @Deprecated // to be removed in 3.0
       @Bean
-      public ConfigProperties otelProperties(
+      ConfigProperties otelProperties(
           AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
         return requireNonNull(AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk));
       }
@@ -166,7 +169,7 @@ public class OpenTelemetryAutoConfiguration {
     @Conditional(DeclarativeConfigEnabled.class)
     static class EmbeddedConfigFileConfig {
 
-      /** Use {@link ConfigProvider} instead. */
+      /** Backs the {@link ConfigProvider} bean below; not meant to be injected directly. */
       @Bean
       OpenTelemetryConfigurationModel openTelemetryConfigurationModel(
           ConfigurableEnvironment environment) {
@@ -187,7 +190,7 @@ public class OpenTelemetryAutoConfiguration {
       }
 
       @Bean
-      public OpenTelemetry openTelemetry(
+      OpenTelemetry openTelemetry(
           OpenTelemetryConfigurationModel model,
           ApplicationContext applicationContext,
           ConfigProvider configProvider) {
@@ -210,7 +213,7 @@ public class OpenTelemetryAutoConfiguration {
        */
       @Deprecated // to be removed in 3.0
       @Bean
-      public ConfigProperties otelProperties(OpenTelemetry openTelemetry) {
+      ConfigProperties otelProperties(OpenTelemetry openTelemetry) {
         return new DeclarativeConfigPropertiesBridgeBuilder()
             .buildFromInstrumentationConfig(
                 ((ExtendedOpenTelemetry) openTelemetry)
@@ -248,7 +251,7 @@ public class OpenTelemetryAutoConfiguration {
   static class DisabledOpenTelemetrySdkConfig {
 
     @Bean
-    public OpenTelemetry openTelemetry() {
+    OpenTelemetry openTelemetry() {
       logger.info("OpenTelemetry Spring Boot starter has been disabled");
 
       return OpenTelemetry.noop();
@@ -259,7 +262,7 @@ public class OpenTelemetryAutoConfiguration {
      */
     @Deprecated // to be removed in 3.0
     @Bean
-    public ConfigProperties otelProperties() {
+    ConfigProperties otelProperties() {
       return DefaultConfigProperties.createFromMap(emptyMap());
     }
 
@@ -293,7 +296,7 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean({ConfigProperties.class})
   static class FallbackConfigProperties {
     @Bean
-    public ConfigProperties otelProperties(ApplicationContext applicationContext) {
+    ConfigProperties otelProperties(ApplicationContext applicationContext) {
       return DefaultConfigProperties.create(
           emptyMap(), new OpenTelemetrySdkComponentLoader(applicationContext));
     }
@@ -309,7 +312,7 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean({ConfigProvider.class})
   static class FallbackConfigProvider {
     @Bean
-    public ConfigProvider configProvider() {
+    ConfigProvider configProvider() {
       return ConfigProvider.noop();
     }
   }
