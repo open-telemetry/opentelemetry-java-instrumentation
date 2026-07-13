@@ -134,7 +134,8 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
           @Nullable List<Request> requests,
           NetSocket netSocket) {
 
-        if (requests == null) {
+        // Vert.x sends no command and never completes the returned future for an empty batch.
+        if (requests == null || requests.isEmpty()) {
           return null;
         }
 

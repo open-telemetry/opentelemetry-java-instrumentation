@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.nCopies;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -35,12 +36,16 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.impl.future.FutureInternal;
 import io.vertx.redis.client.Command;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
 import io.vertx.redis.client.Request;
+import io.vertx.redis.client.Response;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -211,6 +216,24 @@ class VertxRedisClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));
+  }
+
+  @Test
+  void emptyBatchDoesNotStartSpan() {
+    // Vert.x never completes the future returned by batch(emptyList()), so this test cannot wait
+    // for completion like the regular batch tests. Starting a span would replace the pending future
+    // with a span-ending wrapper, but the span would never end or become exportable. The original
+    // Vert.x promise retains its event-loop context, while the wrapper does not.
+    Future<List<Response>> future = connection.batch(emptyList());
+
+    assertThat(future.isComplete()).isFalse();
+    assertThat(future).isInstanceOf(Promise.class);
+    assertThat(((FutureInternal<?>) future).context()).isNotNull();
+
+    // Complete the otherwise permanently pending Vert.x promise only to clean up the test.
+    Promise<?> promise = (Promise<?>) future;
+    assertThat(promise.tryComplete(null)).isTrue();
+    assertThat(testing.spans()).isEmpty();
   }
 
   @ParameterizedTest
