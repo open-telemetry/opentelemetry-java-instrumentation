@@ -140,6 +140,8 @@ class JavaUtilLoggingTest {
                   val -> {
                     if (logException) {
                       val.contains(JavaUtilLoggingTest.class.getName());
+                    } else {
+                      val.isNull();
                     }
                   }),
               equalTo(
