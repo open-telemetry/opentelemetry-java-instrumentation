@@ -265,7 +265,7 @@ public final class AgentInitializer {
     }
   }
 
-  public static boolean isJdkToolMainClass(@Nullable String cmd) {
+  static boolean isJdkToolMainClass(@Nullable String cmd) {
     if (cmd == null || cmd.isEmpty()) {
       return false;
     }
