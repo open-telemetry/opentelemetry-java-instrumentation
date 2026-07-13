@@ -53,6 +53,29 @@ public final class AgentInitializer {
       throw new IllegalStateException("agent initializer should be loaded in boot loader");
     }
 
+    // check if running any JDK tool in $JAVA_HOME/bin, as this is common when setting
+    // JAVA_TOOL_OPTIONS or _JAVA_OPTIONS globally, and we don't want to instrument those tools.
+    // opt-in is still possible with an explicit otel.javaagent.enable=true in system properties or
+    // java agent arguments
+    Boolean skipJdkTool =
+        doPrivileged(
+            new PrivilegedAction<Boolean>() {
+              @Override
+              public Boolean run() {
+                String enable = System.getProperty("otel.javaagent.enable");
+                if (Boolean.parseBoolean(enable)) {
+                  return false;
+                }
+                String cmd = System.getProperty("sun.java.command");
+                return isJdkToolMainClass(cmd);
+              }
+            });
+    if (skipJdkTool) {
+      System.err.println(
+          "JDK tool detected, agent will not be started. To override this behavior, set the 'otel.javaagent.enable=true' agent argument or system property");
+      return;
+    }
+
     isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled();
 
     // this call deliberately uses anonymous class instead of lambda because using lambdas too
@@ -239,6 +262,24 @@ public final class AgentInitializer {
           System.err.println("Setting property [" + key + "] = " + value);
         }
       }
+    }
+  }
+
+  public static boolean isJdkToolMainClass(@Nullable String cmd) {
+    if (cmd == null || cmd.isEmpty()) {
+      return false;
+    }
+    int spaceIndex = cmd.indexOf(' ');
+    String first = spaceIndex == -1 ? cmd : cmd.substring(0, spaceIndex);
+
+    // sun.java.command may be of the form "<module>/<mainClass>" when the main class belongs to a
+    // named module, e.g. "jdk.compiler/com.sun.tools.javac.Main"
+    int slashIndex = first.indexOf('/');
+    if (slashIndex < 0) {
+      return first.startsWith("com.sun.") || first.startsWith("sun.") || first.startsWith("jdk.");
+    } else {
+      String moduleName = first.substring(0, slashIndex);
+      return moduleName.startsWith("jdk.") || moduleName.startsWith("java.");
     }
   }
 }
