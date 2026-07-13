@@ -19,7 +19,7 @@ import org.quartz.impl.matchers.EverythingMatcher;
 public final class QuartzTelemetry {
   private final JobListener jobListener;
   private final Logger eventLogger;
-  private final boolean captureExperimentalSpanAttributes;
+  private final boolean emitExperimentalTelemetry;
 
   /** Returns a new {@link QuartzTelemetry} configured with the given {@link OpenTelemetry}. */
   public static QuartzTelemetry create(OpenTelemetry openTelemetry) {
@@ -33,11 +33,10 @@ public final class QuartzTelemetry {
     return new QuartzTelemetryBuilder(openTelemetry);
   }
 
-  QuartzTelemetry(
-      JobListener jobListener, Logger eventLogger, boolean captureExperimentalSpanAttributes) {
+  QuartzTelemetry(JobListener jobListener, Logger eventLogger, boolean emitExperimentalTelemetry) {
     this.jobListener = jobListener;
     this.eventLogger = eventLogger;
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.emitExperimentalTelemetry = emitExperimentalTelemetry;
   }
 
   /**
@@ -79,8 +78,7 @@ public final class QuartzTelemetry {
       scheduler
           .getListenerManager()
           .addSchedulerListener(
-              new TracingSchedulerListener(
-                  eventLogger, schedulerName, captureExperimentalSpanAttributes));
+              new TracingSchedulerListener(eventLogger, schedulerName, emitExperimentalTelemetry));
     } catch (SchedulerException e) {
       throw new IllegalStateException("Could not add SchedulerListener to Scheduler", e);
     }

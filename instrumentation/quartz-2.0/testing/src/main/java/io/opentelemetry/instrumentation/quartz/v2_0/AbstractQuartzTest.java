@@ -41,8 +41,8 @@ import org.quartz.impl.StdSchedulerFactory;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractQuartzTest {
 
-  protected static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.quartz.experimental-span-attributes");
+  protected static final boolean EMIT_EXPERIMENTAL_TELEMETRY =
+      Boolean.getBoolean("otel.instrumentation.quartz.emit-experimental-telemetry");
 
   private Scheduler scheduler;
 
@@ -71,9 +71,10 @@ public abstract class AbstractQuartzTest {
     scheduler.scheduleJob(jobDetail, trigger);
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(SuccessfulJob.class, "execute");
-    assertions.add(equalTo(stringKey("job.system"), EXPERIMENTAL_ATTRIBUTES ? "quartz" : null));
+    assertions.add(equalTo(stringKey("job.system"), EMIT_EXPERIMENTAL_TELEMETRY ? "quartz" : null));
     assertions.add(
-        equalTo(stringKey("quartz.scheduler.name"), EXPERIMENTAL_ATTRIBUTES ? "default" : null));
+        equalTo(
+            stringKey("quartz.scheduler.name"), EMIT_EXPERIMENTAL_TELEMETRY ? "default" : null));
 
     getTesting()
         .waitAndAssertTraces(
@@ -100,9 +101,10 @@ public abstract class AbstractQuartzTest {
     scheduler.scheduleJob(jobDetail, trigger);
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(FailingJob.class, "execute");
-    assertions.add(equalTo(stringKey("job.system"), EXPERIMENTAL_ATTRIBUTES ? "quartz" : null));
+    assertions.add(equalTo(stringKey("job.system"), EMIT_EXPERIMENTAL_TELEMETRY ? "quartz" : null));
     assertions.add(
-        equalTo(stringKey("quartz.scheduler.name"), EXPERIMENTAL_ATTRIBUTES ? "default" : null));
+        equalTo(
+            stringKey("quartz.scheduler.name"), EMIT_EXPERIMENTAL_TELEMETRY ? "default" : null));
 
     getTesting()
         .waitAndAssertTraces(
@@ -141,7 +143,7 @@ public abstract class AbstractQuartzTest {
                         satisfies(stringKey("exception.stacktrace"), value -> value.isNotEmpty()),
                         equalTo(
                             stringKey("quartz.scheduler.name"),
-                            EXPERIMENTAL_ATTRIBUTES ? "default" : null)));
+                            EMIT_EXPERIMENTAL_TELEMETRY ? "default" : null)));
   }
 
   private static Scheduler createScheduler() throws Exception {

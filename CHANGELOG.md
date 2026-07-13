@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### 🛠️ Deprecations
+
+- The `otel.instrumentation.quartz.experimental-span-attributes` configuration property and
+  `QuartzTelemetryBuilder.setCaptureExperimentalSpanAttributes(boolean)` are deprecated and will be
+  removed in 3.0. Use `otel.instrumentation.quartz.emit-experimental-telemetry` and
+  `QuartzTelemetryBuilder.setEmitExperimentalTelemetry(boolean)` instead.
+
 ## Version 2.29.0 (2026-06-19)
 
 This release targets the OpenTelemetry SDK 1.63.0.
