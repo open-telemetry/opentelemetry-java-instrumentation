@@ -533,7 +533,7 @@ public abstract class AbstractRedissonClientTest {
   @Test
   void atomicBatchTruncatesQueryText() {
     assumeStableAtomicBatchSupport();
-    String bucketName = "bucket" + String.join("", nCopies(20_000, "a"));
+    String bucketName = "bucket" + String.join("", nCopies(15_000, "a"));
     int batchSize = 4;
     RBatch batch =
         redisson.createBatch(

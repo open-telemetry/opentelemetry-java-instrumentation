@@ -29,16 +29,12 @@ public class RedissonBatchRequest {
     }
 
     StringBuilder queryText = new StringBuilder();
-    int commandTextLength = 0;
     for (String commandText : queryTexts) {
-      if (queryText.length() > 0) {
-        queryText.append("; ");
-      }
-      queryText.append(commandText);
-      commandTextLength += commandText.length();
-      if (commandTextLength > QUERY_TEXT_LIMIT) {
+      String separator = queryText.length() == 0 ? "" : "; ";
+      if (queryText.length() + separator.length() + commandText.length() > QUERY_TEXT_LIMIT) {
         break;
       }
+      queryText.append(separator).append(commandText);
     }
     return new RedissonBatchRequest(
         operationName,
