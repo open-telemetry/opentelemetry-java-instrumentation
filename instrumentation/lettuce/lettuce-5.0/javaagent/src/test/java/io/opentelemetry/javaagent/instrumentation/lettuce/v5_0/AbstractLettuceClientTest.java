@@ -13,6 +13,7 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.function.BiConsumer;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -58,7 +59,12 @@ abstract class AbstractLettuceClientTest {
 
   protected String embeddedDbUri;
 
-  protected StatefulRedisConnection<String, String> newContainerConnection() {
+  protected static boolean connectionTelemetryEnabled() {
+    return Boolean.getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled");
+  }
+
+  protected void withIsolatedContainer(
+      BiConsumer<StatefulRedisConnection<String, String>, Integer> action) {
     GenericContainer<?> server =
         new GenericContainer<>(CONTAINER_IMAGE)
             .withExposedPorts(6379)
@@ -67,20 +73,22 @@ abstract class AbstractLettuceClientTest {
     server.start();
     cleanup.deferCleanup(server::stop);
 
-    long serverPort = server.getMappedPort(6379);
+    int containerPort = server.getMappedPort(6379);
 
-    RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
+    RedisClient client =
+        RedisClient.create("redis://" + host + ":" + containerPort + "/" + DB_INDEX);
     client.setOptions(CLIENT_OPTIONS);
     cleanup.deferCleanup(client::shutdown);
 
     StatefulRedisConnection<String, String> statefulConnection = client.connect();
     cleanup.deferCleanup(statefulConnection);
 
-    // 1 connect trace
-    testing.waitForTraces(1);
+    if (connectionTelemetryEnabled()) {
+      testing.waitForTraces(1);
+    }
     testing.clearData();
 
-    return statefulConnection;
+    action.accept(statefulConnection, containerPort);
   }
 
   static void shutdown(RedisClient redisClient) {
