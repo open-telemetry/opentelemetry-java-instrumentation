@@ -19,17 +19,17 @@ description = "OpenTelemetry Javaagent"
 group = "io.opentelemetry.javaagent"
 
 // this configuration collects libs that will be placed in the bootstrap classloader
-val bootstrapLibs by configurations.creating {
+val bootstrapLibs = configurations.create("bootstrapLibs") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
 // this configuration collects only required instrumentations and agent machinery
-val baseJavaagentLibs by configurations.creating {
+val baseJavaagentLibs = configurations.create("baseJavaagentLibs") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
 // this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
-val javaagentLibs by configurations.creating {
+val javaagentLibs = configurations.create("javaagentLibs") {
   isCanBeResolved = true
   isCanBeConsumed = false
   extendsFrom(baseJavaagentLibs)
@@ -48,7 +48,7 @@ listOf(baseJavaagentLibs, javaagentLibs).forEach {
   }
 }
 
-val licenseReportDependencies by configurations.creating {
+val licenseReportDependencies = configurations.create("licenseReportDependencies") {
   extendsFrom(bootstrapLibs)
   extendsFrom(baseJavaagentLibs)
 }
@@ -151,7 +151,7 @@ tasks {
     }
   }
 
-  val buildBootstrapLibs by registering(ShadowJar::class) {
+  val buildBootstrapLibs = register<ShadowJar>("buildBootstrapLibs") {
     configurations = listOf(bootstrapLibs)
 
     // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
@@ -162,7 +162,7 @@ tasks {
     archiveFileName.set("bootstrapLibs.jar")
   }
 
-  val relocateBaseJavaagentLibs by registering(ShadowJar::class) {
+  val relocateBaseJavaagentLibs = register<ShadowJar>("relocateBaseJavaagentLibs") {
     configurations = listOf(baseJavaagentLibs)
 
     excludeBootstrapClasses()
@@ -176,7 +176,7 @@ tasks {
     archiveFileName.set("baseJavaagentLibs-relocated.jar")
   }
 
-  val relocateJavaagentLibs by registering(ShadowJar::class) {
+  val relocateJavaagentLibs = register<ShadowJar>("relocateJavaagentLibs") {
     configurations = listOf(javaagentLibs)
 
     excludeBootstrapClasses()
@@ -196,7 +196,7 @@ tasks {
   }
 
   // Includes everything needed for OOTB experience
-  val shadowJar by existing(ShadowJar::class) {
+  val shadowJar = named<ShadowJar>("shadowJar") {
     dependsOn(buildBootstrapLibs)
     from(zipTree(buildBootstrapLibs.get().archiveFile))
 
@@ -220,7 +220,7 @@ tasks {
   }
 
   // Includes only the agent machinery and required instrumentations
-  val baseJavaagentJar by registering(ShadowJar::class) {
+  val baseJavaagentJar = register<ShadowJar>("baseJavaagentJar") {
     dependsOn(buildBootstrapLibs)
     from(zipTree(buildBootstrapLibs.get().archiveFile))
 
@@ -241,7 +241,7 @@ tasks {
     archiveClassifier.set("dontuse")
   }
 
-  val baseJar by configurations.creating {
+  configurations.create("baseJar") {
     isCanBeConsumed = true
     isCanBeResolved = false
   }
@@ -275,11 +275,11 @@ tasks {
     }
   }
 
-  val cleanLicenses by registering(Delete::class) {
+  val cleanLicenses = register<Delete>("cleanLicenses") {
     delete(rootProject.file("licenses"))
   }
 
-  val trimLicenseTrailingWhitespace by registering {
+  val trimLicenseTrailingWhitespace = register<DefaultTask>("trimLicenseTrailingWhitespace") {
     val licenseFile = rootDir.toPath().resolve("licenses/licenses.md")
     val newline = System.lineSeparator()
     doLast {
@@ -295,7 +295,7 @@ tasks {
     }
   }
 
-  val removeLicenseDate by registering {
+  val removeLicenseDate = register<DefaultTask>("removeLicenseDate") {
     // removing the license report date makes it idempotent
     val rootDirPath = rootDir.toPath()
     doLast {

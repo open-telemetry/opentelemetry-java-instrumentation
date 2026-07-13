@@ -110,6 +110,12 @@ public abstract class AbstractThriftTest {
 
   protected abstract CustomService.Iface configure(CustomService.Client client);
 
+  protected abstract TProtocolFactory configureServerInProtocolFactory(
+      TProtocolFactory protocolFactory);
+
+  protected abstract TProtocolFactory configureServerOutProtocolFactory(
+      TProtocolFactory protocolFactory);
+
   protected int startSimpleServer() throws Exception {
     return startSimpleServer(true);
   }
@@ -206,6 +212,8 @@ public abstract class AbstractThriftTest {
     TNonblockingServerSocket transport = new TNonblockingServerSocket(0, 30000);
     TNonblockingServer.Args tnbArgs = new TNonblockingServer.Args(transport);
     tnbArgs.processor(processor);
+    tnbArgs.inputProtocolFactory(configureServerInProtocolFactory(new TBinaryProtocol.Factory()));
+    tnbArgs.outputProtocolFactory(configureServerOutProtocolFactory(new TBinaryProtocol.Factory()));
 
     TServer server = new TNonblockingServer(tnbArgs);
     new Thread(server::serve).start();
@@ -864,5 +872,203 @@ public abstract class AbstractThriftTest {
                 span -> assertClientSpan(span, "withDelay", port).hasParent(trace.getSpan(0)),
                 span -> assertServerSpan(span, "withDelay", port).hasParent(trace.getSpan(1)));
     getTesting().waitAndAssertTraces(traceAssert, traceAssert, traceAssert, traceAssert);
+  }
+
+  @Test
+  void async() throws Exception {
+    // with thrift 0.13 fails on Java 8 due to java.lang.NoSuchMethodError:
+    // java.nio.ByteBuffer.rewind()Ljava/nio/ByteBuffer;
+    assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
+
+    int port = startAsyncServer();
+    CustomService.AsyncIface asyncClient = createAsyncClient(port);
+
+    CompletableFuture<String> completableFuture = new CompletableFuture<>();
+    getTesting()
+        .runWithSpan(
+            "parent",
+            () ->
+                asyncClient.say(
+                    "Async",
+                    "World",
+                    new AsyncMethodCallback<String>() {
+                      @Override
+                      public void onComplete(String response) {
+                        getTesting()
+                            .runWithSpan("callback", () -> completableFuture.complete(response));
+                      }
+
+                      @Override
+                      public void onError(Exception exception) {
+                        completableFuture.completeExceptionally(exception);
+                      }
+                    }));
+
+    assertThat(completableFuture.get(15, SECONDS)).isEqualTo("Say Async World");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
+                    span ->
+                        assertServerSpan(
+                                span, CustomAsyncHandler.class.getName(), "say", port, null)
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void asyncMany() throws Exception {
+    // with thrift 0.13 fails on Java 8 due to java.lang.NoSuchMethodError:
+    // java.nio.ByteBuffer.rewind()Ljava/nio/ByteBuffer;
+    assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
+
+    int port = startAsyncServer();
+
+    List<CompletableFuture<String>> results = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      CustomService.AsyncIface asyncClient = createAsyncClient(port);
+      CompletableFuture<String> completableFuture = new CompletableFuture<>();
+      results.add(completableFuture);
+      getTesting()
+          .runWithSpan(
+              "parent",
+              () ->
+                  asyncClient.withDelay(
+                      1,
+                      new AsyncMethodCallback<String>() {
+                        @Override
+                        public void onComplete(String response) {
+                          getTesting()
+                              .runWithSpan("callback", () -> completableFuture.complete(response));
+                        }
+
+                        @Override
+                        public void onError(Exception exception) {
+                          completableFuture.completeExceptionally(exception);
+                        }
+                      }));
+    }
+    for (CompletableFuture<String> completableFuture : results) {
+      assertThat(completableFuture.get(15, SECONDS)).isEqualTo("delay 1");
+    }
+
+    Consumer<TraceAssert> traceAssert =
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> assertClientSpan(span, "withDelay", port).hasParent(trace.getSpan(0)),
+                span ->
+                    assertServerSpan(
+                            span, CustomAsyncHandler.class.getName(), "withDelay", port, null)
+                        .hasParent(trace.getSpan(1)),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)));
+    getTesting().waitAndAssertTraces(traceAssert, traceAssert, traceAssert, traceAssert);
+  }
+
+  @Test
+  void oneWayAsync() throws Exception {
+    int port = startAsyncServer();
+    CustomService.AsyncIface asyncClient = createAsyncClient(port);
+
+    CompletableFuture<String> completableFuture = new CompletableFuture<>();
+    getTesting()
+        .runWithSpan(
+            "parent",
+            () ->
+                asyncClient.oneWay(
+                    new AsyncMethodCallback<Void>() {
+                      @Override
+                      public void onComplete(Void response) {
+                        getTesting()
+                            .runWithSpan("callback", () -> completableFuture.complete("ok"));
+                      }
+
+                      @Override
+                      public void onError(Exception exception) {
+                        completableFuture.completeExceptionally(exception);
+                      }
+                    }));
+
+    assertThat(completableFuture.get(15, SECONDS)).isEqualTo("ok");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span -> assertClientSpan(span, "oneWay", port).hasParent(trace.getSpan(0)),
+                    span ->
+                        assertServerSpan(
+                                span, CustomAsyncHandler.class.getName(), "oneWay", port, null)
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void asyncWithError() throws Exception {
+    // with thrift 0.13 fails on Java 8 due to java.lang.NoSuchMethodError:
+    // java.nio.ByteBuffer.rewind()Ljava/nio/ByteBuffer;
+    assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
+
+    int port = startAsyncServer();
+    CustomService.AsyncIface asyncClient = createAsyncClient(port);
+
+    CompletableFuture<String> completableFuture = new CompletableFuture<>();
+    getTesting()
+        .runWithSpan(
+            "parent",
+            () ->
+                asyncClient.withError(
+                    new AsyncMethodCallback<String>() {
+                      @Override
+                      public void onComplete(String response) {
+                        completableFuture.complete(response);
+                      }
+
+                      @Override
+                      public void onError(Exception exception) {
+                        getTesting()
+                            .runWithSpan(
+                                "callback",
+                                () -> completableFuture.completeExceptionally(exception));
+                      }
+                    }));
+
+    assertThatThrownBy(() -> completableFuture.get(15, SECONDS))
+        .hasRootCauseInstanceOf(TApplicationException.class);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        assertClientSpan(span, "withError", port, true)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error()),
+                    span ->
+                        assertServerSpan(
+                                span,
+                                CustomAsyncHandler.class.getName(),
+                                "withError",
+                                port,
+                                IllegalStateException.class.getName())
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 }

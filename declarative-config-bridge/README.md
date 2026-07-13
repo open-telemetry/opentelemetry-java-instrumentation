@@ -46,7 +46,7 @@ use common configuration method:
 Let's first look at the yaml file that is used to configure the inferred spans processor:
 
 ```yaml
-file_format: 1.0
+file_format: 1.1
 tracer_provider:
   processors:
     - inferred_spans:

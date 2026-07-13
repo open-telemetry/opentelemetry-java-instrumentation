@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServ
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -26,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.ConnectionFuture;
@@ -35,7 +37,7 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.lettuce.core.codec.Utf8StringCodec;
+import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -54,10 +56,14 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class LettuceAsyncClientTest extends AbstractLettuceClientTest {
@@ -113,7 +119,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     ConnectionFuture<StatefulRedisConnection<String, String>> connectionFuture =
         testConnectionClient.connectAsync(
-            new Utf8StringCodec(), new RedisURI(host, port, 3, SECONDS));
+            StringCodec.UTF8, RedisURI.create("redis://" + host + ":" + port + "?timeout=3s"));
     StatefulRedisConnection<String, String> connection1 = connectionFuture.join();
     cleanup.deferCleanup(() -> shutdown(testConnectionClient));
     cleanup.deferCleanup(connection1);
@@ -144,7 +150,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             () -> {
               ConnectionFuture<StatefulRedisConnection<String, String>> connectionFuture =
                   testConnectionClient.connectAsync(
-                      new Utf8StringCodec(), new RedisURI(host, incorrectPort, 3, SECONDS));
+                      StringCodec.UTF8,
+                      RedisURI.create("redis://" + host + ":" + incorrectPort + "?timeout=3s"));
               connectionFuture.get();
             });
 
@@ -393,8 +400,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   @Test
   void testCommandCompletesExceptionally() {
     // turn off auto flush to complete the command exceptionally manually
-    asyncCommands.setAutoFlushCommands(false);
-    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
+    connection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> connection.setAutoFlushCommands(true));
 
     RedisFuture<Long> redisFuture = asyncCommands.del("key1", "key2");
     boolean completedExceptionally =
@@ -409,7 +416,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           throw new RuntimeException(error);
         });
 
-    asyncCommands.flushCommands();
+    connection.flushCommands();
     Throwable thrown = catchThrowable(redisFuture::get);
 
     await()
@@ -443,8 +450,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   @Test
   void testCancelCommandBeforeItFinishes() {
-    asyncCommands.setAutoFlushCommands(false);
-    cleanup.deferCleanup(() -> asyncCommands.setAutoFlushCommands(true));
+    connection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> connection.setAutoFlushCommands(true));
 
     RedisFuture<Long> redisFuture =
         testing.runWithSpan("parent", () -> asyncCommands.sadd("SKEY", "1", "2"));
@@ -458,12 +465,14 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 }));
 
     boolean cancelSuccess = redisFuture.cancel(true);
-    asyncCommands.flushCommands();
+    connection.flushCommands();
 
     await().untilAsserted(() -> assertThat(cancelSuccess).isTrue());
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
+            // the command span and the user callback span both start asynchronously on
+            // cancellation, so the two sibling spans can appear in any order
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span ->
                     span.hasName("parent")
                         .hasKind(SpanKind.INTERNAL)
@@ -482,6 +491,163 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("deferredFlushScenarios")
+  void deferredFlushCommand(BatchScenario scenario) throws Exception {
+    connection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> connection.setAutoFlushCommands(true));
+
+    List<RedisFuture<?>> futures = new ArrayList<>();
+    for (BatchCommand command : scenario.commands) {
+      futures.add(command.run(asyncCommands));
+    }
+    connection.flushCommands();
+    for (RedisFuture<?> future : futures) {
+      Throwable thrown = catchThrowable(() -> future.get(10, SECONDS));
+      if (thrown != null) {
+        assertThat(thrown.getCause().getClass().getName()).isEqualTo(scenario.errorType);
+      }
+    }
+
+    if (scenario.isEmpty()) {
+      // Empty flush writes no Redis commands, so there is no database client request to report.
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(scenario.operationName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
+                            equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv() ? scenario.errorType : null))));
+  }
+
+  private static Stream<Arguments> deferredFlushScenarios() {
+    return Stream.of(
+        // Empty flush writes no Redis commands.
+        argumentSet("empty", BatchScenario.builder().build()),
+        argumentSet(
+            "single",
+            BatchScenario.builder()
+                .addCommand(commands -> commands.set("batch1", "v1"))
+                .operationName("SET")
+                .queryText("SET batch1 ?")
+                .build()),
+        argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .addCommand(commands -> commands.set("batch1", "v1"))
+                .addCommand(commands -> commands.set("batch2", "v2"))
+                .operationName("PIPELINE SET")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; SET batch2 ?"
+                        : "SET batch1 ?;SET batch2 ?")
+                .batchSize(2)
+                .build()),
+        argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .addCommand(commands -> commands.set("batch1", "v1"))
+                .addCommand(commands -> commands.get("batch1"))
+                .operationName("PIPELINE")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; GET batch1"
+                        : "SET batch1 ?;GET batch1")
+                .batchSize(2)
+                .build()),
+        argumentSet(
+            "earlierFailure",
+            BatchScenario.builder()
+                .addCommand(commands -> commands.configSet("not-a-real-config", "1"))
+                .addCommand(commands -> commands.set("batch-after-error", "v1"))
+                .operationName("PIPELINE")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "CONFIG SET not-a-real-config ?; SET batch-after-error ?"
+                        : "CONFIG SET not-a-real-config ?;SET batch-after-error ?")
+                .batchSize(2)
+                .errorType("io.lettuce.core.RedisCommandExecutionException")
+                .build()));
+  }
+
+  private static class BatchScenario {
+    private final List<BatchCommand> commands;
+    private final String operationName;
+    private final String queryText;
+    private final Long batchSize;
+    private final String errorType;
+
+    private BatchScenario(Builder builder) {
+      this.commands = builder.commands;
+      this.operationName = builder.operationName;
+      this.queryText = builder.queryText;
+      this.batchSize = builder.batchSize;
+      this.errorType = builder.errorType;
+    }
+
+    private static Builder builder() {
+      return new Builder();
+    }
+
+    private boolean isEmpty() {
+      return commands.isEmpty();
+    }
+
+    private static class Builder {
+      private final List<BatchCommand> commands = new ArrayList<>();
+      private String operationName;
+      private String queryText;
+      private Long batchSize;
+      private String errorType;
+
+      private Builder addCommand(BatchCommand command) {
+        commands.add(command);
+        return this;
+      }
+
+      private Builder operationName(String operationName) {
+        this.operationName = operationName;
+        return this;
+      }
+
+      private Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      private Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      private Builder errorType(String errorType) {
+        this.errorType = errorType;
+        return this;
+      }
+
+      private BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
+  }
+
+  private interface BatchCommand {
+    RedisFuture<?> run(RedisAsyncCommands<String, String> commands);
   }
 
   @Test

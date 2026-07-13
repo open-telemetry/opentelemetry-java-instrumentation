@@ -48,7 +48,7 @@ tasks {
   }
 
   // this will be included in javaagent module
-  val extractShadowJarJavaagent by registering(Copy::class) {
+  register<Copy>("extractShadowJarJavaagent") {
     dependsOn(shadowJar)
     from(zipTree(shadowJar.get().archiveFile))
     into("build/extracted/shadow-javaagent")
@@ -57,21 +57,21 @@ tasks {
   }
 
   // this will be included in bootstrap module
-  val extractShadowJarBootstrap by registering(Copy::class) {
+  register<Copy>("extractShadowJarBootstrap") {
     dependsOn(shadowJar)
     from(zipTree(shadowJar.get().archiveFile))
     into("build/extracted/shadow-bootstrap")
     include("io/opentelemetry/javaagent/bootstrap/**")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
-  val testExceptionSignalLogs by registering(Test::class) {
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

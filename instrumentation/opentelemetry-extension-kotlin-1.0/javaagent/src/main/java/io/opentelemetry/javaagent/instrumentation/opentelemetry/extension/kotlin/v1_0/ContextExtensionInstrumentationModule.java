@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ContextExtensionInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ContextExtensionInstrumentationModule extends InstrumentationModule {
 
   public ContextExtensionInstrumentationModule() {
     super("opentelemetry-extension-kotlin", "opentelemetry-extension-kotlin-1.0");
@@ -29,10 +27,5 @@ public class ContextExtensionInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ContextExtensionInstrumentation());
-  }
-
-  @Override
-  public String getModuleGroup() {
-    return "opentelemetry-api-bridge";
   }
 }
