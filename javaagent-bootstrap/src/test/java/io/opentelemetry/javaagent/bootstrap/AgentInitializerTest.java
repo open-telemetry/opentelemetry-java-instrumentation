@@ -28,7 +28,7 @@ class AgentInitializerTest {
     assertThat(System.getProperty("bar")).isEqualTo("b,c");
   }
 
-  // This list of values have been compiled by invoking every binary in ${JAVA_HOME}/bin
+  // This list of values has been compiled by invoking every binary in ${JAVA_HOME}/bin
   @ParameterizedTest
   @ValueSource(
       strings = {

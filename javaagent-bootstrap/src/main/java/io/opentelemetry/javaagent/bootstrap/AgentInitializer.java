@@ -55,7 +55,7 @@ public final class AgentInitializer {
 
     // check if running any JDK tool in $JAVA_HOME/bin, as this is common when setting
     // JAVA_TOOL_OPTIONS or _JAVA_OPTIONS globally, and we don't want to instrument those tools.
-    // opt-in is still possible with an explicit otel.javaagent.enable=true in system properties or
+    // opt-in is still possible with an explicit otel.javaagent.enabled=true in system properties or
     // java agent arguments
     Boolean skipJdkTool =
         doPrivileged(
