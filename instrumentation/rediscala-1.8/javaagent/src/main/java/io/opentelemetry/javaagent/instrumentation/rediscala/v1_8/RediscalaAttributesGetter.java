@@ -38,4 +38,16 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
   public Long getDbOperationBatchSize(RediscalaRequest request) {
     return request.getBatchSize();
   }
+
+  @Nullable
+  @Override
+  public String getServerAddress(RediscalaRequest request) {
+    return request.getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(RediscalaRequest request) {
+    return request.getPort();
+  }
 }
