@@ -27,6 +27,9 @@ import javax.annotation.Nullable;
  * <p>Only properties starting with "otel.instrumentation." are resolved. Others return null (or
  * default value if provided).
  *
+ * @deprecated Use {@link ConfigPropertiesBackedConfigProvider} when bridging {@link
+ *     ConfigProperties} into declarative configuration. This class will be removed in 3.0.
+ *
  * <p>To resolve:
  *
  * <ul>
@@ -49,6 +52,7 @@ import javax.annotation.Nullable;
  *         string_key: value
  * </pre>
  */
+@Deprecated // will be removed in 3.0
 final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
