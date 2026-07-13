@@ -6,7 +6,8 @@
 package io.opentelemetry.instrumentation.jmx.rules;
 
 import static java.util.Collections.emptyList;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -76,7 +77,7 @@ class TargetSystemTest {
   private GenericContainer<?> targetSystem;
   private Collection<GenericContainer<?>> targetDependencies;
 
-  private WeaverContainer weaver;
+  @Nullable private WeaverContainer weaver;
   @Nullable private Consumer<WeaverContainer.WeaverValidationResult> weaverMetricsVerify = null;
 
   @BeforeAll
@@ -136,7 +137,7 @@ class TargetSystemTest {
     if (weaver != null) {
       stop(weaver);
       validateWeaverResultCommon(weaver.getResult());
-      weaverMetricsVerify.accept(weaver.getResult());
+      requireNonNull(weaverMetricsVerify).accept(weaver.getResult());
     }
   }
 
@@ -442,7 +443,7 @@ class TargetSystemTest {
                       if (forwardStub != null) {
                         // forward to another backend if needed
                         try {
-                          forwardStub.export(request).get(10, MILLISECONDS);
+                          forwardStub.export(request).get(1, SECONDS);
                         } catch (InterruptedException | ExecutionException | TimeoutException e) {
                           throw new RuntimeException(e);
                         }

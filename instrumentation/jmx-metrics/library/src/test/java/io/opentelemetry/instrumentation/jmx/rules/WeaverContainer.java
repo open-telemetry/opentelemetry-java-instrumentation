@@ -78,9 +78,9 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
       this.result = OBJECT_MAPPER.readTree(result.toInputStream());
     } catch (IOException e) {
       throw new IllegalStateException(e);
+    } finally {
+      super.stop();
     }
-
-    super.stop();
   }
 
   public WeaverValidationResult getResult() {
