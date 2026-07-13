@@ -244,11 +244,11 @@ public abstract class RedissonRequest {
   public boolean isTransactionCompletion() {
     Object command = getCommand();
     if (command instanceof CommandData) {
-      return isExec((CommandData<?, ?>) command);
+      return isTransactionCompletion((CommandData<?, ?>) command);
     }
     if (command instanceof CommandsData) {
       for (CommandData<?, ?> singleCommand : ((CommandsData) command).getCommands()) {
-        if (isExec(singleCommand)) {
+        if (isTransactionCompletion(singleCommand)) {
           return true;
         }
       }
@@ -256,8 +256,9 @@ public abstract class RedissonRequest {
     return false;
   }
 
-  private static boolean isExec(CommandData<?, ?> command) {
-    return "EXEC".equals(command.getCommand().getName());
+  private static boolean isTransactionCompletion(CommandData<?, ?> command) {
+    String commandName = command.getCommand().getName();
+    return "EXEC".equals(commandName) || "DISCARD".equals(commandName);
   }
 
   @Nullable

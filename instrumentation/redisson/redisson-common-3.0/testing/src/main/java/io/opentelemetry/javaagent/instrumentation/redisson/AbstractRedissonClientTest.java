@@ -91,6 +91,7 @@ public abstract class AbstractRedissonClientTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final String TEST_RECONNECT = "testReconnect";
+  private static final String TEST_SINGLE_CONNECTION = "testSingleConnection";
 
   private final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
@@ -138,6 +139,10 @@ public abstract class AbstractRedissonClientTest {
       // Redis
       // command execution.
       singleServerConfig.setConnectionMinimumIdleSize(0);
+    }
+    if (testInfo.getTags().contains(TEST_SINGLE_CONNECTION)) {
+      singleServerConfig.setConnectionMinimumIdleSize(1);
+      singleServerConfig.setConnectionPoolSize(1);
     }
     try {
       // disable connection ping if it exists
@@ -528,6 +533,30 @@ public abstract class AbstractRedissonClientTest {
     batch.getBucket("batch2").setAsync("v2");
     batch.executeAsync().toCompletableFuture().join();
     assertStableAtomicBatch("MULTI SET", 2L, "SET batch1 ?; SET batch2 ?");
+  }
+
+  @Test
+  @Tag(TEST_SINGLE_CONNECTION)
+  void atomicBatchDiscard() throws ReflectiveOperationException {
+    assumeStableAtomicBatchSupport();
+    try {
+      RBatch.class.getMethod("discard");
+    } catch (NoSuchMethodException ignored) {
+      Assumptions.abort();
+    }
+
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getClass().getMethod("discard").invoke(batch);
+
+    // Verify that DISCARD clears suppression state from the pooled connection.
+    redisson.getBucket("after-discard").get();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET " + address).hasKind(CLIENT).hasNoParent()));
   }
 
   @Test
