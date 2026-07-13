@@ -21,6 +21,9 @@ dependencies {
 
   library("org.apache.hbase:hbase-client:1.4.0")
 
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
+
   compileOnly("org.apache.hbase:hbase-shaded-client:1.4.0")
 
   testImplementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))

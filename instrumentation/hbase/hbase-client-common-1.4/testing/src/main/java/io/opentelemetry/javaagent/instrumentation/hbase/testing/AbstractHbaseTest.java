@@ -104,7 +104,7 @@ public abstract class AbstractHbaseTest {
   protected static final String ROW_3 = "row3";
   private static final String ROW_4 = "row4";
   private static final String SCAN_ROW = "scan-row";
-  private static final String CHECK_MUTATE_ROW = "check-mutate-row";
+  protected static final String CHECK_MUTATE_ROW = "check-mutate-row";
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -123,6 +123,10 @@ public abstract class AbstractHbaseTest {
     return 0;
   }
 
+  protected String putOperation() {
+    return MUTATE;
+  }
+
   protected void checkAndMutate(Table table, byte[] checkedRowKey, RowMutations rowMutations)
       throws IOException {
     table.checkAndMutate(
@@ -139,7 +143,7 @@ public abstract class AbstractHbaseTest {
   }
 
   protected byte[] checkAndMutateMutatedRowKey() {
-    return checkAndMutateCheckedRowKey();
+    return Bytes.toBytes(ROW_3);
   }
 
   private static String getHostName() {
@@ -255,7 +259,8 @@ public abstract class AbstractHbaseTest {
       table.put(put);
     }
     testing()
-        .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
+        .waitAndAssertTraces(
+            traceAssertConsumer(TABLE_NAME, putOperation(), REGION_SERVER_PORT, true));
   }
 
   @Test

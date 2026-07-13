@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.getTableName;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetRequestAndContext;
@@ -27,6 +28,7 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.hadoop.hbase.protobuf.generated.ClientProtos;
 import org.apache.hadoop.hbase.security.User;
 
 class AbstractRpcClientInstrumentation implements TypeInstrumentation {
@@ -62,16 +64,26 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static RequestAndContext onEnter(
         @Advice.Argument(0) Object md,
+        @Advice.Argument(2) Object param,
         @Advice.Argument(4) User ticket,
         @Advice.Argument(5) InetSocketAddress addr) {
+      String operation = methodDescriptorName(md);
+      Long batchSize = null;
+      if (emitStableDatabaseSemconv() && param instanceof ClientProtos.MultiRequest) {
+        HbaseBatchMetadata batchMetadata =
+            HbaseBatchMetadata.create((ClientProtos.MultiRequest) param);
+        operation = batchMetadata.getOperation();
+        batchSize = batchMetadata.getOperationBatchSize();
+      }
+
       HbaseRequest request =
           HbaseRequest.create(
-              methodDescriptorName(md),
+              operation,
               getTableName(),
               ticket.getName(),
               addr.getHostString(),
               addr.getPort(),
-              0L);
+              batchSize);
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;

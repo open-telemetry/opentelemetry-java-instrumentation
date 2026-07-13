@@ -57,14 +57,4 @@ class HbaseClient20Test extends AbstractHbaseTest {
         .ifMatches(CompareOperator.EQUAL, Bytes.toBytes("col1_val_1"))
         .thenMutate(rowMutations);
   }
-
-  @Override
-  protected byte[] checkAndMutateCheckedRowKey() {
-    return Bytes.toBytes(ROW_1);
-  }
-
-  @Override
-  protected byte[] checkAndMutateMutatedRowKey() {
-    return Bytes.toBytes(ROW_3);
-  }
 }
