@@ -75,6 +75,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
     String greeting = "TESTING TESTING 123!";
     producer.send(new ProducerRecord<>(STREAM_PENDING, 10, greeting));
 
+    awaitUntilConsumerIsReady();
     // check that the message was received
     ConsumerRecords<Integer, String> records = poll(Duration.ofSeconds(10));
     Headers receivedHeaders = null;
@@ -104,6 +105,8 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_SYSTEM, KAFKA),
                             equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                             equalTo(MESSAGING_OPERATION, "publish"),
+                            satisfies(
+                                stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()),
                             equalTo(stringKey("messaging.client_id"), "producer-1"),
                             satisfies(
                                 MESSAGING_DESTINATION_PARTITION_ID,
@@ -132,6 +135,8 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                               equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                               equalTo(stringKey("asdf"), "testing")));
+                  assertions.add(
+                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                   if (EXPERIMENTAL_ATTRIBUTES) {
                     assertions.add(
                         satisfies(
@@ -158,6 +163,8 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_SYSTEM, KAFKA),
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          satisfies(
+                              stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()),
                           satisfies(
                               stringKey("messaging.client_id"),
                               val -> val.isInstanceOf(String.class)),
@@ -188,6 +195,8 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                               equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                               equalTo(longKey("testing"), 123)));
+                  assertions.add(
+                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                   if (EXPERIMENTAL_ATTRIBUTES) {
                     assertions.add(
                         satisfies(

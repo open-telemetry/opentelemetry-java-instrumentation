@@ -22,22 +22,54 @@ public final class KafkaProducerRequest {
   private final ProducerRecord<?, ?> record;
   @Nullable private final String clientId;
   @Nullable private final String bootstrapServers;
+  @Nullable private final String clusterId;
+  // Kept only when constructed from a live Producer so onEnd() can retry getClusterId() after
+  // the first send() has triggered the lazy metadata fetch. Null for the other create() overloads.
+  @Nullable private final Producer<?, ?> producer;
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      Producer<?, ?> producer) {
+    return new KafkaProducerRequest(
+        record, clientId, bootstrapServers, KafkaUtil.getClusterId(producer), producer);
+  }
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, Producer<?, ?> producer, @Nullable String bootstrapServers) {
-    return create(record, extractClientId(producer), bootstrapServers);
+    return new KafkaProducerRequest(
+        record,
+        extractClientId(producer),
+        bootstrapServers,
+        KafkaUtil.getClusterId(producer),
+        producer);
   }
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers);
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, null, null);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable String clusterId) {
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, clusterId, null);
   }
 
   private KafkaProducerRequest(
-      ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable String clusterId,
+      @Nullable Producer<?, ?> producer) {
     this.record = record;
     this.clientId = clientId;
     this.bootstrapServers = bootstrapServers;
+    this.clusterId = clusterId;
+    this.producer = producer;
   }
 
   public ProducerRecord<?, ?> getRecord() {
@@ -52,6 +84,16 @@ public final class KafkaProducerRequest {
   @Nullable
   public String getBootstrapServers() {
     return bootstrapServers;
+  }
+
+  @Nullable
+  public String getClusterId() {
+    return clusterId;
+  }
+
+  @Nullable
+  public Producer<?, ?> getProducer() {
+    return producer;
   }
 
   @Nullable

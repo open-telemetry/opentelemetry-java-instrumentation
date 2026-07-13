@@ -116,6 +116,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                           equalTo(MESSAGING_OPERATION, "publish"),
                           satisfies(
+                              stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()),
+                          satisfies(
                               stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID,
@@ -140,6 +142,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             satisfies(
                                 stringKey("messaging.client_id"), val -> val.endsWith("consumer")),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+                assertions.add(
+                    satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                 if (testLatestDeps()) {
                   assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
                 }
@@ -167,6 +171,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                             equalTo(stringKey("asdf"), "testing")));
 
+                assertions.add(
+                    satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                 if (EXPERIMENTAL_ATTRIBUTES) {
                   assertions.add(
                       satisfies(
@@ -195,6 +201,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                           equalTo(MESSAGING_OPERATION, "publish"),
                           satisfies(
+                              stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()),
+                          satisfies(
                               stringKey("messaging.client_id"), val -> val.endsWith("producer")),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID,
@@ -220,6 +228,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                                   stringKey("messaging.client_id"),
                                   val -> val.startsWith("consumer")),
                               equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+                  assertions.add(
+                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                   if (testLatestDeps()) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
                   }
@@ -247,6 +257,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                               equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                               equalTo(longKey("testing"), 123)));
+                  assertions.add(
+                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                   if (EXPERIMENTAL_ATTRIBUTES) {
                     assertions.add(
                         satisfies(

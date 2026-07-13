@@ -69,6 +69,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                                 equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
+                                    stringKey("messaging.kafka.cluster.id"),
+                                    val -> val.isNotEmpty()),
+                                satisfies(
                                     stringKey("messaging.client_id"),
                                     val -> val.startsWith("producer")),
                                 satisfies(
@@ -86,6 +89,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(MESSAGING_SYSTEM, "kafka"),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                                 equalTo(MESSAGING_OPERATION, "process"),
+                                satisfies(
+                                    stringKey("messaging.kafka.cluster.id"),
+                                    val -> val.isNotEmpty()),
                                 satisfies(
                                     MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
                                 satisfies(
@@ -116,16 +122,19 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
             });
 
     List<AttributeAssertion> processAttributes =
-        asList(
-            equalTo(MESSAGING_SYSTEM, "kafka"),
-            equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-            equalTo(MESSAGING_OPERATION, "process"),
-            satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
-            satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-            satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
-            equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-            equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
-            satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")));
+        new ArrayList<>(
+            asList(
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
+                equalTo(MESSAGING_OPERATION, "process"),
+                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
+                equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer"))));
+    processAttributes.add(
+        3, satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
 
     testing()
         .waitAndAssertTraces(
@@ -142,6 +151,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                       equalTo(MESSAGING_SYSTEM, "kafka"),
                                       equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                                       equalTo(MESSAGING_OPERATION, "publish"),
+                                      satisfies(
+                                          stringKey("messaging.kafka.cluster.id"),
+                                          val -> val.isNotEmpty()),
                                       satisfies(
                                           stringKey("messaging.client_id"),
                                           val -> val.startsWith("producer")),
@@ -221,6 +233,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(MESSAGING_OPERATION, "publish"),
                               satisfies(
+                                  stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()),
+                              satisfies(
                                   stringKey("messaging.client_id"),
                                   val -> val.startsWith("producer")),
                               satisfies(
@@ -238,6 +252,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(MESSAGING_SYSTEM, "kafka"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(MESSAGING_OPERATION, "publish"),
+                              satisfies(
+                                  stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()),
                               satisfies(
                                   stringKey("messaging.client_id"),
                                   val -> val.startsWith("producer")),
@@ -266,6 +282,9 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(MESSAGING_SYSTEM, "kafka"),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                                 equalTo(MESSAGING_OPERATION, "process"),
+                                satisfies(
+                                    stringKey("messaging.kafka.cluster.id"),
+                                    val -> val.isNotEmpty()),
                                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
                                 satisfies(
                                     stringKey("messaging.client_id"),
@@ -290,13 +309,16 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     List<AttributeAssertion> processAttributes =
-        asList(
-            equalTo(MESSAGING_SYSTEM, "kafka"),
-            equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
-            equalTo(MESSAGING_OPERATION, "process"),
-            equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-            satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
-            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+        new ArrayList<>(
+            asList(
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
+                equalTo(MESSAGING_OPERATION, "process"),
+                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
+                satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
+                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+    processAttributes.add(
+        3, satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
 
     testing()
         .waitAndAssertSortedTraces(
@@ -312,6 +334,8 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                               equalTo(MESSAGING_SYSTEM, "kafka"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                               equalTo(MESSAGING_OPERATION, "publish"),
+                              satisfies(
+                                  stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()),
                               satisfies(
                                   stringKey("messaging.client_id"),
                                   val -> val.startsWith("producer")),

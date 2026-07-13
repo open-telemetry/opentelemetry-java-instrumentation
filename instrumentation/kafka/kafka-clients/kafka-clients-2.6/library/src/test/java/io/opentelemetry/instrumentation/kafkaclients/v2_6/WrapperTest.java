@@ -84,7 +84,8 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
-                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders)),
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(testHeaders, testExperimental)),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
@@ -116,6 +117,8 @@ class WrapperTest extends AbstractWrapperTest {
     }
     if (testExperimental) {
       assertions.add(
+          satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+      assertions.add(
           satisfies(
               stringKey("messaging.kafka.bootstrap.servers"),
               val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
@@ -143,12 +146,15 @@ class WrapperTest extends AbstractWrapperTest {
     }
     if (testExperimental) {
       assertions.add(
+          satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+      assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }
     return assertions;
   }
 
-  protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
+  protected static List<AttributeAssertion> receiveAttributes(
+      boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -158,6 +164,10 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+    if (testExperimental) {
+      assertions.add(
+          satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    }
     if (testHeaders) {
       assertions.add(
           equalTo(

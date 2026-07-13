@@ -55,6 +55,7 @@ final class KafkaConsumerAttributesExtractor
     }
 
     attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, request.getConsumerGroup());
+    attributes.put(KafkaClusterId.ATTRIBUTE_KEY, request.getClusterId());
   }
 
   private static boolean canSerialize(Class<?> keyClass) {

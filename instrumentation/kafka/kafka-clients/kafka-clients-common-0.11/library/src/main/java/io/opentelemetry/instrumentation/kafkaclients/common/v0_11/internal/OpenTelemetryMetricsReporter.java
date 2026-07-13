@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
+import org.apache.kafka.common.ClusterResource;
+import org.apache.kafka.common.ClusterResourceListener;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
@@ -35,7 +37,8 @@ import org.apache.kafka.common.metrics.MetricsReporter;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class OpenTelemetryMetricsReporter implements MetricsReporter {
+public final class OpenTelemetryMetricsReporter
+    implements MetricsReporter, ClusterResourceListener {
 
   public static final String CONFIG_KEY_OPENTELEMETRY_SUPPLIER = "opentelemetry.supplier";
   public static final String CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME =
@@ -46,6 +49,8 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
   @Nullable private static volatile Listener listener;
 
   @Nullable private volatile Meter meter;
+  // Populated by Kafka via ClusterResourceListener once the cluster metadata is first resolved.
+  @Nullable private volatile String clusterId;
   private final Object lock = new Object();
 
   @GuardedBy("lock")
@@ -86,7 +91,7 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
     }
 
     RegisteredObservable registeredObservable =
-        KafkaMetricRegistry.getRegisteredObservable(currentMeter, metric);
+        KafkaMetricRegistry.getRegisteredObservable(currentMeter, metric, () -> clusterId);
     if (registeredObservable == null) {
       logger.log(FINEST, "Metric changed but cannot map to instrument: {0}", metric.metricName());
       return;
@@ -137,6 +142,25 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
   @Override
   public void close() {
     closeAllInstruments();
+  }
+
+  // Kafka invokes this once the cluster metadata is first resolved (KIP-78). The id is read from
+  // the client's own metadata, so no extra broker connection is opened.
+  @Override
+  public void onUpdate(ClusterResource clusterResource) {
+    if (clusterResource == null) {
+      return;
+    }
+    String id = clusterResource.clusterId();
+    if (id == null || id.isEmpty()) {
+      return;
+    }
+    synchronized (lock) {
+      if (id.equals(clusterId)) {
+        return;
+      }
+      clusterId = id;
+    }
   }
 
   private void closeAllInstruments() {

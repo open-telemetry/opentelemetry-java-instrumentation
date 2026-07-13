@@ -175,6 +175,8 @@ public abstract class AbstractVertxKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(
@@ -206,6 +208,8 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(MESSAGING_OPERATION, operation),
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (hasConsumerGroup()) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
@@ -223,6 +227,8 @@ public abstract class AbstractVertxKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));

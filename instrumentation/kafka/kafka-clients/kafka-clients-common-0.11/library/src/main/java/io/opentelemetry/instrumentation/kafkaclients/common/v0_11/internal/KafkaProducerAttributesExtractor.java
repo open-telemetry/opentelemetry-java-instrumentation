@@ -41,6 +41,7 @@ final class KafkaProducerAttributesExtractor
     if (request.getRecord().value() == null) {
       attributes.put(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
+    attributes.put(KafkaClusterId.ATTRIBUTE_KEY, request.getClusterId());
   }
 
   private static boolean canSerialize(Class<?> keyClass) {
@@ -66,6 +67,11 @@ final class KafkaProducerAttributesExtractor
       if (emitOldMessagingSemconv()) {
         attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, recordMetadata.offset());
       }
+    }
+    // Producer fetches metadata lazily on the first send(). If cluster id was null at span
+    // start (before send() ran), retry here — send() will have populated metadata by now.
+    if (request.getClusterId() == null && request.getProducer() != null) {
+      attributes.put(KafkaClusterId.ATTRIBUTE_KEY, KafkaUtil.getClusterId(request.getProducer()));
     }
   }
 }

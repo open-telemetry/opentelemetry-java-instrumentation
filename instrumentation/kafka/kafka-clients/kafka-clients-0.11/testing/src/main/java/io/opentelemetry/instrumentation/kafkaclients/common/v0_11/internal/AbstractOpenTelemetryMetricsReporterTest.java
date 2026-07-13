@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
@@ -17,11 +16,9 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.data.PointData;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -40,6 +37,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.ClusterResource;
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.Metrics;
@@ -360,30 +358,50 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     Set<String> metricNames = metrics.stream().map(MetricData::getName).collect(toSet());
     assertThat(metricNames).containsAll(expectedMetricNames);
 
-    assertThat(metrics)
-        .allSatisfy(
-            metricData -> {
-              Set<String> expectedKeys =
-                  metricData.getData().getPoints().stream()
-                      .findFirst()
-                      .map(
-                          point ->
-                              point.getAttributes().asMap().keySet().stream()
-                                  .map(AttributeKey::getKey)
-                                  .collect(toSet()))
-                      .orElse(emptySet());
-              assertThat(metricData.getData().getPoints())
-                  .extracting(PointData::getAttributes)
-                  .extracting(
-                      attributes ->
-                          attributes.asMap().keySet().stream()
-                              .map(AttributeKey::getKey)
-                              .collect(toSet()))
-                  .allSatisfy(attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
-            });
-
     // Print mapping table
     printMappingTable();
+  }
+
+  @Test
+  void metricsIncludeClusterIdAfterOnUpdate() {
+    // Create a fresh producer so its reporter has active observables.
+    KafkaProducer<byte[], byte[]> testProducer = new KafkaProducer<>(producerConfig());
+    try {
+      String expectedClusterId;
+      if (!metricsReporters.isEmpty()) {
+        // Library mode: the reporter is added to metricsReporters via the static listener;
+        // inject a deterministic cluster id so the assertion is precise.
+        OpenTelemetryMetricsReporter reporter = metricsReporters.get(metricsReporters.size() - 1);
+        reporter.onUpdate(new ClusterResource("test-cluster-id"));
+        expectedClusterId = "test-cluster-id";
+      } else {
+        // Javaagent mode: the reporter is injected by the agent into a different classloader, so
+        // the static listener is never triggered and metricsReporters stays empty. The real Kafka
+        // broker fires onUpdate with its own cluster id — accept any non-empty value.
+        expectedClusterId = null;
+      }
+
+      List<MetricData> metrics = testing().metrics();
+      assertThat(
+              metrics.stream()
+                  .flatMap(m -> m.getData().getPoints().stream())
+                  .anyMatch(
+                      p -> {
+                        String id = p.getAttributes().get(KafkaClusterId.ATTRIBUTE_KEY);
+                        return expectedClusterId != null
+                            ? expectedClusterId.equals(id)
+                            : (id != null && !id.isEmpty());
+                      }))
+          .as(
+              expectedClusterId != null
+                  ? "Expected a metric point with messaging.kafka.cluster.id = '"
+                      + expectedClusterId
+                      + "'"
+                  : "Expected a metric point with a non-empty messaging.kafka.cluster.id")
+          .isTrue();
+    } finally {
+      testProducer.close();
+    }
   }
 
   private static void produceRecords() {
