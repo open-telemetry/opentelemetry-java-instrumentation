@@ -119,7 +119,7 @@ class JvmTest extends TargetSystemTest {
                     metric
                         .hasDescription("Number of classes loaded since JVM start.")
                         .hasUnit("{class}")
-                        .isUpDownCounter()
+                        .isCounter()
                         .hasDataPointsWithoutAttributes())
             .add(
                 "jvm.class.unloaded",
@@ -127,7 +127,7 @@ class JvmTest extends TargetSystemTest {
                     metric
                         .hasDescription("Number of classes unloaded since JVM start.")
                         .hasUnit("{class}")
-                        .isUpDownCounter()
+                        .isCounter()
                         .hasDataPointsWithoutAttributes())
             .add(
                 "jvm.class.count",

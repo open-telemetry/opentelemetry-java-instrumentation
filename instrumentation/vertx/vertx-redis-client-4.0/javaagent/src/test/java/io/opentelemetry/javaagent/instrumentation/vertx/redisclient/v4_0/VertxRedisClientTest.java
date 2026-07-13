@@ -28,6 +28,7 @@ import static java.util.Collections.nCopies;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -235,44 +236,55 @@ class VertxRedisClientTest {
 
   private static Stream<Arguments> batchScenarios() {
     String longBatchKey = String.join("", nCopies(1020, "x"));
+    int batchSize = 33;
+    int truncatedQueryTextCommandCount = 31;
     // No empty scenario: Vert.x Redis never completes client.batch(emptyList()),
     // and times out before asserting instrumentation.
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "single",
             BatchScenario.builder()
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .operationName("SET")
                 .queryText("SET batch1 ?")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .addRequest(Request.cmd(Command.SET).arg("batch2").arg("v2"))
                 .operationName("PIPELINE SET")
-                .queryText("SET batch1 ?;SET batch2 ?")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; SET batch2 ?"
+                        : "SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .addRequest(Request.cmd(Command.GET).arg("batch1"))
                 .operationName("PIPELINE")
-                .queryText("SET batch1 ?;GET batch1")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; GET batch1"
+                        : "SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
-            "large",
+        argumentSet(
+            "truncatedQueryText",
             BatchScenario.builder()
                 .requests(
                     Stream.generate(() -> Request.cmd(Command.GET).arg(longBatchKey))
-                        .limit(33)
+                        .limit(batchSize)
                         .collect(toList()))
                 .operationName("PIPELINE GET")
-                .queryText(String.join(";", nCopies(31, "GET " + longBatchKey)))
-                .batchSize(33)
+                .queryText(
+                    String.join(
+                        emitStableDatabaseSemconv() ? "; " : ";",
+                        nCopies(truncatedQueryTextCommandCount, "GET " + longBatchKey)))
+                .batchSize(batchSize)
                 .build()));
   }
 

@@ -95,6 +95,12 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         lineExcludePattern = "= AttributeKey.",
         filePattern = "Test\\.java$"
       ),
+      Rule(
+        "Arguments",
+        "org.junit.jupiter.params.provider.Arguments",
+        "argumentSet",
+        filePattern = "Test\\.java$",
+      ),
     )
 
     var content = input

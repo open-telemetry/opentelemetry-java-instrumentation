@@ -193,6 +193,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
       if (rawQueryTexts.isEmpty()) {
         if (emitStableDatabaseSemconv()) {
+          if (isBatch(request)) {
+            return "BATCH";
+          }
           return computeSpanNameStable(getter, request, null, null, null);
         }
         String dbName = getter.getDbName(request);
@@ -240,7 +243,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     private boolean isBatch(REQUEST request) {
       Long batchSize = getter.getDbOperationBatchSize(request);
-      return batchSize != null && batchSize > 1;
+      // Empty batches with size 0 are batches; single-statement batches are reported as non-batch.
+      return batchSize != null && batchSize != 1;
     }
   }
 

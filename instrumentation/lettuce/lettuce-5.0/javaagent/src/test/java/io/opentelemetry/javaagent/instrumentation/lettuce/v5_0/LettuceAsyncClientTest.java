@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.ConnectionFuture;
@@ -511,6 +512,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     }
 
     if (scenario.isEmpty()) {
+      // Empty flush writes no Redis commands, so there is no database client request to report.
       assertThat(testing.spans()).isEmpty();
       return;
     }
@@ -535,40 +537,49 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   private static Stream<Arguments> deferredFlushScenarios() {
     return Stream.of(
-        // empty batch doesn't produce any span
-        Arguments.argumentSet("empty", BatchScenario.builder().build()),
-        Arguments.argumentSet(
+        // Empty flush writes no Redis commands.
+        argumentSet("empty", BatchScenario.builder().build()),
+        argumentSet(
             "single",
             BatchScenario.builder()
                 .addCommand(commands -> commands.set("batch1", "v1"))
                 .operationName("SET")
                 .queryText("SET batch1 ?")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .addCommand(commands -> commands.set("batch1", "v1"))
                 .addCommand(commands -> commands.set("batch2", "v2"))
                 .operationName("PIPELINE SET")
-                .queryText("SET batch1 ?;SET batch2 ?")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; SET batch2 ?"
+                        : "SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
                 .addCommand(commands -> commands.set("batch1", "v1"))
                 .addCommand(commands -> commands.get("batch1"))
                 .operationName("PIPELINE")
-                .queryText("SET batch1 ?;GET batch1")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; GET batch1"
+                        : "SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "earlierFailure",
             BatchScenario.builder()
                 .addCommand(commands -> commands.configSet("not-a-real-config", "1"))
                 .addCommand(commands -> commands.set("batch-after-error", "v1"))
                 .operationName("PIPELINE")
-                .queryText("CONFIG SET not-a-real-config ?;SET batch-after-error ?")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "CONFIG SET not-a-real-config ?; SET batch-after-error ?"
+                        : "CONFIG SET not-a-real-config ?;SET batch-after-error ?")
                 .batchSize(2)
                 .errorType("io.lettuce.core.RedisCommandExecutionException")
                 .build()));

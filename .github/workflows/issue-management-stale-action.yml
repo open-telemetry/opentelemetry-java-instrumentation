@@ -69,3 +69,13 @@ jobs:
             This PR has been labeled as stale due to lack of activity.
             It will be automatically closed if there is no further activity over the next 14 days.
           operations-per-run: 1000
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - stale
+    if: always()
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@7c49790392da7de86fdb4bb968446f9cb8461eb8 # v0.3.1
+    with:
+      success: ${{ needs.stale.result == 'success' }}

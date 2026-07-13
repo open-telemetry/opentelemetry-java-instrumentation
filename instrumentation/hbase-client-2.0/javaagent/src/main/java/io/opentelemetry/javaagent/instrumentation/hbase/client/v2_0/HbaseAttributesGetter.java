@@ -64,6 +64,12 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
 
   @Nullable
   @Override
+  public Long getDbOperationBatchSize(HbaseRequest hbaseRequest) {
+    return hbaseRequest.getOperationBatchSize();
+  }
+
+  @Nullable
+  @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       HbaseRequest request, @Nullable Void unused) {
     if (request.getHost() == null || request.getPort() == null) {
