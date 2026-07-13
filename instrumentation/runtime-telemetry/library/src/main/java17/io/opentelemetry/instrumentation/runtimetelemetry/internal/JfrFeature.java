@@ -27,6 +27,7 @@ public enum JfrFeature {
   MEMORY_POOL_METRICS(/* overlapsWithJmx= */ true, /* experimental= */ false),
   NETWORK_IO_METRICS(/* overlapsWithJmx= */ false, /* experimental= */ true),
   THREAD_METRICS(/* overlapsWithJmx= */ true, /* experimental= */ false),
+  VIRTUAL_THREAD_METRICS(/* overlapsWithJmx= */ false, /* experimental= */ true),
   ;
 
   private final boolean overlapsWithJmx;

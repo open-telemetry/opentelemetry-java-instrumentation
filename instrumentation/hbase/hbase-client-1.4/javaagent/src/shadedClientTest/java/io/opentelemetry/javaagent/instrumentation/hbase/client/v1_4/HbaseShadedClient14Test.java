@@ -39,11 +39,6 @@ class HbaseShadedClient14Test extends AbstractHbaseTest {
   }
 
   @Override
-  protected String putOperation() {
-    return MULTI;
-  }
-
-  @Override
   protected int getTimeoutClientRetriesNumber() {
     return 1;
   }

@@ -2317,6 +2317,42 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
       - name: messaging.destination.name
         type: STRING
       - name: messaging.message.id
@@ -5066,6 +5102,39 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+      - name: url.full
+        type: STRING
 - name: grails-3.0
   display_name: Grails
   description: |
@@ -5788,6 +5857,60 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.hbase:hbase-client:[2.0.0, 2.5.0)
+  telemetry:
+  - when: default
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.name
+        type: STRING
+      - name: db.operation
+        type: STRING
+      - name: db.system
+        type: STRING
+      - name: db.user
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=database
+    metrics:
+    - name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: helidon-4.3
   display_name: Helidon
   description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -6247,6 +6370,43 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+      - name: url.full
+        type: STRING
 - name: hystrix-1.4
   display_name: Netflix Hystrix
   description: This instrumentation enables spans for Hystrix command executions and
@@ -6534,6 +6694,45 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
 - name: java-http-server
@@ -8422,6 +8621,45 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+      - name: url.full
+        type: STRING
 - name: jsf-mojarra-1.2
   display_name: Eclipse Mojarra
   description: |
@@ -8691,6 +8929,48 @@ libraries:
         type: LONG
       - name: messaging.kafka.message.tombstone
         type: BOOLEAN
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.semconv-stability.opt-in=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.client_id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.message.tombstone
+        type: BOOLEAN
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.message.body.size
+        type: LONG
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.client_id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.message.tombstone
+        type: BOOLEAN
+      - name: messaging.kafka.offset
+        type: LONG
       - name: messaging.operation
         type: STRING
       - name: messaging.system
@@ -9539,6 +9819,39 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
 - name: lettuce-4.0
@@ -10862,6 +11175,93 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: http.server.request.duration
+      description: Duration of HTTP server requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: url.scheme
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+      - name: url.full
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
 - name: netty-4.0
   display_name: Netty HTTP codec
   description: |
@@ -10997,6 +11397,93 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: http.server.request.duration
+      description: Duration of HTTP server requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: url.scheme
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
     - span_kind: SERVER
@@ -11165,6 +11652,93 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: http.server.request.duration
+      description: Duration of HTTP server requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: url.scheme
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
     - span_kind: SERVER
@@ -12515,6 +13089,12 @@ libraries:
         type: STRING
       - name: scheduling.powerjob.job.type
         type: STRING
+  - when: otel.semconv-stability.opt-in=code
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: code.function.name
+        type: STRING
 - name: pulsar-2.8
   display_name: Apache Pulsar Client
   description: |
@@ -13240,6 +13820,43 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+      - name: url.full
+        type: STRING
 - name: reactor-3.1
   display_name: Reactor
   description: |
@@ -13461,6 +14078,51 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.request.resend_count
+        type: LONG
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
 - name: rediscala-1.8
@@ -16158,6 +16820,157 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.thrift:libthrift:[0.13.0,)
+  telemetry:
+  - when: default
+    metrics:
+    - name: rpc.client.duration
+      description: The duration of an outbound RPC invocation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: ms
+      attributes:
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: rpc.server.duration
+      description: The duration of an inbound RPC invocation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: ms
+      attributes:
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: SERVER
+      attributes:
+      - name: network.local.address
+        type: STRING
+      - name: network.local.port
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=rpc
+    metrics:
+    - name: rpc.client.call.duration
+      description: Measures the duration of outbound remote procedure calls (RPC).
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: rpc.server.call.duration
+      description: Measures the duration of inbound remote procedure calls (RPC).
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: network.local.address
+        type: STRING
+      - name: network.local.port
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: tomcat-7.0
   display_name: Apache Tomcat
   description: This instrumentation enables HTTP server spans and HTTP server metrics

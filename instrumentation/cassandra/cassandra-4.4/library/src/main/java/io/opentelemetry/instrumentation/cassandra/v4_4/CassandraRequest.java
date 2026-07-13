@@ -22,12 +22,6 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class CassandraRequest {
 
-  @Deprecated
-  public static CassandraRequest create(
-      Session session, String queryText, boolean parameterizedQuery) {
-    return create(session, singleton(queryText), parameterizedQuery, null, null);
-  }
-
   static CassandraRequest create(Session session, String queryText) {
     return create(session, singleton(queryText), false, null, null);
   }
@@ -110,42 +104,14 @@ public abstract class CassandraRequest {
     return false;
   }
 
-  /**
-   * @deprecated this method will be reduced to package-private visibility
-   */
-  @Deprecated
-  public abstract Session getSession();
+  abstract Session getSession();
 
   abstract Collection<String> getQueryTexts();
-
-  /**
-   * Returns the raw query text.
-   *
-   * @deprecated use {@link #getQueryTexts()} instead
-   */
-  @Deprecated
-  public String getQueryText() {
-    if (getBatchSize() != null) {
-      // Preserve previous public API behavior: BatchStatement query text was not captured.
-      return "";
-    }
-    return getQueryTexts().iterator().next();
-  }
 
   abstract boolean allQueriesParameterized();
 
   @Nullable
   abstract List<Boolean> mixedParameterizedQueries();
-
-  /**
-   * Returns whether all queries in this request are parameterized.
-   *
-   * @deprecated use {@link #isParameterizedQuery(int)} instead
-   */
-  @Deprecated
-  public boolean isParameterizedQuery() {
-    return allQueriesParameterized();
-  }
 
   boolean isParameterizedQuery(int queryIndex) {
     List<Boolean> mixedParameterizedQueries = mixedParameterizedQueries();

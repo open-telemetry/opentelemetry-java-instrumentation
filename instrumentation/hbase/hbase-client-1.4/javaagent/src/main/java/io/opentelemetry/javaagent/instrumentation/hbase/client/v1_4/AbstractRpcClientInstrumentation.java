@@ -70,7 +70,8 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
               getTableName(),
               ticket.getName(),
               addr.getHostString(),
-              addr.getPort());
+              addr.getPort(),
+              0L);
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
