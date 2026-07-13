@@ -103,10 +103,8 @@ public final class JavaagentDistributionAccessCustomizerProvider
         javaagent = new DistributionPropertyModel();
         distribution.withAdditionalProperty("javaagent", javaagent);
       }
-      // when v3 preview is enabled we enable indy by default when not explicitly set
-      if (javaagent.getAdditionalProperties().get("indy/development") == null) {
-        javaagent.withAdditionalProperty("indy/development", true);
-      }
+      // when v3 preview is enabled, force indy enabled
+      javaagent.withAdditionalProperty("indy/development", true);
     }
 
     if (distribution != null) {
