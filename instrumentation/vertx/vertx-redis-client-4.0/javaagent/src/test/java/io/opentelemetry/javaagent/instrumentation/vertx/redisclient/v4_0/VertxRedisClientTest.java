@@ -228,6 +228,7 @@ class VertxRedisClientTest {
 
     assertThat(future.isComplete()).isFalse();
     assertThat(future).isInstanceOf(Promise.class);
+    assertThat(future).isInstanceOf(FutureInternal.class);
     assertThat(((FutureInternal<?>) future).context()).isNotNull();
 
     // Complete the otherwise permanently pending Vert.x promise only to clean up the test.
