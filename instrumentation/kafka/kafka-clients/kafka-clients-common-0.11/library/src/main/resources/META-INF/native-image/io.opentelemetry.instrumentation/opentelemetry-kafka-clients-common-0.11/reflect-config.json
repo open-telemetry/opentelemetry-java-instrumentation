@@ -1,0 +1,23 @@
+[
+  {
+    "name": "org.apache.kafka.clients.producer.KafkaProducer",
+    "condition": {
+      "typeReachable": "org.apache.kafka.clients.producer.KafkaProducer"
+    },
+    "allDeclaredFields": true
+  },
+  {
+    "name": "org.apache.kafka.clients.consumer.KafkaConsumer",
+    "condition": {
+      "typeReachable": "org.apache.kafka.clients.consumer.KafkaConsumer"
+    },
+    "allDeclaredFields": true
+  },
+  {
+    "name": "org.apache.kafka.clients.consumer.LegacyKafkaConsumer",
+    "condition": {
+      "typeReachable": "org.apache.kafka.clients.consumer.LegacyKafkaConsumer"
+    },
+    "allDeclaredFields": true
+  }
+]
