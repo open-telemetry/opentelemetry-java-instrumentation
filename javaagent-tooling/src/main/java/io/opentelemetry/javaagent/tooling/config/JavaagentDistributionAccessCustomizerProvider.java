@@ -91,7 +91,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
       @Nullable DistributionModel distribution, boolean v3Preview) {
 
     // to be removed for 3.0.0
-    // defaults 'distribution.javaagent.indy/development' to 'true' for v3 preview if unset
+    // set 'distribution.javaagent.indy/development' to 'true' for v3 preview
     if (v3Preview) {
       // creating distribution.javaagent is required to add indy/development to it
       DistributionPropertyModel javaagent;
