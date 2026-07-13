@@ -64,6 +64,9 @@ public final class RedissonBatchContext {
   }
 
   public static boolean shouldSuppress(RedisConnection connection, RedissonRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return false;
+    }
     if (request.isMarkedBatchCommand()) {
       connectionMarkerField.set(connection, new RedissonBatchMarker());
       return true;
