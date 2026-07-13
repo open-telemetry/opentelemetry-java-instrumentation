@@ -121,6 +121,7 @@ public class IndyBootstrap {
         // a nested bootstrap call from lambda instrumentation which could lead to stack overflow
         new PrivilegedAction<CallSite>() {
           @Override
+          @Nullable
           public CallSite run() {
             return internalBootstrap(lookup, adviceMethodName, adviceMethodType, args);
           }

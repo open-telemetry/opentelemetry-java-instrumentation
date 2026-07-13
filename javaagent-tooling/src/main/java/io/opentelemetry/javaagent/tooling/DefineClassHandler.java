@@ -29,6 +29,7 @@ public class DefineClassHandler implements Handler {
   }
 
   @Override
+  @Nullable
   public DefineClassContext beforeDefineClass(
       ClassLoader classLoader, String className, byte[] classBytes, int offset, int length) {
     // with OpenJ9 class data sharing we don't get real class bytes
@@ -97,8 +98,10 @@ public class DefineClassHandler implements Handler {
   }
 
   @Override
-  public void afterDefineClass(DefineClassContext context) {
-    context.exit();
+  public void afterDefineClass(@Nullable DefineClassContext context) {
+    if (context != null) {
+      context.exit();
+    }
   }
 
   /**

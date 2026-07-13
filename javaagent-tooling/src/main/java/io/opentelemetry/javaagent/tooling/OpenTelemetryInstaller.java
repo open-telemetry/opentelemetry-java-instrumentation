@@ -6,8 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
-
+import static java.util.Objects.requireNonNull;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
@@ -17,7 +16,6 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 
 public final class OpenTelemetryInstaller {
@@ -38,17 +36,17 @@ public final class OpenTelemetryInstaller {
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    boolean declarativeConfigUsed = configProperties == null;
 
-    if (configProperties != null) {
+    if (!declarativeConfigUsed) {
+      ConfigProperties nonNullConfigProperties = requireNonNull(configProperties);
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
       sdk =
           new ExtendedOpenTelemetrySdkWrapper(
-              sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
-      AgentDistributionConfig.set(AgentDistributionConfig.fromConfigProperties(configProperties));
-    } else {
-      // Declarative config path: no ConfigProperties available, use empty defaults
-      configProperties = DefaultConfigProperties.createFromMap(emptyMap());
+              sdk, ConfigPropertiesBackedConfigProvider.create(nonNullConfigProperties));
+      AgentDistributionConfig.set(
+          AgentDistributionConfig.fromConfigProperties(nonNullConfigProperties));
     }
 
     setForceFlush(sdk);
