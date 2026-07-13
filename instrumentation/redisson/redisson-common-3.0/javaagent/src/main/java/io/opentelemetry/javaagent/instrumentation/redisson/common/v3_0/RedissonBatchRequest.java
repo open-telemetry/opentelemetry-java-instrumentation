@@ -9,7 +9,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class RedissonBatchRequest {
-  private static final int QUERY_TEXT_LIMIT = 32 * 1024;
+  static final int QUERY_TEXT_LIMIT = 32 * 1024;
 
   private final String operationName;
   private final String queryText;

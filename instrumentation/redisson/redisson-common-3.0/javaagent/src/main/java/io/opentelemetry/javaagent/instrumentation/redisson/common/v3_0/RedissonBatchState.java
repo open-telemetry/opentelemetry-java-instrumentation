@@ -27,10 +27,25 @@ public class RedissonBatchState {
 
   private final List<String> commandNames = new ArrayList<>();
   private final List<String> queryTexts = new ArrayList<>();
+  private int queryTextLength;
+  private boolean captureQueryText = true;
 
   public synchronized void add(RedisCommand<?> command, Codec codec, Object[] parameters) {
     commandNames.add(command.getName());
-    queryTexts.add(sanitize(command, codec, parameters));
+    if (!captureQueryText) {
+      // Query text is already complete; avoid sanitizing commands that will not be emitted.
+      return;
+    }
+
+    String queryText = sanitize(command, codec, parameters);
+    int separatorLength = queryTexts.isEmpty() ? 0 : 2;
+    if (queryTextLength + separatorLength + queryText.length()
+        > RedissonBatchRequest.QUERY_TEXT_LIMIT) {
+      captureQueryText = false;
+      return;
+    }
+    queryTexts.add(queryText);
+    queryTextLength += separatorLength + queryText.length();
   }
 
   public synchronized RedissonBatchRequest createRequest(Object options) {
