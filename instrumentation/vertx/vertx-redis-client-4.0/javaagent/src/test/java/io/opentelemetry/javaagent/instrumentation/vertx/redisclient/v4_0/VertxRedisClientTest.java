@@ -37,9 +37,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.impl.future.FutureInternal;
 import io.vertx.redis.client.Command;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
@@ -219,22 +217,42 @@ class VertxRedisClientTest {
   }
 
   @Test
-  void emptyBatchDoesNotStartSpan() {
-    // Vert.x never completes the future returned by batch(emptyList()), so this test cannot wait
-    // for completion like the regular batch tests. Starting a span would replace the pending future
-    // with a span-ending wrapper, but the span would never end or become exportable. The original
-    // Vert.x promise retains its event-loop context, while the wrapper does not.
+  void emptyBatch() throws Exception {
     Future<List<Response>> future = connection.batch(emptyList());
 
-    assertThat(future.isComplete()).isFalse();
-    assertThat(future).isInstanceOf(Promise.class);
-    assertThat(future).isInstanceOf(FutureInternal.class);
-    assertThat(((FutureInternal<?>) future).context()).isNotNull();
+    if (isVertx40x() && !future.isComplete()) {
+      // Vert.x 4.0.x never completes an empty batch. Complete it only to clean up the test.
+      assertThat(
+              future
+                  .getClass()
+                  .getMethod("tryComplete", Object.class)
+                  .invoke(future, (Object) null))
+          .isEqualTo(true);
+    } else {
+      assertThat(future.toCompletionStage().toCompletableFuture().get(30, SECONDS)).isEmpty();
+    }
 
-    // Complete the otherwise permanently pending Vert.x promise only to clean up the test.
-    Promise<?> promise = (Promise<?>) future;
-    assertThat(promise.tryComplete(null)).isTrue();
-    assertThat(testing.spans()).isEmpty();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "PIPELINE " + host + ":" + port
+                                : "PIPELINE")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("PIPELINE", "", 0L))));
+  }
+
+  private static boolean isVertx40x() {
+    try {
+      return Class.forName(
+                  "io.vertx.redis.client.impl.RedisConnectionManager$RedisConnectionProvider")
+              .getDeclaredMethod("init", RedisConnection.class)
+          != null;
+    } catch (ReflectiveOperationException ignored) {
+      return false;
+    }
   }
 
   @ParameterizedTest
