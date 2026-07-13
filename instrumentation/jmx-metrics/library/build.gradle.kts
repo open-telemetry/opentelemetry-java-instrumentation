@@ -46,6 +46,7 @@ tasks {
       .withNormalizer(ClasspathNormalizer::class)
 
     val registryDir = layout.projectDirectory.dir("../model").asFile.absolutePath
+    inputs.dir(registryDir).withPathSensitivity(PathSensitivity.RELATIVE)
 
     jvmArgumentProviders += CommandLineArgumentProvider {
       listOf(
