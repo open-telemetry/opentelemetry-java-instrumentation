@@ -222,6 +222,25 @@ public abstract class RedissonRequest {
     return null;
   }
 
+  public boolean isMarkedBatchCommand() {
+    if (RedissonBatchContext.isMarkedCommand(getCommand())) {
+      return true;
+    }
+    CompletionStage<?> promise = getPromise();
+    if (RedissonBatchContext.isMarkedFuture(promise)) {
+      return true;
+    }
+    Object command = getCommand();
+    if (command instanceof CommandsData) {
+      for (CommandData<?, ?> singleCommand : ((CommandsData) command).getCommands()) {
+        if (RedissonBatchContext.isMarkedFuture(getPromise(singleCommand))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   @Nullable
   private CompletionStage<?> getPromise() {
     Object command = getCommand();
@@ -241,5 +260,18 @@ public abstract class RedissonRequest {
       }
     }
     return null;
+  }
+
+  @Nullable
+  private static CompletionStage<?> getPromise(CommandData<?, ?> command) {
+    if (COMMAND_DATA_GET_PROMISE == null) {
+      return null;
+    }
+    try {
+      return (CompletionStage<?>) COMMAND_DATA_GET_PROMISE.invoke(command);
+    } catch (Throwable t) {
+      logger.log(FINE, "Failed to get Redisson command promise", t);
+      return null;
+    }
   }
 }
