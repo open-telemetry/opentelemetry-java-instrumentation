@@ -44,7 +44,9 @@ public final class RedissonBatchContext {
   }
 
   public static void markCommand(Object command) {
-    if (command instanceof CommandData && isActive(Context.current())) {
+    if (emitStableDatabaseSemconv()
+        && command instanceof CommandData
+        && isActive(Context.current())) {
       commandMarkerField.set((CommandData<?, ?>) command, new RedissonBatchMarker());
     }
   }
