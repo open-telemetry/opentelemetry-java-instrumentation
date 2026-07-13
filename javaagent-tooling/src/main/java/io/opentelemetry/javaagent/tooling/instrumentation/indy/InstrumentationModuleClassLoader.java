@@ -171,7 +171,9 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       ExperimentalInstrumentationModule experimentalModule =
           (ExperimentalInstrumentationModule) module;
       hiddenAgentPackages.addAll(experimentalModule.agentPackagesToHide());
-      if (!forMuzzleCheck && instrumentedCl != null && !experimentalModule.exposedClassNames().isEmpty()) {
+      if (!forMuzzleCheck
+          && instrumentedCl != null
+          && !experimentalModule.exposedClassNames().isEmpty()) {
         // Using a weak reference because HelperInjector.addExposedClass places the supplier into
         // a weak map where instrumentedCl is the key. We must ensure that the value of the map
         // does not strongly reference the key, otherwise we would leak class loaders.

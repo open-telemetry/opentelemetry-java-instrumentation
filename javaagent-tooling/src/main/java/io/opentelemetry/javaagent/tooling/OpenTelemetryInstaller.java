@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
