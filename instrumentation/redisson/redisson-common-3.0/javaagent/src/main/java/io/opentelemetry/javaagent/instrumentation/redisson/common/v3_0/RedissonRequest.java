@@ -241,6 +241,25 @@ public abstract class RedissonRequest {
     return false;
   }
 
+  public boolean isTransactionCompletion() {
+    Object command = getCommand();
+    if (command instanceof CommandData) {
+      return isExec((CommandData<?, ?>) command);
+    }
+    if (command instanceof CommandsData) {
+      for (CommandData<?, ?> singleCommand : ((CommandsData) command).getCommands()) {
+        if (isExec(singleCommand)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private static boolean isExec(CommandData<?, ?> command) {
+    return "EXEC".equals(command.getCommand().getName());
+  }
+
   @Nullable
   private CompletionStage<?> getPromise() {
     Object command = getCommand();

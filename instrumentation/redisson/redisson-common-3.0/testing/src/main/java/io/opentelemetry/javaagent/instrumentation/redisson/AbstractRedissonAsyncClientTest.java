@@ -251,6 +251,9 @@ public abstract class AbstractRedissonAsyncClientTest {
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
     if (emitStableDatabaseSemconv()) {
+      // Verify that completing the atomic batch clears suppression state from the pooled
+      // connection, allowing this bucket GET to produce a span.
+      redisson.getBucket("after-batch").get();
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -269,7 +272,20 @@ public abstract class AbstractRedissonAsyncClientTest {
                               equalTo(
                                   DB_STATEMENT,
                                   emitOldDatabaseSemconv() ? "SET batch1 ?; SET batch2 ?" : null)),
-                  span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
+                  span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("GET " + address)
+                          .hasKind(CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(NETWORK_PEER_ADDRESS, ip),
+                              equalTo(NETWORK_PEER_PORT, port),
+                              equalTo(SERVER_ADDRESS, host),
+                              equalTo(SERVER_PORT, port),
+                              equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_OPERATION_NAME, "GET"),
+                              equalTo(DB_QUERY_TEXT, "GET after-batch"))));
       return;
     }
     testing.waitAndAssertTraces(

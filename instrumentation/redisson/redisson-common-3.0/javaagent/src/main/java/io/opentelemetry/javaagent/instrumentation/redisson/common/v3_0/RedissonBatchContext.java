@@ -67,14 +67,15 @@ public final class RedissonBatchContext {
     if (!emitStableDatabaseSemconv()) {
       return false;
     }
+    if (request.isTransactionCompletion()) {
+      connectionMarkerField.set(connection, null);
+      return request.isMarkedBatchCommand();
+    }
     if (request.isMarkedBatchCommand()) {
       connectionMarkerField.set(connection, new RedissonBatchMarker());
       return true;
     }
     if (connectionMarkerField.get(connection) != null) {
-      if ("EXEC".equals(request.getOperationName())) {
-        connectionMarkerField.set(connection, null);
-      }
       return true;
     }
     return false;
