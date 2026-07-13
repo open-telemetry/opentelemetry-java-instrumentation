@@ -23,15 +23,15 @@ import org.objectweb.asm.tree.MethodNode;
  * VirtualField#find(Class, Class)} in a static field.
  */
 class VirtualFieldChecker {
-  private static final boolean ENABLE_VIRTUAL_FILED_USAGE_CHECKER =
-      Boolean.getBoolean("otel.javaagent.testing.check-virtual-filed-usage.enabled");
+  private static final boolean ENABLE_VIRTUAL_FIELD_USAGE_CHECKER =
+      Boolean.getBoolean("otel.javaagent.testing.check-virtual-field-usage.enabled");
 
   private static final Type VIRTUAL_FIELD_TYPE = Type.getType(VirtualField.class);
   private static final Type ADVICE_ON_METHOD_ENTER = Type.getType(Advice.OnMethodEnter.class);
   private static final Type ADVICE_ON_METHOD_EXIT = Type.getType(Advice.OnMethodExit.class);
 
   static void check(byte[] bytes) {
-    if (!ENABLE_VIRTUAL_FILED_USAGE_CHECKER) {
+    if (!ENABLE_VIRTUAL_FIELD_USAGE_CHECKER) {
       return;
     }
 
