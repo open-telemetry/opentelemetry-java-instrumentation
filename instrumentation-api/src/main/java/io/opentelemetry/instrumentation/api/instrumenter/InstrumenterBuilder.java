@@ -426,8 +426,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   @Nullable
   static String getDeprecatedSpanSuppressionStrategyProperty() {
     String value =
-        SystemProperty.getString(
-            "otel.instrumentation.experimental.span-suppression-strategy");
+        SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
     if (value != null && spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
       logger.warning(
           "The otel.instrumentation.experimental.span-suppression-strategy setting is deprecated"
