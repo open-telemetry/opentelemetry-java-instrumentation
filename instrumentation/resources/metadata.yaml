@@ -4,3 +4,13 @@ description: >
   the host, OS, process, and container environment. It does not emit any telemetry on its own.
 features:
   - RESOURCE_DETECTOR
+configurations:
+  # No declarative_name: declarative resource detection uses the separate process detector schema,
+  # which currently has no toggle for these attributes.
+  # see https://github.com/open-telemetry/opentelemetry-configuration/issues/671
+  - name: otel.instrumentation.resources.experimental.process-command-attributes.enabled
+    description: >
+      Enables capture of process command-line resource attributes when v3 preview suppresses them
+      by default.
+    type: boolean
+    default: false

@@ -21,6 +21,7 @@ public abstract class MessageWithDestination {
 
   public abstract MessageAdapter message();
 
+  @Nullable
   public abstract String destinationName();
 
   public abstract boolean isTemporaryDestination();
@@ -45,15 +46,15 @@ public abstract class MessageWithDestination {
         return createMessageWithTopic(message, jmsDestination);
       }
     }
-    return new AutoValue_MessageWithDestination(
-        message, "unknown", /* isTemporaryDestination= */ false);
+    return new AutoValue_MessageWithDestination(message, null, /* isTemporaryDestination= */ false);
   }
 
   private static MessageWithDestination createMessageWithQueue(
       MessageAdapter message, DestinationAdapter queue) {
 
     String queueName = getDestinationName(queue, DestinationAdapter::getQueueName);
-    boolean temporary = queue.isTemporaryQueue() || queueName.startsWith(TIBCO_TMP_PREFIX);
+    boolean temporary =
+        queue.isTemporaryQueue() || (queueName != null && queueName.startsWith(TIBCO_TMP_PREFIX));
 
     return new AutoValue_MessageWithDestination(message, queueName, temporary);
   }
@@ -62,17 +63,19 @@ public abstract class MessageWithDestination {
       MessageAdapter message, DestinationAdapter topic) {
 
     String topicName = getDestinationName(topic, DestinationAdapter::getTopicName);
-    boolean temporary = topic.isTemporaryTopic() || topicName.startsWith(TIBCO_TMP_PREFIX);
+    boolean temporary =
+        topic.isTemporaryTopic() || (topicName != null && topicName.startsWith(TIBCO_TMP_PREFIX));
 
     return new AutoValue_MessageWithDestination(message, topicName, temporary);
   }
 
+  @Nullable
   private static String getDestinationName(DestinationAdapter destination, NameGetter nameGetter) {
     try {
       return nameGetter.getName(destination);
     } catch (Exception e) {
       logger.log(FINE, "Failure getting JMS destination name", e);
-      return "unknown";
+      return null;
     }
   }
 

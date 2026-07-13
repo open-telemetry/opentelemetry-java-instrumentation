@@ -170,6 +170,8 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 - configuration settings
   - List of settings that are available for the instrumentation module
   - Each setting has a name (flat property format), optional declarative_name (YAML path format), description, type, default value, and optional examples
+  - `name` is optional for declarative-only settings that have no flat property (they must provide a `declarative_name`)
+  - Structured-list settings additionally carry `declarative_type: structured_list` and a `declarative_schema` describing the per-item object shape
 - metrics
   - List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes.
   - Separate lists for the metrics emitted by default vs via configuration options.
@@ -202,11 +204,32 @@ configurations:
   - name: otel.instrumentation.common.db.query-sanitization.enabled
     declarative_name: java.common.db.query_sanitization.enabled    # Optional: YAML config path
     description: Enables query sanitization for database queries.
-    type: boolean               # boolean | string | list | map
+    type: boolean               # boolean | string | list | map (the flat form)
     default: true
     examples:                   # Optional: Example values for this configuration
       - "true"
       - "false"
+  # Structured-list config: a list of objects in declarative config. `name` may be omitted for
+  # declarative-only settings (identified solely by `declarative_name`).
+  - declarative_name: java.common.http.client.url_template_rules
+    description: Rules for deriving low-cardinality URL templates from HTTP client request URLs.
+    type: list
+    default: ""
+    declarative_type: structured_list      # Optional: overrides the declarative-form shape
+    declarative_schema:                     # Required when declarative_type is structured_list
+      type: object
+      required: [pattern, template]
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          default: false
+          description: Whether this rule overrides an already-applied template.
 override_telemetry: false                         # Set to true to ignore auto-generated .telemetry files
 additional_telemetry:                             # Manually document telemetry metadata
   - when: "default"
