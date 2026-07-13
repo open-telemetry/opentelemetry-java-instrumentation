@@ -7,8 +7,6 @@ instrumentation/development:
 
 distribution:
   javaagent:
-    # enabling v3_preview should enable this
-    # indy/development: true
     force_synchronous_agent_listeners/development: false
     thread_details_enabled: true
     exclude_classes:
