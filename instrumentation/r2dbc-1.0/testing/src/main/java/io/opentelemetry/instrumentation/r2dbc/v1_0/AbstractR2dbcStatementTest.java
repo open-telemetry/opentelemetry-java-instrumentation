@@ -376,6 +376,9 @@ public abstract class AbstractR2dbcStatementTest {
                                       maybeStable(DB_STATEMENT),
                                       emitStableDatabaseSemconv() ? null : ""),
                                   equalTo(
+                                      DB_QUERY_SUMMARY,
+                                      emitStableDatabaseSemconv() ? "BATCH" : null),
+                                  equalTo(
                                       DB_OPERATION_BATCH_SIZE,
                                       emitStableDatabaseSemconv() ? 0L : null),
                                   equalTo(maybeStablePeerService(), "test-peer-service"),

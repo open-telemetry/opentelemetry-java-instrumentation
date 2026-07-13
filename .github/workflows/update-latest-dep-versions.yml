@@ -89,3 +89,13 @@ jobs:
                          --body "$body" \
                          --base main
           fi
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - update-latest-dep-versions
+    if: always()
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@7c49790392da7de86fdb4bb968446f9cb8461eb8 # v0.3.1
+    with:
+      success: ${{ needs.update-latest-dep-versions.result == 'success' }}
