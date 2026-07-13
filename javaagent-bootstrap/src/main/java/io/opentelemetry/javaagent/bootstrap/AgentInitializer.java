@@ -62,7 +62,7 @@ public final class AgentInitializer {
             new PrivilegedAction<Boolean>() {
               @Override
               public Boolean run() {
-                String enable = System.getProperty("otel.javaagent.enable");
+                String enable = System.getProperty("otel.javaagent.enabled");
                 if (Boolean.parseBoolean(enable)) {
                   return false;
                 }
@@ -72,7 +72,7 @@ public final class AgentInitializer {
             });
     if (skipJdkTool) {
       System.err.println(
-          "JDK tool detected, agent will not be started. To override this behavior, set the 'otel.javaagent.enable=true' agent argument or system property");
+          "JDK tool detected, agent will not be started. To override this behavior, set the 'otel.javaagent.enabled=true' agent argument or system property");
       return;
     }
 
