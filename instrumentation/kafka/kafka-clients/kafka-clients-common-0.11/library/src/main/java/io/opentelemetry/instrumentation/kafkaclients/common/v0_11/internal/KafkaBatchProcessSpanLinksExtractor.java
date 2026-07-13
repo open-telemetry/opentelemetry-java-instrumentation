@@ -29,7 +29,8 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
       singleRecordLinkExtractor.extract(
           spanLinks,
           parentContext,
-          KafkaProcessRequest.create(record, request.getConsumerGroup(), request.getClientId()));
+          KafkaProcessRequest.create(
+              record, request.getConsumerGroup(), request.getClientId(), request.getClusterId()));
     }
   }
 }

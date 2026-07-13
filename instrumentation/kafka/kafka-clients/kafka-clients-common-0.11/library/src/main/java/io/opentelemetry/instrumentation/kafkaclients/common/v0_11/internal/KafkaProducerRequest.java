@@ -23,10 +23,20 @@ public final class KafkaProducerRequest {
   @Nullable private final String clientId;
   @Nullable private final String bootstrapServers;
   private final boolean spanContextPropagated;
+  @Nullable private final String clusterId;
+  // Kept only when constructed from a live Producer so onEnd() can retry getClusterId() after
+  // the first send() has triggered the lazy metadata fetch. Null for the other create() overloads.
+  @Nullable private final Producer<?, ?> producer;
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, Producer<?, ?> producer, @Nullable String bootstrapServers) {
-    return create(record, extractClientId(producer), bootstrapServers, true);
+    return new KafkaProducerRequest(
+        record,
+        extractClientId(producer),
+        bootstrapServers,
+        true,
+        KafkaUtil.getClusterId(producer),
+        producer);
   }
 
   public static KafkaProducerRequest create(
@@ -34,12 +44,18 @@ public final class KafkaProducerRequest {
       Producer<?, ?> producer,
       @Nullable String bootstrapServers,
       boolean spanContextPropagated) {
-    return create(record, extractClientId(producer), bootstrapServers, spanContextPropagated);
+    return new KafkaProducerRequest(
+        record,
+        extractClientId(producer),
+        bootstrapServers,
+        spanContextPropagated,
+        KafkaUtil.getClusterId(producer),
+        producer);
   }
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
-    return create(record, clientId, bootstrapServers, true);
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, null, null);
   }
 
   public static KafkaProducerRequest create(
@@ -47,18 +63,65 @@ public final class KafkaProducerRequest {
       @Nullable String clientId,
       @Nullable String bootstrapServers,
       boolean spanContextPropagated) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers, spanContextPropagated);
+    return new KafkaProducerRequest(
+        record, clientId, bootstrapServers, spanContextPropagated, null, null);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      Producer<?, ?> producer) {
+    return new KafkaProducerRequest(
+        record, clientId, bootstrapServers, true, KafkaUtil.getClusterId(producer), producer);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable String clusterId) {
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, clusterId, null);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      boolean spanContextPropagated,
+      Producer<?, ?> producer) {
+    return new KafkaProducerRequest(
+        record,
+        clientId,
+        bootstrapServers,
+        spanContextPropagated,
+        KafkaUtil.getClusterId(producer),
+        producer);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      boolean spanContextPropagated,
+      @Nullable String clusterId) {
+    return new KafkaProducerRequest(
+        record, clientId, bootstrapServers, spanContextPropagated, clusterId, null);
   }
 
   private KafkaProducerRequest(
       ProducerRecord<?, ?> record,
       @Nullable String clientId,
       @Nullable String bootstrapServers,
-      boolean spanContextPropagated) {
+      boolean spanContextPropagated,
+      @Nullable String clusterId,
+      @Nullable Producer<?, ?> producer) {
     this.record = record;
     this.clientId = clientId;
     this.bootstrapServers = bootstrapServers;
     this.spanContextPropagated = spanContextPropagated;
+    this.clusterId = clusterId;
+    this.producer = producer;
   }
 
   public ProducerRecord<?, ?> getRecord() {
@@ -77,6 +140,16 @@ public final class KafkaProducerRequest {
 
   public boolean isSpanContextPropagated() {
     return spanContextPropagated;
+  }
+
+  @Nullable
+  public String getClusterId() {
+    return clusterId;
+  }
+
+  @Nullable
+  public Producer<?, ?> getProducer() {
+    return producer;
   }
 
   @Nullable

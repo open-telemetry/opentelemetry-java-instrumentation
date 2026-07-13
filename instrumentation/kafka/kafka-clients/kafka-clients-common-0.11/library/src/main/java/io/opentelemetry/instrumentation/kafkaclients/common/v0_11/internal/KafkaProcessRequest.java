@@ -19,22 +19,46 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
 
   public static KafkaProcessRequest create(
       ConsumerRecord<?, ?> record, @Nullable Consumer<?, ?> consumer) {
-    return create(record, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+    return new KafkaProcessRequest(
+        record,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getClusterId(consumer));
   }
 
   public static KafkaProcessRequest create(
       KafkaConsumerContext consumerContext, ConsumerRecord<?, ?> record) {
-    return create(record, consumerContext.getConsumerGroup(), consumerContext.getClientId());
+    return new KafkaProcessRequest(
+        record,
+        consumerContext.getConsumerGroup(),
+        consumerContext.getClientId(),
+        consumerContext.getClusterId());
   }
 
   public static KafkaProcessRequest create(
       ConsumerRecord<?, ?> record, @Nullable String consumerGroup, @Nullable String clientId) {
-    return new KafkaProcessRequest(record, consumerGroup, clientId);
+    return new KafkaProcessRequest(record, consumerGroup, clientId, null);
+  }
+
+  public static KafkaProcessRequest create(
+      ConsumerRecord<?, ?> record,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable String clusterId) {
+    return new KafkaProcessRequest(record, consumerGroup, clientId, clusterId);
   }
 
   public KafkaProcessRequest(
       ConsumerRecord<?, ?> record, @Nullable String consumerGroup, @Nullable String clientId) {
-    super(consumerGroup, clientId);
+    this(record, consumerGroup, clientId, null);
+  }
+
+  public KafkaProcessRequest(
+      ConsumerRecord<?, ?> record,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable String clusterId) {
+    super(consumerGroup, clientId, clusterId);
     this.record = record;
   }
 
