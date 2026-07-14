@@ -8,15 +8,11 @@ muzzle {
     module.set("jboss-logmanager")
     versions.set("[1.1.0.GA,)")
     assertInverse.set(true)
-    extraDependency("io.opentelemetry:opentelemetry-sdk-common:1.59.0")
   }
 }
 
 dependencies {
   library("org.jboss.logmanager:jboss-logmanager:1.1.0.GA")
-
-  // for IncludeExcludePredicate, used to filter captured MDC attributes
-  implementation("io.opentelemetry:opentelemetry-sdk-common")
 
   // ensure no cross interference
   testInstrumentation(project(":instrumentation:java-util-logging:javaagent"))

@@ -6,9 +6,6 @@ dependencies {
   library("org.apache.logging.log4j:log4j-core:2.17.0")
   annotationProcessor("org.apache.logging.log4j:log4j-core:2.17.0")
 
-  // for IncludeExcludePredicate, used to filter captured context data attributes
-  implementation("io.opentelemetry:opentelemetry-sdk-common")
-
   // to be removed in 3.0
   implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure"))
 

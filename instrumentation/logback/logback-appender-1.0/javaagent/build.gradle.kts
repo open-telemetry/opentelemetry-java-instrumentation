@@ -8,7 +8,6 @@ muzzle {
     module.set("logback-classic")
     versions.set("[0.9.16,)")
     assertInverse.set(true)
-    extraDependency("io.opentelemetry:opentelemetry-sdk-common:1.59.0")
   }
 }
 

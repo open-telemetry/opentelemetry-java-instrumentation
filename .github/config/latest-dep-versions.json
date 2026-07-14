@@ -183,7 +183,6 @@
     "io.opentelemetry:opentelemetry-extension-kotlin#+": "1.64.0",
     "io.opentelemetry:opentelemetry-instrumentation-annotations#+": "0.0",
     "io.opentelemetry:opentelemetry-opencensus-shim#+": "0.13.1",
-    "io.opentelemetry:opentelemetry-sdk-common#+": "1.63.0",
     "io.projectreactor.ipc:reactor-netty#+": "0.7.15.RELEASE",
     "io.projectreactor.kafka:reactor-kafka#+": "1.3.25",
     "io.projectreactor.netty:reactor-netty#+": "1.3.6",

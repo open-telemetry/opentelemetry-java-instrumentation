@@ -8,7 +8,6 @@ muzzle {
     module.set("log4j-core")
     versions.set("[2.0,)")
     assertInverse.set(true)
-    extraDependency("io.opentelemetry:opentelemetry-sdk-common:1.59.0")
   }
 }
 

@@ -8,16 +8,12 @@ muzzle {
     module.set("log4j")
     versions.set("[1.2,)")
     assertInverse.set(true)
-    extraDependency("io.opentelemetry:opentelemetry-sdk-common:1.59.0")
   }
 }
 
 dependencies {
   // 1.2 introduces MDC and there's no version earlier than 1.2.4 available
   library("log4j:log4j:1.2.4")
-
-  // for IncludeExcludePredicate, used to filter captured MDC attributes
-  implementation("io.opentelemetry:opentelemetry-sdk-common")
 
   testInstrumentation(project(":instrumentation:log4j:log4j-appender-2.17:javaagent"))
 }

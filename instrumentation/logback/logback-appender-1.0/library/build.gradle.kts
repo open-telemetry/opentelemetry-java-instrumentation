@@ -25,9 +25,6 @@ dependencies {
     }
   }
 
-  // for IncludeExcludePredicate, used to filter captured MDC attributes
-  implementation("io.opentelemetry:opentelemetry-sdk-common")
-
   if (otelProps.testLatestDeps) {
     testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
