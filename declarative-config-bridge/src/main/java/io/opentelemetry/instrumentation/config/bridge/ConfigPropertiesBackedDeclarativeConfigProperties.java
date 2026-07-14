@@ -95,7 +95,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
   }
 
-  private final ConfigProperties configProperties;
+  final ConfigProperties configProperties;
   private final List<String> path;
   private final Map<String, String> mappings;
   private final String accessRoot;
@@ -175,6 +175,11 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     }
 
     return configProperties.getLong(resolvePropertyKey(name));
+  }
+
+  @Nullable
+  Duration getDuration(String name) {
+    return configProperties.getDuration(resolvePropertyKey(name));
   }
 
   @Nullable
