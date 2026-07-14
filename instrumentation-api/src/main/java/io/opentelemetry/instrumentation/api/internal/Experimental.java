@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import static java.util.Collections.emptySet;
-
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
@@ -40,18 +38,11 @@ public final class Experimental {
   private static volatile BiConsumer<InstrumenterBuilder<?, ?>, AttributesExtractor<?, ?>>
       operationListenerAttributesExtractorAdder;
 
-  private Experimental() {}
+  @Nullable
+  private static volatile BiConsumer<InstrumenterBuilder<?, ?>, InternalExceptionEventExtractor<?>>
+      exceptionEventExtractorSetter;
 
-  /**
-   * @deprecated Use {@link #setSensitiveQueryParameters(HttpClientAttributesExtractorBuilder, Set)}
-   *     instead.
-   */
-  @Deprecated
-  public static void setRedactQueryParameters(
-      HttpClientAttributesExtractorBuilder<?, ?> builder, boolean redactQueryParameters) {
-    setSensitiveQueryParameters(
-        builder, redactQueryParameters ? HttpConstants.SENSITIVE_QUERY_PARAMETERS : emptySet());
-  }
+  private Experimental() {}
 
   public static void setSensitiveQueryParameters(
       HttpClientAttributesExtractorBuilder<?, ?> builder, Set<String> sensitiveQueryParameters) {
@@ -116,5 +107,25 @@ public final class Experimental {
           operationListenerAttributesExtractorAdder) {
     Experimental.operationListenerAttributesExtractorAdder =
         (BiConsumer) operationListenerAttributesExtractorAdder;
+  }
+
+  /**
+   * Sets the {@link InternalExceptionEventExtractor} that will determine the exception event name
+   * and severity. Only used when emitting exceptions as logs is enabled via the {@code
+   * otel.semconv.exception.signal.preview} flag.
+   */
+  public static <REQUEST> void setExceptionEventExtractor(
+      InstrumenterBuilder<REQUEST, ?> builder,
+      InternalExceptionEventExtractor<? super REQUEST> exceptionEventExtractor) {
+    if (exceptionEventExtractorSetter != null) {
+      exceptionEventExtractorSetter.accept(builder, exceptionEventExtractor);
+    }
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"}) // we lose the generic type information
+  public static <REQUEST> void internalSetExceptionEventExtractor(
+      BiConsumer<InstrumenterBuilder<REQUEST, ?>, InternalExceptionEventExtractor<? super REQUEST>>
+          exceptionEventExtractorSetter) {
+    Experimental.exceptionEventExtractorSetter = (BiConsumer) exceptionEventExtractorSetter;
   }
 }

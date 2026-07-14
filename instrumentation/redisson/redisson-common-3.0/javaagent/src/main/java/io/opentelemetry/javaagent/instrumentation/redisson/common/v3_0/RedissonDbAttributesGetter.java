@@ -35,6 +35,26 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return request.getOperationName();
   }
 
+  @Nullable
+  @Override
+  public Long getDbOperationBatchSize(RedissonRequest request) {
+    return request.getOperationBatchSize();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(RedissonRequest request) {
+    InetSocketAddress address = request.getAddress();
+    return address != null ? address.getHostString() : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(RedissonRequest request) {
+    InetSocketAddress address = request.getAddress();
+    return address != null ? address.getPort() : null;
+  }
+
   @Override
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(

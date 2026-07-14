@@ -6,23 +6,18 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@SuppressWarnings("deprecation")
 public final class SemconvStability {
 
   private static final boolean v3Preview;
@@ -44,54 +39,51 @@ public final class SemconvStability {
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
-    v3Preview = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview", false);
-    Set<String> optInValues = resolveOptInValues(openTelemetry, "opt_in");
-    Set<String> previewValues = resolveOptInValues(openTelemetry, "preview");
-
-    emitOldDatabaseSemconv = shouldEmitOld("database", v3Preview, optInValues);
-    emitStableDatabaseSemconv = shouldEmitStable("database", v3Preview, optInValues);
-
-    emitOldCodeSemconv = shouldEmitOld("code", v3Preview, optInValues);
-    emitStableCodeSemconv = shouldEmitStable("code", v3Preview, optInValues);
-
-    emitOldServicePeerSemconv = shouldEmitOld("service.peer", v3Preview, optInValues);
-    emitStableServicePeerSemconv = shouldEmitStable("service.peer", v3Preview, optInValues);
-
-    emitOldRpcSemconv = shouldEmitOld("rpc", v3Preview, optInValues);
-    emitStableRpcSemconv = shouldEmitStable("rpc", v3Preview, optInValues);
-
-    emitOldMessagingSemconv = shouldEmitOld("messaging", false, previewValues);
-    emitStableMessagingSemconv = shouldEmitStable("messaging", false, previewValues);
-  }
-
-  private static Set<String> resolveOptInValues(OpenTelemetry openTelemetry, String flag) {
-    // Try declarative config via GlobalOpenTelemetry first
     DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
-    Set<String> values =
-        new HashSet<>(
-            generalConfig
-                .get("semconv_stability")
-                .getScalarList(flag, String.class, new ArrayList<>()));
-    if (values.isEmpty()) {
-      // Fall back to system property / env var
-      String value =
-          ConfigPropertiesUtil.getString("otel.semconv-stability." + flag.replace('_', '-'));
-      if (value != null) {
-        return new HashSet<>(asList(value.split(",")));
-      }
-    }
-    return values;
+    v3Preview = v3Preview(openTelemetry);
+    SemconvSelectionResolver semconvSelection =
+        new SemconvSelectionResolver(openTelemetry, generalConfig, v3Preview);
+
+    SemconvMode databaseSelection = semconvSelection.database();
+    emitOldDatabaseSemconv = emitOld(databaseSelection);
+    emitStableDatabaseSemconv = emitStable(databaseSelection);
+
+    SemconvMode codeSelection = semconvSelection.code();
+    emitOldCodeSemconv = emitOld(codeSelection);
+    emitStableCodeSemconv = emitStable(codeSelection);
+
+    SemconvMode servicePeerSelection = semconvSelection.servicePeer();
+    emitOldServicePeerSemconv = emitOld(servicePeerSelection);
+    emitStableServicePeerSemconv = emitStable(servicePeerSelection);
+
+    SemconvMode rpcSelection = semconvSelection.rpc();
+    emitOldRpcSemconv = emitOld(rpcSelection);
+    emitStableRpcSemconv = emitStable(rpcSelection);
+
+    SemconvMode messagingSelection = semconvSelection.messaging();
+    emitOldMessagingSemconv = emitOld(messagingSelection);
+    emitStableMessagingSemconv = emitStable(messagingSelection);
   }
 
-  public static boolean v3Preview() {
+  public static boolean v3Preview(OpenTelemetry openTelemetry) {
+    Boolean value = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview");
+    if (value != null) {
+      return value;
+    }
+    // Library instrumentation tests configure this mode using JVM system properties, so a direct
+    // system-property fallback is needed.
+    return SystemProperty.getBoolean("otel.instrumentation.common.v3-preview", false);
+  }
+
+  public static boolean v3Preview() { // to be removed in 3.0
     return v3Preview;
   }
 
-  public static boolean emitOldDatabaseSemconv() {
+  public static boolean emitOldDatabaseSemconv() { // to be removed in 3.0
     return emitOldDatabaseSemconv;
   }
 
-  public static boolean emitStableDatabaseSemconv() {
+  public static boolean emitStableDatabaseSemconv() { // to be removed in 3.0
     return emitStableDatabaseSemconv;
   }
 
@@ -128,11 +120,11 @@ public final class SemconvStability {
     return dbSystemName != null ? dbSystemName : oldDbSystem;
   }
 
-  public static boolean emitOldCodeSemconv() {
+  public static boolean emitOldCodeSemconv() { // to be removed in 3.0
     return emitOldCodeSemconv;
   }
 
-  public static boolean emitStableCodeSemconv() {
+  public static boolean emitStableCodeSemconv() { // to be removed in 3.0
     return emitStableCodeSemconv;
   }
 
@@ -156,35 +148,25 @@ public final class SemconvStability {
     return rpcSystemName != null ? rpcSystemName : oldRpcSystem;
   }
 
-  private static boolean shouldEmitOld(String key, boolean v3Preview, Set<String> optInValues) {
-    if (v3Preview) {
-      return false;
-    }
-    if (optInValues.contains(key + "/dup")) {
-      return true;
-    }
-    return !optInValues.contains(key);
-  }
-
-  private static boolean shouldEmitStable(String key, boolean v3Preview, Set<String> optInValues) {
-    if (v3Preview) {
-      return true;
-    }
-    return optInValues.contains(key) || optInValues.contains(key + "/dup");
-  }
-
-  private static DeclarativeConfigProperties getGeneralInstrumentationConfig(
-      OpenTelemetry openTelemetry) {
+  static DeclarativeConfigProperties getGeneralInstrumentationConfig(OpenTelemetry openTelemetry) {
     return openTelemetry instanceof ExtendedOpenTelemetry
         ? ((ExtendedOpenTelemetry) openTelemetry).getGeneralInstrumentationConfig()
         : empty();
   }
 
-  private static DeclarativeConfigProperties getInstrumentationConfig(
+  static DeclarativeConfigProperties getInstrumentationConfig(
       OpenTelemetry openTelemetry, String instrumentationName) {
     return openTelemetry instanceof ExtendedOpenTelemetry
         ? ((ExtendedOpenTelemetry) openTelemetry).getInstrumentationConfig(instrumentationName)
         : empty();
+  }
+
+  private static boolean emitOld(SemconvMode mode) {
+    return mode.version() == 0 || mode.dualEmit();
+  }
+
+  private static boolean emitStable(SemconvMode mode) {
+    return mode.version() >= 1;
   }
 
   public static boolean emitOldMessagingSemconv() {

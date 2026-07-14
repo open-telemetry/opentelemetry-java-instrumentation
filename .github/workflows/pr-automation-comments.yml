@@ -94,7 +94,7 @@ jobs:
                 "",
                 "### 📋 Checklist",
                 "- Deprecation details added to the PR description",
-                "- Deprecation is documented in the changelog entry for the next release",
+                "- Deprecation is documented in the \"Unreleased\" section of the [Changelog](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/CHANGELOG.md), preferably as part of this PR.",
                 "- Consider adding deprecation warnings in code/documentation",
                 "",
                 "Your deprecation notes will be included in the release notes to help users prepare for future changes.",

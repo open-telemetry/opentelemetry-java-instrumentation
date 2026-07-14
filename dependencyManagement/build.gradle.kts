@@ -5,8 +5,8 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.62.0"
-val otelContribVersion = "1.56.0-alpha"
+val otelSdkVersion = "1.64.0"
+val otelContribVersion = "1.58.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -27,7 +27,7 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.21.3",
+  "com.fasterxml.jackson:jackson-bom:2.22.1",
   "com.google.guava:guava-bom:33.6.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
@@ -37,13 +37,13 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
-val errorProneVersion = "2.49.0"
-val byteBuddyVersion = "1.18.8"
-val asmVersion = "9.10"
+val errorProneVersion = "2.50.0"
+val byteBuddyVersion = "1.18.11"
+val asmVersion = "9.10.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.18"
-val semConvVersion = "1.41.1"
+val semConvVersion = "1.43.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
@@ -85,7 +85,7 @@ val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.13.4",
+  "com.uber.nullaway:nullaway:0.13.7",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
   "commons-codec:commons-codec:1.22.0",
@@ -94,7 +94,7 @@ val DEPENDENCIES = listOf(
   "commons-fileupload:commons-fileupload:1.6.0",
   "commons-io:commons-io:2.22.0",
   "commons-lang:commons-lang:2.6",
-  "commons-logging:commons-logging:1.3.6",
+  "commons-logging:commons-logging:1.4.0",
   "commons-validator:commons-validator:1.10.1",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-azure-resources:${otelContribVersion}",
@@ -117,7 +117,8 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.5",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.7.1"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.7.1",
+  "io.github.netmikey.logunit:logunit-jul:2.0.0"
 )
 
 javaPlatform {

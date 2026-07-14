@@ -1,0 +1,16 @@
+---
+
+rules:
+
+  - bean: java.lang:type=Threading
+    handler: thread-handler
+    handlers:
+      - thread-handler
+    prefix: test.thread.
+    mapping:
+      # test.thread.count3
+      ThreadCount:
+        metric: count3
+        type: updowncounter
+        unit: "{thread}"
+        desc: Number of executing platform threads.

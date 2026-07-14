@@ -28,12 +28,12 @@ dependencies {
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
 
   // latest version is tested in a separate test suite
-  latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // documented limitation
+  latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // see test suite below
 }
 
 testing {
   suites {
-    val xxlJob33Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("xxlJob33Test") {
       dependencies {
         val version = baseVersion("3.3.0").orLatest()
         implementation("com.xuxueli:xxl-job-core:$version")
@@ -51,7 +51,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

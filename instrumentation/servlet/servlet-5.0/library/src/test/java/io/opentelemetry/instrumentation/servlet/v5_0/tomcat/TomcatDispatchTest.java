@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.servlet.v5_0.tomcat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.BaseTomcatDispatchTest;
 import org.apache.catalina.Context;
 import org.junit.jupiter.api.extension.RegisterExtension;
 

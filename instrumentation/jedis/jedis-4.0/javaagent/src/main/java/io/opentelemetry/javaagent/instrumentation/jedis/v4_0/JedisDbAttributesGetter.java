@@ -11,7 +11,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
+class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
   @Override
   public String getDbSystemName(JedisRequest request) {
@@ -21,6 +21,13 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Override
   @Nullable
   public String getDbNamespace(JedisRequest request) {
+    Long databaseIndex = request.getDatabaseIndex();
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
+  }
+
+  @Override
+  @Nullable
+  public String getDbName(JedisRequest request) {
     return null;
   }
 
@@ -32,6 +39,24 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Override
   public String getDbOperationName(JedisRequest request) {
     return request.getOperationName();
+  }
+
+  @Override
+  @Nullable
+  public Long getDbOperationBatchSize(JedisRequest request) {
+    return request.getBatchSize();
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(JedisRequest request) {
+    return request.getServerAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(JedisRequest request) {
+    return request.getServerPort();
   }
 
   @Override

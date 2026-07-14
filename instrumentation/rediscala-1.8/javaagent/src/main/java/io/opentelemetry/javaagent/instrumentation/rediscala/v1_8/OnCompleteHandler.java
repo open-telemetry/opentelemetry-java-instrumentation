@@ -9,15 +9,14 @@ import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.Rediscal
 
 import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
-import redis.RedisCommand;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
 
 class OnCompleteHandler extends AbstractFunction1<Try<Object>, Void> {
   private final Context context;
-  private final RedisCommand<?, ?> request;
+  private final RediscalaRequest request;
 
-  OnCompleteHandler(Context context, RedisCommand<?, ?> request) {
+  OnCompleteHandler(Context context, RediscalaRequest request) {
     this.context = context;
     this.request = request;
   }

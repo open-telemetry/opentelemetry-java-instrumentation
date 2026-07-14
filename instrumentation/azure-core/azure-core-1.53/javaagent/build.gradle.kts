@@ -8,6 +8,9 @@ muzzle {
     module.set("azure-core")
     versions.set("[1.53.0,)")
     assertInverse.set(true)
+    // our advice helper bridges an explicitly supplied application parent context to the agent
+    // context, so it references io.opentelemetry.context.{Context,Scope}
+    extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
 }
 
@@ -23,6 +26,10 @@ sourceSets {
 
 dependencies {
   compileOnly(project(":instrumentation:azure-core:azure-core-1.53:library-instrumentation-shaded", configuration = "shadow"))
+
+  // needed to bridge an explicitly supplied application parent context (the unshaded
+  // "application.io.opentelemetry.*" types) to the agent context inside our advice
+  compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
   library("com.azure:azure-core:1.53.0")
 
@@ -42,7 +49,7 @@ testing {
   suites {
     // using a test suite to ensure that classes from library-instrumentation-shaded that were
     // extracted to the output directory are not available during tests
-    val testAzure by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testAzure") {
       dependencies {
         if (otelProps.testLatestDeps) {
           implementation("com.azure:azure-core:latest.release")

@@ -5,16 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Future;
 import io.vertx.redis.client.Command;
@@ -34,20 +36,29 @@ public class VertxRedisClientSingletons {
       VirtualField.find(RedisStandaloneConnection.class, RedisURI.class);
 
   static {
-    // Redis semantic conventions don't follow the regular pattern of adding the db.namespace to
-    // the span name
-    SpanNameExtractor<VertxRedisClientRequest> spanNameExtractor =
-        VertxRedisClientRequest::getCommand;
     VertxRedisClientAttributesGetter getter = new VertxRedisClientAttributesGetter();
+    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
+    // span name.
+    VertxRedisClientAttributesGetter spanNameAttributesGetter =
+        new VertxRedisClientAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(VertxRedisClientRequest request) {
+            return null;
+          }
+        };
 
     InstrumenterBuilder<VertxRedisClientRequest, Void> builder =
         Instrumenter.<VertxRedisClientRequest, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(getter))
             .addAttributesExtractor(new VertxRedisClientAttributesExtractor())
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(getter, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
 
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

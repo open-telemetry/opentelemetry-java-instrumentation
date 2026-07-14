@@ -158,7 +158,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
           }
 
           jobFutures.forEach(f -> f.cancel(false));
-          children.forEach(U::unblock);
+          children.forEach(TestTask::unblock);
         });
 
     // Just check there is a single trace, this test is primarily to make sure that scopes aren't

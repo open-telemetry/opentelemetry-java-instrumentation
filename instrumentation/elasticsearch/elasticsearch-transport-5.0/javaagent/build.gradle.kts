@@ -24,7 +24,7 @@ muzzle {
 dependencies {
   compileOnly("org.elasticsearch.client:transport:5.0.0")
 
-  implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent"))
+  implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent"))
 
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent"))
@@ -33,7 +33,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+  testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 
@@ -52,7 +52,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -60,7 +60,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

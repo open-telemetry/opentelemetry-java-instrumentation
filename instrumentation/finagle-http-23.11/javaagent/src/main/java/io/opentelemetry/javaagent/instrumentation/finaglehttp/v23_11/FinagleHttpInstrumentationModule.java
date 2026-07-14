@@ -31,12 +31,6 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public String getModuleGroup() {
-    // relies on netty and needs access to common netty instrumentation classes
-    return "netty";
-  }
-
-  @Override
   public List<String> injectedClassNames() {
     // these are injected so that they can access package-private members
     return asList(

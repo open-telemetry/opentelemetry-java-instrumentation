@@ -12,12 +12,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlInstrumenterFactory;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.internal.SqlClientBase;
-import io.vertx.sqlclient.internal.command.CommandBase;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientSingletons {
@@ -34,26 +34,47 @@ public class VertxSqlClientSingletons {
   private static final VirtualField<SqlClientBase, SqlConnectOptions> connectOptionsField =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
 
-  // CommandBase is a generic type; VirtualField.find requires the raw type
-  @SuppressWarnings("rawtypes")
-  private static final VirtualField<CommandBase, Context> commandContextField =
-      VirtualField.find(CommandBase.class, Context.class);
+  @Nullable
+  private static final VirtualField<Object, Context> commandContextField =
+      getCommandContextVirtualField();
 
   public static Instrumenter<VertxSqlClientRequest, Void> instrumenter() {
     return instrumenter;
   }
 
-  // CommandBase is a generic type used as VirtualField key
-  @SuppressWarnings("rawtypes")
-  @Nullable
-  public static Context getCommandContext(CommandBase<?> command) {
-    return commandContextField.get(command);
+  @NoMuzzle // to skip virtual field detection in this method
+  @SuppressWarnings("unchecked") // virtual field key type is not known at compile time
+  private static VirtualField<Object, Context> getCommandContextVirtualField() {
+    // CommandBase that we want to attach context to is in different packages in 5.0 and 5.1
+    Class<?> commandClass = null;
+    try {
+      // 5.0.0
+      commandClass = Class.forName("io.vertx.sqlclient.internal.command.CommandBase");
+    } catch (ClassNotFoundException ignored) {
+      // ignored
+    }
+    if (commandClass == null) {
+      try {
+        // 5.1.0
+        commandClass = Class.forName("io.vertx.sqlclient.spi.protocol.CommandBase");
+      } catch (ClassNotFoundException ignored) {
+        // ignored
+      }
+    }
+    return commandClass != null
+        ? (VirtualField<Object, Context>) VirtualField.find(commandClass, Context.class)
+        : null;
   }
 
-  // CommandBase is a generic type used as VirtualField key
-  @SuppressWarnings("rawtypes")
-  public static void setCommandContext(CommandBase<?> command, Context context) {
-    commandContextField.set(command, context);
+  @Nullable
+  public static Context getCommandContext(Object command) {
+    return commandContextField != null ? commandContextField.get(command) : null;
+  }
+
+  public static void setCommandContext(Object command, Context context) {
+    if (commandContextField != null) {
+      commandContextField.set(command, context);
+    }
   }
 
   public static void storePoolDbSystem(Pool pool, String dbSystem) {
