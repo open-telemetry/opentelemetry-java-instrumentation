@@ -70,8 +70,9 @@ public final class RedissonBatchContext {
       return false;
     }
     if (request.isTransactionCompletion()) {
+      boolean connectionMarked = CONNECTION_MARKER_FIELD.get(connection) != null;
       CONNECTION_MARKER_FIELD.set(connection, null);
-      return request.isMarkedBatchCommand();
+      return connectionMarked || request.isMarkedBatchCommand();
     }
     if (request.isMarkedBatchCommand()) {
       CONNECTION_MARKER_FIELD.set(connection, new RedissonBatchMarker());
