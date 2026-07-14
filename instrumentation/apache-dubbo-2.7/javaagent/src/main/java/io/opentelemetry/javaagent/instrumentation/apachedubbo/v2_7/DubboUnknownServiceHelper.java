@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.DubboSingletons.serverInstrumenter;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -137,7 +138,7 @@ public final class DubboUnknownServiceHelper {
       Throwable throwable,
       long startTimeMillis) {
 
-    if (DubboSingletons.SERVER_INSTRUMENTER == null || isAlreadyRecorded(rpcInvocation)) {
+    if (serverInstrumenter() == null || isAlreadyRecorded(rpcInvocation)) {
       return;
     }
 
@@ -150,8 +151,7 @@ public final class DubboUnknownServiceHelper {
             .getTextMapPropagator()
             .extract(Context.root(), rpcInvocation.getAttachments(), MAP_GETTER);
 
-    startAndEndSpan(
-        DubboSingletons.SERVER_INSTRUMENTER, parentContext, request, throwable, startTimeMillis);
+    startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTimeMillis);
   }
 
   /**
@@ -167,7 +167,7 @@ public final class DubboUnknownServiceHelper {
   public static void createUnknownServiceSpanFromDecode(
       RpcInvocation rpcInvocation, Object channelObj, Throwable throwable, long startTimeMillis) {
 
-    if (DubboSingletons.SERVER_INSTRUMENTER == null || isAlreadyRecorded(rpcInvocation)) {
+    if (serverInstrumenter() == null || isAlreadyRecorded(rpcInvocation)) {
       return;
     }
 
@@ -185,8 +185,7 @@ public final class DubboUnknownServiceHelper {
         DubboRequest.createForUnknownService(
             rpcInvocation, buildOriginalFullMethodName(rpcInvocation), remoteAddress, localAddress);
 
-    startAndEndSpan(
-        DubboSingletons.SERVER_INSTRUMENTER, Context.root(), request, throwable, startTimeMillis);
+    startAndEndSpan(serverInstrumenter(), Context.root(), request, throwable, startTimeMillis);
   }
 
   /**
@@ -205,7 +204,7 @@ public final class DubboUnknownServiceHelper {
   public static void createUnknownServiceSpanFromTriple(
       Object requestObj, Throwable throwable, long startTimeMillis) {
 
-    if (DubboSingletons.SERVER_INSTRUMENTER == null) {
+    if (serverInstrumenter() == null) {
       return;
     }
 
@@ -243,8 +242,7 @@ public final class DubboUnknownServiceHelper {
             .getTextMapPropagator()
             .extract(Context.root(), requestObj, HTTP_REQUEST_GETTER);
 
-    startAndEndSpan(
-        DubboSingletons.SERVER_INSTRUMENTER, parentContext, request, throwable, startTimeMillis);
+    startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTimeMillis);
   }
 
   /**
@@ -323,7 +321,7 @@ public final class DubboUnknownServiceHelper {
   }
 
   public static boolean isEnabled() {
-    return DubboSingletons.SERVER_INSTRUMENTER != null;
+    return serverInstrumenter() != null;
   }
 
   private DubboUnknownServiceHelper() {}

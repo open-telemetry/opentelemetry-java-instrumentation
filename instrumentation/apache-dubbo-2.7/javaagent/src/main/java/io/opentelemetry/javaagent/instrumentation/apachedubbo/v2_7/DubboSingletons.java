@@ -21,8 +21,7 @@ import org.apache.dubbo.rpc.Result;
 class DubboSingletons {
   private static final Filter clientFilter;
   private static final Filter serverFilter;
-
-  @Nullable public static final Instrumenter<DubboRequest, Result> SERVER_INSTRUMENTER;
+  @Nullable private static final Instrumenter<DubboRequest, Result> serverInstrumenter;
 
   static {
     DubboTelemetry telemetry =
@@ -33,7 +32,7 @@ class DubboSingletons {
             .build();
     clientFilter = telemetry.newClientFilter();
     serverFilter = telemetry.newServerFilter();
-    SERVER_INSTRUMENTER =
+    serverInstrumenter =
         emitStableRpcSemconv() ? DubboInternalHelper.getServerInstrumenter(telemetry) : null;
   }
 
@@ -43,6 +42,11 @@ class DubboSingletons {
 
   static Filter serverFilter() {
     return serverFilter;
+  }
+
+  @Nullable
+  static Instrumenter<DubboRequest, Result> serverInstrumenter() {
+    return serverInstrumenter;
   }
 
   private DubboSingletons() {}
