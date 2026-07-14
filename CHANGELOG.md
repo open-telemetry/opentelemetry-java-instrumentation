@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### 🚫 Deprecations
+
+- Deprecate `DeclarativeConfigPropertiesBridgeBuilder` for removal in 3.0. Use
+  `DeclarativeConfigProperties` directly when reading declarative component configuration.
+
+### 📈 Enhancements
+
 - Add Cassandra JMX metrics target system.
   ([#19080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19080))
 
