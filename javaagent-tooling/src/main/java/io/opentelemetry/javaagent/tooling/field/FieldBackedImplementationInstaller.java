@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling.field;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getFieldAccessorInterfaceName;
-import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINEST;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -74,16 +73,13 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   private final VirtualFieldImplementations virtualFieldImplementations;
   private final AgentBuilder.Transformer virtualFieldImplementationsInjector;
 
-  private final Instrumentation instrumentation;
+  @Nullable private final Instrumentation instrumentation;
 
   public FieldBackedImplementationInstaller(
       Class<?> instrumenterClass, VirtualFieldMappings virtualFieldMappings) {
     this.instrumenterClass = instrumenterClass;
     this.virtualFieldMappings = virtualFieldMappings;
-    // This class is used only when running with javaagent, thus this call is safe
-    this.instrumentation =
-        requireNonNull(
-            InstrumentationHolder.getInstrumentation(), "Instrumentation must not be null");
+    this.instrumentation = InstrumentationHolder.getInstrumentation();
 
     ByteBuddy byteBuddy = new ByteBuddy();
     fieldAccessorInterfaces =

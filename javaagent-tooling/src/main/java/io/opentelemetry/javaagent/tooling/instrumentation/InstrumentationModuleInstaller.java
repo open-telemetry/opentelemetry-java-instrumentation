@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static java.util.Collections.emptyList;
-import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -70,7 +69,7 @@ public final class InstrumentationModuleInstaller {
               ClassFileLocator.ForClassLoader.of(Utils.getExtensionsClassLoader())));
 
   public InstrumentationModuleInstaller(Instrumentation instrumentation) {
-    this.instrumentation = requireNonNull(instrumentation, "Instrumentation must not be null");
+    this.instrumentation = instrumentation;
   }
 
   // Need to call deprecated API for backward compatibility with modules that haven't migrated
