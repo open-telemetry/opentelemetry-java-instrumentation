@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 
+import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
@@ -25,19 +26,26 @@ final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final String queryText;
   @Nullable private final Long batchSize;
+  @Nullable private final RedisURI redisUri;
 
   private LettuceBatchRequest(
-      String operationName, @Nullable String queryText, @Nullable Long batchSize) {
+      String operationName,
+      @Nullable String queryText,
+      @Nullable Long batchSize,
+      @Nullable RedisURI redisUri) {
     this.operationName = operationName;
     this.queryText = queryText;
     this.batchSize = batchSize;
+    this.redisUri = redisUri;
   }
 
-  static LettuceBatchRequest create(List<RedisCommand<?, ?, ?>> commands) {
+  static LettuceBatchRequest create(
+      List<RedisCommand<?, ?, ?>> commands, @Nullable RedisURI redisUri) {
     return new LettuceBatchRequest(
         operationName(commands),
         queryText(commands),
-        commands.size() != 1 ? (long) commands.size() : null);
+        commands.size() != 1 ? (long) commands.size() : null,
+        redisUri);
   }
 
   String getOperationName() {
@@ -52,6 +60,11 @@ final class LettuceBatchRequest {
   @Nullable
   Long getBatchSize() {
     return batchSize;
+  }
+
+  @Nullable
+  RedisURI getRedisUri() {
+    return redisUri;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {

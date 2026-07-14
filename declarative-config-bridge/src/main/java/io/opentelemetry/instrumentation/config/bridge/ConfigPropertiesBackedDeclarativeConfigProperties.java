@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
  * <p>It tracks the navigation path and only resolves to system properties at the leaf node when a
  * value is actually requested.
  */
-public final class ConfigPropertiesBackedDeclarativeConfigProperties
+final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
   private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
@@ -95,7 +95,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   private final ConfigProperties configProperties;
   private final List<String> path;
 
-  public static DeclarativeConfigProperties createInstrumentationConfig(
+  static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
     return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, emptyList());
   }
