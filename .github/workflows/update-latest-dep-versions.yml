@@ -69,6 +69,18 @@ jobs:
           git add .github/config/latest-dep-versions.json
           git commit -m "$message"
 
+          # Dependency resolution can take long enough for workflow files on main to change after
+          # checkout. GitHub then rejects pushing the stale branch without workflows: write, even
+          # though the generated commit only changes latest-dep-versions.json. Merge instead of
+          # rebase so that commit remains tied to its source snapshot while the pushed branch
+          # contains the current workflow files.
+          git fetch origin main
+          if ! git merge --no-edit origin/main; then
+            echo "::error::Failed to merge the latest origin/main into the generated dependency update."
+            git merge --abort
+            exit 1
+          fi
+
           # If the remote branch already exists, only force-push when its tip
           # was authored by otelbot. This preserves any manual commits that
           # may have pushed on top of an open auto-PR.
