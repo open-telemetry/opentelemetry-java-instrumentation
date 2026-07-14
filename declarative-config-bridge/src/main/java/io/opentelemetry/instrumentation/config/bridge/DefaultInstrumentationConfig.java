@@ -120,7 +120,8 @@ public final class DefaultInstrumentationConfig {
   public Map<String, String> toConfigProperties() {
     HashMap<String, String> map = new HashMap<>();
     defaults.forEach(
-        (declarativePath, value) -> map.put(toConfigProperty(declarativePath), String.valueOf(value)));
+        (declarativePath, value) ->
+            map.put(toConfigProperty(declarativePath), String.valueOf(value)));
     return map;
   }
 
@@ -150,7 +151,8 @@ public final class DefaultInstrumentationConfig {
     }
 
     if (propertyPrefix == null) {
-      return ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey("java." + declarativePath);
+      return ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey(
+          "java." + declarativePath);
     }
     if (declarativePrefix == null) {
       throw new IllegalStateException("missing declarative prefix for property mapping");

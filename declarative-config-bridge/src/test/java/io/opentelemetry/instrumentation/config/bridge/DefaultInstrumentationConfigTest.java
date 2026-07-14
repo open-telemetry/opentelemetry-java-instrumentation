@@ -49,10 +49,7 @@ class DefaultInstrumentationConfigTest {
             "experimental special mapping",
             (Consumer<DefaultInstrumentationConfig>)
                 defaults ->
-                    defaults
-                        .get("common")
-                        .get("http")
-                        .setDefault("known_methods", "GET,POST"),
+                    defaults.get("common").get("http").setDefault("known_methods", "GET,POST"),
             "otel.instrumentation.http.known-methods",
             "GET,POST"));
   }
