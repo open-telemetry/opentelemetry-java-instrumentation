@@ -36,7 +36,7 @@ public final class RedissonBatchContext {
   }
 
   public static Context clearMarker(Context context) {
-    return context.with(KEY, false);
+    return isActive(context) ? context.with(KEY, false) : context;
   }
 
   @Nullable
