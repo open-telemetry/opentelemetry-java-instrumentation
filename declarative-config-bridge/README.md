@@ -68,6 +68,16 @@ And now the component provider:
 public class InferredSpansSpanProcessorProvider implements ComponentProvider {
 
   @Override
+  public String getName() {
+    return "inferred_spans";
+  }
+
+  @Override
+  public String getType() {
+    return "processor";
+  }
+
+  @Override
   public SpanProcessor create(DeclarativeConfigProperties properties) {
     return InferredSpansConfig.createSpanProcessor(properties);
   }
