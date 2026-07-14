@@ -38,6 +38,8 @@ public final class ConfigPropertiesBackedConfigProvider implements ConfigProvide
 
   public static final class Builder {
     private final Map<String, String> mappings = new HashMap<>();
+    private String accessRoot = ConfigPropertiesBackedDeclarativeConfigProperties.DEFAULT_ACCESS_ROOT;
+    private String resultPrefix = ConfigPropertiesBackedDeclarativeConfigProperties.DEFAULT_RESULT_PREFIX;
 
     private Builder() {}
 
@@ -47,10 +49,17 @@ public final class ConfigPropertiesBackedConfigProvider implements ConfigProvide
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder setAccessPath(String accessRoot, String resultPrefix) {
+      this.accessRoot = accessRoot;
+      this.resultPrefix = resultPrefix;
+      return this;
+    }
+
     public ConfigProvider build(ConfigProperties configProperties) {
       return new ConfigPropertiesBackedConfigProvider(
           ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
-              configProperties, mappings));
+              configProperties, mappings, accessRoot, resultPrefix));
     }
   }
 

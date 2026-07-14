@@ -29,6 +29,8 @@ import javax.annotation.Nullable;
 public final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
+  static final String DEFAULT_ACCESS_ROOT = "java.";
+  static final String DEFAULT_RESULT_PREFIX = "otel.instrumentation.";
   private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
@@ -94,14 +96,17 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   private final ConfigProperties configProperties;
   private final List<String> path;
   private final Map<String, String> mappings;
+  private final String accessRoot;
+  private final String resultPrefix;
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
-    return createInstrumentationConfig(configProperties, emptyMap());
+    return createInstrumentationConfig(configProperties, emptyMap(), DEFAULT_ACCESS_ROOT, DEFAULT_RESULT_PREFIX);
   }
 
-  public static DeclarativeConfigProperties createInstrumentationConfig(
-      ConfigProperties configProperties, Map<String, String> mappings) {
+  static DeclarativeConfigProperties createInstrumentationConfig(
+      ConfigProperties configProperties, Map<String, String> mappings, String accessRoot,
+      String resultPrefix) {
     for (String mapping : mappings.keySet()) {
       if (SPECIAL_MAPPINGS.containsKey(mapping)) {
         throw new IllegalArgumentException(
@@ -111,14 +116,17 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     Map<String, String> mergedMappings = new HashMap<>(SPECIAL_MAPPINGS);
     mergedMappings.putAll(mappings);
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, emptyList(), mergedMappings);
+        configProperties, emptyList(), mergedMappings, accessRoot, resultPrefix);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
-      ConfigProperties configProperties, List<String> path, Map<String, String> mappings) {
+      ConfigProperties configProperties, List<String> path, Map<String, String> mappings,
+      String accessRoot, String resultPrefix) {
     this.configProperties = configProperties;
     this.path = path;
     this.mappings = mappings;
+    this.accessRoot = accessRoot;
+    this.resultPrefix = resultPrefix;
   }
 
   @Nullable
@@ -178,7 +186,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     List<String> newPath = new ArrayList<>(path);
     newPath.add(name);
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, newPath, mappings);
+        configProperties, newPath, mappings, accessRoot, resultPrefix);
   }
 
   @Nullable
@@ -229,12 +237,11 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       return mappedKey;
     }
 
-    if (!fullPath.startsWith("java.")) {
+    if (!accessRoot.isEmpty() && !fullPath.startsWith(accessRoot)) {
       return "";
     }
 
-    // Remove "java." prefix and translate the remaining path
-    String[] segments = fullPath.substring(5).split("\\.");
+    String[] segments = fullPath.substring(accessRoot.length()).split("\\.");
     StringBuilder translatedPath = new StringBuilder();
 
     for (int i = 0; i < segments.length; i++) {
@@ -244,7 +251,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       translatedPath.append(translateName(segments[i]));
     }
 
-    return "otel.instrumentation." + translatedPath;
+    return resultPrefix + translatedPath;
   }
 
   private String pathWithName(String name) {
