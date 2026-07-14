@@ -73,6 +73,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final String TEST_RECONNECT = "testReconnect";
+  private static final String TEST_SINGLE_CONNECTION = "testSingleConnection";
   private static final Duration TIMEOUT = Duration.ofSeconds(30);
 
   private final GenericContainer<?> redisServer =
@@ -113,6 +114,10 @@ public abstract class AbstractRedissonAsyncClientTest {
       // When verifying the futureCallback test case, simulate reconnection during Redis command
       // execution.
       singleServerConfig.setConnectionMinimumIdleSize(0);
+    }
+    if (testInfo.getTags().contains(TEST_SINGLE_CONNECTION)) {
+      singleServerConfig.setConnectionMinimumIdleSize(1);
+      singleServerConfig.setConnectionPoolSize(1);
     }
     try {
       // disable connection ping if it exists
@@ -222,6 +227,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @Test
+  @Tag(TEST_SINGLE_CONNECTION)
   void atomicBatchCommand() {
     try {
       // available since 3.7.2

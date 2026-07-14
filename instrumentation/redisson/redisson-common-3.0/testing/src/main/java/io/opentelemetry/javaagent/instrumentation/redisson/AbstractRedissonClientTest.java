@@ -589,6 +589,7 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
+  @Tag(TEST_SINGLE_CONNECTION)
   void atomicBatchFailure() {
     assumeStableAtomicBatchSupport();
     redisson.getBucket("wrongtype").set("value");
