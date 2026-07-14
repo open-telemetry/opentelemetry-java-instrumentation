@@ -15,29 +15,29 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class KubernetesRequestUtilsTest {
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("isResourceRequestArguments")
-  void isResourceRequest(String name, String urlPath, boolean expected) {
+  void isResourceRequest(String urlPath, boolean expected) {
     assertThat(KubernetesRequestDigest.isResourceRequest(urlPath)).isEqualTo(expected);
   }
 
   private static Stream<Arguments> isResourceRequestArguments() {
     return Stream.of(
-        Arguments.of("api root", "/api", false),
-        Arguments.of("apis root", "/apis", false),
-        Arguments.of("apis version only", "/apis/v1", false),
-        Arguments.of("healthz", "/healthz", false),
-        Arguments.of("swagger", "/swagger.json", false),
-        Arguments.of("core api version", "/api/v1", false),
-        Arguments.of("core api version trailing slash", "/api/v1/", false),
-        Arguments.of("group api version", "/apis/apps/v1", false),
-        Arguments.of("group api version trailing slash", "/apis/apps/v1/", false),
-        Arguments.of("custom resource list", "/apis/example.io/v1/foos", true),
-        Arguments.of(
+        argumentSet("api root", "/api", false),
+        argumentSet("apis root", "/apis", false),
+        argumentSet("apis version only", "/apis/v1", false),
+        argumentSet("healthz", "/healthz", false),
+        argumentSet("swagger", "/swagger.json", false),
+        argumentSet("core api version", "/api/v1", false),
+        argumentSet("core api version trailing slash", "/api/v1/", false),
+        argumentSet("group api version", "/apis/apps/v1", false),
+        argumentSet("group api version trailing slash", "/apis/apps/v1/", false),
+        argumentSet("custom resource list", "/apis/example.io/v1/foos", true),
+        argumentSet(
             "custom resource namespaced list", "/apis/example.io/v1/namespaces/default/foos", true),
-        Arguments.of("core namespaces list", "/api/v1/namespaces", true),
-        Arguments.of("core pods list", "/api/v1/pods", true),
-        Arguments.of("core namespaced pods list", "/api/v1/namespaces/default/pods", true));
+        argumentSet("core namespaces list", "/api/v1/namespaces", true),
+        argumentSet("core pods list", "/api/v1/pods", true),
+        argumentSet("core namespaced pods list", "/api/v1/namespaces/default/pods", true));
   }
 
   @ParameterizedTest
@@ -63,10 +63,9 @@ class KubernetesRequestUtilsTest {
     assertThat(actual.getName()).isEqualTo(expected.getName());
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("k8sRequestVerbsArguments")
   void k8sRequestVerbs(
-      String name,
       String httpVerb,
       boolean hasNamePathParam,
       boolean hasWatchParam,
@@ -77,15 +76,14 @@ class KubernetesRequestUtilsTest {
 
   private static Stream<Arguments> k8sRequestVerbsArguments() {
     return Stream.of(
-        Arguments.of("GET named", "GET", true, false, KubernetesVerb.GET),
-        Arguments.of("GET watch", "GET", false, true, KubernetesVerb.WATCH),
-        Arguments.of("GET list", "GET", false, false, KubernetesVerb.LIST),
-        Arguments.of("POST create", "POST", false, false, KubernetesVerb.CREATE),
-        Arguments.of("PUT update", "PUT", false, false, KubernetesVerb.UPDATE),
-        Arguments.of("PATCH", "PATCH", false, false, KubernetesVerb.PATCH),
-        Arguments.of("DELETE named", "DELETE", true, false, KubernetesVerb.DELETE),
-        Arguments.of(
-            "DELETE collection", "DELETE", false, false, KubernetesVerb.DELETE_COLLECTION));
+        argumentSet("GET named", "GET", true, false, KubernetesVerb.GET),
+        argumentSet("GET watch", "GET", false, true, KubernetesVerb.WATCH),
+        argumentSet("GET list", "GET", false, false, KubernetesVerb.LIST),
+        argumentSet("POST create", "POST", false, false, KubernetesVerb.CREATE),
+        argumentSet("PUT update", "PUT", false, false, KubernetesVerb.UPDATE),
+        argumentSet("PATCH", "PATCH", false, false, KubernetesVerb.PATCH),
+        argumentSet("DELETE named", "DELETE", true, false, KubernetesVerb.DELETE),
+        argumentSet("DELETE collection", "DELETE", false, false, KubernetesVerb.DELETE_COLLECTION));
   }
 
   private static Stream<Arguments> parseRegularResourceArguments() {
