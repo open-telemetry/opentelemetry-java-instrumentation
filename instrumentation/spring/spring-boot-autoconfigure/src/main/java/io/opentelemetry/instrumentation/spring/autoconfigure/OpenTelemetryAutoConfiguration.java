@@ -189,10 +189,10 @@ public class OpenTelemetryAutoConfiguration {
 
       @Bean
       OpenTelemetry openTelemetry(
-          OpenTelemetryConfigurationModel model,
-          ApplicationContext applicationContext) {
-        SpringConfigProvider configProvider = SpringConfigProvider.create(
-            model, new OpenTelemetrySdkComponentLoader(applicationContext));
+          OpenTelemetryConfigurationModel model, ApplicationContext applicationContext) {
+        SpringConfigProvider configProvider =
+            SpringConfigProvider.create(
+                model, new OpenTelemetrySdkComponentLoader(applicationContext));
 
         OpenTelemetrySdk sdk =
             DeclarativeConfiguration.create(

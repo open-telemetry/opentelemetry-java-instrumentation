@@ -78,7 +78,6 @@ class DeclarativeConfigTest {
         });
   }
 
-
   @Test
   void configProviderMatchesOpenTelemetryConfigProvider() {
     this.contextRunner.run(
