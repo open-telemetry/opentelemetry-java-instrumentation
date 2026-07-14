@@ -38,8 +38,10 @@ public final class ConfigPropertiesBackedConfigProvider implements ConfigProvide
 
   public static final class Builder {
     private final Map<String, String> mappings = new HashMap<>();
-    private String accessRoot = ConfigPropertiesBackedDeclarativeConfigProperties.DEFAULT_ACCESS_ROOT;
-    private String resultPrefix = ConfigPropertiesBackedDeclarativeConfigProperties.DEFAULT_RESULT_PREFIX;
+    private String accessRoot =
+        ConfigPropertiesBackedDeclarativeConfigProperties.DEFAULT_ACCESS_ROOT;
+    private String resultPrefix =
+        ConfigPropertiesBackedDeclarativeConfigProperties.DEFAULT_RESULT_PREFIX;
 
     private Builder() {}
 

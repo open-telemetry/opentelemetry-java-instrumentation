@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.config.bridge;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.HashMap;
@@ -108,7 +107,8 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
     Map<String, String> customMappings = new HashMap<>();
     customMappings.put("java.custom.enabled", "otel.custom.enabled");
 
-    ConfigPropertiesBackedConfigProvider.Builder builder = ConfigPropertiesBackedConfigProvider.builder();
+    ConfigPropertiesBackedConfigProvider.Builder builder =
+        ConfigPropertiesBackedConfigProvider.builder();
 
     DefaultConfigProperties fromMap = DefaultConfigProperties.createFromMap(properties);
     customMappings.forEach(builder::addMapping);

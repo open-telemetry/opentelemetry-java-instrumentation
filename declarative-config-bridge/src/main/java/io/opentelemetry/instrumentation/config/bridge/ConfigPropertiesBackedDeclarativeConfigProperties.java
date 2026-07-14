@@ -103,11 +103,14 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
-    return createInstrumentationConfig(configProperties, emptyMap(), DEFAULT_ACCESS_ROOT, DEFAULT_RESULT_PREFIX);
+    return createInstrumentationConfig(
+        configProperties, emptyMap(), DEFAULT_ACCESS_ROOT, DEFAULT_RESULT_PREFIX);
   }
 
   static DeclarativeConfigProperties createInstrumentationConfig(
-      ConfigProperties configProperties, Map<String, String> mappings, String accessRoot,
+      ConfigProperties configProperties,
+      Map<String, String> mappings,
+      String accessRoot,
       String resultPrefix) {
     for (String mapping : mappings.keySet()) {
       if (SPECIAL_MAPPINGS.containsKey(mapping)) {
@@ -122,8 +125,11 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
-      ConfigProperties configProperties, List<String> path, Map<String, String> mappings,
-      String accessRoot, String resultPrefix) {
+      ConfigProperties configProperties,
+      List<String> path,
+      Map<String, String> mappings,
+      String accessRoot,
+      String resultPrefix) {
     this.configProperties = configProperties;
     this.path = path;
     this.mappings = mappings;
