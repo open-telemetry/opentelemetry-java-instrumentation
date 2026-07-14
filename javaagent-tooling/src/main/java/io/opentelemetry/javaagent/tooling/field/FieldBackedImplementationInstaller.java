@@ -146,7 +146,6 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
       final HelperInjector injector =
           HelperInjector.forDynamicTypes(getClass().getSimpleName(), helpers, instrumentation);
 
-      @Nullable
       @Override
       public DynamicType.Builder<?> transform(
           DynamicType.Builder<?> builder,
@@ -154,13 +153,14 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
           ClassLoader classLoader,
           JavaModule javaModule,
           ProtectionDomain protectionDomain) {
-        return injector.transform(
+        injector.transform(
             builder,
             typeDescription,
             // virtual field implementation classes will always go to the bootstrap
             null,
             javaModule,
             protectionDomain);
+        return builder;
       }
     };
   }
