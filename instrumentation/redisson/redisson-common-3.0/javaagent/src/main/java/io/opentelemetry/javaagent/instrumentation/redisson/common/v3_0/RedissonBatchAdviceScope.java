@@ -51,7 +51,9 @@ public class RedissonBatchAdviceScope {
     if (state == null) {
       return false;
     }
-    state.add(command, codec, parameters);
+    if (!RedissonBatchContext.isActive(currentContext())) {
+      state.add(command, codec, parameters);
+    }
     return true;
   }
 
