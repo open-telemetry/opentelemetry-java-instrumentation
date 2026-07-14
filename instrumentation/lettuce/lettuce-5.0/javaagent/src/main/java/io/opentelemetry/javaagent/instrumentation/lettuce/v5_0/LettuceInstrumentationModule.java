@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx.LettuceReactiveCommandsInstrumentation;
@@ -24,7 +25,13 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 5.1
+    if (AgentCommonConfig.get().isV3Preview()) {
+      // under v3-preview this advice-based module handles the whole supported lettuce range (5.0+);
+      // the SPI-based lettuce-5.1 javaagent module is disabled
+      return hasClassesNamed("io.lettuce.core.AbstractRedisAsyncCommands");
+    }
+    // the tracing SPI was added in 5.1; by default this module only handles pre-5.1, while the
+    // lettuce-5.1 javaagent module handles 5.1+
     return not(hasClassesNamed("io.lettuce.core.tracing.Tracing"));
   }
 
@@ -33,6 +40,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
     return asList(
         new LettuceAsyncCommandInstrumentation(),
         new LettuceAsyncCommandsInstrumentation(),
+        new LettuceEndpointInstrumentation(),
         new LettuceClientInstrumentation(),
         new LettuceReactiveCommandsInstrumentation());
   }

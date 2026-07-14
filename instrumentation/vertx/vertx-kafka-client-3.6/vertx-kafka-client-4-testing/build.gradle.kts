@@ -18,7 +18,7 @@ dependencies {
 
 testing {
   suites {
-    val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testNoReceiveTelemetry") {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
@@ -49,7 +49,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

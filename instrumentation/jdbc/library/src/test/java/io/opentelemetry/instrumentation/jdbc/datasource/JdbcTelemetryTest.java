@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
@@ -201,6 +202,32 @@ class JdbcTelemetryTest {
                 span -> span.hasName("parent"),
                 span -> span.hasName("COMMIT"),
                 span -> span.hasName("ROLLBACK")));
+  }
+
+  @Test
+  void transactionMetrics() throws SQLException {
+    JdbcTelemetry telemetry =
+        JdbcTelemetry.builder(testing.getOpenTelemetry())
+            .setTransactionInstrumenterEnabled(true)
+            .build();
+
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
+
+    testing.runWithSpan("parent", () -> dataSource.getConnection().commit());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"), span -> span.hasName("COMMIT")));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.jdbc",
+        DB_NAMESPACE,
+        DB_OPERATION_NAME,
+        DB_SYSTEM_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test

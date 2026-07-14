@@ -49,6 +49,16 @@ class ThriftTest extends AbstractThriftTest {
   }
 
   @Override
+  protected TProtocolFactory configureServerInProtocolFactory(TProtocolFactory protocolFactory) {
+    return protocolFactory;
+  }
+
+  @Override
+  protected TProtocolFactory configureServerOutProtocolFactory(TProtocolFactory protocolFactory) {
+    return protocolFactory;
+  }
+
+  @Override
   protected boolean hasAsyncServerNetworkAttributes() {
     return true;
   }

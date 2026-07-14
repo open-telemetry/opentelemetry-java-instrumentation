@@ -9,7 +9,7 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -22,10 +22,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class ManifestResourceProviderTest {
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("createResourceCases")
   void createResource(
-      String name, String expectedName, String expectedVersion, Resource input, Resource existing) {
+      String expectedName, String expectedVersion, Resource input, Resource existing) {
     ConfigProperties config = DefaultConfigProperties.createFromMap(emptyMap());
 
     ManifestResourceProvider provider = new ManifestResourceProvider(() -> input);
@@ -41,8 +41,8 @@ class ManifestResourceProviderTest {
         Resource.create(Attributes.of(SERVICE_NAME, "demo", SERVICE_VERSION, "0.0.1-SNAPSHOT"));
     Resource existingWithName = Resource.create(Attributes.of(SERVICE_NAME, "old"));
     return Stream.of(
-        arguments("name ok", "demo", "0.0.1-SNAPSHOT", manifest, Resource.getDefault()),
-        arguments("name - empty resource", null, null, Resource.empty(), Resource.getDefault()),
-        arguments("name already detected", null, "0.0.1-SNAPSHOT", manifest, existingWithName));
+        argumentSet("name ok", "demo", "0.0.1-SNAPSHOT", manifest, Resource.getDefault()),
+        argumentSet("name - empty resource", null, null, Resource.empty(), Resource.getDefault()),
+        argumentSet("name already detected", null, "0.0.1-SNAPSHOT", manifest, existingWithName));
   }
 }

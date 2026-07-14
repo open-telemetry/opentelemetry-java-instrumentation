@@ -17,13 +17,13 @@ dependencies {
 
   api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  implementation(platform("io.grpc:grpc-bom:1.82.0"))
+  implementation(platform("io.grpc:grpc-bom:1.82.2"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:4.35.0")
+  implementation("com.google.protobuf:protobuf-java-util:4.35.1")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
@@ -53,7 +53,7 @@ tasks {
       "wildfly" to listOf("**/Wildfly*.*"),
     )
 
-    val smokeTestSuite: String? by project
+    val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
     val skipOpenJ9SmokeTests = (findProperty("skipOpenJ9SmokeTests") as String?) == "true"
     if (smokeTestSuite != null) {
       val suite = suites[smokeTestSuite]

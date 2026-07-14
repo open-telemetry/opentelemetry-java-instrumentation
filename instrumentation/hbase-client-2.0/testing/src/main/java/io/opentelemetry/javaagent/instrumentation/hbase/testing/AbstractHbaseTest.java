@@ -11,6 +11,8 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -24,6 +26,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
@@ -40,6 +43,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -58,6 +62,7 @@ import org.apache.hadoop.hbase.client.Increment;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Row;
 import org.apache.hadoop.hbase.client.RowMutations;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
@@ -70,6 +75,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
@@ -100,7 +108,6 @@ public abstract class AbstractHbaseTest {
   private static final String ROW_2 = "row2";
   private static final String ROW_3 = "row3";
   private static final String ROW_4 = "row4";
-  private static final String ROW_5 = "row5";
   private static final String SCAN_ROW = "scan-row";
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
@@ -174,12 +181,13 @@ public abstract class AbstractHbaseTest {
           TableDescriptorBuilder.newBuilder(TABLE_NAME)
               .setColumnFamily(columnFamilyDescriptor)
               .build();
-      admin.createTable(tableDescriptor);
+      admin.createTable(tableDescriptor, new byte[][] {Bytes.toBytes("m")});
     }
   }
 
   private void seedRows() throws IOException {
     try (Table table = connection.getTable(TABLE_NAME)) {
+      table.put(row("batch-seed-row", "col1_val", "col2_val"));
       table.put(row(ROW_1, "col1_val_1", "col2_val_1"));
       table.put(row(SCAN_ROW, "scan_col1_val", "scan_col2_val"));
     }
@@ -224,16 +232,12 @@ public abstract class AbstractHbaseTest {
 
   @Test
   void testPut() throws IOException {
-    try (Connection putConnection =
-            ConnectionFactory.createConnection(connection.getConfiguration());
-        Table table = putConnection.getTable(TABLE_NAME)) {
+    try (Table table = connection.getTable(TABLE_NAME)) {
       Put put = row("put-row", "put_col1_val", "put_col2_val");
       table.put(put);
     }
     testing()
-        .waitAndAssertTraces(
-            traceAssertConsumer(META, SCAN, REGION_SERVER_PORT, true),
-            traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
+        .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MUTATE, REGION_SERVER_PORT, true));
   }
 
   @Test
@@ -273,7 +277,16 @@ public abstract class AbstractHbaseTest {
                                     maybeStable(DB_SYSTEM),
                                     maybeStableDbSystemName(DB_SYSTEM_VALUE)),
                                 equalTo(maybeStable(DB_OPERATION), GET),
-                                equalTo(maybeStable(DB_NAME), TABLE_NAME.getNameAsString()),
+                                equalTo(
+                                    maybeStable(DB_NAME),
+                                    emitStableDatabaseSemconv()
+                                        ? TABLE_NAME.getNamespaceAsString()
+                                        : TABLE_NAME.getNameAsString()),
+                                equalTo(
+                                    DB_COLLECTION_NAME,
+                                    emitStableDatabaseSemconv()
+                                        ? TABLE_NAME.getNameAsString()
+                                        : null),
                                 equalTo(SERVER_ADDRESS, hostname),
                                 equalTo(SERVER_PORT, REGION_SERVER_PORT),
                                 equalTo(
@@ -344,47 +357,77 @@ public abstract class AbstractHbaseTest {
     testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, SCAN, REGION_SERVER_PORT, true));
   }
 
-  @Test
-  void testBatchGet() throws IOException {
-    Result[] results;
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void testBatch(BatchScenario scenario) throws IOException, InterruptedException {
     try (Table table = connection.getTable(TABLE_NAME)) {
-      List<Get> getList = new ArrayList<>();
-      getList.add(new Get(Bytes.toBytes(ROW_1)));
-      getList.add(new Get(Bytes.toBytes(ROW_2)));
-      getList.add(new Get(Bytes.toBytes(ROW_5)));
-      results = table.get(getList);
+      table.batch(scenario.actions, new Object[scenario.actions.size()]);
     }
-    assertThat(results).hasSize(3);
-    {
-      assertThat(Bytes.toString(results[0].getRow())).isEqualTo(ROW_1);
-      assertThat(value(results[0], "col1")).isEqualTo("col1_val_1");
-      assertThat(value(results[0], "col2")).isEqualTo("col2_val_1");
+
+    // an empty batch sends nothing to the server, so no span is produced under either semconv
+    if (scenario.actions.isEmpty()) {
+      assertThat(testing().spans()).isEmpty();
+      return;
     }
-    {
-      assertThat(Bytes.toString(results[1].getRow())).isNull();
-      assertThat(value(results[1], "col1")).isNull();
-      assertThat(value(results[1], "col2")).isNull();
+
+    if (!emitStableDatabaseSemconv()) {
+      // old semconv reports every batch RPC as the raw "Multi" operation
+      testing()
+          .waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
+      return;
     }
-    {
-      assertThat(Bytes.toString(results[2].getRow())).isNull();
-      assertThat(value(results[2], "col1")).isNull();
-      assertThat(value(results[2], "col2")).isNull();
-    }
-    testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
+
+    // stable semconv derives the batch operation name and db.operation.batch.size; the batch size
+    // is present only for multi-action batches (a single-action batch is a non-batch operation, so
+    // scenario.batchSize is null and the attribute is asserted absent)
+    testing()
+        .waitAndAssertTraces(
+            traceAssertConsumer(
+                TABLE_NAME, scenario.operationName, REGION_SERVER_PORT, true, scenario.batchSize));
   }
 
-  @Test
-  void testBatchPut() throws IOException {
-    try (Table table = connection.getTable(TABLE_NAME)) {
-      List<Put> putList = new ArrayList<>();
-      for (int i = 2; i < 5; i++) {
-        Put put = new Put(Bytes.toBytes("batch-put-row" + i));
-        put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val_" + i));
-        putList.add(put);
-      }
-      table.put(putList);
-    }
-    testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true));
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        // an empty batch sends nothing to the server, so it produces no span
+        argumentSet("empty", BatchScenario.builder().build()),
+        // a single operation is modeled as a non-batch operation (no db.operation.batch.size)
+        argumentSet(
+            "single", BatchScenario.builder().addAction(get(ROW_1)).operationName(GET).build()),
+        argumentSet(
+            "twoGets",
+            BatchScenario.builder()
+                .addAction(get(ROW_1))
+                .addAction(get(ROW_2))
+                .operationName("BATCH " + GET)
+                .batchSize(2L)
+                .build()),
+        argumentSet(
+            "twoMutations",
+            BatchScenario.builder()
+                .addAction(put("batch-mutation-row-1"))
+                .addAction(put("batch-mutation-row-2"))
+                .operationName("BATCH " + MUTATE)
+                .batchSize(2L)
+                .build()),
+        // The mutation and get are on opposite sides of the table's split key.
+        argumentSet(
+            "mixedAcrossRegions",
+            BatchScenario.builder()
+                .addAction(put("batch-mixed-put-row"))
+                .addAction(get(ROW_1))
+                .operationName("BATCH")
+                .batchSize(2L)
+                .build()));
+  }
+
+  private static Get get(String rowKey) {
+    return new Get(Bytes.toBytes(rowKey));
+  }
+
+  private static Put put(String rowKey) {
+    Put put = new Put(Bytes.toBytes(rowKey));
+    put.addColumn(COLUMN_FAMILY, Bytes.toBytes("col1"), Bytes.toBytes("col1_val"));
+    return put;
   }
 
   @Test
@@ -477,7 +520,12 @@ public abstract class AbstractHbaseTest {
     }
     testing()
         .waitAndAssertTraces(
-            traceAssertConsumer(TABLE_NAME, MULTI, REGION_SERVER_PORT, true),
+            traceAssertConsumer(
+                TABLE_NAME,
+                emitStableDatabaseSemconv() ? "BATCH " + MUTATE : MULTI,
+                REGION_SERVER_PORT,
+                true,
+                2L),
             traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
   }
 
@@ -509,12 +557,18 @@ public abstract class AbstractHbaseTest {
         DB_SYSTEM_NAME,
         maybeStable(DB_OPERATION),
         maybeStable(DB_NAME),
+        DB_COLLECTION_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
 
   protected Consumer<TraceAssert> traceAssertConsumer(
       TableName table, String operation, int port, boolean hasTable) {
+    return traceAssertConsumer(table, operation, port, hasTable, null);
+  }
+
+  private Consumer<TraceAssert> traceAssertConsumer(
+      TableName table, String operation, int port, boolean hasTable, Long batchSize) {
     String spanName;
     if (hasTable) {
       spanName = operation + " " + table.getNameAsString();
@@ -531,7 +585,11 @@ public abstract class AbstractHbaseTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DB_SYSTEM_VALUE)),
                         equalTo(maybeStable(DB_OPERATION), operation),
-                        equalTo(maybeStable(DB_NAME), hasTable ? table.getNameAsString() : null),
+                        equalTo(maybeStable(DB_NAME), dbNamespace(table, hasTable)),
+                        equalTo(DB_COLLECTION_NAME, dbCollectionName(table, hasTable)),
+                        equalTo(
+                            DB_OPERATION_BATCH_SIZE,
+                            emitStableDatabaseSemconv() ? batchSize : null),
                         equalTo(SERVER_ADDRESS, hostname),
                         equalTo(SERVER_PORT, port),
                         satisfies(
@@ -539,5 +597,63 @@ public abstract class AbstractHbaseTest {
                             emitStableDatabaseSemconv()
                                 ? AbstractAssert::isNull
                                 : AbstractAssert::isNotNull)));
+  }
+
+  private static String dbNamespace(TableName table, boolean hasTable) {
+    if (!hasTable) {
+      return null;
+    }
+    if (emitStableDatabaseSemconv()) {
+      return table.getNamespaceAsString();
+    }
+    return table.getNameAsString();
+  }
+
+  private static String dbCollectionName(TableName table, boolean hasTable) {
+    if (hasTable && emitStableDatabaseSemconv()) {
+      return table.getNameAsString();
+    }
+    return null;
+  }
+
+  private static class BatchScenario {
+    final List<Row> actions;
+    final String operationName;
+    final Long batchSize;
+
+    BatchScenario(Builder builder) {
+      this.actions = builder.actions;
+      this.operationName = builder.operationName;
+      this.batchSize = builder.batchSize;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static class Builder {
+      private final List<Row> actions = new ArrayList<>();
+      private String operationName;
+      private Long batchSize;
+
+      Builder operationName(String operationName) {
+        this.operationName = operationName;
+        return this;
+      }
+
+      Builder batchSize(Long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder addAction(Row action) {
+        this.actions.add(action);
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }

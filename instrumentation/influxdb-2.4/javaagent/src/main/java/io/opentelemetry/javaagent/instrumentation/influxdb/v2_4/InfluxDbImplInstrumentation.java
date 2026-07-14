@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.queryInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.requestInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isEnum;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -84,11 +85,11 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
       Context parentContext = currentContext();
 
       HttpUrl httpUrl = retrofit.baseUrl();
-      InfluxDbRequest influxDbRequest =
-          InfluxDbRequest.create(
-              httpUrl.host(), httpUrl.port(), query.getDatabase(), null, query.getCommand());
+      InfluxDbQuery influxDbQuery =
+          InfluxDbQuery.create(
+              httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
 
-      if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
+      if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
         return null;
       }
 
@@ -98,7 +99,9 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         newArguments[i] = InfluxDbObjectWrapper.wrap(arguments[i], parentContext);
       }
 
-      return new Object[] {newArguments, InfluxDbScope.start(parentContext, influxDbRequest)};
+      return new Object[] {
+        newArguments, InfluxDbScope.start(queryInstrumenter(), parentContext, influxDbQuery)
+      };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -109,7 +112,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      ((InfluxDbScope) enterArgs[1]).end(throwable);
+      ((InfluxDbScope<?>) enterArgs[1]).end(throwable);
     }
   }
 
@@ -117,7 +120,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbModifyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static InfluxDbScope onEnter(
+    public static InfluxDbScope<InfluxDbOperation> onEnter(
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(0) Object arg0,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
@@ -137,30 +140,33 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
           (arg0 instanceof BatchPoints)
               ? ((BatchPoints) arg0).getDatabase()
               // write data by UDP protocol, in this way, can't get database name.
-              : arg0 instanceof Integer ? "" : String.valueOf(arg0);
+              : arg0 instanceof Integer ? null : String.valueOf(arg0);
 
       String operationName;
       if ("createDatabase".equals(methodName)) {
+        // createDatabase emits a CREATE DATABASE query.
         operationName = "CREATE DATABASE";
       } else if ("deleteDatabase".equals(methodName)) {
+        // deleteDatabase emits a DROP DATABASE query.
         operationName = "DROP DATABASE";
       } else {
-        operationName = "WRITE";
+        operationName = methodName;
       }
 
-      InfluxDbRequest influxDbRequest =
-          InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, operationName, null);
+      InfluxDbOperation influxDbOperation =
+          InfluxDbOperation.create(httpUrl.host(), httpUrl.port(), database, operationName);
 
-      if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
+      if (!requestInstrumenter().shouldStart(parentContext, influxDbOperation)) {
         return null;
       }
 
-      return InfluxDbScope.start(parentContext, influxDbRequest);
+      return InfluxDbScope.start(requestInstrumenter(), parentContext, influxDbOperation);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable InfluxDbScope scope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable InfluxDbScope<InfluxDbOperation> scope) {
       CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
       if (callDepth.decrementAndGet() > 0 || scope == null) {
         return;

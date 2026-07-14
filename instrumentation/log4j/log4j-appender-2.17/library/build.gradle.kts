@@ -27,7 +27,7 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testAsyncLogger by registering(Test::class) {
+  val testAsyncLogger = register<Test>("testAsyncLogger") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
@@ -36,13 +36,13 @@ tasks {
     )
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code")
   }
 
-  val testBothSemconv by registering(Test::class) {
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")

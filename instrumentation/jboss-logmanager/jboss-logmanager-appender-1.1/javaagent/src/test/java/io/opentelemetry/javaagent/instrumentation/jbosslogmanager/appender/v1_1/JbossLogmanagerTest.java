@@ -15,8 +15,10 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -38,6 +40,16 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JbossLogmanagerTest {
+
+  private static final AttributeKey<String> LOG_BODY_TEMPLATE =
+      AttributeKey.stringKey("log.body.template");
+  private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
+      AttributeKey.stringArrayKey("log.body.parameters");
+
+  private static final boolean CAPTURE_TEMPLATE =
+      Boolean.getBoolean("otel.instrumentation.jboss-logmanager.experimental.capture-template");
+  private static final boolean CAPTURE_ARGUMENTS =
+      Boolean.getBoolean("otel.instrumentation.jboss-logmanager.experimental.capture-arguments");
 
   private static final Logger logger = LogContext.getLogContext().getLogger("abc");
 
@@ -159,6 +171,17 @@ class JbossLogmanagerTest {
                       satisfies(
                           EXCEPTION_STACKTRACE,
                           val -> val.contains(JbossLogmanagerTest.class.getName()))));
+            }
+            // logging via the Supplier + Throwable overload used above for logException doesn't
+            // support parameters, so the template/arguments attributes are only captured in the
+            // plain withParam case
+            if (withParam && !logException) {
+              if (CAPTURE_TEMPLATE) {
+                attributeAsserts.add(equalTo(LOG_BODY_TEMPLATE, "xyz: {0}"));
+              }
+              if (CAPTURE_ARGUMENTS) {
+                attributeAsserts.add(equalTo(LOG_BODY_PARAMETERS, singletonList("123")));
+              }
             }
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 

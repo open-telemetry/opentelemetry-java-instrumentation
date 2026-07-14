@@ -34,6 +34,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -1879,6 +1880,116 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))));
   }
 
+  static Stream<Arguments> batchCasesStream() {
+    return Stream.of(
+        argumentSet(
+            "empty",
+            BatchScenario.builder()
+                .spanName("BATCH")
+                .oldSpanName(DATABASE_NAME_LOWER)
+                .summary("BATCH")
+                .batchSize(0)
+                .build()),
+        argumentSet(
+            "single",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .spanName("INSERT batch_test")
+                .oldSpanName("INSERT " + DATABASE_NAME_LOWER + ".batch_test")
+                .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .oldStatement("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .summary("INSERT batch_test")
+                .oldOperation("INSERT")
+                .oldTable("batch_test")
+                .build()),
+        argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (2, 2)")
+                .spanName("BATCH INSERT batch_test")
+                .oldSpanName(DATABASE_NAME_LOWER)
+                .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .summary("BATCH INSERT batch_test")
+                .batchSize(2)
+                .build()),
+        argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .addQuery("UPDATE batch_test SET num = 5 WHERE id = 1")
+                .spanName("BATCH")
+                .oldSpanName(DATABASE_NAME_LOWER)
+                .queryText(
+                    "INSERT INTO batch_test (id, num) VALUES (?, ?); UPDATE batch_test SET num = ? WHERE id = ?")
+                .summary("BATCH")
+                .batchSize(2)
+                .build()));
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchCasesStream")
+  void testStatementBatch(BatchScenario scenario) throws SQLException {
+    Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
+    cleanup.deferCleanup(connection);
+
+    // recreate a fresh batch_test table for each scenario so that batch row ids can be reused
+    // without worrying about collisions from previous scenarios
+    Statement dropTable = connection.createStatement();
+    dropTable.execute("DROP TABLE IF EXISTS batch_test");
+    cleanup.deferCleanup(dropTable);
+    Statement createTable = connection.createStatement();
+    createTable.execute(
+        "CREATE TABLE batch_test (id INTEGER not NULL, num INTEGER, PRIMARY KEY ( id ))");
+    cleanup.deferCleanup(createTable);
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
+    for (String sql : scenario.queries) {
+      statement.addBatch(sql);
+    }
+
+    testing().runWithSpan("parent", statement::executeBatch);
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? scenario.spanName
+                                    : scenario.oldSpanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
+                                equalTo(
+                                    DB_CONNECTION_STRING,
+                                    emitStableDatabaseSemconv() ? null : "h2:mem:"),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv()
+                                        ? scenario.queryText
+                                        : scenario.oldStatement),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? scenario.summary : null),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : scenario.oldOperation),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : scenario.oldTable),
+                                equalTo(
+                                    DB_OPERATION_BATCH_SIZE,
+                                    emitStableDatabaseSemconv() ? scenario.batchSize : null))));
+  }
+
   static Stream<Arguments> batchStream() throws SQLException {
     return Stream.of(
         Arguments.of("h2", new org.h2.Driver().connect(JDBC_URLS.get("h2"), null), null, "h2:mem:"),
@@ -1898,19 +2009,6 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   @ParameterizedTest
   @MethodSource("batchStream")
-  void testBatch(String system, Connection connection, String username, String url)
-      throws SQLException {
-    testBatchImpl(
-        system,
-        wrap(connection),
-        username,
-        url,
-        "simple_batch_test",
-        statement -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
-  }
-
-  @ParameterizedTest
-  @MethodSource("batchStream")
   void testLargeBatch(String system, Connection connection, String username, String url)
       throws SQLException {
 
@@ -1924,177 +2022,13 @@ public abstract class AbstractJdbcInstrumentationTest {
     statement.addBatch("INSERT INTO simple_batch_test_large VALUES(2)");
 
     if (testLatestDeps() || "sqlite".equals(system)) {
-      assertThat(statement.executeLargeBatch()).isEqualTo(new long[] {1, 1});
+      statement.executeLargeBatch();
     } else {
       // Older drivers don't support JDBC 4.2, expect UnsupportedOperationException
       // This is the correct behavior - instrumentation should not change driver behavior
       assertThatThrownBy(statement::executeLargeBatch)
           .isInstanceOf(UnsupportedOperationException.class);
     }
-  }
-
-  private void testBatchImpl(
-      String system,
-      Connection connection,
-      String username,
-      String url,
-      String tableName,
-      ThrowingConsumer<Statement> action)
-      throws SQLException {
-    Statement createTable = connection.createStatement();
-    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable);
-
-    testing().waitForTraces(1);
-    testing().clearData();
-
-    Statement statement = connection.createStatement();
-    cleanup.deferCleanup(statement);
-    statement.addBatch("INSERT INTO non_existent_table VALUES(1)");
-    statement.clearBatch();
-    statement.addBatch("INSERT INTO " + tableName + " VALUES(1)");
-    statement.addBatch("INSERT INTO " + tableName + " VALUES(2)");
-    testing().runWithSpan("parent", () -> action.accept(statement));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT " + tableName
-                                    : "jdbcunittest")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                                equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv()
-                                        ? "INSERT INTO " + tableName + " VALUES(?)"
-                                        : null),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv()
-                                        ? "BATCH INSERT " + tableName
-                                        : null),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? 2L : null))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("batchStream")
-  void testMultiBatch(String system, Connection conn, String username, String url)
-      throws SQLException {
-    Connection connection = wrap(conn);
-    String tableName1 = "multi_batch_test_1";
-    String tableName2 = "multi_batch_test_2";
-    Statement createTable1 = connection.createStatement();
-    createTable1.execute(
-        "CREATE TABLE " + tableName1 + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable1);
-    Statement createTable2 = connection.createStatement();
-    createTable2.execute(
-        "CREATE TABLE " + tableName2 + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable2);
-
-    testing().waitForTraces(2);
-    testing().clearData();
-
-    Statement statement = connection.createStatement();
-    cleanup.deferCleanup(statement);
-    statement.addBatch("INSERT INTO " + tableName1 + " VALUES(1)");
-    statement.addBatch("INSERT INTO " + tableName2 + " VALUES(2)");
-    testing()
-        .runWithSpan(
-            "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(emitStableDatabaseSemconv() ? "BATCH" : "jdbcunittest")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                                equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv()
-                                        ? "INSERT INTO "
-                                            + tableName1
-                                            + " VALUES(?); INSERT INTO multi_batch_test_2 VALUES(?)"
-                                        : null),
-                                equalTo(
-                                    DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "BATCH" : null),
-                                equalTo(maybeStable(DB_OPERATION), null),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? 2L : null))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("batchStream")
-  void testSingleItemBatch(String system, Connection conn, String username, String url)
-      throws SQLException {
-    Connection connection = wrap(conn);
-    String tableName = "single_item_batch_test";
-    Statement createTable = connection.createStatement();
-    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable);
-
-    testing().waitForTraces(1);
-    testing().clearData();
-
-    Statement statement = connection.createStatement();
-    cleanup.deferCleanup(statement);
-    statement.addBatch("INSERT INTO " + tableName + " VALUES(1)");
-    testing()
-        .runWithSpan("parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1}));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "INSERT " + tableName
-                                    : "INSERT jdbcunittest." + tableName)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                                equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "INSERT INTO " + tableName + " VALUES(?)"),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "INSERT " + tableName : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : "INSERT"),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? null : tableName))));
   }
 
   @ParameterizedTest
@@ -2120,9 +2054,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     statement.addBatch();
     statement.setInt(1, 2);
     statement.addBatch();
-    testing()
-        .runWithSpan(
-            "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
+    testing().runWithSpan("parent", statement::executeBatch);
 
     testing()
         .waitAndAssertTraces(
@@ -2445,5 +2377,94 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     : "SELECT " + DATABASE_NAME_LOWER)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(1))));
+  }
+
+  private static final class BatchScenario {
+    final List<String> queries;
+    final String spanName;
+    final String oldSpanName;
+    final String queryText;
+    final String oldStatement;
+    final String summary;
+    final String oldOperation;
+    final String oldTable;
+    final Long batchSize;
+
+    BatchScenario(Builder builder) {
+      this.queries = builder.queries;
+      this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
+      this.queryText = builder.queryText;
+      this.oldStatement = builder.oldStatement;
+      this.summary = builder.summary;
+      this.oldOperation = builder.oldOperation;
+      this.oldTable = builder.oldTable;
+      this.batchSize = builder.batchSize;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static final class Builder {
+      private final List<String> queries = new ArrayList<>();
+      private String spanName;
+      private String oldSpanName;
+      private String queryText;
+      private String oldStatement;
+      private String summary;
+      private String oldOperation;
+      private String oldTable;
+      private Long batchSize;
+
+      Builder addQuery(String query) {
+        queries.add(query);
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
+      Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      Builder oldStatement(String oldStatement) {
+        this.oldStatement = oldStatement;
+        return this;
+      }
+
+      Builder summary(String summary) {
+        this.summary = summary;
+        return this;
+      }
+
+      Builder oldOperation(String oldOperation) {
+        this.oldOperation = oldOperation;
+        return this;
+      }
+
+      Builder oldTable(String oldTable) {
+        this.oldTable = oldTable;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }

@@ -51,13 +51,13 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks {
-  val testAsync by registering(Test::class) {
+  val testAsync = register<Test>("testAsync") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
   }
 
-  val testV3Preview by registering(Test::class) {
+  val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")

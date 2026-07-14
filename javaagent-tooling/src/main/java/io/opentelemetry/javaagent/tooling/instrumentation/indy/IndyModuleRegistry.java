@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.tooling.util.ClassLoaderValue;
 import java.lang.instrument.Instrumentation;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.utility.JavaModule;
 
@@ -25,14 +26,13 @@ public class IndyModuleRegistry {
 
   /**
    * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application class
-   * loader. The {@link InstrumentationModuleClassLoader} are kept alive by a strong reference from
-   * the instrumented class loader realized via {@link ClassLoaderValue}.
-   *
-   * <p>The keys of the contained map are the instrumentation module group names, see {@link
-   * ExperimentalInstrumentationModule#getModuleGroup()};
+   * loader. For internal instrumentation, the agent classloader key is used, for extensions the key
+   * is the extension classloader. <br>
+   * The {@link InstrumentationModuleClassLoader} are kept alive by a strong reference from the
+   * instrumented class loader realized via {@link ClassLoaderValue}.
    */
-  private static final ClassLoaderValue<Map<String, InstrumentationModuleClassLoader>>
-      instrumentationClassLoaders = new ClassLoaderValue<>();
+  private static final ClassLoaderValue<Map<ClassLoader, InstrumentationModuleClassLoader>>
+      internalOrExtensionsClassLoaders = new ClassLoaderValue<>();
 
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
       String moduleClassName, ClassLoader instrumentedClassLoader) {
@@ -47,20 +47,10 @@ public class IndyModuleRegistry {
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
       InstrumentationModule module, ClassLoader instrumentedClassLoader) {
 
-    String groupName = getModuleGroup(module);
+    ClassLoader moduleCl = module.getClass().getClassLoader();
+    InstrumentationModuleClassLoader loader =
+        lookupInstrumentationClassLoader(instrumentedClassLoader, moduleCl);
 
-    Map<String, InstrumentationModuleClassLoader> loadersByGroupName =
-        instrumentationClassLoaders.get(instrumentedClassLoader);
-
-    if (loadersByGroupName == null) {
-      throw new IllegalArgumentException(
-          module
-              + " has not been initialized for class loader "
-              + instrumentedClassLoader
-              + " yet");
-    }
-
-    InstrumentationModuleClassLoader loader = loadersByGroupName.get(groupName);
     if (loader == null || !loader.hasModuleInstalled(module)) {
       throw new IllegalArgumentException(
           module
@@ -90,11 +80,18 @@ public class IndyModuleRegistry {
     return loader;
   }
 
-  /**
-   * Returns a newly created class loader containing only the provided module. Note that other
-   * modules from the same module group (see {@link #getModuleGroup(InstrumentationModule)}) will
-   * not be installed in this class loader.
-   */
+  @Nullable
+  private static InstrumentationModuleClassLoader lookupInstrumentationClassLoader(
+      ClassLoader instrumentedClassLoader, ClassLoader moduleCl) {
+    Map<ClassLoader, InstrumentationModuleClassLoader> map =
+        internalOrExtensionsClassLoaders.get(instrumentedClassLoader);
+    if (map == null) {
+      return null;
+    }
+    return map.get(moduleCl);
+  }
+
+  /** Returns a newly created class loader containing only the provided module for muzzle. */
   public static InstrumentationModuleClassLoader createInstrumentationClassLoaderForMuzzle(
       InstrumentationModule module, ClassLoader instrumentedClassLoader) {
     // TODO: remove this method and replace usages with a custom TypePool implementation instead
@@ -124,23 +121,20 @@ public class IndyModuleRegistry {
       InstrumentationModule module, ClassLoader classLoader) {
 
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
+    InstrumentationModuleClassLoader moduleCl;
 
-    String groupName = getModuleGroup(module);
+    // Because extensions have their own classloader, extension modules are loaded in a common
+    // InstrumentationModuleCLassLoader per extension and instrumented CL (with extension CL as key)
+    // Non-extension modules are loaded in a common InstrumentationModuleClassLoader per
+    // instrumented CL (with agent CL as key)
 
-    InstrumentationModuleClassLoader moduleCl =
-        instrumentationClassLoaders
+    moduleCl =
+        internalOrExtensionsClassLoaders
             .computeIfAbsent(classLoader, ConcurrentHashMap::new)
             .computeIfAbsent(
-                groupName,
-                unused -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
+                agentOrExtensionCl,
+                k -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
 
     moduleCl.installModule(module);
-  }
-
-  private static String getModuleGroup(InstrumentationModule module) {
-    if (module instanceof ExperimentalInstrumentationModule) {
-      return ((ExperimentalInstrumentationModule) module).getModuleGroup();
-    }
-    return module.getClass().getName();
   }
 }

@@ -5,10 +5,13 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -16,9 +19,12 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.context.Context;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.message.ParameterizedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.Test;
@@ -33,6 +39,8 @@ class LogEventMapperTest {
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
             false,
             false,
             false,
@@ -62,6 +70,8 @@ class LogEventMapperTest {
             false,
             false,
             false,
+            false,
+            false,
             singletonList("key2"),
             emptyList(),
             false);
@@ -84,6 +94,8 @@ class LogEventMapperTest {
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
             false,
             false,
             false,
@@ -115,6 +127,8 @@ class LogEventMapperTest {
             false,
             false,
             false,
+            false,
+            false,
             singletonList("*"),
             singletonList("key2"),
             false);
@@ -138,6 +152,8 @@ class LogEventMapperTest {
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
             false,
             false,
             false,
@@ -169,6 +185,8 @@ class LogEventMapperTest {
             false,
             false,
             false,
+            false,
+            false,
             emptyList(),
             singletonList("key2"),
             false);
@@ -190,6 +208,8 @@ class LogEventMapperTest {
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
             false,
             false,
             false,
@@ -217,6 +237,8 @@ class LogEventMapperTest {
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
             false,
             false,
             false,
@@ -250,6 +272,8 @@ class LogEventMapperTest {
             false,
             true,
             false,
+            false,
+            false,
             singletonList("*"),
             emptyList(),
             v3Preview);
@@ -280,6 +304,8 @@ class LogEventMapperTest {
             false,
             false,
             true,
+            false,
+            false,
             false,
             singletonList("*"),
             emptyList(),
@@ -314,6 +340,8 @@ class LogEventMapperTest {
             false,
             true,
             false,
+            false,
+            false,
             singletonList("*"),
             emptyList(),
             v3Preview);
@@ -334,6 +362,80 @@ class LogEventMapperTest {
     verify(builder)
         .setAttribute(stringKey(v3Preview ? "message" : "log4j.map_message.message"), "value2");
     verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testCaptureTemplateAndArguments() {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            emptyList(),
+            emptyList(),
+            false);
+    ParameterizedMessage message = new ParameterizedMessage("hello {}", "world");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.mapLogEvent(
+        builder,
+        message,
+        Level.INFO,
+        null,
+        null,
+        new HashMap<>(),
+        "main",
+        1,
+        () -> null,
+        Context.root());
+
+    // then
+    verify(builder).setBody("hello world");
+    verify(builder).setAttribute(stringKey("log.body.template"), "hello {}");
+    verify(builder).setAttribute(stringArrayKey("log.body.parameters"), singletonList("world"));
+  }
+
+  @Test
+  void testCaptureTemplateAndArgumentsDisabledByDefault() {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            emptyList(),
+            emptyList(),
+            false);
+    ParameterizedMessage message = new ParameterizedMessage("hello {}", "world");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.mapLogEvent(
+        builder,
+        message,
+        Level.INFO,
+        null,
+        null,
+        new HashMap<>(),
+        "main",
+        1,
+        () -> null,
+        Context.root());
+
+    // then
+    verify(builder).setBody("hello world");
+    verify(builder, never()).setAttribute(eq(stringKey("log.body.template")), anyString());
+    verify(builder, never()).setAttribute(eq(stringArrayKey("log.body.parameters")), any());
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {

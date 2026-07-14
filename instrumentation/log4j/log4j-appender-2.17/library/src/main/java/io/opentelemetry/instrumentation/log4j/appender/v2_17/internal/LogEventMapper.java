@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
@@ -19,6 +20,7 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.sdk.common.internal.IncludeExcludePredicate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -51,6 +53,9 @@ public final class LogEventMapper<T> {
       Cache.bounded(100);
 
   private static final AttributeKey<String> LOG_MARKER = stringKey("log4j.marker");
+  private static final AttributeKey<String> LOG_BODY_TEMPLATE = stringKey("log.body.template");
+  private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
+      AttributeKey.stringArrayKey("log.body.parameters");
 
   private final ContextDataAccessor<T> contextDataAccessor;
 
@@ -58,15 +63,20 @@ public final class LogEventMapper<T> {
   private final boolean captureCodeAttributes;
   private final boolean captureMapMessageAttributes;
   private final boolean captureMarkerAttribute;
+  private final boolean captureTemplate;
+  private final boolean captureArguments;
   @Nullable private final Predicate<String> contextDataAttributeFilter;
   private final boolean v3Preview;
 
+  @SuppressWarnings("TooManyParameters")
   public LogEventMapper(
       ContextDataAccessor<T> contextDataAccessor,
       boolean captureExperimentalAttributes,
       boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
+      boolean captureTemplate,
+      boolean captureArguments,
       List<String> captureContextDataAttributes,
       List<String> excludeContextDataAttributes,
       boolean v3Preview) {
@@ -76,6 +86,8 @@ public final class LogEventMapper<T> {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMapMessageAttributes = captureMapMessageAttributes;
     this.captureMarkerAttribute = captureMarkerAttribute;
+    this.captureTemplate = captureTemplate;
+    this.captureArguments = captureArguments;
     // an empty include list captures nothing; excludes only take effect alongside includes
     this.contextDataAttributeFilter =
         captureContextDataAttributes.isEmpty()
@@ -112,6 +124,17 @@ public final class LogEventMapper<T> {
     captureContextDataAttributes(builder, contextData);
 
     captureMessage(builder, message);
+
+    Object[] parameters = message == null ? null : message.getParameters();
+    if (parameters != null && parameters.length > 0) {
+      if (captureTemplate) {
+        builder.setAttribute(LOG_BODY_TEMPLATE, message.getFormat());
+      }
+      if (captureArguments) {
+        builder.setAttribute(
+            LOG_BODY_PARAMETERS, Arrays.stream(parameters).map(String::valueOf).collect(toList()));
+      }
+    }
 
     if (captureMarkerAttribute) {
       if (marker != null) {
