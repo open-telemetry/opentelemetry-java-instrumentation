@@ -45,12 +45,28 @@ public final class ConfigPropertiesBackedConfigProvider implements ConfigProvide
 
     private Builder() {}
 
+    /**
+     * Adds a mapping from a declarative property path to a flat {@link ConfigProperties} key.
+     *
+     * <p>This is useful when a component is configured under a custom declarative path but still
+     * wants to read an existing flat property name. For example, contrib's inferred spans component
+     * uses declarative keys like {@code backup_diagnostic_files} while reading {@code
+     * otel.inferred.spans.backup.diagnostic.files} from flat config.
+     */
     @CanIgnoreReturnValue
     public Builder addMapping(String declarativeProperty, String configProperty) {
       mappings.put(declarativeProperty, configProperty);
       return this;
     }
 
+    /**
+     * Sets the declarative path prefix that this bridge reads from and the flat-property prefix it
+     * resolves to.
+     *
+     * <p>This lets callers bridge a subtree directly instead of always starting from {@code java.}
+     * -> {@code otel.instrumentation.}. For example, contrib's inferred spans autoconfigure path
+     * reads the component root directly and resolves it against {@code otel.inferred.spans.}.
+     */
     @CanIgnoreReturnValue
     public Builder setAccessPath(String accessRoot, String resultPrefix) {
       this.accessRoot = accessRoot;

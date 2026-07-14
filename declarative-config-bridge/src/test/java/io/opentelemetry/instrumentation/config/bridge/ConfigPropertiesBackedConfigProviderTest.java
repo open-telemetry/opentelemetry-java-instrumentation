@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -77,5 +78,21 @@ class ConfigPropertiesBackedConfigProviderTest {
                     .build(DefaultConfigProperties.createFromMap(emptyMap())))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("java.common.http.known_methods");
+  }
+
+  @Test
+  void testBuilderWithCustomAccessPath() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.inferred.spans.min.duration", "42ms");
+
+    ConfigProvider provider =
+        ConfigPropertiesBackedConfigProvider.builder()
+            .setAccessPath("", "otel.inferred.spans.")
+            .build(DefaultConfigProperties.createFromMap(properties));
+
+    DeclarativeConfigProperties config = provider.getInstrumentationConfig();
+
+    assertThat(DeclarativeConfigPropertiesDurationUtil.parseDuration(config, "min_duration"))
+        .isEqualTo(Duration.ofMillis(42));
   }
 }
