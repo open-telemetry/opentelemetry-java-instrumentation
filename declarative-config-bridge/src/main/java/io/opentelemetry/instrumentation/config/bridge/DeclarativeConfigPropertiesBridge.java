@@ -49,8 +49,10 @@ import javax.annotation.Nullable;
  *         string_key: value
  * </pre>
  *
- * @deprecated Use {@link ConfigPropertiesBackedConfigProvider} when bridging {@link
- *     ConfigProperties} into declarative configuration. This class will be removed in 3.0.
+ * @deprecated Migrate code that reads declarative component configuration to use {@link
+ *     DeclarativeConfigProperties} directly. To expose {@link ConfigProperties} through the
+ *     declarative configuration API, use {@link ConfigPropertiesBackedConfigProvider}. This class
+ *     will be removed in 3.0.
  */
 @Deprecated // will be removed in 3.0
 final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
