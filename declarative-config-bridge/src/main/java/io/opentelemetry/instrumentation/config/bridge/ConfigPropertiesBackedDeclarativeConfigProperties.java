@@ -203,9 +203,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   }
 
   private String resolvePropertyKey(String name) {
-    String fullPath = pathWithName(name);
+    return toPropertyKey(pathWithName(name));
+  }
 
-    // Check explicit property mappings first
+  static String toPropertyKey(String fullPath) {
     String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
     if (mappedKey != null) {
       return mappedKey;
@@ -215,7 +216,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       return "";
     }
 
-    // Remove "java." prefix and translate the remaining path
     String[] segments = fullPath.substring(5).split("\\.");
     StringBuilder translatedPath = new StringBuilder();
 

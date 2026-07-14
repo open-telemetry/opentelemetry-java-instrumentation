@@ -26,9 +26,9 @@ import java.util.Map;
  * <pre>{@code
  * DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
  * defaults.get("micrometer").setDefault("base_time_unit", "s");
- * defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
+ * defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
  * defaults.addMapping("acme", "acme.full_name");
- * defaults.get("acme").get("full_name").setDefault("preserved", "true");
+ * defaults.get("acme").get("full_name").setDefault("preserved", true);
  *
  * autoConfiguration.addPropertiesSupplier(defaults::toConfigProperties);
  * }</pre>
@@ -39,7 +39,7 @@ import java.util.Map;
  */
 public final class DefaultInstrumentationConfig {
 
-  private final Map<String, String> defaults;
+  private final Map<String, Object> defaults;
   private final List<String> path;
   private final Map<String, String> propertyMappings;
 
@@ -48,7 +48,7 @@ public final class DefaultInstrumentationConfig {
   }
 
   private DefaultInstrumentationConfig(
-      Map<String, String> defaults, List<String> path, Map<String, String> propertyMappings) {
+      Map<String, Object> defaults, List<String> path, Map<String, String> propertyMappings) {
     this.defaults = defaults;
     this.path = path;
     this.propertyMappings = propertyMappings;
@@ -88,8 +88,27 @@ public final class DefaultInstrumentationConfig {
    */
   @CanIgnoreReturnValue
   public DefaultInstrumentationConfig setDefault(String key, String value) {
-    defaults.put(pathWithName(key), value);
-    return this;
+    return setDefaultValue(key, value);
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, boolean value) {
+    return setDefaultValue(key, value);
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, int value) {
+    return setDefaultValue(key, value);
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, long value) {
+    return setDefaultValue(key, value);
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, double value) {
+    return setDefaultValue(key, value);
   }
 
   /**
@@ -100,11 +119,12 @@ public final class DefaultInstrumentationConfig {
    */
   public Map<String, String> toConfigProperties() {
     HashMap<String, String> map = new HashMap<>();
-    defaults.forEach((declarativePath, value) -> map.put(toConfigProperty(declarativePath), value));
+    defaults.forEach(
+        (declarativePath, value) -> map.put(toConfigProperty(declarativePath), String.valueOf(value)));
     return map;
   }
 
-  Map<String, String> getDefaults() {
+  Map<String, Object> getDefaults() {
     return defaults;
   }
 
@@ -130,7 +150,7 @@ public final class DefaultInstrumentationConfig {
     }
 
     if (propertyPrefix == null) {
-      return "otel.instrumentation." + translatePath(declarativePath);
+      return ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey("java." + declarativePath);
     }
     if (declarativePrefix == null) {
       throw new IllegalStateException("missing declarative prefix for property mapping");
@@ -142,6 +162,12 @@ public final class DefaultInstrumentationConfig {
 
     int matchedPrefixLength = declarativePrefix.length();
     return propertyPrefix + "." + translatePath(declarativePath.substring(matchedPrefixLength + 1));
+  }
+
+  @CanIgnoreReturnValue
+  private DefaultInstrumentationConfig setDefaultValue(String key, Object value) {
+    defaults.put(pathWithName(key), value);
+    return this;
   }
 
   private static boolean matchesPrefix(String path, String prefix) {

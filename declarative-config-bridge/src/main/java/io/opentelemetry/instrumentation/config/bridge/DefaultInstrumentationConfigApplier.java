@@ -16,8 +16,6 @@ import java.util.Map;
 /** Utility that applies {@link DefaultInstrumentationConfig} defaults to the declarative model. */
 public final class DefaultInstrumentationConfigApplier {
 
-  private DefaultInstrumentationConfigApplier() {}
-
   /**
    * Applies defaults to the declarative configuration model under {@code
    * instrumentation/development.java}. Existing values in the model take precedence; defaults are
@@ -44,7 +42,7 @@ public final class DefaultInstrumentationConfigApplier {
     Map<String, ExperimentalLanguageSpecificInstrumentationPropertyModel> props =
         java.getAdditionalProperties();
 
-    for (Map.Entry<String, String> entry : defaults.getDefaults().entrySet()) {
+    for (Map.Entry<String, Object> entry : defaults.getDefaults().entrySet()) {
       applyDefault(props, entry.getKey(), entry.getValue());
     }
 
@@ -54,7 +52,7 @@ public final class DefaultInstrumentationConfigApplier {
   private static void applyDefault(
       Map<String, ExperimentalLanguageSpecificInstrumentationPropertyModel> props,
       String declarativePath,
-      String value) {
+      Object value) {
     String[] segments = declarativePath.split("\\.");
     ExperimentalLanguageSpecificInstrumentationPropertyModel propertyModel =
         props.computeIfAbsent(
@@ -78,4 +76,6 @@ public final class DefaultInstrumentationConfigApplier {
     }
     target.putIfAbsent(segments[segments.length - 1], value);
   }
+
+  private DefaultInstrumentationConfigApplier() {}
 }

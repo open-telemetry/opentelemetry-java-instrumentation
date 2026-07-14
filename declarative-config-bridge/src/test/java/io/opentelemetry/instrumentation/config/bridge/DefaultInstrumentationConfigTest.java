@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,49 +22,72 @@ class DefaultInstrumentationConfigTest {
   private static Stream<Arguments> configPropertyDefaults() {
     return Stream.of(
         Arguments.of(
-            "micrometer", "base_time_unit", "s", "otel.instrumentation.micrometer.base-time-unit"),
+            "string default",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults -> defaults.get("micrometer").setDefault("base_time_unit", "s"),
+            "otel.instrumentation.micrometer.base-time-unit",
+            "s"),
         Arguments.of(
-            "log4j_appender",
-            "experimental_log_attributes/development",
-            "true",
-            "otel.instrumentation.log4j-appender.experimental-log-attributes"),
+            "boolean experimental default",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults ->
+                    defaults
+                        .get("log4j_appender")
+                        .setDefault("experimental_log_attributes/development", true),
+            "otel.instrumentation.log4j-appender.experimental-log-attributes",
+            "true"),
         Arguments.of(
-            "spring_scheduling",
-            "controller_telemetry/development",
-            "false",
-            "otel.instrumentation.spring-scheduling.experimental.controller-telemetry"),
+            "boolean non-experimental development default",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults ->
+                    defaults
+                        .get("spring_scheduling")
+                        .setDefault("controller_telemetry/development", false),
+            "otel.instrumentation.spring-scheduling.experimental.controller-telemetry",
+            "false"),
         Arguments.of(
-            "grpc",
-            "experimental_span_attributes/development",
-            "true",
-            "otel.instrumentation.grpc.experimental-span-attributes"));
+            "experimental special mapping",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults ->
+                    defaults
+                        .get("common")
+                        .get("http")
+                        .setDefault("known_methods", "GET,POST"),
+            "otel.instrumentation.http.known-methods",
+            "GET,POST"));
   }
 
   @ParameterizedTest
   @MethodSource("configPropertyDefaults")
   void toConfigProperties(
-      String instrumentation, String key, String value, String expectedPropertyKey) {
+      String name,
+      Consumer<DefaultInstrumentationConfig> defaultsCustomizer,
+      String expectedPropertyKey,
+      String expectedValue) {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
-    defaults.get(instrumentation).setDefault(key, value);
+    defaultsCustomizer.accept(defaults);
 
     Map<String, String> props = defaults.toConfigProperties();
 
-    assertThat(props).containsEntry(expectedPropertyKey, value).hasSize(1);
+    assertThat(props).containsEntry(expectedPropertyKey, expectedValue).hasSize(1);
   }
 
-  @ParameterizedTest
-  @MethodSource("configPropertyDefaults")
-  void toConfigPropertiesRoundTripsThroughBridge(
-      String instrumentation, String key, String value, String expectedPropertyKey) {
+  @Test
+  void toConfigPropertiesRoundTripsSpecialMappingThroughBridge() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
-    defaults.get(instrumentation).setDefault(key, value);
+    defaults.get("common").get("http").setDefault("known_methods", "GET,POST");
 
     DeclarativeConfigProperties config =
         ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
             DefaultConfigProperties.createFromMap(defaults.toConfigProperties()));
 
-    assertThat(config.getStructured("java").getStructured(instrumentation).getString(key))
-        .isEqualTo(value);
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("http")
+                .getString("known_methods"))
+        .isEqualTo("GET,POST");
   }
 
   @Test

@@ -5,21 +5,31 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
+import java.io.ByteArrayInputStream;
 import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import org.junit.jupiter.api.Test;
 
 class DefaultInstrumentationConfigApplierTest {
+
+  private static OpenTelemetryConfigurationModel newModel() {
+    return DeclarativeConfiguration.parse(
+        new ByteArrayInputStream("file_format: \"1.0\"\n".getBytes(UTF_8)));
+  }
 
   @Test
   void applyToModel() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("micrometer").setDefault("base_time_unit", "s");
-    defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
+    defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
 
-    OpenTelemetryConfigurationModel model = new OpenTelemetryConfigurationModel();
+    OpenTelemetryConfigurationModel model = newModel();
     DefaultInstrumentationConfigApplier.applyToModel(defaults, model);
 
     assertThat(
@@ -37,7 +47,28 @@ class DefaultInstrumentationConfigApplierTest {
                 .getAdditionalProperties()
                 .get("log4j_appender")
                 .getAdditionalProperties())
-        .containsEntry("experimental_log_attributes/development", "true");
+        .containsEntry("experimental_log_attributes/development", true);
+  }
+
+  @Test
+  void applyToModelPreservesTypedScalarDefaults() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("example_instrumentation").setDefault("bool_key", true);
+    defaults.get("example_instrumentation").setDefault("int_key", 42L);
+    defaults.get("example_instrumentation").setDefault("double_key", 3.14);
+
+    OpenTelemetryConfigurationModel model = newModel();
+    DefaultInstrumentationConfigApplier.applyToModel(defaults, model);
+
+    DeclarativeConfigProperties config =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model))
+            .getInstrumentationConfig();
+
+    DeclarativeConfigProperties instrumentation =
+        config.getStructured("java").getStructured("example_instrumentation");
+    assertThat(instrumentation.getBoolean("bool_key")).isTrue();
+    assertThat(instrumentation.getLong("int_key")).isEqualTo(42L);
+    assertThat(instrumentation.getDouble("double_key")).isEqualTo(3.14);
   }
 
   @Test
@@ -45,7 +76,7 @@ class DefaultInstrumentationConfigApplierTest {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("acme").get("full_name").setDefault("preserved", "true");
 
-    OpenTelemetryConfigurationModel model = new OpenTelemetryConfigurationModel();
+    OpenTelemetryConfigurationModel model = newModel();
     DefaultInstrumentationConfigApplier.applyToModel(defaults, model);
 
     assertThat(
@@ -60,7 +91,7 @@ class DefaultInstrumentationConfigApplierTest {
 
   @Test
   void applyToModelDoesNotOverrideExisting() {
-    OpenTelemetryConfigurationModel model = new OpenTelemetryConfigurationModel();
+    OpenTelemetryConfigurationModel model = newModel();
     DefaultInstrumentationConfig seed = new DefaultInstrumentationConfig();
     seed.get("micrometer").setDefault("base_time_unit", "ms");
     DefaultInstrumentationConfigApplier.applyToModel(seed, model);
@@ -81,7 +112,7 @@ class DefaultInstrumentationConfigApplierTest {
 
   @Test
   void applyToModelDoesNotOverrideExistingNestedValues() {
-    OpenTelemetryConfigurationModel model = new OpenTelemetryConfigurationModel();
+    OpenTelemetryConfigurationModel model = newModel();
     DefaultInstrumentationConfig seed = new DefaultInstrumentationConfig();
     seed.get("acme").get("full_name").setDefault("preserved", "true");
     DefaultInstrumentationConfigApplier.applyToModel(seed, model);
