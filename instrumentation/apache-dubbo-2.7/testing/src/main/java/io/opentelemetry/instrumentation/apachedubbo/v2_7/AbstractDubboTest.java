@@ -13,6 +13,9 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -532,7 +535,7 @@ public abstract class AbstractDubboTest {
                 .hasKind(SpanKind.CLIENT)
                 .hasNoParent()
                 .hasStatus(StatusData.error())
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
                     equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                     equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "dubbo" : null),
                     equalTo(
@@ -543,12 +546,21 @@ public abstract class AbstractDubboTest {
                         emitStableRpcSemconv()
                             ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                             : "$invoke"),
+                    satisfies(ERROR_TYPE, AbstractDubboTest::assertErrorType),
+                    equalTo(
+                        maybeStablePeerService(),
+                        hasServicePeerName() ? "test-peer-service" : null),
                     equalTo(SERVER_ADDRESS, "localhost"),
-                    satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)));
+                    satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                    satisfies(
+                        NETWORK_PEER_ADDRESS,
+                        val -> assertLatestDeps(val, v -> v.isInstanceOf(String.class))),
+                    satisfies(
+                        NETWORK_PEER_PORT,
+                        val -> assertLatestDeps(val, v -> v.isInstanceOf(Long.class))),
+                    satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType));
 
-    if (canCaptureUnknownServiceSpans()
-        && emitStableRpcSemconv()
-        && Boolean.getBoolean("testLatestDeps")) {
+    if (canCaptureUnknownServiceSpans() && emitStableRpcSemconv() && testLatestDeps()) {
       // Dubbo protocol (binary) with newer Dubbo versions (3.x / latest):
       // DecodeableRpcInvocation.decode() fails at PermittedSerializationKeeper before attachments
       // (which carry traceparent) are read from the wire. The server _OTHER span cannot extract
@@ -563,7 +575,8 @@ public abstract class AbstractDubboTest {
                               .hasKind(SpanKind.SERVER)
                               .hasNoParent()
                               .hasStatus(StatusData.error())
-                              .hasAttributesSatisfying(
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                   equalTo(RPC_METHOD, "_OTHER"),
                                   satisfies(
@@ -575,9 +588,17 @@ public abstract class AbstractDubboTest {
                                                       .contains(
                                                           "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
                                               v -> assertThat(v).contains("MiddleService"))),
+                                  satisfies(ERROR_TYPE, val -> val.isNotNull()),
                                   satisfies(
-                                      NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                  satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
+                                      NETWORK_LOCAL_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                  satisfies(
+                                      NETWORK_LOCAL_PORT, val -> val.isInstanceOf(Long.class)),
+                                  satisfies(
+                                      NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                  satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                                  satisfies(
+                                      NETWORK_TYPE,
+                                      AbstractDubboTest::assertUnknownServiceNetworkType))));
     } else if (canCaptureUnknownServiceSpans() && emitStableRpcSemconv()) {
       // Dubbo protocol (binary) with older Dubbo versions (2.7.x):
       // decode succeeds past PermittedSerializationKeeper (not present or not enforced),
@@ -593,7 +614,8 @@ public abstract class AbstractDubboTest {
                               .hasKind(SpanKind.SERVER)
                               .hasParent(trace.getSpan(0))
                               .hasStatus(StatusData.error())
-                              .hasAttributesSatisfying(
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                   equalTo(RPC_METHOD, "_OTHER"),
                                   satisfies(
@@ -605,9 +627,17 @@ public abstract class AbstractDubboTest {
                                                       .contains(
                                                           "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
                                               v -> assertThat(v).contains("MiddleService"))),
+                                  satisfies(ERROR_TYPE, val -> val.isNotNull()),
                                   satisfies(
-                                      NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                  satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
+                                      NETWORK_LOCAL_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                  satisfies(
+                                      NETWORK_LOCAL_PORT, val -> val.isInstanceOf(Long.class)),
+                                  satisfies(
+                                      NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                  satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                                  satisfies(
+                                      NETWORK_TYPE,
+                                      AbstractDubboTest::assertUnknownServiceNetworkType))));
     } else {
       testing().waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(clientSpanAssert));
     }
@@ -621,8 +651,7 @@ public abstract class AbstractDubboTest {
   @Test
   void testTripleUnknownService() throws ReflectiveOperationException {
     // Triple protocol requires Dubbo 3.x
-    Assumptions.assumeTrue(
-        Boolean.getBoolean("testLatestDeps"), "Triple protocol requires Dubbo 3.x");
+    Assumptions.assumeTrue(testLatestDeps(), "Triple protocol requires Dubbo 3.x");
     Assumptions.assumeTrue(canCaptureUnknownServiceSpans(), "Requires agent instrumentation");
     Assumptions.assumeTrue(emitStableRpcSemconv(), "Requires stable RPC semconv");
 
@@ -679,19 +708,34 @@ public abstract class AbstractDubboTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasStatus(StatusData.error())
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                 equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                                equalTo(
+                                    RPC_SERVICE,
+                                    emitOldRpcSemconv()
+                                        ? "org.apache.dubbo.rpc.service.GenericService"
+                                        : null),
                                 equalTo(
                                     RPC_METHOD,
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
+                                satisfies(ERROR_TYPE, val -> val.isNotNull()),
+                                equalTo(
+                                    maybeStablePeerService(),
+                                    hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
-                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class))),
+                                satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                                satisfies(
+                                    NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName("_OTHER")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                 equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                 equalTo(RPC_METHOD, "_OTHER"),
                                 satisfies(
@@ -702,7 +746,25 @@ public abstract class AbstractDubboTest {
                                                 assertThat(v)
                                                     .contains(
                                                         "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                            v -> assertThat(v).contains("MiddleService"))))));
+                                            v -> assertThat(v).contains("MiddleService"))),
+                                satisfies(ERROR_TYPE, val -> val.isNotNull()),
+                                satisfies(
+                                    NETWORK_LOCAL_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                satisfies(NETWORK_LOCAL_PORT, val -> val.isInstanceOf(Long.class)),
+                                satisfies(
+                                    NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                                satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                                satisfies(
+                                    NETWORK_TYPE,
+                                    AbstractDubboTest::assertUnknownServiceNetworkType))));
+  }
+
+  static void assertErrorType(AbstractStringAssert<?> stringAssert) {
+    if (emitStableRpcSemconv()) {
+      stringAssert.isNotNull();
+    } else {
+      stringAssert.isNull();
+    }
   }
 
   static void assertNetworkType(AbstractStringAssert<?> stringAssert) {
@@ -712,6 +774,11 @@ public abstract class AbstractDubboTest {
             a.satisfiesAnyOf(
                 val -> assertThat(val).isEqualTo("ipv4"),
                 val -> assertThat(val).isEqualTo("ipv6")));
+  }
+
+  static void assertUnknownServiceNetworkType(AbstractStringAssert<?> stringAssert) {
+    stringAssert.satisfiesAnyOf(
+        val -> assertThat(val).isEqualTo("ipv4"), val -> assertThat(val).isEqualTo("ipv6"));
   }
 
   static void assertLatestDeps(
