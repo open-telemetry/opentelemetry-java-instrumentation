@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### 🚫 Deprecations
+
+- Deprecate `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative component configuration
+  through `DeclarativeConfigProperties` directly. To expose `ConfigProperties` through the
+  declarative configuration API, use `ConfigPropertiesBackedConfigProvider`.
+
 ### 📈 Enhancements
 
 - Add Cassandra JMX metrics target system.
