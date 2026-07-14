@@ -30,15 +30,21 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
   }
 
+  val testStableSemconv = register<Test>("testStableSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testStableSemconv)
   }
 }
 

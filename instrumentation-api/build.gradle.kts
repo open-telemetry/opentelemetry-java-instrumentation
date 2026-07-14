@@ -44,4 +44,20 @@ tasks {
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
+
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+  }
+
+  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs, testExceptionSignalLogsDup)
+  }
 }

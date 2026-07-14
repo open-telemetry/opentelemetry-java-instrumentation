@@ -53,7 +53,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClientTest {
 
-  private static String dbUriNonExistent;
+  private String dbUriNonExistent;
 
   private static final ImmutableMap<String, String> TEST_HASH_MAP =
       ImmutableMap.of(
@@ -61,7 +61,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
           "lastname", "Doe",
           "age", "53");
 
-  private static RedisCommands<String, String> syncCommands;
+  private RedisCommands<String, String> syncCommands;
 
   @BeforeAll
   void setUp() throws UnknownHostException {

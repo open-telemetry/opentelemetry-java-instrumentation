@@ -14,7 +14,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import java.util.HashMap;
@@ -80,7 +80,7 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
     SpanContext spanContext = currentSpan.getSpanContext();
     contextData.put(contextDataKeys.getTraceIdKey(), spanContext.getTraceId());
     contextData.put(contextDataKeys.getSpanIdKey(), spanContext.getSpanId());
-    contextData.put(contextDataKeys.getTraceFlags(), spanContext.getTraceFlags().asHex());
+    contextData.put(contextDataKeys.getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
 
     if (Configuration.baggageEnabled) {
       Baggage baggage = Baggage.fromContext(context);
@@ -94,13 +94,15 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
   }
 
   private static class Configuration {
-    @SuppressWarnings("deprecation") // using deprecated config property
     private static final boolean baggageEnabled =
         DeclarativeConfigUtil.getInstrumentationConfig(
                 GlobalOpenTelemetry.getOrNoop(), "log4j_context_data")
             .getBoolean(
                 "add_baggage",
-                ConfigPropertiesUtil.getBoolean(
+                // OpenTelemetryContextDataProvider is a log4j ContextDataProvider SPI with no
+                // programmatic API, and declarative instrumentation configuration is not stable
+                // yet, so a system-property fallback is still needed.
+                SystemProperty.getBoolean(
                     "otel.instrumentation.log4j-context-data.add-baggage", false));
 
     private static final ContextDataKeys contextDataKeys =

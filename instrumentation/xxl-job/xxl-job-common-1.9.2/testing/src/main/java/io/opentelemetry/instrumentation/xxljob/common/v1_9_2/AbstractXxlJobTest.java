@@ -24,7 +24,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -46,7 +45,7 @@ public abstract class AbstractXxlJobTest {
     trigger(jobThread, null);
   }
 
-  protected void trigger(JobThread jobThread, @Nullable String executorParams) {
+  protected void trigger(JobThread jobThread, String executorParams) {
     TriggerParam triggerParam = new TriggerParam();
     triggerParam.setExecutorTimeout(0);
     if (executorParams != null) {
@@ -60,13 +59,16 @@ public abstract class AbstractXxlJobTest {
   void testGlueJob() {
     JobThread jobThread = new JobThread(1, getGlueJobHandler());
     trigger(jobThread);
-    checkXxlJob(
-        "CustomizedGroovyHandler.execute",
-        StatusData.unset(),
-        GlueTypeEnum.GLUE_GROOVY,
-        "CustomizedGroovyHandler",
-        "execute");
-    jobThread.toStop("Test finish");
+    try {
+      checkXxlJob(
+          "CustomizedGroovyHandler.execute",
+          StatusData.unset(),
+          GlueTypeEnum.GLUE_GROOVY,
+          "CustomizedGroovyHandler",
+          "execute");
+    } finally {
+      jobThread.toStop("Test finish");
+    }
   }
 
   @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Shell scripts require /bin/sh")
@@ -74,21 +76,28 @@ public abstract class AbstractXxlJobTest {
   void testScriptJob() {
     JobThread jobThread = new JobThread(2, getScriptJobHandler());
     trigger(jobThread, "");
-    checkXxlJobWithoutCodeAttributes("GLUE(Shell)", StatusData.unset(), GlueTypeEnum.GLUE_SHELL, 2);
-    jobThread.toStop("Test finish");
+    try {
+      checkXxlJobWithoutCodeAttributes(
+          "GLUE(Shell)", StatusData.unset(), GlueTypeEnum.GLUE_SHELL, 2);
+    } finally {
+      jobThread.toStop("Test finish");
+    }
   }
 
   @Test
   void testSimpleJob() {
     JobThread jobThread = new JobThread(3, getCustomizeHandler());
     trigger(jobThread);
-    checkXxlJob(
-        "SimpleCustomizedHandler.execute",
-        StatusData.unset(),
-        GlueTypeEnum.BEAN,
-        getPackageName() + ".SimpleCustomizedHandler",
-        "execute");
-    jobThread.toStop("Test finish");
+    try {
+      checkXxlJob(
+          "SimpleCustomizedHandler.execute",
+          StatusData.unset(),
+          GlueTypeEnum.BEAN,
+          getPackageName() + ".SimpleCustomizedHandler",
+          "execute");
+    } finally {
+      jobThread.toStop("Test finish");
+    }
   }
 
   protected Class<?> getReflectObjectClass() {
@@ -103,26 +112,32 @@ public abstract class AbstractXxlJobTest {
 
     JobThread jobThread = new JobThread(4, methodHandler);
     trigger(jobThread);
-    checkXxlJob(
-        "ReflectObject.echo",
-        StatusData.unset(),
-        GlueTypeEnum.BEAN,
-        getReflectObjectClass().getName(),
-        "echo");
-    jobThread.toStop("Test finish");
+    try {
+      checkXxlJob(
+          "ReflectObject.echo",
+          StatusData.unset(),
+          GlueTypeEnum.BEAN,
+          getReflectObjectClass().getName(),
+          "echo");
+    } finally {
+      jobThread.toStop("Test finish");
+    }
   }
 
   @Test
   void testFailedJob() {
     JobThread jobThread = new JobThread(5, getCustomizeFailedHandler());
     trigger(jobThread);
-    checkXxlJob(
-        "CustomizedFailedHandler.execute",
-        StatusData.error(),
-        GlueTypeEnum.BEAN,
-        getPackageName() + ".CustomizedFailedHandler",
-        "execute");
-    jobThread.toStop("Test finish");
+    try {
+      checkXxlJob(
+          "CustomizedFailedHandler.execute",
+          StatusData.error(),
+          GlueTypeEnum.BEAN,
+          getPackageName() + ".CustomizedFailedHandler",
+          "execute");
+    } finally {
+      jobThread.toStop("Test finish");
+    }
   }
 
   protected abstract IJobHandler getGlueJobHandler();
@@ -133,7 +148,6 @@ public abstract class AbstractXxlJobTest {
 
   protected abstract IJobHandler getCustomizeFailedHandler();
 
-  @Nullable
   protected abstract IJobHandler getMethodHandler();
 
   protected abstract String getPackageName();

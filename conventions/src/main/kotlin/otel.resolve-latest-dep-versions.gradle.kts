@@ -3,7 +3,7 @@ import io.opentelemetry.javaagent.muzzle.MuzzleExtension
 import org.eclipse.aether.util.version.GenericVersionScheme
 
 tasks {
-  val resolveLatestDepVersions by registering {
+  register<DefaultTask>("resolveLatestDepVersions") {
     group = "help"
     description = "Resolve latest dependency versions and write to .github/config/latest-dep-versions.json"
 
@@ -78,7 +78,11 @@ tasks {
 
       subprojects {
         configurations
-          .filter { it.isCanBeResolved && it.name.contains("test", ignoreCase = true) && it.name.endsWith("RuntimeClasspath") }
+          .filter {
+            it.isCanBeResolved &&
+              ((it.name.contains("test", ignoreCase = true) && it.name.endsWith("RuntimeClasspath")) ||
+                it.name == "compileClasspath")
+          }
           .forEach { config ->
             config.incoming.resolutionResult.allDependencies.forEach { dep ->
               if (dep is org.gradle.api.artifacts.result.ResolvedDependencyResult) {

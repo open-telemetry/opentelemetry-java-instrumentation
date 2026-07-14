@@ -12,6 +12,43 @@
 - Do not use AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in tests.
   Prefer direct assertions whose failure output shows the unexpected values.
 
+## Parameterized Tests
+
+- When the same test logic is repeated for multiple input/output cases, prefer
+  `@ParameterizedTest` over one large test with many unrelated assertions or many small tests that
+  duplicate the same setup.
+- Prefer `@MethodSource` with a private static `Stream<Arguments>` provider for multi-field cases.
+  Keep the provider close to the test that uses it.
+- Use `Arguments.argumentSet(String name, Object... args)` to name each case. This requires no
+  changes to the test method signature and no `name =` attribute on the annotation. Prefer this
+  over passing a `String name` as the first parameter with `@ParameterizedTest(name = "{0}")`.
+- Each `Arguments.argumentSet(...)` entry should describe one coherent scenario. Prefer one
+  expected outcome per row instead of packing several unrelated expectations into a single
+  parameterized case.
+- In the test body, keep the setup and assertion flow the same for every row. If different rows need
+  materially different control flow, split them into separate tests instead of forcing everything
+  into one parameterized method.
+- Avoid introducing a dedicated `TestCase` wrapper type for parameterized rows. Prefer a readable
+  case name plus plain arguments, and extract a shared expected-value object only when it makes the
+  assertions materially clearer.
+- If a row gets too wide, first look for ways to simplify the assertion shape (for example, compare
+  against one structured expected value) instead of adding another wrapper layer around the row.
+
+Example shape:
+
+```java
+@ParameterizedTest
+@MethodSource("testCases")
+void test(Input input, Output expected) {
+  assertThat(run(input)).isEqualTo(expected);
+}
+
+private static Stream<Arguments> testCases() {
+  return Stream.of(
+      Arguments.argumentSet("valid input", new Input("input"), new Output("expected")));
+}
+```
+
 ## Test Method Throws Clauses
 
 - On methods annotated with `@Test`, keep the `throws` clause to a single exception type.
@@ -76,6 +113,36 @@
   use `deferAfterAll(...)` instead of `deferCleanup(...)`.
 - If the test intentionally closes the resource mid-test or asserts behavior around explicit
   close, keep the direct close or try-with-resources in the test body.
+
+## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
+
+When an abstract test base is shared by multiple concrete subclasses run in the same JVM
+fork, `static` fixture fields become JVM-wide state the subclasses fight over. Annotate
+the base with `@TestInstance(Lifecycle.PER_CLASS)` and make per-class fixtures
+**instance** fields. JUnit creates one base instance per concrete subclass and reuses it
+for every `@Test`, giving the same once-per-class lifecycle as `static` without leaking
+across subclasses.
+
+What goes where:
+
+- **Instance** (`protected`, not `protected static`): containers, clients, connections,
+  `host` / `port` / URI fields, and any helper method that reads them (e.g.
+  `spanName(String)` reading `host`/`port`).
+- **Instance** `@RegisterExtension AutoCleanupExtension cleanup`: a shared `static`
+  `AutoCleanupExtension` latches `rootContext` on the first subclass's `beforeAll` and
+  never resets it, so `deferAfterAll(...)` callbacks registered by later subclasses
+  silently leak.
+- **`static`** for true JVM-wide constants only: `DB_INDEX`, loggers, `*_HASH_MAP`
+  literals, pure helpers (`addExtraAttributes(...)`, `assertCommandEncodeEvents(...)`),
+  and `@RegisterExtension InstrumentationExtension testing` — the agent/SDK extension
+  must be `static final` because JUnit only invokes `BeforeAllCallback` /
+  `AfterAllCallback` for class-level (static) `@RegisterExtension` fields.
+
+This shape is also required when a subclass needs to mutate the container's builder
+(e.g. `withCommand("--requirepass password")`): with shared `static` state an earlier
+subclass may have already started the container, so `withCommand` on the running
+instance is a no-op; with per-instance state each subclass mutates and starts its own
+fresh container.
 
 ## Span Attribute Assertions
 
@@ -143,12 +210,12 @@ already proper AssertJ assertions - they throw on failure. Do **not** wrap them 
 
 Prefer built-in AssertJ collection/list assertions over extracting values manually:
 
-| Anti-pattern | Idiomatic form |
-| --- | --- |
-| `assertThat(list.size()).isEqualTo(N)` | `assertThat(list).hasSize(N)` |
-| `assertThat(list.isEmpty()).isTrue()` | `assertThat(list).isEmpty()` |
-| `assertThat(list).hasSize(0)` | `assertThat(list).isEmpty()` |
-| `assertThat(list.contains(x)).isTrue()` | `assertThat(list).contains(x)` |
+| Anti-pattern                                                                                                      | Idiomatic form                           |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `assertThat(list.size()).isEqualTo(N)`                                                                            | `assertThat(list).hasSize(N)`            |
+| `assertThat(list.isEmpty()).isTrue()`                                                                             | `assertThat(list).isEmpty()`             |
+| `assertThat(list).hasSize(0)`                                                                                     | `assertThat(list).isEmpty()`             |
+| `assertThat(list.contains(x)).isTrue()`                                                                           | `assertThat(list).contains(x)`           |
 | sequential `assertThat(list.get(0)).isEqualTo(a)` / `assertThat(list.get(1)).isEqualTo(b)` checking every element | `assertThat(list).containsExactly(a, b)` |
 
 The `containsExactly` form verifies both size and element values in order, making a
@@ -156,10 +223,10 @@ separate `hasSize` check redundant.
 
 Similar patterns apply to maps, arrays, and strings:
 
-| Anti-pattern | Idiomatic form |
-| --- | --- |
-| `assertThat(str.length()).isEqualTo(N)` | `assertThat(str).hasSize(N)` |
-| `assertThat(map.size()).isEqualTo(N)` | `assertThat(map).hasSize(N)` |
+| Anti-pattern                            | Idiomatic form                 |
+| --------------------------------------- | ------------------------------ |
+| `assertThat(str.length()).isEqualTo(N)` | `assertThat(str).hasSize(N)`   |
+| `assertThat(map.size()).isEqualTo(N)`   | `assertThat(map).hasSize(N)`   |
 | `assertThat(array.length).isEqualTo(N)` | `assertThat(array).hasSize(N)` |
 
 ## Span Ordering Assertions
@@ -188,11 +255,11 @@ Each flag has a shared static accessor; static-import it and call it directly. N
 `Boolean.getBoolean("…")` inline and never duplicate the property-name string at the call
 site.
 
-| Flag | Shared accessor | Where it lives |
-| --- | --- | --- |
-| `-PtestLatestDeps=true` | `testLatestDeps()` | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
-| `otel.semconv-stability.opt-in=…` | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc. | `io.opentelemetry.instrumentation.api.internal.SemconvStability` |
-| `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class |
+| Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
+| `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
 
 ### Inline ternary in `equalTo(...)` with `null` for "absent"
 

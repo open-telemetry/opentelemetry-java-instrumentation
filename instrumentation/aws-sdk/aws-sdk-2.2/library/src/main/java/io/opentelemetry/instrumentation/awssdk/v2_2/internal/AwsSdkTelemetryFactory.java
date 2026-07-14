@@ -11,7 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import java.util.List;
 
@@ -21,19 +21,18 @@ import java.util.List;
  */
 public final class AwsSdkTelemetryFactory {
 
-  private final boolean useLegacyLibraryConfig;
-
-  public static AwsSdkTelemetry legacyLibraryTelemetry() {
-    return telemetry(true);
+  public static AwsSdkTelemetry telemetryForAutoconfigureModule() {
+    // The library-autoconfigure module has no programmatic configuration API, and
+    // declarative instrumentation configuration is not stable, so it is necessary to
+    // support configuration via system properties.
+    return telemetry(SystemProperties.ENABLED);
   }
 
   public static AwsSdkTelemetry telemetry() {
-    return telemetry(false);
+    return telemetry(SystemProperties.DISABLED);
   }
 
-  private static AwsSdkTelemetry telemetry(boolean useLegacyLibraryConfig) {
-    AwsSdkTelemetryFactory factory = new AwsSdkTelemetryFactory(useLegacyLibraryConfig);
-
+  private static AwsSdkTelemetry telemetry(SystemProperties systemProperties) {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
@@ -47,51 +46,71 @@ public final class AwsSdkTelemetryFactory {
             messaging.getScalarList(
                 "capture_headers/development",
                 String.class,
-                factory.legacyListValue(
-                    "otel.instrumentation.messaging.experimental.capture-headers")))
+                systemProperties.getList(
+                    "otel.instrumentation.messaging.experimental.capture-headers", emptyList())))
         .setCaptureExperimentalSpanAttributes(
             awsSdk.getBoolean(
                 "experimental_span_attributes/development",
-                factory.legacyBooleanValue(
-                    "otel.instrumentation.aws-sdk.experimental-span-attributes")))
+                systemProperties.getBoolean(
+                    "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
         .setMessagingReceiveTelemetryEnabled(
             messaging
                 .get("receive_telemetry/development")
                 .getBoolean(
                     "enabled",
-                    factory.legacyBooleanValue(
-                        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled")))
+                    systemProperties.getBoolean(
+                        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+                        false)))
         .setUseConfiguredPropagatorForMessaging(
             awsSdk.getBoolean(
                 "use_propagator_for_messaging/development",
-                factory.legacyBooleanValue(
-                    "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging")))
+                systemProperties.getBoolean(
+                    "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging",
+                    false)))
         .setRecordIndividualHttpError(
             awsSdk.getBoolean(
                 "record_individual_http_error/development",
-                factory.legacyBooleanValue(
-                    "otel.instrumentation.aws-sdk.experimental-record-individual-http-error")))
+                systemProperties.getBoolean(
+                    "otel.instrumentation.aws-sdk.experimental-record-individual-http-error",
+                    false)))
         .setGenaiCaptureMessageContent(
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
+            commonConfig
                 .get("gen_ai")
                 .getBoolean(
                     "capture_message_content",
-                    factory.legacyBooleanValue(
-                        "otel.instrumentation.genai.capture-message-content")))
+                    systemProperties.getBoolean(
+                        "otel.instrumentation.genai.capture-message-content", false)))
         .build();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated config property
-  private List<String> legacyListValue(String key) {
-    return useLegacyLibraryConfig ? ConfigPropertiesUtil.getList(key, emptyList()) : emptyList();
-  }
+  private AwsSdkTelemetryFactory() {}
 
-  @SuppressWarnings("deprecation") // using deprecated config property
-  private boolean legacyBooleanValue(String key) {
-    return useLegacyLibraryConfig && ConfigPropertiesUtil.getBoolean(key, false);
-  }
+  private enum SystemProperties {
+    ENABLED {
+      @Override
+      List<String> getList(String key, List<String> defaultValue) {
+        return SystemProperty.getList(key, defaultValue);
+      }
 
-  private AwsSdkTelemetryFactory(boolean useLegacyLibraryConfig) {
-    this.useLegacyLibraryConfig = useLegacyLibraryConfig;
+      @Override
+      boolean getBoolean(String key, boolean defaultValue) {
+        return SystemProperty.getBoolean(key, defaultValue);
+      }
+    },
+    DISABLED {
+      @Override
+      List<String> getList(String key, List<String> defaultValue) {
+        return defaultValue;
+      }
+
+      @Override
+      boolean getBoolean(String key, boolean defaultValue) {
+        return defaultValue;
+      }
+    };
+
+    abstract List<String> getList(String key, List<String> defaultValue);
+
+    abstract boolean getBoolean(String key, boolean defaultValue);
   }
 }

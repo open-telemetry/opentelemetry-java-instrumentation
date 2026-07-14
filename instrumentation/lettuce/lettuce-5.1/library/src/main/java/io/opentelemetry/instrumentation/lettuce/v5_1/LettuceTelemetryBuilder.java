@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTelemetry.INSTRUMENTATION_NAME;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -14,8 +15,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import javax.annotation.Nullable;
 
 /** A builder of {@link LettuceTelemetry}. */
 public final class LettuceTelemetryBuilder {
@@ -57,12 +60,22 @@ public final class LettuceTelemetryBuilder {
    */
   public LettuceTelemetry build() {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
+    // span name.
+    LettuceDbAttributesGetter spanNameAttributesGetter =
+        new LettuceDbAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(LettuceRequest request) {
+            return null;
+          }
+        };
 
-    Instrumenter<LettuceRequest, LettuceResponse> instrumenter =
+    InstrumenterBuilder<LettuceRequest, LettuceResponse> builder =
         Instrumenter.<LettuceRequest, LettuceResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get())
             .setSpanStatusExtractor(
@@ -73,8 +86,11 @@ public final class LettuceTelemetryBuilder {
                     SpanStatusExtractor.getDefault()
                         .extract(spanStatusBuilder, request, response, error);
                   }
-                })
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+                });
+    setDbClientExceptionEventExtractor(builder);
+
+    Instrumenter<LettuceRequest, LettuceResponse> instrumenter =
+        builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     return new LettuceTelemetry(instrumenter, querySanitizationEnabled, encodingEventsEnabled);
   }

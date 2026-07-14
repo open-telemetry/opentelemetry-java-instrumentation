@@ -19,11 +19,31 @@ dependencies {
   latestDepTestLibrary("io.kubernetes:client-java-api:19.+") // see test suite below
 }
 
+val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+
 testing {
   suites {
-    val version20Test by registering(JvmTestSuite::class) {
+    // version22Test reuses the same test source against `latest.release` in latest-deps mode
+    // (currently 26.x), and against 22.0.0 otherwise, to exercise the upper end of the v20+
+    // builder API line.
+    register<JvmTestSuite>("version22Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/version20Test/java"))
+        }
+      }
       dependencies {
-        implementation("io.kubernetes:client-java-api:${baseVersion("20.0.0").orLatest()}")
+        implementation("io.kubernetes:client-java-api:${baseVersion("22.0.0").orLatest()}")
+      }
+      targets {
+        all {
+          testTask.configure {
+            // client-java-api 22.0.0+ requires Java 11+
+            if (testJavaVersion.isJava8) {
+              enabled = false
+            }
+          }
+        }
       }
     }
   }
@@ -40,7 +60,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -48,7 +68,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.kubernetes-client.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

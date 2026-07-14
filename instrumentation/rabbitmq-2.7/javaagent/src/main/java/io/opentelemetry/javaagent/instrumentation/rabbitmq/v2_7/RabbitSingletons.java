@@ -7,16 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
@@ -27,9 +30,6 @@ import javax.annotation.Nullable;
 
 public class RabbitSingletons {
 
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "rabbitmq")
-          .getBoolean("experimental_span_attributes/development", false);
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rabbitmq-2.7";
   private static final Instrumenter<ChannelAndMethod, Void> channelInstrumenter =
       createChannelInstrumenter(false);
@@ -58,17 +58,22 @@ public class RabbitSingletons {
   }
 
   private static Instrumenter<ChannelAndMethod, Void> createChannelInstrumenter(boolean publish) {
-    return Instrumenter.<ChannelAndMethod, Void>builder(
-            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, ChannelAndMethod::getMethod)
-        .addAttributesExtractor(
-            buildMessagingAttributesExtractor(
-                new RabbitChannelAttributesGetter(), publish ? MessageOperation.PUBLISH : null))
-        .addAttributesExtractor(
-            NetworkAttributesExtractor.create(new RabbitChannelNetAttributesGetter()))
-        .addContextCustomizer(
-            (context, request, startAttributes) ->
-                context.with(CHANNEL_AND_METHOD_CONTEXT_KEY, new RabbitChannelAndMethodHolder()))
-        .buildInstrumenter(channelAndMethod -> publish ? PRODUCER : CLIENT);
+    InstrumenterBuilder<ChannelAndMethod, Void> builder =
+        Instrumenter.<ChannelAndMethod, Void>builder(
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, ChannelAndMethod::getMethod)
+            .addAttributesExtractor(
+                buildMessagingAttributesExtractor(
+                    new RabbitChannelAttributesGetter(), publish ? MessageOperation.PUBLISH : null))
+            .addAttributesExtractor(
+                NetworkAttributesExtractor.create(new RabbitChannelNetAttributesGetter()))
+            .addContextCustomizer(
+                (context, request, startAttributes) ->
+                    context.with(
+                        CHANNEL_AND_METHOD_CONTEXT_KEY, new RabbitChannelAndMethodHolder()));
+    if (publish) {
+      setMessagingSendExceptionEventExtractor(builder);
+    }
+    return builder.buildInstrumenter(channelAndMethod -> publish ? PRODUCER : CLIENT);
   }
 
   private static Instrumenter<ReceiveRequest, GetResponse> createReceiveInstrumenter() {
@@ -77,19 +82,21 @@ public class RabbitSingletons {
         buildMessagingAttributesExtractor(
             new RabbitReceiveAttributesGetter(), MessageOperation.RECEIVE));
     extractors.add(NetworkAttributesExtractor.create(new RabbitReceiveNetAttributesGetter()));
-    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+    if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitReceiveExperimentalAttributesExtractor());
     }
 
-    return Instrumenter.<ReceiveRequest, GetResponse>builder(
-            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, ReceiveRequest::spanName)
-        .addAttributesExtractors(extractors)
-        .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-        .addSpanLinksExtractor(
-            new PropagatorBasedSpanLinksExtractor<>(
-                GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
-                new ReceiveRequestTextMapGetter()))
-        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    InstrumenterBuilder<ReceiveRequest, GetResponse> builder =
+        Instrumenter.<ReceiveRequest, GetResponse>builder(
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, ReceiveRequest::spanName)
+            .addAttributesExtractors(extractors)
+            .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+            .addSpanLinksExtractor(
+                new PropagatorBasedSpanLinksExtractor<>(
+                    GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
+                    new ReceiveRequestTextMapGetter()));
+    setMessagingReceiveExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static Instrumenter<DeliveryRequest, Void> createDeliverInstrumenter() {
@@ -99,14 +106,16 @@ public class RabbitSingletons {
             new RabbitDeliveryAttributesGetter(), MessageOperation.PROCESS));
     extractors.add(NetworkAttributesExtractor.create(new RabbitDeliveryNetAttributesGetter()));
     extractors.add(new RabbitDeliveryExtraAttributesExtractor());
-    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+    if (RabbitInstrumenterHelper.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       extractors.add(new RabbitDeliveryExperimentalAttributesExtractor());
     }
 
-    return Instrumenter.<DeliveryRequest, Void>builder(
-            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, DeliveryRequest::spanName)
-        .addAttributesExtractors(extractors)
-        .buildConsumerInstrumenter(new DeliveryRequestGetter());
+    InstrumenterBuilder<DeliveryRequest, Void> builder =
+        Instrumenter.<DeliveryRequest, Void>builder(
+                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, DeliveryRequest::spanName)
+            .addAttributesExtractors(extractors);
+    setMessagingProcessExceptionEventExtractor(builder);
+    return builder.buildConsumerInstrumenter(new DeliveryRequestGetter());
   }
 
   private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(

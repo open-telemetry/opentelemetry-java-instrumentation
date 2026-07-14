@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.Declarativ
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread.ThreadDetailsCustomizerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
@@ -32,15 +33,15 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.SpringResourceProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -179,9 +180,11 @@ public class OpenTelemetryAutoConfiguration {
        * <p>Not using spring boot properties directly, because declarative configuration does not
        * integrate with spring boot properties.
        *
-       * @deprecated use the Declarative Config API instead.
+       * @deprecated Migrate consuming auto-configurations to the Declarative Config API. This
+       *     compatibility bean will be removed in 3.0 together with {@link
+       *     DeclarativeConfigPropertiesBridgeBuilder}.
        */
-      @Deprecated
+      @Deprecated // will be removed in 3.0
       @Bean
       public ConfigProperties otelProperties(OpenTelemetry openTelemetry) {
         return new DeclarativeConfigPropertiesBridgeBuilder()
@@ -194,6 +197,11 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       public DeclarativeConfigurationCustomizerProvider distroConfigurationCustomizerProvider() {
         return new ResourceCustomizerProvider();
+      }
+
+      @Bean
+      public DeclarativeConfigurationCustomizerProvider threadDetailsCustomizerProvider() {
+        return new ThreadDetailsCustomizerProvider();
       }
 
       @Bean

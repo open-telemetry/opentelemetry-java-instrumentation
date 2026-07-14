@@ -26,7 +26,7 @@ plugins {
 
 buildscript {
   dependencies {
-    classpath("com.squareup.okhttp3:okhttp:5.3.2")
+    classpath("com.squareup.okhttp3:okhttp:5.4.0")
     classpath("org.apache.commons:commons-lang3:3.20.0")
   }
 }
@@ -69,7 +69,7 @@ if (project.findProperty("skipTests") as String? == "true") {
 
 if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
   tasks {
-    val listTestsInPartition by registering {
+    register<DefaultTask>("listTestsInPartition") {
       group = "Help"
       description = "List test tasks in given partition"
 
@@ -129,7 +129,7 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
 tasks {
   val stableVersion = version.toString().replace("-alpha", "")
 
-  val generateFossaConfiguration by registering {
+  register<DefaultTask>("generateFossaConfiguration") {
     group = "Help"
     description = "Generate .fossa.yml configuration file"
 
@@ -166,7 +166,7 @@ tasks {
     }
   }
 
-  val generateReleaseBundle by registering(Zip::class) {
+  val generateReleaseBundle = register<Zip>("generateReleaseBundle") {
     dependsOn(project.tasks.withType<PublishToMavenRepository>())
     from("releaseRepo")
 
@@ -176,7 +176,7 @@ tasks {
     archiveFileName.set("release-bundle-$stableVersion.zip")
   }
 
-  val uploadReleaseBundle by registering {
+  register<DefaultTask>("uploadReleaseBundle") {
     dependsOn(generateReleaseBundle)
     val bundleFile = generateReleaseBundle.flatMap { it.archiveFile }
     doFirst {

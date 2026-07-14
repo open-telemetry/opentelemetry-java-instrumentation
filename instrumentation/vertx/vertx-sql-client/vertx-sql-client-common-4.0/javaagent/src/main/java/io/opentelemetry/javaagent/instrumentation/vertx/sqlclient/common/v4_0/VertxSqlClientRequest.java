@@ -14,16 +14,19 @@ public class VertxSqlClientRequest {
   @Nullable private final SqlConnectOptions sqlConnectOptions;
   private final boolean parameterizedQuery;
   private final String dbSystemName;
+  @Nullable private final Long operationBatchSize;
 
   public VertxSqlClientRequest(
       String queryText,
       @Nullable SqlConnectOptions sqlConnectOptions,
       boolean parameterizedQuery,
-      String dbSystemName) {
+      String dbSystemName,
+      @Nullable Long operationBatchSize) {
     this.queryText = queryText;
     this.sqlConnectOptions = sqlConnectOptions;
     this.parameterizedQuery = parameterizedQuery;
     this.dbSystemName = dbSystemName;
+    this.operationBatchSize = operationBatchSize;
   }
 
   public String getQueryText() {
@@ -56,5 +59,10 @@ public class VertxSqlClientRequest {
 
   public String getDbSystemName() {
     return dbSystemName;
+  }
+
+  @Nullable
+  public Long getOperationBatchSize() {
+    return operationBatchSize;
   }
 }

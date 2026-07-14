@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.twitter.finagle.http.Request;
@@ -28,10 +27,9 @@ class BijectionsNettyInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("fullRequestToFinagle")), getClass().getName() + "$FullRequestAdvice");
+        named("fullRequestToFinagle"), getClass().getName() + "$FullRequestAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("chunkedRequestToFinagle")),
-        getClass().getName() + "$ChunkedRequestAdvice");
+        named("chunkedRequestToFinagle"), getClass().getName() + "$ChunkedRequestAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -26,5 +26,5 @@ dependencies {
 
 // Needed by mockito
 configurations.testRuntimeClasspath {
-  exclude(group = "net.bytebuddy", module = "byte-buddy-dep")
+  exclude("net.bytebuddy", "byte-buddy-dep")
 }

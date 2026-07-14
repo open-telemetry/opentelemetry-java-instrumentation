@@ -1,37 +1,87 @@
 # OpenTelemetry Java Instrumentation
 
-## Scope
+First-pass PR review rules. A deep review with full knowledge files runs
+separately later in the PR lifecycle. **Prefer silence over uncertainty.** Only
+flag substantive issues on changed lines. Skip stylistic preferences not listed
+below. Do not nitpick.
 
-Repository-wide defaults for Copilot behavior.
-Keep scoped language or file-type rules in `.github/instructions/*.instructions.md`.
+Do not flag anything CI will catch. This includes compilation errors (missing
+imports, unbalanced braces, type errors, unresolved symbols), Spotless-covered
+formatting (indentation, wrapping, alignment, brace placement, import
+ordering/grouping, whitespace), Checkstyle/ErrorProne/NullAway findings, and
+test failures. Do not ask authors to run the formatter. CI surfaces these
+directly, so review comments on them are noise.
 
-## Repository Layout
+Use category tags like `[Style]`, `[Naming]`, `[Testing]`, `[General]`.
 
-- Workspace-level overview: `.github/README.md`
-- Scoped instructions and `applyTo` patterns: `.github/instructions/README.md`
-- Agent review and implementation knowledge index: `.github/agents/knowledge/README.md`
+Java-specific style and test rules live in path-specific files (loaded in
+addition to this one when reviewing Java changes):
 
-## Core References
+- `.github/instructions/java-style.instructions.md`
+- `.github/instructions/java-tests.instructions.md`
 
-- Style guide and core conventions: `docs/contributing/style-guide.md`
-- Review and implementation knowledge by topic: `.github/agents/knowledge/README.md`
+## [Style] `@SuppressWarnings` Scoping
 
-## Knowledge Loading
+Place `@SuppressWarnings` on the single member that needs it. Use class-level
+only when two or more members would need the same suppression.
 
-For coding, fix, and refactoring tasks, consult `.github/agents/knowledge/README.md`
-before making substantial changes.
+## [Naming] Catch Variable Names
 
-Use the knowledge index to load only the article(s) relevant to the current task.
-Do not load the entire knowledge folder by default.
+In **catch clauses only** (not method/lambda parameters or fields):
 
-## Gradle Execution Rules
+- Used exception → `e` (or `error` for a specific `*Error` subtype).
+- Used exception in nested catch where outer already uses `e` → `f`.
+- Used `Throwable` → `t`.
+- Intentionally unused → `ignored` (or `ignore` if `ignored` would shadow an
+  outer catch).
 
-Never use `--rerun-tasks`. Use `--rerun` when needed.
+## [Naming] Public API Getters
 
-Builds and tests in this repository can take several minutes.
-Run Gradle commands with timeout `0` (no timeout), and wait for completion.
-Do not treat slow output as a hang by default.
+Public API getters use `get*` (or `is*` for booleans).
 
-Never pipe Gradle output through `tail`, `head`, `grep`, or any other command.
-Piping masks the Gradle exit code — the shell reports the exit code of the last
-pipe segment, not Gradle, so a failing build silently appears to succeed.
+## [Style] No Redundant Null Guards on Attribute Puts
+
+`AttributesBuilder.put`, `Span.setAttribute`, `SpanBuilder.setAttribute`, and
+`LogRecordBuilder.setAttribute` are no-ops when the value is `null`. Do not wrap
+calls in `if (value != null)` when the value can be passed straight through:
+
+```java
+// BAD
+String v = getSomething();
+if (v != null) {
+  attributes.put(SOME_KEY, v);
+}
+// GOOD
+attributes.put(SOME_KEY, getSomething());
+```
+
+Do **not** flag when the guard protects a dereference or derived computation
+(e.g. `view.getClass().getName()`). When in doubt, stay silent.
+
+## [Javaagent] Singleton Accessor Naming
+
+In `*Singletons`, `*SpanNaming`, and similar holder classes, zero-arg accessor
+methods that **directly return a stored singleton field** must match the field
+name with no `get` prefix:
+
+```java
+private static final Instrumenter<Request, Response> instrumenter = ...;
+
+public static Instrumenter<Request, Response> instrumenter() {
+  return instrumenter;
+}
+```
+
+- Methods that take arguments or compute a value are not singleton accessors —
+  keep their normal names (including `get*` when appropriate). Do not flag
+  `getAddressAndPort(client)` on this basis.
+- Uppercase constant-like fields (e.g. `VirtualField`, `ContextKey`) may be
+  exposed as `public static final` directly with no accessor.
+- Caller sites should static-import the accessor / constant and call it
+  unqualified.
+
+## [General] Engineering Correctness
+
+Flag real defects on changed lines: logic errors, concurrency hazards, resource
+leaks, copy/paste mistakes, incorrect comments, unsafe error handling, dead
+code, security regressions. Skip stylistic preferences not listed above.

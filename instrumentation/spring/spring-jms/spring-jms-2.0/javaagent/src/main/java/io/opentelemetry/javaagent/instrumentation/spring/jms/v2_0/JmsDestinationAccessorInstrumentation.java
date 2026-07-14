@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0.SpringJmsSingletons.isReceiveTelemetryEnabled;
+import static io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0.SpringJmsSingletons.RECEIVE_TELEMETRY_ENABLED;
 import static io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0.SpringJmsSingletons.receiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -41,7 +41,7 @@ class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter() {
-      if (isReceiveTelemetryEnabled()) {
+      if (RECEIVE_TELEMETRY_ENABLED) {
         return null;
       }
       // suppress receive span creation in jms instrumentation

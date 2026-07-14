@@ -79,7 +79,7 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-data-jdbc:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   implementation(project(":sdk-autoconfigure-support"))
   implementation(project(":declarative-config-bridge"))
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
@@ -120,7 +120,7 @@ dependencies {
   // needed for the Spring Boot 3 support
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
 
-  // give access to common classes, e.g. InstrumentationConfigUtil
+  // give access to common classes
   add("javaSpring3CompileOnly", files(sourceSets.main.get().output.classesDirs))
   add("javaSpring3CompileOnly", "org.springframework.boot:spring-boot-starter-web:3.2.4")
   add("javaSpring3CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
@@ -173,7 +173,7 @@ val testSpring3 =
 
 testing {
   suites {
-    val testLogbackAppender by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testLogbackAppender") {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk")
@@ -196,7 +196,7 @@ testing {
       }
     }
 
-    val testLogbackMissing by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testLogbackMissing") {
       dependencies {
         implementation(project())
         implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
@@ -209,7 +209,7 @@ testing {
       }
     }
 
-    val testSpring2 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSpring2") {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk")
@@ -234,7 +234,7 @@ testing {
       }
     }
 
-    val testSpring3 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSpring3") {
       dependencies {
         implementation(project())
         val version = baseVersion("3.2.4").orLatest("3.+")
@@ -248,7 +248,7 @@ testing {
       }
     }
 
-    val testSpring4 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSpring4") {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
@@ -271,7 +271,7 @@ testing {
       }
     }
 
-    val testDeclarativeConfig by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testDeclarativeConfig") {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk")
@@ -359,7 +359,7 @@ tasks {
     from(sourceSets["javaSpring4"].java)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")

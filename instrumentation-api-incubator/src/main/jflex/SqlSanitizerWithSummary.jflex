@@ -76,6 +76,8 @@ WHITESPACE           = [ \t\r\n]+
 
   private final StringBuilder builder = new StringBuilder();
   private final StringBuilder querySummaryBuilder = new StringBuilder();
+  private String operationName = null;
+  private String collectionName = null;
   private String storedProcedureName = null;
   private String dollarTag = null;
 
@@ -88,6 +90,14 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** Appends an operation name (SELECT, INSERT, etc.) to the query summary. */
+  private void appendOperationToSummary() {
+    if (querySummaryBuilder.length() > 0) {
+      querySummaryBuilder.append(' ');
+    }
+    // yytext() allocates a String; append directly from JFlex's buffer.
+    querySummaryBuilder.append(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
+  }
+
   private void appendOperationToSummary(String operationName) {
     if (querySummaryBuilder.length() > 0) {
       querySummaryBuilder.append(' ');
@@ -101,6 +111,28 @@ WHITESPACE           = [ \t\r\n]+
       querySummaryBuilder.append(' ');
     }
     querySummaryBuilder.append(yytext());
+  }
+
+  private void recordOperationName(String operationName) {
+    if (this.operationName == null) {
+      this.operationName = operationName;
+    }
+  }
+
+  private void recordOperationName() {
+    recordOperationName(yytext());
+  }
+
+  private void refineOperationName(String operationTarget) {
+    if (operationName != null) {
+      operationName = operationName + " " + operationTarget;
+    }
+  }
+
+  private void recordCollectionName() {
+    if (collectionName == null) {
+      collectionName = yytext();
+    }
   }
 
   private int parenLevel = 0;
@@ -135,6 +167,14 @@ WHITESPACE           = [ \t\r\n]+
 
   private void setOperation(Operation operation) {
     this.operation = operation;
+  }
+
+  private boolean shouldSanitizeRemainderAfterPassword() {
+    return !insideComment && operation.shouldSanitizeRemainderAfterPassword();
+  }
+
+  private boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+    return !insideComment && operation.shouldSanitizeRemainderAfterIdentifiedBy();
   }
 
   /** Push current operation onto stack and reset to none for subquery processing. */
@@ -184,6 +224,15 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingOperationTarget() {
       return false;
     }
+    boolean isCapturingIdentifier() {
+      return false;
+    }
+    boolean shouldSanitizeRemainderAfterPassword() {
+      return false;
+    }
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return shouldSanitizeRemainderAfterPassword();
+    }
     /** Returns true if open paren should start a subquery context. */
     boolean isEnteringSubquery() {
       return false;
@@ -208,14 +257,36 @@ WHITESPACE           = [ \t\r\n]+
       operationTarget = target;
       expectingOperationTarget = false;
       appendOperationToSummary(operationTarget);
+      refineOperationName(operationTarget);
+    }
+
+    boolean isCapturingIdentifier() {
+      return (!identifierCaptured && !inEmbeddedSelect)
+          || (inEmbeddedSelect && expectingTableName && parenLevel == selectParenLevel);
+    }
+
+    /** Returns true for DDL targets where PASSWORD is treated as an identifier, not a secret clause. */
+    boolean hasSafeDdlTarget() {
+      return operationTarget.equalsIgnoreCase("TABLE")
+          || operationTarget.equalsIgnoreCase("INDEX")
+          || operationTarget.equalsIgnoreCase("PROCEDURE")
+          || operationTarget.equalsIgnoreCase("VIEW");
+    }
+
+    boolean shouldSanitizeRemainderAfterPassword() {
+      return !hasSafeDdlTarget();
     }
 
     void handleIdentifier() {
       if (!identifierCaptured && !inEmbeddedSelect) {
         appendTargetToSummary();
+        if (operationTarget.equalsIgnoreCase("TABLE")) {
+          recordCollectionName();
+        }
         identifierCaptured = true;
       } else if (inEmbeddedSelect && expectingTableName && parenLevel == selectParenLevel) {
         appendTargetToSummary();
+        recordCollectionName();
         expectingTableName = false;
       }
     }
@@ -223,7 +294,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleSelect() {
       inEmbeddedSelect = true;
       selectParenLevel = parenLevel;
-      appendOperationToSummary("SELECT");
+      appendOperationToSummary();
     }
 
     void handleFrom() {
@@ -345,6 +416,7 @@ WHITESPACE           = [ \t\r\n]+
       if (captureSingleTable && identifierCount == 1) {
         if (!isCteReference) {
           appendTargetToSummary();
+          recordCollectionName();
         }
         captureSingleTable = false;
         identifierCount = 0;
@@ -355,6 +427,7 @@ WHITESPACE           = [ \t\r\n]+
       if (captureTableList && identifierCount == 1) {
         if (!isCteReference) {
           appendTargetToSummary();
+          recordCollectionName();
         }
         captureTableList = false;
         // Don't reset identifierCount - keep counting for implicit join detection
@@ -393,12 +466,13 @@ WHITESPACE           = [ \t\r\n]+
 
     void handleSelect() {
       operation = new Select();
-      appendOperationToSummary("SELECT");
+      appendOperationToSummary();
     }
 
     void handleIdentifier() {
       if (expectingTableName) {
         appendTargetToSummary();
+        recordCollectionName();
         expectingTableName = false;
       }
     }
@@ -416,13 +490,14 @@ WHITESPACE           = [ \t\r\n]+
       // Once we've captured the DELETE table, any SELECT is a subquery
       if (identifierCaptured) {
         operation = new Select();
-        appendOperationToSummary("SELECT");
+        appendOperationToSummary();
       }
     }
 
     void handleIdentifier() {
       if (expectingTableName) {
         appendTargetToSummary();
+        recordCollectionName();
         expectingTableName = false;
         identifierCaptured = true;
       }
@@ -448,19 +523,30 @@ WHITESPACE           = [ \t\r\n]+
       // Once we've captured the UPDATE table, any SELECT is a subquery
       if (identifierCaptured) {
         operation = new Select();
-        appendOperationToSummary("SELECT");
+        appendOperationToSummary();
       }
     }
 
     void handleIdentifier() {
       if (!identifierCaptured) {
         appendTargetToSummary();
+        recordCollectionName();
         identifierCaptured = true;
       }
     }
   }
 
-  private class Merge extends SimpleOperation {}
+  private class Merge extends Operation {
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        recordCollectionName();
+        identifierCaptured = true;
+      }
+    }
+  }
 
   private class Call extends Operation {
     boolean identifierCaptured = false;
@@ -497,6 +583,12 @@ WHITESPACE           = [ \t\r\n]+
   /** VALUES operation - no table to capture. */
   private class Values extends Operation {}
 
+  private class SensitivePhraseOperation extends Operation {
+    boolean shouldSanitizeRemainderAfterPassword() {
+      return true;
+    }
+  }
+
   /** EXECUTE/EXEC operation for stored procedures. */
   private class Execute extends SimpleOperation {
     void handleIdentifier() {
@@ -523,12 +615,16 @@ WHITESPACE           = [ \t\r\n]+
       if (text.equalsIgnoreCase("TABLE")) {
         if (!tableCaptured) {
           appendTargetToSummary();
+          refineOperationName(text);
           tableCaptured = true;
         }
         return;
       }
       if (!identifierCaptured) {
         appendTargetToSummary();
+        if (tableCaptured) {
+          recordCollectionName();
+        }
         identifierCaptured = true;
       }
     }
@@ -546,6 +642,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleIdentifier() {
       if (!tableCaptured) {
         appendTargetToSummary();
+        recordCollectionName();
         tableCaptured = true;
         expectingTableName = false;
       }
@@ -569,6 +666,7 @@ WHITESPACE           = [ \t\r\n]+
       }
       if (!identifierCaptured) {
         appendTargetToSummary();
+        recordCollectionName();
         identifierCaptured = true;
       }
     }
@@ -591,7 +689,11 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   /** GRANT operation - blocks other keywords from being parsed. */
-  private class Grant extends Operation {}
+  private class Grant extends Operation {
+    boolean shouldSanitizeRemainderAfterIdentifiedBy() {
+      return true;
+    }
+  }
 
   /** REVOKE operation - blocks other keywords from being parsed. */
   private class Revoke extends Operation {}
@@ -659,7 +761,12 @@ WHITESPACE           = [ \t\r\n]+
       summary = summary.substring(0, summary.length() - 1);
     }
 
-    return SqlQuery.createWithSummary(normalizedStatement, storedProcedureName, summary);
+    return SqlQuery.createWithSummary(
+      normalizedStatement,
+      operationName,
+      collectionName,
+      storedProcedureName,
+      summary);
   }
 
 %}
@@ -687,10 +794,11 @@ WHITESPACE           = [ \t\r\n]+
             confirmPendingSubqueryIfNeeded();
             if (shouldStartMainOperation()) {
               setOperation(new Select());
-              appendOperationToSummary("SELECT");
+              recordOperationName();
+              appendOperationToSummary();
             } else if (operation instanceof Select) {
               // nested SELECT (subquery) - append SELECT to summary
-              appendOperationToSummary("SELECT");
+              appendOperationToSummary();
             }
             operation.handleSelect();
           }
@@ -700,7 +808,8 @@ WHITESPACE           = [ \t\r\n]+
   "INSERT" {
           if (shouldStartMainOperation()) {
             setOperation(new Insert());
-            appendOperationToSummary("INSERT");
+            recordOperationName();
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -711,7 +820,8 @@ WHITESPACE           = [ \t\r\n]+
   "DELETE" {
           if (shouldStartMainOperation()) {
             setOperation(new Delete());
-            appendOperationToSummary("DELETE");
+            recordOperationName();
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -722,7 +832,8 @@ WHITESPACE           = [ \t\r\n]+
   "UPDATE" {
           if (shouldStartMainOperation()) {
             setOperation(new Update());
-            appendOperationToSummary("UPDATE");
+            recordOperationName();
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -733,7 +844,8 @@ WHITESPACE           = [ \t\r\n]+
   "CALL" {
           if (shouldStartNewOperation()) {
             setOperation(new Call());
-            appendOperationToSummary("CALL");
+            recordOperationName();
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -744,7 +856,8 @@ WHITESPACE           = [ \t\r\n]+
   "MERGE" {
           if (shouldStartNewOperation()) {
             setOperation(new Merge());
-            appendOperationToSummary("MERGE");
+            recordOperationName();
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -755,7 +868,8 @@ WHITESPACE           = [ \t\r\n]+
   "CREATE" {
           if (shouldStartNewOperation()) {
             setOperation(new Create());
-            appendOperationToSummary("CREATE");
+            recordOperationName();
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -766,7 +880,8 @@ WHITESPACE           = [ \t\r\n]+
   "DROP" {
           if (shouldStartNewOperation()) {
             setOperation(new Drop());
-            appendOperationToSummary("DROP");
+            recordOperationName();
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -777,7 +892,8 @@ WHITESPACE           = [ \t\r\n]+
   "ALTER" {
           if (shouldStartNewOperation()) {
             setOperation(new Alter());
-            appendOperationToSummary("ALTER");
+            recordOperationName();
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -793,7 +909,8 @@ WHITESPACE           = [ \t\r\n]+
               setOperation(new Values());
               // Only append VALUES to summary if at top level (not inside a subquery or CTE body)
               if (operationStack.isEmpty()) {
-                appendOperationToSummary("VALUES");
+                recordOperationName();
+                appendOperationToSummary();
               }
             }
           }
@@ -803,7 +920,8 @@ WHITESPACE           = [ \t\r\n]+
   "EXECUTE" | "EXEC" {
           if (shouldStartNewOperation()) {
             setOperation(new Execute());
-            appendOperationToSummary(yytext());
+            recordOperationName();
+            appendOperationToSummary();
           } else if (!insideComment) {
             cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
@@ -814,7 +932,8 @@ WHITESPACE           = [ \t\r\n]+
   "TRUNCATE" {
           if (shouldStartNewOperation()) {
             setOperation(new Truncate());
-            appendOperationToSummary("TRUNCATE");
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -822,7 +941,8 @@ WHITESPACE           = [ \t\r\n]+
   "REPLACE" {
           if (shouldStartNewOperation()) {
             setOperation(new Replace());
-            appendOperationToSummary("REPLACE");
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -830,7 +950,8 @@ WHITESPACE           = [ \t\r\n]+
   "LOCK" {
           if (shouldStartNewOperation()) {
             setOperation(new Lock());
-            appendOperationToSummary("LOCK");
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -838,7 +959,8 @@ WHITESPACE           = [ \t\r\n]+
   "USE" {
           if (shouldStartNewOperation()) {
             setOperation(new Use());
-            appendOperationToSummary("USE");
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -846,7 +968,8 @@ WHITESPACE           = [ \t\r\n]+
   "BEGIN" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            appendOperationToSummary("BEGIN");
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -854,7 +977,8 @@ WHITESPACE           = [ \t\r\n]+
   "COMMIT" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            appendOperationToSummary("COMMIT");
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -862,7 +986,8 @@ WHITESPACE           = [ \t\r\n]+
   "ROLLBACK" {
           if (shouldStartNewOperation()) {
             setOperation(new TransactionControl());
-            appendOperationToSummary("ROLLBACK");
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -870,7 +995,8 @@ WHITESPACE           = [ \t\r\n]+
   "GRANT" {
           if (shouldStartNewOperation()) {
             setOperation(new Grant());
-            appendOperationToSummary("GRANT");
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -878,7 +1004,8 @@ WHITESPACE           = [ \t\r\n]+
   "REVOKE" {
           if (shouldStartNewOperation()) {
             setOperation(new Revoke());
-            appendOperationToSummary("REVOKE");
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -886,7 +1013,15 @@ WHITESPACE           = [ \t\r\n]+
   "SHOW" {
           if (shouldStartNewOperation()) {
             setOperation(new Show());
-            appendOperationToSummary("SHOW");
+            recordOperationName();
+            appendOperationToSummary();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "CONNECT" | "VALIDATE" | "CHECK" | "EXPORT" | "IMPORT" | "RECOVER" {
+          if (shouldStartNewOperation()) {
+            setOperation(new SensitivePhraseOperation());
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -895,23 +1030,10 @@ WHITESPACE           = [ \t\r\n]+
           // EXPLAIN is a prefix command - append to summary but don't set an operation,
           // so the inner statement (SELECT, INSERT, etc.) gets processed normally.
           if (!insideComment && operation == none) {
-            appendOperationToSummary("EXPLAIN");
+            recordOperationName();
+            appendOperationToSummary();
           }
           appendCurrentFragment();
-          if (isOverLimit()) return YYEOF;
-      }
-  "CONNECT" {
-          appendCurrentFragment();
-          // sanitize SAP HANA CONNECT statement
-          // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
-          // we check that operation is not set to avoid triggering sanitization when a field named
-          // connect is used or CONNECT BY clause is used in a SELECT statement
-          if (!insideComment && operation == none) {
-            // CONNECT statement could contain an unquoted password. We are not going to try
-            // figuring out whether that is the case or not, just sanitize the whole statement.
-            builder.append(" ?");
-            return YYEOF;
-          }
           if (isOverLimit()) return YYEOF;
       }
   "FROM" {
@@ -920,7 +1042,10 @@ WHITESPACE           = [ \t\r\n]+
               // hql/jpql queries may skip SELECT and start with FROM clause
               // treat such queries as SELECT queries
               setOperation(new Select());
-              appendOperationToSummary("SELECT");
+              // Derive the synthetic SELECT case from the matched FROM token.
+              String operationName = Character.isUpperCase(zzBuffer[zzStartRead]) ? "SELECT" : "select";
+              recordOperationName(operationName);
+              appendOperationToSummary(operationName);
             }
             operation.handleFrom();
           }
@@ -1000,7 +1125,7 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
+  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" | "USER" {
           if (!insideComment) {
             // If we see a reserved word where we expected a subquery, it's a parenthesized name
             cancelPendingSubqueryIfNeeded();
@@ -1013,14 +1138,23 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "USER" {
+  "PASSWORD" {
+          boolean passwordTokenIsIdentifier = false;
+          if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            passwordTokenIsIdentifier = operation.isCapturingIdentifier();
+            operation.handleIdentifier();
+          }
           appendCurrentFragment();
-          if (!insideComment && (operation instanceof Create || operation instanceof Alter)) {
-            // CREATE USER and ALTER USER statements could contain an unquoted password. We are not
-            // going to try figuring out whether that is the case or not, just sanitize the whole
-            // statement.
-            // https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_8003.htm
-            // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
+          if (!passwordTokenIsIdentifier && !insideComment && shouldSanitizeRemainderAfterPassword()) {
+            builder.append(" ?");
+            return YYEOF;
+          }
+          if (isOverLimit()) return YYEOF;
+      }
+  "IDENTIFIED" {WHITESPACE}+ "BY" {
+          appendCurrentFragment();
+          if (!insideComment && shouldSanitizeRemainderAfterIdentifiedBy()) {
             builder.append(" ?");
             return YYEOF;
           }

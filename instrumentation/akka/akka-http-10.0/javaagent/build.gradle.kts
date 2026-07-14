@@ -35,8 +35,8 @@ dependencies {
   library("com.typesafe.akka:akka-stream_2.11:2.4.14")
 
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
-  testInstrumentation(project(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent"))
-  testInstrumentation(project(":instrumentation:scala-fork-join-2.8:javaagent"))
+  testInstrumentation(project(":instrumentation:akka:akka-actor-forkjoin-2.5:javaagent"))
+  testInstrumentation(project(":instrumentation:scala-forkjoin-2.8:javaagent"))
 
   latestDepTestLibrary("com.typesafe.akka:akka-http_2.13:latest.release")
   latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:latest.release")
@@ -44,7 +44,7 @@ dependencies {
 
 testing {
   suites {
-    val javaRouteTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("javaRouteTest") {
       dependencies {
         val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
         implementation("com.typesafe.akka:akka-http_$scalaVersion:${baseVersion("10.2.0").orLatest()}")
@@ -64,7 +64,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")

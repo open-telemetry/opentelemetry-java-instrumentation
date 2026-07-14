@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -20,9 +22,13 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_PORT;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -42,13 +48,14 @@ import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
+import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -58,6 +65,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -1017,16 +1025,48 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
 
     testing.waitAndAssertTraces(assertions);
+
+    if (endpoint == EXCEPTION
+        && emitExceptionAsLogs()
+        && options.hasExceptionOnServerSpan.test(endpoint)) {
+      assertExceptionLogs(options.expectedException, "http.server.request.exception");
+    }
   }
 
   @CanIgnoreReturnValue
   protected SpanDataAssert assertControllerSpan(SpanDataAssert span, Throwable expectedException) {
     span.hasName("controller").hasKind(SpanKind.INTERNAL);
     if (expectedException != null) {
-      span.hasStatus(StatusData.error());
-      span.hasException(expectedException);
+      span.hasStatus(StatusData.error())
+          .hasException(emitExceptionAsSpanEvents() ? expectedException : null);
     }
     return span;
+  }
+
+  protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
+    Awaitility.await()
+        .untilAsserted(
+            () -> {
+              List<LogRecordData> logs =
+                  testing.getExportedLogRecords().stream()
+                      .filter(log -> expectedEventName.equals(log.getEventName()))
+                      .collect(toList());
+
+              assertThat(logs).hasSize(1);
+              assertThat(logs.get(0))
+                  .hasSeverity(Severity.ERROR)
+                  .hasEventName(expectedEventName)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, expectedException.getClass().getName()),
+                      satisfies(
+                          EXCEPTION_MESSAGE,
+                          val -> {
+                            if (expectedException.getMessage() != null) {
+                              val.isEqualTo(expectedException.getMessage());
+                            }
+                          }),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
+            });
   }
 
   protected SpanDataAssert assertHandlerSpan(
@@ -1084,13 +1124,13 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         .satisfies(
             spanData ->
                 assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_37_0));
+                    .isEqualTo(SchemaUrls.V1_41_0));
     if (statusCode >= 500) {
       span.hasStatus(StatusData.error());
     }
 
     if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.test(endpoint)) {
-      span.hasException(options.expectedException);
+      span.hasException(emitExceptionAsSpanEvents() ? options.expectedException : null);
     }
 
     span.hasAttributesSatisfying(

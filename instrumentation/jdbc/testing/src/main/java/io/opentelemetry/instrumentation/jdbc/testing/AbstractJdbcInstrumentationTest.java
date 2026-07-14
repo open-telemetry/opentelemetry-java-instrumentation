@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.testing;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
@@ -12,7 +14,6 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -30,21 +31,27 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.beans.PropertyVetoException;
 import java.io.Closeable;
 import java.sql.CallableStatement;
@@ -68,6 +75,7 @@ import org.apache.derby.jdbc.EmbeddedDriver;
 import org.assertj.core.api.ThrowingConsumer;
 import org.h2.jdbcx.JdbcDataSource;
 import org.hsqldb.jdbc.JDBCDriver;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -76,6 +84,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.sqlite.JDBC;
+import org.sqlite.SQLiteDataSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJdbcInstrumentationTest {
@@ -102,12 +112,14 @@ public abstract class AbstractJdbcInstrumentationTest {
       ImmutableMap.of(
           "h2", "jdbc:h2:mem:" + DATABASE_NAME,
           "derby", "jdbc:derby:memory:" + DATABASE_NAME,
-          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
+          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME,
+          "sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
   private static final Map<String, String> JDBC_DRIVER_CLASS_NAMES =
       ImmutableMap.of(
           "h2", "org.h2.Driver",
           "derby", "org.apache.derby.jdbc.EmbeddedDriver",
-          "hsqldb", "org.hsqldb.jdbc.JDBCDriver");
+          "hsqldb", "org.hsqldb.jdbc.JDBCDriver",
+          "sqlite", "org.sqlite.JDBC");
   private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
   private static final Properties connectionProps = new Properties();
   // JDBC Connection pool name (i.e. HikariCP) -> Map<databaseName, Datasource>
@@ -117,6 +129,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     jdbcUserNames.put("derby", "APP");
     jdbcUserNames.put("h2", null);
     jdbcUserNames.put("hsqldb", "SA");
+    jdbcUserNames.put("sqlite", null);
 
     connectionProps.put("databaseName", "someDb");
     connectionProps.put("OPEN_NEW", "true"); // So H2 doesn't complain about username/password.
@@ -237,6 +250,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "hsqldb:mem:",
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
         Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "SELECT 3",
+            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
+        Arguments.of(
             "h2",
             new org.h2.Driver().connect(JDBC_URLS.get("h2"), connectionProps),
             null,
@@ -263,6 +285,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
+        Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), connectionProps),
+            null,
+            "SELECT 3",
+            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
         Arguments.of(
             "h2",
             cpDatasources.get("tomcat").get("h2").getConnection(),
@@ -291,6 +322,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "hsqldb:mem:",
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
         Arguments.of(
+            "sqlite",
+            cpDatasources.get("tomcat").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
+        Arguments.of(
             "h2",
             cpDatasources.get("hikari").get("h2").getConnection(),
             null,
@@ -318,6 +358,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "hsqldb:mem:",
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
         Arguments.of(
+            "sqlite",
+            cpDatasources.get("hikari").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
+        Arguments.of(
             "h2",
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
@@ -344,6 +393,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
             "INFORMATION_SCHEMA.SYSTEM_USERS"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("c3p0").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
         // stored procedure test
         Arguments.of(
             "h2",
@@ -418,6 +476,52 @@ public abstract class AbstractJdbcInstrumentationTest {
         testing(), "io.opentelemetry.jdbc", DB_SYSTEM_NAME, DB_NAMESPACE, DB_QUERY_SUMMARY);
   }
 
+  @Test
+  void testFailedStatement() throws SQLException {
+    Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
+    cleanup.deferCleanup(connection);
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
+
+    Throwable error =
+        catchThrowable(
+            () ->
+                testing()
+                    .runWithSpan(
+                        "parent",
+                        () -> statement.executeQuery("SELECT * FROM table_does_not_exist")));
+
+    assertThat(error).isInstanceOf(SQLException.class);
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
+
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("db.client.operation.exception")
+                      .hasException(error)
+                      .hasTotalAttributeCount(3),
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("exception")
+                      .hasException(error)
+                      .hasTotalAttributeCount(3));
+    }
+  }
+
   static Stream<Arguments> preparedStatementStream() throws SQLException {
     return Stream.of(
         Arguments.of(
@@ -441,6 +545,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
         Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "SELECT 3",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
+        Arguments.of(
             "h2",
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
@@ -460,6 +573,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("tomcat").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
         Arguments.of(
             "h2",
             cpDatasources.get("hikari").get("h2").getConnection(),
@@ -481,6 +603,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
         Arguments.of(
+            "sqlite",
+            cpDatasources.get("hikari").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
+        Arguments.of(
             "h2",
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
@@ -500,6 +631,15 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("c3p0").get("sqlite").getConnection(),
+            null,
+            "SELECT 3",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null),
         // stored procedure test
         Arguments.of(
             "h2",
@@ -649,6 +789,9 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    // SQLite does not support CallableStatement, so skip this test for SQLite.
+    Assumptions.assumeFalse(system.equalsIgnoreCase("sqlite"));
+
     Connection connection = wrap(conn);
     CallableStatement statement = connection.prepareCall(query);
     cleanup.deferCleanup(statement);
@@ -725,6 +868,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "hsqldb:mem:",
             "PUBLIC.S_HSQLDB"),
         Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "CREATE TABLE S_SQLITE (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_SQLITE"
+                : "CREATE TABLE jdbcunittest.S_SQLITE",
+            "sqlite:memory:",
+            "S_SQLITE"),
+        Arguments.of(
             "h2",
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
@@ -752,6 +905,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "CREATE TABLE PUBLIC.S_HSQLDB_TOMCAT",
             "hsqldb:mem:",
             "PUBLIC.S_HSQLDB_TOMCAT"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("tomcat").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE S_SQLITE_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_SQLITE_TOMCAT"
+                : "CREATE TABLE jdbcunittest.S_SQLITE_TOMCAT",
+            "sqlite:memory:",
+            "S_SQLITE_TOMCAT"),
         Arguments.of(
             "h2",
             cpDatasources.get("hikari").get("h2").getConnection(),
@@ -781,6 +944,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "hsqldb:mem:",
             "PUBLIC.S_HSQLDB_HIKARI"),
         Arguments.of(
+            "sqlite",
+            cpDatasources.get("hikari").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE S_SQLITE_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_SQLITE_HIKARI"
+                : "CREATE TABLE jdbcunittest.S_SQLITE_HIKARI",
+            "sqlite:memory:",
+            "S_SQLITE_HIKARI"),
+        Arguments.of(
             "h2",
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
@@ -807,7 +980,17 @@ public abstract class AbstractJdbcInstrumentationTest {
             "CREATE TABLE PUBLIC.S_HSQLDB_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))",
             "CREATE TABLE PUBLIC.S_HSQLDB_C3P0",
             "hsqldb:mem:",
-            "PUBLIC.S_HSQLDB_C3P0"));
+            "PUBLIC.S_HSQLDB_C3P0"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("c3p0").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE S_SQLITE_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_SQLITE_C3P0"
+                : "CREATE TABLE jdbcunittest.S_SQLITE_C3P0",
+            "sqlite:memory:",
+            "S_SQLITE_C3P0"));
   }
 
   @ParameterizedTest
@@ -877,6 +1060,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "derby:memory:",
             "PS_DERBY"),
         Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "CREATE TABLE PS_SQLITE (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_SQLITE"
+                : "CREATE TABLE jdbcunittest.PS_SQLITE",
+            "sqlite:memory:",
+            "PS_SQLITE"),
+        Arguments.of(
             "h2",
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
@@ -896,6 +1089,16 @@ public abstract class AbstractJdbcInstrumentationTest {
                 : "CREATE TABLE jdbcunittest.PS_DERBY_TOMCAT",
             "derby:memory:",
             "PS_DERBY_TOMCAT"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("tomcat").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE PS_SQLITE_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_SQLITE_TOMCAT"
+                : "CREATE TABLE jdbcunittest.PS_SQLITE_TOMCAT",
+            "sqlite:memory:",
+            "PS_SQLITE_TOMCAT"),
         Arguments.of(
             "h2",
             cpDatasources.get("hikari").get("h2").getConnection(),
@@ -917,6 +1120,16 @@ public abstract class AbstractJdbcInstrumentationTest {
             "derby:memory:",
             "PS_DERBY_HIKARI"),
         Arguments.of(
+            "sqlite",
+            cpDatasources.get("hikari").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE PS_SQLITE_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_SQLITE_HIKARI"
+                : "CREATE TABLE jdbcunittest.PS_SQLITE_HIKARI",
+            "sqlite:memory:",
+            "PS_SQLITE_HIKARI"),
+        Arguments.of(
             "h2",
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
@@ -935,7 +1148,17 @@ public abstract class AbstractJdbcInstrumentationTest {
                 ? "CREATE TABLE PS_DERBY_C3P0"
                 : "CREATE TABLE jdbcunittest.PS_DERBY_C3P0",
             "derby:memory:",
-            "PS_DERBY_C3P0"));
+            "PS_DERBY_C3P0"),
+        Arguments.of(
+            "sqlite",
+            cpDatasources.get("c3p0").get("sqlite").getConnection(),
+            null,
+            "CREATE TABLE PS_SQLITE_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_SQLITE_C3P0"
+                : "CREATE TABLE jdbcunittest.PS_SQLITE_C3P0",
+            "sqlite:memory:",
+            "PS_SQLITE_C3P0"));
   }
 
   @ParameterizedTest
@@ -1010,7 +1233,17 @@ public abstract class AbstractJdbcInstrumentationTest {
             "CREATE TABLE PUBLIC.PS_LARGE_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))",
             "CREATE TABLE PUBLIC.PS_LARGE_HSQLDB",
             "hsqldb:mem:",
-            "PUBLIC.PS_LARGE_HSQLDB"));
+            "PUBLIC.PS_LARGE_HSQLDB"),
+        Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "CREATE TABLE PS_LARGE_SQLITE (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_LARGE_SQLITE"
+                : "CREATE TABLE jdbcunittest.PS_LARGE_SQLITE",
+            "sqlite:memory:",
+            "PS_LARGE_SQLITE"));
   }
 
   @ParameterizedTest
@@ -1026,7 +1259,8 @@ public abstract class AbstractJdbcInstrumentationTest {
       throws SQLException {
     Connection connection = wrap(conn);
 
-    if (testLatestDeps()) {
+    // SQLite is only tested with a current driver that supports JDBC 4.2 large updates.
+    if (testLatestDeps() || "sqlite".equals(system)) {
       testPreparedStatementUpdateImpl(
           system,
           connection,
@@ -1159,7 +1393,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     try {
       connection = new TestConnection(true);
     } catch (Exception ignored) {
-      connection = driver.connect(jdbcUrl, null);
+      connection = driver.connect(jdbcUrl, new Properties());
     }
     connection = wrap(connection);
     cleanup.deferCleanup(connection);
@@ -1226,12 +1460,21 @@ public abstract class AbstractJdbcInstrumentationTest {
             "derby",
             "APP",
             "derby:memory:"),
+        Arguments.of(
+            new SQLiteDataSource(),
+            (Consumer<DataSource>) ds -> ((SQLiteDataSource) ds).setUrl(JDBC_URLS.get("sqlite")),
+            "sqlite",
+            null,
+            "sqlite:memory:"),
         Arguments.of(cpDatasources.get("hikari").get("h2"), null, "h2", null, "h2:mem:"),
         Arguments.of(
             cpDatasources.get("hikari").get("derby"), null, "derby", "APP", "derby:memory:"),
-        Arguments.of(cpDatasources.get("c3p0").get("h2"), null, "h2", null, "h2:mem:"),
         Arguments.of(
-            cpDatasources.get("c3p0").get("derby"), null, "derby", "APP", "derby:memory:"));
+            cpDatasources.get("hikari").get("sqlite"), null, "sqlite", null, "sqlite:memory:"),
+        Arguments.of(cpDatasources.get("c3p0").get("h2"), null, "h2", null, "h2:mem:"),
+        Arguments.of(cpDatasources.get("c3p0").get("derby"), null, "derby", "APP", "derby:memory:"),
+        Arguments.of(
+            cpDatasources.get("c3p0").get("sqlite"), null, "sqlite", null, "sqlite:memory:"));
   }
 
   @ParameterizedTest(autoCloseArguments = false)
@@ -1267,14 +1510,27 @@ public abstract class AbstractJdbcInstrumentationTest {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
                       asList(
-                          span1 -> span1.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                          span1 ->
-                              span1
-                                  .hasName(
+                          span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                          span ->
+                              span.hasName(
                                       originalDatasourceClass.getSimpleName() + ".getConnection")
                                   .hasKind(SpanKind.INTERNAL)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(attributesAssertions)));
+              // sqlite-jdbc executes extra statements during connection init
+              if (ds instanceof SQLiteDataSource
+                  && testing() instanceof AgentInstrumentationExtension) {
+                assertions.add(
+                    span ->
+                        span.hasName("jdbcunittest")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1)));
+                assertions.add(
+                    span ->
+                        span.hasName("jdbcunittest")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1)));
+              }
               trace.hasSpansSatisfyingExactly(assertions);
             });
   }
@@ -1624,6 +1880,116 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))));
   }
 
+  static Stream<Arguments> batchCasesStream() {
+    return Stream.of(
+        argumentSet(
+            "empty",
+            BatchScenario.builder()
+                .spanName("BATCH")
+                .oldSpanName(DATABASE_NAME_LOWER)
+                .summary("BATCH")
+                .batchSize(0)
+                .build()),
+        argumentSet(
+            "single",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .spanName("INSERT batch_test")
+                .oldSpanName("INSERT " + DATABASE_NAME_LOWER + ".batch_test")
+                .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .oldStatement("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .summary("INSERT batch_test")
+                .oldOperation("INSERT")
+                .oldTable("batch_test")
+                .build()),
+        argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (2, 2)")
+                .spanName("BATCH INSERT batch_test")
+                .oldSpanName(DATABASE_NAME_LOWER)
+                .queryText("INSERT INTO batch_test (id, num) VALUES (?, ?)")
+                .summary("BATCH INSERT batch_test")
+                .batchSize(2)
+                .build()),
+        argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .addQuery("INSERT INTO batch_test (id, num) VALUES (1, 1)")
+                .addQuery("UPDATE batch_test SET num = 5 WHERE id = 1")
+                .spanName("BATCH")
+                .oldSpanName(DATABASE_NAME_LOWER)
+                .queryText(
+                    "INSERT INTO batch_test (id, num) VALUES (?, ?); UPDATE batch_test SET num = ? WHERE id = ?")
+                .summary("BATCH")
+                .batchSize(2)
+                .build()));
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchCasesStream")
+  void testStatementBatch(BatchScenario scenario) throws SQLException {
+    Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
+    cleanup.deferCleanup(connection);
+
+    // recreate a fresh batch_test table for each scenario so that batch row ids can be reused
+    // without worrying about collisions from previous scenarios
+    Statement dropTable = connection.createStatement();
+    dropTable.execute("DROP TABLE IF EXISTS batch_test");
+    cleanup.deferCleanup(dropTable);
+    Statement createTable = connection.createStatement();
+    createTable.execute(
+        "CREATE TABLE batch_test (id INTEGER not NULL, num INTEGER, PRIMARY KEY ( id ))");
+    cleanup.deferCleanup(createTable);
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
+    for (String sql : scenario.queries) {
+      statement.addBatch(sql);
+    }
+
+    testing().runWithSpan("parent", statement::executeBatch);
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? scenario.spanName
+                                    : scenario.oldSpanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
+                                equalTo(
+                                    DB_CONNECTION_STRING,
+                                    emitStableDatabaseSemconv() ? null : "h2:mem:"),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    emitStableDatabaseSemconv()
+                                        ? scenario.queryText
+                                        : scenario.oldStatement),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? scenario.summary : null),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : scenario.oldOperation),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : scenario.oldTable),
+                                equalTo(
+                                    DB_OPERATION_BATCH_SIZE,
+                                    emitStableDatabaseSemconv() ? scenario.batchSize : null))));
+  }
+
   static Stream<Arguments> batchStream() throws SQLException {
     return Stream.of(
         Arguments.of("h2", new org.h2.Driver().connect(JDBC_URLS.get("h2"), null), null, "h2:mem:"),
@@ -1633,23 +1999,12 @@ public abstract class AbstractJdbcInstrumentationTest {
             "APP",
             "derby:memory:"),
         Arguments.of(
-            "hsqldb",
-            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
-            "SA",
-            "hsqldb:mem:"));
-  }
-
-  @ParameterizedTest
-  @MethodSource("batchStream")
-  void testBatch(String system, Connection connection, String username, String url)
-      throws SQLException {
-    testBatchImpl(
-        system,
-        wrap(connection),
-        username,
-        url,
-        "simple_batch_test",
-        statement -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
+            "hsqldb", new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null), "SA", "hsqldb:mem:"),
+        Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "sqlite:memory:"));
   }
 
   @ParameterizedTest
@@ -1666,178 +2021,14 @@ public abstract class AbstractJdbcInstrumentationTest {
     statement.addBatch("INSERT INTO simple_batch_test_large VALUES(1)");
     statement.addBatch("INSERT INTO simple_batch_test_large VALUES(2)");
 
-    if (testLatestDeps()) {
-      assertThat(statement.executeLargeBatch()).isEqualTo(new long[] {1, 1});
+    if (testLatestDeps() || "sqlite".equals(system)) {
+      statement.executeLargeBatch();
     } else {
       // Older drivers don't support JDBC 4.2, expect UnsupportedOperationException
       // This is the correct behavior - instrumentation should not change driver behavior
       assertThatThrownBy(statement::executeLargeBatch)
           .isInstanceOf(UnsupportedOperationException.class);
     }
-  }
-
-  private void testBatchImpl(
-      String system,
-      Connection connection,
-      String username,
-      String url,
-      String tableName,
-      ThrowingConsumer<Statement> action)
-      throws SQLException {
-    Statement createTable = connection.createStatement();
-    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable);
-
-    testing().waitForTraces(1);
-    testing().clearData();
-
-    Statement statement = connection.createStatement();
-    cleanup.deferCleanup(statement);
-    statement.addBatch("INSERT INTO non_existent_table VALUES(1)");
-    statement.clearBatch();
-    statement.addBatch("INSERT INTO " + tableName + " VALUES(1)");
-    statement.addBatch("INSERT INTO " + tableName + " VALUES(2)");
-    testing().runWithSpan("parent", () -> action.accept(statement));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT " + tableName
-                                    : "jdbcunittest")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                                equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv()
-                                        ? "INSERT INTO " + tableName + " VALUES(?)"
-                                        : null),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv()
-                                        ? "BATCH INSERT " + tableName
-                                        : null),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? 2L : null))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("batchStream")
-  void testMultiBatch(String system, Connection conn, String username, String url)
-      throws SQLException {
-    Connection connection = wrap(conn);
-    String tableName1 = "multi_batch_test_1";
-    String tableName2 = "multi_batch_test_2";
-    Statement createTable1 = connection.createStatement();
-    createTable1.execute(
-        "CREATE TABLE " + tableName1 + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable1);
-    Statement createTable2 = connection.createStatement();
-    createTable2.execute(
-        "CREATE TABLE " + tableName2 + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable2);
-
-    testing().waitForTraces(2);
-    testing().clearData();
-
-    Statement statement = connection.createStatement();
-    cleanup.deferCleanup(statement);
-    statement.addBatch("INSERT INTO " + tableName1 + " VALUES(1)");
-    statement.addBatch("INSERT INTO " + tableName2 + " VALUES(2)");
-    testing()
-        .runWithSpan(
-            "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(emitStableDatabaseSemconv() ? "BATCH" : "jdbcunittest")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                                equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv()
-                                        ? "INSERT INTO "
-                                            + tableName1
-                                            + " VALUES(?); INSERT INTO multi_batch_test_2 VALUES(?)"
-                                        : null),
-                                equalTo(
-                                    DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "BATCH" : null),
-                                equalTo(maybeStable(DB_OPERATION), null),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? 2L : null))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("batchStream")
-  void testSingleItemBatch(String system, Connection conn, String username, String url)
-      throws SQLException {
-    Connection connection = wrap(conn);
-    String tableName = "single_item_batch_test";
-    Statement createTable = connection.createStatement();
-    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable);
-
-    testing().waitForTraces(1);
-    testing().clearData();
-
-    Statement statement = connection.createStatement();
-    cleanup.deferCleanup(statement);
-    statement.addBatch("INSERT INTO " + tableName + " VALUES(1)");
-    testing()
-        .runWithSpan("parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1}));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "INSERT " + tableName
-                                    : "INSERT jdbcunittest." + tableName)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                                equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "INSERT INTO " + tableName + " VALUES(?)"),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "INSERT " + tableName : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : "INSERT"),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? null : tableName))));
   }
 
   @ParameterizedTest
@@ -1863,9 +2054,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     statement.addBatch();
     statement.setInt(1, 2);
     statement.addBatch();
-    testing()
-        .runWithSpan(
-            "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
+    testing().runWithSpan("parent", statement::executeBatch);
 
     testing()
         .waitAndAssertTraces(
@@ -2074,10 +2263,12 @@ public abstract class AbstractJdbcInstrumentationTest {
             "APP",
             "derby:memory:"),
         Arguments.of(
-            "hsqldb",
-            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
-            "SA",
-            "hsqldb:mem:"));
+            "hsqldb", new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null), "SA", "hsqldb:mem:"),
+        Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "sqlite:memory:"));
   }
 
   private PreparedStatement wrapPreparedStatement(PreparedStatement statement) {
@@ -2186,5 +2377,94 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     : "SELECT " + DATABASE_NAME_LOWER)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(1))));
+  }
+
+  private static final class BatchScenario {
+    final List<String> queries;
+    final String spanName;
+    final String oldSpanName;
+    final String queryText;
+    final String oldStatement;
+    final String summary;
+    final String oldOperation;
+    final String oldTable;
+    final Long batchSize;
+
+    BatchScenario(Builder builder) {
+      this.queries = builder.queries;
+      this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
+      this.queryText = builder.queryText;
+      this.oldStatement = builder.oldStatement;
+      this.summary = builder.summary;
+      this.oldOperation = builder.oldOperation;
+      this.oldTable = builder.oldTable;
+      this.batchSize = builder.batchSize;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static final class Builder {
+      private final List<String> queries = new ArrayList<>();
+      private String spanName;
+      private String oldSpanName;
+      private String queryText;
+      private String oldStatement;
+      private String summary;
+      private String oldOperation;
+      private String oldTable;
+      private Long batchSize;
+
+      Builder addQuery(String query) {
+        queries.add(query);
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
+      Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      Builder oldStatement(String oldStatement) {
+        this.oldStatement = oldStatement;
+        return this;
+      }
+
+      Builder summary(String summary) {
+        this.summary = summary;
+        return this;
+      }
+
+      Builder oldOperation(String oldOperation) {
+        this.oldOperation = oldOperation;
+        return this;
+      }
+
+      Builder oldTable(String oldTable) {
+        this.oldTable = oldTable;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }

@@ -158,11 +158,12 @@ public class TestServlet3 {
                       resp.setStatus(endpoint.getStatus());
                       PrintWriter writer = resp.getWriter();
                       writer.print(endpoint.getBody());
-                      if (req.getClass().getName().contains("catalina")) {
+                      if (req.getServletContext().getClass().getName().contains("catalina")) {
                         // on tomcat close the writer to ensure response is sent immediately,
                         // otherwise there is a chance that tomcat resets the connection before the
                         // response is sent
                         writer.close();
+                        resp.flushBuffer();
                       }
                       throw new IllegalStateException(endpoint.getBody());
                     } else if (HTML_PRINT_WRITER.equals(endpoint)) {

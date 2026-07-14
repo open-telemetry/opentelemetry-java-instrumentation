@@ -14,7 +14,7 @@ import java.lang.invoke.MethodType;
 import javax.annotation.Nullable;
 
 public class AkkaHttpClientUtil {
-  @Nullable private static final MethodHandle actorSystemAccessor = findActorSystemAccessor();
+  @Nullable private static final MethodHandle ACTOR_SYSTEM_ACCESSOR = findActorSystemAccessor();
 
   @Nullable
   private static MethodHandle findActorSystemAccessor() {
@@ -37,12 +37,12 @@ public class AkkaHttpClientUtil {
 
   @Nullable
   public static ActorSystem getActorSystem(HttpExt httpExt) {
-    if (actorSystemAccessor == null) {
+    if (ACTOR_SYSTEM_ACCESSOR == null) {
       return null;
     }
 
     try {
-      return (ActorSystem) actorSystemAccessor.invoke(httpExt);
+      return (ActorSystem) ACTOR_SYSTEM_ACCESSOR.invoke(httpExt);
     } catch (Throwable ignored) {
       return null;
     }

@@ -111,7 +111,7 @@ public class AnnotationSingletons {
       application.io.opentelemetry.api.trace.SpanKind applicationSpanKind) {
     try {
       return SpanKind.valueOf(applicationSpanKind.name());
-    } catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException ignored) {
       logger.log(FINE, "unexpected span kind: {0}", applicationSpanKind.name());
       return SpanKind.INTERNAL;
     }

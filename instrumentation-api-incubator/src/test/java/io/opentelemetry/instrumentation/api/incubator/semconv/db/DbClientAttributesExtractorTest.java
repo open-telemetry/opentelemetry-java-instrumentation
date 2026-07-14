@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
@@ -50,6 +51,11 @@ class DbClientAttributesExtractorTest {
       return map.get("db.namespace");
     }
 
+    @Override
+    public String getDbCollectionName(Map<String, String> map) {
+      return map.get("db.collection.name");
+    }
+
     @Deprecated
     @Override
     public String getConnectionString(Map<String, String> map) {
@@ -71,6 +77,12 @@ class DbClientAttributesExtractorTest {
     public String getDbOperationName(Map<String, String> map) {
       return map.get("db.operation.name");
     }
+
+    @Deprecated
+    @Override
+    public String getDbOperation(Map<String, String> map) {
+      return map.get("db.operation");
+    }
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
@@ -81,9 +93,11 @@ class DbClientAttributesExtractorTest {
     request.put("db.system", "myDb");
     request.put("db.user", "username");
     request.put("db.namespace", "potatoes");
+    request.put("db.collection.name", "potato");
     request.put("db.connection_string", "mydb:///potatoes");
     request.put("db.query.text", "SELECT * FROM potato");
     request.put("db.query_summary", "SELECT potato");
+    request.put("db.operation", "old SELECT");
     request.put("db.operation.name", "SELECT");
 
     Context context = Context.root();
@@ -108,7 +122,8 @@ class DbClientAttributesExtractorTest {
               entry(DB_NAME, "potatoes"),
               entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
               entry(DB_STATEMENT, "SELECT * FROM potato"),
-              entry(DB_OPERATION, "SELECT"),
+              entry(DB_OPERATION, "old SELECT"),
+              entry(DB_COLLECTION_NAME, "potato"),
               entry(DB_NAMESPACE, "potatoes"),
               entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
               entry(DB_QUERY_SUMMARY, "SELECT potato"),
@@ -121,11 +136,12 @@ class DbClientAttributesExtractorTest {
               entry(DB_NAME, "potatoes"),
               entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
               entry(DB_STATEMENT, "SELECT * FROM potato"),
-              entry(DB_OPERATION, "SELECT"));
+              entry(DB_OPERATION, "old SELECT"));
     } else if (emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_SYSTEM_NAME, "myDb"),
+              entry(DB_COLLECTION_NAME, "potato"),
               entry(DB_NAMESPACE, "potatoes"),
               entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
               entry(DB_QUERY_SUMMARY, "SELECT potato"),

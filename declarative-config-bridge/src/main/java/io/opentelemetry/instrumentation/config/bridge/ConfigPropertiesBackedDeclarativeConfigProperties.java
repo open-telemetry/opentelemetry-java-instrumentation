@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
  * <p>It tracks the navigation path and only resolves to system properties at the leaf node when a
  * value is actually requested.
  */
-public final class ConfigPropertiesBackedDeclarativeConfigProperties
+final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
   static final String DEFAULT_ACCESS_ROOT = "java.";
@@ -54,6 +54,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
         "general.sanitization.url.sensitive_query_parameters/development",
         "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
     SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
+    SPECIAL_MAPPINGS.put(
+        "general.semconv_exception.signal.preview", "otel.semconv.exception.signal.preview");
     // moving common http, database, messaging, and gen_ai configs under common
     SPECIAL_MAPPINGS.put(
         "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
@@ -99,7 +101,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   private final String accessRoot;
   private final String resultPrefix;
 
-  public static DeclarativeConfigProperties createInstrumentationConfig(
+  static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
     return createInstrumentationConfig(configProperties, emptyMap(), DEFAULT_ACCESS_ROOT, DEFAULT_RESULT_PREFIX);
   }

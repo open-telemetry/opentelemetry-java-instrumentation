@@ -9,99 +9,106 @@ plugins {
 description = "opentelemetry-api shaded for internal javaagent usage"
 group = "io.opentelemetry.javaagent"
 
-val latestDeps by configurations.creating {
+val latestDeps = configurations.create("latestDeps") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
-val v1_10Deps by configurations.creating {
-  isCanBeResolved = true
-  isCanBeConsumed = false
-  // exclude the bom added by dependencyManagement
-  exclude("io.opentelemetry", "opentelemetry-bom")
-}
-val v1_15Deps by configurations.creating {
+val v1_10Deps = configurations.create("v1_10Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
 }
-val v1_27Deps by configurations.creating {
+val v1_15Deps = configurations.create("v1_15Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
 }
-val v1_31Deps by configurations.creating {
+val v1_27Deps = configurations.create("v1_27Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
-  exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
-val v1_32Deps by configurations.creating {
+val v1_31Deps = configurations.create("v1_31Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
-val v1_37Deps by configurations.creating {
+val v1_32Deps = configurations.create("v1_32Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
-val v1_38Deps by configurations.creating {
+val v1_37Deps = configurations.create("v1_37Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
-val v1_40Deps by configurations.creating {
+val v1_38Deps = configurations.create("v1_38Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
-val v1_42Deps by configurations.creating {
+val v1_40Deps = configurations.create("v1_40Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
-val v1_47Deps by configurations.creating {
+val v1_42Deps = configurations.create("v1_42Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
-val v1_50Deps by configurations.creating {
+val v1_47Deps = configurations.create("v1_47Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
-val v1_56Deps by configurations.creating {
+val v1_50Deps = configurations.create("v1_50Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
-val v1_57Deps by configurations.creating {
+val v1_56Deps = configurations.create("v1_56Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
-val v1_59Deps by configurations.creating {
+val v1_57Deps = configurations.create("v1_57Deps") {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+  // exclude the bom added by dependencyManagement
+  exclude("io.opentelemetry", "opentelemetry-bom")
+  exclude("io.opentelemetry", "opentelemetry-bom-alpha")
+}
+val v1_59Deps = configurations.create("v1_59Deps") {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+  // exclude the bom added by dependencyManagement
+  exclude("io.opentelemetry", "opentelemetry-bom")
+  exclude("io.opentelemetry", "opentelemetry-bom-alpha")
+}
+val v1_63Deps = configurations.create("v1_63Deps") {
   isCanBeResolved = true
   isCanBeConsumed = false
   // exclude the bom added by dependencyManagement
@@ -109,59 +116,63 @@ val v1_59Deps by configurations.creating {
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
 // configuration for publishing the shadowed artifact
-val v1_10 by configurations.creating {
+val v1_10 = configurations.create("v1_10") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_15 by configurations.creating {
+val v1_15 = configurations.create("v1_15") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_27 by configurations.creating {
+val v1_27 = configurations.create("v1_27") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_31 by configurations.creating {
+val v1_31 = configurations.create("v1_31") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_32 by configurations.creating {
+val v1_32 = configurations.create("v1_32") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_37 by configurations.creating {
+val v1_37 = configurations.create("v1_37") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_38 by configurations.creating {
+val v1_38 = configurations.create("v1_38") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_40 by configurations.creating {
+val v1_40 = configurations.create("v1_40") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_42 by configurations.creating {
+val v1_42 = configurations.create("v1_42") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_47 by configurations.creating {
+val v1_47 = configurations.create("v1_47") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_50 by configurations.creating {
+val v1_50 = configurations.create("v1_50") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_56 by configurations.creating {
+val v1_56 = configurations.create("v1_56") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_57 by configurations.creating {
+val v1_57 = configurations.create("v1_57") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
-val v1_59 by configurations.creating {
+val v1_59 = configurations.create("v1_59") {
+  isCanBeConsumed = true
+  isCanBeResolved = false
+}
+val v1_63 = configurations.create("v1_63") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
@@ -256,6 +267,11 @@ dependencies {
         strictly("1.59.0-alpha")
       }
     }
+    v1_63Deps("io.opentelemetry:$it") {
+      version {
+        strictly("1.63.0-alpha")
+      }
+    }
   }
 }
 
@@ -271,61 +287,65 @@ tasks {
     configurations = listOf(latestDeps)
   }
 
-  val v1_10Shadow by registering(ShadowJar::class) {
+  val v1_10Shadow = register<ShadowJar>("v1_10Shadow") {
     configurations = listOf(v1_10Deps)
     archiveClassifier.set("v1_10")
   }
-  val v1_15Shadow by registering(ShadowJar::class) {
+  val v1_15Shadow = register<ShadowJar>("v1_15Shadow") {
     configurations = listOf(v1_15Deps)
     archiveClassifier.set("v1_15")
   }
-  val v1_27Shadow by registering(ShadowJar::class) {
+  val v1_27Shadow = register<ShadowJar>("v1_27Shadow") {
     configurations = listOf(v1_27Deps)
     archiveClassifier.set("v1_27")
   }
-  val v1_31Shadow by registering(ShadowJar::class) {
+  val v1_31Shadow = register<ShadowJar>("v1_31Shadow") {
     configurations = listOf(v1_31Deps)
     archiveClassifier.set("v1_31")
   }
-  val v1_32Shadow by registering(ShadowJar::class) {
+  val v1_32Shadow = register<ShadowJar>("v1_32Shadow") {
     configurations = listOf(v1_32Deps)
     archiveClassifier.set("v1_32")
   }
-  val v1_37Shadow by registering(ShadowJar::class) {
+  val v1_37Shadow = register<ShadowJar>("v1_37Shadow") {
     configurations = listOf(v1_37Deps)
     archiveClassifier.set("v1_37")
   }
-  val v1_38Shadow by registering(ShadowJar::class) {
+  val v1_38Shadow = register<ShadowJar>("v1_38Shadow") {
     configurations = listOf(v1_38Deps)
     archiveClassifier.set("v1_38")
   }
-  val v1_40Shadow by registering(ShadowJar::class) {
+  val v1_40Shadow = register<ShadowJar>("v1_40Shadow") {
     configurations = listOf(v1_40Deps)
     archiveClassifier.set("v1_40")
   }
-  val v1_42Shadow by registering(ShadowJar::class) {
+  val v1_42Shadow = register<ShadowJar>("v1_42Shadow") {
     configurations = listOf(v1_42Deps)
     archiveClassifier.set("v1_42")
   }
-  val v1_47Shadow by registering(ShadowJar::class) {
+  val v1_47Shadow = register<ShadowJar>("v1_47Shadow") {
     configurations = listOf(v1_47Deps)
     archiveClassifier.set("v1_47")
   }
-  val v1_50Shadow by registering(ShadowJar::class) {
+  val v1_50Shadow = register<ShadowJar>("v1_50Shadow") {
     configurations = listOf(v1_50Deps)
     archiveClassifier.set("v1_50")
   }
-  val v1_56Shadow by registering(ShadowJar::class) {
+  val v1_56Shadow = register<ShadowJar>("v1_56Shadow") {
     configurations = listOf(v1_56Deps)
     archiveClassifier.set("v1_56")
   }
-  val v1_57Shadow by registering(ShadowJar::class) {
+  val v1_57Shadow = register<ShadowJar>("v1_57Shadow") {
     configurations = listOf(v1_57Deps)
     archiveClassifier.set("v1_57")
   }
-  val v1_59Shadow by registering(ShadowJar::class) {
+  val v1_59Shadow = register<ShadowJar>("v1_59Shadow") {
     configurations = listOf(v1_59Deps)
     archiveClassifier.set("v1_59")
+  }
+  val v1_63Shadow = register<ShadowJar>("v1_63Shadow") {
+    configurations = listOf(v1_63Deps)
+    archiveClassifier.set("v1_63")
   }
 
   artifacts {
@@ -343,5 +363,6 @@ tasks {
     add(v1_56.name, v1_56Shadow)
     add(v1_57.name, v1_57Shadow)
     add(v1_59.name, v1_59Shadow)
+    add(v1_63.name, v1_63Shadow)
   }
 }

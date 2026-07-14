@@ -6,11 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
@@ -25,7 +29,11 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -45,12 +53,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -137,7 +150,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -149,7 +162,7 @@ class VertxSqlClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "select * from test"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test" : null),
+                                emitStableDatabaseSemconv() ? "select test" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -164,11 +177,14 @@ class VertxSqlClientTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
 
-    if (emitStableDatabaseSemconv()) {
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.vertx-sql-client-5.0",
-          metric -> metric.hasName("db.client.operation.duration"));
-    }
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.vertx-sql-client-5.0",
+        DB_SYSTEM_NAME,
+        DB_NAMESPACE,
+        DB_QUERY_SUMMARY,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
@@ -190,7 +206,7 @@ class VertxSqlClientTest {
                       }
                     }));
 
-    latch.await(30, SECONDS);
+    assertThat(latch.await(30, SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -249,7 +265,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -261,7 +277,7 @@ class VertxSqlClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "select * from test where id = $1"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test" : null),
+                                emitStableDatabaseSemconv() ? "select test" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -273,24 +289,37 @@ class VertxSqlClientTest {
                             equalTo(SERVER_PORT, port))));
   }
 
-  @Test
-  void testBatch() throws Exception {
-    testing
-        .runWithSpan(
-            "parent",
-            () ->
-                pool.preparedQuery("insert into test values ($1, $2) returning *")
-                    .executeBatch(asList(Tuple.of(3, "Three"), Tuple.of(4, "Four"))))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, SECONDS);
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void testBatch(BatchScenario scenario) throws Exception {
+    // recreate a fresh batch_test table for each scenario so that batch row ids can be reused
+    // without worrying about collisions from previous scenarios
+    recreateBatchTestTable();
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    // an empty batch is rejected before sending, so its execution fails; non-empty batches succeed
+    try {
+      testing
+          .runWithSpan(
+              "parent",
+              () -> pool.preparedQuery(scenario.preparedQuery).executeBatch(scenario.tuples))
+          .toCompletionStage()
+          .toCompletableFuture()
+          .get(30, SECONDS);
+    } catch (ExecutionException ignored) {
+      // an empty batch fails to execute; the failure is recorded on the client span
+    }
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "INSERT test" : "INSERT tempdb.test")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? scenario.stableSpanName
+                                : "INSERT tempdb.batch_test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -299,21 +328,65 @@ class VertxSqlClientTest {
                                 emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "insert into test values ($1, $2) returning *"),
+                            equalTo(maybeStable(DB_STATEMENT), scenario.preparedQuery),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "INSERT test" : null),
+                                emitStableDatabaseSemconv() ? scenario.querySummary : null),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT"),
                             equalTo(
                                 maybeStable(DB_SQL_TABLE),
-                                emitStableDatabaseSemconv() ? null : "test"),
+                                emitStableDatabaseSemconv() ? null : "batch_test"),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv() ? scenario.errorType : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
+  }
+
+  private static void recreateBatchTestTable() throws Exception {
+    pool.query("drop table if exists batch_test")
+        .execute()
+        .compose(r -> pool.query("create table batch_test(id int primary key, num int)").execute())
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        argumentSet(
+            "empty",
+            BatchScenario.builder()
+                .preparedQuery("insert into batch_test values ($1, $2) returning *")
+                .tuples(emptyList())
+                .stableSpanName("BATCH insert batch_test")
+                .querySummary("BATCH insert batch_test")
+                .batchSize(0)
+                .errorType("io.vertx.core.VertxException")
+                .build()),
+        argumentSet(
+            "single",
+            BatchScenario.builder()
+                .preparedQuery("insert into batch_test values ($1, $2) returning *")
+                .tuples(singletonList(Tuple.of(1, 1)))
+                .stableSpanName("insert batch_test")
+                .querySummary("insert batch_test")
+                .build()),
+        argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .preparedQuery("insert into batch_test values ($1, $2) returning *")
+                .tuples(asList(Tuple.of(1, 1), Tuple.of(2, 2)))
+                .stableSpanName("BATCH insert batch_test")
+                .querySummary("BATCH insert batch_test")
+                .batchSize(2)
+                .build()));
   }
 
   @Test
@@ -378,7 +451,7 @@ class VertxSqlClientTest {
                         latch.countDown();
                       }));
     }
-    latch.await(30, SECONDS);
+    assertThat(latch.await(30, SECONDS)).isTrue();
     for (CompletableFuture<Object> result : resultList) {
       result.get(10, SECONDS);
     }
@@ -391,7 +464,7 @@ class VertxSqlClientTest {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
                         span.hasName(
-                                emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
+                                emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -403,7 +476,7 @@ class VertxSqlClientTest {
                                 equalTo(maybeStable(DB_STATEMENT), "select * from test"),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "SELECT test" : null),
+                                    emitStableDatabaseSemconv() ? "select test" : null),
                                 equalTo(
                                     maybeStable(DB_OPERATION),
                                     emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -455,7 +528,7 @@ class VertxSqlClientTest {
                             }));
           });
     }
-    latch.await(30, SECONDS);
+    assertThat(latch.await(30, SECONDS)).isTrue();
     for (CompletableFuture<Object> result : resultList) {
       result.get(10, SECONDS);
     }
@@ -468,7 +541,7 @@ class VertxSqlClientTest {
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
                         span.hasName(
-                                emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
+                                emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -481,7 +554,7 @@ class VertxSqlClientTest {
                                     maybeStable(DB_STATEMENT), "select * from test where id = $1"),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "SELECT test" : null),
+                                    emitStableDatabaseSemconv() ? "select test" : null),
                                 equalTo(
                                     maybeStable(DB_OPERATION),
                                     emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -496,5 +569,70 @@ class VertxSqlClientTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
     testing.waitAndAssertTraces(assertions);
+  }
+
+  private static final class BatchScenario {
+    final String preparedQuery;
+    final List<Tuple> tuples;
+    final String stableSpanName;
+    final String querySummary;
+    final Long batchSize;
+    final String errorType;
+
+    BatchScenario(Builder builder) {
+      this.preparedQuery = builder.preparedQuery;
+      this.tuples = builder.tuples;
+      this.stableSpanName = builder.stableSpanName;
+      this.querySummary = builder.querySummary;
+      this.batchSize = builder.batchSize;
+      this.errorType = builder.errorType;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    static final class Builder {
+      private String preparedQuery;
+      private List<Tuple> tuples;
+      private String stableSpanName;
+      private String querySummary;
+      private Long batchSize;
+      private String errorType;
+
+      Builder preparedQuery(String preparedQuery) {
+        this.preparedQuery = preparedQuery;
+        return this;
+      }
+
+      Builder tuples(List<Tuple> tuples) {
+        this.tuples = tuples;
+        return this;
+      }
+
+      Builder stableSpanName(String stableSpanName) {
+        this.stableSpanName = stableSpanName;
+        return this;
+      }
+
+      Builder querySummary(String querySummary) {
+        this.querySummary = querySummary;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder errorType(String errorType) {
+        this.errorType = errorType;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
   }
 }

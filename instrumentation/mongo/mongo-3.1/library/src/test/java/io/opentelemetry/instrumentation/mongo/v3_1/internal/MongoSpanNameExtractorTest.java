@@ -21,8 +21,7 @@ class MongoSpanNameExtractorTest {
   void testSpanNameWithNoDbName() {
     MongoSpanNameExtractor nameExtractor =
         new MongoSpanNameExtractor(
-            new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH),
-            new MongoAttributesExtractor());
+            new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH));
 
     String command = "listDatabases";
     CommandStartedEvent event =

@@ -13,14 +13,14 @@ val extraTag = findProperty("extraTag")
 tasks {
   val dockerWorkingDir = layout.buildDirectory.dir("docker")
 
-  val imagePrepare by registering(Copy::class) {
+  val imagePrepare = register<Copy>("imagePrepare") {
     into(dockerWorkingDir)
     from("Dockerfile")
   }
 
   val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
-  val imageBuild by registering(DockerBuildImage::class) {
+  val imageBuild = register<DockerBuildImage>("imageBuild") {
     dependsOn(imagePrepare)
     inputDir.set(dockerWorkingDir)
 
@@ -28,7 +28,7 @@ tasks {
     dockerFile.set(dockerWorkingDir.get().file("Dockerfile"))
   }
 
-  val dockerPush by registering(DockerPushImage::class) {
+  register<DockerPushImage>("dockerPush") {
     group = "publishing"
     description = "Push all Docker images"
     dependsOn(imageBuild)
