@@ -4,6 +4,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative component configuration
+  through `DeclarativeConfigProperties` directly. To expose `ConfigProperties` through the
+  declarative configuration API, use `ConfigPropertiesBackedConfigProvider`.
 - For library instrumentation users, deprecate configuring span suppression using the
   `otel.instrumentation.experimental.span-suppression-strategy` system property in favor of
   `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration.
