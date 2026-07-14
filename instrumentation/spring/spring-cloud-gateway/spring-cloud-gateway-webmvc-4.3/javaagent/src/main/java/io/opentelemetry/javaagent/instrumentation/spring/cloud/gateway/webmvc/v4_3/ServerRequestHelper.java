@@ -45,7 +45,7 @@ public class ServerRequestHelper {
     }
 
     Span serverSpan =
-        v3Preview() ? Span.fromContext(context) : LocalRootSpan.fromContextOrNull(context);
+        v3Preview() ? Span.fromContextOrNull(context) : LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }
