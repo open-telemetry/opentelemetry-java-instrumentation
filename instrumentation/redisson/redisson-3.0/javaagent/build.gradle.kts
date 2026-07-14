@@ -27,10 +27,36 @@ dependencies {
 
 testing {
   suites {
-    // Atomic batch execution was introduced in 3.7.2, but versions with atomic batch support before
-    // 3.11.1 cannot run on Java 21 because URIBuilder reflects on Field.modifiers. 3.11.1 is the
-    // earliest runnable version that exercises RedissonPromiseWrapper; the latest version covered
-    // by this module uses BatchPromise and bypasses the wrapper.
+    // 3.7.1 is the last version where atomic mode is passed to executeAsync. It requires Java 8
+    // because URIBuilder reflects on Field.modifiers during startup.
+    register<JvmTestSuite>("testRedisson371") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+          include("**/RedissonClientTest.java")
+        }
+      }
+      dependencies {
+        implementation("org.redisson:redisson:3.7.1")
+        implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
+      }
+      targets.configureEach {
+        testTask.configure {
+          javaLauncher.set(
+            project.javaToolchains.launcherFor {
+              languageVersion = JavaLanguageVersion.of(8)
+            }
+          )
+          jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+        }
+      }
+    }
+
+    // BatchOptions.ExecutionMode was introduced in 3.7.2, but versions before 3.11.1 cannot run on
+    // Java 21 because URIBuilder reflects on Field.modifiers. 3.11.1 is the earliest runnable
+    // version that exercises RedissonPromiseWrapper; the latest version covered by this module uses
+    // BatchPromise and bypasses the wrapper.
     register<JvmTestSuite>("testRedisson3111") {
       sources {
         java {
@@ -64,6 +90,10 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  named<Test>("testRedisson371") {
+    systemProperty("testLatestDeps", true)
   }
 
   named<Test>("testRedisson3111") {

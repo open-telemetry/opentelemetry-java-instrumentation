@@ -71,10 +71,18 @@ class RedissonBatchState {
     if (options == null) {
       return false;
     }
+    if (options instanceof Boolean) {
+      return (Boolean) options;
+    }
     try {
-      Method method = options.getClass().getMethod("getExecutionMode");
-      Object executionMode = method.invoke(options);
-      return executionMode != null && executionMode.toString().endsWith("_ATOMIC");
+      try {
+        Method method = options.getClass().getMethod("getExecutionMode");
+        Object executionMode = method.invoke(options);
+        return executionMode != null && executionMode.toString().endsWith("_ATOMIC");
+      } catch (NoSuchMethodException ignored) {
+        Method method = options.getClass().getMethod("isAtomic");
+        return Boolean.TRUE.equals(method.invoke(options));
+      }
     } catch (ReflectiveOperationException e) {
       logger.log(FINE, "Failed to read Redisson batch execution mode", e);
       return false;

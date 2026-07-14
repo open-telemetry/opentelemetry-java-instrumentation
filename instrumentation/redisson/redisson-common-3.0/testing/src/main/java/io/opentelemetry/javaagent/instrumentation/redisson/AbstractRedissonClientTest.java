@@ -42,6 +42,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -146,10 +147,10 @@ public abstract class AbstractRedissonClientTest {
     }
     try {
       // disable connection ping if it exists
-      singleServerConfig
-          .getClass()
-          .getMethod("setPingConnectionInterval", int.class)
-          .invoke(singleServerConfig, 0);
+      Method method =
+          singleServerConfig.getClass().getMethod("setPingConnectionInterval", int.class);
+      method.setAccessible(true);
+      method.invoke(singleServerConfig, 0);
     } catch (NoSuchMethodException ignored) {
       // ignored
     }
@@ -509,6 +510,26 @@ public abstract class AbstractRedissonClientTest {
     batch.getBucket("batch1").setAsync("v1");
     batch.execute();
     assertStableAtomicBatch("SET", null, "SET batch1 ?");
+  }
+
+  @Test
+  void atomicBatchBeforeRedisson372() {
+    Assumptions.assumeTrue(emitStableDatabaseSemconv());
+    try {
+      RBatch.class.getMethod("atomic");
+      Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      Assumptions.abort();
+    } catch (NoSuchMethodException ignored) {
+      Assumptions.abort();
+    } catch (ClassNotFoundException ignored) {
+      // Atomic mode was passed to executeAsync before it became a CommandBatchService field.
+    }
+
+    RBatch batch = createBatch(redisson).atomic();
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch2").setAsync("v2");
+    batch.execute();
+    assertStableAtomicBatch("MULTI SET", 2L, "SET batch1 ?; SET batch2 ?");
   }
 
   @Test

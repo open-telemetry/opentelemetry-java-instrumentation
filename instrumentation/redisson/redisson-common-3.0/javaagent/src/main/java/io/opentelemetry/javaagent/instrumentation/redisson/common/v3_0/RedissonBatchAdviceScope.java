@@ -57,6 +57,17 @@ public class RedissonBatchAdviceScope {
     return true;
   }
 
+  public static void captureCandidate(
+      CommandBatchService service, RedisCommand<?> command, Codec codec, Object[] parameters) {
+    if (!emitStableDatabaseSemconv()) {
+      return;
+    }
+    RedissonBatchState state = BATCH_STATE_FIELD.get(service);
+    if (state != null && !RedissonBatchContext.isActive(currentContext())) {
+      state.add(command, codec, parameters);
+    }
+  }
+
   public static void initialize(CommandBatchService service) {
     if (emitStableDatabaseSemconv() && BATCH_STATE_FIELD.get(service) == null) {
       BATCH_STATE_FIELD.set(service, new RedissonBatchState());
