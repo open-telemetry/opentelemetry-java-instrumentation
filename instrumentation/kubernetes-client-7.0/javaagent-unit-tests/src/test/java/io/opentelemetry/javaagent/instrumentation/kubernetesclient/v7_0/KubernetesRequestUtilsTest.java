@@ -23,21 +23,21 @@ class KubernetesRequestUtilsTest {
 
   private static Stream<Arguments> isResourceRequestArguments() {
     return Stream.of(
-        arguments("api root", "/api", false),
-        arguments("apis root", "/apis", false),
-        arguments("apis version only", "/apis/v1", false),
-        arguments("healthz", "/healthz", false),
-        arguments("swagger", "/swagger.json", false),
-        arguments("core api version", "/api/v1", false),
-        arguments("core api version trailing slash", "/api/v1/", false),
-        arguments("group api version", "/apis/apps/v1", false),
-        arguments("group api version trailing slash", "/apis/apps/v1/", false),
-        arguments("custom resource list", "/apis/example.io/v1/foos", true),
-        arguments(
+        Arguments.of("api root", "/api", false),
+        Arguments.of("apis root", "/apis", false),
+        Arguments.of("apis version only", "/apis/v1", false),
+        Arguments.of("healthz", "/healthz", false),
+        Arguments.of("swagger", "/swagger.json", false),
+        Arguments.of("core api version", "/api/v1", false),
+        Arguments.of("core api version trailing slash", "/api/v1/", false),
+        Arguments.of("group api version", "/apis/apps/v1", false),
+        Arguments.of("group api version trailing slash", "/apis/apps/v1/", false),
+        Arguments.of("custom resource list", "/apis/example.io/v1/foos", true),
+        Arguments.of(
             "custom resource namespaced list", "/apis/example.io/v1/namespaces/default/foos", true),
-        arguments("core namespaces list", "/api/v1/namespaces", true),
-        arguments("core pods list", "/api/v1/pods", true),
-        arguments("core namespaced pods list", "/api/v1/namespaces/default/pods", true));
+        Arguments.of("core namespaces list", "/api/v1/namespaces", true),
+        Arguments.of("core pods list", "/api/v1/pods", true),
+        Arguments.of("core namespaced pods list", "/api/v1/namespaces/default/pods", true));
   }
 
   @ParameterizedTest
@@ -77,14 +77,15 @@ class KubernetesRequestUtilsTest {
 
   private static Stream<Arguments> k8sRequestVerbsArguments() {
     return Stream.of(
-        arguments("GET named", "GET", true, false, KubernetesVerb.GET),
-        arguments("GET watch", "GET", false, true, KubernetesVerb.WATCH),
-        arguments("GET list", "GET", false, false, KubernetesVerb.LIST),
-        arguments("POST create", "POST", false, false, KubernetesVerb.CREATE),
-        arguments("PUT update", "PUT", false, false, KubernetesVerb.UPDATE),
-        arguments("PATCH", "PATCH", false, false, KubernetesVerb.PATCH),
-        arguments("DELETE named", "DELETE", true, false, KubernetesVerb.DELETE),
-        arguments("DELETE collection", "DELETE", false, false, KubernetesVerb.DELETE_COLLECTION));
+        Arguments.of("GET named", "GET", true, false, KubernetesVerb.GET),
+        Arguments.of("GET watch", "GET", false, true, KubernetesVerb.WATCH),
+        Arguments.of("GET list", "GET", false, false, KubernetesVerb.LIST),
+        Arguments.of("POST create", "POST", false, false, KubernetesVerb.CREATE),
+        Arguments.of("PUT update", "PUT", false, false, KubernetesVerb.UPDATE),
+        Arguments.of("PATCH", "PATCH", false, false, KubernetesVerb.PATCH),
+        Arguments.of("DELETE named", "DELETE", true, false, KubernetesVerb.DELETE),
+        Arguments.of(
+            "DELETE collection", "DELETE", false, false, KubernetesVerb.DELETE_COLLECTION));
   }
 
   private static Stream<Arguments> parseRegularResourceArguments() {
