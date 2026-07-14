@@ -35,6 +35,10 @@ public final class RedissonBatchContext {
     return Boolean.TRUE.equals(context.get(KEY));
   }
 
+  public static Context clearMarker(Context context) {
+    return context.with(KEY, false);
+  }
+
   @Nullable
   public static Scope startCapture() {
     if (!emitStableDatabaseSemconv()) {
