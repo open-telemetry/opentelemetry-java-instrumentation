@@ -37,6 +37,7 @@ class RedissonBatchState {
     }
     if ("DISCARD".equals(command.getName())) {
       finished = true;
+      clear();
       return;
     }
     commandNames.add(command.getName());
@@ -62,9 +63,17 @@ class RedissonBatchState {
     }
     finished = true;
     if (!isAtomic(options) || commandNames.isEmpty()) {
+      clear();
       return null;
     }
-    return RedissonBatchRequest.create(commandNames, queryTexts);
+    RedissonBatchRequest request = RedissonBatchRequest.create(commandNames, queryTexts);
+    clear();
+    return request;
+  }
+
+  private void clear() {
+    commandNames.clear();
+    queryTexts.clear();
   }
 
   static boolean isAtomic(Object options) {
