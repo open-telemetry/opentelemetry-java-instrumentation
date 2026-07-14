@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
@@ -74,6 +75,17 @@ class DeclarativeConfigTest {
                     assertThat(config.getLong("int_key")).isEqualTo(42);
                   });
           assertThat(context).getBean("configProvider", ConfigProvider.class).isNotNull();
+        });
+  }
+
+
+  @Test
+  void configProviderMatchesOpenTelemetryConfigProvider() {
+    this.contextRunner.run(
+        context -> {
+          OpenTelemetry openTelemetry = context.getBean(OpenTelemetry.class);
+          assertThat(context.getBean(ConfigProvider.class))
+              .isSameAs(((ExtendedOpenTelemetry) openTelemetry).getConfigProvider());
         });
   }
 

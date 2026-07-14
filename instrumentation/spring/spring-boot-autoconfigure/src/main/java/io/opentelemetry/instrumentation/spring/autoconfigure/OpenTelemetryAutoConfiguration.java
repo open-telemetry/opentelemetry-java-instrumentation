@@ -179,21 +179,21 @@ public class OpenTelemetryAutoConfiguration {
       /**
        * Unlike {@link
        * OpenTelemetrySdkConfig.PropertiesConfig#configProvider(AutoConfiguredOpenTelemetrySdk)},
-       * this reads config directly from the declarative {@link OpenTelemetryConfigurationModel}
-       * instead of bridging from {@link ConfigProperties}.
+       * this derives the provider from the constructed {@link OpenTelemetry} so that it reflects
+       * declarative model customizers applied during SDK creation.
        */
       @Bean
-      ConfigProvider configProvider(
-          OpenTelemetryConfigurationModel model, ApplicationContext applicationContext) {
-        return SpringConfigProvider.create(
-            model, new OpenTelemetrySdkComponentLoader(applicationContext));
+      ConfigProvider configProvider(OpenTelemetry openTelemetry) {
+        return configProviderFrom(openTelemetry);
       }
 
       @Bean
       OpenTelemetry openTelemetry(
           OpenTelemetryConfigurationModel model,
-          ApplicationContext applicationContext,
-          ConfigProvider configProvider) {
+          ApplicationContext applicationContext) {
+        SpringConfigProvider configProvider = SpringConfigProvider.create(
+            model, new OpenTelemetrySdkComponentLoader(applicationContext));
+
         OpenTelemetrySdk sdk =
             DeclarativeConfiguration.create(
                     model, new OpenTelemetrySdkComponentLoader(applicationContext))
@@ -216,9 +216,14 @@ public class OpenTelemetryAutoConfiguration {
       ConfigProperties otelProperties(OpenTelemetry openTelemetry) {
         return new DeclarativeConfigPropertiesBridgeBuilder()
             .buildFromInstrumentationConfig(
-                ((ExtendedOpenTelemetry) openTelemetry)
-                    .getConfigProvider()
-                    .getInstrumentationConfig());
+                configProviderFrom(openTelemetry).getInstrumentationConfig());
+      }
+
+      private static ConfigProvider configProviderFrom(OpenTelemetry openTelemetry) {
+        if (openTelemetry instanceof ExtendedOpenTelemetry) {
+          return ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider();
+        }
+        return ConfigProvider.noop();
       }
 
       @Bean
