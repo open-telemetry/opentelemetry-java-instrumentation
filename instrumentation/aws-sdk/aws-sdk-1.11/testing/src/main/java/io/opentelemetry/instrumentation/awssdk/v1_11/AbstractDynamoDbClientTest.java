@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -19,17 +21,32 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.AWS_DYNAMODB;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.BatchGetItemRequest;
+import com.amazonaws.services.dynamodbv2.model.BatchWriteItemRequest;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.DeleteRequest;
+import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
+import com.amazonaws.services.dynamodbv2.model.PutRequest;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTest {
 
@@ -43,20 +60,20 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void sendRequestWithMockedResponse() throws ReflectiveOperationException {
-    AmazonDynamoDBClientBuilder clientBuilder = AmazonDynamoDBClientBuilder.standard();
-    AmazonDynamoDB client =
-        configureClient(clientBuilder)
-            .withEndpointConfiguration(endpoint)
-            .withCredentials(credentialsProvider)
-            .build();
+    AmazonDynamoDB client = createClient();
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
 
     List<AttributeAssertion> additionalAttributes =
-        asList(
-            equalTo(maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
-            equalTo(maybeStable(DB_OPERATION), "CreateTable"),
-            equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")));
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
+                equalTo(maybeStable(DB_OPERATION), "CreateTable"),
+                equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable"))));
+    if (emitStableDatabaseSemconv()) {
+      additionalAttributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
+    }
 
     Object response = client.createTable(new CreateTableRequest("sometable", null));
     assertRequestWithMockedResponse(
@@ -67,7 +84,245 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         "io.opentelemetry.aws-sdk-1.11",
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
+        DB_COLLECTION_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  // describes the batch cases for the two DynamoDB batch operations (BatchGetItem and
+  // BatchWriteItem): the request to send and the expected client span. batch attributes
+  // (db.operation.batch.size, BATCH operation name, db.collection.name) are only emitted under
+  // stable database semconv for BatchWriteItem, whose request entries represent explicit write
+  // operations. BatchGetItem request entries are keys, so they do not produce batch telemetry.
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void batchOperation(BatchScenario scenario) throws ReflectiveOperationException {
+    AmazonDynamoDB client = createClient();
+
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, "{}"));
+
+    List<AttributeAssertion> additionalAttributes =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
+                equalTo(
+                    maybeStable(DB_OPERATION),
+                    emitStableDatabaseSemconv() ? scenario.stableOperation : scenario.awsOperation),
+                equalTo(
+                    DB_OPERATION_BATCH_SIZE,
+                    emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                equalTo(
+                    DB_COLLECTION_NAME,
+                    emitStableDatabaseSemconv() && scenario.hasCollection ? "sometable" : null)));
+
+    Object response = scenario.execute.apply(client);
+    assertRequestWithMockedResponse(
+        response, client, "DynamoDBv2", scenario.awsOperation, "POST", additionalAttributes);
+  }
+
+  private static Stream<BatchScenario> batchScenarios() {
+    return Stream.of(
+        // BatchGetItem entries are keys, not explicit operations, so the stable operation name
+        // remains the raw batch operation and db.operation.batch.size is not emitted.
+        BatchScenario.builder("getItemEmpty")
+            .awsOperation("BatchGetItem")
+            .execute(client -> client.batchGetItem(getItemRequest(0)))
+            .stableOperation("BatchGetItem")
+            .build(),
+        BatchScenario.builder("getItemSingle")
+            .awsOperation("BatchGetItem")
+            .execute(client -> client.batchGetItem(getItemRequest(1)))
+            .stableOperation("BatchGetItem")
+            .hasCollection()
+            .build(),
+        BatchScenario.builder("getItemTwo")
+            .awsOperation("BatchGetItem")
+            .execute(client -> client.batchGetItem(getItemRequest(2)))
+            .stableOperation("BatchGetItem")
+            .hasCollection()
+            .build(),
+        BatchScenario.builder("writeItemEmpty")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(emptyWriteItemRequest()))
+            .stableOperation("BatchWriteItem")
+            .batchSize(0)
+            .build(),
+        // a single put request is reported as PutItem
+        BatchScenario.builder("writeItemSinglePut")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(putItemsRequest(1)))
+            .stableOperation("PutItem")
+            .hasCollection()
+            .build(),
+        // a single delete request is reported as DeleteItem
+        BatchScenario.builder("writeItemSingleDelete")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(deleteItemsRequest(1)))
+            .stableOperation("DeleteItem")
+            .hasCollection()
+            .build(),
+        // two put requests are reported as BATCH PutItem
+        BatchScenario.builder("writeItemTwoPuts")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(putItemsRequest(2)))
+            .stableOperation("BATCH PutItem")
+            .batchSize(2)
+            .hasCollection()
+            .build(),
+        // two delete requests are reported as BATCH DeleteItem
+        BatchScenario.builder("writeItemTwoDeletes")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(deleteItemsRequest(2)))
+            .stableOperation("BATCH DeleteItem")
+            .batchSize(2)
+            .hasCollection()
+            .build(),
+        // a batch mixing a put and a delete collapses to bare "BATCH"
+        // (consistent with SQL/Cassandra mixed-operation batches)
+        BatchScenario.builder("writeItemMixed")
+            .awsOperation("BatchWriteItem")
+            .execute(client -> client.batchWriteItem(mixedWriteItemRequest()))
+            .stableOperation("BATCH")
+            .batchSize(2)
+            .hasCollection()
+            .build());
+  }
+
+  private static BatchGetItemRequest getItemRequest(int count) {
+    if (count == 0) {
+      return new BatchGetItemRequest().withRequestItems(emptyMap());
+    }
+    List<Map<String, AttributeValue>> keys = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      keys.add(singletonMap("key", new AttributeValue().withS("value" + i)));
+    }
+    return new BatchGetItemRequest()
+        .withRequestItems(singletonMap("sometable", new KeysAndAttributes().withKeys(keys)));
+  }
+
+  private static BatchWriteItemRequest emptyWriteItemRequest() {
+    return new BatchWriteItemRequest().withRequestItems(emptyMap());
+  }
+
+  private static BatchWriteItemRequest putItemsRequest(int count) {
+    List<WriteRequest> writes = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      writes.add(putRequest("value" + i));
+    }
+    return new BatchWriteItemRequest().withRequestItems(singletonMap("sometable", writes));
+  }
+
+  private static BatchWriteItemRequest deleteItemsRequest(int count) {
+    List<WriteRequest> writes = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      writes.add(deleteRequest("value" + i));
+    }
+    return new BatchWriteItemRequest().withRequestItems(singletonMap("sometable", writes));
+  }
+
+  private static WriteRequest putRequest(String value) {
+    return new WriteRequest()
+        .withPutRequest(
+            new PutRequest().withItem(singletonMap("key", new AttributeValue().withS(value))));
+  }
+
+  private static WriteRequest deleteRequest(String value) {
+    return new WriteRequest()
+        .withDeleteRequest(
+            new DeleteRequest().withKey(singletonMap("key", new AttributeValue().withS(value))));
+  }
+
+  private static BatchWriteItemRequest mixedWriteItemRequest() {
+    List<WriteRequest> writes =
+        asList(
+            new WriteRequest()
+                .withPutRequest(
+                    new PutRequest()
+                        .withItem(singletonMap("key", new AttributeValue().withS("value")))),
+            new WriteRequest()
+                .withDeleteRequest(
+                    new DeleteRequest()
+                        .withKey(singletonMap("key", new AttributeValue().withS("anotherValue")))));
+    return new BatchWriteItemRequest().withRequestItems(singletonMap("sometable", writes));
+  }
+
+  private static final class BatchScenario {
+    final String name;
+    final String awsOperation;
+    final Function<AmazonDynamoDB, Object> execute;
+    final String stableOperation;
+    final Long batchSize;
+    final boolean hasCollection;
+
+    BatchScenario(Builder builder) {
+      this.name = builder.name;
+      this.awsOperation = builder.awsOperation;
+      this.execute = builder.execute;
+      this.stableOperation = builder.stableOperation;
+      this.batchSize = builder.batchSize;
+      this.hasCollection = builder.hasCollection;
+    }
+
+    @Override
+    public String toString() {
+      // used as the parameterized test display name
+      return name;
+    }
+
+    static Builder builder(String name) {
+      return new Builder(name);
+    }
+
+    static final class Builder {
+      private final String name;
+      private String awsOperation;
+      private Function<AmazonDynamoDB, Object> execute;
+      private String stableOperation;
+      private Long batchSize;
+      private boolean hasCollection;
+
+      Builder(String name) {
+        this.name = name;
+      }
+
+      Builder awsOperation(String awsOperation) {
+        this.awsOperation = awsOperation;
+        return this;
+      }
+
+      Builder execute(Function<AmazonDynamoDB, Object> execute) {
+        this.execute = execute;
+        return this;
+      }
+
+      Builder stableOperation(String stableOperation) {
+        this.stableOperation = stableOperation;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder hasCollection() {
+        this.hasCollection = true;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
+    }
+  }
+
+  private AmazonDynamoDB createClient() {
+    AmazonDynamoDBClientBuilder clientBuilder = AmazonDynamoDBClientBuilder.standard();
+    return configureClient(clientBuilder)
+        .withEndpointConfiguration(endpoint)
+        .withCredentials(credentialsProvider)
+        .build();
   }
 }

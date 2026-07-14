@@ -69,10 +69,10 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
   public static class JaxRsAnnotationsAdvice {
 
     public static class AdviceScope {
-      private final HandlerData handlerData;
+      @Nullable private final HandlerData handlerData;
       private final CallDepth callDepth;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       public AdviceScope(CallDepth callDepth, Class<?> type, Method method) {
         this.callDepth = callDepth;

@@ -17,7 +17,7 @@ libraries:
   minimum_java_version: 17
   scope:
     name: io.opentelemetry.activej-http-6.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.activej:activej-http:[6.0,)
@@ -103,16 +103,16 @@ libraries:
   - com.typesafe.akka:akka-actor_2.11:[2.3,)
   - com.typesafe.akka:akka-actor_2.12:[2.3,)
   - com.typesafe.akka:akka-actor_2.13:[2.3,)
-- name: akka-actor-fork-join-2.5
+- name: akka-actor-forkjoin-2.5
   display_name: Akka Actors
   description: This instrumentation provides context propagation for the Akka Fork-Join
     Pool, it does not emit any telemetry on its own.
   library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
   features:
   - CONTEXT_PROPAGATION
-  source_path: instrumentation/akka/akka-actor-fork-join-2.5
+  source_path: instrumentation/akka/akka-actor-forkjoin-2.5
   scope:
-    name: io.opentelemetry.akka-actor-fork-join-2.5
+    name: io.opentelemetry.akka-actor-forkjoin-2.5
   has_javaagent: true
   javaagent_target_versions:
   - com.typesafe.akka:akka-actor_2.11:[2.5,)
@@ -134,7 +134,7 @@ libraries:
   source_path: instrumentation/akka/akka-http-10.0
   scope:
     name: io.opentelemetry.akka-http-10.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - com.typesafe.akka:akka-http_2.11:[10,)
@@ -158,17 +158,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.http.server.capture-request-headers
     declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
@@ -578,11 +613,24 @@ libraries:
   - org.apache.dubbo:dubbo:[2.7,)
   configurations:
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   telemetry:
   - when: default
     metrics:
@@ -749,7 +797,7 @@ libraries:
   source_path: instrumentation/apache-httpasyncclient-4.1
   scope:
     name: io.opentelemetry.apache-httpasyncclient-4.1
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.httpcomponents:httpasyncclient:[4.1,)
@@ -771,17 +819,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -878,7 +961,7 @@ libraries:
   source_path: instrumentation/apache-httpclient/apache-httpclient-2.0
   scope:
     name: io.opentelemetry.apache-httpclient-2.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - commons-httpclient:commons-httpclient:[2.0,4.0)
@@ -900,17 +983,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -1003,7 +1121,7 @@ libraries:
   source_path: instrumentation/apache-httpclient/apache-httpclient-4.0
   scope:
     name: io.opentelemetry.apache-httpclient-4.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.dropwizard:dropwizard-client:(,3.0.0)
@@ -1026,17 +1144,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -1133,7 +1286,7 @@ libraries:
   source_path: instrumentation/apache-httpclient/apache-httpclient-4.3
   scope:
     name: io.opentelemetry.apache-httpclient-4.3
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   telemetry:
   - when: default
@@ -1186,7 +1339,7 @@ libraries:
   source_path: instrumentation/apache-httpclient/apache-httpclient-5.0
   scope:
     name: io.opentelemetry.apache-httpclient-5.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.httpcomponents.client5:httpclient5:[5.0,)
@@ -1208,17 +1361,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -1315,7 +1503,7 @@ libraries:
   source_path: instrumentation/apache-httpclient/apache-httpclient-5.2
   scope:
     name: io.opentelemetry.apache-httpclient-5.2
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   telemetry:
   - when: default
@@ -1392,7 +1580,7 @@ libraries:
   source_path: instrumentation/armeria/armeria-1.3
   scope:
     name: io.opentelemetry.armeria-1.3
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -1415,17 +1603,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.http.server.capture-request-headers
     declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
@@ -1702,7 +1925,7 @@ libraries:
   source_path: instrumentation/async-http-client/async-http-client-1.8
   scope:
     name: io.opentelemetry.async-http-client-1.8
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - com.ning:async-http-client:[1.8.0,1.9.0)
@@ -1724,16 +1947,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -1822,7 +2081,7 @@ libraries:
   source_path: instrumentation/async-http-client/async-http-client-1.9
   scope:
     name: io.opentelemetry.async-http-client-1.9
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - com.ning:async-http-client:[1.9.0,)
@@ -1844,17 +2103,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -1943,7 +2237,7 @@ libraries:
   source_path: instrumentation/async-http-client/async-http-client-2.0
   scope:
     name: io.opentelemetry.async-http-client-2.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - org.asynchttpclient:async-http-client:[2.0.0,)
@@ -1965,17 +2259,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -2316,6 +2645,42 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
       - name: messaging.destination.name
         type: STRING
       - name: messaging.message.id
@@ -2346,6 +2711,8 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.collection.name
+        type: STRING
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -2383,6 +2750,10 @@ libraries:
         type: STRING
       - name: aws.step_functions.state_machine.arn
         type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -2694,6 +3065,8 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.collection.name
+        type: STRING
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -2749,6 +3122,10 @@ libraries:
         type: STRING
       - name: aws.step_functions.state_machine.arn
         type: STRING
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -3168,6 +3545,10 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.name
+        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.system.name
@@ -3183,7 +3564,13 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.collection.name
+        type: STRING
       - name: db.namespace
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
         type: STRING
       - name: db.query.summary
         type: STRING
@@ -3195,8 +3582,6 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: network.type
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
@@ -3266,6 +3651,10 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.name
+        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.system.name
@@ -3293,7 +3682,13 @@ libraries:
         type: BOOLEAN
       - name: cassandra.speculative_execution.count
         type: LONG
+      - name: db.collection.name
+        type: STRING
       - name: db.namespace
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
         type: STRING
       - name: db.query.summary
         type: STRING
@@ -3305,8 +3700,6 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: network.type
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
@@ -3384,6 +3777,10 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.operation.name
+        type: STRING
       - name: db.query.summary
         type: STRING
       - name: db.system.name
@@ -3411,7 +3808,13 @@ libraries:
         type: BOOLEAN
       - name: cassandra.speculative_execution.count
         type: LONG
+      - name: db.collection.name
+        type: STRING
       - name: db.namespace
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
         type: STRING
       - name: db.query.summary
         type: STRING
@@ -3423,8 +3826,6 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: network.type
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
@@ -3752,6 +4153,13 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.1,3.1.6)
+  configurations:
+  - name: otel.instrumentation.couchbase.experimental-span-attributes
+    declarative_name: java.couchbase.experimental_span_attributes/development
+    description: Enables experimental span attributes emitted from the underlying
+      Couchbase library.
+    type: boolean
+    default: false
   telemetry:
   - when: default
     spans:
@@ -3785,6 +4193,48 @@ libraries:
         type: LONG
       - name: net.transport
         type: STRING
+  - when: otel.semconv-stability.opt-in=database
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.couchbase.local_id
+        type: STRING
+      - name: db.couchbase.operation_id
+        type: LONG
+      - name: db.couchbase.scope
+        type: STRING
+      - name: db.couchbase.server_duration
+        type: LONG
+      - name: db.couchbase.service
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
 - name: couchbase-3.1.6
   display_name: Couchbase Client
   description: |
@@ -3800,6 +4250,13 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.1.6,3.2.0)
+  configurations:
+  - name: otel.instrumentation.couchbase.experimental-span-attributes
+    declarative_name: java.couchbase.experimental_span_attributes/development
+    description: Enables experimental span attributes emitted from the underlying
+      Couchbase library.
+    type: boolean
+    default: false
   telemetry:
   - when: default
     spans:
@@ -3835,6 +4292,50 @@ libraries:
         type: LONG
       - name: net.transport
         type: STRING
+  - when: otel.semconv-stability.opt-in=database
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.couchbase.local_id
+        type: STRING
+      - name: db.couchbase.operation_id
+        type: LONG
+      - name: db.couchbase.retries
+        type: LONG
+      - name: db.couchbase.scope
+        type: STRING
+      - name: db.couchbase.server_duration
+        type: LONG
+      - name: db.couchbase.service
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
 - name: couchbase-3.2
   display_name: Couchbase Client
   description: |
@@ -3850,6 +4351,13 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.2.0,3.4.0)
+  configurations:
+  - name: otel.instrumentation.couchbase.experimental-span-attributes
+    declarative_name: java.couchbase.experimental_span_attributes/development
+    description: Enables experimental span attributes emitted from the underlying
+      Couchbase library.
+    type: boolean
+    default: false
   telemetry:
   - when: default
     spans:
@@ -3887,6 +4395,52 @@ libraries:
         type: LONG
       - name: net.transport
         type: STRING
+  - when: otel.semconv-stability.opt-in=database
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.couchbase.document_id
+        type: STRING
+      - name: db.couchbase.local_id
+        type: STRING
+      - name: db.couchbase.operation_id
+        type: LONG
+      - name: db.couchbase.retries
+        type: LONG
+      - name: db.couchbase.scope
+        type: STRING
+      - name: db.couchbase.server_duration
+        type: LONG
+      - name: db.couchbase.service
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
 - name: couchbase-3.4
   display_name: Couchbase Client
   description: |
@@ -3902,6 +4456,13 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - com.couchbase.client:java-client:[3.4.0,)
+  configurations:
+  - name: otel.instrumentation.couchbase.experimental-span-attributes
+    declarative_name: java.couchbase.experimental_span_attributes/development
+    description: Enables experimental span attributes emitted from the underlying
+      Couchbase library.
+    type: boolean
+    default: false
   telemetry:
   - when: default
     spans:
@@ -3939,6 +4500,52 @@ libraries:
         type: LONG
       - name: net.transport
         type: STRING
+  - when: otel.semconv-stability.opt-in=database
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.experimental-span-attributes=true
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.couchbase.document_id
+        type: STRING
+      - name: db.couchbase.local_id
+        type: STRING
+      - name: db.couchbase.operation_id
+        type: LONG
+      - name: db.couchbase.retries
+        type: LONG
+      - name: db.couchbase.scope
+        type: STRING
+      - name: db.couchbase.server_duration
+        type: LONG
+      - name: db.couchbase.service
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
 - name: dropwizard-metrics-4.0
   display_name: Dropwizard Metrics
   description: |
@@ -4722,7 +5329,7 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
-      - name: db.namespace
+      - name: db.collection.name
         type: STRING
       - name: db.operation.name
         type: STRING
@@ -4731,7 +5338,7 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
-      - name: db.namespace
+      - name: db.collection.name
         type: STRING
       - name: db.operation.name
         type: STRING
@@ -4750,7 +5357,7 @@ libraries:
   source_path: instrumentation/google-http-client-1.19
   scope:
     name: io.opentelemetry.google-http-client-1.19
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - com.google.http-client:google-http-client:[1.19.0,)
@@ -4772,17 +5379,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -4821,6 +5463,39 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
 - name: grails-3.0
@@ -4972,7 +5647,7 @@ libraries:
   source_path: instrumentation/grizzly-2.3
   scope:
     name: io.opentelemetry.grizzly-2.3
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - org.glassfish.grizzly:grizzly-http:[2.3,)
@@ -5517,6 +6192,76 @@ libraries:
         type: STRING
       - name: rpc.system
         type: STRING
+- name: hbase-client-2.0
+  display_name: HBase Client
+  description: |
+    This instrumentation enables database client spans and database client metrics for the Apache HBase client.
+  semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+  library_link: https://hbase.apache.org/
+  source_path: instrumentation/hbase-client-2.0
+  scope:
+    name: io.opentelemetry.hbase-client-2.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.hbase:hbase-client:[2.0.0, 2.5.0)
+  telemetry:
+  - when: default
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.name
+        type: STRING
+      - name: db.operation
+        type: STRING
+      - name: db.system
+        type: STRING
+      - name: db.user
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=database
+    metrics:
+    - name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: helidon-4.3
   display_name: Helidon
   description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -5531,7 +6276,7 @@ libraries:
   minimum_java_version: 21
   scope:
     name: io.opentelemetry.helidon-4.3
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -5673,7 +6418,7 @@ libraries:
     name: io.opentelemetry.hibernate-6.0
   has_javaagent: true
   javaagent_target_versions:
-  - org.hibernate:hibernate-core:[6.0.0.Final,)
+  - org.hibernate.orm:hibernate-core:[6.0.0.Final,)
   configurations:
   - name: otel.instrumentation.hibernate.experimental-span-attributes
     declarative_name: java.hibernate.experimental_span_attributes/development
@@ -5899,7 +6644,7 @@ libraries:
   source_path: instrumentation/http-url-connection
   scope:
     name: io.opentelemetry.http-url-connection
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - Java 8+
@@ -5921,16 +6666,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -5973,6 +6754,43 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
 - name: hystrix-1.4
@@ -6184,7 +7002,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.java-http-client
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -6207,17 +7025,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -6264,6 +7117,45 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+      - name: url.full
+        type: STRING
 - name: java-http-server
   display_name: Java HTTP Server
   description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -6275,7 +7167,7 @@ libraries:
   source_path: instrumentation/java-http-server
   scope:
     name: io.opentelemetry.java-http-server
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -6298,11 +7190,24 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.server.emit-experimental-telemetry
     declarative_name: java.common.http.server.emit_experimental_telemetry/development
     description: |
@@ -6977,11 +7882,24 @@ libraries:
     type: boolean
     default: false
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
     declarative_name: java.jdbc.capture_query_parameters/development
     description: |
@@ -7061,6 +7979,8 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: error.type
+        type: STRING
       - name: server.address
         type: STRING
       - name: service.peer.name
@@ -7088,7 +8008,7 @@ libraries:
     name: io.opentelemetry.jedis-1.4
   has_javaagent: true
   javaagent_target_versions:
-  - redis.clients:jedis:[1.4.0,3.0.0)
+  - redis.clients:jedis:[1.4.0,2.0.0)
   configurations:
   - name: otel.instrumentation.common.db.query-sanitization.enabled
     declarative_name: java.common.db.query_sanitization.enabled
@@ -7096,11 +8016,24 @@ libraries:
     type: boolean
     default: true
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   telemetry:
   - when: default
     spans:
@@ -7149,6 +8082,82 @@ libraries:
         type: LONG
       - name: service.peer.name
         type: STRING
+- name: jedis-2.0
+  display_name: Jedis
+  description: This instrumentation enables database client spans and database client
+    metrics for Jedis Redis operations.
+  semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+  library_link: https://github.com/redis/jedis
+  source_path: instrumentation/jedis/jedis-2.0
+  scope:
+    name: io.opentelemetry.jedis-2.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - redis.clients:jedis:[2.0.0,3.0.0)
+  configurations:
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
+    description: Enables query sanitization for database queries.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
+    description: Used to specify a mapping from host names or IP addresses to peer
+      services.
+    type: structured_list
+    default: ''
+  telemetry:
+  - when: default
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.operation
+        type: STRING
+      - name: db.statement
+        type: STRING
+      - name: db.system
+        type: STRING
+      - name: peer.service
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=database,service.peer
+    metrics:
+    - name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.text
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
 - name: jedis-3.0
   display_name: Jedis
   description: This instrumentation enables database client spans and database client
@@ -7170,11 +8179,24 @@ libraries:
     type: boolean
     default: true
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   telemetry:
   - when: default
     spans:
@@ -7221,6 +8243,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -7274,6 +8298,10 @@ libraries:
         type: LONG
       - name: network.type
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.semconv-stability.opt-in=database
     metrics:
     - name: db.client.operation.duration
@@ -7282,6 +8310,8 @@ libraries:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: db.namespace
+        type: STRING
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -7290,9 +8320,17 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -7302,6 +8340,10 @@ libraries:
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
         type: LONG
 - name: jetty-8.0
   display_name: Eclipse Jetty
@@ -7316,7 +8358,7 @@ libraries:
   source_path: instrumentation/jetty/jetty-8.0
   scope:
     name: io.opentelemetry.jetty-8.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - org.eclipse.jetty:jetty-server:[8.0.0.v20110901,11)
@@ -7403,7 +8445,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.jetty-11.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - org.eclipse.jetty:jetty-server:[11, 12)
@@ -7490,7 +8532,7 @@ libraries:
   minimum_java_version: 17
   scope:
     name: io.opentelemetry.jetty-12.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - org.eclipse.jetty:jetty-server:[12,)
@@ -7576,7 +8618,7 @@ libraries:
   source_path: instrumentation/jetty-httpclient/jetty-httpclient-9.2
   scope:
     name: io.opentelemetry.jetty-httpclient-9.2
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -7599,16 +8641,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -7706,7 +8784,7 @@ libraries:
   minimum_java_version: 17
   scope:
     name: io.opentelemetry.jetty-httpclient-12.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -7729,16 +8807,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -7971,7 +9085,7 @@ libraries:
   source_path: instrumentation/jodd-http-4.2
   scope:
     name: io.opentelemetry.jodd-http-4.2
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - org.jodd:jodd-http:[4.1.1,)
@@ -7993,17 +9107,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -8048,6 +9197,45 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
 - name: jsf-mojarra-1.2
@@ -8323,6 +9511,48 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: otel.semconv-stability.opt-in=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.client_id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.message.tombstone
+        type: BOOLEAN
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.message.body.size
+        type: LONG
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.client_id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.message.tombstone
+        type: BOOLEAN
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: kafka-clients-2.6
   display_name: Apache Kafka Client
   description: This standalone instrumentation enables messaging spans for Kafka producers
@@ -8487,7 +9717,7 @@ libraries:
 - name: kotlinx-coroutines-1.0
   display_name: Kotlin Coroutines
   description: |
-    This instrumentation enables context propagation for Kotlin coroutines and adds support for @WithSpan annotations on Kotlin suspend functions.
+    This instrumentation enables context propagation for Kotlin coroutines and adds support for @WithSpan annotations on Kotlin suspend functions by default unless v3 preview mode is enabled.
   library_link: https://github.com/Kotlin/kotlinx.coroutines
   features:
   - CONTEXT_PROPAGATION
@@ -8523,7 +9753,7 @@ libraries:
   source_path: instrumentation/ktor/ktor-1.0
   scope:
     name: io.opentelemetry.ktor-1.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   telemetry:
   - when: default
@@ -8610,7 +9840,7 @@ libraries:
   source_path: instrumentation/ktor/ktor-2.0
   scope:
     name: io.opentelemetry.ktor-2.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -8650,17 +9880,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -8788,7 +10053,7 @@ libraries:
   source_path: instrumentation/ktor/ktor-3.0
   scope:
     name: io.opentelemetry.ktor-3.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -8828,17 +10093,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -9053,7 +10353,7 @@ libraries:
   source_path: instrumentation/kubernetes-client-7.0
   scope:
     name: io.opentelemetry.kubernetes-client-7.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.kubernetes:client-java-api:[7.0.0,)
@@ -9081,17 +10381,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -9169,6 +10504,39 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+      - name: url.full
+        type: STRING
 - name: lettuce-4.0
   display_name: Lettuce
   description: |
@@ -9195,11 +10563,24 @@ libraries:
     type: boolean
     default: false
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   telemetry:
   - when: default
     spans:
@@ -9246,6 +10627,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -9290,11 +10673,24 @@ libraries:
     type: boolean
     default: true
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   telemetry:
   - when: default
     spans:
@@ -9305,6 +10701,37 @@ libraries:
       - name: db.statement
         type: STRING
       - name: db.system
+        type: STRING
+      - name: peer.service
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.instrumentation.common.v3-preview=true
+    metrics:
+    - name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.text
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: peer.service
         type: STRING
@@ -9347,6 +10774,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -9631,20 +11060,20 @@ libraries:
       Enables adding baggage entries to the Log4j ThreadContext, prefixed with "baggage.".
     type: boolean
     default: false
-  - name: otel.instrumentation.common.logging.trace-id
-    declarative_name: java.common.logging.trace_id
+  - name: otel.instrumentation.common.logging.trace-id-key
+    declarative_name: java.common.logging.trace_id_key
     description: |
       Specifies the key name used to store the trace ID in the logging context.
     type: string
     default: trace_id
-  - name: otel.instrumentation.common.logging.span-id
-    declarative_name: java.common.logging.span_id
+  - name: otel.instrumentation.common.logging.span-id-key
+    declarative_name: java.common.logging.span_id_key
     description: |
       Specifies the key name used to store the span ID in the logging context.
     type: string
     default: span_id
-  - name: otel.instrumentation.common.logging.trace-flags
-    declarative_name: java.common.logging.trace_flags
+  - name: otel.instrumentation.common.logging.trace-flags-key
+    declarative_name: java.common.logging.trace_flags_key
     description: |
       Specifies the key name used to store the trace flags in the logging context.
     type: string
@@ -9673,20 +11102,20 @@ libraries:
       Enables adding baggage entries to the Log4j ThreadContext, prefixed with "baggage.".
     type: boolean
     default: false
-  - name: otel.instrumentation.common.logging.trace-id
-    declarative_name: java.common.logging.trace_id
+  - name: otel.instrumentation.common.logging.trace-id-key
+    declarative_name: java.common.logging.trace_id_key
     description: |
       Specifies the key name used to store the trace ID in the logging context.
     type: string
     default: trace_id
-  - name: otel.instrumentation.common.logging.span-id
-    declarative_name: java.common.logging.span_id
+  - name: otel.instrumentation.common.logging.span-id-key
+    declarative_name: java.common.logging.span_id_key
     description: |
       Specifies the key name used to store the span ID in the logging context.
     type: string
     default: span_id
-  - name: otel.instrumentation.common.logging.trace-flags
-    declarative_name: java.common.logging.trace_flags
+  - name: otel.instrumentation.common.logging.trace-flags-key
+    declarative_name: java.common.logging.trace_flags_key
     description: |
       Specifies the key name used to store the trace flags in the logging context.
     type: string
@@ -9709,20 +11138,20 @@ libraries:
   javaagent_target_versions:
   - log4j:log4j:[1.2,)
   configurations:
-  - name: otel.instrumentation.common.logging.trace-id
-    declarative_name: java.common.logging.trace_id
+  - name: otel.instrumentation.common.logging.trace-id-key
+    declarative_name: java.common.logging.trace_id_key
     description: |
       Specifies the key name used to store the trace ID in the logging context.
     type: string
     default: trace_id
-  - name: otel.instrumentation.common.logging.span-id
-    declarative_name: java.common.logging.span_id
+  - name: otel.instrumentation.common.logging.span-id-key
+    declarative_name: java.common.logging.span_id_key
     description: |
       Specifies the key name used to store the span ID in the logging context.
     type: string
     default: span_id
-  - name: otel.instrumentation.common.logging.trace-flags
-    declarative_name: java.common.logging.trace_flags
+  - name: otel.instrumentation.common.logging.trace-flags-key
+    declarative_name: java.common.logging.trace_flags_key
     description: |
       Specifies the key name used to store the trace flags in the logging context.
     type: string
@@ -9830,20 +11259,20 @@ libraries:
       Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
     type: boolean
     default: false
-  - name: otel.instrumentation.common.logging.trace-id
-    declarative_name: java.common.logging.trace_id
+  - name: otel.instrumentation.common.logging.trace-id-key
+    declarative_name: java.common.logging.trace_id_key
     description: |
       Specifies the key name used to store the trace ID in the logging context.
     type: string
     default: trace_id
-  - name: otel.instrumentation.common.logging.span-id
-    declarative_name: java.common.logging.span_id
+  - name: otel.instrumentation.common.logging.span-id-key
+    declarative_name: java.common.logging.span_id_key
     description: |
       Specifies the key name used to store the span ID in the logging context.
     type: string
     default: span_id
-  - name: otel.instrumentation.common.logging.trace-flags
-    declarative_name: java.common.logging.trace_flags
+  - name: otel.instrumentation.common.logging.trace-flags-key
+    declarative_name: java.common.logging.trace_flags_key
     description: |
       Specifies the key name used to store the trace flags in the logging context.
     type: string
@@ -10312,7 +11741,7 @@ libraries:
   source_path: instrumentation/netty/netty-3.8
   scope:
     name: io.opentelemetry.netty-3.8
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.netty:netty:[3.8.0.Final,4)
@@ -10334,17 +11763,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.http.server.capture-request-headers
     declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
@@ -10423,6 +11887,93 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: http.server.request.duration
+      description: Duration of HTTP server requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: url.scheme
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
     - span_kind: SERVER
@@ -10468,7 +12019,7 @@ libraries:
   source_path: instrumentation/netty/netty-4.0
   scope:
     name: io.opentelemetry.netty-4.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.netty:netty-all:[4.0.0.Final,4.1.0.Final)
@@ -10491,17 +12042,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.http.server.capture-request-headers
     declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
@@ -10590,6 +12176,93 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: http.server.request.duration
+      description: Duration of HTTP server requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: url.scheme
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
     - span_kind: SERVER
@@ -10635,7 +12308,7 @@ libraries:
   source_path: instrumentation/netty/netty-4.1
   scope:
     name: io.opentelemetry.netty-4.1
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -10659,17 +12332,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.http.server.capture-request-headers
     declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
@@ -10790,6 +12498,93 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: http.server.request.duration
+      description: Duration of HTTP server requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: url.scheme
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+      - name: url.full
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: client.address
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.path
+        type: STRING
+      - name: url.query
+        type: STRING
+      - name: url.scheme
+        type: STRING
+      - name: user_agent.original
+        type: STRING
 - name: okhttp-2.2
   display_name: OkHttp
   description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -10800,7 +12595,7 @@ libraries:
   source_path: instrumentation/okhttp/okhttp-2.2
   scope:
     name: io.opentelemetry.okhttp-2.2
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - com.squareup.okhttp:okhttp:[2.2,3)
@@ -10822,17 +12617,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -10929,7 +12759,7 @@ libraries:
   source_path: instrumentation/okhttp/okhttp-3.0
   scope:
     name: io.opentelemetry.okhttp-3.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -10952,17 +12782,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -11384,14 +13249,14 @@ libraries:
       attributes:
       - name: db.client.connection.pool.name
         type: STRING
-- name: oshi
+- name: oshi-5.0
   display_name: OSHI
   description: |
     When the OSHI library is detected on the classpath, this instrumentation enables system metrics for memory, disk, and network operations.
   semantic_conventions:
   - SYSTEM_METRICS
   library_link: https://github.com/oshi/oshi/
-  source_path: instrumentation/oshi
+  source_path: instrumentation/oshi-5.0
   scope:
     name: io.opentelemetry.oshi
   has_standalone_library: true
@@ -11558,14 +13423,14 @@ libraries:
         type: STRING
       - name: direction
         type: STRING
-- name: payara
+- name: payara-5.2020
   display_name: Payara
   description: |
     This instrumentation prevents Payara's built-in OpenTracing integration from interfering with OpenTelemetry server spans, it does not emit any telemetry on its own.
   library_link: https://www.payara.fish/
-  source_path: instrumentation/payara
+  source_path: instrumentation/payara-5.2020
   scope:
-    name: io.opentelemetry.payara
+    name: io.opentelemetry.payara-5.2020
   has_javaagent: true
 - name: pekko-actor-1.0
   display_name: Pekko Actors
@@ -11598,7 +13463,7 @@ libraries:
   source_path: instrumentation/pekko/pekko-http-1.0
   scope:
     name: io.opentelemetry.pekko-http-1.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.12:[1.7,)
@@ -11625,17 +13490,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.http.server.capture-request-headers
     declarative_name: general.http.server.request_captured_headers
     description: List of HTTP request headers to capture in HTTP server telemetry.
@@ -11802,7 +13702,7 @@ libraries:
   source_path: instrumentation/play/play-ws/play-ws-1.0
   scope:
     name: io.opentelemetry.play-ws-1.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - com.typesafe.play:play-ahc-ws-standalone_2.11:[1.0.0,2.0.0)
@@ -11825,17 +13725,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -11893,7 +13828,7 @@ libraries:
   source_path: instrumentation/play/play-ws/play-ws-2.0
   scope:
     name: io.opentelemetry.play-ws-2.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - com.typesafe.play:play-ahc-ws-standalone_2.11:[2.0.0,]
@@ -11917,17 +13852,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -11985,7 +13955,7 @@ libraries:
   source_path: instrumentation/play/play-ws/play-ws-2.1
   scope:
     name: io.opentelemetry.play-ws-2.1
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.1.0,]
@@ -12009,17 +13979,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -12107,6 +14112,12 @@ libraries:
       - name: scheduling.powerjob.job.param
         type: STRING
       - name: scheduling.powerjob.job.type
+        type: STRING
+  - when: otel.semconv-stability.opt-in=code
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: code.function.name
         type: STRING
 - name: pulsar-2.8
   display_name: Apache Pulsar Client
@@ -12321,16 +14332,16 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-- name: quarkus-resteasy-reactive
+- name: quarkus-resteasy-reactive-1.11
   display_name: Quarkus RESTEasy Reactive
   description: |
     This instrumentation enriches HTTP server spans with route information for Quarkus RESTEasy Reactive, it does not emit any telemetry on its own.
   library_link: https://quarkus.io/guides/resteasy-reactive/
   features:
   - HTTP_ROUTE
-  source_path: instrumentation/quarkus-resteasy-reactive
+  source_path: instrumentation/quarkus-resteasy-reactive-1.11
   scope:
-    name: io.opentelemetry.quarkus-resteasy-reactive
+    name: io.opentelemetry.quarkus-resteasy-reactive-1.11
   has_javaagent: true
   javaagent_target_versions:
   - io.quarkus:quarkus-rest:[3.9.0,)
@@ -12405,11 +14416,24 @@ libraries:
     type: boolean
     default: false
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   telemetry:
   - when: default
     spans:
@@ -12458,11 +14482,15 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.query.summary
         type: STRING
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: server.address
         type: STRING
@@ -12651,7 +14679,7 @@ libraries:
   source_path: instrumentation/ratpack/ratpack-1.7
   scope:
     name: io.opentelemetry.ratpack-1.7
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -12695,17 +14723,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -12827,6 +14890,43 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: http.route
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
       - name: url.full
         type: STRING
 - name: reactor-3.1
@@ -12961,7 +15061,7 @@ libraries:
   source_path: instrumentation/reactor/reactor-netty/reactor-netty-1.0
   scope:
     name: io.opentelemetry.reactor-netty-1.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.projectreactor.netty:reactor-netty-http:[1.0.0,)
@@ -12984,17 +15084,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.reactor-netty.connection-telemetry.enabled
     declarative_name: java.reactor_netty.connection_telemetry.enabled
     description: Enables the creation of Connect and DNS spans.
@@ -13052,6 +15187,51 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
+    metrics:
+    - name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.request.method_original
+        type: STRING
+      - name: http.request.resend_count
+        type: LONG
+      - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.protocol.version
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: service.peer.name
+        type: STRING
+      - name: url.full
+        type: STRING
 - name: rediscala-1.8
   display_name: Rediscala
   description: |
@@ -13081,6 +15261,10 @@ libraries:
         type: STRING
       - name: db.system
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.semconv-stability.opt-in=database
     metrics:
     - name: db.client.operation.duration
@@ -13093,13 +15277,23 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: redisson-3.0
   display_name: Redisson
   description: This instrumentation enables database client spans and database client
@@ -13131,6 +15325,49 @@ libraries:
         type: LONG
       - name: network.type
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=database
+    metrics:
+    - name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.text
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: redisson-3.17
   display_name: Redisson
   description: This instrumentation enables database client spans and database client
@@ -13162,6 +15399,10 @@ libraries:
         type: LONG
       - name: network.type
         type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.semconv-stability.opt-in=database
     metrics:
     - name: db.client.operation.duration
@@ -13178,9 +15419,15 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -13190,6 +15437,10 @@ libraries:
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
         type: LONG
 - name: resources
   display_name: Resource Detectors
@@ -13201,6 +15452,12 @@ libraries:
   scope:
     name: io.opentelemetry.resources
   has_standalone_library: true
+  configurations:
+  - name: otel.instrumentation.resources.experimental.process-command-attributes.enabled
+    description: |
+      Enables capture of process command-line resource attributes when v3 preview suppresses them by default.
+    type: boolean
+    default: false
 - name: restlet-1.1
   display_name: Restlet
   description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -13214,7 +15471,7 @@ libraries:
   source_path: instrumentation/restlet/restlet-1.1
   scope:
     name: io.opentelemetry.restlet-1.1
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -13307,7 +15564,7 @@ libraries:
   source_path: instrumentation/restlet/restlet-2.0
   scope:
     name: io.opentelemetry.restlet-2.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -13772,6 +16029,111 @@ libraries:
         type: BOOLEAN
       - name: jvm.thread.state
         type: STRING
+  - when: Java21
+    metrics:
+    - name: jvm.class.count
+      description: Number of classes currently loaded.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: '{class}'
+      attributes: []
+    - name: jvm.class.loaded
+      description: Number of classes loaded since JVM start.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{class}'
+      attributes: []
+    - name: jvm.class.unloaded
+      description: Number of classes unloaded since JVM start.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{class}'
+      attributes: []
+    - name: jvm.cpu.count
+      description: Number of processors available to the Java virtual machine.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: '{cpu}'
+      attributes: []
+    - name: jvm.cpu.recent_utilization
+      description: Recent CPU utilization for the process as reported by the JVM.
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: '1'
+      attributes: []
+    - name: jvm.cpu.time
+      description: CPU time used by the process as reported by the JVM.
+      instrument: counter
+      data_type: DOUBLE_SUM
+      unit: s
+      attributes: []
+    - name: jvm.gc.duration
+      description: Duration of JVM garbage collection actions.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: jvm.gc.action
+        type: STRING
+      - name: jvm.gc.name
+        type: STRING
+    - name: jvm.memory.committed
+      description: Measure of memory committed.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: By
+      attributes:
+      - name: jvm.memory.pool.name
+        type: STRING
+      - name: jvm.memory.type
+        type: STRING
+    - name: jvm.memory.limit
+      description: Measure of max obtainable memory.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: By
+      attributes:
+      - name: jvm.memory.pool.name
+        type: STRING
+      - name: jvm.memory.type
+        type: STRING
+    - name: jvm.memory.used
+      description: Measure of memory used.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: By
+      attributes:
+      - name: jvm.memory.pool.name
+        type: STRING
+      - name: jvm.memory.type
+        type: STRING
+    - name: jvm.memory.used_after_last_gc
+      description: Measure of memory used, as measured after the most recent garbage
+        collection event on this pool.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: By
+      attributes:
+      - name: jvm.memory.pool.name
+        type: STRING
+      - name: jvm.memory.type
+        type: STRING
+    - name: jvm.thread.count
+      description: Number of executing platform threads.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: '{thread}'
+      attributes:
+      - name: jvm.thread.daemon
+        type: BOOLEAN
+      - name: jvm.thread.state
+        type: STRING
+    - name: jvm.thread.virtual.pinned
+      description: Duration of virtual thread pinning.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes: []
   - when: default
     metrics:
     - name: jvm.buffer.count
@@ -13996,14 +16358,14 @@ libraries:
       Enables the experimental span attribute `rxjava.canceled`.
     type: boolean
     default: false
-- name: scala-fork-join-2.8
+- name: scala-forkjoin-2.8
   display_name: Scala ForkJoinPool
   description: |
     This instrumentation enables context propagation for Scala fork-join tasks, it does not emit any telemetry on its own.
   library_link: https://www.scala-lang.org/api/2.12.0/scala/concurrent/forkjoin/package$$ForkJoinPool$.html
-  source_path: instrumentation/scala-fork-join-2.8
+  source_path: instrumentation/scala-forkjoin-2.8
   scope:
-    name: io.opentelemetry.scala-fork-join-2.8
+    name: io.opentelemetry.scala-forkjoin-2.8
   has_javaagent: true
   javaagent_target_versions:
   - org.scala-lang:scala-library:[2.8.0,2.12.0)
@@ -14298,6 +16660,97 @@ libraries:
       - name: url.scheme
         type: STRING
       - name: user_agent.original
+        type: STRING
+- name: sofa-rpc-5.4
+  display_name: SOFARPC
+  description: |
+    The SOFARPC instrumentation provides RPC client spans and metrics, and RPC server spans and metrics for SOFARPC RPC calls.
+  semantic_conventions:
+  - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
+  - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
+  library_link: https://github.com/sofastack/sofa-rpc/
+  source_path: instrumentation/sofa-rpc-5.4
+  scope:
+    name: io.opentelemetry.sofa-rpc-5.4
+  has_standalone_library: true
+  has_javaagent: true
+  javaagent_target_versions:
+  - com.alipay.sofa:sofa-rpc-all:[5.4.0,)
+  configurations:
+  - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
+    description: Used to specify a mapping from host names or IP addresses to peer
+      services.
+    type: map
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
+  telemetry:
+  - when: default
+    metrics:
+    - name: rpc.client.duration
+      description: The duration of an outbound RPC invocation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: ms
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: rpc.server.duration
+      description: The duration of an inbound RPC invocation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: ms
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: peer.service
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: SERVER
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
         type: STRING
 - name: spark-2.3
   display_name: Spark Web Framework
@@ -14828,8 +17281,8 @@ libraries:
 - name: spring-security-config-6.0
   display_name: Spring Security
   description: |
-    This instrumentation does not emit any telemetry on its own. Instead, it captures enduser attributes, and is only enabled when at least one of the `enduser` configurations is enabled.
-    NOTE: The `enduser` attributes have been deprecated and will be removed in 3.0+ of the java agent.
+    This instrumentation does not emit any telemetry on its own. Instead, it captures identity attributes, and is only enabled when at least one common identity configuration is enabled.
+    NOTE: The `enduser` attributes have been deprecated. When `otel.instrumentation.common.v3-preview` is enabled, `enduser.id` is emitted as `user.name`, `enduser.role` is emitted as the string array `user.roles`, and `enduser.scope` is not emitted.
   library_link: https://spring.io/projects/spring-security
   source_path: instrumentation/spring/spring-security-config-6.0
   minimum_java_version: 17
@@ -14842,29 +17295,55 @@ libraries:
   configurations:
   - name: otel.instrumentation.common.enduser.id.enabled
     declarative_name: java.common.enduser.id.enabled
-    description: Enables capturing the enduser.id attribute.
+    description: Enables capturing the enduser.id attribute. This property and the
+      associated attribute are not supported when v3 preview is enabled.
     type: boolean
     default: false
   - name: otel.instrumentation.common.enduser.role.enabled
     declarative_name: java.common.enduser.role.enabled
-    description: Enables capturing the enduser.role attribute.
+    description: Enables capturing the enduser.role attribute. This property and the
+      associated attribute are not supported when v3 preview is enabled.
     type: boolean
     default: false
   - name: otel.instrumentation.common.enduser.scope.enabled
     declarative_name: java.common.enduser.scope.enabled
-    description: Enables capturing the enduser.scope attribute.
+    description: Enables capturing the enduser.scope attribute when v3 preview is
+      not enabled. This property is not honored when v3 preview is enabled.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.user.name.enabled
+    declarative_name: java.common.user.name.enabled
+    description: Enables capturing the user.name attribute when v3 preview is enabled.
+      This property and the associated attribute are not supported when v3 preview
+      is disabled.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.user.roles.enabled
+    declarative_name: java.common.user.roles.enabled
+    description: Enables capturing the user.roles attribute when v3 preview is enabled.
+      This property and the associated attribute are not supported when v3 preview
+      is disabled.
     type: boolean
     default: false
   - name: otel.instrumentation.spring-security.enduser.role.granted-authority-prefix
     declarative_name: java.spring_security.enduser.role.granted_authority_prefix
     description: Prefix of granted authorities identifying roles to capture in the
-      `enduser.role` semantic attribute.
+      `enduser.role` semantic attribute. This property is not honored when v3 preview
+      is enabled; use the `user.roles` variant instead.
+    type: string
+    default: ROLE_
+  - name: otel.instrumentation.spring-security.user.roles.granted-authority-prefix
+    declarative_name: java.spring_security.user.roles.granted_authority_prefix
+    description: Prefix of granted authorities identifying roles to capture in the
+      `user.roles` semantic attribute when v3 preview is enabled. This property is
+      not honored when v3 preview is disabled; use the `enduser.role` variant instead.
     type: string
     default: ROLE_
   - name: otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix
     declarative_name: java.spring_security.enduser.scope.granted_authority_prefix
     description: Prefix of granted authorities identifying scopes to capture in the
-      `enduser.scope` semantic attribute.
+      `enduser.scope` semantic attribute. This property and the associated attribute
+      are not supported when v3 preview is enabled.
     type: string
     default: SCOPE_
 - name: spring-web-3.1
@@ -14878,7 +17357,7 @@ libraries:
   source_path: instrumentation/spring/spring-web/spring-web-3.1
   scope:
     name: io.opentelemetry.spring-web-3.1
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   telemetry:
   - when: default
@@ -14964,6 +17443,28 @@ libraries:
       Enables the capture of experimental HTTP client telemetry, including URL template as the span name.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
 - name: spring-webflux-5.0
   display_name: Spring WebFlux
   description: |
@@ -14975,7 +17476,7 @@ libraries:
   source_path: instrumentation/spring/spring-webflux/spring-webflux-5.0
   scope:
     name: io.opentelemetry.spring-webflux-5.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.projectreactor.ipc:reactor-netty:[0.7.0.RELEASE,)
@@ -15079,7 +17580,7 @@ libraries:
   source_path: instrumentation/spring/spring-webflux/spring-webflux-5.3
   scope:
     name: io.opentelemetry.spring-webflux-5.3
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   telemetry:
   - when: default
@@ -15292,7 +17793,7 @@ libraries:
   source_path: instrumentation/spring/spring-webmvc/spring-webmvc-5.3
   scope:
     name: io.opentelemetry.spring-webmvc-5.3
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_standalone_library: true
   telemetry:
   - when: default
@@ -15591,6 +18092,174 @@ libraries:
     spans:
     - span_kind: INTERNAL
       attributes: []
+- name: thrift-0.13
+  display_name: Apache Thrift
+  description: This instrumentation enables RPC client and RPC server spans and metrics
+    for Apache Thrift.
+  semantic_conventions:
+  - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
+  - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
+  library_link: https://thrift.apache.org
+  source_path: instrumentation/thrift-0.13
+  scope:
+    name: io.opentelemetry.thrift-0.13
+  has_standalone_library: true
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.thrift:libthrift:[0.13.0,)
+  telemetry:
+  - when: default
+    metrics:
+    - name: rpc.client.duration
+      description: The duration of an outbound RPC invocation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: ms
+      attributes:
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: rpc.server.duration
+      description: The duration of an inbound RPC invocation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: ms
+      attributes:
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: SERVER
+      attributes:
+      - name: network.local.address
+        type: STRING
+      - name: network.local.port
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=rpc
+    metrics:
+    - name: rpc.client.call.duration
+      description: Measures the duration of outbound remote procedure calls (RPC).
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - name: rpc.server.call.duration
+      description: Measures the duration of inbound remote procedure calls (RPC).
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: network.local.address
+        type: STRING
+      - name: network.local.port
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: tomcat-7.0
   display_name: Apache Tomcat
   description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -15604,7 +18273,7 @@ libraries:
   source_path: instrumentation/tomcat/tomcat-7.0
   scope:
     name: io.opentelemetry.tomcat-7.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.tomcat.embed:tomcat-embed-core:[7.0.4, 10)
@@ -15706,7 +18375,7 @@ libraries:
   source_path: instrumentation/tomcat/tomcat-10.0
   scope:
     name: io.opentelemetry.tomcat-10.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.tomcat.embed:tomcat-embed-core:[10,)
@@ -15795,14 +18464,14 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
-- name: tomcat-jdbc
+- name: tomcat-jdbc-8.5
   display_name: Tomcat JDBC
   description: This instrumentation enables database connection pool metrics for Tomcat
     JDBC.
   semantic_conventions:
   - DATABASE_POOL_METRICS
   library_link: https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html
-  source_path: instrumentation/tomcat/tomcat-jdbc
+  source_path: instrumentation/tomcat/tomcat-jdbc-8.5
   scope:
     name: io.opentelemetry.tomcat-jdbc
   has_javaagent: true
@@ -15953,7 +18622,7 @@ libraries:
   source_path: instrumentation/undertow-1.4
   scope:
     name: io.opentelemetry.undertow-1.4
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.undertow:undertow-core:[1.4.0.Final,)
@@ -16060,7 +18729,7 @@ libraries:
   source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-3.0
   scope:
     name: io.opentelemetry.vertx-http-client-3.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-core:[3.0.0,4.0.0)
@@ -16082,17 +18751,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -16177,7 +18881,7 @@ libraries:
   source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-4.0
   scope:
     name: io.opentelemetry.vertx-http-client-4.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-core:[4.0.0,5)
@@ -16199,17 +18903,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -16315,7 +19054,7 @@ libraries:
   minimum_java_version: 11
   scope:
     name: io.opentelemetry.vertx-http-client-5.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.41.0
   has_javaagent: true
   javaagent_target_versions:
   - io.vertx:vertx-core:[5.0.0,)
@@ -16337,17 +19076,52 @@ libraries:
     type: list
     default: ''
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
     description: |
       Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
     type: boolean
     default: false
+  - declarative_name: java.common.http.client.url_template_rules
+    description: |
+      Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only applied when experimental HTTP client telemetry is enabled.
+    type: list
+    default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - pattern
+      - template
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          description: Whether this rule overrides an already-applied template.
+          default: false
   - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
     declarative_name: general.sanitization.url.sensitive_query_parameters/development
     description: List of URL query parameter names whose values are redacted in URL
@@ -16463,7 +19237,7 @@ libraries:
     default: true
   - name: otel.instrumentation.kafka.experimental-span-attributes
     declarative_name: java.kafka.experimental_span_attributes/development
-    description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`
+    description: Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms`
       and `messaging.kafka.bootstrap.servers`.
     type: boolean
     default: false
@@ -16546,11 +19320,24 @@ libraries:
     type: boolean
     default: true
   - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.peer_service_mapping
+    declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer
       services.
     type: map
     default: ''
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+      - peer
+      - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   telemetry:
   - when: default
     spans:
@@ -16601,6 +19388,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.operation.name
         type: STRING
       - name: db.query.text
@@ -16694,6 +19483,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.query.summary
         type: STRING
       - name: db.query.text
@@ -16773,6 +19564,8 @@ libraries:
       attributes:
       - name: db.namespace
         type: STRING
+      - name: db.operation.batch.size
+        type: LONG
       - name: db.query.summary
         type: STRING
       - name: db.query.text

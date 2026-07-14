@@ -11,7 +11,7 @@ dependencies {
   errorprone(project(":custom-checks"))
 }
 
-val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
+val disableErrorProne = project.findProperty("disableErrorProne")?.toString()?.toBoolean() ?: false
 val otelProps = the<OtelPropsExtension>()
 
 tasks {
@@ -66,7 +66,7 @@ tasks {
         // The disable() also disables the custom check via its altNames, so we
         // must explicitly re-enable it.
         disable("UnnecessarilyFullyQualified")
-        if (!project.name.equals("custom-checks")) {
+        if (project.name != "custom-checks") {
           warn("OtelUnnecessarilyFullyQualified")
         }
 
@@ -109,9 +109,6 @@ tasks {
         disable("JdkObsolete")
         disable("JavaUtilDate")
 
-        // TODO: Remove this, we use this pattern in several tests and it will mean some moving.
-        disable("DefaultPackage")
-
         // we use modified Otel* checks which ignore *Advice classes
         disable("PrivateConstructorForUtilityClass")
         disable("CanIgnoreReturnValueSuggester")
@@ -135,6 +132,8 @@ tasks {
         disable("AddNullMarkedToClass")
         disable("AddNullMarkedToPackageInfo")
 
+        disable("ReferenceEquality")
+
         if (otelProps.testLatestDeps) {
           // Some latest dep tests are compiled for java 17 although the base version uses an older
           // version. Disable rules that suggest using new language features.
@@ -144,7 +143,7 @@ tasks {
           // may deprecate APIs that weren't deprecated before.
           //
           // Except for the custom-checks project to avoid "not a valid checker name" error.
-          if (!project.name.equals("custom-checks")) {
+          if (project.name != "custom-checks") {
             disable("OtelDeprecatedApiUsage")
           }
         }
@@ -153,11 +152,12 @@ tasks {
           // Allow underscore in test-type method names
           disable("MemberName")
         }
-        if ((project.path.endsWith("testing") || name.contains("Test")) && !project.name.equals("custom-checks")) {
+        if ((project.path.endsWith("testing") || name.contains("Test")) && project.name != "custom-checks") {
           // This check causes too many failures, ignore the ones in tests
           disable("OtelCanIgnoreReturnValueSuggester")
           disable("OtelInternalJavadoc")
           disable("SuppressWarningsWithoutExplanation")
+          disable("ExposedPrivateType")
         }
       }
     }

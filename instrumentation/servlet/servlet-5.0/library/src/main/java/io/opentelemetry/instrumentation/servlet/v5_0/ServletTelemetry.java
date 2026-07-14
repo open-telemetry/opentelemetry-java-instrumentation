@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.servlet.v5_0;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
-import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5TelemetryFilter;
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;

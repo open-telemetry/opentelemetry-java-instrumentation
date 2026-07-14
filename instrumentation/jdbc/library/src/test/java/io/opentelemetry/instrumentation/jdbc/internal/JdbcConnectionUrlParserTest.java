@@ -194,7 +194,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .build(),
         arg("jdbc:mysql:failover://[::1]:3306") // IPv6 without slash
-            .setShortUrl("mysql:failover://::1:3306")
+            .setShortUrl("mysql:failover://[::1]:3306")
             .setSystem(MYSQL)
             .setSubtype("failover")
             .setHost("::1")
@@ -419,7 +419,7 @@ class JdbcConnectionUrlParserTest {
             .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:loadbalance://[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host/mdbdb")
-            .setShortUrl("mariadb:loadbalance://2001:0660:7401:0200:0000:0000:0edf:bdd7:33")
+            .setShortUrl("mariadb:loadbalance://[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33")
             .setSystem(MARIADB)
             .setSubtype("loadbalance")
             .setHost("2001:0660:7401:0200:0000:0000:0edf:bdd7")
@@ -449,7 +449,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .build(),
         arg("jdbc:mariadb:failover://[::1]:3306") // IPv6 without slash
-            .setShortUrl("mariadb:failover://::1:3306")
+            .setShortUrl("mariadb:failover://[::1]:3306")
             .setSystem(MARIADB)
             .setSubtype("failover")
             .setHost("::1")
@@ -557,6 +557,25 @@ class JdbcConnectionUrlParserTest {
             .setPort(1433)
             .setName("ssdb")
             .build(),
+        // database= alias (shorthand for databaseName)
+        arg("jdbc:sqlserver://ss.host;database=ssdb;")
+            .setShortUrl("sqlserver://ss.host:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setHost("ss.host")
+            .setPort(1433)
+            .setName("ssdb")
+            .build(),
+        arg("jdbc:sqlserver://ss.host\\ssinstance:44;database=ssdb;user=ssuser")
+            .setShortUrl("sqlserver://ss.host:44")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setUser("ssuser")
+            .setHost("ss.host")
+            .setPort(44)
+            .setNamespace("ssinstance|ssdb")
+            .setName("ssinstance")
+            .build(),
         arg("jdbc:microsoft:sqlserver://ss.host:44;DatabaseName=ssdb;user=ssuser;password=pw;user=ssuser2;")
             .setShortUrl("microsoft:sqlserver://ss.host:44")
             .setSystem("microsoft.sql_server")
@@ -657,6 +676,28 @@ class JdbcConnectionUrlParserTest {
             .setHost("ss.host")
             .setPort(1433)
             .setNamespace("ssinstance")
+            .setName("ssinstance")
+            .build(),
+        // database= alias (shorthand for databaseName) in jTDS URLs
+        arg("jdbc:jtds:sqlserver://ss.host/ssdb;instance=ssinstance;database=otherdb")
+            .setShortUrl("jtds:sqlserver://ss.host:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setSubtype("sqlserver")
+            .setHost("ss.host")
+            .setPort(1433)
+            .setNamespace("ssinstance|ssdb")
+            .setName("ssinstance")
+            .build(),
+        // database= param provides database name when there's no URL path
+        arg("jdbc:jtds:sqlserver://ss.host;instance=ssinstance;database=ssdb")
+            .setShortUrl("jtds:sqlserver://ss.host:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setSubtype("sqlserver")
+            .setHost("ss.host")
+            .setPort(1433)
+            .setNamespace("ssinstance|ssdb")
             .setName("ssinstance")
             .build(),
         arg("jdbc:jtds:sqlserver://ss.host:1444/urldb")
@@ -1629,6 +1670,92 @@ class JdbcConnectionUrlParserTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("polardbArguments")
   void testPolardbParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> amazonAuroraArguments() {
+    return args(
+        // https://docs.aws.amazon.com/aurora-dsql/latest/userguide/SECTION_program-with-jdbc-connector.html
+        arg("jdbc:aws-dsql:postgresql://your-cluster.dsql.us-east-1.on.aws/postgres")
+            .setShortUrl("postgresql://your-cluster.dsql.us-east-1.on.aws:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("your-cluster.dsql.us-east-1.on.aws")
+            .setPort(5432)
+            .setName("postgres")
+            .build(),
+        arg("jdbc:aws-dsql:postgresql://your-cluster.dsql.us-east-1.on.aws:5432/postgres?user=admin")
+            .setShortUrl("postgresql://your-cluster.dsql.us-east-1.on.aws:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("your-cluster.dsql.us-east-1.on.aws")
+            .setPort(5432)
+            .setUser("admin")
+            .setNamespace("postgres|admin")
+            .setName("postgres")
+            .build(),
+        // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Connecting.html#Aurora.Connecting.JDBCDriverMySQL
+        arg("jdbc:aws-wrapper:mysql://")
+            .setShortUrl("mysql://localhost:3306")
+            .setSystem(MYSQL)
+            .setHost("localhost")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:aws-wrapper:mariadb://mdb.host:33/mdbdb?user=mdbuser&password=PW")
+            .setShortUrl("mariadb://mdb.host:33")
+            .setSystem(MARIADB)
+            .setUser("mdbuser")
+            .setHost("mdb.host")
+            .setPort(33)
+            .setName("mdbdb")
+            .build(),
+        // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Connecting.html#Aurora.Connecting.JDBCDriverPostgreSQL
+        arg("jdbc:aws-wrapper:postgresql://")
+            .setShortUrl("postgresql://localhost:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("localhost")
+            .setPort(5432)
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("amazonAuroraArguments")
+  void testAmazonAuroraParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> sqliteArguments() {
+    return args(
+        arg("jdbc:sqlite:").setShortUrl("sqlite:memory:").setSystem("sqlite").build(),
+        arg("jdbc:sqlite:memory:").setShortUrl("sqlite:memory:").setSystem("sqlite").build(),
+        arg("jdbc:sqlite:file:mydb?mode=memory")
+            .setShortUrl("sqlite:memory:")
+            .setSystem("sqlite")
+            .setName("mydb")
+            .build(),
+        arg("jdbc:sqlite:/tmp/app.db")
+            .setShortUrl("sqlite:file:")
+            .setSystem("sqlite")
+            .setName("app.db")
+            .build(),
+        arg("jdbc:sqlite:file:app.db")
+            .setShortUrl("sqlite:file:")
+            .setSystem("sqlite")
+            .setName("app.db")
+            .build(),
+        arg("jdbc:sqlite:resource:db")
+            .setShortUrl("sqlite:resource:")
+            .setSystem("sqlite")
+            .setName("db")
+            .build(),
+        arg("jdbc:sqlite:resource:dir/db")
+            .setShortUrl("sqlite:resource:")
+            .setSystem("sqlite")
+            .setName("db")
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("sqliteArguments")
+  void testSqliteParsing(ParseTestArgument argument) {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 

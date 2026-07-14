@@ -78,6 +78,20 @@ spotless {
 
 if (project == rootProject) {
   spotless {
+    format("markdown") {
+      target("**/*.md")
+      targetExclude(
+        "**/build/**",
+        "licenses/**"
+      )
+      prettier("3.6.2").config(
+        mapOf(
+          "proseWrap" to "preserve",
+          "embeddedLanguageFormatting" to "off"
+        )
+      )
+    }
+
     format("misc") {
       target(
         ".gitignore",

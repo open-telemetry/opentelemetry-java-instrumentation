@@ -28,8 +28,8 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.glassfish.jaxb:jaxb-runtime:2.3.3")
 
-  latestDepTestLibrary("org.hibernate:hibernate-core:5.+") // documented limitation
-  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+") // documented limitation
+  latestDepTestLibrary("org.hibernate:hibernate-core:5.+") // see hibernate-6.0 module
+  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+") // see hibernate-6.0 module
 }
 
 tasks {
@@ -37,7 +37,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -45,7 +45,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

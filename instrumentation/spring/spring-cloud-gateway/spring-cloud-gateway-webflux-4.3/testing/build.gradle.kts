@@ -15,7 +15,9 @@ dependencies {
   // classes in test setup require 5.0+
   testLibrary("org.springframework.cloud:spring-cloud-starter-gateway-server-webflux:5.0.0")
   testLibrary("org.springframework.boot:spring-boot-starter-test:4.0.0")
-  testLibrary("org.springframework.boot:spring-boot-webflux")
+
+  // latest Spring Cloud release is not compatible with Spring Boot 4.1
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:4.0.+") // related dependency
 }
 
 tasks.test {

@@ -26,15 +26,14 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
   static final Logger logger = LoggerFactory.getLogger("TestLogger");
 
-  static Resource resource;
-  static InstrumentationScopeInfo instrumentationScopeInfo;
+  static final Resource RESOURCE = Resource.getDefault();
+  static final InstrumentationScopeInfo INSTRUMENTATION_SCOPE_INFO =
+      InstrumentationScopeInfo.create("TestLogger");
 
   void executeAfterLogsExecution() {}
 
   @BeforeAll
   static void setupAll() {
-    resource = Resource.getDefault();
-    instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
     // by default LoggerContext contains HOSTNAME property we clear it to start with empty context
     Helper.resetLoggerContext();
   }
@@ -64,8 +63,8 @@ abstract class AbstractOpenTelemetryAppenderTest {
         .waitAndAssertLogRecords(
             logRecord ->
                 logRecord
-                    .hasResource(resource)
-                    .hasInstrumentationScope(instrumentationScopeInfo)
+                    .hasResource(RESOURCE)
+                    .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
                     .hasBody("log message 1")
                     .hasAttributesSatisfyingExactly(assertions));
   }

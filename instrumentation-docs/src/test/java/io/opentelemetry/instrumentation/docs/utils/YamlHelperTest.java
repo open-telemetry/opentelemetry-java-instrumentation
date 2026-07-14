@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -76,12 +77,7 @@ class YamlHelperTest {
             .group("struts")
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
         libraries:
@@ -111,7 +107,7 @@ class YamlHelperTest {
           - org.apache.struts:struts2-core:2.1.0
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -175,12 +171,7 @@ class YamlHelperTest {
                 Set.of("io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)"))
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
             libraries:
@@ -212,7 +203,7 @@ class YamlHelperTest {
               - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
             """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -237,12 +228,7 @@ class YamlHelperTest {
                     "org.springframework.data:spring-data-commons:[1.8.0.RELEASE,)"))
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
         libraries:
@@ -262,7 +248,7 @@ class YamlHelperTest {
           - org.springframework:spring-aop:[1.2,)
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -408,12 +394,7 @@ class YamlHelperTest {
             .metrics(Map.of("default", List.of(metric)))
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
         libraries:
@@ -444,7 +425,7 @@ class YamlHelperTest {
                 type: LONG
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -468,12 +449,7 @@ class YamlHelperTest {
             .metrics(Map.of("default", metrics))
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
         libraries:
@@ -510,7 +486,7 @@ class YamlHelperTest {
               attributes: []
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -537,12 +513,7 @@ class YamlHelperTest {
             .spans(Map.of("default", List.of(span)))
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
         libraries:
@@ -568,7 +539,7 @@ class YamlHelperTest {
                 type: LONG
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -598,11 +569,7 @@ class YamlHelperTest {
             .spans(spans1)
             .build());
 
-    StringWriter stringWriter1 = new StringWriter();
-    BufferedWriter writer1 = new BufferedWriter(stringWriter1);
-    YamlHelper.generateInstrumentationYaml(modules1, writer1);
-    writer1.flush();
-    String yaml1 = stringWriter1.toString();
+    String yaml1 = generateInstrumentationYaml(modules1);
 
     // Different ordering
     Map<String, List<EmittedMetrics.Metric>> metrics2 = new LinkedHashMap<>();
@@ -625,11 +592,7 @@ class YamlHelperTest {
             .spans(spans2)
             .build());
 
-    StringWriter stringWriter2 = new StringWriter();
-    BufferedWriter writer2 = new BufferedWriter(stringWriter2);
-    YamlHelper.generateInstrumentationYaml(modules2, writer2);
-    writer2.flush();
-    String yaml2 = stringWriter2.toString();
+    String yaml2 = generateInstrumentationYaml(modules2);
 
     assertThat(yaml1).isEqualTo(yaml2);
   }
@@ -675,12 +638,7 @@ class YamlHelperTest {
             .metadata(metadataWithoutLink)
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
             libraries:
@@ -701,7 +659,7 @@ class YamlHelperTest {
               - com.example:test-library:[1.0.0,)
             """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -726,12 +684,7 @@ class YamlHelperTest {
             .hasStandaloneLibrary(true)
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
         libraries:
@@ -747,7 +700,7 @@ class YamlHelperTest {
           has_javaagent: true
         """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
   }
 
   @Test
@@ -793,12 +746,7 @@ class YamlHelperTest {
             .metadata(metadata)
             .build());
 
-    StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-
-    YamlHelper.generateInstrumentationYaml(modules, writer);
-    writer.flush();
-
+    String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
             libraries:
@@ -824,6 +772,15 @@ class YamlHelperTest {
                 name: io.opentelemetry.opentelemetry-api-2.0
             """;
 
-    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+    assertThat(result).isEqualTo(expectedYaml);
+  }
+
+  private static String generateInstrumentationYaml(List<InstrumentationModule> modules)
+      throws IOException {
+    StringWriter stringWriter = new StringWriter();
+    try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
+      YamlHelper.generateInstrumentationYaml(modules, writer);
+    }
+    return stringWriter.toString();
   }
 }

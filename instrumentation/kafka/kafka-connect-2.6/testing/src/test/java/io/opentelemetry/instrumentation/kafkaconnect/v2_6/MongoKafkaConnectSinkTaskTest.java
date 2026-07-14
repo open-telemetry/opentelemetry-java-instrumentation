@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -60,7 +61,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   private static final String CONNECTOR_NAME = "test-mongo-connector";
   private static final String TOPIC_NAME = "test-mongo-topic";
 
-  private static MongoDBContainer mongoDB;
+  private MongoDBContainer mongoDB;
 
   @Override
   protected void setupDatabaseContainer() {
@@ -157,7 +158,10 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 span ->
-                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "update " + COLLECTION_NAME
+                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))),
         trace ->
@@ -268,15 +272,24 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 span ->
-                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "update " + COLLECTION_NAME
+                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "update " + COLLECTION_NAME
+                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "update " + COLLECTION_NAME
+                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))),
         trace ->
@@ -288,7 +301,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   // MongoDB-specific helper methods
-  private static void setupMongoSinkConnector(String topicName) throws IOException {
+  private void setupMongoSinkConnector(String topicName) throws IOException {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put("connector.class", "com.mongodb.kafka.connect.MongoSinkConnector");
     configMap.put("tasks.max", "1");
@@ -304,7 +317,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy");
 
     String payload =
-        MAPPER.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
+        mapper.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
     given()
         .log()
         .headers()
@@ -319,7 +332,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         .all();
   }
 
-  private static void setupMongoSinkConnectorMultiTopic(String... topicNames) throws IOException {
+  private void setupMongoSinkConnectorMultiTopic(String... topicNames) throws IOException {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put("connector.class", "com.mongodb.kafka.connect.MongoSinkConnector");
     configMap.put("tasks.max", "1");
@@ -336,7 +349,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy");
 
     String payload =
-        MAPPER.writeValueAsString(
+        mapper.writeValueAsString(
             ImmutableMap.of("name", CONNECTOR_NAME + "-multi", "config", configMap));
     given()
         .log()
@@ -352,7 +365,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         .all();
   }
 
-  private static long getRecordCountFromMongo() {
+  private long getRecordCountFromMongo() {
     try (MongoClient mongoClient = MongoClients.create(mongoDB.getConnectionString())) {
       MongoDatabase database = mongoClient.getDatabase(DATABASE_NAME);
       MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
@@ -360,7 +373,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     }
   }
 
-  private static void clearMongoCollection() {
+  private void clearMongoCollection() {
     try (MongoClient mongoClient = MongoClients.create(mongoDB.getConnectionString())) {
       MongoDatabase database = mongoClient.getDatabase(DATABASE_NAME);
       MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);

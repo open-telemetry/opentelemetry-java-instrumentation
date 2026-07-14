@@ -23,6 +23,7 @@ dependencies {
   testLibrary("com.h2database:h2:1.3.169")
   testLibrary("org.apache.derby:derby:10.6.1.0")
   testLibrary("org.hsqldb:hsqldb:2.0.0")
+  testLibrary("org.xerial:sqlite-jdbc:3.53.1.0")
 
   testLibrary("org.apache.tomcat:tomcat-jdbc:7.0.19")
   testLibrary("org.apache.tomcat:tomcat-juli:7.0.19") // tomcat jdbc needs this
@@ -52,7 +53,7 @@ sourceSets {
 }
 
 tasks {
-  val testSlick by registering(Test::class) {
+  val testSlick = register<Test>("testSlick") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -62,7 +63,7 @@ tasks {
     include("**/SlickTest.*")
   }
 
-  val testSqlCommenter by registering(Test::class) {
+  val testSqlCommenter = register<Test>("testSqlCommenter") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -76,7 +77,7 @@ tasks {
     jvmArgs("-Dotel.testing.sqlcommenter.enabled=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -90,7 +91,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
-  val testSlickStableSemconv by registering(Test::class) {
+  val testSlickStableSemconv = register<Test>("testSlickStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -101,7 +102,7 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
-  val testCaptureParameters by registering(Test::class) {
+  val testCaptureParameters = register<Test>("testCaptureParameters") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -109,6 +110,20 @@ tasks {
       includeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
+  }
+
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("SlickTest")
+      excludeTestsMatching("SqlCommenterTest")
+      excludeTestsMatching("PreparedStatementParametersTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
   }
 
   test {
@@ -126,6 +141,7 @@ tasks {
     dependsOn(testStableSemconv)
     dependsOn(testSlickStableSemconv)
     dependsOn(testCaptureParameters)
+    dependsOn(testExceptionSignalLogs)
   }
 }
 

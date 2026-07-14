@@ -498,19 +498,19 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.common.logging.trace-id",
+      "name": "otel.instrumentation.common.logging.trace-id-key",
       "type": "java.lang.String",
       "description": "Customize MDC key name for the trace id.",
       "defaultValue": "trace_id"
     },
     {
-      "name": "otel.instrumentation.common.logging.span-id",
+      "name": "otel.instrumentation.common.logging.span-id-key",
       "type": "java.lang.String",
       "description": "Customize MDC key name for the span id.",
       "defaultValue": "span_id"
     },
     {
-      "name": "otel.instrumentation.common.logging.trace-flags",
+      "name": "otel.instrumentation.common.logging.trace-flags-key",
       "type": "java.lang.String",
       "description": "Customize MDC key name for the trace flags.",
       "defaultValue": "trace_flags"

@@ -18,7 +18,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 public class KafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-clients-0.11";
 
-  private static final boolean PRODUCER_PROPAGATION_ENABLED =
+  public static final boolean PRODUCER_PROPAGATION_ENABLED =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
           .get("producer_propagation")
           .getBoolean("enabled", true);
@@ -39,10 +39,6 @@ public class KafkaSingletons {
     producerInstrumenter = instrumenterFactory.createProducerInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.createConsumerReceiveInstrumenter();
     consumerProcessInstrumenter = instrumenterFactory.createConsumerProcessInstrumenter();
-  }
-
-  public static boolean isProducerPropagationEnabled() {
-    return PRODUCER_PROPAGATION_ENABLED;
   }
 
   public static Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter() {

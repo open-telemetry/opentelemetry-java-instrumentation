@@ -15,7 +15,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:tomcat:tomcat-common:javaagent"))
+  implementation(project(":instrumentation:tomcat:tomcat-common-7.0:javaagent"))
   implementation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 

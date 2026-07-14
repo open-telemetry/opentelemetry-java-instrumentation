@@ -4,10 +4,10 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.38.0")
+  implementation("com.linecorp.armeria:armeria-junit5:1.40.0")
   implementation("com.google.errorprone:error_prone_annotations")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
-  implementation("com.google.protobuf:protobuf-java-util:4.34.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.35.1")
   implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   // we'll replace caffeine shaded in armeria with a later version that doesn't use Unsafe. Caffeine
@@ -84,7 +84,7 @@ tasks {
     relocationPrefix = "io.opentelemetry.testing.internal"
   }
 
-  val extractShadowJar by registering(Copy::class) {
+  register<Copy>("extractShadowJar") {
     dependsOn(shadowJar)
     // there's both "LICENSE" file and "license" and without excluding one of these build fails on case insensitive file systems
     // there's a LICENSE.txt file that has the same contents anyway, so we're not losing anything excluding that

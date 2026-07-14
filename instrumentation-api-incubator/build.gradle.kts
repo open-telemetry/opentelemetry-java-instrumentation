@@ -29,7 +29,7 @@ dependencies {
 val jflexSourceDir = layout.projectDirectory.dir("src/main/jflex")
 val jflexOutputDir = layout.buildDirectory.dir("generated/sources/jflex")
 
-val generateJflex by tasks.registering(JavaExec::class) {
+val generateJflex = tasks.register<JavaExec>("generateJflex") {
   classpath(jflex)
   mainClass.set("jflex.Main")
 
@@ -88,21 +88,35 @@ tasks {
     }
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database,code,service.peer,rpc")
     inputs.dir(jflexOutputDir)
   }
 
-  val testBothSemconv by registering(Test::class) {
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup,service.peer/dup,rpc/dup")
     inputs.dir(jflexOutputDir)
   }
 
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    inputs.dir(jflexOutputDir)
+  }
+
+  val testExceptionSignalLogsDup = register<Test>("testExceptionSignalLogsDup") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
+    inputs.dir(jflexOutputDir)
+  }
+
   check {
-    dependsOn(testStableSemconv, testBothSemconv)
+    dependsOn(testStableSemconv, testBothSemconv, testExceptionSignalLogs, testExceptionSignalLogsDup)
   }
 }

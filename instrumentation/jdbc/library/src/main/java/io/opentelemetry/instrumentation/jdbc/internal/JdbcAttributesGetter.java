@@ -134,7 +134,8 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   }
 
   @Override
-  public boolean isParameterizedQuery(DbRequest request) {
+  public boolean isParameterizedQuery(DbRequest request, int queryIndex) {
+    // JDBC does not support mixed parameterization within a single request.
     return request.isParameterizedQuery();
   }
 

@@ -1,0 +1,48 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
+
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
+
+import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import java.util.List;
+import net.bytebuddy.matcher.ElementMatcher;
+
+@AutoService(InstrumentationModule.class)
+public class ThriftInstrumentationModule extends InstrumentationModule {
+
+  public ThriftInstrumentationModule() {
+    super("thrift", "thrift-0.13");
+  }
+
+  @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // limit support to 0.13.0 since we don't test with earlier versions
+    // added in 0.13.0
+    return hasClassesNamed("org.apache.thrift.protocol.ShortStack");
+  }
+
+  @Override
+  public boolean isHelperClass(String className) {
+    // these classes are only used by library instrumentation but muzzle still checks them
+    return className.startsWith("org.apache.thrift.server.FrameBufferUtil")
+        || className.startsWith("org.apache.thrift.AsyncProcessorUtil");
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(
+        new ThriftServiceClientInstrumentation(),
+        new ThriftAsyncClientInstrumentation(),
+        new ThriftTBaseProcessorInstrumentation(),
+        new ThriftAsyncProcessFunctionInstrumentation(),
+        new ThriftTBaseAsyncProcessorInstrumentation(),
+        new ThriftFrameBufferInstrumentation());
+  }
+}

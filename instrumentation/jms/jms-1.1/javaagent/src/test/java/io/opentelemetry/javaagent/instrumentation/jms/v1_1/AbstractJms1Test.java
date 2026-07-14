@@ -38,6 +38,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -48,18 +49,19 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractJms1Test {
   private static final Logger logger = LoggerFactory.getLogger(AbstractJms1Test.class);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static Session session;
+  Session session;
 
   @BeforeAll
-  static void setUp() throws JMSException {
+  void setUp() throws JMSException {
     GenericContainer<?> broker =
         new GenericContainer<>("apache/activemq-classic:5.19.2")
             .withExposedPorts(61616, 8161)

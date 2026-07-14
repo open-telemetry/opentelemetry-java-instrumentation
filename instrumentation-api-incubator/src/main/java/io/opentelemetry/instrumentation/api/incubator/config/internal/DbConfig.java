@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -74,15 +75,17 @@ public final class DbConfig {
       return value;
     }
 
-    // this variant was never a regular (non-declarative) configuration property name
-    Boolean deprecatedValue =
-        commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled");
-    if (deprecatedValue != null) {
-      warnIfDeprecatedDeclarativeConfigurationUsed(
-          "instrumentation/development: java: common: database:"
-              + " sqlcommenter/development: enabled",
-          "instrumentation/development: java: common: db: sqlcommenter/development: enabled");
-      return deprecatedValue;
+    if (!SemconvStability.v3Preview(openTelemetry)) {
+      // this variant was never a regular (non-declarative) configuration property name
+      Boolean deprecatedValue =
+          commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled");
+      if (deprecatedValue != null) {
+        warnIfDeprecatedDeclarativeConfigurationUsed(
+            "instrumentation/development: java: common: database:"
+                + " sqlcommenter/development: enabled",
+            "instrumentation/development: java: common: db: sqlcommenter/development: enabled");
+        return deprecatedValue;
+      }
     }
 
     return null;
@@ -98,24 +101,26 @@ public final class DbConfig {
       return value;
     }
 
-    // this variant was never a regular (non-declarative) configuration property name
-    Boolean deprecatedStatementSanitizerValue =
-        commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled");
-    if (deprecatedStatementSanitizerValue != null) {
-      warnIfDeprecatedDeclarativeConfigurationUsed(
-          "instrumentation/development: java: common: database: statement_sanitizer: enabled",
-          "instrumentation/development: java: common: db: query_sanitization: enabled");
-      return deprecatedStatementSanitizerValue;
-    }
+    if (!SemconvStability.v3Preview(openTelemetry)) {
+      // this variant was never a regular (non-declarative) configuration property name
+      Boolean deprecatedStatementSanitizerValue =
+          commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled");
+      if (deprecatedStatementSanitizerValue != null) {
+        warnIfDeprecatedDeclarativeConfigurationUsed(
+            "instrumentation/development: java: common: database: statement_sanitizer: enabled",
+            "instrumentation/development: java: common: db: query_sanitization: enabled");
+        return deprecatedStatementSanitizerValue;
+      }
 
-    // this variant was never a declarative configuration property name
-    Boolean deprecatedStatementSanitizerPropertyValue =
-        commonConfig.get("db_statement_sanitizer").getBoolean("enabled");
-    if (deprecatedStatementSanitizerPropertyValue != null) {
-      warnIfDeprecatedSystemPropertyUsed(
-          "otel.instrumentation.common.db-statement-sanitizer.enabled",
-          "otel.instrumentation.common.db.query-sanitization.enabled");
-      return deprecatedStatementSanitizerPropertyValue;
+      // this variant was never a declarative configuration property name
+      Boolean deprecatedStatementSanitizerPropertyValue =
+          commonConfig.get("db_statement_sanitizer").getBoolean("enabled");
+      if (deprecatedStatementSanitizerPropertyValue != null) {
+        warnIfDeprecatedSystemPropertyUsed(
+            "otel.instrumentation.common.db-statement-sanitizer.enabled",
+            "otel.instrumentation.common.db.query-sanitization.enabled");
+        return deprecatedStatementSanitizerPropertyValue;
+      }
     }
 
     return null;
@@ -129,10 +134,12 @@ public final class DbConfig {
       return value;
     }
 
-    Boolean deprecatedValue = config.get("statement_sanitizer").getBoolean("enabled");
-    if (deprecatedValue != null) {
-      warnIfDeprecatedSettingOrEquivalentUsed(deprecatedProperty, replacementProperty);
-      return deprecatedValue;
+    if (!SemconvStability.v3Preview()) {
+      Boolean deprecatedValue = config.get("statement_sanitizer").getBoolean("enabled");
+      if (deprecatedValue != null) {
+        warnIfDeprecatedSettingOrEquivalentUsed(deprecatedProperty, replacementProperty);
+        return deprecatedValue;
+      }
     }
 
     return null;

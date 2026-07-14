@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.TaskQueueInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -24,7 +25,7 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // added in 5.0
-    return hasClassesNamed("io.vertx.core.http.impl.HttpClientConnectionInternal");
+    return hasClassesNamed("io.vertx.core.http.HttpClientConnection");
   }
 
   @Override
@@ -32,6 +33,8 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
     return asList(
         new HttpRequestInstrumentation(),
         new HttpClientRequestBaseInstrumentation(),
-        new ResourceManagerInstrumentation());
+        new HttpClientResponseImplInstrumentation(),
+        new HttpClientImplInstrumentation(),
+        new TaskQueueInstrumentation());
   }
 }

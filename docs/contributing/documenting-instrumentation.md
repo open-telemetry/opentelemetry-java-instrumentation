@@ -12,7 +12,7 @@ will meet all of these guidelines or already be documented in this way.
 Every library instrumentation module must have a README.md file in the library directory root
 (`instrumentation/{some instrumentation}/library/README.md`) that follows this pattern:
 
-```markdown
+````markdown
 # Library Instrumentation for [Technology] version [X.Y] and higher
 
 Provides OpenTelemetry instrumentation for [Technology link].
@@ -46,7 +46,7 @@ For Gradle, add to your dependencies:
 ### Usage
 
 [Code examples showing integration]
-```
+````
 
 Following these sections, you can include any other relevant information.
 
@@ -124,7 +124,7 @@ Display name is mostly used for UI purposes, and has two main uses:
 - Providing a more user-friendly name for the instrumentation than the module name
   (e.g., "Apache CXF JAX-RS 2.x" instead of "jaxrs-2.0-cxf-3.2").
 - Collapsing multiple related modules into a single display name
-  (e.g., "Akka Actors" for both "akka-actor-2.3" and "akka-actor-fork-join-2.5").
+  (e.g., "Akka Actors" for both "akka-actor-2.3" and "akka-actor-forkjoin-2.5").
 
 ### Description (required)
 
@@ -132,39 +132,39 @@ At a minimum, every instrumentation metadata file should include a `description`
 
 Some example descriptions:
 
-* This instrumentation enables HTTP server spans and HTTP server metrics for the ActiveJ HTTP server.
-* This instrumentation provides context propagation for Akka actors, it does not emit any telemetry
+- This instrumentation enables HTTP server spans and HTTP server metrics for the ActiveJ HTTP server.
+- This instrumentation provides context propagation for Akka actors, it does not emit any telemetry
   on its own.
-* The Alibaba Druid instrumentation generates database connection pool metrics for druid data sources.
-* The Apache Dubbo instrumentation provides RPC client spans and RPC server spans for Apache Dubbo
+- The Alibaba Druid instrumentation generates database connection pool metrics for druid data sources.
+- The Apache Dubbo instrumentation provides RPC client spans and RPC server spans for Apache Dubbo
   RPC calls. Each call produces a span named after the Dubbo method, enriched with standard RPC
   attributes (system, service, method), network attributes, and error details if an exception
   occurs.
 
 Some notes when writing descriptions:
 
-* You don't always need to explicitly name the instrumentation, and you can start with "This
+- You don't always need to explicitly name the instrumentation, and you can start with "This
   instrumentation..."
-* Prefer the convention of using the word "enables" when describing what the instrumentation does,
+- Prefer the convention of using the word "enables" when describing what the instrumentation does,
   "This instrumentation **enables** HTTP server spans and HTTP server metrics for the ActiveJ" instead
   of something like "This instrumentation **provides** HTTP server spans and HTTP server metrics for the ActiveJ".
-* Explicitly state whether the instrumentation generates new telemetry (spans, metrics, logs).
-  * If it doesn't generate new telemetry, clearly explain what its purpose is, for example whether it
+- Explicitly state whether the instrumentation generates new telemetry (spans, metrics, logs).
+  - If it doesn't generate new telemetry, clearly explain what its purpose is, for example whether it
     augments or enriches existing telemetry produced by other instrumentations (e.g., by adding
     attributes or ensuring context propagation).
-* When describing the functionality of the instrumentation and the telemetry, specify using
+- When describing the functionality of the instrumentation and the telemetry, specify using
   [semantic convention categories](https://opentelemetry.io/docs/specs/semconv/) when possible
   (e.g., "database client spans", "RPC server metrics", "consumer messaging spans").
-* Do not include specific method names, class names, or other low-level implementation details in
+- Do not include specific method names, class names, or other low-level implementation details in
   the description unless they are essential to understanding the purpose of the instrumentation.
-* It is not usually necessary to include specific library or framework version numbers in the
+- It is not usually necessary to include specific library or framework version numbers in the
   description, unless that context is significant in some way.
-* When describing instrumentations with controller or view spans:
-  * Always explicitly state that controller/view spans are disabled by default
-  * Use the phrase "(controller spans are disabled by default)" or "(view spans are disabled by default)"
-  * When an instrumentation has both enabled-by-default features (like HTTP_ROUTE) and disabled-by-default
+- When describing instrumentations with controller or view spans:
+  - Always explicitly state that controller/view spans are disabled by default
+  - Use the phrase "(controller spans are disabled by default)" or "(view spans are disabled by default)"
+  - When an instrumentation has both enabled-by-default features (like HTTP_ROUTE) and disabled-by-default
     features (like CONTROLLER_SPANS or VIEW_SPANS), describe the enabled features first, then the disabled features
-  * Example: "This instrumentation enriches HTTP server spans with route information, and enables
+  - Example: "This instrumentation enriches HTTP server spans with route information, and enables
     controller spans for Apache CXF JAX-WS web services (controller spans are disabled by default)."
 
 ### Semantic Conventions
@@ -174,23 +174,23 @@ If the instrumentation adheres to one or more specific semantic conventions, inc
 
 List of possible options:
 
-* [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client-span)
-* [HTTP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-client)
-* [HTTP_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server)
-* [HTTP_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-server)
-* [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-client-span)
-* [RPC_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-client)
-* [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-server-span)
-* [RPC_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server)
-* [MESSAGING_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md)
-* [DATABASE_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md)
-* [DATABASE_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-metrics.md)
-* [DATABASE_POOL_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-metrics.md)
-* [JVM_RUNTIME_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md)
-* [GRAPHQL_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/graphql/graphql-spans.md)
-* [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
-* [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md)
-* [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
+- [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client-span)
+- [HTTP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-client)
+- [HTTP_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server)
+- [HTTP_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-server)
+- [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-client-span)
+- [RPC_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-client)
+- [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-server-span)
+- [RPC_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server)
+- [MESSAGING_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md)
+- [DATABASE_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md)
+- [DATABASE_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-metrics.md)
+- [DATABASE_POOL_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-metrics.md)
+- [JVM_RUNTIME_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md)
+- [GRAPHQL_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/graphql/graphql-spans.md)
+- [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
+- [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md)
+- [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
 
 ### Features (optional)
 
@@ -199,16 +199,16 @@ the relevant functionality descriptions.
 
 List of possible options:
 
-* `HTTP_ROUTE`: Instrumentation that enriches HTTP spans with route information
-* `CONTEXT_PROPAGATION`: Instrumentation that propagates OpenTelemetry context across application or thread boundaries. This applies to:
-  * Inter-process/application context propagation: Passing context through headers between applications (HTTP, gRPC, messaging, etc.)
-  * Inter-thread context propagation: Passing context from one thread to another (executors, actors, reactive streams, etc.)
-  * Does not include standard single-threaded scope management or normal span creation patterns
-* `AUTO_INSTRUMENTATION_SHIM`: Instrumentation that adapts or bridges instrumentation from upstream libraries or frameworks
-* `CONTROLLER_SPANS`: Instrumentation that generates controller-level spans for controller/handler methods in web frameworks (disabled by default, experimental)
-* `VIEW_SPANS`: Instrumentation that generates view-level spans for view rendering such as templates or JSP (disabled by default, experimental)
-* `LOGGING_BRIDGE`: Instrumentation that bridges logging framework events to the OpenTelemetry Logs API. These instrumentations capture log records from standard logging frameworks and emit them as OpenTelemetry log records
-* `RESOURCE_DETECTOR`: Instrumentation that sets resource attributes based on certain conditions
+- `HTTP_ROUTE`: Instrumentation that enriches HTTP spans with route information
+- `CONTEXT_PROPAGATION`: Instrumentation that propagates OpenTelemetry context across application or thread boundaries. This applies to:
+  - Inter-process/application context propagation: Passing context through headers between applications (HTTP, gRPC, messaging, etc.)
+  - Inter-thread context propagation: Passing context from one thread to another (executors, actors, reactive streams, etc.)
+  - Does not include standard single-threaded scope management or normal span creation patterns
+- `AUTO_INSTRUMENTATION_SHIM`: Instrumentation that adapts or bridges instrumentation from upstream libraries or frameworks
+- `CONTROLLER_SPANS`: Instrumentation that generates controller-level spans for controller/handler methods in web frameworks (disabled by default, experimental)
+- `VIEW_SPANS`: Instrumentation that generates view-level spans for view rendering such as templates or JSP (disabled by default, experimental)
+- `LOGGING_BRIDGE`: Instrumentation that bridges logging framework events to the OpenTelemetry Logs API. These instrumentations capture log records from standard logging frameworks and emit them as OpenTelemetry log records
+- `RESOURCE_DETECTOR`: Instrumentation that sets resource attributes based on certain conditions
 
 ### Library Link
 
@@ -222,14 +222,80 @@ If an instrumentation module has configuration options, they should be documente
 
 Each configuration should include:
 
-* `name`: The full configuration property name, for example `otel.instrumentation.common.db.query-sanitization.enabled`.
-* `description`: A brief description of what the configuration does.
-* `type`: The data type of the configuration value. Supported types are: `boolean`, `string`, `list`, and `map`.
-* `default`: The default value for the configuration.
+- `name`: The full configuration property name, for example `otel.instrumentation.common.db.query-sanitization.enabled`.
+  Optional only for declarative-only configs that have no flat property (see Structured Lists below);
+  such entries must instead provide a `declarative_name`.
+- `declarative_name` (optional): The declarative configuration YAML key path, for example
+  `java.common.db.query_sanitization.enabled`.
+- `description`: A brief description of what the configuration does.
+- `type`: The data type of the configuration value. Supported types are: `boolean`, `string`, `list`,
+  and `map`. This describes the **flat** (system property) form.
+- `default`: The default value for the configuration.
 
 If a configuration enables experimental attributes, list them, for example:
 
 > Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
+
+#### Structured Lists
+
+Some configurations are **lists of objects** in declarative configuration even though their flat
+system-property form is a scalar or map. For these, keep `type` describing the flat form and add:
+
+- `declarative_type`: set to `structured_list`.
+- `declarative_schema`: the per-item object schema, mirroring the JSON-schema style used by
+  [opentelemetry-configuration](https://github.com/open-telemetry/opentelemetry-configuration). It
+  consists of `type: object`, a `required` list, and named `properties` (each with `type`, an
+  optional `description`, and an optional `default`). The `required` keys must be a subset of
+  `properties`.
+
+For example, `service_peer_mapping` is a `host=service` map as a flat property but a list of
+`{peer, service_name}` objects in declarative configuration:
+
+```yaml
+configurations:
+  - name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
+    description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
+    default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required: [peer, service_name]
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
+```
+
+A configuration that exists only in declarative configuration (no flat system property) omits `name`
+and is identified solely by its `declarative_name`, for example `url_template_rules`:
+
+```yaml
+configurations:
+  - declarative_name: java.common.http.client.url_template_rules
+    description: Rules for deriving low-cardinality URL templates from HTTP client request URLs.
+    type: list
+    default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required: [pattern, template]
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+        override:
+          type: boolean
+          default: false
+          description: Whether this rule overrides an already-applied template.
+```
 
 ### Classification (optional)
 
@@ -237,11 +303,11 @@ If an instrumentation module does not specify a `classification`, it is assumed 
 
 There are currently three supported classifications:
 
-* `library`: An instrumentation that provides automatic instrumentation for a specific library or
+- `library`: An instrumentation that provides automatic instrumentation for a specific library or
   framework. This is the default classification.
-* `internal`: An instrumentation that is used internally by other instrumentations or the OpenTelemetry
+- `internal`: An instrumentation that is used internally by other instrumentations or the OpenTelemetry
   SDK itself, and is not intended for direct use by end users.
-* `custom`: An instrumentation that is intended for custom or user-defined use cases, and may not
+- `custom`: An instrumentation that is intended for custom or user-defined use cases, and may not
   fit into the standard library or internal categories.
 
 The primary way this `classification` is used is to group and filter instrumentations by their

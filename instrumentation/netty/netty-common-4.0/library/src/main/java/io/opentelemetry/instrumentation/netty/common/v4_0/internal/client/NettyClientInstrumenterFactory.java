@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.netty.common.v4_0.internal.client;
 
+import static io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder.setHttpClientExceptionEventExtractor;
+
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
@@ -70,6 +72,10 @@ public final class NettyClientInstrumenterFactory {
 
     builder.addAttributesExtractor(
         HttpClientServicePeerAttributesExtractor.create(getter, openTelemetry));
+
+    if (!connectionTelemetryFullyEnabled) {
+      setHttpClientExceptionEventExtractor(builder);
+    }
 
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =
         builder.buildInstrumenter(

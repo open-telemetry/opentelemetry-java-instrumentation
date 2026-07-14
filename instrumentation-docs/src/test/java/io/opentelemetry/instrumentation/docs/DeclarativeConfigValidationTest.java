@@ -8,9 +8,10 @@ package io.opentelemetry.instrumentation.docs;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedDeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
+import io.opentelemetry.instrumentation.docs.internal.DeclarativeSchema;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -55,7 +56,16 @@ class DeclarativeConfigValidationTest {
           InstrumentationMetadata metadata = YamlHelper.metaDataParser(content);
 
           for (ConfigurationOption config : metadata.getConfigurations()) {
-            if (config.declarativeName() != null && !config.declarativeName().isBlank()) {
+            // Structured-list schemas are validated structurally, even for declarative-only configs
+            // (those without a flat property name, such as url_template_rules).
+            validateStructuredListSchema(metadataFile, config, errors);
+
+            // The flat -> declarative round-trip needs a flat system property to drive the bridge.
+            // Declarative-only configs (no name) are skipped here.
+            if (config.name() != null
+                && !config.name().isBlank()
+                && config.declarativeName() != null
+                && !config.declarativeName().isBlank()) {
               ValidationResult result = validateConfig(metadataFile, config);
               results.add(result);
               if (!result.valid) {
@@ -93,18 +103,25 @@ class DeclarativeConfigValidationTest {
     String declarativePath = config.declarativeName();
     ConfigurationType type = config.type();
 
+    // The declarative form is a structured list when either the flat type is structured_list
+    // (legacy) or the dedicated declarative_type marks it as such. service_peer_mapping uses
+    // type: map (the flat host=service form) + declarative_type: structured_list.
+    boolean structuredList =
+        type == ConfigurationType.STRUCTURED_LIST
+            || config.declarativeType() == ConfigurationType.STRUCTURED_LIST;
+
     // Create test value appropriate for the type
-    TestValue testValue = createTestValue(type);
+    TestValue testValue = structuredList ? structuredListTestValue() : createTestValue(type);
 
     Map<String, String> properties = new HashMap<>();
     properties.put(flatProperty, testValue.propertyValue);
     DefaultConfigProperties configProperties = DefaultConfigProperties.createFromMap(properties);
 
     DeclarativeConfigProperties declarativeConfig =
-        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
-            configProperties);
+        ConfigPropertiesBackedConfigProvider.create(configProperties).getInstrumentationConfig();
 
-    Object retrievedValue = navigateAndGetValue(declarativeConfig, declarativePath, type);
+    Object retrievedValue =
+        navigateAndGetValue(declarativeConfig, declarativePath, type, structuredList);
 
     boolean valid = Objects.equals(testValue.expectedValue, retrievedValue);
 
@@ -124,8 +141,19 @@ class DeclarativeConfigValidationTest {
       case STRING -> new TestValue("test-validation-value", "test-validation-value");
       case INT -> new TestValue("42", 42);
       case LIST -> new TestValue("item1,item2,item3", List.of("item1", "item2", "item3"));
-      case MAP -> new TestValue("key1=value1,key2=value2", "key1=value1,key2=value2");
+      case MAP, STRUCTURED_LIST ->
+          new TestValue("key1=value1,key2=value2", "key1=value1,key2=value2");
     };
+  }
+
+  // The only structured_list config with a flat property is the common peer-service-mapping. Its
+  // flat form is a host=service map, which the bridge turns into a list of {peer, service_name}
+  // entries. readPeerServiceMappingAsMap below rebuilds the host->service map from those entries,
+  // so
+  // the comparison exercises getStructuredList (what the consumer uses) rather than a string
+  // lookup.
+  private static TestValue structuredListTestValue() {
+    return new TestValue("host1=svc1,host2=svc2", Map.of("host1", "svc1", "host2", "svc2"));
   }
 
   private record TestValue(String propertyValue, Object expectedValue) {}
@@ -137,7 +165,10 @@ class DeclarativeConfigValidationTest {
    * "java.logback_appender.capture_code_attributes/development".
    */
   private static Object navigateAndGetValue(
-      DeclarativeConfigProperties config, String path, ConfigurationType type) {
+      DeclarativeConfigProperties config,
+      String path,
+      ConfigurationType type,
+      boolean structuredList) {
     String[] segments = path.split("\\.");
 
     DeclarativeConfigProperties current = config;
@@ -151,13 +182,64 @@ class DeclarativeConfigValidationTest {
     }
 
     String lastSegment = segments[segments.length - 1];
+    if (structuredList) {
+      return readPeerServiceMappingAsMap(current, lastSegment);
+    }
     return switch (type) {
       case BOOLEAN -> current.getBoolean(lastSegment);
       case STRING -> current.getString(lastSegment);
       case INT -> current.getInt(lastSegment);
       case LIST -> current.getScalarList(lastSegment, String.class);
-      case MAP -> current.getString(lastSegment);
+      case MAP, STRUCTURED_LIST -> current.getString(lastSegment);
     };
+  }
+
+  /**
+   * Reads the peer-service-mapping structured list through the bridge (the same {@code
+   * getStructuredList} call {@code ServicePeerResolver} makes) and collapses its {@code {peer,
+   * service_name}} entries back into a {@code host -> service} map, so it can be compared against
+   * the flat-property value the test fed in. This is specific to peer-service-mapping, which is
+   * currently the only {@code structured_list} config.
+   */
+  private static Object readPeerServiceMappingAsMap(
+      DeclarativeConfigProperties current, String lastSegment) {
+    List<DeclarativeConfigProperties> entries = current.getStructuredList(lastSegment);
+    if (entries == null) {
+      return null;
+    }
+    Map<String, String> mapping = new HashMap<>();
+    for (DeclarativeConfigProperties entry : entries) {
+      mapping.put(entry.getString("peer"), entry.getString("service_name"));
+    }
+    return mapping;
+  }
+
+  /**
+   * Validates the structure of a {@code declarative_schema} on a {@code structured_list} config.
+   * Applies to every structured-list config, including declarative-only ones (no flat property)
+   * such as {@code url_template_rules}, which the round-trip check above cannot exercise.
+   */
+  private static void validateStructuredListSchema(
+      Path metadataFile, ConfigurationOption config, List<String> errors) {
+    if (config.declarativeType() != ConfigurationType.STRUCTURED_LIST) {
+      return;
+    }
+    String label = metadataFile + " (" + config.declarativeName() + ")";
+    DeclarativeSchema schema = config.declarativeSchema();
+    if (schema == null) {
+      errors.add(label + ": structured_list config is missing a declarative_schema");
+      return;
+    }
+    if (!"object".equals(schema.type())) {
+      errors.add(label + ": declarative_schema type must be 'object'");
+    }
+    if (schema.properties() == null || schema.properties().isEmpty()) {
+      errors.add(label + ": declarative_schema must define at least one property");
+      return;
+    }
+    if (schema.required() != null && !schema.properties().keySet().containsAll(schema.required())) {
+      errors.add(label + ": declarative_schema required keys must be a subset of its properties");
+    }
   }
 
   private record ValidationResult(

@@ -69,13 +69,13 @@ class InstrumentationAnalyzer {
 
     module.setAgentTargetVersions(getVersionInformation(module));
 
-    // Handle telemetry merging (manual + emitted)
-    setMergedTelemetry(module, metaData);
-
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
     if (scopeInfo != null) {
       module.setScopeInfo(scopeInfo);
     }
+
+    // Handle telemetry merging (manual + emitted)
+    setMergedTelemetry(module, metaData);
   }
 
   @Nullable

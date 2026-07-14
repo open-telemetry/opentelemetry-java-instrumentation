@@ -58,11 +58,14 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
   public static class AdviceScope {
     private final OpenSearchRequest otelRequest;
+    private final Context parentContext;
     private final Context context;
     private final Scope scope;
 
-    private AdviceScope(OpenSearchRequest otelRequest, Context context, Scope scope) {
+    private AdviceScope(
+        OpenSearchRequest otelRequest, Context parentContext, Context context, Scope scope) {
       this.otelRequest = otelRequest;
+      this.parentContext = parentContext;
       this.context = context;
       this.scope = scope;
     }
@@ -87,11 +90,29 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         return null;
       }
       Context context = instrumenter().start(parentContext, otelRequest);
-      return new AdviceScope(otelRequest, context, context.makeCurrent());
+      return new AdviceScope(otelRequest, parentContext, context, context.makeCurrent());
     }
 
     public CompletableFuture<Object> wrapFuture(CompletableFuture<Object> future) {
-      return future.whenComplete(new OpenSearchResponseHandler(context, otelRequest));
+      return wrapFuture(
+          future.whenComplete(new OpenSearchResponseHandler(context, otelRequest)), parentContext);
+    }
+
+    private static <T> CompletableFuture<T> wrapFuture(
+        CompletableFuture<T> future, Context context) {
+      CompletableFuture<T> result = new CompletableFuture<>();
+      future.whenComplete(
+          (T value, Throwable throwable) -> {
+            try (Scope ignored = context.makeCurrent()) {
+              if (throwable != null) {
+                result.completeExceptionally(throwable);
+              } else {
+                result.complete(value);
+              }
+            }
+          });
+
+      return result;
     }
 
     public void end(@Nullable Throwable throwable) {

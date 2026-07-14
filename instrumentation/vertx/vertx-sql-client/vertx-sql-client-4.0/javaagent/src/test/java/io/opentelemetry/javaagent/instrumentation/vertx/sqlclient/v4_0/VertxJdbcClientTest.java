@@ -82,7 +82,7 @@ class VertxJdbcClientTest {
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT test" : "SELECT " + DB + ".test")
+                            emitStableDatabaseSemconv() ? "select test" : "SELECT " + DB + ".test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -95,7 +95,7 @@ class VertxJdbcClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "select * from test"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test" : null),
+                                emitStableDatabaseSemconv() ? "select test" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),

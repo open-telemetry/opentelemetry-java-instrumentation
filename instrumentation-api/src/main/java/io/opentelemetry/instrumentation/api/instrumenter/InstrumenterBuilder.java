@@ -14,6 +14,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.logs.LoggerBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -23,17 +24,18 @@ import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.InternalExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -71,6 +73,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor =
       SpanStatusExtractor.getDefault();
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
+  @Nullable InternalExceptionEventExtractor<? super REQUEST> exceptionEventExtractor;
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
 
@@ -80,6 +83,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             builder.operationListenerAttributesExtractors.add(
                 requireNonNull(
                     operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
+    Experimental.internalSetExceptionEventExtractor(
+        (builder, exceptionEventExtractor) ->
+            builder.exceptionEventExtractor =
+                requireNonNull(exceptionEventExtractor, "exceptionEventExtractor"));
   }
 
   InstrumenterBuilder(
@@ -89,8 +96,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     this.openTelemetry = openTelemetry;
     this.instrumentationName = instrumentationName;
     this.spanNameExtractor = spanNameExtractor;
-    this.instrumentationVersion =
-        EmbeddedInstrumentationProperties.findVersion(instrumentationName);
   }
 
   /**
@@ -297,6 +302,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
     applyCustomizers(this);
 
+    if (instrumentationVersion == null) {
+      instrumentationVersion = EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+    }
+
     this.spanKindExtractor = spanKindExtractor;
     return constructor.create(this);
   }
@@ -312,6 +321,18 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       tracerBuilder.setSchemaUrl(schemaUrl);
     }
     return tracerBuilder.build();
+  }
+
+  io.opentelemetry.api.logs.Logger buildLogger() {
+    LoggerBuilder loggerBuilder = openTelemetry.getLogsBridge().loggerBuilder(instrumentationName);
+    if (instrumentationVersion != null) {
+      loggerBuilder.setInstrumentationVersion(instrumentationVersion);
+    }
+    String schemaUrl = getSchemaUrl();
+    if (schemaUrl != null) {
+      loggerBuilder.setSchemaUrl(schemaUrl);
+    }
+    return loggerBuilder.build();
   }
 
   List<OperationListener> buildOperationListeners() {
@@ -387,11 +408,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               .getInstrumentationConfig("common");
     }
 
-    @SuppressWarnings("deprecation") // using deprecated config property
     String result =
         commonConfig.getString(
             "span_suppression_strategy/development",
-            ConfigPropertiesUtil.getString(
+            SystemProperty.getString(
                 "otel.instrumentation.experimental.span-suppression-strategy", ""));
     return result.isEmpty() ? null : result;
   }

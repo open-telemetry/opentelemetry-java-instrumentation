@@ -1,5 +1,11 @@
 # Declarative Config Bridge
 
+> [!WARNING]
+> `DeclarativeConfigPropertiesBridgeBuilder` is deprecated and will be removed in 3.0. Read
+> declarative component configuration through `DeclarativeConfigProperties` directly. To expose
+> `ConfigProperties` through the declarative configuration API, use
+> `ConfigPropertiesBackedConfigProvider`.
+
 Declarative Config Bridge allows instrumentation authors to access configuration in a uniform way,
 regardless of the configuration source.
 
@@ -46,7 +52,7 @@ use common configuration method:
 Let's first look at the yaml file that is used to configure the inferred spans processor:
 
 ```yaml
-file_format: 1.0
+file_format: 1.1
 tracer_provider:
   processors:
     - inferred_spans:
