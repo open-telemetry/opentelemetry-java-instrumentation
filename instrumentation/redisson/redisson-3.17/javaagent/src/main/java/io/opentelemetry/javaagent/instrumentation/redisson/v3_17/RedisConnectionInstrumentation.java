@@ -52,13 +52,13 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(RedisConnection connection, Object arg) {
         Context parentContext = currentContext();
-        if (RedissonBatchContext.isActive(parentContext)) {
-          return null;
-        }
         InetSocketAddress remoteAddress =
             (InetSocketAddress) connection.getChannel().remoteAddress();
         RedissonRequest request = RedissonRequest.create(remoteAddress, arg);
         if (RedissonBatchContext.shouldSuppress(connection, request)) {
+          return null;
+        }
+        if (RedissonBatchContext.isActive(parentContext)) {
           return null;
         }
         PromiseWrapper<?> promise = request.getPromiseWrapper();
