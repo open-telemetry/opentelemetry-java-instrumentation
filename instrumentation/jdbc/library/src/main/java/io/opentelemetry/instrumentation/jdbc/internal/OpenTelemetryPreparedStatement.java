@@ -68,7 +68,11 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
 
   private void putParameter(int index, Object value) {
     if (this.captureQueryParameters && value != null) {
-      parameters.put(Integer.toString(index - 1), value.toString());
+      try {
+        parameters.put(Integer.toString(index - 1), value.toString());
+      } catch (Throwable ignored) {
+        // ignore
+      }
     }
   }
 
