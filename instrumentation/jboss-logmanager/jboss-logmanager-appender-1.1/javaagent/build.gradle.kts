@@ -8,13 +8,7 @@ muzzle {
     module.set("jboss-logmanager")
     versions.set("[1.1.0.GA,)")
     assertInverse.set(true)
-  }
-
-  // Allow IncludeExcludePredicate from opentelemetry-sdk-common
-  pass {
-    group.set("io.opentelemetry")
-    module.set("opentelemetry-sdk-common")
-    versions.set("[1.59.0,)")
+    extraDependency("io.opentelemetry:opentelemetry-sdk-common:1.59.0")
   }
 }
 

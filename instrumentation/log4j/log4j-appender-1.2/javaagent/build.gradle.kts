@@ -8,13 +8,7 @@ muzzle {
     module.set("log4j")
     versions.set("[1.2,)")
     assertInverse.set(true)
-  }
-
-  // Allow IncludeExcludePredicate from opentelemetry-sdk-common
-  pass {
-    group.set("io.opentelemetry")
-    module.set("opentelemetry-sdk-common")
-    versions.set("[1.59.0,)")
+    extraDependency("io.opentelemetry:opentelemetry-sdk-common:1.59.0")
   }
 }
 
