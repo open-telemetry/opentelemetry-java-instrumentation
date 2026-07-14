@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 import org.redisson.client.codec.Codec;
 import org.redisson.client.protocol.RedisCommand;
 
-public class RedissonBatchState {
+class RedissonBatchState {
   private static final Logger logger = Logger.getLogger(RedissonBatchState.class.getName());
 
   private static final RedisCommandSanitizer sanitizer =

@@ -20,11 +20,11 @@ import org.redisson.client.protocol.CommandsData;
 public final class RedissonBatchContext {
   private static final ContextKey<Boolean> KEY =
       ContextKey.named("opentelemetry-redisson-atomic-batch");
-  private static final VirtualField<CompletionStage<?>, RedissonBatchMarker> futureMarkerField =
+  private static final VirtualField<CompletionStage<?>, RedissonBatchMarker> FUTURE_MARKER_FIELD =
       VirtualField.find(CompletionStage.class, RedissonBatchMarker.class);
-  private static final VirtualField<CommandData<?, ?>, RedissonBatchMarker> commandMarkerField =
+  private static final VirtualField<CommandData<?, ?>, RedissonBatchMarker> COMMAND_MARKER_FIELD =
       VirtualField.find(CommandData.class, RedissonBatchMarker.class);
-  private static final VirtualField<RedisConnection, RedissonBatchMarker> connectionMarkerField =
+  private static final VirtualField<RedisConnection, RedissonBatchMarker> CONNECTION_MARKER_FIELD =
       VirtualField.find(RedisConnection.class, RedissonBatchMarker.class);
 
   public static Context mark(Context context) {
@@ -47,17 +47,17 @@ public final class RedissonBatchContext {
     if (emitStableDatabaseSemconv()
         && command instanceof CommandData
         && isActive(Context.current())) {
-      commandMarkerField.set((CommandData<?, ?>) command, new RedissonBatchMarker());
+      COMMAND_MARKER_FIELD.set((CommandData<?, ?>) command, new RedissonBatchMarker());
     }
   }
 
   public static boolean isMarkedCommand(Object command) {
     if (command instanceof CommandData) {
-      return commandMarkerField.get((CommandData<?, ?>) command) != null;
+      return COMMAND_MARKER_FIELD.get((CommandData<?, ?>) command) != null;
     }
     if (command instanceof CommandsData) {
       for (CommandData<?, ?> singleCommand : ((CommandsData) command).getCommands()) {
-        if (commandMarkerField.get(singleCommand) != null) {
+        if (COMMAND_MARKER_FIELD.get(singleCommand) != null) {
           return true;
         }
       }
@@ -70,14 +70,14 @@ public final class RedissonBatchContext {
       return false;
     }
     if (request.isTransactionCompletion()) {
-      connectionMarkerField.set(connection, null);
+      CONNECTION_MARKER_FIELD.set(connection, null);
       return request.isMarkedBatchCommand();
     }
     if (request.isMarkedBatchCommand()) {
-      connectionMarkerField.set(connection, new RedissonBatchMarker());
+      CONNECTION_MARKER_FIELD.set(connection, new RedissonBatchMarker());
       return true;
     }
-    if (connectionMarkerField.get(connection) != null) {
+    if (CONNECTION_MARKER_FIELD.get(connection) != null) {
       return true;
     }
     return false;
@@ -85,13 +85,13 @@ public final class RedissonBatchContext {
 
   public static void markFuture(Object future) {
     if (emitStableDatabaseSemconv() && future instanceof CompletionStage) {
-      futureMarkerField.set((CompletionStage<?>) future, new RedissonBatchMarker());
+      FUTURE_MARKER_FIELD.set((CompletionStage<?>) future, new RedissonBatchMarker());
     }
   }
 
   public static boolean isMarkedFuture(Object future) {
     return future instanceof CompletionStage
-        && futureMarkerField.get((CompletionStage<?>) future) != null;
+        && FUTURE_MARKER_FIELD.get((CompletionStage<?>) future) != null;
   }
 
   private RedissonBatchContext() {}

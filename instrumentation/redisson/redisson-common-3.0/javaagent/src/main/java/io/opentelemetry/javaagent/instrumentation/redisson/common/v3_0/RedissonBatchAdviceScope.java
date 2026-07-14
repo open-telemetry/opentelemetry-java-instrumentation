@@ -19,7 +19,7 @@ import org.redisson.client.protocol.RedisCommand;
 import org.redisson.command.CommandBatchService;
 
 public class RedissonBatchAdviceScope {
-  private static final VirtualField<CommandBatchService, RedissonBatchState> batchStateField =
+  private static final VirtualField<CommandBatchService, RedissonBatchState> BATCH_STATE_FIELD =
       VirtualField.find(CommandBatchService.class, RedissonBatchState.class);
 
   private final Instrumenter<RedissonBatchRequest, Void> instrumenter;
@@ -47,10 +47,10 @@ public class RedissonBatchAdviceScope {
     if (!emitStableDatabaseSemconv() || !RedissonBatchState.isAtomic(options)) {
       return false;
     }
-    RedissonBatchState state = batchStateField.get(service);
+    RedissonBatchState state = BATCH_STATE_FIELD.get(service);
     if (state == null) {
       state = new RedissonBatchState();
-      batchStateField.set(service, state);
+      BATCH_STATE_FIELD.set(service, state);
     }
     state.add(command, codec, parameters);
     return true;
@@ -64,11 +64,11 @@ public class RedissonBatchAdviceScope {
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
-    RedissonBatchState state = batchStateField.get(service);
+    RedissonBatchState state = BATCH_STATE_FIELD.get(service);
     if (state == null) {
       return null;
     }
-    batchStateField.set(service, null);
+    BATCH_STATE_FIELD.set(service, null);
     RedissonBatchRequest request = state.createRequest(options);
     if (request == null) {
       return null;
