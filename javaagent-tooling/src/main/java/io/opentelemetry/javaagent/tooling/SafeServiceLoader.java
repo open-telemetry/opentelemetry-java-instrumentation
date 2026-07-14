@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -35,11 +34,10 @@ public final class SafeServiceLoader {
   public static <T> List<T> load(Class<T> serviceClass, @Nullable ClassLoader classLoader) {
     List<T> result = new ArrayList<>();
     ServiceLoader<T> services = ServiceLoader.load(serviceClass, classLoader);
-    for (Iterator<T> iterator = new SafeIterator<>(services.iterator()); iterator.hasNext(); ) {
-      try {
-        result.add(iterator.next());
-      } catch (NoSuchElementException ignored) {
-        // UnsupportedClassVersionError was thrown and handled by SafeIterator
+    for (SafeIterator<T> iterator = new SafeIterator<>(services.iterator()); iterator.hasNext(); ) {
+      T service = iterator.nextOrNull();
+      if (service != null) {
+        result.add(service);
       }
     }
     return result;
@@ -58,7 +56,7 @@ public final class SafeServiceLoader {
 
   private SafeServiceLoader() {}
 
-  private static class SafeIterator<T> implements Iterator<T> {
+  private static class SafeIterator<T> {
     private final Iterator<T> delegate;
 
     SafeIterator(Iterator<T> iterator) {
@@ -73,8 +71,7 @@ public final class SafeServiceLoader {
           unsupportedClassVersionError.getMessage());
     }
 
-    @Override
-    public boolean hasNext() {
+    private boolean hasNext() {
       // jdk9 and newer throw UnsupportedClassVersionError in hasNext()
       while (true) {
         try {
@@ -85,14 +82,14 @@ public final class SafeServiceLoader {
       }
     }
 
-    @Override
-    public T next() {
+    @Nullable
+    private T nextOrNull() {
       // jdk8 throws UnsupportedClassVersionError in next()
       try {
         return delegate.next();
       } catch (UnsupportedClassVersionError unsupportedClassVersionError) {
         handleUnsupportedClassVersionError(unsupportedClassVersionError);
-        throw new NoSuchElementException(unsupportedClassVersionError.getMessage());
+        return null;
       }
     }
   }
