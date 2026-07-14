@@ -478,7 +478,12 @@
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
       "type": "java.lang.String",
-      "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes. This is a comma-separated list of attribute names."
+      "description": "MDC attributes to capture. Supports glob patterns and comma-separated values. Use `*` to capture all attributes. See `otel.instrumentation.logback-appender.experimental.exclude-mdc-attributes` to exclude specific attributes."
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.exclude-mdc-attributes",
+      "type": "java.lang.String",
+      "description": "MDC attributes to exclude from capture. Supports glob patterns and comma-separated values. Takes precedence over capture-mdc-attributes."
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-template",
