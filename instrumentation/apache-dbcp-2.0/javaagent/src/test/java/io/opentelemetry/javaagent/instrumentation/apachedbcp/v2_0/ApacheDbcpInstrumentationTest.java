@@ -29,7 +29,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
 
   @Override
   protected void configure(BasicDataSource dataSource, String dataSourceName) {
-    dataSource.setJmxName(dataSourceName);
+    dataSource.setJmxName("org.apache.commons.dbcp2:type=BasicDataSource,name=" + dataSourceName);
   }
 
   @Override
@@ -40,6 +40,27 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
   @Test
   void shouldReportMetricsWithDefaultDataSourceNameWhenJmxNameIsNull() throws Exception {
     BasicDataSource dataSource = createDataSource();
+
+    try {
+      dataSource.getConnection().close();
+
+      assertConnectionUsagePoolNamesSatisfying(
+          poolNames ->
+              assertThat(poolNames)
+                  .hasSize(1)
+                  .allMatch(poolName -> poolName != null && poolName.matches("dbcp2-[0-9]+")));
+    } finally {
+      dataSource.close();
+      shutdown(dataSource);
+    }
+
+    assertNoMetrics();
+  }
+
+  @Test
+  void shouldReportMetricsWithDefaultDataSourceNameWhenJmxNameIsInvalid() throws Exception {
+    BasicDataSource dataSource = createDataSource();
+    dataSource.setJmxName("invalid-jmx-name");
 
     try {
       dataSource.getConnection().close();
@@ -84,7 +105,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
   @Test
   void shouldPreferJmxNameOverRegisteredJmxName() throws Exception {
     BasicDataSource dataSource = createDataSource();
-    dataSource.setJmxName("configuredPool");
+    dataSource.setJmxName("org.apache.commons.dbcp2:type=BasicDataSource,name=configuredPool");
 
     ObjectName objectName =
         new ObjectName("org.apache.commons.dbcp2:type=BasicDataSource,name=registeredPool");

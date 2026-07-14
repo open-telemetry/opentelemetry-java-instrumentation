@@ -42,17 +42,14 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   public static class StartPoolMaintenanceAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
-      String dataSourceName = dataSource.getJmxName();
-      if (dataSourceName == null) {
-        ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
-        if (objectName != null) {
-          dataSourceName = objectName.getKeyProperty("name");
-          if (dataSourceName == null) {
-            dataSourceName = objectName.toString();
-          }
+      String dataSourceName;
+      ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
+      if (objectName != null) {
+        dataSourceName = objectName.getKeyProperty("name");
+        if (dataSourceName == null) {
+          dataSourceName = objectName.toString();
         }
-      }
-      if (dataSourceName == null) {
+      } else {
         dataSourceName = getDefaultName();
       }
       telemetry().registerMetrics(dataSource, dataSourceName);
