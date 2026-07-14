@@ -38,7 +38,7 @@ class HbaseShadedClient14Test extends AbstractHbaseTest {
   protected void createTable(Admin admin) throws IOException {
     HTableDescriptor tableDescriptor = new HTableDescriptor(TABLE_NAME);
     tableDescriptor.addFamily(new HColumnDescriptor(COLUMN_FAMILY));
-    admin.createTable(tableDescriptor);
+    admin.createTable(tableDescriptor, new byte[][] {Bytes.toBytes("m")});
   }
 
   @Override

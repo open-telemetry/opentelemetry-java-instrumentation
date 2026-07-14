@@ -45,7 +45,12 @@ class HbaseClient20Test extends AbstractHbaseTest {
         TableDescriptorBuilder.newBuilder(TABLE_NAME)
             .setColumnFamily(columnFamilyDescriptor)
             .build();
-    admin.createTable(tableDescriptor);
+    admin.createTable(tableDescriptor, new byte[][] {Bytes.toBytes("m")});
+  }
+
+  @Override
+  protected byte[] checkAndMutateCheckedRowKey() {
+    return Bytes.toBytes(ROW_1);
   }
 
   @Override
