@@ -49,11 +49,16 @@ public class RedissonBatchAdviceScope {
     }
     RedissonBatchState state = BATCH_STATE_FIELD.get(service);
     if (state == null) {
-      state = new RedissonBatchState();
-      BATCH_STATE_FIELD.set(service, state);
+      return false;
     }
     state.add(command, codec, parameters);
     return true;
+  }
+
+  public static void initialize(CommandBatchService service) {
+    if (emitStableDatabaseSemconv() && BATCH_STATE_FIELD.get(service) == null) {
+      BATCH_STATE_FIELD.set(service, new RedissonBatchState());
+    }
   }
 
   @Nullable
@@ -68,8 +73,7 @@ public class RedissonBatchAdviceScope {
     if (state == null) {
       return null;
     }
-    BATCH_STATE_FIELD.set(service, null);
-    RedissonBatchRequest request = state.createRequest(options);
+    RedissonBatchRequest request = state.finish(options);
     if (request == null) {
       return null;
     }

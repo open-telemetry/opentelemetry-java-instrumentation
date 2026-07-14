@@ -512,6 +512,19 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
+  void atomicBatchCannotExecuteTwice() {
+    assumeStableAtomicBatchSupport();
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    batch.getBucket("batch1").setAsync("v1");
+    batch.execute();
+
+    assertThat(catchThrowable(batch::execute)).isNotNull();
+    assertStableAtomicBatch("SET", null, "SET batch1 ?");
+  }
+
+  @Test
   void atomicBatchMixedCommands() {
     assumeStableAtomicBatchSupport();
     RBatch batch =

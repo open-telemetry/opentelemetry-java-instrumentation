@@ -29,8 +29,16 @@ class RedissonBatchState {
   private final List<String> queryTexts = new ArrayList<>();
   private int queryTextLength;
   private boolean captureQueryText = true;
+  private boolean finished;
 
   public synchronized void add(RedisCommand<?> command, Codec codec, Object[] parameters) {
+    if (finished) {
+      return;
+    }
+    if ("DISCARD".equals(command.getName())) {
+      finished = true;
+      return;
+    }
     commandNames.add(command.getName());
     if (!captureQueryText) {
       // Query text is already complete; avoid sanitizing commands that will not be emitted.
@@ -48,7 +56,11 @@ class RedissonBatchState {
     queryTextLength += separatorLength + queryText.length();
   }
 
-  public synchronized RedissonBatchRequest createRequest(Object options) {
+  public synchronized RedissonBatchRequest finish(Object options) {
+    if (finished) {
+      return null;
+    }
+    finished = true;
     if (!isAtomic(options) || commandNames.isEmpty()) {
       return null;
     }

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_17.RedissonSingletons.batchInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Scope;
@@ -31,8 +32,17 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(named("async"), getClass().getName() + "$CaptureAdvice");
     transformer.applyAdviceToMethod(named("executeAsync"), getClass().getName() + "$ExecuteAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This CommandBatchService service) {
+      RedissonBatchAdviceScope.initialize(service);
+    }
   }
 
   @SuppressWarnings("unused")

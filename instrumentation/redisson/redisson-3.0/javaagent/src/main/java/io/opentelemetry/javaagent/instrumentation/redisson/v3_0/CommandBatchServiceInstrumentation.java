@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_0.RedissonSingletons.batchInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -33,6 +34,7 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
         named("async").and(returns(void.class)),
         getClass().getName() + "$CaptureWithArgumentAdvice");
@@ -40,6 +42,14 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
         named("async").and(returns(isSubTypeOf(CompletionStage.class))),
         getClass().getName() + "$CaptureWithReturnAdvice");
     transformer.applyAdviceToMethod(named("executeAsync"), getClass().getName() + "$ExecuteAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This CommandBatchService service) {
+      RedissonBatchAdviceScope.initialize(service);
+    }
   }
 
   @SuppressWarnings("unused")
