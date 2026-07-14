@@ -88,7 +88,7 @@ jobs:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
+          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request against main
@@ -110,3 +110,18 @@ jobs:
           gh pr create --title "$message" \
                        --body "$body" \
                        --base main
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - check-versions
+      - update-otel-sdk
+    if: always()
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@62d5939b47144252763c5ff9fffe8c20d76cd806 # v0.4.0
+    with:
+      success: >-
+        ${{
+          needs.check-versions.result == 'success' &&
+          (needs.update-otel-sdk.result == 'success' || needs.update-otel-sdk.result == 'skipped')
+        }}

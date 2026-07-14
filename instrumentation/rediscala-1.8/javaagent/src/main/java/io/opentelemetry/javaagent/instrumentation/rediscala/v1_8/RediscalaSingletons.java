@@ -14,12 +14,17 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import redis.commands.TransactionBuilder;
 
 public class RediscalaSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rediscala-1.8";
 
   private static final Instrumenter<RediscalaRequest, Void> instrumenter;
+
+  public static final VirtualField<TransactionBuilder, ServerEndpoint> TRANSACTION_ENDPOINT =
+      VirtualField.find(TransactionBuilder.class, ServerEndpoint.class);
 
   static {
     RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();

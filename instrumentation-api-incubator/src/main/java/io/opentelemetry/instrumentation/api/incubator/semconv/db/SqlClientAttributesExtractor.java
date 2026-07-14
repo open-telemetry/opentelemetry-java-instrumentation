@@ -156,6 +156,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
           attributes.put(DB_COLLECTION_NAME, multiQuery.getCollectionName());
         }
         attributes.put(DB_STORED_PROCEDURE_NAME, multiQuery.getStoredProcedureName());
+      } else if (isBatch) {
+        // an explicit empty batch (no query texts) — summarize as BATCH to match the span name
+        // produced by DbClientSpanNameExtractor
+        attributes.put(DB_QUERY_SUMMARY, "BATCH");
       }
     }
 

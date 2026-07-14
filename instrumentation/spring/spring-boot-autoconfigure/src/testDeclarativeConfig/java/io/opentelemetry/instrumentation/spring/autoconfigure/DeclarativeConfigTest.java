@@ -45,7 +45,7 @@ class DeclarativeConfigTest {
   void customOpenTelemetry() {
     this.contextRunner
         .withUserConfiguration(CustomTracerConfiguration.class)
-        .withPropertyValues("otel.file_format=1.0")
+        .withPropertyValues("otel.file_format=1.1")
         .run(
             context ->
                 assertThat(context)
@@ -167,7 +167,7 @@ class DeclarativeConfigTest {
   @Test
   void shouldInitializeSdkWhenNotDisabled() {
     this.contextRunner
-        .withPropertyValues("otel.file_format=1.0", "otel.disabled=false")
+        .withPropertyValues("otel.file_format=1.1", "otel.disabled=false")
         .run(
             context ->
                 assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
@@ -177,7 +177,7 @@ class DeclarativeConfigTest {
   void shouldInitializeNoopOpenTelemetryWhenSdkIsDisabled() {
     this.contextRunner
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.disabled=true",
             "otel.resource.attributes=service.name=workflow-backend-dev,service.version=3c8f9ce9")
         .run(
@@ -191,7 +191,7 @@ class DeclarativeConfigTest {
   void shouldLoadInstrumentation() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
-        .withPropertyValues("otel.file_format=1.0")
+        .withPropertyValues("otel.file_format=1.1")
         .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
   }
 
@@ -200,7 +200,7 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.distribution.spring_starter.instrumentation.default_enabled=false")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
   }
@@ -210,7 +210,7 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.distribution.spring_starter.instrumentation.default_enabled=false",
             "otel.distribution.spring_starter.instrumentation.enabled=spring_web")
         .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
@@ -221,7 +221,7 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.distribution.spring_starter.instrumentation.default_enabled=false",
             "otel.distribution.spring_starter.instrumentation.disabled=spring_web")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
@@ -232,7 +232,7 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.distribution.spring_starter.instrumentation.default_enabled=false",
             "otel.distribution.spring_starter.instrumentation.enabled[0]=spring_web")
         .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
@@ -243,7 +243,7 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.distribution.spring_starter.instrumentation.disabled[0]=spring_web")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
   }

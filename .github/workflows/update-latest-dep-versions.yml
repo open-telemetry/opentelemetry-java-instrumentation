@@ -52,7 +52,7 @@ jobs:
         if: steps.check-changes.outputs.changed == 'true'
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
+          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request
@@ -89,3 +89,13 @@ jobs:
                          --body "$body" \
                          --base main
           fi
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - update-latest-dep-versions
+    if: always()
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@62d5939b47144252763c5ff9fffe8c20d76cd806 # v0.4.0
+    with:
+      success: ${{ needs.update-latest-dep-versions.result == 'success' }}
