@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import java.io.ByteArrayInputStream;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import org.junit.jupiter.api.Test;
 
