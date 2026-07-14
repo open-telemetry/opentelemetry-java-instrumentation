@@ -4,8 +4,9 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `DeclarativeConfigPropertiesBridgeBuilder` for removal in 3.0. Use
-  `DeclarativeConfigProperties` directly when reading declarative component configuration.
+- Deprecate `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative component configuration
+  through `DeclarativeConfigProperties` directly. To expose `ConfigProperties` through the
+  declarative configuration API, use `ConfigPropertiesBackedConfigProvider`.
 
 ### 📈 Enhancements
 
