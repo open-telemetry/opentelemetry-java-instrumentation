@@ -27,6 +27,31 @@ dependencies {
 
 testing {
   suites {
+    // 3.6.5 is the last version where atomic mode is the seventh executeAsync argument.
+    register<JvmTestSuite>("testRedisson365") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+          include("**/RedissonClientTest.java")
+        }
+      }
+      dependencies {
+        implementation("org.redisson:redisson:3.6.5")
+        implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
+      }
+      targets.configureEach {
+        testTask.configure {
+          javaLauncher.set(
+            project.javaToolchains.launcherFor {
+              languageVersion = JavaLanguageVersion.of(8)
+            }
+          )
+          jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+        }
+      }
+    }
+
     // 3.7.1 is the last version where atomic mode is passed to executeAsync. It requires Java 8
     // because URIBuilder reflects on Field.modifiers during startup.
     register<JvmTestSuite>("testRedisson371") {
@@ -90,6 +115,10 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  named<Test>("testRedisson365") {
+    systemProperty("testLatestDeps", true)
   }
 
   named<Test>("testRedisson371") {
