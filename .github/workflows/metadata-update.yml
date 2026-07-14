@@ -104,8 +104,7 @@ jobs:
           # checkout. GitHub then rejects pushing the stale branch without workflows: write, even
           # though the generated commit only changes docs/instrumentation-list.yaml. Merge instead
           # of rebase so that commit remains tied to its source snapshot while the pushed branch
-          # contains the current workflow files. See
-          # https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/19214.
+          # contains the current workflow files.
           git fetch origin main
           if ! git merge --no-edit origin/main; then
             echo "::error::Failed to merge the latest origin/main into the generated metadata commit."
