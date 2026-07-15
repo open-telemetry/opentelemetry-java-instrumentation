@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonBatchAdviceScope;
@@ -55,13 +56,21 @@ class CommandBatchServiceBefore372Instrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class CaptureAdvice {
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
+    public static Scope onEnter(
         @Advice.This CommandBatchService service,
         @Advice.Argument(2) Codec codec,
         @Advice.Argument(3) RedisCommand<?> command,
         @Advice.Argument(4) Object[] parameters) {
-      RedissonBatchAdviceScope.captureCandidate(service, command, codec, parameters);
+      return RedissonBatchAdviceScope.captureCandidate(service, command, codec, parameters);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 

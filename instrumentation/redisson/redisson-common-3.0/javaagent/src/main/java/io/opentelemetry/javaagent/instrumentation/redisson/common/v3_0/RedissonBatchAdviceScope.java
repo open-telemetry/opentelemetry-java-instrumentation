@@ -38,34 +38,40 @@ public class RedissonBatchAdviceScope {
     this.scope = RedissonBatchContext.mark(parentContext).makeCurrent();
   }
 
-  public static boolean capture(
+  @Nullable
+  public static Scope capture(
       CommandBatchService service,
       Object options,
       RedisCommand<?> command,
       Codec codec,
       Object[] parameters) {
     if (!emitStableDatabaseSemconv() || !RedissonBatchState.isAtomic(options)) {
-      return false;
+      return null;
     }
     RedissonBatchState state = BATCH_STATE_FIELD.get(service);
     if (state == null) {
-      return false;
+      return null;
     }
-    if (!RedissonBatchContext.isActive(currentContext())) {
-      state.add(command, codec, parameters);
+    if (RedissonBatchContext.isActive(currentContext())) {
+      return RedissonBatchContext.startCapture();
     }
-    return true;
+    return RedissonBatchContext.startCapture(state, command, codec, parameters);
   }
 
-  public static void captureCandidate(
+  @Nullable
+  public static Scope captureCandidate(
       CommandBatchService service, RedisCommand<?> command, Codec codec, Object[] parameters) {
     if (!emitStableDatabaseSemconv()) {
-      return;
+      return null;
     }
     RedissonBatchState state = BATCH_STATE_FIELD.get(service);
-    if (state != null && !RedissonBatchContext.isActive(currentContext())) {
-      state.add(command, codec, parameters);
+    if (state == null) {
+      return null;
     }
+    if (RedissonBatchContext.isActive(currentContext())) {
+      return RedissonBatchContext.startCapture();
+    }
+    return RedissonBatchContext.startCapture(state, command, codec, parameters);
   }
 
   public static void initialize(CommandBatchService service) {

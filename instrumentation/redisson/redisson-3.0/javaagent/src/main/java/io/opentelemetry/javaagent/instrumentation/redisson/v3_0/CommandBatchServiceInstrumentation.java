@@ -64,11 +64,11 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
         @Advice.Argument(4) Object[] parameters,
         @Advice.Argument(5) Object promise,
         @Advice.FieldValue("options") Object options) {
-      if (!RedissonBatchAdviceScope.capture(service, options, command, codec, parameters)) {
-        return null;
+      Scope scope = RedissonBatchAdviceScope.capture(service, options, command, codec, parameters);
+      if (scope != null) {
+        RedissonBatchContext.markFuture(promise);
       }
-      RedissonBatchContext.markFuture(promise);
-      return RedissonBatchContext.startCapture();
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -89,10 +89,7 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) RedisCommand<?> command,
         @Advice.Argument(4) Object[] parameters,
         @Advice.FieldValue("options") Object options) {
-      if (!RedissonBatchAdviceScope.capture(service, options, command, codec, parameters)) {
-        return null;
-      }
-      return RedissonBatchContext.startCapture();
+      return RedissonBatchAdviceScope.capture(service, options, command, codec, parameters);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

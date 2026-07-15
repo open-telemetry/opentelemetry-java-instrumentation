@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 import org.redisson.client.codec.Codec;
@@ -25,13 +26,11 @@ class RedissonBatchState {
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "redisson"));
 
-  private final List<String> commandNames = new ArrayList<>();
-  private final List<String> queryTexts = new ArrayList<>();
-  private int queryTextLength;
-  private boolean captureQueryText = true;
+  private final List<CapturedCommand> commands = new ArrayList<>();
   private boolean finished;
 
-  public synchronized void add(RedisCommand<?> command, Codec codec, Object[] parameters) {
+  public synchronized void add(
+      int index, RedisCommand<?> command, Codec codec, Object[] parameters) {
     if (finished) {
       return;
     }
@@ -39,21 +38,8 @@ class RedissonBatchState {
       discard();
       return;
     }
-    commandNames.add(command.getName());
-    if (!captureQueryText) {
-      // Query text is already complete; avoid sanitizing commands that will not be emitted.
-      return;
-    }
-
-    String queryText = sanitize(command, codec, parameters);
-    int separatorLength = queryTexts.isEmpty() ? 0 : 2;
-    if (queryTextLength + separatorLength + queryText.length()
-        > RedissonBatchRequest.QUERY_TEXT_LIMIT) {
-      captureQueryText = false;
-      return;
-    }
-    queryTexts.add(queryText);
-    queryTextLength += separatorLength + queryText.length();
+    commands.add(
+        new CapturedCommand(index, command.getName(), sanitize(command, codec, parameters)));
   }
 
   public synchronized RedissonBatchRequest finish(Object options) {
@@ -61,9 +47,16 @@ class RedissonBatchState {
       return null;
     }
     finished = true;
-    if (!isAtomic(options) || commandNames.isEmpty()) {
+    if (!isAtomic(options) || commands.isEmpty()) {
       clear();
       return null;
+    }
+    commands.sort(Comparator.comparingInt(command -> command.index));
+    List<String> commandNames = new ArrayList<>(commands.size());
+    List<String> queryTexts = new ArrayList<>(commands.size());
+    for (CapturedCommand command : commands) {
+      commandNames.add(command.name);
+      queryTexts.add(command.queryText);
     }
     RedissonBatchRequest request = RedissonBatchRequest.create(commandNames, queryTexts);
     clear();
@@ -76,8 +69,7 @@ class RedissonBatchState {
   }
 
   private void clear() {
-    commandNames.clear();
-    queryTexts.clear();
+    commands.clear();
   }
 
   static boolean isAtomic(Object options) {
@@ -120,5 +112,17 @@ class RedissonBatchState {
       }
     }
     return sanitizer.sanitize(command.getName(), args);
+  }
+
+  private static class CapturedCommand {
+    private final int index;
+    private final String name;
+    private final String queryText;
+
+    private CapturedCommand(int index, String name, String queryText) {
+      this.index = index;
+      this.name = name;
+      this.queryText = queryText;
+    }
   }
 }
