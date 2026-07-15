@@ -33,10 +33,14 @@ class RedissonBatchState {
   private int queryTextCommandCount;
   private int queryTextCutoff = Integer.MAX_VALUE;
   private boolean finished;
+  private boolean atomic;
 
   public synchronized void add(
       Object batchCommand, int index, RedisCommand<?> command, Codec codec, Object[] parameters) {
     if (finished) {
+      if (atomic) {
+        RedissonBatchContext.markCapturedCommand(batchCommand);
+      }
       return;
     }
     if ("DISCARD".equals(command.getName())) {
@@ -74,8 +78,9 @@ class RedissonBatchState {
     if (finished) {
       return null;
     }
+    atomic = isAtomic(options);
     finished = true;
-    if (!isAtomic(options) || commands.isEmpty()) {
+    if (!atomic || commands.isEmpty()) {
       clear();
       return null;
     }
