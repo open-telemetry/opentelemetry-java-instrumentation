@@ -509,7 +509,7 @@ public abstract class AbstractRedissonClientTest {
             BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
     batch.getBucket("batch1").setAsync("v1");
     batch.execute();
-    assertStableAtomicBatch("SET", null, "SET batch1 ?");
+    assertStableAtomicBatch("MULTI SET", null, "SET batch1 ?");
   }
 
   @Test

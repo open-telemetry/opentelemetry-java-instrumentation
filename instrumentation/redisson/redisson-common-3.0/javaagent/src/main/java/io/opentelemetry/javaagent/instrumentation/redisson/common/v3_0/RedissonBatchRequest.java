@@ -17,14 +17,11 @@ public class RedissonBatchRequest {
 
   public static RedissonBatchRequest create(List<String> commandNames, List<String> queryTexts) {
     String firstCommandName = commandNames.get(0);
-    String operationName = firstCommandName;
-    if (commandNames.size() > 1) {
-      operationName = "MULTI " + firstCommandName;
-      for (int i = 1; i < commandNames.size(); i++) {
-        if (!commandNames.get(i).equals(firstCommandName)) {
-          operationName = "MULTI";
-          break;
-        }
+    String operationName = "MULTI " + firstCommandName;
+    for (int i = 1; i < commandNames.size(); i++) {
+      if (!commandNames.get(i).equals(firstCommandName)) {
+        operationName = "MULTI";
+        break;
       }
     }
 
