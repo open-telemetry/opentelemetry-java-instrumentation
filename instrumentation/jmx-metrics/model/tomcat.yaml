@@ -38,7 +38,7 @@ groups:
       - id: tomcat.request.processor.name
         type: string
         stability: development
-        brief: Name of the Tomcat request processor
+        brief: Name of the Tomcat request processor.
         examples:
           - "http-nio-8080"
 
@@ -76,14 +76,14 @@ groups:
     metric_name: tomcat.thread.count
     stability: development
     type: metric
-    brief: Tomcat thread count
+    brief: Tomcat thread count.
     unit: "{thread}"
     instrument: updowncounter
     attributes:
       - id: tomcat.thread.pool.name
         type: string
         stability: development
-        brief: Name of the Tomcat thread pool
+        brief: Name of the Tomcat thread pool.
         examples:
           - "http-nio-8080"
 
@@ -102,7 +102,7 @@ groups:
     metric_name: tomcat.thread.limit
     stability: development
     type: metric
-    brief: Tomcat thread limit
+    brief: Tomcat thread limit.
     unit: "{thread}"
     instrument: updowncounter
     attributes:
@@ -112,7 +112,7 @@ groups:
     metric_name: tomcat.thread.busy.count
     stability: development
     type: metric
-    brief: Tomcat busy thread count
+    brief: Tomcat busy thread count.
     unit: "{thread}"
     instrument: updowncounter
     attributes:
