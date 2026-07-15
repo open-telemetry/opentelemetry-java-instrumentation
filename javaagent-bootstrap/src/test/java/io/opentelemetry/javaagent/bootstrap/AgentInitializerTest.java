@@ -118,6 +118,8 @@ class AgentInitializerTest {
         "com.example.Main arg1 arg2",
         "myapp/com.example.Main arg1 arg2",
         "/path/to/application.jar arg1",
+        // glassfish/payara application server
+        "com.sun.enterprise.glassfish.bootstrap.ASMain"
       })
   void isJdkToolMainClass_false(String sunJavaCommand) {
     assertThat(AgentInitializer.isJdkToolMainClass(sunJavaCommand)).isFalse();

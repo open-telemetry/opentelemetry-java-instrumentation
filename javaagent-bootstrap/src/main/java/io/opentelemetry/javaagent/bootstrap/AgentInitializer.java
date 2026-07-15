@@ -29,6 +29,7 @@ public final class AgentInitializer {
   private static boolean isSecurityManagerSupportEnabled = false;
   private static volatile boolean agentStarted = false;
 
+  @SuppressWarnings("SystemOut")
   public static void initialize(
       Instrumentation inst, File javaagentFile, boolean fromPremain, @Nullable String agentArgs)
       throws Exception {
@@ -272,10 +273,21 @@ public final class AgentInitializer {
     int spaceIndex = cmd.indexOf(' ');
     String first = spaceIndex == -1 ? cmd : cmd.substring(0, spaceIndex);
 
+    if (first.endsWith(".jar")) {
+      // java -jar /path/to/app.jar
+      return false;
+    }
+
     // sun.java.command may be of the form "<module>/<mainClass>" when the main class belongs to a
     // named module, e.g. "jdk.compiler/com.sun.tools.javac.Main"
     int slashIndex = first.indexOf('/');
     if (slashIndex < 0) {
+
+      // known exception for glassfish/payara application server
+      if (first.startsWith("com.sun.enterprise.glassfish.")) {
+        return false;
+      }
+
       return first.startsWith("com.sun.") || first.startsWith("sun.") || first.startsWith("jdk.");
     } else {
       String moduleName = first.substring(0, slashIndex);
