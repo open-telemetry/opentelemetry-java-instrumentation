@@ -383,11 +383,9 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                       attributes ->
                           attributes.asMap().keySet().stream()
                               .map(AttributeKey::getKey)
-                              .filter(
-                                  k -> !k.equals(KafkaClusterId.ATTRIBUTE_KEY.getKey()))
+                              .filter(k -> !k.equals(KafkaClusterId.ATTRIBUTE_KEY.getKey()))
                               .collect(toSet()))
-                  .allSatisfy(
-                      attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
+                  .allSatisfy(attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
             });
 
     // Print mapping table
