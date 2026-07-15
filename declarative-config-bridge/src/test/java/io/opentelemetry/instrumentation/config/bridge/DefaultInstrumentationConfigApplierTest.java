@@ -30,7 +30,7 @@ class DefaultInstrumentationConfigApplierTest {
     defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
 
     OpenTelemetryConfigurationModel model = newModel();
-    DefaultInstrumentationConfigApplier.applyToModel(defaults, model);
+    defaults.applyToModel(model);
 
     assertThat(
             model
@@ -58,7 +58,7 @@ class DefaultInstrumentationConfigApplierTest {
     defaults.get("example_instrumentation").setDefault("double_key", 3.14);
 
     OpenTelemetryConfigurationModel model = newModel();
-    DefaultInstrumentationConfigApplier.applyToModel(defaults, model);
+    defaults.applyToModel(model);
 
     DeclarativeConfigProperties config =
         SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model))

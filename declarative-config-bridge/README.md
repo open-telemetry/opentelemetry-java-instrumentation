@@ -146,9 +146,9 @@ acme.preserved=true
 ```
 
 The auto configuration **with declarative config** registers the defaults as a model customizer,
-injecting them under `instrumentation/development.java`. This optional path uses
-`DefaultInstrumentationConfigApplier`, so only declarative-config users need the incubator
-file-config dependency on their classpath.
+injecting them under `instrumentation/development.java`. You can call
+`DefaultInstrumentationConfig#applyToModel(...)` directly, or use
+`DefaultInstrumentationConfigApplier` if a static helper fits better.
 
 Let's first look at the yaml file that the defaults effectively merge into:
 
@@ -174,8 +174,7 @@ public class MyDistroDeclarativeConfig implements DeclarativeConfigurationCustom
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
-    customizer.addModelCustomizer(
-        model -> DefaultInstrumentationConfigApplier.applyToModel(DEFAULTS, model));
+    customizer.addModelCustomizer(DEFAULTS::applyToModel);
   }
 
   private static DefaultInstrumentationConfig createDefaults() {

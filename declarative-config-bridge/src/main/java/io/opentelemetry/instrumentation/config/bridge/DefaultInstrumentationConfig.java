@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.config.bridge;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,9 +34,8 @@ import java.util.Map;
  * autoConfiguration.addPropertiesSupplier(defaults::toConfigProperties);
  * }</pre>
  *
- * <p>For declarative-config model integration, use the optional {@link
- * DefaultInstrumentationConfigApplier} helper so the base defaults type stays usable without the
- * incubator model classes on the runtime classpath.
+ * <p>For declarative-config model integration, call {@link #applyToModel(OpenTelemetryConfigurationModel)}
+ * or use {@link DefaultInstrumentationConfigApplier} when a static helper is more convenient.
  */
 public final class DefaultInstrumentationConfig {
 
@@ -123,6 +123,16 @@ public final class DefaultInstrumentationConfig {
         (declarativePath, value) ->
             map.put(toConfigProperty(declarativePath), String.valueOf(value)));
     return map;
+  }
+
+  /**
+   * Applies defaults to the declarative configuration model under {@code
+   * instrumentation/development.java}. Existing values in the model take precedence; defaults are
+   * only set for properties not already present.
+   */
+  @CanIgnoreReturnValue
+  public OpenTelemetryConfigurationModel applyToModel(OpenTelemetryConfigurationModel model) {
+    return DefaultInstrumentationConfigApplier.applyToModel(this, model);
   }
 
   Map<String, Object> getDefaults() {
